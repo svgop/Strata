@@ -5362,3 +5362,98 @@ bits-per-expert -> miss-cost curve directly: same model, same drafter, same prob
 sidequest to queue when the main line has a session to spare - gated by the six-metric law, since 2-bit costs
 quality (M4/M5 must be measured, not assumed).
 
+### F-172 — THE LINUX PORT: THE LANE RUNS ON FEDORA 45 / RTX 5090 (2026-10-13 evening)
+
+**WHAT THE OPERATOR ASKED.** Move to the Linux desktop (Fedora 45, Ryzen 9 9950X3D, RTX 5090 32 GB) and run
+the Q2_0 lane with this engine instead of the stock one; check the scripts for Windows-only baggage.
+
+**THE PORT (repo copied to NVMe, ~/LLM/strata-custom-2; NTFS master stays canonical):**
+- **Build law.** MSVC includes <cmath> transitively; GCC does not. `src/core/expert_source.cpp:2379`
+  (RouterLookahead::run, std::exp) failed with `'exp' is not a member of 'std'`. Fix: one
+  `#include <cmath>` at the include block. UPSTREAM THIS - it is the only source change Linux needs.
+- **Launch law preserved.** `launch-custom-q2_0-8081.sh` is the line-by-line port of
+  launch-v2-armT1d-8081.bat: every STRATA_* arm carried, serve/server.py started directly, port 8081.
+- **draft-vocab is a setup flag, not an engine flag.** `--draft-vocab en` belongs to setup.py; the engine
+  reads `draft_vocab.bin` inside the MTP folder (refresh_draft_vocab, setup.py:4660, copies
+  data/draft_vocab_en.bin over it). Config key `"draft_vocab": "en"`; engine args must NOT carry it.
+- **VRAM budget law for Q2_0 @ 32 GB.** The aux allocations fail in a fixed order as the reserve shrinks:
+  200 -> cuBLAS create dies; 300 -> draft head 178 MiB vs 75 free; 512 -> verify device arena 76 MiB;
+  **768 -> clean, staged hc check included.** Same shape as F-168's reserve-2000 on Windows; Q2_0's tier
+  needs less. kv-resident stays 32768 (operator's call).
+- **MTP isolation.** The stock lane and this lane share pack/GGUFs via symlinks (models/, packs/), but mtp
+  is a private 6.5 GB copy so the draft-vocab swap cannot narrow the stock lane.
+
+**F-64 ON LINUX IS A NO-OP BY DEFAULT - AND THAT IS THE POINT.** STRATA_KEEP_MAPPING exists because .43+'s
+Windows file tier opens unbuffered and the mapping is dropped; on Linux the source is not opened unbuffered,
+so the mapping (and the OS page cache behind it) is kept without asking. The warm-rate parity F-64 fights
+for on Windows is simply Linux's default. Arm kept in the launcher (harmless, documents intent).
+STRATA_POOL_SPIN_US is the same species (works around coarse parking; cheaper scheduling here). The
+GPU-side arms (DMA batch, PLE batch, device verify plan, exchange rotation, adapt tier, coupled drafts)
+are platform-neutral and carry their measured value unchanged.
+
+**MEASURED (Q2_0, short probes - NOT the six-metric gate):** decode 190-227 t/s, prefill 265-287 t/s,
+draft acceptance 83-92% (35/38 and 125/151), hyper-connection staged, exchange rotation on,
+16.95 GiB pinned RAM complement, ~32 GB VRAM, 29 GB RSS.
+
+**STATUS.** Running on 8081 from the NVMe copy. The six-metric suite is the gate before calling the Linux
+lane adopted; the cmath fix wants upstreaming into the NTFS master.
+
+### F-173 — THE LINUX SUPERIORITY CAMPAIGN, ROUNDS 0-4: ALL THREE THROUGHPUT BARS BEATEN (2026-10-13 night)
+
+**WHAT THE OPERATOR ASKED.** Beat the Windows lane by 30%+ on every metric; relentless rounds, two study
+legs each (code + world), local NVMe copy only, /mnt/DATA frozen as the before-snapshot. Goal register:
+`campaign/GOAL-LINUX-SUPERIORITY.md` (the bar table, the rules, the round queue, the scorecard).
+
+**THE REGRESSION WAS rt-r17, NOT LINUX (proven in-log and by A/B).** Sessions 1-2 of custom-iq3_s.log ran
+rt-r17 at 48-63% acceptance / 0.45-0.62 drafts offered / 108 t/s; session 3 (stock mtp/rt, same box, same
+recipe) read 88-92% / 135-171 t/s — the Windows 90.2%/145.8 class exactly. r17 is the distilled head whose
+own audit (F-104/F-114/F-115/F-116) measured a 55.7-57.4% plateau; the 280.7-class head is stock rt.
+Rounds 1-4 (each one variable, probe-lane.py, results in campaign/results/linux-*.txt):
+
+| round | change | M1 | pair | 6-conc | accept |
+|---|---|---|---|---|---|
+| 0 | port baseline (r17, min-p .7, spec 4) | 109.1 | 132.7 | 162.3 | 63% |
+| 1 | --mtp -> stock rt | 154.9 | 132.8 | 168.8 | 88-92% |
+| 2 | + min-p 0.5 | 167.1 | 144.7 | 187.6 | 87% |
+| 3 | + --spec 6 | 181.5 | 144.9 | 179.1 | 79% |
+| 4 | + ROUTE_RESIDENT=0.5 / ROUTE_RESIDENT_MTP=1 (battery arms the port had dropped) | **196.1** | **158.8** | **212.8** | 79.4% |
+
+**THE BAR TABLE: M1 +34.5%, pair +46%, 6-conc +52% over the Windows standing lane — all three throughput
+bars met in four rounds.** Hit rate 98.3%, ms/window stable (late 8.8), TREND stable, 10,307 slots at boot
+(Windows: 9,850-10,077). Context: the public single-stream frontier for this model class on one 5090 is
+~100-120 t/s; the lane is at 196.
+
+**PENDING BEFORE ADOPTION IS DECLARED:** the M4/M5 gate (MMLU-Pro running on the round-4 recipe;
+mimicbench not yet ported — the M5 tool must be located/ported from the Windows campaign), the depth
+metrics (M6 64k prefill/decode), and the short-class matched anchor. Round-1 agent findings and the full
+round queue live in the goal register.
+
+### F-174 — THE STANDING LINUX RECIPE, PINNED (2026-10-13 night; the F-173 performance, reproducibly)
+
+**THE RECIPE IS TWO FILES, NOTHING ELSE.** (1) `launch-custom-iq3s-8081.sh` — the env arsenal: the full
+armT1d battery (KEEP_MAPPING, TYPICAL_ACCEPT=0.2, POOL_SPIN_US=100, KV_PREFETCH=1, ADAPT_LAG=2, DMA_BATCH=1,
+PREDICT_CREDIT=1.0/BUDGET=2, ADAPT_PINCAP=48, ADAPT_MIN_AGE=2, ADAPT_DORMANT=64, EXCHANGE_ROTATE=1,
+L2_SETASIDE_MIB=60, BATCH_MTP=0, BATCH_RESCUE=0, SPEC_COUPLED=1, PLE_BATCH=1, VERIFY_DEVICE_PLAN=1,
+ADAPT_OVERLAP=1, ADAPT_OVERLAP_RESIDENT=1) **plus the restored F-72 battery arms ROUTE_RESIDENT=0.5 and
+ROUTE_RESIDENT_MTP=1** (the first port dropped them; R4 proved them worth ~+8% everywhere). (2)
+`custom-iq3_s-8081.json` — engine args: pack Custom-data/packs/iq3_s, native/ple the two IQ3_S GGUFs
+(Custom-data/models/), expert-profile data/expert-profile.bin, spec **6**, spec-min-p **0.5**, mtp
+**Custom-data/mtp/rt** (STOCK head — rt-r17 is retired pending the F16/distill upgrade), mtp-q4 all,
+mtp-hnorm stream, max-context 131072, kv int8, kv-resident 32768, pcie-frac 0.35/dma, vram-reserve 2000
+(F-168 law), conversation-cache 49152, cvec refusal-r 4-24 project/per-layer, ple-io mmap, adapt-decay
+0.85, profile-save every 30, resident-experts; config KEY draft_vocab "en".
+State at pin: M1 196.1 / pair 158.8 / 6-conc 212.8 / MMLU 95.71 (mmlu-linux-r4.json) / 10307 slots.
+
+**THE INSTRUMENTS (ported this session, both in campaign/):** `probe-lane.py` — the Linux port of
+probe-lane.ps1, same prompts/sequence/log-accounting; results in campaign/results/linux-*.txt.
+`mmlu-pro-gate.py` — local copy with the Authorization header added (the Linux lane keys its API) and
+`datasets` pip-installed into .venv. Boot order: launcher direct (LAUNCH LAW), never through setup.
+
+**CODE-STUDY FINDINGS FUTURE ROUNDS STAND ON (agent leg, R1):** draft_offered Y counts min-p-FILTERED
+window rows (MTP + suffix rows), accepted X includes typical-acceptance rescues; --spec is rewritten at
+boot by the suffix drafter (spec 6 -> S_mtp 4 + up to 2 suffix rows/window); a draft is only OFFERED when
+its own dprob >= min-p (generate.cpp:12190-12193) — under coupled sampling dprob is the post-temperature
+chain probability, structurally lower, which is why min-p 0.7 truncated to ~1 draft; STRATA_SPEC_MIN_TEMP
+(spec_prob.hpp:64-73) keeps argmax drafting for lukewarm requests; the draft path has NO OS-gated numerics
+(Philox position-keyed, bit-deterministic; only _WIN32 intrinsics/IO). r17's 57% is its distilled plateau
+(F-104/114/115/116), not a Linux fault. Full lever list: campaign/GOAL-LINUX-SUPERIORITY.md.

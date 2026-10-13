@@ -1,0 +1,42 @@
+=== PROBE linux-routeresident | 2026-10-13 18:16:16 | log=/home/svg/LLM/strata-custom-2/custom-iq3_s.log
+    warmup: 8 tok in 0.32s
+    A.short[1]: 220 tok in 1.59s = 138.6 t/s
+    A.short[2]: 220 tok in 1.27s = 173.0 t/s
+    fresh-long-prompt: 80 tok out in 0.89s
+    B.short[1]: 220 tok in 1.15s = 191.4 t/s
+    B.short[2]: 220 tok in 1.19s = 185.4 t/s
+SHORT-CLASS A/B   : before long prompt 155.8 t/s -> after 188.4 t/s (21%)
+M1 single-stream : 196.1 t/s (2000 tok in 10.20s)
+M2 pair          : 158.8 t/s aggregate (1800 tok in 11.33s)
+M2 6-conc        : 212.8 t/s aggregate (3600 tok in 16.92s)
+--- engine accounting, in order (ms/window is the degradation signal) ---
+    [ 1] prompt   55 gen     8 ->    33.5 ms/window | accept  66.7% (6/9) | hit 88.8%
+    [ 2] prompt   81 gen   220 ->    13.7 ms/window | accept  86.0% (129/150) | hit 96.0%
+    [ 3] prompt   81 gen   220 ->    11.8 ms/window | accept  77.1% (118/153) | hit 98.4%
+    [ 4] prompt  417 gen    80 ->    13.2 ms/window | accept  85.7% (48/56) | hit 97.2%
+    [ 5] prompt   81 gen   220 ->    12.2 ms/window | accept  80.5% (132/164) | hit 98.7%
+    [ 6] prompt   81 gen   220 ->    12.5 ms/window | accept  80.2% (130/162) | hit 98.7%
+    [ 7] prompt  100 gen  1501 ->    12.5 ms/window | accept  79.4% (911/1147) | hit 98.3%
+    [ 8] prompt 1618 gen   482 ->    15.1 ms/window | accept  76.8% (317/413) | hit 96.9%
+    [ 9] prompt   84 gen     1 ->    12.0 ms/window | accept   0.0% (0/0) | hit 86.4%
+    [10] prompt   85 gen     1 ->    10.0 ms/window | accept   0.0% (0/0) | hit 90.5%
+    [11] prompt   84 gen     1 ->     8.0 ms/window | accept   0.0% (0/0) | hit 97.5%
+    [12] prompt  618 gen     1 ->     9.0 ms/window | accept   0.0% (0/0) | hit 93.5%
+    [13] prompt  618 gen     1 ->     9.0 ms/window | accept   0.0% (0/0) | hit 94.1%
+    [14] prompt   84 gen     5 ->    18.0 ms/window | accept  75.0% (3/4) | hit 91.5%
+    [15] prompt   89 gen     1 ->     8.0 ms/window | accept   0.0% (0/0) | hit 98.3%
+    [16] prompt   84 gen     1 ->     8.0 ms/window | accept   0.0% (0/0) | hit 97.9%
+    [17] prompt   84 gen     1 ->     9.0 ms/window | accept   0.0% (0/0) | hit 97.9%
+    [18] prompt   84 gen     1 ->     7.0 ms/window | accept   0.0% (0/0) | hit 100.0%
+    [19] prompt   84 gen     1 ->     8.0 ms/window | accept   0.0% (0/0) | hit 96.9%
+    [20] prompt  318 gen     1 ->     8.0 ms/window | accept   0.0% (0/0) | hit 98.8%
+    [21] prompt  318 gen     1 ->     8.0 ms/window | accept   0.0% (0/0) | hit 98.8%
+    [22] prompt   84 gen     1 ->     8.0 ms/window | accept   0.0% (0/0) | hit 98.3%
+    [23] prompt  318 gen     1 ->     8.0 ms/window | accept   0.0% (0/0) | hit 98.5%
+    [24] prompt  318 gen     1 ->     8.0 ms/window | accept   0.0% (0/0) | hit 98.3%
+    [25] prompt  318 gen     1 ->     8.0 ms/window | accept   0.0% (0/0) | hit 97.5%
+    [26] prompt  318 gen     1 ->     8.0 ms/window | accept   0.0% (0/0) | hit 98.3%
+TREND ms/window: early 13.3 -> late 8.8 (stable)
+M3b rate         : 79.0% mean over 8 requests (diagnostic)
+M3d per-position : not printed (arm STRATA_SPEC_DEPTH=1 to publish accepted/tested by depth)
+=== PROBE END linux-routeresident

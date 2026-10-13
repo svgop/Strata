@@ -1,0 +1,42 @@
+=== PROBE linux-minp05 | 2026-10-13 17:55:49 | log=/home/svg/LLM/strata-custom-2/custom-iq3_s.log
+    warmup: 8 tok in 0.47s
+    A.short[1]: 220 tok in 2.45s = 90.0 t/s
+    A.short[2]: 220 tok in 2.01s = 109.6 t/s
+    fresh-long-prompt: 80 tok out in 1.29s
+    B.short[1]: 220 tok in 1.88s = 117.3 t/s
+    B.short[2]: 220 tok in 1.80s = 122.1 t/s
+SHORT-CLASS A/B   : before long prompt 99.8 t/s -> after 119.7 t/s (20%)
+M1 single-stream : 108.5 t/s (2000 tok in 18.43s)
+M2 pair          : 134.5 t/s aggregate (1800 tok in 13.38s)
+M2 6-conc        : 175.2 t/s aggregate (3600 tok in 20.55s)
+--- engine accounting, in order (ms/window is the degradation signal) ---
+    [ 1] prompt   55 gen     8 ->    19.2 ms/window | accept  75.0% (3/4) | hit 79.9%
+    [ 2] prompt   81 gen   220 ->    13.1 ms/window | accept  62.2% (61/98) | hit 92.6%
+    [ 3] prompt   81 gen   220 ->    11.5 ms/window | accept  48.6% (52/107) | hit 96.2%
+    [ 4] prompt  417 gen    80 ->    12.1 ms/window | accept  42.1% (16/38) | hit 94.6%
+    [ 5] prompt   81 gen   220 ->    11.3 ms/window | accept  57.5% (61/106) | hit 96.8%
+    [ 6] prompt   81 gen   220 ->    11.0 ms/window | accept  63.6% (63/99) | hit 97.4%
+    [ 7] prompt  100 gen  1502 ->    12.4 ms/window | accept  50.3% (470/934) | hit 96.0%
+    [ 8] prompt 1618 gen   482 ->    13.2 ms/window | accept  46.8% (131/280) | hit 94.1%
+    [ 9] prompt   84 gen     2 ->    14.0 ms/window | accept   0.0% (0/0) | hit 78.8%
+    [10] prompt   86 gen     1 ->    14.0 ms/window | accept   0.0% (0/0) | hit 75.4%
+    [11] prompt   84 gen     1 ->    15.0 ms/window | accept   0.0% (0/0) | hit 78.9%
+    [12] prompt  618 gen     1 ->    12.0 ms/window | accept   0.0% (0/0) | hit 83.3%
+    [13] prompt  618 gen     1 ->    12.0 ms/window | accept   0.0% (0/0) | hit 85.5%
+    [14] prompt   84 gen     2 ->    13.5 ms/window | accept   0.0% (0/0) | hit 80.7%
+    [15] prompt   86 gen     1 ->    11.0 ms/window | accept   0.0% (0/0) | hit 88.1%
+    [16] prompt   84 gen     1 ->    10.0 ms/window | accept   0.0% (0/0) | hit 93.5%
+    [17] prompt   84 gen     1 ->    10.0 ms/window | accept   0.0% (0/0) | hit 93.5%
+    [18] prompt   84 gen     1 ->    11.0 ms/window | accept   0.0% (0/0) | hit 93.5%
+    [19] prompt   84 gen     1 ->    11.0 ms/window | accept   0.0% (0/0) | hit 86.5%
+    [20] prompt   84 gen     1 ->    11.0 ms/window | accept   0.0% (0/0) | hit 86.5%
+    [21] prompt  318 gen     1 ->    10.0 ms/window | accept   0.0% (0/0) | hit 92.9%
+    [22] prompt  318 gen     1 ->    10.0 ms/window | accept   0.0% (0/0) | hit 92.9%
+    [23] prompt  318 gen     1 ->    10.0 ms/window | accept   0.0% (0/0) | hit 90.5%
+    [24] prompt  318 gen     1 ->    10.0 ms/window | accept   0.0% (0/0) | hit 92.6%
+    [25] prompt  318 gen     1 ->    11.0 ms/window | accept   0.0% (0/0) | hit 90.9%
+    [26] prompt  318 gen     1 ->    11.0 ms/window | accept   0.0% (0/0) | hit 90.9%
+TREND ms/window: early 13.1 -> late 10.7 (stable)
+M3b rate         : 53.0% mean over 7 requests (diagnostic)
+M3d per-position : not printed (arm STRATA_SPEC_DEPTH=1 to publish accepted/tested by depth)
+=== PROBE END linux-minp05
