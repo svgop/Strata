@@ -5457,3 +5457,13 @@ chain probability, structurally lower, which is why min-p 0.7 truncated to ~1 dr
 (spec_prob.hpp:64-73) keeps argmax drafting for lukewarm requests; the draft path has NO OS-gated numerics
 (Philox position-keyed, bit-deterministic; only _WIN32 intrinsics/IO). r17's 57% is its distilled plateau
 (F-104/114/115/116), not a Linux fault. Full lever list: campaign/GOAL-LINUX-SUPERIORITY.md.
+
+### F-175 — THE ANCHOR LOCK: the R4 recipe's true means, measured properly (2026-10-13 night)
+
+Three full-protocol probes on a fresh boot of the committed recipe (plus two MMLU gates) replace the
+single-run round numbers as the defended record: **M1 190.3 mean (183.6/199.3/188.1, +30.6% over Windows,
+at the 189.5 bar but inside ±4% run noise — margin required), pair 159.4 (+46.5%), 6-conc 203.7 (+45.3%),
+MMLU 95.71 ±2.42 twice (= Windows 95.7), short-class 185.4 post-fresh.** THE LOCK LAW: future rounds
+claim gains only on means, re-run 3x when near a bar, gate MMLU when distribution-bending, and may not
+regress any mean beyond noise. Sources: campaign/results/anchor-run{1,2,3}.txt, mmlu-{linux-r4,anchor}.json.
+Git: the lane is now versioned (import -> port -> instruments -> campaign; no push yet).

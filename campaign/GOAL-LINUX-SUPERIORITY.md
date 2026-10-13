@@ -70,6 +70,23 @@ MMQ-vs-cuBLAS audit + CUDA 12.8 A/B (Blackwell trap, up to 1.4x); L2 persisting 
 green contexts for draft/DMA overlap; adaptive draft length (AdaEDL/SpecDec++ class, +10-25% code-level);
 public ceiling for this model class on 5090 ≈ 100-120 t/s — the lane is at 196, already ~65% past public.
 
+
+## THE ANCHOR (locked 2026-10-13 night; the R4 recipe, 3 full-protocol probes + 2 MMLU gates, fresh boot)
+
+| metric | run1 | run2 | run3 | MEAN | Windows | vs Windows | bar status |
+|---|---|---|---|---|---|---|---|
+| M1 single 2000 tok | 183.6 | 199.3 | 188.1 | **190.3** | 145.8 | **+30.6%** | at bar (+0.4% over 189.5; run noise ±4%) — needs margin |
+| M2 pair | 150.9 | 166.0 | 161.4 | **159.4** | 108.8 | **+46.5%** | MET with margin |
+| M2 6-conc | 194.1 | 214.0 | 203.0 | **203.7** | 140.2 | **+45.3%** | MET with margin |
+| M3b rate | 80.5 | 81.6 | 79.5 | **80.5%** | 90.1 | below (depth-for-rate trade; diagnostic only per the 2026-10-12 amendment) | open |
+| M4 MMLU-Pro | 95.71 | 95.71 | — | **95.71 ±2.42** | 95.7 | held | MET (=) |
+| short class (post-fresh) | 177.8 | 191.0 | 187.3 | **185.4** | ~124-146 | +27-49% | matched-anchor pending |
+
+**THE LOCK LAW from here:** every future round re-runs the full probe (3x when within noise of a bar)
+plus the MMLU gate when distribution-bending, and must not regress any MEAN by more than run noise
+(±4% M1-class). Gains are claimed only on means. Sources: campaign/results/anchor-run{1,2,3}.txt,
+mmlu-linux-r4.json, mmlu-anchor.json.
+
 ## NEXT ROUNDS QUEUE (deepest-first protocol continues)
 
 - R5: STRATA_SPEC_GUMBEL=1 A/B → M1 + acceptance; gate if bending.
