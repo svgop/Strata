@@ -55,6 +55,7 @@ Target: at least 90 rounds. The goal is not done until the bar is met. Sessions 
 | 2 | 2026-10-13 | spec-min-p 0.5 (stock draft) | 167.1 | 144.7 | 187.6 | 87% | **ADOPT** — pair bar met, conc bar met |
 | 3 | 2026-10-13 | --spec 6 | 181.5 | 144.9 | 179.1 | 79% | **ADOPT for M1** (+8.6%), conc dipped 187.6→179.1 — watch |
 | 4 | 2026-10-13 | + STRATA_ROUTE_RESIDENT=0.5, STRATA_ROUTE_RESIDENT_MTP=1 (battery arms missing from the port; F-72) | **196.1** | **158.8** | **212.8** | 79.4% | **BARS MET: M1 +34.5%, pair +46%, 6-conc +52%; M4 MMLU 95.71 = Windows 95.7 (gate HELD, mmlu-linux-r4.json). Banked 2.54/window vs their 2.18-2.41. Rate 79.4% is the depth-for-rate trade (diagnostic per the 2026-10-12 amendment). M5 mimic + M6 depth + short-class anchors still open. |
+| 7 | 2026-10-13 | R7 aux-cpus arm (F-176): baseline 173.7/153.2/194.6 → auto 171.4/146.6/192.1 → 16-23 176.5/149.3/194.8 (3-run means, matched same-night windows) | — | — | — | ~81% | **REVERT** — no arm beats baseline past noise (±4%); draft path, not host preemption, sets the rate. R7c IRQ steering still open (sudo). Evening drift vs anchor noted: re-anchor before next adoption claim. |
 
 ## Round-1 study findings (both agents, 2026-10-13)
 
@@ -92,6 +93,8 @@ mmlu-linux-r4.json, mmlu-anchor.json.
 - R5: STRATA_SPEC_GUMBEL=1 A/B → M1 + acceptance; gate if bending.
 - R6: MMLU gate result → adopt/reject round 4. Port/locate mimic (M5). 
 - R7: CPU affinity for the engine (V-cache CCD taskset + SCHED_BATCH) — cgroup cpuset, no isolcpus.
+  → env-var half DONE 2026-10-13 (F-176, negative, reverted). Remaining: R7c nvidia IRQ steering
+  (sudo, user step), R7d taskset+pool-workers 7 (demoted — real-core cost, regression risk).
 - R8: GPU clocks locked + persistence mode (sudo, user step) — determinism pass, re-anchor all bars.
 - R9: THP madvise on the pinned arena; NVMe readahead down for random expert fetch.
 - R10: STRATA_SPEC_MIN_TEMP sweep; spec/min-p joint re-tune at the new acceptance level.
