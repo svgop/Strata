@@ -89,28 +89,35 @@ plus the MMLU gate when distribution-bending, and must not regress any MEAN by m
 (±4% M1-class). Gains are claimed only on means. Sources: campaign/results/anchor-run{1,2,3}.txt,
 mmlu-linux-r4.json, mmlu-anchor.json.
 
-## NEXT ROUNDS QUEUE (re-ranked 2026-10-14 ~01:00 by the round-8 study, F-178)
+## NEXT ROUNDS QUEUE (re-ranked 2026-10-14 ~02:30 by the round-9 deep study, F-179)
 
-- **R9: un-block the F-67 overlap combo [env, free]** — launcher kept ADAPT_LAG/DMA_BATCH/
-  VERIFY_DEVICE_PLAN that the Windows v2 battery dropped; each refuses the overlap
-  (generate.cpp:8496-8516). Drop all three, keep OVERLAP arms, verify boot line, 3× probe vs
-  re-anchor v2. Expect +2-6% conc / +1-3% M1. Same boot: L2 persisting-ceiling read-out.
-- R5b: tau sweep — DIRECTION CORRECTED: higher tau is STRICTER (generate.cpp:281-323); loosen via
-  0.15/0.10; plus the STRATA_SPEC_RATIO=1 Leviathan arm (exact, MMLU-safe). MMLU gate EVERY arm.
-- R8: GPU clocks locked + power cap (sudo, user step) + 5090 Xid-79 firmware check + iGPU display
-  cable move — determinism/variance first; may explain part of the −6..−9% drift.
-- R10: STRATA_DF_PDL=1 Linux probe — WDDM was the Windows retraction cause; sustained-reasoning
-  gate mandatory (−40% downside documented).
-- R11: F-31 slot coupling [code+rebuild] — concurrent slots run DRAFTLESS; coupled drafts are
-  quality-safe by construction; fix slot verify counter staging (verify.cpp:2576). The only path
-  past the ~190 t/s concurrent ceiling (+25-50% class).
-- R12: FastMTP recursive re-tune of the stock mtp head [training] — pos-2 acceptance 0.476→0.616
-  upstream on our model family; attacks the depth-6 acceptance wall. Reuse r17 training tooling.
-- Backlog: EAGLE-3 fused features, draft-vocab trim (#25187, 64k), L2 evict_first hints, DFlash.
-- Closed/deprioritized: Controller wiring (0-3% for our flat acceptance profile), green contexts
-  (nothing exists; fights the graphs), adaptive γ (same reason), draft trees, NVFP4, GUMBEL (F-177).
-- M6 depth metrics (64k prefill/decode) + short-class matched probes + M5 mimic port still open
-  for the bar table; NTFS journal master sync (user's sudo one-liner, now spans F-172..F-178).
+THE ROUND-9 THESIS: the engine is EXECUTION-bound — ~1,800 graph nodes/window at ~9.5 µs spacing
+carrying ~2.3 µs of bytes each; 24-26% of GDDR7 peak; ~2.9x honest ceiling without touching bytes.
+Byte cuts are devalued until node spacing is fixed; acceptance gains multiply on top (rows/s ∝ T).
+
+**Tier 0 — env-only, free (test in this order, some share boots):**
+- R9: F-67 overlap unblock — drop ADAPT_LAG/DMA_BATCH/VERIFY_DEVICE_PLAN, keep OVERLAP arms
+  (generate.cpp:8496-8516 refuses today). Verify the boot line arms the overlap. +2-6% conc.
+- R10a: STRATA_QFUSE=1 (−48 quantize nodes; verify.cpp:1065-1069; never tested here).
+- R10b: diagnostic boot STRATA_VERIFY_PROFILE=1 STRATA_DECODE_TIMING=1 STRATA_VERIFY_NODES=1 —
+  measure the budget before any code work.
+- R10c: PDL STRATA_DF_PDL=1 — production-backed node-spacing fix; sustained-reasoning gate MANDATORY.
+- R10d: ROUTE_RESIDENT margin sweep — kill the 2% CPU-expert doorbell tail (~2-3 ms/window);
+  MMLU-gated (changes output).
+- R5b: tau 0.15/0.10 + STRATA_SPEC_RATIO=1, MMLU-gated.
+- R8: clocks + power cap + Xid-79 check + iGPU cable (user steps).
+**Tier 1 — code, days:** commit double-buffer (1.10 ms hazard, h_commitb_); verify>adapt stream
+priority; ungated resident share / partial device plan (1.5-2.5 ms/window, 9-15%); fenced batched
+admission (30-56 → 10-20 ms).
+**Tier 2 — research→code, weeks:** F-31 slot coupling + device-driven draft chain (conditional
+nodes = green field, no production precedent, scaffolding exists); node-count fusion program
+(router+resident, QSA epilogues, BCG-style segment breaks, TRT-style router+topk single node).
+**Tier 3 — training:** FastMTP recursive re-tune (reuse r17 tooling).
+**Demoted (F-179 evidence):** draft-verify overlap (draft=6-9% of round), ReplaySSM-as-speed
+(0.23 GB state), from-scratch megakernel (window already one launch), hc→Q8 (until density fixed),
+trees, NVFP4, adaptive γ, GUMBEL.
+**Open bar items:** M5 mimic port, M6 depth + short-class matched anchors, NTFS master sync
+(F-172..F-179).
 
 ## RE-ANCHOR v2 (2026-10-14 ~00:15, fresh boot, current conditions — the A/B reference going forward)
 
