@@ -16,6 +16,7 @@
 #include "strata/kernels/cpu/kq_avx1.hpp"
 #include "strata/kernels/cpu/kq_avx2.hpp"
 
+#include <cmath>
 #include <cuda_runtime.h>
 
 #include <algorithm>
