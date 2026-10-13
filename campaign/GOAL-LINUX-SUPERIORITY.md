@@ -89,20 +89,41 @@ plus the MMLU gate when distribution-bending, and must not regress any MEAN by m
 (±4% M1-class). Gains are claimed only on means. Sources: campaign/results/anchor-run{1,2,3}.txt,
 mmlu-linux-r4.json, mmlu-anchor.json.
 
-## NEXT ROUNDS QUEUE (deepest-first protocol continues)
+## NEXT ROUNDS QUEUE (re-ranked 2026-10-14 ~01:00 by the round-8 study, F-178)
 
-- R5: ~~STRATA_SPEC_GUMBEL=1 A/B~~ DONE 2026-10-14 (F-177, full factorial, negative, reverted).
-  → R5b NEW: STRATA_TYPICAL_ACCEPT tau sweep 0.25/0.30 — the rescue is the largest measured lever
-  (+20.6pts accept, +8.2% M1 at tau 0.2); MMLU gate MANDATORY (looser tau emits drafts further from
-  the target's pick; their F-15 rescue bug is the cautionary tale).
-- R6: MMLU gate result → adopt/reject round 4. Port/locate mimic (M5). 
-- R7: CPU affinity for the engine (V-cache CCD taskset + SCHED_BATCH) — cgroup cpuset, no isolcpus.
-  → env-var half DONE 2026-10-13 (F-176, negative, reverted). Remaining: R7c nvidia IRQ steering
-  (sudo, user step), R7d taskset+pool-workers 7 (demoted — real-core cost, regression risk).
-- R8: GPU clocks locked + persistence mode (sudo, user step) — determinism pass, re-anchor all bars.
-- R9: THP madvise on the pinned arena; NVMe readahead down for random expert fetch.
-- R10: STRATA_SPEC_MIN_TEMP sweep; spec/min-p joint re-tune at the new acceptance level.
-- R11: CUDA build audit (MMQ path on sm_120; CUDA 12.8 A/B build).
-- R12+: code-level — adaptive draft-length governor, L2 persisting window, green contexts.
-- M6 depth metrics (64k prefill/decode) + short-class matched probes still to be measured for the bar table.
+- **R9: un-block the F-67 overlap combo [env, free]** — launcher kept ADAPT_LAG/DMA_BATCH/
+  VERIFY_DEVICE_PLAN that the Windows v2 battery dropped; each refuses the overlap
+  (generate.cpp:8496-8516). Drop all three, keep OVERLAP arms, verify boot line, 3× probe vs
+  re-anchor v2. Expect +2-6% conc / +1-3% M1. Same boot: L2 persisting-ceiling read-out.
+- R5b: tau sweep — DIRECTION CORRECTED: higher tau is STRICTER (generate.cpp:281-323); loosen via
+  0.15/0.10; plus the STRATA_SPEC_RATIO=1 Leviathan arm (exact, MMLU-safe). MMLU gate EVERY arm.
+- R8: GPU clocks locked + power cap (sudo, user step) + 5090 Xid-79 firmware check + iGPU display
+  cable move — determinism/variance first; may explain part of the −6..−9% drift.
+- R10: STRATA_DF_PDL=1 Linux probe — WDDM was the Windows retraction cause; sustained-reasoning
+  gate mandatory (−40% downside documented).
+- R11: F-31 slot coupling [code+rebuild] — concurrent slots run DRAFTLESS; coupled drafts are
+  quality-safe by construction; fix slot verify counter staging (verify.cpp:2576). The only path
+  past the ~190 t/s concurrent ceiling (+25-50% class).
+- R12: FastMTP recursive re-tune of the stock mtp head [training] — pos-2 acceptance 0.476→0.616
+  upstream on our model family; attacks the depth-6 acceptance wall. Reuse r17 training tooling.
+- Backlog: EAGLE-3 fused features, draft-vocab trim (#25187, 64k), L2 evict_first hints, DFlash.
+- Closed/deprioritized: Controller wiring (0-3% for our flat acceptance profile), green contexts
+  (nothing exists; fights the graphs), adaptive γ (same reason), draft trees, NVFP4, GUMBEL (F-177).
+- M6 depth metrics (64k prefill/decode) + short-class matched probes + M5 mimic port still open
+  for the bar table; NTFS journal master sync (user's sudo one-liner, now spans F-172..F-178).
+
+## RE-ANCHOR v2 (2026-10-14 ~00:15, fresh boot, current conditions — the A/B reference going forward)
+
+| metric | MEAN (3 probes / 2 gates) | locked anchor | note |
+|---|---|---|---|
+| M1 single | **176.3** | 190.3 | −7.3%; drift is global, not GPU throttle (42 °C, clean) |
+| M2 pair | **145.3** | 159.4 | −8.8% |
+| M2 6-conc | **190.7** | 203.7 | −6.4% |
+| M3b | **81.3%** | 80.5% | +0.8 pt |
+| MMLU-Pro | **93.6** (92.86 / 94.29) | 95.71 | ≈1.5 q / 70 — within noise, recipe unchanged |
+
+The locked anchor stays the BAR reference; re-anchor v2 is the matched-window reference for
+adoption A/Bs. Candidate drift source: the learned expert profile (re-saved by probe traffic every
+30 rounds) — check by restoring data/expert-profile.bin over learned in a spare boot if the gap
+persists. Sources: campaign/results/reanchor2-{1,2,3}.txt, mmlu-reanchor2-{a,b}.json.
 
