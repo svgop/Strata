@@ -1,0 +1,11 @@
+=== DRAFT-YIELD SWEEP DIAG-pcie-frac-0.9 | 17:37:57 | boot 10-12 17:36:11 engi
+  repetitive-list   700 tok in   5,88s =  119,1 t/s (wall)
+  code              500 tok in   4,25s =  117,8 t/s (wall)
+  prose             500 tok in   3,54s =  141,2 t/s (wall)
+  literal-repeat    500 tok in   3,85s =  129,9 t/s (wall)
+  repetitive-list  T  2.25 | tok/win  2.19 |  16.58 ms/win = GPU wait   9.61 + host   3.49 (CPU   2.96) | =>  132,1 t/s
+  code             T  3.93 | tok/win  3.85 |  27.06 ms/win = GPU wait  15.57 + host   7.55 (CPU   6.15) | =>  142,3 t/s
+  prose            T  2.01 | tok/win  1.94 |  15.02 ms/win = GPU wait   9.06 + host   3.24 (CPU   2.77) | =>  129,2 t/s
+  literal-repeat   T  2.53 | tok/win  2.36 |  15.10 ms/win = GPU wait   9.31 + host   2.93 (CPU   2.49) | =>  156,3 t/s
+  extra5           T  3.26 | tok/win  3.03 |  21.27 ms/win = GPU wait  12.27 + host   5.10 (CPU   4.21) | =>  142,5 t/s
+=== SWEEP END DIAG-pcie-frac-0.9 (5 requests with a decode-timing line)

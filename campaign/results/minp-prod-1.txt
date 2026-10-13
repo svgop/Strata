@@ -1,0 +1,16 @@
+=== TUNE SWEEP minp-prod (spec_min_p) | 2026-10-12 19:36:13 | boot 026-10-12 19:22:17 
+    2000 greedy tokens per arm (identical routing across arms) | 2 pass(es) forward+reverse | arms 0.7, 0.5, 0.35
+    pass  frac     t/s     T     ms/win  GPUwait   CPU   misses/lw  PCIe/lw  VRAMhits/lw  hit%   acc%  drafts
+       1  0.7     152,4   2,24    13,67     8,61   2,35       0,61     0,09       21,64   97,0              
+       1  0.5     166,5   2,50    13,51     8,88   1,85       0,47     0,05       24,42   97,9              
+       1  0.35    171,9   2,87    14,38     9,27   1,95       0,50     0,06       28,06   98,1              
+       2  0.7     160,7   2,41    13,16     8,87   1,72       0,44     0,05       23,59   98,0              
+       2  0.5     164,0   2,45    13,38     8,88   1,66       0,42     0,05       23,97   98,1              
+       2  0.35    160,7   2,76    14,18     9,27   1,83       0,46     0,05       27,08   98,2              
+--- per arm (median of its passes; the split's effect is on CPU/misses, the verdict is on t/s) ---
+    frac 0,5   t/s  166,5 | ms/win  13,51 | CPU  1,85 | misses  0,47 | PCIe  0,05 | hit  98,1%
+    frac 0,7   t/s  160,7 | ms/win  13,67 | CPU  2,35 | misses  0,61 | PCIe  0,09 | hit  98,0%
+    frac 0,35  t/s  171,9 | ms/win  14,38 | CPU  1,95 | misses  0,50 | PCIe  0,06 | hit  98,2%
+BEST ARM: spec_min_p 0,35 at 171,9 t/s
+  vs the standing 0.7 at 160,7 t/s  =>  7,0%
+=== END

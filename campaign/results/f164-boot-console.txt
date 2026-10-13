@@ -1,0 +1,195 @@
+loading the model (the first start takes a minute or two) ...
+[strata] starting the engine: reading the model's weights ...
+[strata] loading the experts the GPU does not hold into RAM (of about 55 GB) and locking part of them for the GPU.
+         YOUR PC CAN BE SLOW OR STOP RESPONDING FOR 1-3 MINUTES NOW - this is normal.
+         Please wait and don't close this window; the browser opens when it is ready.
+[strata] still starting (23 s) - please wait ...
+[strata] filling the GPU's expert cache (9610 experts, 18.23 GiB of VRAM) ...
+[strata] almost ready ...
+ready: http://127.0.0.1:8081/v1  (OpenAI: /v1/chat/completions, Anthropic: /v1/messages, context 262144 tokens)
+       open http://127.0.0.1:8081/ in a browser to chat; close this window to stop the model
+[strata] reading the prompt: 60 tokens, 10 s so far
+[strata] reading the prompt: 60 tokens, 20 s so far
+[strata] reading the prompt: 60 tokens, 30 s so far
+[strata] reading the prompt: 60 tokens, 41 s so far
+[strata] reading the prompt: 60 tokens, 51 s so far
+[strata] reading the prompt: 60 tokens, 61 s so far
+[strata] reading the prompt: 60 tokens, 71 s so far
+[strata] reading the prompt: 60 tokens, 81 s so far
+[strata] reading the prompt: 55 of 60 tokens, 86 s so far
+[strata] reading the prompt: 59 of 60 tokens, 91 s so far
+[strata] thinking: 1 of max 8 tokens, 1000000.0 tok/s, 93 s
+[strata] thinking: 2 of max 8 tokens, 0.7 tok/s, 96 s
+[strata] thinking: 4 of max 8 tokens, 0.5 tok/s, 101 s
+[strata] thinking: 8 of max 8 tokens, 0.6 tok/s, 106 s
+[strata] done: 8 tokens in 106 s (0.6 tok/s) (length, cancel=False), expert cache 87.4% hit (+3.0% of the routed experts over PCIe)
+[strata] the reply reached max tokens while still thinking, so it has no answer: a thinking budget (reasoning_budget_tokens, in the request or in strata-<model>.json for every request) leaves room to answer
+[strata] reading the prompt: 100 tokens, 10 s so far
+[strata] reading the prompt: 100 tokens, 20 s so far
+[strata] reading the prompt: 100 tokens, 30 s so far
+[strata] reading the prompt: 100 tokens, 41 s so far
+[strata] reading the prompt: 100 tokens, 51 s so far
+[strata] reading the prompt: 100 tokens, 61 s so far
+[strata] reading the prompt: 95 of 100 tokens, 65 s so far
+[strata] reading the prompt: 99 of 100 tokens, 70 s so far
+[strata] thinking: 1 of budget 1500 (max 2000) tokens, 1000000.0 tok/s, 72 s
+[strata] thinking: 2 of budget 1500 (max 2000) tokens, 0.4 tok/s, 76 s
+[strata] thinking: 6 of budget 1500 (max 2000) tokens, 0.6 tok/s, 82 s
+[strata] thinking: 10 of budget 1500 (max 2000) tokens, 0.7 tok/s, 87 s
+[strata] thinking: 14 of budget 1500 (max 2000) tokens, 0.6 tok/s, 97 s
+[strata] thinking: 20 of budget 1500 (max 2000) tokens, 0.7 tok/s, 102 s
+[strata] thinking: 24 of budget 1500 (max 2000) tokens, 0.7 tok/s, 105 s
+[strata] thinking: 26 of budget 1500 (max 2000) tokens, 0.6 tok/s, 114 s
+[strata] thinking: 27 of budget 1500 (max 2000) tokens, 0.6 tok/s, 119 s
+[strata] thinking: 31 of budget 1500 (max 2000) tokens, 0.6 tok/s, 124 s
+[strata] thinking: 35 of budget 1500 (max 2000) tokens, 0.6 tok/s, 129 s
+[strata] thinking: 39 of budget 1500 (max 2000) tokens, 0.6 tok/s, 135 s
+[strata] thinking: 43 of budget 1500 (max 2000) tokens, 0.6 tok/s, 140 s
+[strata] thinking: 47 of budget 1500 (max 2000) tokens, 0.6 tok/s, 145 s
+[strata] thinking: 51 of budget 1500 (max 2000) tokens, 0.7 tok/s, 148 s
+[strata] thinking: 53 of budget 1500 (max 2000) tokens, 0.7 tok/s, 153 s
+[strata] thinking: 57 of budget 1500 (max 2000) tokens, 0.7 tok/s, 155 s
+[strata] thinking: 58 of budget 1500 (max 2000) tokens, 0.7 tok/s, 159 s
+[strata] thinking: 61 of budget 1500 (max 2000) tokens, 0.7 tok/s, 162 s
+[strata] thinking: 62 of budget 1500 (max 2000) tokens, 0.7 tok/s, 166 s
+[strata] thinking: 65 of budget 1500 (max 2000) tokens, 0.7 tok/s, 169 s
+[strata] thinking: 67 of budget 1500 (max 2000) tokens, 0.7 tok/s, 174 s
+[strata] thinking: 70 of budget 1500 (max 2000) tokens, 0.7 tok/s, 179 s
+[strata] thinking: 72 of budget 1500 (max 2000) tokens, 0.6 tok/s, 184 s
+[strata] thinking: 74 of budget 1500 (max 2000) tokens, 0.6 tok/s, 189 s
+[strata] thinking: 78 of budget 1500 (max 2000) tokens, 0.7 tok/s, 191 s
+[strata] thinking: 79 of budget 1500 (max 2000) tokens, 0.6 tok/s, 195 s
+[strata] thinking: 82 of budget 1500 (max 2000) tokens, 0.6 tok/s, 199 s
+[strata] thinking: 85 of budget 1500 (max 2000) tokens, 0.7 tok/s, 201 s
+[strata] thinking: 86 of budget 1500 (max 2000) tokens, 0.6 tok/s, 206 s
+[strata] thinking: 89 of budget 1500 (max 2000) tokens, 0.7 tok/s, 208 s
+[strata] thinking: 90 of budget 1500 (max 2000) tokens, 0.6 tok/s, 212 s
+[strata] thinking: 92 of budget 1500 (max 2000) tokens, 0.6 tok/s, 214 s
+[strata] thinking: 93 of budget 1500 (max 2000) tokens, 0.6 tok/s, 216 s
+[strata] thinking: 94 of budget 1500 (max 2000) tokens, 0.6 tok/s, 219 s
+[strata] thinking: 96 of budget 1500 (max 2000) tokens, 0.6 tok/s, 223 s
+[strata] thinking: 99 of budget 1500 (max 2000) tokens, 0.6 tok/s, 225 s
+[strata] thinking: 100 of budget 1500 (max 2000) tokens, 0.6 tok/s, 227 s
+[strata] thinking: 101 of budget 1500 (max 2000) tokens, 0.6 tok/s, 231 s
+[strata] thinking: 102 of budget 1500 (max 2000) tokens, 0.6 tok/s, 233 s
+[strata] thinking: 103 of budget 1500 (max 2000) tokens, 0.6 tok/s, 235 s
+[strata] thinking: 104 of budget 1500 (max 2000) tokens, 0.6 tok/s, 237 s
+[strata] thinking: 105 of budget 1500 (max 2000) tokens, 0.6 tok/s, 239 s
+[strata] thinking: 106 of budget 1500 (max 2000) tokens, 0.6 tok/s, 244 s
+[strata] thinking: 110 of budget 1500 (max 2000) tokens, 0.6 tok/s, 248 s
+[strata] thinking: 112 of budget 1500 (max 2000) tokens, 0.6 tok/s, 252 s
+[strata] thinking: 114 of budget 1500 (max 2000) tokens, 0.6 tok/s, 254 s
+[strata] thinking: 115 of budget 1500 (max 2000) tokens, 0.6 tok/s, 257 s
+[strata] thinking: 117 of budget 1500 (max 2000) tokens, 0.6 tok/s, 261 s
+[strata] thinking: 120 of budget 1500 (max 2000) tokens, 0.6 tok/s, 265 s
+[strata] the Settings view changed vram_reserve_mib in strata-iq3_s.json (the earlier file: strata-iq3_s.json.bak); used from the next start
+[strata] thinking: 122 of budget 1500 (max 2000) tokens, 0.6 tok/s, 270 s
+[strata] thinking: 126 of budget 1500 (max 2000) tokens, 0.6 tok/s, 274 s
+[strata] thinking: 129 of budget 1500 (max 2000) tokens, 0.6 tok/s, 278 s
+[strata] thinking: 132 of budget 1500 (max 2000) tokens, 0.6 tok/s, 282 s
+[strata] thinking: 134 of budget 1500 (max 2000) tokens, 0.6 tok/s, 284 s
+[strata] thinking: 135 of budget 1500 (max 2000) tokens, 0.6 tok/s, 288 s
+[strata] the Settings view changed vram_reserve_mib in strata-iq3_s.json (the earlier file: strata-iq3_s.json.bak); used from the next start
+[strata] thinking: 138 of budget 1500 (max 2000) tokens, 0.6 tok/s, 291 s
+[strata] thinking: 140 of budget 1500 (max 2000) tokens, 0.6 tok/s, 293 s
+[strata] thinking: 141 of budget 1500 (max 2000) tokens, 0.6 tok/s, 298 s
+[strata] thinking: 145 of budget 1500 (max 2000) tokens, 0.6 tok/s, 300 s
+[strata] thinking: 146 of budget 1500 (max 2000) tokens, 0.6 tok/s, 303 s
+[strata] thinking: 147 of budget 1500 (max 2000) tokens, 0.6 tok/s, 308 s
+[strata] thinking: 151 of budget 1500 (max 2000) tokens, 0.6 tok/s, 310 s
+[strata] thinking: 152 of budget 1500 (max 2000) tokens, 0.6 tok/s, 315 s
+[strata] thinking: 155 of budget 1500 (max 2000) tokens, 0.6 tok/s, 320 s
+[strata] thinking: 159 of budget 1500 (max 2000) tokens, 0.6 tok/s, 322 s
+[strata] thinking: 160 of budget 1500 (max 2000) tokens, 0.6 tok/s, 327 s
+[strata] thinking: 163 of budget 1500 (max 2000) tokens, 0.6 tok/s, 329 s
+[strata] thinking: 164 of budget 1500 (max 2000) tokens, 0.6 tok/s, 332 s
+[strata] thinking: 166 of budget 1500 (max 2000) tokens, 0.6 tok/s, 338 s
+[strata] thinking: 170 of budget 1500 (max 2000) tokens, 0.6 tok/s, 343 s
+[strata] thinking: 172 of budget 1500 (max 2000) tokens, 0.6 tok/s, 347 s
+[strata] thinking: 175 of budget 1500 (max 2000) tokens, 0.6 tok/s, 351 s
+[strata] thinking: 179 of budget 1500 (max 2000) tokens, 0.6 tok/s, 356 s
+[strata] thinking: 183 of budget 1500 (max 2000) tokens, 0.6 tok/s, 360 s
+[strata] thinking: 187 of budget 1500 (max 2000) tokens, 0.6 tok/s, 366 s
+[strata] thinking: 191 of budget 1500 (max 2000) tokens, 0.6 tok/s, 371 s
+[strata] thinking: 195 of budget 1500 (max 2000) tokens, 0.6 tok/s, 375 s
+[strata] thinking: 198 of budget 1500 (max 2000) tokens, 0.6 tok/s, 380 s
+[strata] thinking: 202 of budget 1500 (max 2000) tokens, 0.6 tok/s, 385 s
+[strata] thinking: 205 of budget 1500 (max 2000) tokens, 0.6 tok/s, 390 s
+[strata] thinking: 209 of budget 1500 (max 2000) tokens, 0.7 tok/s, 393 s
+[strata] thinking: 211 of budget 1500 (max 2000) tokens, 0.6 tok/s, 397 s
+[strata] thinking: 215 of budget 1500 (max 2000) tokens, 0.7 tok/s, 401 s
+[strata] thinking: 217 of budget 1500 (max 2000) tokens, 0.6 tok/s, 406 s
+[strata] thinking: 221 of budget 1500 (max 2000) tokens, 0.7 tok/s, 410 s
+[strata] thinking: 223 of budget 1500 (max 2000) tokens, 0.7 tok/s, 413 s
+[strata] thinking: 226 of budget 1500 (max 2000) tokens, 0.7 tok/s, 419 s
+[strata] thinking: 230 of budget 1500 (max 2000) tokens, 0.7 tok/s, 422 s
+[strata] thinking: 232 of budget 1500 (max 2000) tokens, 0.7 tok/s, 426 s
+[strata] thinking: 235 of budget 1500 (max 2000) tokens, 0.7 tok/s, 428 s
+[strata] thinking: 236 of budget 1500 (max 2000) tokens, 0.7 tok/s, 430 s
+[strata] thinking: 237 of budget 1500 (max 2000) tokens, 0.7 tok/s, 435 s
+[strata] thinking: 241 of budget 1500 (max 2000) tokens, 0.7 tok/s, 440 s
+[strata] thinking: 245 of budget 1500 (max 2000) tokens, 0.7 tok/s, 444 s
+[strata] thinking: 249 of budget 1500 (max 2000) tokens, 0.7 tok/s, 449 s
+[strata] thinking: 251 of budget 1500 (max 2000) tokens, 0.7 tok/s, 454 s
+[strata] thinking: 255 of budget 1500 (max 2000) tokens, 0.7 tok/s, 459 s
+[strata] thinking: 259 of budget 1500 (max 2000) tokens, 0.7 tok/s, 465 s
+[strata] thinking: 262 of budget 1500 (max 2000) tokens, 0.7 tok/s, 470 s
+[strata] thinking: 265 of budget 1500 (max 2000) tokens, 0.7 tok/s, 472 s
+[strata] thinking: 266 of budget 1500 (max 2000) tokens, 0.7 tok/s, 477 s
+[strata] thinking: 270 of budget 1500 (max 2000) tokens, 0.7 tok/s, 480 s
+[strata] thinking: 271 of budget 1500 (max 2000) tokens, 0.7 tok/s, 484 s
+[strata] thinking: 274 of budget 1500 (max 2000) tokens, 0.7 tok/s, 486 s
+[strata] thinking: 275 of budget 1500 (max 2000) tokens, 0.7 tok/s, 490 s
+[strata] thinking: 279 of budget 1500 (max 2000) tokens, 0.7 tok/s, 491 s
+[strata] thinking: 280 of budget 1500 (max 2000) tokens, 0.7 tok/s, 493 s
+[strata] thinking: 281 of budget 1500 (max 2000) tokens, 0.7 tok/s, 495 s
+[strata] thinking: 283 of budget 1500 (max 2000) tokens, 0.7 tok/s, 497 s
+[strata] thinking: 284 of budget 1500 (max 2000) tokens, 0.7 tok/s, 498 s
+[strata] thinking: 285 of budget 1500 (max 2000) tokens, 0.7 tok/s, 501 s
+[strata] thinking: 287 of budget 1500 (max 2000) tokens, 0.7 tok/s, 503 s
+[strata] thinking: 288 of budget 1500 (max 2000) tokens, 0.7 tok/s, 506 s
+[strata] thinking: 290 of budget 1500 (max 2000) tokens, 0.7 tok/s, 507 s
+[strata] thinking: 291 of budget 1500 (max 2000) tokens, 0.7 tok/s, 508 s
+[strata] thinking: 292 of budget 1500 (max 2000) tokens, 0.7 tok/s, 510 s
+[strata] thinking: 293 of budget 1500 (max 2000) tokens, 0.7 tok/s, 511 s
+[strata] thinking: 294 of budget 1500 (max 2000) tokens, 0.7 tok/s, 515 s
+[strata] thinking: 298 of budget 1500 (max 2000) tokens, 0.7 tok/s, 516 s
+[strata] thinking: 299 of budget 1500 (max 2000) tokens, 0.7 tok/s, 518 s
+[strata] thinking: 300 of budget 1500 (max 2000) tokens, 0.7 tok/s, 520 s
+[strata] thinking: 303 of budget 1500 (max 2000) tokens, 0.7 tok/s, 522 s
+[strata] thinking: 304 of budget 1500 (max 2000) tokens, 0.7 tok/s, 524 s
+[strata] thinking: 305 of budget 1500 (max 2000) tokens, 0.7 tok/s, 525 s
+[strata] thinking: 306 of budget 1500 (max 2000) tokens, 0.7 tok/s, 526 s
+[strata] thinking: 307 of budget 1500 (max 2000) tokens, 0.7 tok/s, 528 s
+[strata] thinking: 308 of budget 1500 (max 2000) tokens, 0.7 tok/s, 529 s
+[strata] thinking: 309 of budget 1500 (max 2000) tokens, 0.7 tok/s, 533 s
+[strata] thinking: 310 of budget 1500 (max 2000) tokens, 0.7 tok/s, 536 s
+[strata] thinking: 314 of budget 1500 (max 2000) tokens, 0.7 tok/s, 538 s
+[strata] thinking: 316 of budget 1500 (max 2000) tokens, 0.7 tok/s, 542 s
+[strata] thinking: 321 of budget 1500 (max 2000) tokens, 0.7 tok/s, 545 s
+[strata] thinking: 323 of budget 1500 (max 2000) tokens, 0.7 tok/s, 546 s
+[strata] thinking: 324 of budget 1500 (max 2000) tokens, 0.7 tok/s, 548 s
+[strata] thinking: 325 of budget 1500 (max 2000) tokens, 0.7 tok/s, 552 s
+[strata] thinking: 329 of budget 1500 (max 2000) tokens, 0.7 tok/s, 553 s
+[strata] thinking: 330 of budget 1500 (max 2000) tokens, 0.7 tok/s, 557 s
+[strata] thinking: 333 of budget 1500 (max 2000) tokens, 0.7 tok/s, 559 s
+[strata] thinking: 335 of budget 1500 (max 2000) tokens, 0.7 tok/s, 562 s
+[strata] thinking: 339 of budget 1500 (max 2000) tokens, 0.7 tok/s, 565 s
+[strata] thinking: 342 of budget 1500 (max 2000) tokens, 0.7 tok/s, 568 s
+[strata] thinking: 346 of budget 1500 (max 2000) tokens, 0.7 tok/s, 569 s
+[strata] thinking: 347 of budget 1500 (max 2000) tokens, 0.7 tok/s, 573 s
+[strata] thinking: 351 of budget 1500 (max 2000) tokens, 0.7 tok/s, 577 s
+[strata] thinking: 355 of budget 1500 (max 2000) tokens, 0.7 tok/s, 579 s
+[strata] thinking: 357 of budget 1500 (max 2000) tokens, 0.7 tok/s, 583 s
+[strata] thinking: 361 of budget 1500 (max 2000) tokens, 0.7 tok/s, 585 s
+[strata] thinking: 363 of budget 1500 (max 2000) tokens, 0.7 tok/s, 587 s
+[strata] thinking: 364 of budget 1500 (max 2000) tokens, 0.7 tok/s, 588 s
+[strata] thinking: 365 of budget 1500 (max 2000) tokens, 0.7 tok/s, 592 s
+[strata] thinking: 366 of budget 1500 (max 2000) tokens, 0.7 tok/s, 595 s
+[strata] thinking: 368 of budget 1500 (max 2000) tokens, 0.7 tok/s, 598 s
+[strata] thinking: 371 of budget 1500 (max 2000) tokens, 0.7 tok/s, 600 s
+[strata] thinking: 373 of budget 1500 (max 2000) tokens, 0.7 tok/s, 602 s
+[strata] thinking: 377 of budget 1500 (max 2000) tokens, 0.7 tok/s, 606 s
+[strata] thinking: 381 of budget 1500 (max 2000) tokens, 0.7 tok/s, 610 s
+[strata] thinking: 385 of budget 1500 (max 2000) tokens, 0.7 tok/s, 614 s
+[strata] done: 388 tokens in 614 s (0.7 tok/s) (cancel, cancel=True), expert cache 96.3% hit (+0.6% of the routed experts over PCIe)

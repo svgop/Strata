@@ -1,0 +1,21 @@
+=== TUNE SWEEP tau-curve (spec_min_p) | 2026-10-12 19:35:00 | boot 026-10-12 19:22:17 
+    500 greedy tokens per arm (identical routing across arms) | 1 pass(es) forward+reverse | arms 1, 0.9, 0.8, 0.7, 0.5, 0.3, 0
+    pass  frac     t/s     T     ms/win  GPUwait   CPU   misses/lw  PCIe/lw  VRAMhits/lw  hit%
+       1  1        89,5   1,11    11,76     7,59   2,41       0,62     0,07       10,36   94,2
+       1  0.9     130,1   1,56    11,44     8,02   1,63       0,39     0,05       15,13   97,3
+       1  0.8     153,4   2,09    12,95     8,39   2,34       0,60     0,10       20,10   96,9
+       1  0.7     143,0   1,83    11,84     8,24   1,79       0,46     0,06       17,75   97,3
+       1  0.5     172,2   2,99    14,77     9,24   2,91       0,79     0,14       28,95   97,1
+       1  0.3     147,8   2,99    14,19     9,31   2,48       0,65     0,10       29,11   97,7
+       1  0       152,8   3,97    16,57    10,11   3,52       0,97     0,20       38,37   97,2
+--- per arm (median of its passes; the split's effect is on CPU/misses, the verdict is on t/s) ---
+    frac 0     t/s  152,8 | ms/win  16,57 | CPU  3,52 | misses  0,97 | PCIe  0,20 | hit  97,2%
+    frac 1     t/s   89,5 | ms/win  11,76 | CPU  2,41 | misses  0,62 | PCIe  0,07 | hit  94,2%
+    frac 0,3   t/s  147,8 | ms/win  14,19 | CPU  2,48 | misses  0,65 | PCIe  0,10 | hit  97,7%
+    frac 0,5   t/s  172,2 | ms/win  14,77 | CPU  2,91 | misses  0,79 | PCIe  0,14 | hit  97,1%
+    frac 0,7   t/s  143,0 | ms/win  11,84 | CPU  1,79 | misses  0,46 | PCIe  0,06 | hit  97,3%
+    frac 0,8   t/s  153,4 | ms/win  12,95 | CPU  2,34 | misses  0,60 | PCIe  0,10 | hit  96,9%
+    frac 0,9   t/s  130,1 | ms/win  11,44 | CPU  1,63 | misses  0,39 | PCIe  0,05 | hit  97,3%
+BEST ARM: spec_min_p 0,5 at 172,2 t/s
+  vs the standing 0.7 at 143,0 t/s  =>  20,4%
+=== END

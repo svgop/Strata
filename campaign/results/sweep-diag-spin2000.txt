@@ -1,0 +1,11 @@
+=== DRAFT-YIELD SWEEP DIAG-POOL_SPIN_US-2000 | 18:07:00 | boot 10-12 18:05:19 engi
+  repetitive-list   700 tok in  11,54s =   60,7 t/s (wall)
+  code              500 tok in   9,45s =   52,9 t/s (wall)
+  prose             500 tok in   8,36s =   59,8 t/s (wall)
+  literal-repeat    500 tok in   8,19s =   61,0 t/s (wall)
+  repetitive-list  T  2.92 | tok/win  2.73 |  45.50 ms/win = GPU wait  30.36 + host   8.83 (CPU   7.83) | =>   60,0 t/s
+  code             T  3.98 | tok/win  3.81 |  55.17 ms/win = GPU wait  34.29 + host  14.22 (CPU  12.79) | =>   69,1 t/s
+  prose            T  2.29 | tok/win  2.14 |  38.27 ms/win = GPU wait  26.61 + host   5.71 (CPU   5.06) | =>   55,9 t/s
+  literal-repeat   T  2.46 | tok/win  2.29 |  36.10 ms/win = GPU wait  26.58 + host   4.01 (CPU   3.53) | =>   63,4 t/s
+  extra5           T  2.77 | tok/win  2.65 |  40.98 ms/win = GPU wait  29.29 + host   5.98 (CPU   5.29) | =>   64,7 t/s
+=== SWEEP END DIAG-POOL_SPIN_US-2000 (5 requests with a decode-timing line)

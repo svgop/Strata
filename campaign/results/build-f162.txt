@@ -1,0 +1,274 @@
+-- Strata: CUDA enabled, arch 120
+-- strata: pack/full/experts.bin absent - the expert arena load test is NOT registered
+-- Warning: ccache not found - consider installing it for faster compilation or disable this warning with GGML_CCACHE=OFF
+-- CMAKE_SYSTEM_PROCESSOR: AMD64
+-- CMAKE_GENERATOR_PLATFORM: 
+-- GGML_SYSTEM_ARCH: x86
+-- Including CPU backend
+-- x86 detected
+-- Adding CPU backend variant ggml-cpu: /arch:AVX512 GGML_AVX512
+-- ggml version: 0.24.0
+-- ggml commit:  8eec6c93
+-- Configuring done (1.6s)
+-- Generating done (0.1s)
+-- Build files have been written to: E:/LLM/Engine/strata-custom-2/build
+[1/4] Building C object ggml\src\CMakeFiles\ggml-base.dir\ggml.c.obj
+[2/4] Linking CXX static library ggml\src\ggml-base.lib
+[3/4] Building CXX object CMakeFiles\strata.dir\src\program\generate.cpp.obj
+E:\LLM\Engine\strata-custom-2\include\strata/core/dma_batch.hpp(32): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+E:\LLM\Engine\strata-custom-2\include\strata/kernels/cpu/expert.hpp(74): warning C4324: 'strata::kernels::cpu::ActQ': structure was padded due to alignment specifier
+E:\LLM\Engine\strata-custom-2\include\strata/kernels/cpu/pool.hpp(267): warning C4324: 'strata::kernels::cpu::ExpertPool': structure was padded due to alignment specifier
+E:\LLM\Engine\strata-custom-2\include\strata/kernels/cpu/pool.hpp(268): warning C4324: 'strata::kernels::cpu::ExpertPool': structure was padded due to alignment specifier
+E:\LLM\Engine\strata-custom-2\include\strata/kernels/cpu/pool.hpp(269): warning C4324: 'strata::kernels::cpu::ExpertPool': structure was padded due to alignment specifier
+E:\LLM\Engine\strata-custom-2\include\strata/kernels/cpu/pool.hpp(270): warning C4324: 'strata::kernels::cpu::ExpertPool': structure was padded due to alignment specifier
+E:\LLM\Engine\strata-custom-2\include\strata/kernels/cpu/pool.hpp(271): warning C4324: 'strata::kernels::cpu::ExpertPool': structure was padded due to alignment specifier
+E:\LLM\Engine\strata-custom-2\include\strata/kernels/cpu/pool.hpp(274): warning C4324: 'strata::kernels::cpu::ExpertPool': structure was padded due to alignment specifier
+E:\LLM\Engine\strata-custom-2\include\strata/core/coupled_draft.hpp(59): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+E:\LLM\Engine\strata-custom-2\include\strata/core/coupled_draft.hpp(69): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+E:\LLM\Engine\strata-custom-2\include\strata/core/emulate.hpp(17): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+E:\LLM\Engine\strata-custom-2\src\program\generate.cpp(232): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+E:\LLM\Engine\strata-custom-2\src\program\generate.cpp(234): warning C4996: 'fopen': This function or variable may be unsafe. Consider using fopen_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+E:\LLM\Engine\strata-custom-2\src\program\generate.cpp(246): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+E:\LLM\Engine\strata-custom-2\src\program\generate.cpp(256): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+E:\LLM\Engine\strata-custom-2\src\program\generate.cpp(257): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+E:\LLM\Engine\strata-custom-2\src\program\generate.cpp(268): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+E:\LLM\Engine\strata-custom-2\src\program\generate.cpp(277): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+E:\LLM\Engine\strata-custom-2\src\program\generate.cpp(288): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+E:\LLM\Engine\strata-custom-2\src\program\generate.cpp(1335): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+E:\LLM\Engine\strata-custom-2\src\program\generate.cpp(1392): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+E:\LLM\Engine\strata-custom-2\src\program\generate.cpp(1401): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+E:\LLM\Engine\strata-custom-2\src\program\generate.cpp(1411): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+E:\LLM\Engine\strata-custom-2\src\program\generate.cpp(1422): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+E:\LLM\Engine\strata-custom-2\src\program\generate.cpp(1487): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+E:\LLM\Engine\strata-custom-2\src\program\generate.cpp(1650): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+E:\LLM\Engine\strata-custom-2\src\program\generate.cpp(3028): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+E:\LLM\Engine\strata-custom-2\src\program\generate.cpp(3048): warning C4996: 'fopen': This function or variable may be unsafe. Consider using fopen_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+E:\LLM\Engine\strata-custom-2\src\program\generate.cpp(3052): warning C4996: 'sscanf': This function or variable may be unsafe. Consider using sscanf_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+E:\LLM\Engine\strata-custom-2\src\program\generate.cpp(3724): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+E:\LLM\Engine\strata-custom-2\src\program\generate.cpp(3825): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+E:\LLM\Engine\strata-custom-2\src\program\generate.cpp(3968): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+E:\LLM\Engine\strata-custom-2\src\program\generate.cpp(4887): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+E:\LLM\Engine\strata-custom-2\src\program\generate.cpp(5421): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+E:\LLM\Engine\strata-custom-2\src\program\generate.cpp(5427): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+E:\LLM\Engine\strata-custom-2\src\program\generate.cpp(5579): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+E:\LLM\Engine\strata-custom-2\src\program\generate.cpp(5601): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+E:\LLM\Engine\strata-custom-2\src\program\generate.cpp(5602): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+E:\LLM\Engine\strata-custom-2\src\program\generate.cpp(5604): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+E:\LLM\Engine\strata-custom-2\src\program\generate.cpp(5606): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+E:\LLM\Engine\strata-custom-2\src\program\generate.cpp(5889): warning C4244: '=': conversion from 'const int64_t' to 'int32_t', possible loss of data
+E:\LLM\Engine\strata-custom-2\src\program\generate.cpp(6378): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+E:\LLM\Engine\strata-custom-2\src\program\generate.cpp(6399): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+E:\LLM\Engine\strata-custom-2\src\program\generate.cpp(6523): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+E:\LLM\Engine\strata-custom-2\src\program\generate.cpp(6525): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+E:\LLM\Engine\strata-custom-2\src\program\generate.cpp(6569): warning C4456: declaration of 'r' hides previous local declaration
+E:\LLM\Engine\strata-custom-2\src\program\generate.cpp(6541): note: see declaration of 'r'
+E:\LLM\Engine\strata-custom-2\src\program\generate.cpp(6727): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+E:\LLM\Engine\strata-custom-2\src\program\generate.cpp(6751): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+E:\LLM\Engine\strata-custom-2\src\program\generate.cpp(6793): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+E:\LLM\Engine\strata-custom-2\src\program\generate.cpp(6805): warning C4244: 'argument': conversion from 'const int64_t' to 'int', possible loss of data
+E:\LLM\Engine\strata-custom-2\src\program\generate.cpp(6956): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+E:\LLM\Engine\strata-custom-2\src\program\generate.cpp(6996): warning C4456: declaration of 'sp' hides previous local declaration
+E:\LLM\Engine\strata-custom-2\src\program\generate.cpp(5848): note: see declaration of 'sp'
+E:\LLM\Engine\strata-custom-2\src\program\generate.cpp(7225): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+E:\LLM\Engine\strata-custom-2\src\program\generate.cpp(7912): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+E:\LLM\Engine\strata-custom-2\src\program\generate.cpp(8246): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+E:\LLM\Engine\strata-custom-2\src\program\generate.cpp(8386): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+E:\LLM\Engine\strata-custom-2\src\program\generate.cpp(8387): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+E:\LLM\Engine\strata-custom-2\src\program\generate.cpp(8388): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+E:\LLM\Engine\strata-custom-2\src\program\generate.cpp(8498): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+E:\LLM\Engine\strata-custom-2\src\program\generate.cpp(8501): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+E:\LLM\Engine\strata-custom-2\src\program\generate.cpp(8605): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+E:\LLM\Engine\strata-custom-2\src\program\generate.cpp(9636): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+E:\LLM\Engine\strata-custom-2\src\program\generate.cpp(9770): warning C4474: 'fprintf' : too many arguments passed for format string
+E:\LLM\Engine\strata-custom-2\src\program\generate.cpp(9770): note: placeholders and their parameters expect 25 variadic arguments, but 27 were provided
+E:\LLM\Engine\strata-custom-2\src\program\generate.cpp(9914): warning C4189: 'w': local variable is initialized but not referenced
+E:\LLM\Engine\strata-custom-2\src\program\generate.cpp(10132): warning C4456: declaration of 'wo' hides previous local declaration
+E:\LLM\Engine\strata-custom-2\src\program\generate.cpp(4580): note: see declaration of 'wo'
+E:\LLM\Engine\strata-custom-2\src\program\generate.cpp(10273): warning C4456: declaration of 'tok' hides previous local declaration
+E:\LLM\Engine\strata-custom-2\src\program\generate.cpp(5928): note: see declaration of 'tok'
+E:\LLM\Engine\strata-custom-2\src\program\generate.cpp(10338): warning C4456: declaration of 'hdr' hides previous local declaration
+E:\LLM\Engine\strata-custom-2\src\program\generate.cpp(5868): note: see declaration of 'hdr'
+E:\LLM\Engine\strata-custom-2\src\program\generate.cpp(10686): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+E:\LLM\Engine\strata-custom-2\src\program\generate.cpp(10927): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+E:\LLM\Engine\strata-custom-2\src\program\generate.cpp(10928): warning C4996: 'fopen': This function or variable may be unsafe. Consider using fopen_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+E:\LLM\Engine\strata-custom-2\src\program\generate.cpp(10931): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+E:\LLM\Engine\strata-custom-2\src\program\generate.cpp(10893): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+E:\LLM\Engine\strata-custom-2\src\program\generate.cpp(11073): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+E:\LLM\Engine\strata-custom-2\src\program\generate.cpp(11089): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+E:\LLM\Engine\strata-custom-2\src\program\generate.cpp(11247): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+E:\LLM\Engine\strata-custom-2\src\program\generate.cpp(11354): warning C4456: declaration of 'sbuf' hides previous local declaration
+E:\LLM\Engine\strata-custom-2\src\program\generate.cpp(3186): note: see declaration of 'sbuf'
+E:\LLM\Engine\strata-custom-2\src\program\generate.cpp(12177): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+E:\LLM\Engine\strata-custom-2\src\program\generate.cpp(12452): warning C4456: declaration of 'pool' hides previous local declaration
+E:\LLM\Engine\strata-custom-2\src\program\generate.cpp(4837): note: see declaration of 'pool'
+E:\LLM\Engine\strata-custom-2\src\program\generate.cpp(12461): warning C4456: declaration of 'pool' hides previous local declaration
+E:\LLM\Engine\strata-custom-2\src\program\generate.cpp(4837): note: see declaration of 'pool'
+E:\LLM\Engine\strata-custom-2\src\program\generate.cpp(13147): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+E:\LLM\Engine\strata-custom-2\src\program\generate.cpp(13177): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+E:\LLM\Engine\strata-custom-2\src\program\generate.cpp(13291): warning C4456: declaration of 'sbuf' hides previous local declaration
+E:\LLM\Engine\strata-custom-2\src\program\generate.cpp(3186): note: see declaration of 'sbuf'
+E:\LLM\Engine\strata-custom-2\src\program\generate.cpp(13622): warning C4456: declaration of 'hdr' hides previous local declaration
+E:\LLM\Engine\strata-custom-2\src\program\generate.cpp(5868): note: see declaration of 'hdr'
+E:\LLM\Engine\strata-custom-2\src\program\generate.cpp(1839): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+E:\LLM\Engine\strata-custom-2\src\program\generate.cpp(1861): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+E:\LLM\Engine\strata-custom-2\src\program\generate.cpp(2035): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+E:\LLM\Engine\strata-custom-2\src\program\generate.cpp(2211): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+E:\LLM\Engine\strata-custom-2\src\program\generate.cpp(2213): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+E:\LLM\Engine\strata-custom-2\src\program\generate.cpp(2222): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+E:\LLM\Engine\strata-custom-2\src\program\generate.cpp(2224): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+E:\LLM\Engine\strata-custom-2\src\program\generate.cpp(2292): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+E:\LLM\Engine\strata-custom-2\src\program\generate.cpp(2299): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+E:\LLM\Engine\strata-custom-2\src\program\generate.cpp(2310): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+E:\LLM\Engine\strata-custom-2\src\program\generate.cpp(2450): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+E:\LLM\Engine\strata-custom-2\src\program\generate.cpp(2550): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+E:\LLM\Engine\strata-custom-2\src\program\generate.cpp(2811): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+E:\LLM\Engine\strata-custom-2\src\program\generate.cpp(2832): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+E:\LLM\Engine\strata-custom-2\src\program\generate.cpp(2836): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+E:\LLM\Engine\strata-custom-2\src\program\generate.cpp(2873): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+E:\LLM\Engine\strata-custom-2\src\program\generate.cpp(2876): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+E:\LLM\Engine\strata-custom-2\src\program\generate.cpp(3212): warning C4996: 'fopen': This function or variable may be unsafe. Consider using fopen_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+E:\LLM\Engine\strata-custom-2\src\program\generate.cpp(3255): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+E:\LLM\Engine\strata-custom-2\src\program\generate.cpp(3256): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+E:\LLM\Engine\strata-custom-2\src\program\generate.cpp(3267): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+E:\LLM\Engine\strata-custom-2\src\program\generate.cpp(3447): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+E:\LLM\Engine\strata-custom-2\src\program\generate.cpp(3448): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+E:\LLM\Engine\strata-custom-2\src\program\generate.cpp(3599): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+E:\LLM\Engine\strata-custom-2\src\program\generate.cpp(3601): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+E:\LLM\Engine\strata-custom-2\src\program\generate.cpp(3777): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+E:\LLM\Engine\strata-custom-2\src\program\generate.cpp(3803): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+E:\LLM\Engine\strata-custom-2\src\program\generate.cpp(3809): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+E:\LLM\Engine\strata-custom-2\src\program\generate.cpp(4225): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+E:\LLM\Engine\strata-custom-2\src\program\generate.cpp(4317): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+E:\LLM\Engine\strata-custom-2\src\program\generate.cpp(4329): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+E:\LLM\Engine\strata-custom-2\src\program\generate.cpp(4413): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+E:\LLM\Engine\strata-custom-2\src\program\generate.cpp(4723): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+E:\LLM\Engine\strata-custom-2\src\program\generate.cpp(4742): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+E:\LLM\Engine\strata-custom-2\src\program\generate.cpp(4762): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+E:\LLM\Engine\strata-custom-2\src\program\generate.cpp(4763): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+E:\LLM\Engine\strata-custom-2\src\program\generate.cpp(4773): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+E:\LLM\Engine\strata-custom-2\src\program\generate.cpp(4789): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+E:\LLM\Engine\strata-custom-2\src\program\generate.cpp(5146): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+E:\LLM\Engine\strata-custom-2\src\program\generate.cpp(5265): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+E:\LLM\Engine\strata-custom-2\src\program\generate.cpp(5310): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+E:\LLM\Engine\strata-custom-2\src\program\generate.cpp(5617): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+E:\LLM\Engine\strata-custom-2\src\program\generate.cpp(5621): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+E:\LLM\Engine\strata-custom-2\src\program\generate.cpp(5726): warning C4996: 'fopen': This function or variable may be unsafe. Consider using fopen_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+E:\LLM\Engine\strata-custom-2\src\program\generate.cpp(5876): warning C4996: 'fopen': This function or variable may be unsafe. Consider using fopen_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+E:\LLM\Engine\strata-custom-2\src\program\generate.cpp(5900): warning C4996: 'fopen': This function or variable may be unsafe. Consider using fopen_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+E:\LLM\Engine\strata-custom-2\src\program\generate.cpp(6234): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+E:\LLM\Engine\strata-custom-2\src\program\generate.cpp(6925): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+E:\LLM\Engine\strata-custom-2\src\program\generate.cpp(6989): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+E:\LLM\Engine\strata-custom-2\src\program\generate.cpp(7434): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+E:\LLM\Engine\strata-custom-2\src\program\generate.cpp(7436): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+E:\LLM\Engine\strata-custom-2\src\program\generate.cpp(7482): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+E:\LLM\Engine\strata-custom-2\src\program\generate.cpp(7483): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+E:\LLM\Engine\strata-custom-2\src\program\generate.cpp(7484): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+E:\LLM\Engine\strata-custom-2\src\program\generate.cpp(7486): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+E:\LLM\Engine\strata-custom-2\src\program\generate.cpp(7667): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+E:\LLM\Engine\strata-custom-2\src\program\generate.cpp(8220): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+E:\LLM\Engine\strata-custom-2\src\program\generate.cpp(8334): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+E:\LLM\Engine\strata-custom-2\src\program\generate.cpp(8346): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+E:\LLM\Engine\strata-custom-2\src\program\generate.cpp(8375): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+E:\LLM\Engine\strata-custom-2\src\program\generate.cpp(8440): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+E:\LLM\Engine\strata-custom-2\src\program\generate.cpp(8441): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+E:\LLM\Engine\strata-custom-2\src\program\generate.cpp(8455): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+E:\LLM\Engine\strata-custom-2\src\program\generate.cpp(9102): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+E:\LLM\Engine\strata-custom-2\src\program\generate.cpp(9192): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+E:\LLM\Engine\strata-custom-2\src\program\generate.cpp(9196): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+E:\LLM\Engine\strata-custom-2\src\program\generate.cpp(10335): warning C4996: 'fopen': This function or variable may be unsafe. Consider using fopen_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+E:\LLM\Engine\strata-custom-2\src\program\generate.cpp(10625): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+E:\LLM\Engine\strata-custom-2\src\program\generate.cpp(10652): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+E:\LLM\Engine\strata-custom-2\src\program\generate.cpp(10707): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+E:\LLM\Engine\strata-custom-2\src\program\generate.cpp(10765): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+E:\LLM\Engine\strata-custom-2\src\program\generate.cpp(10787): warning C4996: 'fopen': This function or variable may be unsafe. Consider using fopen_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+E:\LLM\Engine\strata-custom-2\src\program\generate.cpp(10990): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+E:\LLM\Engine\strata-custom-2\src\program\generate.cpp(11371): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+E:\LLM\Engine\strata-custom-2\src\program\generate.cpp(11381): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+E:\LLM\Engine\strata-custom-2\src\program\generate.cpp(12018): warning C4996: 'fopen': This function or variable may be unsafe. Consider using fopen_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+E:\LLM\Engine\strata-custom-2\src\program\generate.cpp(12154): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+E:\LLM\Engine\strata-custom-2\src\program\generate.cpp(12159): warning C4996: 'fopen': This function or variable may be unsafe. Consider using fopen_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+E:\LLM\Engine\strata-custom-2\src\program\generate.cpp(12363): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+E:\LLM\Engine\strata-custom-2\src\program\generate.cpp(12405): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+E:\LLM\Engine\strata-custom-2\src\program\generate.cpp(12644): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+E:\LLM\Engine\strata-custom-2\src\program\generate.cpp(12673): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+E:\LLM\Engine\strata-custom-2\src\program\generate.cpp(12718): warning C4996: 'fopen': This function or variable may be unsafe. Consider using fopen_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+E:\LLM\Engine\strata-custom-2\src\program\generate.cpp(13279): warning C4996: 'fopen': This function or variable may be unsafe. Consider using fopen_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+E:\LLM\Engine\strata-custom-2\src\program\generate.cpp(13339): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+E:\LLM\Engine\strata-custom-2\src\program\generate.cpp(13407): warning C4996: 'getenv': This function or variable may be unsafe. Consider using _dupenv_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+E:\LLM\Engine\strata-custom-2\src\program\generate.cpp(13409): warning C4996: 'fopen': This function or variable may be unsafe. Consider using fopen_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+E:\LLM\Engine\strata-custom-2\src\program\generate.cpp(13597): warning C4996: 'fopen': This function or variable may be unsafe. Consider using fopen_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+E:\LLM\Engine\strata-custom-2\src\program\generate.cpp(13617): warning C4996: 'fopen': This function or variable may be unsafe. Consider using fopen_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\vector(1461): warning C4244: '=': conversion from '__int64' to 'int', possible loss of data
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\vector(1461): note: the template instantiation context (the oldest one first) is
+E:\LLM\Engine\strata-custom-2\src\program\generate.cpp(8161): note: see reference to function template instantiation 'void std::vector<int32_t,std::allocator<int>>::assign<std::_Vector_iterator<std::_Vector_val<std::_Simple_types<_Ty>>>,0>(_Iter,_Iter)' being compiled
+        with
+        [
+            _Ty=int64_t,
+            _Iter=std::_Vector_iterator<std::_Vector_val<std::_Simple_types<int64_t>>>
+        ]
+E:\LLM\Engine\strata-custom-2\src\program\generate.cpp(8161): note: see the first reference to 'std::vector<int32_t,std::allocator<int>>::assign' in 'main::<lambda_89>::operator ()'
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\vector(1491): note: see reference to function template instantiation 'void std::vector<int32_t,std::allocator<int>>::_Assign_counted_range<__int64*>(_Iter,const unsigned __int64)' being compiled
+        with
+        [
+            _Iter=__int64 *
+        ]
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\xutility(4813): warning C4244: '=': conversion from '__int64' to 'int', possible loss of data
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\xutility(4813): note: the template instantiation context (the oldest one first) is
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\vector(1491): note: see reference to function template instantiation 'void std::vector<int32_t,std::allocator<int>>::_Assign_counted_range<__int64*>(_Iter,const unsigned __int64)' being compiled
+        with
+        [
+            _Iter=__int64 *
+        ]
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\vector(1475): note: see reference to function template instantiation '_OutIt *std::_Copy_n_unchecked4<__int64*,unsigned __int64,int*>(_InIt,_SizeTy,_OutIt)' being compiled
+        with
+        [
+            _OutIt=int *,
+            _InIt=__int64 *,
+            _SizeTy=unsigned __int64
+        ]
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\xutility(462): warning C4244: 'initializing': conversion from 'int64_t' to '_Ty', possible loss of data
+        with
+        [
+            _Ty=int
+        ]
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\xutility(462): note: the template instantiation context (the oldest one first) is
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\vector(1436): note: see reference to function template instantiation 'int *std::_Uninitialized_copy_n<__int64*,std::allocator<int>>(_InIt,size_t,int *,_Alloc &)' being compiled
+        with
+        [
+            _InIt=__int64 *,
+            _Alloc=std::allocator<int>
+        ]
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\xmemory(1938): note: see reference to function template instantiation 'void std::_Uninitialized_backout_al<std::allocator<int>>::_Emplace_back<__int64&>(__int64 &)' being compiled
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\xmemory(1844): note: see reference to function template instantiation 'void std::_Default_allocator_traits<_Alloc>::construct<_Ty,int64_t&>(_Alloc &,_Objty *const ,int64_t &)' being compiled
+        with
+        [
+            _Alloc=std::allocator<int>,
+            _Ty=int,
+            _Objty=int
+        ]
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\xmemory(730): note: see reference to function template instantiation '_Ty *std::construct_at<_Objty,int64_t&>(_Ty *const ,int64_t &) noexcept(<expr>)' being compiled
+        with
+        [
+            _Ty=int,
+            _Objty=int
+        ]
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\xutility(463): warning C4244: 'initializing': conversion from 'int64_t' to '_Objty', possible loss of data
+        with
+        [
+            _Objty=int
+        ]
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\xutility(463): note: the template instantiation context (the oldest one first) is
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\xmemory(1844): note: see reference to function template instantiation 'void std::_Default_allocator_traits<_Alloc>::construct<_Ty,int64_t&>(_Alloc &,_Objty *const ,int64_t &)' being compiled
+        with
+        [
+            _Alloc=std::allocator<int>,
+            _Ty=int,
+            _Objty=int
+        ]
+C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\MSVC\14.44.35207\include\xmemory(730): note: see reference to function template instantiation '_Ty *std::construct_at<_Objty,int64_t&>(_Ty *const ,int64_t &) noexcept' being compiled
+        with
+        [
+            _Ty=int,
+            _Objty=int
+        ]
+[4/4] Linking CXX executable strata.exe

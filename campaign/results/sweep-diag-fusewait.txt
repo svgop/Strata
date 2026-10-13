@@ -1,0 +1,11 @@
+=== DRAFT-YIELD SWEEP DIAG-FUSE_WAIT-1 | 18:01:15 | boot 10-12 17:59:35 engi
+  repetitive-list   700 tok in   8,74s =   80,1 t/s (wall)
+  code              500 tok in   7,01s =   71,3 t/s (wall)
+  prose             500 tok in   6,57s =   76,1 t/s (wall)
+  literal-repeat    500 tok in   6,49s =   77,1 t/s (wall)
+  repetitive-list  T  2.84 | tok/win  2.71 |  33.86 ms/win = GPU wait  20.72 + host   8.43 (CPU   7.68) | =>   80,0 t/s
+  code             T  3.97 | tok/win  3.94 |  43.88 ms/win = GPU wait  24.17 + host  14.58 (CPU  13.38) | =>   89,8 t/s
+  prose            T  2.97 | tok/win  2.78 |  36.44 ms/win = GPU wait  21.20 + host   9.65 (CPU   8.81) | =>   76,3 t/s
+  literal-repeat   T  2.80 | tok/win  2.59 |  31.68 ms/win = GPU wait  21.44 + host   5.55 (CPU   5.05) | =>   81,8 t/s
+  extra5           T  3.54 | tok/win  3.42 |  41.69 ms/win = GPU wait  24.56 + host  11.84 (CPU  10.83) | =>   82,0 t/s
+=== SWEEP END DIAG-FUSE_WAIT-1 (5 requests with a decode-timing line)

@@ -1,0 +1,36 @@
+=== PROBE v2-standing | 2026-10-12 16:55:41 | log=E:\LLM\Engine\strata-custom-2\strata-iq3_s.log
+    boot: 2026-10-12 16:29:13 | GPU used 31781 MiB, free 826 MiB | ps1 pid 26544
+    warmup: 8 tok in 0.97s
+    A.short[1]: 220 tok in 18.69s = 11.8 t/s
+    A.short[2]: 0 tok in 4.38s = 0 t/s
+    A.short[3]: 0 tok in 2.02s = 0 t/s
+    A.short[4]: 0 tok in 2.02s = 0 t/s
+    A.short[5]: 0 tok in 2.05s = 0 t/s
+    A.short[6]: 0 tok in 2.01s = 0 t/s
+    fresh-long-prompt: 0 tok out in 2.03s (see log for prompt tokens)
+    B.short[1]: 0 tok in 2.02s = 0 t/s
+    B.short[2]: 0 tok in 2.02s = 0 t/s
+    B.short[3]: 0 tok in 2.04s = 0 t/s
+    B.short[4]: 0 tok in 2.03s = 0 t/s
+    B.short[5]: 0 tok in 2.05s = 0 t/s
+    B.short[6]: 0 tok in 2.01s = 0 t/s
+M1 single-stream : 0 t/s (0 tok in 2.03s)
+Invoke-RestMethod: No connection could be made because the target machine actively refused it.
+Invoke-RestMethod: No connection could be made because the target machine actively refused it.
+M2 pair          : 0 t/s aggregate (0 tok in 2.11s)
+Invoke-RestMethod: No connection could be made because the target machine actively refused it.
+Invoke-RestMethod: No connection could be made because the target machine actively refused it.
+Invoke-RestMethod: No connection could be made because the target machine actively refused it.
+Invoke-RestMethod: No connection could be made because the target machine actively refused it.
+Invoke-RestMethod: No connection could be made because the target machine actively refused it.
+Invoke-RestMethod: No connection could be made because the target machine actively refused it.
+M2 6-conc        : 0 t/s aggregate (0 tok in 2.08s)
+--- engine accounting, in order (ms/window is the degradation signal) ---
+    [ 1] prompt   55 gen     1 ->      39 ms/window | accept     0% (0/0) | hit 97,3%
+    [ 2] prompt   81 gen     1 ->      53 ms/window | accept     0% (0/0) | hit 98,1%
+    [ 3] prompt   81 gen     1 ->      40 ms/window | accept     0% (0/0) | hit 98,1%
+    [ 4] prompt   81 gen     1 ->      48 ms/window | accept     0% (0/0) | hit 98,1%
+    [ 5] prompt   81 gen     1 ->      24 ms/window | accept     0% (0/0) | hit 98,5%
+    [ 6] prompt   87 gen     1 ->      27 ms/window | accept     0% (0/0) | hit 93,9%
+TREND ms/window: early 44,0 -> late 33,0 (stable)
+=== PROBE END v2-standing

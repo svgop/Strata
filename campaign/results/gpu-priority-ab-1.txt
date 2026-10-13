@@ -1,0 +1,9 @@
+=== GPU PRIORITY A/B | 2026-10-12 19:21:19 | engine pid 30580, priority was Normal
+    arm            t/s    T     ms/win   GPUwait  CPU   draft
+    Normal          59,3   2,07    32,07    25,07  1,38   1,73
+    High            70,4   2,07    27,12    21,65  1,23   1,33
+    RealTime        80,3   1,97    23,38    18,01  1,32   1,15
+    Normal          54,4   2,40    39,53    32,01  2,24   1,78
+    (engine priority restored to Normal)
+RESULT: best arm RealTime at 23,38 ms/window (80,3 t/s) vs worst Normal at 39,53 ms/window (54,4 t/s) = 1,69x
+=== END

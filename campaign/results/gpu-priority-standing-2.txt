@@ -1,0 +1,10 @@
+=== GPU PRIORITY A/B | 2026-10-12 19:23:28 | engine pid 42612, priority was Normal
+    workload: REAL (2000 tok) | pair arms: Normal,RealTime
+    arm            t/s    T     ms/win   GPUwait  CPU   draft   pair_agg
+    Normal         157,8   2,29    13,29     8,92  1,80   1,08      110,7
+    High           155,7   2,32    13,99     9,12  2,10   1,13          -
+    RealTime       142,8   2,23    14,12     9,58  1,79   1,09      110,2
+    Normal         132,0   2,32    15,46    10,30  2,11   1,18      105,0
+    (engine priority restored to Normal)
+RESULT: best arm Normal at 13,29 ms/window (157,8 t/s) vs worst Normal at 15,46 ms/window (132,0 t/s) = 1,16x
+=== END

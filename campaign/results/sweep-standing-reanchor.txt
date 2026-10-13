@@ -1,0 +1,11 @@
+=== DRAFT-YIELD SWEEP STANDING-reanchor | 18:10:21 | boot 10-12 18:07:47 engi
+  repetitive-list   700 tok in  10,70s =   65,4 t/s (wall)
+  code              500 tok in   8,18s =   61,1 t/s (wall)
+  prose             500 tok in   7,64s =   65,4 t/s (wall)
+  literal-repeat    500 tok in   7,83s =   63,9 t/s (wall)
+  repetitive-list  T  3.09 | tok/win  2.97 |  41.13 ms/win = GPU wait  26.33 + host   9.60 (CPU   8.71) | =>   72,2 t/s
+  code             T  4.00 | tok/win  3.85 |  54.55 ms/win = GPU wait  32.08 + host  15.68 (CPU  14.37) | =>   70,6 t/s
+  prose            T  2.73 | tok/win  2.56 |  39.52 ms/win = GPU wait  25.76 + host   8.06 (CPU   7.32) | =>   64,8 t/s
+  literal-repeat   T  2.54 | tok/win  2.42 |  34.67 ms/win = GPU wait  24.08 + host   5.30 (CPU   4.79) | =>   69,8 t/s
+  extra5           T  2.67 | tok/win  2.50 |  36.59 ms/win = GPU wait  25.50 + host   5.80 (CPU   5.24) | =>   68,3 t/s
+=== SWEEP END STANDING-reanchor (5 requests with a decode-timing line)

@@ -1,0 +1,11 @@
+=== DRAFT-YIELD SWEEP DIAG-batch2 | 17:43:01 | boot 10-12 17:41:21 engi
+  repetitive-list   700 tok in  34,60s =   20,2 t/s (wall)
+  code              500 tok in   4,11s =  121,7 t/s (wall)
+  prose             500 tok in   3,74s =  133,7 t/s (wall)
+  literal-repeat    500 tok in   3,50s =  142,7 t/s (wall)
+  repetitive-list  T  2.63 | tok/win  2.55 |  18.62 ms/win = GPU wait   8.99 + host   6.02 (CPU   5.47) | =>  136,9 t/s
+  code             T  4.18 | tok/win  4.11 |  28.50 ms/win = GPU wait  10.49 + host  13.36 (CPU  12.26) | =>  144,2 t/s
+  prose            T  2.50 | tok/win  2.39 |  17.94 ms/win = GPU wait   8.77 + host   5.56 (CPU   5.07) | =>  133,2 t/s
+  literal-repeat   T  2.63 | tok/win  2.42 |  16.37 ms/win = GPU wait   9.18 + host   3.82 (CPU   3.43) | =>  147,8 t/s
+  extra5           T  3.83 | tok/win  3.73 |  23.61 ms/win = GPU wait  10.10 + host   9.60 (CPU   8.78) | =>  158,0 t/s
+=== SWEEP END DIAG-batch2 (5 requests with a decode-timing line)

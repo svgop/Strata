@@ -1,0 +1,38 @@
+=== PROBE v2-thrash-52k | 2026-10-12 17:06:25 | log=E:\LLM\Engine\strata-custom-2\strata-iq3_s.log
+    boot: 2026-10-12 17:02:58 | GPU used 31498 MiB, free 1109 MiB | ps1 pid 22876
+    warmup: 8 tok in 0.58s
+    A.short[1]: 220 tok in 2.11s = 104.1 t/s
+    A.short[2]: 220 tok in 1.71s = 128.4 t/s
+    A.short[3]: 220 tok in 1.74s = 126.8 t/s
+    A.short[4]: 220 tok in 1.64s = 133.9 t/s
+    A.short[5]: 220 tok in 1.57s = 140.5 t/s
+    A.short[6]: 220 tok in 1.59s = 138.7 t/s
+    fresh-long-prompt: 80 tok out in 11.6s (see log for prompt tokens)
+    B.short[1]: 220 tok in 1.78s = 123.6 t/s
+    B.short[2]: 220 tok in 1.6s = 137.4 t/s
+    B.short[3]: 220 tok in 1.65s = 133.2 t/s
+    B.short[4]: 220 tok in 1.55s = 142.4 t/s
+    B.short[5]: 220 tok in 1.49s = 148 t/s
+    B.short[6]: 220 tok in 1.53s = 143.8 t/s
+SHORT-CLASS A/B   : before long prompt 128,7 t/s -> after 138,1 t/s (7%)
+M1 single-stream : 139.4 t/s (2000 tok in 14.35s)
+--- engine accounting, in order (ms/window is the degradation signal) ---
+    [ 1] prompt   55 gen     8 ->    28,3 ms/window | accept   100% (5/5) | hit 86,8%
+    [ 2] prompt   81 gen   220 ->    15,3 ms/window | accept    94% (110/117) | hit 97%
+    [ 3] prompt   81 gen   220 ->    13,6 ms/window | accept  90,1% (100/111) | hit 98,2%
+    [ 4] prompt   81 gen   220 ->    12,8 ms/window | accept  90,9% (90/99) | hit 98,7%
+    [ 5] prompt   81 gen   220 ->    13,8 ms/window | accept  87,6% (106/121) | hit 98,6%
+    [ 6] prompt   81 gen   220 ->    13,5 ms/window | accept  91,6% (109/119) | hit 98,8%
+    [ 7] prompt   81 gen   220 ->    13,2 ms/window | accept  86,2% (106/123) | hit 99,1%
+    [ 8] prompt 54819 gen    80 ->    17,3 ms/window | accept  95,3% (41/43) | hit 95,5%
+    [ 9] prompt   81 gen   220 ->    13,5 ms/window | accept  91,3% (115/126) | hit 99,2%
+    [10] prompt   81 gen   220 ->    12,9 ms/window | accept  88,7% (102/115) | hit 99,2%
+    [11] prompt   81 gen   220 ->    13,7 ms/window | accept  87,5% (105/120) | hit 98,6%
+    [12] prompt   81 gen   220 ->    13,2 ms/window | accept  92,3% (108/117) | hit 99,1%
+    [13] prompt   81 gen   220 ->    13,3 ms/window | accept  94,2% (114/121) | hit 99,2%
+    [14] prompt   81 gen   220 ->    13,2 ms/window | accept  89,4% (110/123) | hit 99,1%
+    [15] prompt  100 gen  1501 ->    15,3 ms/window | accept  90,5% (824/910) | hit 97,8%
+    [16] prompt 1618 gen   482 ->    17,6 ms/window | accept  88,8% (284/320) | hit 96,4%
+TREND ms/window: early 16,0 -> late 14,1 (stable)
+M3 acceptance    : 90,6% mean over 15 requests
+=== PROBE END v2-thrash-52k

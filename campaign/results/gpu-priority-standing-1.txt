@@ -1,0 +1,14 @@
+=== GPU PRIORITY A/B | 2026-10-12 19:23:02 | engine pid 42612, priority was Normal
+    workload: REAL (2000 tok) | pair arms: Normal,RealTime
+    arm            t/s    T     ms/win   GPUwait  CPU   draft   pair_agg
+SetValueInvocationException: E:\LLM\Engine\strata-custom-2\campaign\gpu-priority-ab.ps1:82
+Line |
+  82 |    $eng.PriorityClass = $arm
+     |    ~~~~~~~~~~~~~~~~~~~~~~~~~
+     | Exception setting "PriorityClass": "Cannot convert value "Normal,High,RealTime,Normal" to type
+     | "System.Diagnostics.ProcessPriorityClass" due to enumeration values that are not valid. Specify one of the
+     | following enumeration values and try again. The possible enumeration values are
+     | "Normal,Idle,High,RealTime,BelowNormal,AboveNormal"."
+    Normal,High,RealTime,Normal   143,7   2,13    13,70     8,80  2,24   1,07          -
+    (engine priority restored to Normal)
+=== END

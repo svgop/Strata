@@ -1,0 +1,11 @@
+=== DRAFT-YIELD SWEEP DIAG-sfx-lookup-chain4 | 17:52:40 | boot 10-12 17:51:00 engi
+  repetitive-list   700 tok in   6,06s =  115,4 t/s (wall)
+  code              500 tok in   4,50s =  111,0 t/s (wall)
+  prose             500 tok in   4,14s =  120,8 t/s (wall)
+  literal-repeat    500 tok in   4,50s =  111,1 t/s (wall)
+  repetitive-list  T  2.22 | tok/win  2.12 |  17.19 ms/win = GPU wait   9.71 + host   4.44 (CPU   4.01) | =>  123,3 t/s
+  code             T  3.94 | tok/win  3.85 |  30.71 ms/win = GPU wait  10.92 + host  15.34 (CPU  14.16) | =>  125,4 t/s
+  prose            T  2.38 | tok/win  2.19 |  18.12 ms/win = GPU wait   9.36 + host   5.38 (CPU   4.91) | =>  120,9 t/s
+  literal-repeat   T  2.56 | tok/win  2.39 |  17.90 ms/win = GPU wait  10.20 + host   4.18 (CPU   3.76) | =>  133,5 t/s
+  extra5           T  2.91 | tok/win  2.69 |  22.09 ms/win = GPU wait  10.98 + host   7.38 (CPU   6.72) | =>  121,8 t/s
+=== SWEEP END DIAG-sfx-lookup-chain4 (5 requests with a decode-timing line)

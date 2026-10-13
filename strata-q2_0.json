@@ -1,0 +1,42 @@
+{
+ "exe": "/home/svg/LLM/strata-custom-2/engine/strata",
+ "args": [
+  "--pack",
+  "/home/svg/LLM/Custom-data/packs/q2_0",
+  "--native",
+  "/home/svg/LLM/Strata-data/models/Qwen3.8-Flash-Next-GSQ-RCO-Q2_0-00001-of-00002.gguf",
+  "--ple-gguf",
+  "/home/svg/LLM/Strata-data/models/Qwen3.8-Flash-Next-GSQ-RCO-Q2_0-00002-of-00002.gguf",
+  "--expert-profile",
+  "/home/svg/LLM/strata-custom-2/data/expert-profile.bin",
+  "--expert-cache",
+  "auto",
+  "--prefill",
+  "auto",
+  "--spec",
+  "4",
+  "--spec-min-p",
+  "0.5",
+  "--mtp",
+  "/home/svg/LLM/Custom-data/mtp/rt",
+  "--max-context",
+  "131072",
+  "--kv",
+  "int8",
+  "--kv-resident",
+  "32768"
+ ],
+ "cwd": "/home/svg/LLM/strata-custom-2",
+ "tokenizer": "/home/svg/LLM/Custom-data/packs/q2_0/tokenizer",
+ "model_name": "qwen3.8-flash-next-q2_0",
+ "log": "/home/svg/LLM/strata-custom-2/strata-q2_0.log",
+ "lib_dirs": [
+  "/usr/local/cuda-13.4/bin",
+  "/usr/local/cuda-13.4/lib64"
+ ],
+ "port": 8080,
+ "gpu": 0,
+ "gpus_asked": true,
+ "host": "0.0.0.0",
+ "api_key": "3f0940df8efb9c363e4189956ae907d3e4acac221aab39f44804fe0b0df1b8"
+}
