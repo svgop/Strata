@@ -5,7 +5,7 @@
 # --- standing arms (each measured; see SVG-CUSTOM F-05/F-12/F-15b/F-16/F-64) ---
 export STRATA_KEEP_MAPPING=1        # F-64: keep mmap. No-op-likely on Linux (the unbuffered
                                     # file tier that forced this is a Windows path), harmless.
-export STRATA_TYPICAL_ACCEPT=0.2    # Medusa typical acceptance (sampled traffic only)
+export STRATA_TYPICAL_ACCEPT=0.2    # Medusa typical acceptance (sampled traffic only; R5: worth +20.6pts accept / +8% M1)
 export STRATA_POOL_SPIN_US=100      # pool workers park after 100us instead of 20ms
 export STRATA_KV_PREFETCH=1         # +5.3%/4.1% prefill at 32K/64K
 export STRATA_ADAPT_LAG=2           # kills the lag-1 event sync stall in the adapt tier
