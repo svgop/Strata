@@ -1,0 +1,22 @@
+=== PROBE f198-up-2 | 2026-10-14 23:02:20 | log=/home/svg/LLM/strata-custom-2/custom-iq3_s.log
+    warmup: 8 tok in 0.61s
+    A.short[1]: 220 tok in 1.73s = 127.4 t/s
+    A.short[2]: 220 tok in 1.56s = 141.3 t/s
+    A.short[3]: 220 tok in 1.53s = 143.3 t/s
+    A.short[4]: 220 tok in 1.51s = 146.1 t/s
+    A.short[5]: 220 tok in 1.52s = 144.7 t/s
+    A.short[6]: 220 tok in 1.50s = 147.0 t/s
+    fresh-long-prompt: 80 tok out in 2.02s
+    B.short[1]: 220 tok in 1.47s = 149.4 t/s
+    B.short[2]: 220 tok in 1.43s = 153.8 t/s
+    B.short[3]: 220 tok in 1.42s = 155.0 t/s
+    B.short[4]: 220 tok in 1.47s = 149.3 t/s
+    B.short[5]: 220 tok in 1.52s = 144.5 t/s
+    B.short[6]: 220 tok in 1.43s = 153.6 t/s
+SHORT-CLASS A/B   : before long prompt 141.6 t/s -> after 150.9 t/s (7%)
+M1 single-stream : 144.9 t/s (2000 tok in 13.80s)
+M2 pair          : 145.8 t/s aggregate (1800 tok in 12.35s)
+M2 6-conc        : 186.1 t/s aggregate (3600 tok in 19.35s)
+--- engine accounting, in order (ms/window is the degradation signal) ---
+M3d per-position : not printed (arm STRATA_SPEC_DEPTH=1 to publish accepted/tested by depth)
+=== PROBE END f198-up-2
