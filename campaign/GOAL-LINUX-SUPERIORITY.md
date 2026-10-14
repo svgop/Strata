@@ -104,7 +104,10 @@ verify.cpp:2039), batch 6 ADOPTED (F-185, 131k lanes only — 262k driver still 
 refused while DMA_BATCH=1, KEEP_MAPPING dead on Linux). Open: 262k driver parallel:4→6 A/B
 (watch per-slot KV/conv-cache + M6b); logrotate drop-in for custom-iq3_s*.log.
 **R8 — GPU state (USER SUDO, NOW — variance first):** persistence Disabled + clocks unlocked
-measured (F-187) — the likeliest re-anchor-v2 drift mechanism. Block:
+measured (F-187) — the likeliest re-anchor-v2 drift mechanism. PACKAGED ALTERNATIVE (preferred):
+strata-gpu-lock RPM (1.0.0, staged /tmp) — a watcher daemon that locks while an engine port
+(8080/8081) serves and releases after a grace period, so the idle cost is only paid while the
+engine runs; install supersedes the manual block below. Manual block (equivalent, always-on):
 `sudo systemctl enable --now nvidia-persistenced; sudo nvidia-smi -pm 1; sudo nvidia-smi -lgc 2835;
 sudo nvidia-smi -lmc 14001` (step -lgc to 2745 if `dmon -s pc` shows sw_power/sw_thermal; optional
 `-pl 600`; `-rgc`/`-rmc` revert). Then RE-ANCHOR v3 — all means reference post-lock conditions.
