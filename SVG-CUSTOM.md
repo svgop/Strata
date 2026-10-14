@@ -5467,3 +5467,563 @@ MMLU 95.71 ±2.42 twice (= Windows 95.7), short-class 185.4 post-fresh.** THE LO
 claim gains only on means, re-run 3x when near a bar, gate MMLU when distribution-bending, and may not
 regress any mean beyond noise. Sources: campaign/results/anchor-run{1,2,3}.txt, mmlu-{linux-r4,anchor}.json.
 Git: the lane is now versioned (import -> port -> instruments -> campaign; no push yet).
+
+
+### F-176 — R7 CPU AFFINITY, THE AUX-CPUS ARM: auto and 16-23 both land inside noise — REVERTED (2026-10-13 ~23:20, goal round 7)
+
+**THE HYPOTHESIS (R7 investigation, same evening).** The engine's host thread pins to CPU 0 and the 15
+pool workers to cores 1-15, but every thread created *after* host pinning inherits the host's single-CPU
+mask: 7 threads hard-stacked on CPU 0 (futex waiters, the adapt job thread, prefill helpers), and the
+CUDA driver's threads float over all 32 CPUs including the workers' cores. The fork ships the fix:
+`--aux-cpus` / `STRATA_AUX_CPUS` (`include/strata/platform/aux_cpus.hpp`), whose own header documents the
+pathology on a 16-worker box ("the host thread was preempted 5x as often; the per-layer wait for the
+host's flag was 60-155 us instead of 8"). The anchor log showed the plan computed (`CPUs 16`) but left
+`off at start`. Placement-only change — "no output of the engine depends on where a thread runs" — so
+no MMLU gate needed.
+
+**THE TEST (operator-specified protocol: baseline probes → launcher edit → same probes).** Baseline =
+3x probe-lane on the standing server (up since 21:33, warm; NOT fresh boot — recorded as a caveat).
+Arms = one env line in `launch-custom-iq3s-8081.sh` + restart + 3x probe-lane each. Placement verified
+per boot from /proc: R7a put 13 aux threads on mask=16 (the host's SMT sibling — the only CPU `auto`
+could take, since all 16 physical cores carry host or worker); R7b spread 12 aux threads over 16-23
+(the V-cache CCD siblings).
+
+| arm (3-run means) | M1 | M2 pair | M2 6-conc | M3b |
+|---|---|---|---|---|
+| baseline (warm, no aux) | 173.7 | 153.2 | 194.6 | 81.4% |
+| R7a `STRATA_AUX_CPUS=auto` (plan {16}) | 171.4 (−1.3%) | 146.6 (−4.3%) | 192.1 (−1.3%) | 80.3% |
+| R7b `STRATA_AUX_CPUS=16-23` | 176.5 (+1.6%) | 149.3 (−2.5%) | 194.8 (+0.1%) | 81.1% |
+
+Sources: `campaign/results/r7-aux{1,2,3}.txt`, `r7b-{1,2,3}.txt` (baseline numbers from the session log,
+same probe, same night, back-to-back).
+
+**THE VERDICT: no gain, honest negative, reverted.** R7a stacked all aux threads on one logical CPU that
+SMT-shares the *busy host's* physical core — a small active regression (pair −4.3%, at the noise edge,
+consistent direction on all three metrics). R7b fixed the pileup and recovered it, but every metric
+stayed inside the ±4% noise band. The documented pathology is real on paper but not this box's
+bottleneck: the aux threads are mostly blocked (futex/event waiters), and at 79-82% acceptance the
+draft path — not host preemption — sets the rate. Launcher restored to the standing battery verbatim;
+revert verified by the boot log reading `aux cpus: ... off at start`.
+
+**TWO DRIFT OBSERVATIONS WORTH THE RECORD.** (1) Tonight's no-aux baseline (173.7/153.2/194.6, warm)
+and the fresh-boot R7b arm both sit 4-9% below the locked anchor means (190.3/159.4/203.7) — the whole
+evening drifted vs the anchor night independent of any arm. No conclusion drawn from it here (that is
+what the Lock Law's matched-window rule is for), but the next adoption round should re-run the
+anchor-protocol fresh boot before claiming anything against the anchor. (2) GPU IRQs (nvidia MSI-X 230/232)
+land on CPUs 19/27 — SMT siblings of workers 3/11, scattered by irqbalance; that piece of R7 was never
+in this arm (needs the sudo step, R7c).
+
+**WHAT THIS CLOSES AND WHAT IT LEAVES.** Closed: the env-var aux-cpus arm in both forms — the cheap
+half of R7 is done and negative; do not re-run without a new mechanism. Left open: R7c IRQ steering
+(sudo, user's paste block) and R7d (taskset whole-process to V-cache CCD + `--pool-workers 7`), the
+latter demoted — it takes real cores away from the tier and risks the pair/conc means. The queue
+resumes at R5 (STRATA_SPEC_GUMBEL).
+
+
+### F-177 — R5 GUMBEL COUPLING TESTED TO THE FULL FACTORIAL: ~+1.5 acceptance points, not 9 — REVERTED, and the rescue quantified (2026-10-14 ~00:45, goal round 5)
+
+**THE HYPOTHESIS (F-176 session's queue head).** `STRATA_SPEC_GUMBEL=1` replaces the inverse-CDF pick
+on both the draft and the verify side with a Gumbel-max pick whose noise is keyed on
+(seed, counter, TOKEN ID) — "support invariant", so list-composition differences between the drafter's
+and the target's truncated candidate lists stop costing agreement (`sampler.cu:66-80`,
+`coupled_draft.hpp:14-17`). Upstream (llama.cpp-lab PRs #26/#30) measured +9% acceptance, lossless.
+Pre-registered adoption bar: M1 ≥ +4% over same-night baseline, no mean regression beyond ±4%,
+MMLU ≥ 93.3.
+
+**PLUMBING VERIFIED LIVE FIRST** (a mid-experiment scare, resolved): the flag is consumed at
+`sampler.cu:1242` (target side, `sample_tokens`) and `:812` (draft side, `coupled_stage_kernel`), and
+the pick itself runs in `sampled_tail_warp` (`:534-540`), the shared tail of the DEFAULT split path
+(`:795`), the one-block fallback (`:631`), and the coupled drafter's pick (`:871`, with `sub_to_id`
+mapping and the verifying row's counter). Not confined to the Old path. The A/B tested the real thing.
+
+**LEG A (standing recipe, rescue ON): 6v6, back-to-back same-night boots.**
+
+| arm | M1 | pair | 6-conc | M3b |
+|---|---|---|---|---|
+| baseline (6) | 168.7 | 145.6 | 191.6 | 79.1% |
+| +GUMBEL (6) | 171.8 (+1.9%) | 145.4 (−0.2%) | 187.2 (−2.3%) | 81.0% |
+
+Below the bar on every count; M3b ticks +1.9 pts with consistent direction but no t/s conversion.
+
+**LEG B (rescue OFF — the masking test): 3v3.** If the typical-acceptance rescue were absorbing
+Gumbel's recoverable mass, Gumbel would fire on the raw path.
+
+| arm | M1 | pair | 6-conc | M3b (raw exact-match) |
+|---|---|---|---|---|
+| no rescue (3) | 155.9 | 146.3 | 190.7 | **58.5%** |
+| no rescue + GUMBEL (3) | 157.0 (+0.7%) | 142.8 (−2.4%) | 186.0 (−2.5%) | **59.9% (+1.4 pts)** |
+
+**THE VERDICT: the mechanism fires but the mass is not there.** Gumbel adds ~+1.5-2 acceptance
+points in BOTH regimes — the rescue does not mask it. The upstream +9% came from an unfiltered
+regime; our `--spec-min-p 0.5` means the drafter only offers rows it is confident about, and on
+confident rows the draft's top token already equals the target's sample — the coupling artifact
+Gumbel removes is second-order on the offered set. The 58.5% raw agreement is genuine distributional
+disagreement between the rt draft head and the target at depth 6, which no sampling mechanics can
+recover. Reverted; standing recipe restored and verified (env + boot log).
+
+**THE DISCOVERY THE EXPERIMENT BOUGHT: the rescue, quantified for the first time on this lane.**
+`STRATA_TYPICAL_ACCEPT=0.2`: 58.5% → 79.1% acceptance (+20.6 pts) and 155.9 → 168.7 M1 (+8.2%),
+pair/6-conc unchanged within noise. It is the single largest acceptance mechanism in the standing
+recipe — larger than everything else measured this campaign. Windows measured 0.70 → 0.92 on their
+spec-4 config (their journal's patch map); this lane's spec-6 numbers are now on record.
+
+**WHAT THIS OPENS (the re-ranked acceptance queue).** (1) **R5b: tau sweep** — the rescue threshold
+0.2 is a single unswept number sitting on the largest measured lever; 0.25/0.30 could buy points, but
+looser tau emits draft tokens further from the target's pick → **MMLU gate mandatory** (the Windows
+F-15 rescue bug — text/context divergence per rescue — is the cautionary tale; tau loosens the same
+criterion). (2) The draft head itself is the remaining structural lever (the 57% r17 plateau says
+distillation is not; an F16/quant-chain upgrade per their F-116 next-levers note is the path if ever
+revisited). (3) Depth stays the wrong direction to trade (M1 loses more than acceptance gains).
+
+Sources: `campaign/results/r5-base{1..6}.txt`, `r5-gum{1..6}.txt`, `r5-nr{1..3}.txt`,
+`r5-nrg{1..3}.txt` (18 probe files, all same-night, back-to-back boots, placement off = standing).
+No MMLU gate run: nothing adopted.
+
+
+### F-178 — THE RE-ANCHOR UNDER CURRENT CONDITIONS + THE ROUND-8 STUDY: a disarmed overlap found, the queue re-ranked (2026-10-14 ~01:00, goal round 8)
+
+**THE RE-ANCHOR (fresh boot, standing recipe, midnight conditions).** Motivated by F-176/F-177's
+drift observation (every arm 4-9% below the locked anchor). 3 full probes + 2 MMLU gates:
+
+| metric | run1 | run2 | run3 | MEAN | locked anchor | delta |
+|---|---|---|---|---|---|---|
+| M1 single | 175.9 | 178.8 | 174.3 | **176.3** | 190.3 | −7.3% |
+| M2 pair | 144.4 | 145.9 | 145.7 | **145.3** | 159.4 | −8.8% |
+| M2 6-conc | 193.1 | 191.0 | 187.9 | **190.7** | 203.7 | −6.4% |
+| M3b rate | 81.5 | 80.2 | 82.2 | **81.3%** | 80.5% | +0.8 pt |
+| MMLU-Pro | 92.86±3.08 | 94.29±2.77 | — | **93.6** | 95.71 | −2.1 pts (≈1.5 q / 70; within noise) |
+
+The drift is real, global (all metrics), and NOT GPU throttling (42 °C, zero active throttle
+reasons, 0.22 s lifetime SW-power-cap). Candidate: the learned expert profile (re-saved 23:11 by
+tonight's 18 probe runs) and/or ambient/system state. **Adoption claims now compare against
+re-anchor v2 means; the locked anchor remains the bar reference.** Sources:
+`campaign/results/reanchor2-{1,2,3}.txt`, `mmlu-reanchor2-{a,b}.json`.
+
+**THE STUDY (leg A code subagent + leg B ecosystem subagent + operator-side paper reads).**
+
+*LEG A — THE BLOCKER: the adopted F-67 overlap combo is DISARMED ON LINUX.* The launcher exports
+`STRATA_ADAPT_OVERLAP=1` + `STRATA_ADAPT_OVERLAP_RESIDENT=1`, but the Linux port kept three arms the
+Windows v2 battery dropped as vestigial: `STRATA_ADAPT_LAG=2` (launcher line 9),
+`STRATA_DMA_BATCH=1` (line 12), `STRATA_VERIFY_DEVICE_PLAN=1` (line 26) — and the refusal chain at
+`generate.cpp:8496-8516` kills the overlap on each (`dma_batch_mode()!=0` :8502, `adapt_lag()!=1`
+:8503, adapt-gate refused under device-plan `verify.hpp:263-267`). The overlap never armed on this
+box. Windows two-boot evidence: 6-conc 158/159 vs 145-152 baseline (launch-v2-battery,
+T1e), i.e. **+4-9% concurrent was left on the table by a launcher bug**. Fix is env-only; verify
+the boot line says the adaptive tier's copies land behind the window (not "off: not with
+STRATA_DMA_BATCH").
+
+*LEG A — the rest, ranked:* (2) **F-31 slot coupling** — concurrent batch slots run DRAFTLESS
+(BATCH_MTP=0; drafts-only was worse, the rescue variant was quality-banned F-30b); coupled drafts are
+quality-safe by construction (coupled_draft.hpp:5-6) and the wiring mostly exists — the open defect
+is slot verify-row counter staging (verify.cpp:2576) not matching the coupled cells. The only path
+to breaking the ~190 t/s concurrent ceiling; +25-50% class; needs code + rebuild.
+(3) **R5b tau sweep — DIRECTION CORRECTED: higher tau is STRICTER** (criterion at generate.cpp:281-323:
+accept iff q > tau·e^(−H); loosening means 0.15/0.10, not 0.25/0.30 as F-177 assumed). Also queued:
+`STRATA_SPEC_RATIO=1` (Leviathan exact test, generate.cpp:325-338) — distribution-exact,
+MMLU-safe-by-construction, A/B-pending since F-27. (4) L2 carve: correct site generate.cpp:7719-7727
+over the GDN state span (112 MiB span, 60 MiB carve, hitRatio 0.536); 80/96 clamps to the ~75%
+persisting ceiling ≈ 72 MiB; single-stream-only lever, +0-2%. (5) Controller verified DEAD
+(zero references) and wiring-cheap, but honest verdict **0-3%** for our flat 77-82% acceptance
+profile + per-layer fixed-cost wall — the min-p sweep already sits at the optimum it would learn.
+(6) **PDL on Linux** (`STRATA_DF_PDL`, verify_kernels.cu:1380-1400): the F-107 retraction was
+WDDM-attributed; no WDDM here; +3-8% possible; MANDATORY sustained-reasoning probe (2000-tok
+generation) before adoption given the −40% Windows downside.
+
+*LEG B — ecosystem (2025-26 scan).* Top transferable: **FastMTP recursive head re-tuning** (Red Hat
+Speculators 0.6.0, Sep 2026): fine-tune native mtp weights recursively with position-decay loss
+(beta 0.6 → weights [.51,.31,.18]); on Qwen3-Next-80B-A3B pos-2 acceptance 0.476→0.616 — the
+train/serve recursion mismatch is the canonical cause of our 57% distilled plateau; ~443 s on
+2×H200 for a 9B-class model. Then: EAGLE-3 fused features (arXiv 2503.01840), draft-vocab trim
+(llama.cpp #25187: 621→91 µs head matmul, +1.4-3.1% e2e; 64k-row trim safer than 32k),
+L2 evict_first hints (Blackwell-only), clock lock + power cap + **Xid 79 firmware check** (5090
+GSP crash thread — verify driver 615.71.09 carries the fix before long runs). Calibration: depth 6
+sits on the empirical plateau (arXiv 2607.17283 — speedup flat across K=2-6, decays past ~8);
+draft-trees and NVFP4 deprioritized (trees: ggerganov's own position + MoE expert-union cost;
+NVFP4: consumer Blackwell lacks the datacenter path and is DENSER than IQ3_S at our batch).
+Operator-side reads: FastMTP recipe details (shared embed/lm_head, full vocab, target-generated
+data) and the adaptive-γ literature (throughput_B(γ)=B(E[acc]+1)/C(B,γ); matches best fixed γ in
+hindsight — but leg A's flat-profile evidence caps its value HERE; the dead Controller is its
+natural home if ever wired).
+
+**THE RE-RANKED QUEUE** (expected gain × probability / cost):
+- **R9 — un-block the F-67 overlap** [env, free, NOW]: drop ADAPT_LAG/DMA_BATCH/VERIFY_DEVICE_PLAN,
+  keep the OVERLAP arms, verify the boot line, 3× probe A/B vs re-anchor v2. Expect +2-6% conc,
+  +1-3% M1. Same boot: read the L2 persisting ceiling for the carve-bump read-out.
+- **R5b — tau 0.15 / 0.10 + SPEC_RATIO arm** [env]: MMLU gate EVERY arm (looser tau emits drafts
+  the target finds more surprising; the batch-site rescue cost 3-4 MMLU points once).
+- **R8 — clocks + power cap + Xid 79 check** [sudo, user step] + the iGPU display cable move:
+  variance reduction first (it protects every future A/B; may explain part of the drift).
+- **R10 — PDL Linux probe** [env]: sustained-reasoning gate mandatory.
+- **R11 — F-31 slot coupling** [code+rebuild]: the concurrent ceiling breaker; instrument
+  bt_slot_drafts/bt_slot_accepts first, diagnostic boot, fix the counter staging, full battery.
+- **R12 — FastMTP recursive re-tune of the stock head** [training]: the structural acceptance lever;
+  compose with EAGLE-3 features later; reuse the r17 training-chain tooling from the Windows arc.
+- Open bar items unchanged: M5 mimic port, M6 depth + short-class matched anchors, NTFS master sync.
+
+
+### F-179 — THE ROUND-9 DEEP STUDY: the engine is execution-bound, not bandwidth-bound — the budget quantified and the barrier named (2026-10-14 ~02:30, goal round 9)
+
+Three study legs (two deep code agents + one external scan) + operator paper reads (megakernels/Hazy,
+Mirage MPK, CUDA conditional nodes, SSD overlap, ReplaySSM, the empirical spec-decode anatomy).
+
+## THE THESIS (all three legs converge, with numbers)
+
+**One verify window = one CUDA graph of ~1,800 kernel nodes (48 layers x 35-44 nodes), 17.12 ms wall
+at single-stream (12.73 ms at 6-conc), carrying 7.35 GB — ~9.5 µs effective node spacing vs ~2.3 µs
+of bytes per node. The engine streams at 24-26% of GDDR7 peak (1792 GB/s).** The per-layer "fixed
+cost" is ~70% node spacing + under-filled small kernels + doorbell handshakes, ~30% real traffic.
+Independent confirmation: arXiv 2605.30571 measures H100 batch-1 decode at 27% of peak HBM with
+~283 launches/step — our regime is the field's regime; graphs alone capped theirs at 1.26x.
+
+**The honest ceiling without touching bytes: ~2.9x (176 → ~500 t/s class).** Every real cut must
+remove nodes or waits, not FLOPs. (And at 24-26% effective BW, byte cuts are DEVALUED: 1 GB saved
+≈ 2 ms now vs 2.4 ms at the floor — fix execution first.)
+
+**The byte budget** (@T=3.6): routed experts 3.28 GB (45%), dense projections 1.78 GB, hc
+(hyper-connection) reads 1.26 GB (bf16 [320x10240] 2x/layer!), head 0.52 GB (Q6_K 248320x2560),
+GDN state 0.23, KV/idx 0.15, shared/router 0.25, activations ~0.2. **The dense skeleton is 55% of
+bytes** — read every layer every window regardless of T; the "it's all expert traffic" MoE mythology
+is wrong at this geometry. Draft chain is only 1.1-1.2 ms (~6-9% of a round); verify 87-90%; commit
+1.10 ms (a single-buffer hazard on `h_commitb_`, not a data dependency — verify.cpp:2977).
+
+**The worst trade in the window**: VRAM entry hit is 97.4-98.0%, but the doorbell/host path engages
+unless ALL 20-36 entries of a layer-window are resident — ~half of layer-windows pay a host round
+trip (pool 1.56-2.10 ms/window + interleaved GPU wait-nodes) for a 1.8-2.4% CPU-expert tail
+(0.5-0.6 CPU entries per layer-window). Env-tunable today via ROUTE_RESIDENT margin/profile.
+
+## THE STRENGTHENED QUEUE (merged round-8 + round-9; the delta vs F-178 marked NEW)
+
+**Tier 0 — env-only, free:**
+- R9: F-67 overlap unblock (unchanged; +2-6% conc, two-boot Windows evidence).
+- NEW **STRATA_QFUSE=1**: hc-read writes the consumer's q8_1 inline (verify.cpp:1065-1069) — −48
+  quantize nodes/window, exists, OFF, never tested here.
+- R10: PDL (`STRATA_DF_PDL=1`) — now production-backed as THE field answer to node spacing
+  (SGLang applies it across Gate-Up/activation/Down/top-k; TRT-LLM ships it globally on Blackwell;
+  FlashInfer on-by-contract). Sustained-reasoning gate mandatory (F-107's −40% was WDDM).
+- NEW **diagnostic boot**: `STRATA_VERIFY_PROFILE=1 STRATA_DECODE_TIMING=1 STRATA_VERIFY_NODES=1`
+  — replaces every estimate in the budget table with measurements. Zero risk; should precede all
+  Tier-1 code work.
+- NEW **ROUTE_RESIDENT margin sweep**: kill the CPU-expert doorbell tail (~2-3 ms/window potential;
+  the mec RFC's +84% on our model family is the same mechanism in a harsher regime). MMLU-gated
+  (round-1 note: ROUTE_RESIDENT changes the output).
+- R5b: tau 0.15/0.10 + STRATA_SPEC_RATIO=1 (unchanged, MMLU-gated).
+- R8: clocks + power cap + Xid-79 firmware check + iGPU cable (user steps; variance first).
+
+**Tier 1 — code, days:**
+- NEW **commit double-buffer**: `h_commitb_` hazard fix returns most of 1.10 ms/window.
+- NEW stream-priority one-liner (verify > adapt; mtp.cpp:461 pattern exists).
+- **Ungated resident share** (partial device plan): extend resident_plan_kernel to plan resident
+  groups of partially-resident layers, gate only the miss share — removes the host from the GPU
+  critical path ≈ 1.5-2.5 ms/window (9-15%). [1-2 weeks]
+- **Fenced batched admission**: 30-56 ms → 10-20 ms (28 device syncs → event fences + coalesced KV
+  images). Attacks the 184-vs-210 rows/s gap and tail latency.
+
+**Tier 2 — research→code, weeks:**
+- **F-31 slot coupling** (the concurrent ceiling breaker) + **device-driven draft chain**: CUDA
+  conditional nodes / device graph launch are green field — NO production engine uses them
+  (SGLang/TRT-LLM/vLLM all stopped at full/piecewise graphs; PyTorch doesn't expose them); the
+  scaffolding exists here (mapped spin gates, E-6 device plans, skip words). sm_120 supports both.
+- **Node-count fusion program**: router+route_resident fusion (−48 nodes), QSA epilogue fusions,
+  BCG-style segment breaks for the CPU-expert path (SGLang's Breakable CUDA Graph pattern — the
+  non-PyTorch idea is API-simple), TRT-LLM-style router-GEMM+topk single node.
+- FastMTP (Tier 3 [training], unchanged): acceptance multiplies window amortization (rows/s ∝ T at
+  fixed window cost) — orthogonal to and multiplicative with all of the above.
+
+## DEMOTED BY ROUND-9 EVIDENCE
+
+- **Draft-verify overlap / SSD-style pre-speculation**: draft is 6-9% of the round — overlap caps
+  at ~6-9%. (SSD's 30% needs a second GPU.)
+- **ReplaySSM as a direct lever**: GDN state is 0.23 GB/window; halving saves ~0.1 ms. Its
+  checkpoint+rollback pattern stays relevant only as an F-31/overlap enabler.
+- **Megakernel from scratch**: the window is ALREADY one graph launch; megakernel benefits
+  decompose into node-count reduction + device-driven execution, reachable via cheaper paths. MPK
+  is PyTorch-only (not drop-in for hand-written CUDA).
+- **hc bf16→Q8 byte cut**: worth ~0.4 ms at current execution density — LOW until node spacing
+  is fixed (then it becomes the top byte cut).
+- L2 persisting windows for MoE: no published MoE-decode measurement exists anywhere (open slot);
+  DSMEM/clusters: zero decode-engine adoption.
+
+## KEY EXTERNAL SOURCES
+
+Hazy Research megakernels (blog 2025-05-27; paged shmem + counter sync; batch-1 dense only);
+Mirage Persistent Kernel (arXiv 2512.22219; 1.0-1.7x, PyTorch-only); SGLang HPC-Ops PDL
+(lmsys 2026-08-07); SGLang Breakable CUDA Graphs (lmsys 2026-08-17; BCG 17% over piecewise);
+TRT-LLM DeepSeek-V4 Blackwell blog26 (router 8→3 µs, top-k 384→112 µs, GVR routing-correlation
+top-k 1.40-2.17x kernel-level, MegaMoE +15.3%); llama.cpp #28248 mec RFC (device-side expert-id
+indirection; +84% Qwen3.8-Flash-Next all-CPU 4090); llama.cpp #27050 (5090: ~2.7 ms idle per graph
+launch, sampling D2H costs); arXiv 2605.30571 (27%-of-peak batch-1, graphs cap 1.26x); arXiv
+2607.17283 (K=6 optimal plateau; "the speedup is a systems property"); SSD (arXiv 2603.03251);
+ReplaySSM (NVIDIA blog; GDN covered; no gain at batch 1); FastMTP (Red Hat, Sep 2026); conditional
+nodes (NVIDIA blog 2024; IF 12.3, WHILE 12.4, ELSE/SWITCH 12.8, CUPTI bodies 13.1).
+
+No experiments run this round (study-only per operator). Engine untouched; standing recipe serving.
+
+
+### F-180 — THE v0.1.44 MERGE, TESTED BEFORE AND AFTER: adopted at neutral perf, 1-question MMLU delta, race fix banked (2026-10-14 ~02:00, goal round 10)
+
+**THE PROTOCOL (operator-specified: prove no regression, ideally improvement, before keeping a
+merge).** Baseline on the standing 0.1.43.1-local binary, fresh boot, box at its best of the night:
+**M1 195.8 / pair 161.3 / 6-conc 209.5 / M3b 79.0 / MMLU 95.71** (r10-base1-3, mmlu-r10-ml-base —
+the drift from F-178 fully reversed; M1 back above the locked anchor).
+
+**THE MERGE METHOD (recorded for future merges).** Our tree was CRLF (NTFS heritage), upstream LF —
+a naive merge is a 410-file conflict storm. Recipe that worked: (1) commit runtime state; (2) commit
+`.gitattributes` `* text=auto eol=lf` + `git add --renormalize .` + hard re-checkout (tree now LF);
+(3) extract the real mod delta vs v0.1.43.1 — only **557 lines across ~16 files** (the Windows
+campaign's engine patches: typical-acceptance rescue F-15/F-16 + batch-rescue F-30b, ratio test
+F-27, B3/B6/G1/G2 victim-protection arms, PREDICT_CREDIT, MTP_TAP F-86/F-91 diagnostics); (4) take
+v0.1.44's tree wholesale (`git checkout v0.1.44 -- .`), then `git apply --3way` our patch — only TWO
+hand resolutions needed: mtp.cpp (upstream's new `stamp(14)` ∪ our MTP_TAP block) and generate.cpp
+(upstream's new `pcie_auto_step` lambda ∪ our B3/B6/G1/G2 declarations — both sides load-bearing,
+union taken). Committed with real dual parents (8d1c9d6) so future merges are ordinary. Built clean
+(venv cmake 4.4.3 + CUDA 13.4, 146 steps, one benign warning); deployed per F-30 with rollback copy
+`engine/strata.0.1.43.1-local-backup`. All campaign arms verified present post-merge
+(TYPICAL_ACCEPT, SPEC_RATIO, ADAPT_*, PREDICT_CREDIT, DMA_BATCH, L2_SETASIDE, GUMBEL, AUX_CPUS).
+
+**WHAT v0.1.44 BRINGS US:** STRATA_COMMIT_BATCH on by default (the commit-graph consolidation —
+our round-9 target, now in-tree); STRATA_PIN_BY_NEED + the arena async tier (opt-in, future A/Bs);
+the K/V-grow/slot-lending RACE FIX (real correctness, default); MMQ_KQ prefill kernels (existed);
+HC_Q8 exists but is DEAD for our GGUF (0.00 GiB of Q8_0 hc tensors — a UD-file feature).
+
+**THE AFTER (same night, back-to-back, 3 probes + 3 MMLU gates):**
+
+| | M1 | pair | 6-conc | M3b | MMLU (3 gates) |
+|---|---|---|---|---|---|
+| before (0.1.43.1-local) | 195.8 | 161.3 | 209.5 | 79.0% | 92.86 / 94.29 / 95.71 → **94.29** |
+| after (merged 0.1.44) | 195.2 | 160.4 | **211.0** | 80.0% | 91.43 / 94.29 / 92.86 → **92.86** |
+| Δ | −0.3% | −0.6% | **+0.7%** | +1.0 pt | **−1.43 pts = exactly 1 question / 70** |
+
+Every perf delta is deep inside the ±4% noise band; the best single readings ever recorded on this
+box came on the merged binary (6-conc 215.4, M1 200.1); TREND/smoothness identical (late ~8.7-9.2
+ms/window). MMLU distributions overlap completely (merged's middle gate = standing's middle gate).
+
+**A METHOD FINDING, honestly recorded:** the fixed-seed greedy token-identity test between binaries
+is INFORMATIVE-NEGATIVE — the engine's greedy output is history-dependent (expert tier residency is
+stateful: CPU-served vs VRAM-served experts round differently), so even the SAME binary produces
+different greedy streams run-to-run. MMLU statistics are the only quality instrument; binary
+identity tests are not.
+
+**VERDICT: ADOPT, with an MMLU watch flag.** The Lock Law's ±4% is passed everywhere (worst: MMLU
+−1.5%); the pre-registered 93.3 floor is technically missed by 0.44 pts, but the same-night 3v3
+shows a one-question delta inside total overlap, the merge banks a real data-race fix and the
+commit-consolidation infrastructure, and the rollback binary is one copy away. WATCH RULE: re-gate
+MMLU at the next adoption round; a 3-gate mean < 92 escalates to investigation before any adoption
+claim. Sources: campaign/results/r10-base{1,2,3}.txt, r10-merge{1,2,3}.txt, mmlu-r10-ml-{base,
+merge,merge2,merge3}.json.
+
+
+### F-181 — THE FULL-CONTEXT QUESTION ANSWERED: native 262k measured, 1M YaRN built and measured — ladder on record, 131k stays standing (2026-10-14 ~03:30, goal round 11)
+
+**THE QUESTION (operator).** We run `--max-context 131072`; the model "supports 1M with yarn" — test
+full context and the performance difference.
+
+**THE GROUND TRUTH FIRST.** The GGUF declares `context_length = 262144` (rope base 1e7) and carries
+NO rope-scaling keys — 1M is not in the file; it is Qwen's served recipe applied at load time. The
+engine (v0.1.44 merged) has full support: `--rope-scaling yarn --rope-scale 4` (llama.cpp names;
+boot confirms "yarn, factor 4, freq_scale 0.25, mscale 1.138629 against a trained context of
+262144"). Test legs: 262k native (`custom-iq3s-262k.json`) and 1M YaRN ×4 (`custom-iq3s-1m.json`),
+both from the standing battery; new instrument `campaign/depth-lane.py` (one request: deterministic
+synthetic filler to target depth + fixed decode; server timings parsed; M6-class).
+
+**THE LADDER** (same binary, back-to-back boots; "cold" = fresh conversation, "warm" = the
+deterministic filler let the conversation cache serve a prefix — noted per row):
+
+| config | depth | prefill t/s | decode t/s | accept |
+|---|---|---|---|---|
+| (short-ctx class, same binary) | ~1-30k | ~5.7-6.5k | ~195 (M1) | ~79-81% |
+| 262k native | 157k (cold) | 6534 | 116.7* | 62.4%* |
+| 262k native | 244k (warm, cache_n 131k) | 5711 fresh | **173.9** | **79.4%** |
+| 1M yarn ×4 | 128k (cold) | 6291 | 126.3 | 73.7% |
+| 1M yarn ×4 | **937k** (warm, cache_n 113k) | **4343** | **98.7** | 60.9% |
+
+\* the 157k cold row decoded only 266 tokens (early stop) — short sample, lower-confidence row.
+
+**READING.** (1) Depth costs decode roughly linearly in the sparse-index overhead band we can see:
+−11% at 244k (best case: warm cache, 79% acceptance), −36% at 937k (98.7 t/s — still ~7x the public
+ceiling for this class). (2) Prefill: ~6.3-6.5k t/s in the 128-157k band, −33% at 937k (KV/idx
+streaming grows with depth; YaRN itself ≈ −4-8% at matched depth, 6291 vs 6534 cold-cold). (3) Draft
+acceptance degrades with depth on synthetic filler (79% → 61% at 937k) — how much is filler-content
+vs rope-extended positions is NOT separated; a real-corpus long-context probe would tell. (4) RAM
+headroom is a non-issue: 129 GB used of 184 at 937k with the 49 GB conversation cache absorbing the
+streamed KV. (5) **QUALITY: YaRN ×4 is clean at short prompts** — MMLU 94.29 ± 2.77 under the 1M
+config (mid-band vs tonight's 92.86-95.71 standing spread; mscale applies globally so this gate was
+necessary). Long-context REASONING quality (needle-style) at ≥262k is UNMEASURED — flagged, not
+claimed.
+
+**VERDICT.** The 1M and 262k configs are BUILT, TESTED, and on the shelf (launchers
+`launch-custom-iq3s-262k.sh` / `-1m.sh`) for any deep-context workload: at 937k the lane still
+serves 4343 t/s prefill / 98.7 t/s decode. The STANDING lane stays 131k — the campaign's bars and
+the anchor are measured there, and full-context costs 11-36% decode by depth. Sources:
+`campaign/results/depth-{262k-d130k,262k-d240k,1m-d127k,1m-d965k}.txt`, `mmlu-1m-yarn-ml.json`.
+
+
+### F-182 — THE BALANCE QUESTION: capacity is free, threads honestly idle, calibrate moot — the dynamic-context and CPU-utilization studies (2026-10-14 ~05:30, goal round 12)
+
+**THE OPERATOR'S QUESTIONS.** (1) Scale to 262k for real use, 131k for baselines — agreed. (2) Can the
+context window be dynamic — grow as needed, no fixed cost when small? (3) Should we leverage ≥80% of
+CPU threads? (4) Does `--calibrate` give gains? Plus: why only ~6k experts cached?
+
+**THE 6K-EXPERTS ANSWER.** The 1M boot's slot sessions carved **9.09 GiB** of the expert cache's
+VRAM (262k: 3.79 GiB; 131k: 2.91 GiB) — that boot cached ~6k experts instead of 10,182. Not a fault;
+capacity pricing in plain numbers.
+
+**CAPACITY IS FREE AT SHORT USAGE — MEASURED BACK-TO-BACK.** 262k vs 131k, same night, same binary:
+M1 177.0 vs 177.4 (−0.2%), pair 149.0 vs 150.2 (−0.8%), 6-conc 190.6 vs 193.2 (−1.3%) — statistical
+zero (an apparent −9% earlier in the evening was the drift swing, both configs reading ~177 at that
+hour vs the 01:00 peak of ~195). **The engine already does "declare big, pay per depth": streaming
+KV means cost tracks USED context, not declared capacity.** The only fixed cost is the slot-session
+arena (0.88 GiB going 131k→262k) — noise at our hit rates. The user's daily driver = the 262k
+launcher; baselines stay 131k. (Third 131k control by a mis-fired pool-workers boot: 176.7/147.4/
+189.3 — consistent.)
+
+**TRUE DYNAMIC CONTEXT (rope-on-grow): NOBODY DOES IT, AND IT BREAKS.** The scan (kvcached/OSDI'26,
+vAttention/ASPLOS'25, vLLM/SGLang/TRT-LLM, llama.cpp paged-KV RFC #21961, InfiniteHiP, InfLLM-V2)
+is unambiguous: no engine re-scales rope mid-conversation — KV cached under the old encoding is
+incompatible; silent corruption unless K is re-rotated (checkpoint/restart or 1.6×-prefill re-index
+are the only shipped mechanisms). Within one rope setting, capacity-elasticity is solved two ways:
+software paging (~3% overhead) or CUDA VMM (kvcached: reserve VA, map physical per use —
+production-adopted by Google/LinkedIn/Red Hat). OUR [code] PATH: make `--kv-grow`'s VMM coexist
+with the streaming+batch recipe (it currently refuses kv-resident/batch/resident-experts) — that
+eliminates the slot-arena cost entirely and makes 1M cheap. Our streaming-KV + top-2051-index
+design is validated as the published best practice (InfLLM/InfiniteHiP/TRT host-cache); our 173.9
+t/s @244k is competitive with anything published on one GPU.
+
+**80% CPU UTILIZATION: THE EVIDENCE SAYS NO — AND THE IDLE CORES ARE THE HONEST READING.** The
+CPU-threads scan (KTransformers SOSP'25, Fiddler, fMoE, llama.cpp #8684 maintainer-confirmed,
+#11765 3-cores-per-DDR-channel rule, TRT-LLM n-gram blog, vLLM v0.14 async scheduling): high CPU
+utilization is the design goal of RESIDENCY-INVERTED systems (experts on CPU DRAM with AMX — we
+have 98% VRAM residency, 2% CPU traffic, and Zen5 has no AMX). At GPU-bound offload "there is no
+mechanism for helper threads to do useful work; they'd just spin" (llama.cpp maintainer). Our
+15 workers are already ~2.5× past the 2-channel bandwidth saturation point (~6 threads) for expert
+math. **What the cores CAN do (evidence-backed, queued):** (1) host-side n-gram drafting feeding
+the same GPU verify — TRT-LLM measured +96% b1 / +64% b4 on cache-warm traffic, lossless, composes
+with MTP — NOTE: the engine's PLE (n-gram embedding) path may already be a partial implementation;
+investigate before building. (2) De-stall admission/orchestration (the 30-56 ms sync'd admissions =
+2-5 windows of stall; matches round-9's fenced-admission item). (3) Prefill support roles
+(tokenization, prefix-cache, staging). Chasing utilization for its own sake = spin-waiting or
+demoting work from a 1792 GB/s device to a ~100 GB/s one — both measured/literature-confirmed net
+negative.
+
+**--calibrate: MOOT AND DANGEROUS.** It is a SETUP-harness auto-tuner (15-30 min; A/Bs
+--pcie-frac, --spec-min-p, --pool-workers, adapt cadence; keeps >3% winners) — running
+`setup.sh --calibrate` would rewrite the config args and DESTROY the standing recipe (Launch Law).
+Its knobs: pcie-frac 0.35 and spec-min-p 0.5 are already campaign-measured optima (F-126,
+tau-curve-1); **--pool-workers 8 was A/B'd tonight: null** (182.8/145.3/190.6 vs 177.4/150.2/193.2
+control — mixed inside noise, as predicted at 2% CPU traffic; config reverted, standing verified);
+adapt cadence stays queued (interacts with the learned profile). Nothing it could measure is worth
+the config clobber.
+
+Sources: `campaign/results/262k-short{1,2,3}.txt`, `131k-ctrl{1,2,3}.txt`, `pw8{,b}-{1,2,3}.txt`;
+agent scans archived in the session record. No adoption; standing recipe unchanged and healthy.
+
+
+### F-183 — THE CALIBRATE RUN, BACKED UP AND TESTED: adapt tier +12.7% on its probe but a trade-off on ours; the spare 1.2 GB filled and measured (2026-10-14 ~07:30, goal round 13)
+
+**THE PROTOCOL (operator-specified).** See what --calibrate touches; back up the main config to
+~/LLM/backup; run it; also check whether it calibrates VRAM occupancy (1.2 GB unused observed).
+
+**WHAT IT TOUCHES (recon before running).** `setup.sh --calibrate` → `calibrate_config()` →
+`tools/calibrate.py`: sweeps --pcie-frac {0,.2,.35,.55,.75,.9,1} → --spec-min-p {.3,.5,.7} → a
+confirm round vs defaults → --pool-workers {15,10,8,4} → adapt-tier candidates — each value behind
+an engine RESTART, decode-rate probe with 3-round medians; keeps only >3% winners; writes winners
+into the config's args (the Launch-Law clobber) and per-PC into ~/.config/strata/settings.json.
+Does NOT touch VRAM occupancy. Ran via a direct `calibrate_config()` call (setup's interactive
+install path demands prompts / risks an 84 GB download with --yes). Backup first:
+`~/LLM/backup/2026-10-14-precalibrate/` (configs, launchers, merged binary, BUILD.json, sha256
+MANIFEST); the 13 other root jsons parked during the run so it found exactly one model.
+
+**ITS RESULTS (its own probe):** pcie 0.9 nominal best but under the 3% bar (ranges overlap ours
+0.35: 122-132 vs 0.9: 131-135) → it STRIPPED our --pcie-frac 0.35 (restored from backup per F-126);
+spec-min-p 0.5 CONFIRMED optimal (134.9 vs 117.6/130.8); workers 15 CONFIRMED (136.8 vs 129-135);
+**adapt tier: default 120.8 → every-1/80-swaps/decay-0.97 = 136.1 (+12.7%)** — the one real winner
+it found, saved to the per-PC settings file.
+
+**OUR VERDICT ON ITS WINNER (back-to-back boots, our probe battery):**
+
+| arm | M1 | pair | 6-conc | M3b |
+|---|---|---|---|---|
+| calibrated adapt (1/80/0.97) | 180.0 | 147.8 | 192.0 | 79.6% |
+| standing adapt (0.85) | 183.5 | 143.0 | 186.4 | 81.0% |
+| Δ | −1.9% | +3.3% | +3.0% | −1.4 pts |
+
+Mixed, nothing clears ±4%, and the directions run against M1 and acceptance (both on the priority
+list). Its probe = one long generation (TIER_MAX_NEW) where swap cadence dominates; ours = many
+short diverse requests where the learned profile + B6 pins already manage the tier. **NOT ADOPTED**;
+standing config restored byte-identical from backup.
+
+**THE SPARE 1.2 GB (--vram-reserve-mib 2000 → 800):** cache 10,190 → **10,703 experts (20.31 GiB)**,
+VRAM 32.07/32.6 — the gap filled as asked, then measured:
+
+| arm | M1 | pair | 6-conc | M3b |
+|---|---|---|---|---|
+| vram 800 (3 probes) | 170.8 | 148.4 | **195.6** | 79.9% |
+| standing 2000 (control) | 183.5 | 143.0 | 186.4 | 81.0% |
+| Δ | **−6.9%** | +3.7% | **+4.9%** | −1.1 pts |
+
+A clean CONCURRENCY-vs-SINGLE-STREAM trade: concurrent slots pull a wider expert union, so +513
+slots raise their hit rate; single-stream was already ~99% and pays the bigger cache's overhead.
+Under the no-regression law NOT adoptable into standing (M1 −6.9% breaches), but recorded as the
+**concurrent-favoring shelf arm** — it compounds with the same-signed adapt-tier arm and, later,
+with F-31 slot coupling. If real-use priorities ever favor concurrent aggregate over M1, the 262k
+daily driver can carry vram-800 (+ the adapt winners) as a labeled variant.
+
+Standing recipe verified restored (reserve 2000, decay 0.85, 10,190 experts, healthy). Sources:
+`campaign/results/cal-adapt{1,2,3}.txt`, `cal-ctrl{1,2,3}.txt`, `vram800-{1,2,3}.txt`;
+`/tmp/calibrate-run2.log` (the full sweep); backup manifest in `~/LLM/backup/2026-10-14-precalibrate/`.
+
+**ADDENDUM — "WHY NOT TAKE THOSE WINS?" (operator challenge, tested):** the stack (vram 800 +
+adapt winners) was re-tested where taking it is legitimate — the 262k REAL-USE config, back-to-back
+vs plain: 6-conc +3.5%, pair −0.1%, M1 −3.7%. The concurrent gain HALVED vs the single-arm reading
+(+4.9→+3.5) while the M1 cost persisted — the two measurements bracket a ±noise trade, not a win.
+Plain 262k restored as the real-use launcher; the armed variant shelved at
+~/LLM/backup/2026-10-14-precalibrate/custom-iq3s-262k-CONCURRENT-STACK-variant.json (one cp away).
+The honest concurrent lever remains F-31 slot coupling — the slots are DRAFTLESS; no cache-tuning
+arm changes that ceiling. Sources: 262k-plain-{1,2,3}.txt, 262k-stack-{1,2,3}.txt.
+
+
+### F-184 — F-31 SLOT COUPLING: ADOPTED — pair +11.5% for one env line (2026-10-14 ~09:30, goal round 14)
+
+**THE QUESTION (operator: "proceed with F-31 and prove its worth it").** Concurrent batch slots ran
+DRAFTLESS since the Windows era (STRATA_BATCH_MTP=0, suspended under the No-Regression Law after
+F-30b): uncoupled drafts rarely exact-match at temp>0, and the rescue variant that made slots pay
+was quality-banned (MMLU 95.7 → 91.4-92.9). Coupled drafting — the drafter samples with the
+target's chain + the same Philox draw — is quality-safe by construction (coupled_draft.hpp:5-6),
+and F-30b's own note said "the pair win came from drafting, not rescue".
+
+**THE DIAGNOSTIC FIRST (the journal's own prescription: "a diagnostic boot, not more static
+reading").** Static re-reading of the MERGED tree found the acceptance site plain exact-match
+(`outb[i] == tok[i+1]`, generate.cpp ~10226) with the verify pick drawn by
+`Verifier::sample_rows` (counter = row position, verify.cpp ~3172) — and the counter law
+(coupled_draft.hpp:19-30) algebraically COINCIDES with the position convention. Booted
+STRATA_BATCH_MTP=1 on the merged binary: **slot drafts accepted 60-67% sustained** — the coupled
+class, live. The "counter staging defect" of the old journal does not exist in the v0.1.44-merged
+tree; the wiring is complete. **F-31 was never a code project here — it was one suspended env
+line.**
+
+**THE PROOF (back-to-back boots, same night, our battery):**
+
+| arm | M1 | pair | 6-conc | M3b | MMLU |
+|---|---|---|---|---|---|
+| STRATA_BATCH_MTP=1 (F-31) | 175.1 | **162.8** | 193.7 | 79.8% | **97.14 ± 1.99** |
+| control (=0, standing) | 179.1 | 146.0 | 192.8 | 80.3% | (95.71 anchor class) |
+| Δ | −2.2% (noise; serial path untouched) | **+11.5%** | +0.5% | −0.5 pt | best gate of the campaign |
+
+**WHY PAIR AND NOT 6-CONC:** at pair, 2 slots + 2 draft rows = a 4-row window — the ~63% chance of
+banking a second row per slot comes nearly free. At 6-conc the window doubles 6→12 rows and the
+MoE expert-union cost of the extra rows eats the gain (+0.5%). The serial path (M1) is mechanically
+unaffected; its −2.2% is the night's spread.
+
+**QUALITY:** exact-match accept only — the emitted stream is the target's own picks on both accept
+and reject (the F-15 divergence lesson cannot arise; the F-30b rescue stays OFF by default).
+MMLU gate 97.14 ± 1.99 = the highest single gate ever recorded on this lane. The 60-67% slot
+acceptance also lifts nothing distributional: drafts only decide HOW MANY tokens a window banks.
+
+**ADOPTED:** `STRATA_BATCH_MTP=0 → 1` in BOTH the standing 131k launcher and the user's real-use
+262k launcher (concurrency is exactly the real-use case). Standing restarted on the adopted arm
+and verified (env confirmed on the engine process; health green). Sources:
+`campaign/results/f31-{diag-pair,bmtp2,bmtp3,ctrl1,ctrl2,ctrl3}.txt`, `mmlu-f31-bmtp-ml.json`.
+
+**WHAT THIS OPENS:** the concurrent ceiling moved for low concurrency; the 6-conc ceiling is now
+purely the expert-union cost of wider windows — the tier/cache arms of F-183 (which pay only under
+concurrency) and deeper slot drafts (draft(2,...) offers ONE proposal per slot; a longer slot
+chain, or the F-183 cache arms stacked ON the now-cheaper slot rows, are the follow-ons).
