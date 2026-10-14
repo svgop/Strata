@@ -6440,3 +6440,23 @@ ACTIONS: results v3-run{8..12}.txt committed; lock service to be re-armed by the
 "+10% on a bad window" is the Tier-0 battery starting with R10c PDL as the first drift-immune
 immediate-toggle pair (arms minutes apart, immune by construction). The F-188/F-189 retraction
 trail stands in full — wrong interim claims are marked as such in the journal, per campaign law.
+
+### F-191 — R10c PDL: REJECTED AS A NO-OP by the first drift-immune ABAB (2026-10-14 ~21:50, goal round 16 execution)
+
+Immediate-toggle pair design (fresh boots, identical warm-up, minutes apart, locked 2835):
+
+| leg | arm | M1 | pair | 6-conc |
+|---|---|---|---|---|
+| ctl1 | standing | 163.8 | 159.7 | 195.9 |
+| pdl | STRATA_DF_PDL=1 | 166.9 | 155.0 | 188.7 |
+| ctl2 | standing | 166.2 | 153.0 | 188.8 |
+
+ctl2 ≈ pdl on EVERY metric (≤1.2%) while both sit −4-5% under ctl1 — the evening gradient again.
+**PDL changes nothing on this engine/config: no M1 gain, no batched-window harm.** F-178's +3-8%
+estimate and the external corroboration (TRT-LLM/LMSYS) do not transfer here — plausibly because
+our serial windows' launch spacing is already hidden behind the host round-trip PDL would target.
+Env line removed from the launcher; R10c CLOSED as a measured no-op (supersedes the F-107
+Windows-era retraction with clean same-window data). The ABAB itself is the night's deliverable:
+arm-vs-arm within ±1.2% while the world moved −5% underneath — the noise floor and the drift
+gradient are now both quantified on this box. NEXT (Tier-0, same design): R10f PIN_BY_NEED +
+--adapt-async, then R10d ROUTE_RESIDENT 0.75, R10e L2 72.
