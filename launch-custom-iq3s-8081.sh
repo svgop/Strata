@@ -10,6 +10,8 @@ export STRATA_POOL_SPIN_US=100      # pool workers park after 100us instead of 2
 export STRATA_KV_PREFETCH=1         # +5.3%/4.1% prefill at 32K/64K
 export STRATA_ADAPT_LAG=2           # kills the lag-1 event sync stall in the adapt tier
 export STRATA_DMA_BATCH=1           # 84.9% fewer DMA submit cycles
+export STRATA_VERIFY_DEVICE_PLAN=1  # device-side routing plan when all experts resident
+
 export STRATA_PREDICT_CREDIT=1.0    # prediction credit (proven at 103k: 128 t/s / 97.6%)
 export STRATA_PREDICT_BUDGET=2
 export STRATA_ADAPT_PINCAP=48       # B6 victim protection
@@ -21,7 +23,7 @@ export STRATA_BATCH_MTP=1           # F-31 ADOPTED 2026-10-14: coupled slot draf
 export STRATA_BATCH_RESCUE=0        # off (quality law)
 export STRATA_SPEC_COUPLED=1        # coupled drafts on the serial path
 export STRATA_PLE_BATCH=1           # batched PLE key/value projections
-export STRATA_VERIFY_DEVICE_PLAN=1  # device-side routing plan when all experts resident
+
 export STRATA_ADAPT_OVERLAP=1
 export STRATA_ADAPT_OVERLAP_RESIDENT=1
 # F-72 battery arms (missing from the first port; measured acceptance points when experts swap)
