@@ -153,6 +153,19 @@ kernel 7.2.9; numa_balancing=0 small probe (open bar).
 | M1 single | **176.3** | 190.3 | −7.3%; drift is global, not GPU throttle (42 °C, clean) |
 | M2 pair | **145.3** | 159.4 | −8.8% |
 | M2 6-conc | **190.7** | 203.7 | −6.4% |
+
+## RE-ANCHOR v3 (2026-10-14 ~20:15, locked clocks 2835/14001 via strata-gpu-lock, warm stable server — F-188)
+
+| metric | MEAN (3 probes / 2 gates) | round-15 window | verdict |
+|---|---|---|---|
+| M1 single | **179.5** | 191.1 | **−6.1% — OUTSIDE ±4% noise: the 2835 bin costs M1** (decode latency-bound, boost-hungry) |
+| M2 pair | **177.7** | 175.5 | +1.3% — unharmed |
+| M2 6-conc | **214.7** | 216.0 | −0.6% — unharmed |
+| MMLU | **92.86** ± 2.8 (94.29/91.43) | 92.86 watch | rescue-on band, no escalation |
+
+Runs v3-run1/run2 are INVALID (cold cache / server churn — renamed in results/). **NEXT: user one-liner
+`sudo sed -i 's/^SM_CLOCK=.*/SM_CLOCK=3135/' /etc/sysconfig/strata-gpu-lock && sudo systemctl reload strata-gpu-lock`
+then 2 warm probes; step 3050→2950 if sw_power sustains; fallback = SM unlock + persistence + mem lock.**
 | M3b | **81.3%** | 80.5% | +0.8 pt |
 | MMLU-Pro | **93.6** (92.86 / 94.29) | 95.71 | ≈1.5 q / 70 — within noise, recipe unchanged |
 

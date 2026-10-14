@@ -6322,3 +6322,52 @@ mean and it poisons 3-run statistics.
 Standing = boot C (current recipe), healthy. The frozen baseline stays at
 `~/LLM/strata-frozen-baseline` as the permanent reference engine (launcher `launch-frozen.sh`).
 Sources: campaign/results/frozen-{1,2,3}.txt, curanchor-{1,2,3}.txt, curcurrent-{1,2,3}.txt.
+
+### F-188 — RE-ANCHOR v3 UNDER THE LOCK + THE SERVER-CHURN SAGA: 2835 costs M1 ~6%, pair/conc unharmed; 3135 is the next bin (2026-10-14 ~20:30, goal round 16 execution)
+
+**R8 CLOSED, LOCK LIVE**: strata-gpu-lock RPM installed by the user (19:01) — persistence
+Enabled, clocks pinned continuously since (pclk 2805-2827 / mclk 13801 held; the service held
+through a server-restart gap shorter than GRACE and released/re-locked correctly on longer gaps).
+
+**THE SAGA (infra, not engine)**: probes v3-run1/run2 and my direct curl tests measured a
+COLLAPSE (M1 150.8 → 90.9 → 55.6 t/s client-side) that DOes not exist. Root causes found:
+(1) my detached relaunch died with its tool-call shell and the task-runner RETRIED the command,
+parenting a new server to another call shell — servers churned; probe 2 measured a server that
+DIED mid-run (its engine's stderr log froze at 19:26 while requests kept serving from the next
+instance). (2) Fresh boots have a COLD expert cache: first-probe M1 penalty ~10-20% (run1 150.8
+on a fresh boot vs 179.5 warm mean). (3) A kill-loop self-matched its own shell (the recurring
+pgrep self-match trap — bracket-proof EVERY pattern). After killing everything and launching ONE
+setsid server (PID verified alive across call boundaries BEFORE each probe), warm-up traffic,
+then probes: **the engine's own per-request summaries NEVER dropped below ~173 t/s warm** — the
+"55 t/s essays" were a dying-server artifact. Marked v3-run1 COLD-INVALID, v3-run2 CHURN-INVALID.
+
+**RE-ANCHOR v3 (locked clocks, warm stable server, runs 3-5 = campaign/results/v3-run{3,4,5}.txt)**:
+
+| metric | mean (3 runs) | round-15 current window | delta |
+|---|---|---|---|
+| M1 single | **179.5** (178.3/176.8/183.3) | 191.1 | **−6.1%** |
+| M2 pair | **177.7** (174.1/179.3/179.8) | 175.5 | +1.3% |
+| M2 6-conc | **214.7** (210.7/216.9/216.6) | 216.0 | −0.6% |
+| M3b rate | 80.8 (80.0/81.5/81.0) | — | — |
+| MMLU (2×70q) | **92.86** (94.29/91.43) ± 2.8 | 92.86 (3g watch) | at watch level, > 92 escalation line |
+
+MMLU note: rescue arm ON (standing recipe); 92.86 matches the rescue-on historical band
+(F-30b: 91.4-92.9 class) — distribution untouched by anything today (clock state is
+distribution-neutral), no escalation.
+
+**VERDICT ON 2835**: M1 −6.1% is OUTSIDE the ±4% noise law → the 2835 bin is an M1 LOSS.
+Mechanism fits the physics: single-stream decode is LATENCY-bound (~160-300W observed, never
+power-capped) and boost-hungry — unlocked it reached ~3135; the lock removes ~9% of clock on
+exactly that path. Pair/6-conc (throughput-bound, SM-saturated windows) are unharmed (+1.3%/−0.6%).
+**NEXT: SM_CLOCK 2835 → 3135** (the card's own max boost — a floor AT max, not a cap below it):
+`sudo sed -i 's/^SM_CLOCK=.*/SM_CLOCK=3135/' /etc/sysconfig/strata-gpu-lock && sudo systemctl reload strata-gpu-lock`
+then 2 warm probes A/B. If `nvidia-smi dmon -s p` shows sustained sw_power at 3135, step 3050 → 2950.
+Fallback if no bin is both stable and boost-class: unlock SM entirely, keep persistence + mem lock
+(mem-lock alone still kills the mclk transition jitter). Run-to-run spread this session (176.8-183.3,
+±1.8%) vs anchor-era (±4%) hints the variance goal may already be working — needs more sessions to claim.
+
+**DURABLE OPS LAW (learned the hard way)**: before ANY timed measurement, verify the server PID
+identity (`ps -o pid= -p <pid>`), that it survived the previous tool-call boundary, and that the
+expert cache is warm (first-probe-after-boot is always the coldest); never attribute client-side
+t/s without cross-reading the engine's own "generated in X ms (Y tok/s)" summary — the engine's
+self-reported speed vs client wall is the fastest split-brain detector.
