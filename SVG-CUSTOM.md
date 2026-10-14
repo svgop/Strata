@@ -6405,3 +6405,38 @@ SETTLED CONFIG: SM_CLOCK=2835 (vendor-sane sustained bin, current state). Bin-vs
 3135 vs unlocked-for-M1) is queued as a MULTI-WINDOW series: 2 probes per bin alternating across
 days/sessions — the only design that beats the drift gradient. Secondary; Tier-0 battery (R10b
 diagnostic, R10c PDL, R10f PIN_BY_NEED) outranks it and must itself run as immediate-toggle pairs.
+
+### F-190 — THE UNLOCK VERDICT: the lock is EXONERATED (mildly beneficial), the decline is exogenous drift — cleared by toggle, fresh boot, and host audit (2026-10-14 ~21:10, goal round 16 execution)
+
+Operator demanded the regression be fixed rather than attributed to the box. Delivered the full
+toggle chain, same evening, same warm/stable server discipline:
+
+| arm (all this evening) | M1 | pair | 6-conc |
+|---|---|---|---|
+| locked 2835 (runs 8-9, ~20:25) | 173.3 | 164.1 | 200.0 |
+| **UNLOCKED (runs 10-11, ~20:50)** | **162.6** | **161.5** | **195.9** |
+| unlocked + FRESH BOOT (run 12, ~21:05) | 169.2 | 163.3 | 198.5 |
+
+FINDINGS:
+1. **Unlocked is slightly WORSE than locked-2835 in adjacent windows** (−6%). Unlocked boosts to
+   2962 MHz under load — the same effective bin the 3135-lock achieved and which ALSO measured
+   slower (F-189 window B). Consistent mechanism: SM bins above ~2.9 GHz are mildly counter-
+   productive for this engine's 1,800-kernel latency chains; the 2835 pin forces the efficient
+   bin. THE 2835 LOCK IS KEPT — it is not the regression, it is a small win.
+2. **F-188's "2835 costs M1 −6.1%" is RETRACTED** — that comparison reached across 7.5 h to
+   round-15's 191.1. The matched-window toggle proves the lock was innocent.
+3. **State accumulation exonerated**: fresh boot (cold cache, fresh learned-profile load from the
+   01:31 base) reads the same as the 1.5 h warm server (169.2 vs 162.6). Engine state, expert
+   profile, conversation cache, arena — all clear.
+4. **Host exonerated**: governor=performance, tuned=throughput-performance, 5.1-5.6 GHz under
+   load, Tctl 49 °C, no throttling anywhere; GPU power-cap time 0 µs even at 3135.
+5. Therefore: **the ±8-10%, hours-scale drift is real, exogenous, and survives every variable we
+   control** (lock, bin, boot freshness, host config). It hit 191-class at midday and 165-class at
+   21:00 on identical configs. Whether it is room/grid/GPU-DVFS-curve related is now the top
+   instrumentation question — but it is NOT ours to fix tonight and NOT caused by today's changes.
+
+ACTIONS: results v3-run{8..12}.txt committed; lock service to be re-armed by the user
+(`sudo systemctl start strata-gpu-lock` — config already at the settled 2835). The REAL path to
+"+10% on a bad window" is the Tier-0 battery starting with R10c PDL as the first drift-immune
+immediate-toggle pair (arms minutes apart, immune by construction). The F-188/F-189 retraction
+trail stands in full — wrong interim claims are marked as such in the journal, per campaign law.
