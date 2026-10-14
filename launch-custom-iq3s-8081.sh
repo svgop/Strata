@@ -15,7 +15,6 @@ export STRATA_PREDICT_BUDGET=2
 export STRATA_ADAPT_PINCAP=48       # B6 victim protection
 export STRATA_ADAPT_MIN_AGE=2
 export STRATA_ADAPT_DORMANT=64      # never-routed experts evictable after 64 rounds
-export STRATA_EXCHANGE_ROTATE=1     # +8.1% upstream anchor
 export STRATA_L2_SETASIDE_MIB=60    # B8 L2 set-aside over the GDN state
 export STRATA_BATCH_MTP=1           # F-31 ADOPTED 2026-10-14: coupled slot drafts (60-67% accept, pair +11.5%, MMLU 97.14). Exact-match only - the F-30b rescue stays OFF.
 export STRATA_BATCH_RESCUE=0        # off (quality law)

@@ -357,6 +357,22 @@ private:
     bool sample_rows(int S, std::string& err);   ///< the sampled slots' rows of the last batch window
     int32_t* h_commitb_ = nullptr; int32_t* m_commitb_ = nullptr;   // per slot [1, 0, pos, -1 ..], stride 2 + max_t
     int32_t* commitb_ = nullptr;
+    // savage-custom F-196: the batch commit double buffer.  A single mapped buffer forces commit_slot_prefixes to
+    // cudaStreamSynchronize before returning - the next round's stage_batch would overwrite words the commit
+    // graph's copy node has not consumed yet (the 1.2 ms exposed block F-194 measured).  Parity p reads
+    // h_commitb_[p*cb_host_] / commitb_[p*cb_dev_]; stage_batch flips the parity every round, and buffer p is not
+    // rewritten until two rounds later - behind that round's window sync (run_slot_rows syncs, batch_poll returns
+    // done only on cudaStreamQuery success), so the parity-p commit is always retired first.  Under
+    // set_commit_async the commit launches and returns; commitb_done_ is checked at the NEXT commit.
+    int commit_parity_ = 0;
+    int64_t cb_host_ = 0, cb_dev_ = 0;   // a parity half's stride in int32 elements (host: S*(2+max_t); device: 256-aligned)
+    cudaEvent_t commitb_done_ = nullptr;
+    bool commitb_pending_ = false;
+    std::vector<int> ckey(const int* rows, int S, int hbase, int parity) const {   // F-196: the commit graphs carry the parity
+        std::vector<int> k = bkey(rows, S, hbase);
+        k.push_back(parity);
+        return k;
+    }
     float* tail_snap_b_ = nullptr;         ///< per (slot, QSA layer) indexer tail snapshot
     void* arena_b_ = nullptr;
     int64_t last_pos_b_[8] = {};
@@ -382,7 +398,7 @@ private:
     double fl_since_ms_ = 0, fl_flush_ms_ = 0, fl_launch_ms_ = 0;
     int32_t pl_prev_[2] = {-1, -1};
     std::vector<uint32_t> pl_ple_rows_;   ///< the window's PLE rows (T x PLE_N_HEADS), gathered when layer 0 is served
-    bool capture_commit_batch(const int* rows, int S, int hbase, std::string& err);
+    bool capture_commit_batch(const int* rows, int S, int hbase, int parity, std::string& err);
     bool stage_batch(const int* rows, int S, int hbase, const int32_t* tokens, const int64_t* pos, std::string& err);
     strata::kernels::SamplerParams sampling_ = [] {
         strata::kernels::SamplerParams s;

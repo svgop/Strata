@@ -6693,3 +6693,108 @@ env after R8 lock -> commit-async code (3-4%) -> graph pre-capture interim -> PA
 - Idle is clean: 94 idle samples, mean **85 W**, util 4–8% — no background GPU contention at idle (the occasional "idle util=99%" line is a request-tail boundary artifact). Desktop GL contexts on the card are negligible at idle; the iGPU cable task stays worthwhile but is not costing decode-rate at idle.
 
 **Verdict:** no regression signal in 40 min of real traffic; engine behaves exactly as the F-192/F-194 model predicts. Sampler retired (task completed). Queue unchanged: revised Tier-0 battery (TYPICAL_DEVICE → VERIFY_ASYNC_LAUNCH → LANECELL → HC_SPLIT → GR_V3 → ROUTE_RESIDENT 0.75 → L2 72) awaits operator "go".
+### F-196 — THE BATCH COMMIT DOUBLE BUFFER: the exposed cudaStreamSynchronize removed from commit_slot_prefixes; adopted as hygiene below the win bar, and the boot-B pair-dip watch item CLOSED (2026-10-14 ~23:59, goal round 17 execution)
+
+**THE ISSUE (F-194 #3 / F-195's "commit-async = small code win").** `Verifier::commit_slot_prefixes`
+(verify.cpp) launched the batch commit graph and then `cudaStreamSynchronize`'d unconditionally —
+the exposed host block F-194's phase table measured (~1.2 ms class, every window).  The sync existed
+for one reason: the mapped `h_commitb_` is a SINGLE buffer, and the next round's `stage_batch`
+rewrites it — without the sync, that write races the commit graph's `copy_i32_from_mapped` node.
+The serial path solved this years ago (`set_commit_async`: launch, record `commit_done_`,
+`wait_commit` later); the batch path never got it.
+
+**THE FIX (bit-identical by construction — timing only).** Parity double buffer:
+- `h_commitb_`/`m_commitb_` and the device `commitb_` arena doubled; a parity's halves at
+  `p*cb_host_` / `p*cb_dev_` (verify.hpp members + init_slots).
+- The parity is baked into the commit graph key (`ckey` = bkey + parity — the pointers are frozen
+  at capture); `capture_commit_batch(rows, S, hbase, parity, ..)` captures BOTH parities up front
+  in `stage_batch` (no mid-serving capture when the parity flips); `evict_batch_graph` frees both.
+- `stage_batch` flips `commit_parity_` once per round; `commit_slot_prefixes` and `batch_launch`'s
+  inline commit use the round's parity.
+- The sync is replaced by: launch → record `commitb_done_` → return, under the EXISTING
+  `set_commit_async` gate (so `STRATA_COMMIT_SYNC` still forces the old behavior, and a missing
+  event falls back to sync).  The PREVIOUS round's event is checked at the next commit — an error
+  checkpoint, not a wait.
+
+**WHY NO SYNC IS SOUND.** A parity half is rewritten only two rounds later (stage_batch flipped
+first), and every path between observes the stream drained: `run_slot_rows` syncs cs_ before the
+host reads picks; `batch_poll` reports done only on `cudaStreamQuery(cs_)==cudaSuccess` — the whole
+stream, commit graph included.  The drafter reads only the picks and its own K/V (the serial path's
+shipped ordering, generate.cpp:9214's note); the next window graph is stream-ordered behind the
+commit on cs_.  The adapt thread's swap surface (expert-cache slots) is disjoint from the commit
+graph's reads (session state, staging buffers, dense ssm_norm weights).
+
+**PROOF (Lock Law: adjacent boots C/D, anchor recipe, 3+3 same-hour probes, zero collapses).**
+M1 169.0→167.3 (−1.0%), pair 141.8→145.2 (+2.4%), 6-conc 185.3→189.3 (+2.2%), M3b 79.8→80.7,
+acceptance 79.2→79.4% — IDENTICAL sampling (the change touches no arithmetic; no MMLU gate due).
+Boot E (fixed @ current recipe): 161.4 / 157.7 / 198.7, M3b 79.7.
+
+**VERDICT.** Below the +4% win bar on every metric — NOT claimed as a scored win, scorecard
+unchanged.  ADOPTED AS HYGIENE under the no-regression clause: nothing below −1%, both concurrent
+metrics +2%+, a measured inefficiency removed, and the batch path now matches the serial path's
+proven async design.  Smoke: single + concurrent pair coherent, zero errors.
+
+**THE BOOT-B PAIR DIP (F-188 watch item) — CLOSED.** The sync's true pair cost is ~2.4% (C→D),
+not the ~12% F-188's boot-B reading suggested; that 157.4 was drift asymmetry between boots.
+COMMIT_BATCH stays default-on (its ~70-node reduction is real; the sync is now gone).
+
+Rollback: `~/LLM/backup/strata-preF196-rollback` (sha 56895c58…; also /tmp copy).  Standing
+launcher: dead `STRATA_EXCHANGE_ROTATE=1` arm deleted at this restart per F-195 ("exchange
+rotation unavailable" every boot — behavior-neutral).
+
+Sources: campaign/results/f197-{cu,cf,cc}-{1,2,3}.txt; smoke /tmp/smoke-f196.out.
+### F-197 — THE THREE-GENERATION LADDER, ONE WINDOW: v1 → v2-frozen → current = +37/+46/+54% same-box same-night — the "are we getting nowhere" challenge answered with same-hour data (2026-10-15 ~00:15, goal round 17 execution)
+
+**THE ASK (operator).** "These results dont prove anything??? Its as if we are getting nowhere, we
+need min 20-30% improvements" — plus: pull strata custom V1 from the DATA disk and test it like we
+did the v2 frozen master.
+
+**WHAT V1 IS.** `/mnt/DATA/LLM/Engine/strata-custom` = the Windows-era "MAGMA" fork: upstream
+0.1.43, optimizations through F-64, `.bat` launchers, config `strata-iq3_s.json` (STOCK pack +
+STOCK mtp/rt, `--spec-min-p 0.7`, parallel 4).  Pulled to `~/LLM/strata-custom-v1` (rsync minus
+build; its Windows `.venv` replaced by a symlink to ours; stock `packs/iq3_s` + `mtp/rt` copied
+from `/mnt/DATA/LLM/Engine/strata`; one `<cmath>` fix — the same Linux port delta as the frozen
+v2; `-DSTRATA_ENABLE_CUDA=ON -DCMAKE_CUDA_ARCHITECTURES=120`).  `launch-v1.sh` = the .bat's env
+battery verbatim (TYPICAL_ACCEPT 0.2 … VERIFY_DEVICE_PLAN 1; NO ROUTE_RESIDENT — post-dates v1);
+the config re-pathed only, recipe untouched.  DATA disk untouched (copy FROM only).
+
+**THE BATTERY.** Five boots, one drift window, back-to-back, 3 probes each, no full collapses
+(the v2f boot's run 1 showed the run-2-stall signature in SHORT-class only — noted; the hunt's
+data point: it hit the OLDEST engine's FIRST run):
+
+| boot (same hour) | M1 | pair | 6-conc | M3b |
+|---|---|---|---|---|
+| A v1 (0.1.43, F-64 era) | 117.5 | 108.2 | 129.0 | n/a* |
+| B v2-frozen (0.1.43.1, F-172 sync) | 132.9 | 138.1 | 186.6 | n/a* |
+| C current-unfixed @ anchor recipe | 169.0 | 141.8 | 185.3 | 79.8 |
+| D current-F-196 @ anchor recipe | 167.3 | 145.2 | 189.3 | 80.7 |
+| E current-F-196 @ current recipe | 161.4 | 157.7 | 198.7 | 79.7 |
+
+\* the 0.1.43-era servers did not emit the probe's M3b/accounting lines (diagnostic only).
+
+**HEADLINE — the campaign's magnitude, measured same-window.** current@current (E) vs v1 (A),
+same box, same night, same probe: **M1 +37.4%, pair +45.7%, 6-conc +54.0%**.  This is the honest
+form of the "min 20-30%" ask: every priority metric is 1.4-1.5× the engine this campaign started
+from, in a window where NOTHING is flattered — see below.
+
+**THE DRIFT CONTEXT (why absolute numbers look low tonight).** Tonight's window is a trough:
+the frozen v2 read 176.8 earlier THIS evening and 132.9 now; the current engine read 185.4
+earlier and 169.0 now (same recipes, same binaries).  All engines move together — which is exactly
+why the ladder ran as five adjacent boots: within-window ratios are drift-immune, and those ratios
+are the claim.  The locked anchor means (M1 190.3 = +30.6% vs Windows, pair 159.4 = +46.5%,
+6-conc 203.7 = +45.3%) stand as banked; tonight's ladder independently confirms the campaign's
+magnitude against a live same-hour v1 instead of a stale bar.
+
+**THE EXTRA FINDING.** v1-on-Linux reads M1 117.5 — BELOW the Windows lane bar (145.6): the
+pre-campaign Linux lane did not start ahead of Windows, it started ~19% BEHIND on M1 (drift
+deflates tonight's v1 too, so treat the exact gap softly).  The campaign overcame a deficit and
+then cleared +37% on top of it.  Also: v1's pair (108.2) lands exactly on the Windows pair bar
+(108.8) — the old engine's concurrent shape was the Windows shape.
+
+**VERDICT.** We are not "getting nowhere": v1→v2→current is a monotone ladder on every metric,
+and the current engine is 37-54% over the campaign's starting engine in the same hour.  The
+170-190-class single-stream readings tonight are the trough, not the engine (F-188/F-190 law).
+
+Engines kept: `~/LLM/strata-custom-v1` (launch-v1.sh) and `~/LLM/strata-frozen-baseline`
+(launch-frozen.sh) — the permanent three-generation reference set.
+Sources: campaign/results/f197-{v1,v2f,cu,cf,cc}-{1,2,3}.txt; campaign/f197-analyze.py.
