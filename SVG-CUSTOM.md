@@ -6460,3 +6460,38 @@ Windows-era retraction with clean same-window data). The ABAB itself is the nigh
 arm-vs-arm within ±1.2% while the world moved −5% underneath — the noise floor and the drift
 gradient are now both quantified on this box. NEXT (Tier-0, same design): R10f PIN_BY_NEED +
 --adapt-async, then R10d ROUTE_RESIDENT 0.75, R10e L2 72.
+
+### F-192 — THE INSIDE MAN: the evening "drift" is largely OUR OWN CONTEXT GROWTH; the standing log already carries the full window profile (2026-10-14 ~22:10, goal round 17 study, server untouched)
+
+Operator hint: the "real user traffic" on 8081 is this ZCode session itself — every request
+carries the full conversation context (53k -> 110k+ as the session grew). Watched it live with a
+10-15 s /metrics sampler (Bearer key required; live.tok_s, live.phase caught "thinking" at 155.6
+t/s and "writing a tool call" at 113.6). Inside-man log: /tmp/insideman.txt (40 min, 15 s cadence,
+also tails new window lines).
+
+**THE WITHIN-BOOT TIME SERIES (single boot, same weights/tier, two traffic classes, ~2 h):**
+3.1-row windows 16.37 -> 18.89 ms (+15%), GPU-reach 11.2 -> 12.8; 6.6-row windows 27.14 -> 31.41
+(+15%), GPU-reach 18.6 -> 21.7. Both classes rise together and monotonically; CPU experts flat
+(2.8->3.1 / 4.6->4.9); NO thermal/power throttle (41-43 C, ~300 W of 575 W). Comparator: F-187
+diagnostic boot 29.99 ms/window (probe, short ctx) vs live 31.41 (session, long ctx) = +4.7%,
+concentrated in GPU-reach (+0.88) and emit (+0.23, +14%).
+
+**CONTEXT-vs-DECODE CURVE (log, generated tok/s bucketed by prompt tokens):** 3k = 171.1,
+4k = 160.2, 5k = 153.6, 6k = 153.8, 7k = 168.3, 9-11k ~ 150, 51-62k ~ 156. One-time ~10% penalty
+3k->5k, then FLAT to 60k+: sparse QSA (q+q-idx) caps the KV reads — the depth lane is healthy,
+110k context decodes at 145-155. So the within-boot rise = short-context probes -> long-context
+session traffic, saturating; NOT an engine regression. The r10c ABAB between-boot −5%/25 min
+gradient (fixed short-context probes) remains a separate, smaller exogenous component.
+
+**STAGE SEMANTICS verified in source (generate.cpp:10362, verify.cpp:3533):** GPU-reach wait =
+host spin-wait for the graph to reach each layer = pure GPU execution (69% of window); CPU experts
+= host pool for the 2.0% CPU-routed entries, GPU stalls at those layers (16%); emit = per-slot MTP
+draft launches + residual D2D copies (6%); commit = commit_slot_prefixes, matches the h_commitb_
+1.10 ms hazard (4%); adapt wait 0.18 = async tier healthy.
+
+**QUEUE CONSEQUENCES:** (1) R10b diagnostic boot DEMOTED — the standing log already prints the
+full per-window stage breakdown every time slots go idle; (2) partial device plan / ungated
+resident share RE-PRICED from 1.5-2.5 to up to 4.9 ms/window (~16%, live data), the biggest
+code-side prize after the GPU-execution core; (3) long-context lane needs no fix — sparse
+attention already flattens the curve; (4) realtime-stats recipe: GET /metrics with Bearer key,
+live.{state,phase,generated,tok_s}, hardware.{gpu_util,gpu_temp,gpu_power,gpu_pcie_rx_mb}.
