@@ -6678,3 +6678,18 @@ the boot line "adaptive tier asynchronous"; absent = arm never armed.
 **AGENT EXECUTION ORDER (impact×confidence÷cost):** TYPICAL_DEVICE env -> ROUTE_RESIDENT/QFUSE
 env after R8 lock -> commit-async code (3-4%) -> graph pre-capture interim -> PARTIAL DEVICE PLAN
 (the structural one) -> fenced admission -> sentinel bucketing. #10/#11 checks before any R10f A/B.
+
+## F-196 — Inside-man sampler: 40 min of live traffic under our own session (2026-10-14 21:29–22:08)
+
+**Source:** background sampler (15 s loop: /metrics live.{state,phase,generated,tok_s} + nvidia-smi util/temp/power + engine-log `serve:` lines) → /tmp/insideman.txt. Server untouched throughout.
+
+**Probe/window:** 51 request segments, 94 idle samples, 40 min. Every prompt carried 31k–101k tokens of context — i.e. ALL traffic in the window was this ZCode session itself. F-192 confirmed at scale: the evening "drift" observations ride on our own long-context traffic, not on background load.
+
+**Numbers:**
+- Decode mean **151.9 tok/s** across the band; first-half 156.7 vs second-half 149.9 (−4.3% over 40 min — inside the ±8% drift band, and the session context itself grew 68k→101k across the same span, so context growth plausibly explains most of the gradient).
+- Aggregate draft acceptance **68.5%** (36,222/52,877) — matches the standing slot-accept 67.7%; MTP healthy.
+- Cache-miss prefills: 4,600–6,600 tok/s on big fresh reads (52.9k, 44.4k, 23.7k new tokens) — confirms the F-192 correction that real prefill ≈5,700 tok/s, not the misleading /metrics mean.
+- **Context-vs-decode is FLAT-to-favorable at the top of the band:** 98k–101k contexts decoded 169–176 tok/s while 31k–43k contexts decoded 133–158. Depth is NOT the decode-rate driver in this regime; window composition (rows/slot mix) dominates. Reinforces R19c (fold n_q into attn block) as the width fix.
+- Idle is clean: 94 idle samples, mean **85 W**, util 4–8% — no background GPU contention at idle (the occasional "idle util=99%" line is a request-tail boundary artifact). Desktop GL contexts on the card are negligible at idle; the iGPU cable task stays worthwhile but is not costing decode-rate at idle.
+
+**Verdict:** no regression signal in 40 min of real traffic; engine behaves exactly as the F-192/F-194 model predicts. Sampler retired (task completed). Queue unchanged: revised Tier-0 battery (TYPICAL_DEVICE → VERIFY_ASYNC_LAUNCH → LANECELL → HC_SPLIT → GR_V3 → ROUTE_RESIDENT 0.75 → L2 72) awaits operator "go".
