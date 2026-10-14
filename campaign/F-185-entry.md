@@ -33,3 +33,12 @@ window numbers, not anchor claims — but they show the F-31-adopted recipe's co
 pair +62% over the Windows bar of 108.8, 6-conc +46% over 140.2).
 
 Sources: campaign/results/r9-ovl{1,2,3}.txt, r9-ctrl{1,2,3}.txt.
+
+**ADDENDUM — BATCH WIDTH 6 (the round-15 systems scan's top item, tested same hour):** `parallel: 4
+→ 6` (server.py; engine --batch 6): 6-conc **216.0 (209.6-219.5, +5.7% vs the fresh control's
+204.3 — the highest concurrent mean ever recorded here)**, pair 175.5 (flat), M1 191.1 (the drift
+peak; no regression), slot drafts 67.8% acceptance. Mechanism: the 6-client probe no longer queues
+2 clients on 4 slots; the extra verify rows ride the same graph nearly free on a launch-bound
+engine (MoE-Inference-Bench: fused-MoE batch scaling ~flat to saturation). Cost: 2 slot sessions =
+1.46 GiB of expert cache. **ADOPTED** into both configs (131k standing + 262k real-use).
+Sources: b6-{1,2,3}.txt.
