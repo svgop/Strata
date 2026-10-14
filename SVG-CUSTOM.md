@@ -6607,3 +6607,74 @@ STRATA_HC_SPLIT=1, STRATA_GR_V3=1 (V3 = bit-change, MMLU-gated). R19 refined int
 above; R19c (fold n_q into block) promoted to top Tier-1 code item — it is the mechanism behind
 the 6-conc ceiling. R20 re-scoped: hc down is 41-block parallelism-starved; env variants first,
 split-K only if they miss.
+
+### F-195 — CODE-STUDY AGENT VERDICT: merge exonerated, two new live env levers, R10f demoted, commit-async is a small code win (2026-10-14 ~23:40, goal round 17 study, server untouched)
+
+**METHOD:** read-only deep audit agent (merge 8d1c9d6 vs parents, live log, queue v4). Cross-checked
+against my F-194 mechanisms. Inside-man sampler still running.
+
+**MERGE VERDICT: no silent disable.** Upstream v0.1.44 wholesale + our 491-line patch re-applied
+clean; all our arms verified present (TYPICAL_ACCEPT/RESQ, PREDICT_CREDIT, PINCAP, L2_SETASIDE,
+BATCH_MTP, MTP tap, B3 counters). Only default that flipped at the merge: STRATA_COMMIT_BATCH
+on (F-180 measured neutral; MMLU 3-mean<92 watch stays the tripwire; =0 is the instant revert).
+
+**NEW LIVE LEVERS (env-only, join Tier-0 battery):**
+- **STRATA_TYPICAL_DEVICE=1** — built, parity-proven (F-16b), NOT in our launcher. Host rescue
+  path does full-vocab D2H (~1 MB) + 2×O(248k) host softmax per probe, up to 2 probes/window on
+  the M1 hot path (temp 0.7 probes). Device arm exists (verify.cpp:3343-3355, elementwise.cu:462).
+  Est 2-5% sampled M1. -> NEW TOP of battery.
+- **STRATA_VERIFY_ASYNC_LAUNCH=1** — v0.1.44 opt-in, never tested here: window launch wrapped in
+  HostGraphLaunch; its own comment warns an instrumented doorbell-graph launch "may block until
+  device work completes" — part of the 20-21 ms GPU-reach wait may be the LAUNCH CALL stalling.
+  Env-only A/B; watch release_gpu_waits.
+- ROUTE_RESIDENT 0.75 mechanism CONFIRMED (tail ranks 6-9 swapped for resident within margin,
+  renormalized; exit-time swap-rate stats built in). Stays queued.
+- QFUSE caveat CONFIRMED: g_qfuse disables T=1 self-commit (verify.cpp:878) — boot-rider only.
+
+**R10f DEMOTED (two independent reasons):** (a) PIN_BY_NEED ~0 upside here — RAM complement is
+already 100% pinned (cudaHostAlloc Mapped|Portable, "pinned 41.85 GiB" of 41.85); upstream's gain
+was complement-starved shapes. (b) --adapt-async 1 will NOT arm the v0.1.44 arena fast-path on our
+resident-RAM mode (needs srcp==&arena_src; we run srcp=&src) — takes the OLD exchange-buffer path
+only if exchange_capacity >= 2*a_cap, else silently stays blocking. GATE any adapt-async A/B on
+the boot line "adaptive tier asynchronous"; absent = arm never armed.
+
+**QUEUE CORRECTIONS:**
+- STRATA_VERIFY_DEVICE_PLAN_PART does NOT exist — partial device plan (F-185/F-194 #4) is
+  unimplemented CODE work, not an env A/B. Site map complete: plan layout already carries the
+  never-filled miss segment (counts[2]=0, start2[0]=n, verify_kernels.cu:1243-1251); pre-doorbell
+  publishes only misses (verify.cpp:1519-1526). Fix = emit resident groups + miss entries in
+  second region, skip=ring, gate only the CPU-row copy. MMLU-neutral by construction (exact
+  arithmetic). 9-15% class. Needs a lane reboot — quiet window per campaign law.
+- "Commit double-buffer BANKED via STRATA_COMMIT_BATCH" was WRONG: COMMIT_BATCH removes ~70 graph
+  NODES; the 1.10-1.23 ms is the forced cudaStreamSynchronize in commit_slot_prefixes (3151/3153).
+  The SERIAL path already has the async pattern (g_commit_async, verify.cpp:2643/2685-2697) — the
+  batch path never got it. Small code win ~3-4%: double-buffer m_commitb_ by window parity baked
+  into the graph key, drop the sync. (Matches my F-194 #3 exactly.)
+- Launcher hygiene: STRATA_EXCHANGE_ROTATE=1 is a DEAD arm ("exchange rotation unavailable" every
+  boot) — delete from launch-custom-iq3s-8081.sh at next restart.
+- Learned expert profile EXONERATED as drift suspect: expert-profile-learned.bin is write-only;
+  nothing reads it back. Drift suspects remain: boot age (in-boot adaptation state) + our own
+  context growth (F-192).
+- pcie_auto_step exonerated (requires pcie_frac_auto; we pass explicit 0.35).
+- Conditional-THP arena (#2126): boot-to-boot variance only; STRATA_ARENA_THP=1/0 pins it if the
+  "expert arena:" boot note ever flips.
+
+**NEW CODE ITEMS (Tier-1.5):**
+- Batch graph layout churn: graphs keyed on EXACT active-slot subset (batch_key), captured lazily
+  IN the serving path — 176 captures/5 boots (~35/boot) from BATCH_MTP=1 slot rotation. Multi-ms
+  stalls at admission/drain boundaries (tail, not steady M1). Interim: pre-capture canonical
+  rotation subsets inside copy_to_slot (already device-syncs); full fix = sentinel bucketing.
+- adapt_stream + cs_ have NO priority on this boot; in-tree pattern exists (mtp.cpp:461-476).
+  One-liner: adapt_stream at LOW priority. Small (adapt wait 0.15-0.35 ms + jitter).
+- Per-token printf+fflush on engine thread (generate.cpp:10293-10295) = 0.2-0.5 ms/window of
+  bt_emit. Buffer BT lines, one flush per window.
+- Fenced admission CONFIRMED heavy: ~14-30 cudaDeviceSynchronize per 6-slot admit wave
+  (copy_to_slot/from_slot, generate.cpp:10049-10140) = the 54.8-58.3 ms admit waves; pair/6-conc
+  under churn. Fix: stream-ordered events + one batched save/restore.
+- 3-way patch residue (harmless): dup telemetry resets (generate.cpp:10386-10389), two extra
+  printf args (10377-10378), dup dhead_type_ (mtp.cpp:716/722) — fold into next code round.
+- Config drift live: 262k daily-driver still "parallel": 4 after batch-6 adoption — A/B on its own port.
+
+**AGENT EXECUTION ORDER (impact×confidence÷cost):** TYPICAL_DEVICE env -> ROUTE_RESIDENT/QFUSE
+env after R8 lock -> commit-async code (3-4%) -> graph pre-capture interim -> PARTIAL DEVICE PLAN
+(the structural one) -> fenced admission -> sentinel bucketing. #10/#11 checks before any R10f A/B.
