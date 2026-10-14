@@ -1,0 +1,16 @@
+# Research brief 3: speculative decoding 2026 (agent, 2026-10-15) — 12 findings
+
+1. **Block Verification** (ICLR 2025, arXiv:2403.10444) — joint acceptance of whole draft blocks, provably-optimal expected accepted tokens, DISTRIBUTION-EXACT; 5-8% wall-clock, "never worse". Drop-in atop exact-match+rescue. ADOPT: +3-8%.
+2. **Draft-side temperature down-scaling** (arXiv:2609.24150 + EMNLP-2024 findings) — acceptance decided by overlap of the TEMPERATURE-SCALED distributions; sampling the draft head at T'≈0.4-0.5 while target serves 0.7 raises q/p overlap; lossless for ANY draft distribution under rejection sampling. HIGHEST-ROI TEST: +3-5pts acceptance plausible ≈ +5-9% banked tokens. Zero training, zero distribution risk. (We have spec_draft_temp_scale machinery in-tree already — sampler hooks exist.)
+3. **Nightjar** (arXiv:2512.22420, Feb 2026) — batch-contextual bandit over speculative length γ (context = batch size, reward = goodput): +14.8% throughput, −20.2% latency vs static depth; static SD degrades to −30% at high load. Lossless (length-only). ADOPT for slot scheduling.
+4. **Multi-draft WITHOUT replacement** (ICLR 2025, arXiv:2502.18779) — sampling method determines optimal multi-draft acceptance; without-replacement beats with; OT-dual is optimal. Pilot for 2 disjoint chains/slot.
+5. **Traversal Verification** (arXiv:2505.12398) — leaf-to-root path verification salvages subsequences parent-rejection discards; exact-lossless. The acceptance rule that makes #4/multi-chain exact-match-compatible.
+6. **FLy** (ICLR 2026, arXiv:2511.22972) — loose verification from already-computed logits: entropy gate (h<0.3 strict) + 6-token deferred window; 0.45 ms overhead; 2.62× at temp 1; ≥99% quality. NEAR-lossless (not exact) — quality-law risk, needs MMLU gate.
+7. **HeteroSpec** (ACL 2026, arXiv:2505.13254) — per-row cumulative-entropy CART-binned draft budgets; DED −8.65% verify calls, Top-N pruning −19.94% tokens for −0.11 accepted. Greedy-evaluated: re-tune bins at 0.7. Pilot.
+8. **CSD pattern memory** (arXiv:2604.13634) — online rejection-pattern table, prob-ratio gate τ=0.01; 1.75→2.02×. LOSSY. Optional; our coupled+min-p leaves little artifact mass.
+9. **TurboSpec** (arXiv:2406.14066) — closed-loop goodput controller; simplest production-safe version of #3.
+10. **Judge-decoding family** (arXiv:2501.19309 / SelfJudge 2510.02329 / AutoJudge) — lossy, needs judge training. HOLD — dominated by FLy for us.
+11. **Suffix-automaton draft override** (TRT-LLM ships it, sa_spec_threshold=4) — overrides the neural draft when an n-gram suffix match is long enough; free acceptance on code/log/templated spans; distribution-preserving (different draft SOURCE). ADOPT — cheap.
+12. **Depth 7-8 + early stop** (TRT verify-all-in-one-pass; ReDrafter 2.5×; Baseten +90% from draft-length tuning) — on a launch-bound engine extra verify rows are ~free: (1−a⁸)/(1−a) adds ~0.4-0.6 banked/window at a≈0.8. ADOPT — pairs with AdaEDL early-stop (known) + block verification (#1).
+
+**The exact-lossless acceptance space beyond our exact-match+typical-rescue = block verification (1) + traversal verification (5) + multi-draft w/o replacement (4). Everything with bigger numbers is intentionally lossy.**

@@ -20,12 +20,14 @@ export STRATA_BATCH_MTP=1           # F-31 ADOPTED 2026-10-14: coupled slot draf
 export STRATA_BATCH_RESCUE=0        # off (quality law)
 export STRATA_SPEC_COUPLED=1        # coupled drafts on the serial path
 export STRATA_PLE_BATCH=1           # batched PLE key/value projections
+export STRATA_TYPICAL_DEVICE=1      # F-200 ADOPTED 2026-10-15: device-side typical rescue (parity-proven port; +9.0/+6.7/+6.4 M1/pair/conc vs interpolated control)
+export STRATA_VERIFY_ASYNC_LAUNCH=1 # F-200 ADOPTED 2026-10-15: v0.1.44 HostGraphLaunch (+4.9/+7.9/+8.9 - attacks the 69% GPU-reach wait)
 
 # (STRATA_ADAPT_OVERLAP / _RESIDENT removed F-187: the engine refuses them while DMA_BATCH=1 —
 #  "is off: not with STRATA_DMA_BATCH" boot line; KEEP_MAPPING removed: dead branch on Linux,
 #  expert_source.cpp:510-520. F-185 rejected the overlap trade anyway.)
 # F-72 battery arms (missing from the first port; measured acceptance points when experts swap)
-export STRATA_ROUTE_RESIDENT=0.5
+export STRATA_ROUTE_RESIDENT=0.75     # F-200 ADOPTED 2026-10-15: battery +14.9/+8.5/+12.2 M1/pair/conc vs interpolated control; routing-changing -> 2x MMLU gate PASSED (92.86/97.14, mean 95.00)
 export STRATA_ROUTE_RESIDENT_MTP=1
 
 cd "$(dirname "$0")"
