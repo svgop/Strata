@@ -6495,3 +6495,49 @@ resident share RE-PRICED from 1.5-2.5 to up to 4.9 ms/window (~16%, live data), 
 code-side prize after the GPU-execution core; (3) long-context lane needs no fix — sparse
 attention already flattens the curve; (4) realtime-stats recipe: GET /metrics with Bearer key,
 live.{state,phase,generated,tok_s}, hardware.{gpu_util,gpu_temp,gpu_power,gpu_pcie_rx_mb}.
+
+---
+
+## F-193 — EXTERNAL STACK SCAN (agent) + read-only verification battery
+
+**VERIFIED LOCALLY (read-only, server untouched):** kernel journal today: 65 lines, ZERO Xid/NVRM
+warnings. PCIe link NOW: Gen5 x16 full width (sysfs current_link_speed 32.0 GT/s, width 16; max
+same). ASPM policy = `default` (BIOS-controlled; L1 substates likely enabled). nvidia-smi does NOT
+expose GDDR7 memory temp on GB202 (temperature.memory = N/A; -q -d TEMPERATURE has no Memory
+field) -> the "VRAM temp" hypothesis is NOT testable with our toolset, demoted. Engine binary
+links plain cuBLAS only (GemmEx, GemmStridedBatchedEx, Sgemm; NO cublasLt, NO grouped GEMM) ->
+CUDA 13.4's Blackwell grouped-GEMM wrong-results bug does NOT apply to us.
+
+**CAVEAT:** the scan was dispatched before F-192. Its items 1-4 target the between-boot
+−5%/25 min ABAB gradient (fixed short-context probes) — NOT the within-boot +15% series, which is
+now explained by our own context growth.
+
+**RANKED EXTERNAL FINDINGS (condensed):**
+1. X870E/AM5 Gen5 link-training + ASPM/fabric deep-idle: exact-pairing forum thread (RTX 5090 +
+9950X3D, Xid 79 at idle, ASPM off at register level, suspicion = AMD fabric C-states modulating
+link latency). Our policy is `default` = BIOS L1 substates on. Runtime-reversible test:
+`echo performance > /sys/module/pcie_aspm/parameters/policy` + 60 s LnkSta logging across a drift
+ABAB; also latest BIOS/AGESA (vendors shipped lane fixes).
+2. GB202 GSP firmware Xid 79/109/8 across 590-615 branches — today's journal clean; keep watching.
+3. GDDR7 ambient temp compensation — unmeasurable here (see above); demoted.
+4. Wayland/GNOME compositor + desktop video contending with decode on the dGPU — upstream's own
+v0.1.43.1 reverted "adaptive overlap" after "desktop decode collapses"; 4K playback + compositor
+plausibly 8-10% on a bandwidth-bound workload. -> PROMOTES the pending iGPU-cable task (one
+monitor still on 5090 DP-4; iGPU has free DP-2/DP-3).
+5. amd-pstate-epp boost regression on 6.17/6.18 (HFI preferred-core) — low-medium; optional
+taskset-to-V-cache-CCD ABAB.
+6. Upstream v0.1.44.1 (today): hotfix only (AVX2-free startup, CUDA 12.x builds, Metal); answers
+byte-identical; optional zero-risk rebase, no perf.
+7. ECHO-class budget-adaptive draft length (arxiv 2604.09603; vLLM DSpark; fergusfinn adaptive
+speculation) — fits the emit stage + Tier-2 draft chain: log per-hour MTP acceptance, then sweep
+draft length 1/2/3 per window offline.
+8. CUDA-graph FUSION (fewer fatter memory-bound kernels), not node-count cuts — consistent with
+F-191 PDL no-op (inter-node gaps <2%).
+9. FlashInfer SM120 GDN decode kernels exist (sm_120, not tcgen05-only) but vLLM/SGLang layouts;
+standalone microbench before any port.
+10. CUDA 13.4 grouped-GEMM bug — NOT APPLICABLE (verified: no cublasLt/grouped symbols).
+11. MoE expert prefetch — skip; fully resident at IQ3_S/32 GB.
+
+**QUEUE CHANGES:** iGPU cable promoted to top hardware task; ASPM-performance + LnkSta logging
+queued as user-sudo block for the next drift window; acceptance-vs-hour logging added to the
+inside-man analysis; env battery order unchanged (R10f PIN_BY_NEED first).
