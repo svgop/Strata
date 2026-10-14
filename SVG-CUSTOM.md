@@ -6971,3 +6971,14 @@ conditional nodes / device tail launch → exact two-phase head → Kitty KV / Q
 Full set: campaign/ROADMAP-30-VS-STOCK.md + research/F-200-*.md.
 
 Sources: campaign/results/f200-*, mmlu-mmlu-f200-adopt{,-b}.json.
+
+**F-200 ADDENDUM — THE STANDING RECIPE PINNED (post-adoption snapshot, 2026-10-15 ~04:00).**
+After the three F-200 adoptions the standing launcher (launch-custom-iq3s-8081.sh) carries, in
+full: TYPICAL_ACCEPT=0.2 · POOL_SPIN_US=100 · KV_PREFETCH=1 · ADAPT_LAG=2 · DMA_BATCH=1 ·
+VERIFY_DEVICE_PLAN=1 · PREDICT_CREDIT=1.0 · PREDICT_BUDGET=2 · ADAPT_PINCAP=48 · ADAPT_MIN_AGE=2 ·
+ADAPT_DORMANT=64 · L2_SETASIDE_MIB=60 · BATCH_MTP=1 (F-31) · BATCH_RESCUE=0 · SPEC_COUPLED=1 ·
+PLE_BATCH=1 · ROUTE_RESIDENT=**0.75** (F-200) · ROUTE_RESIDENT_MTP=1 · **TYPICAL_DEVICE=1**
+(F-200) · **VERIFY_ASYNC_LAUNCH=1** (F-200); config custom-iq3_s-8081.json: spec 6 / min-p 0.5 /
+parallel 6 / reserve 2000 / kv-resident 32768; binary = 0.1.44-merged + F-196 commit double
+buffer.  REMOVED this session: EXCHANGE_ROTATE (dead arm), ADAPT_OVERLAP/_RESIDENT (refused),
+KEEP_MAPPING (dead on Linux).  Reference pair kept: ~/LLM/strata-custom-2 + upstream-0144.
