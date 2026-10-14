@@ -6129,3 +6129,94 @@ credible 10-20% concurrent win.
 R19 layered prefill → R20 DuetServe look-ahead launch + launch-completion events + QKV-multistream-
 in-graph → R21 FastMTP+KV-injection training → R22 rare-expert mixed precision (quality axis) →
 R8 clocks (user step) whenever ready. Standing recipe now: merged 0.1.44 + BATCH_MTP=1 + batch 6.
+
+### F-187 — THE SIX-LEG DEEP SCAN: drift mechanism found (GPU state), the untested v0.1.44 opt-ins, dead-arm hygiene, and the floor-stair M1 lever (2026-10-14 ~14:30, goal round 16 study)
+
+Six parallel study legs (4 code + 2 web), user-directed. All file:lines verified by the legs.
+
+**CORRECTIONS to the standing queues:**
+- R9 overlap-unblock: already TESTED/REJECTED (F-185). Commit double-buffer: already BANKED —
+  v0.1.44 ships STRATA_COMMIT_BATCH default-on (verify.cpp:2039-2044). Removed from Tier-0/1.
+- QFUSE (R10a) downgraded to boot-rider with a CAUTION: it disables T=1 self-commit
+  (verify.cpp:879) — never pair it with a BATCH_MTP adoption boot; F-67 caps expectations.
+- Launchers carried dead arms: STRATA_ADAPT_OVERLAP / _RESIDENT are REFUSED while DMA_BATCH=1
+  (boot log: "is off: not with STRATA_DMA_BATCH"; generate.cpp:8886-8931) and KEEP_MAPPING is a
+  dead branch on Linux (file_tier_unbuffered=false without STRATA_UNBUFFERED_LOAD,
+  expert_source.cpp:510-520). DELETED from launch-custom-iq3s-{262k,8081}.sh this round.
+- 262k DAILY DRIVER still runs parallel:4 (custom-iq3s-262k.json:71) — the F-185 batch-6
+  adoption never reached it. A/B queued (R0).
+
+**NEW #1 — GPU state measured (the drift mechanism):** persistence_mode Disabled, clocks UNLOCKED
+(max sm/gr 3135 MHz, mem 14001; power 575/600 W; nvidia-persistenced unit disabled). Re-anchor
+v2's −7.3% M1 at 42 °C clean ("drift is global, not GPU throttle") is most consistent with
+unlocked boost/P-state churn between probe clients. R8 upgraded from "double-justified" to
+DIAGNOSED; exact block handed to the user (persistenced enable, -pm 1, -lgc 2835 [step 2745 if
+dmon sw_power/sw_thermal active], -lmc 14001, optional -pl 600; -rgc/-rmc reverts). VARIANCE
+FIRST: a claimable M1 needs the lock + re-anchor v3 before any mean-chasing round.
+
+**NEW #2 — v0.1.44 opt-ins never tested here:** STRATA_PIN_BY_NEED=1 + --adapt-async 1 are
+in-tree and untested; upstream release notes claim +4.2-5.2% decode on an RTX 5070
+(vendor-measured, our engine family). Pin-by-need page-locks only hot (layer,expert) pairs —
+same CPU-expert tail as the device-plan work. Env-only A/B (R10f), MMLU-gated (residency is
+stateful; F-180 history-dependence).
+
+**NEW #3 — the spec-path M1 lever, all distribution-neutral:**
+- The floor is the binder, not the cap: serial chain loop `while (T < S_mtp && dprob[T-1] >=
+  spec_min_p) ++T` (generate.cpp:12796-12798; pipeline twin 12271-12274). F-159 depths accept
+  96/93/90% at 1/2/3, but chains stop ≤3 at floor 0.5 → depths 4-6 starve under --spec 6.
+- Floor STAIR (0.5 at depths 1-2 → ~0.30 at 3+): offer-side only; serial verify is true
+  rejection sampling with residual resample (verify.cpp:2449-2465, sampler.cu:1007-1050) and
+  greedy is exact-match — outputs unchanged by construction. M1 +2-6% class. Gate: one
+  STRATA_SPEC_DEPTH=1 diagnostic boot + one spec-8 measurement boot (--spec 8 --mtp-max-t 8;
+  kVerifyMaxT=8 cap) to read depths 4-6 before committing.
+- Deeper slot chains: `set_max_drafts(1)`→3 (generate.cpp:4736), `slot_mtp->draft(2,...)`→4
+  (generate.cpp:10317), admit rows per-depth gated by dprob ≥ spec_min_p, generalize the
+  exact-match accept loop (10223-10234) to matched-prefix. Infra already kVerifyMaxT=8-ready
+  (BSlot::draft/dprob sized 8, generate.cpp:9992-9994; commit_slot_prefixes takes keep[],
+  verify.cpp:3129-3166). Pair +4-8% class; 6-conc is the regression guard (F-31 window-width).
+- AdaEDL (arXiv 2410.18351): proven-lossless entropy-based early draft-stop — the cheap,
+  training-free precursor of the F-186 open-lane entropy arbiter.
+- Rejection-sampled slot accept (batch path is plain exact-match today, generate.cpp:10227;
+  the q-list kernel exists for the solo path) = the distribution-SAFE substitute for the F-30b
+  rescue. Tier-1.5, MMLU-gate mandatory.
+
+**NEW #4 — Tier-1 code items now have implementation-level maps:**
+- Partial device plan: resident_plan_kernel aborts the WHOLE layer on any slot<0
+  (`atomicOr(&s_bad,1)`; verify_kernels.cu:1150-1162) while the plan layout already carries the
+  miss-share segment (counts[2]/start2/ptr2, expert_source.cpp:3862; verify_kernels.cu:1225-1229)
+  and post() has the per-region copy machinery (verify.cpp:1630-1666; doorbell publishes only
+  misses, 1520-1526). Remove the s_bad abort, emit resident groups, skip_ semantic 0=full/2=partial.
+  EXACT arithmetic (no rerouting) → F-69 margin risk inapplicable. Behind
+  STRATA_VERIFY_DEVICE_PLAN_PART=1. 9-15% class on the ~half of layer-windows paying the round-trip.
+- Fenced admission: ~2×(2+qsa_alloc)×stages cudaDeviceSynchronize() in copy_to/from_slot
+  (generate.cpp:10055-10105, 10110-10155); measured "copied in 54.8-58.3 ms" = 6 windows of
+  engine-thread stall per admission → stream events + one batched save/restore ≈ 15 ms. Stability
+  UP, pair/6-conc under churn.
+- Window width 8→12: kVerifyMaxT (verify_kernels.hpp:21), kResidentPlanMax 128→160, s_wsum[4]→[5];
+  +2 slot sessions = 1.9 GiB from 21.7 GiB pre-cache free; expert cache 9648→~8.6k slots vs
+  10,182 experts (decode hits 96-99% has margin). The structural 6-conc lever past ~204.
+- L2: 60 MiB was the ASK, not the cap — 262k log shows "60 MiB carve over a 112 MiB span,
+  hitRatio 0.536" (device.cu:376-410 clamps to the device attr). R10e sweep 60→72. 1-3% class.
+- kv-resident 32k→65k: +415 MiB (3.09 GiB host copy / 262k cells / 12 QSA layers; layer.cpp:636-653)
+  — M6b/depth-lane item, not a 6-conc bar mover.
+
+**EXTERNAL CORROBORATION (web legs):** PDL is production-standard on Blackwell — TRT-LLM ships it
+globally, LMSYS Ling-3.0-flash (batch-1 MoE + spec decode, our mirror) reports bitwise-safe PDL
+validated by byte-exact greedy checks, SGLang HPC-ops chain Gate-Up/router/attention with it →
+R10c confidence up (+3-8% journal class; their full-stack numbers higher). pegainfer: fusion >
+graph > megakernel on cost/benefit; LMSYS shipped bitwise-neutral fusion exemplars (SwiGLU folded
+into up-GEMM epilogue via even/odd column interleave). SP-MoE (arXiv 2510.10302): draft-gated
+expert prefetch 1.07-3.5× TPOT — Tier-2 candidate that feeds OUR planner. tcgen05 confirmed
+absent on sm_120 (CUTLASS docs) — matches the F-186 truth list. Upstream v0.1.44.1 = hotfix only,
+zero perf content — merge for hygiene only; hold driver 615.71.09; stay on kernel 7.2.9.
+Server per-token path measured NOT a round-trip contributor (~15-40 µs/token off-thread; <1% of
+a 5.3 ms window). Stability verdict: watchdog stack sound (ENGINE_STALL_S=90, tries=3, no Xid).
+RAM is 184 GB (the 64 GB note was stale) — OOM margin wide at 262k+6-conc.
+
+**QUEUE v4 (goal register updated; supersedes v3 ordering where conflicting):**
+R0 hygiene (dead arms DELETED this round; 262k parallel:6 A/B; logrotate) → R8 GPU state
+(USER SUDO, exact block above; then RE-ANCHOR v3) → R10b diagnostic boot → R10c PDL (3×3 +
+sustained gate + VERIFY_NODES edges>0) → R10f PIN_BY_NEED+adapt-async → R10d ROUTE_RESIDENT 0.75
+→ R10e L2 72 → spec-path diagnostics then floor stair (M1) + deeper chains (pair) → Tier-1 code
+order by R10b: partial plan → fenced admission → width 12 (+kv-resident 65k for the depth lane).
+Tier-2 additions: SP-MoE prefetch, LMSYS fusion recipes. AdaEDL before the full arbiter.

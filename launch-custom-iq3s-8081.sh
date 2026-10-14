@@ -3,8 +3,6 @@
 # LAUNCH LAW preserved: starts serve/server.py directly (setup.py rewrites the
 # "args" key on every setup run and would drop this recipe).
 # --- standing arms (each measured; see SVG-CUSTOM F-05/F-12/F-15b/F-16/F-64) ---
-export STRATA_KEEP_MAPPING=1        # F-64: keep mmap. No-op-likely on Linux (the unbuffered
-                                    # file tier that forced this is a Windows path), harmless.
 export STRATA_TYPICAL_ACCEPT=0.2    # Medusa typical acceptance (sampled traffic only; R5: worth +20.6pts accept / +8% M1)
 export STRATA_POOL_SPIN_US=100      # pool workers park after 100us instead of 20ms
 export STRATA_KV_PREFETCH=1         # +5.3%/4.1% prefill at 32K/64K
@@ -24,8 +22,9 @@ export STRATA_BATCH_RESCUE=0        # off (quality law)
 export STRATA_SPEC_COUPLED=1        # coupled drafts on the serial path
 export STRATA_PLE_BATCH=1           # batched PLE key/value projections
 
-export STRATA_ADAPT_OVERLAP=1
-export STRATA_ADAPT_OVERLAP_RESIDENT=1
+# (STRATA_ADAPT_OVERLAP / _RESIDENT removed F-187: the engine refuses them while DMA_BATCH=1 —
+#  "is off: not with STRATA_DMA_BATCH" boot line; KEEP_MAPPING removed: dead branch on Linux,
+#  expert_source.cpp:510-520. F-185 rejected the overlap trade anyway.)
 # F-72 battery arms (missing from the first port; measured acceptance points when experts swap)
 export STRATA_ROUTE_RESIDENT=0.5
 export STRATA_ROUTE_RESIDENT_MTP=1

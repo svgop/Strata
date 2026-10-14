@@ -91,35 +91,57 @@ plus the MMLU gate when distribution-bending, and must not regress any MEAN by m
 (±4% M1-class). Gains are claimed only on means. Sources: campaign/results/anchor-run{1,2,3}.txt,
 mmlu-linux-r4.json, mmlu-anchor.json.
 
-## NEXT ROUNDS QUEUE (re-ranked 2026-10-14 ~02:30 by the round-9 deep study, F-179)
+## NEXT ROUNDS QUEUE v4 (re-ranked 2026-10-14 ~14:30 by the six-leg deep scan, F-187)
 
-THE ROUND-9 THESIS: the engine is EXECUTION-bound — ~1,800 graph nodes/window at ~9.5 µs spacing
-carrying ~2.3 µs of bytes each; 24-26% of GDDR7 peak; ~2.9x honest ceiling without touching bytes.
-Byte cuts are devalued until node spacing is fixed; acceptance gains multiply on top (rows/s ∝ T).
+THE ROUND-9 THESIS stands: the engine is EXECUTION-bound — ~1,800 graph nodes/window at ~9.5 µs
+spacing carrying ~2.3 µs of bytes each; 24-26% of GDDR7 peak; ~2.9x honest ceiling without
+touching bytes. Node spacing before bytes; acceptance gains multiply on top (rows/s ∝ T).
+Supersedes the F-179 ranking and F-186 v3 ordering where they conflict. Banked/closed since v3:
+R9 overlap-unblock REJECTED (F-185), commit double-buffer BANKED (STRATA_COMMIT_BATCH default-on,
+verify.cpp:2039), batch 6 ADOPTED (F-185, 131k lanes only — 262k driver still parallel:4, R0).
 
-**Tier 0 — env-only, free (test in this order, some share boots):**
-- R9: F-67 overlap unblock — drop ADAPT_LAG/DMA_BATCH/VERIFY_DEVICE_PLAN, keep OVERLAP arms
-  (generate.cpp:8496-8516 refuses today). Verify the boot line arms the overlap. +2-6% conc.
-- R10a: STRATA_QFUSE=1 (−48 quantize nodes; verify.cpp:1065-1069; never tested here).
-- R10b: diagnostic boot STRATA_VERIFY_PROFILE=1 STRATA_DECODE_TIMING=1 STRATA_VERIFY_NODES=1 —
-  measure the budget before any code work.
-- R10c: PDL STRATA_DF_PDL=1 — production-backed node-spacing fix; sustained-reasoning gate MANDATORY.
-- R10d: ROUTE_RESIDENT margin sweep — kill the 2% CPU-expert doorbell tail (~2-3 ms/window);
-  MMLU-gated (changes output).
-- R5b: tau 0.15/0.10 + STRATA_SPEC_RATIO=1, MMLU-gated.
-- R8: clocks + power cap + Xid-79 check + iGPU cable (user steps).
-**Tier 1 — code, days:** commit double-buffer (1.10 ms hazard, h_commitb_); verify>adapt stream
-priority; ungated resident share / partial device plan (1.5-2.5 ms/window, 9-15%); fenced batched
-admission (30-56 → 10-20 ms).
-**Tier 2 — research→code, weeks:** F-31 slot coupling + device-driven draft chain (conditional
-nodes = green field, no production precedent, scaffolding exists); node-count fusion program
-(router+resident, QSA epilogues, BCG-style segment breaks, TRT-style router+topk single node).
-**Tier 3 — training:** FastMTP recursive re-tune (reuse r17 tooling).
-**Demoted (F-179 evidence):** draft-verify overlap (draft=6-9% of round), ReplaySSM-as-speed
-(0.23 GB state), from-scratch megakernel (window already one launch), hc→Q8 (until density fixed),
-trees, NVFP4, adaptive γ, GUMBEL.
+**R0 — hygiene (zero risk):** dead arms DELETED from both live launchers (F-187: ADAPT_OVERLAP
+refused while DMA_BATCH=1, KEEP_MAPPING dead on Linux). Open: 262k driver parallel:4→6 A/B
+(watch per-slot KV/conv-cache + M6b); logrotate drop-in for custom-iq3_s*.log.
+**R8 — GPU state (USER SUDO, NOW — variance first):** persistence Disabled + clocks unlocked
+measured (F-187) — the likeliest re-anchor-v2 drift mechanism. Block:
+`sudo systemctl enable --now nvidia-persistenced; sudo nvidia-smi -pm 1; sudo nvidia-smi -lgc 2835;
+sudo nvidia-smi -lmc 14001` (step -lgc to 2745 if `dmon -s pc` shows sw_power/sw_thermal; optional
+`-pl 600`; `-rgc`/`-rmc` revert). Then RE-ANCHOR v3 — all means reference post-lock conditions.
+**Tier 0 — env A/Bs (after R8):**
+- R10b: diagnostic boot VERIFY_PROFILE=1 + DECODE_TIMING=1 + VERIFY_NODES=1 (one boot; sets the
+  code order; not perf-representative — prof stamps, df_branch off).
+- R10c: PDL STRATA_DF_PDL=1 — corroborated 3 ways (TRT-LLM Blackwell-global; LMSYS Ling-3.0-flash
+  bitwise-safe batch-1 MoE+spec; SGLang HPC-ops). In-tree + parity-tested, G==1 windows.
+  3×3 + 2000-tok sustained gate + VERIFY_NODES programmatic-edges>0. [+3-8% class]
+- R10f: v0.1.44 opt-ins never tested here — STRATA_PIN_BY_NEED=1 + --adapt-async 1 (vendor
+  +4.2-5.2% decode on 5070). MMLU-gated (residency stateful).
+- R10d: ROUTE_RESIDENT margin sweep 0.5→0.75 (1.0 stays closed, F-69). MMLU-gated.
+- R10e: L2_SETASIDE_MIB 60→72 — 60 was the ask, not the cap (112 MiB span, hitRatio 0.536).
+- R10a: QFUSE=1 boot-rider ONLY (−48 nodes) — CAUTION: disables T=1 self-commit (verify.cpp:879);
+  never pair with a BATCH_MTP adoption boot; low prior (F-67).
+**Spec path — the M1 margin levers (all distribution-neutral, F-187 #3):**
+- Diagnostics first: STRATA_SPEC_DEPTH=1 boot + one spec-8 boot (--spec 8 --mtp-max-t 8).
+  Floor is the binder (F-159: 96/93/90% at depths 1/2/3, chains stop ≤3 at floor 0.5).
+- Floor stair 0.5/0.5/0.30… (generate.cpp:12796-12798) → M1 +2-6% class; offer-side only.
+- Deeper slot chains: set_max_drafts(1)→3 + draft(2,…)→4 + matched-prefix accept (F-187 map).
+  Pair +4-8% class; 6-conc is the guard.
+- AdaEDL entropy early-stop (proven lossless) before the F-186 open-lane arbiter.
+- Tier-1.5: rejection-sampled slot accept = distribution-safe F-30b substitute. MMLU-gate.
+**Tier 1 — code (order set by R10b):** partial device plan (s_bad abort removal; full data-path
+map in F-187; STRATA_VERIFY_DEVICE_PLAN_PART=1; exact arithmetic; 9-15% class) → fenced admission
+(sync map F-187; measured 54.8-58.3 → ~15 ms) → window width 8→12 (F-187 VRAM math: +1.9 GiB of
+21.7 free). Config rider: kv-resident 65k for the M6b/depth lane (+415 MiB).
+**Tier 2 — research→code:** v3 items stand (FlashInfer ports, ECHO budget, DuetServe look-ahead,
+layered prefill, sentinel-slot graphs, QKV-multistream) + NEW: SP-MoE draft-gated prefetch
+(arXiv 2510.10302), LMSYS bitwise-neutral fusion recipes (SwiGLU-in-GEMM epilogue) opening the
+node-density program, conditional nodes / metadata-glue graph capture for remaining host syncs.
+**Tier 3 — training:** FastMTP recursive re-tune (unchanged).
+**Upstream/env:** v0.1.44.1 = hotfix only (merge for hygiene); hold driver 615.71.09; stay on
+kernel 7.2.9; numa_balancing=0 small probe (open bar).
+**Demoted:** v3 demotions stand + QFUSE-as-headline, overlap-unblock (F-185), hc→Q8 byte cuts.
 **Open bar items:** M5 mimic port, M6 depth + short-class matched anchors, NTFS master sync
-(F-172..F-179).
+(F-172..F-187), log rotation, numa_balancing probe.
 
 ## RE-ANCHOR v2 (2026-10-14 ~00:15, fresh boot, current conditions — the A/B reference going forward)
 
