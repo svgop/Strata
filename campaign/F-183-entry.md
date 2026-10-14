@@ -52,3 +52,12 @@ daily driver can carry vram-800 (+ the adapt winners) as a labeled variant.
 Standing recipe verified restored (reserve 2000, decay 0.85, 10,190 experts, healthy). Sources:
 `campaign/results/cal-adapt{1,2,3}.txt`, `cal-ctrl{1,2,3}.txt`, `vram800-{1,2,3}.txt`;
 `/tmp/calibrate-run2.log` (the full sweep); backup manifest in `~/LLM/backup/2026-10-14-precalibrate/`.
+
+**ADDENDUM — "WHY NOT TAKE THOSE WINS?" (operator challenge, tested):** the stack (vram 800 +
+adapt winners) was re-tested where taking it is legitimate — the 262k REAL-USE config, back-to-back
+vs plain: 6-conc +3.5%, pair −0.1%, M1 −3.7%. The concurrent gain HALVED vs the single-arm reading
+(+4.9→+3.5) while the M1 cost persisted — the two measurements bracket a ±noise trade, not a win.
+Plain 262k restored as the real-use launcher; the armed variant shelved at
+~/LLM/backup/2026-10-14-precalibrate/custom-iq3s-262k-CONCURRENT-STACK-variant.json (one cp away).
+The honest concurrent lever remains F-31 slot coupling — the slots are DRAFTLESS; no cache-tuning
+arm changes that ceiling. Sources: 262k-plain-{1,2,3}.txt, 262k-stack-{1,2,3}.txt.
