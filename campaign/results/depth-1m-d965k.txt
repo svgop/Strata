@@ -1,0 +1,9 @@
+DEPTH-LANE 1m-d965k
+depth reached     : 936597 prompt tokens (target 800000)
+decoded           : 917 tokens
+wall total        : 199.4s
+server timings    : {"cache_n": 112640, "prompt_n": 823957, "prompt_ms": 189719.1, "prompt_per_token_ms": 0.23, "prompt_per_second": 4343.0, "predicted_n": 917, "predicted_ms": 9292.3, "predicted_per_token_ms": 10.133, "predicted_per_second": 98.7, "draft_n": 953, "draft_n_accepted": 580}
+prefill metric prompt_n = 823957
+prefill metric prompt_ms = 189719.1
+prefill metric prompt_per_token_ms = 0.23
+prefill metric prompt_per_second = 4343.0
