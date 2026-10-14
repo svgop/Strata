@@ -6541,3 +6541,69 @@ standalone microbench before any port.
 **QUEUE CHANGES:** iGPU cable promoted to top hardware task; ASPM-performance + LnkSta logging
 queued as user-sudo block for the next drift window; acceptance-vs-hour logging added to the
 inside-man analysis; env battery order unchanged (R10f PIN_BY_NEED first).
+
+### F-194 — SOURCE DEEP-DIVE: every phase-table line traced to its mechanism; attention is latency-starved, hc reads are parallelism-starved, commit is a host block (2026-10-14 ~23:00, goal round 17 study, server untouched)
+
+**METHOD:** own read-through of the hot path while the code-study agent and inside-man sampler run:
+qsa_decode_attn.cu (full attn_chunk_kernel body), fused_gr.cu (geometry + launch_multi + variant
+gates), verify.cpp (commit_slot_prefixes, stage_batch tail), verify_kernels.cu (gdn commit).
+No server touch, no code change. Comparator = F-187 phase table (29.99 ms/window).
+
+**1. QSA decode attention (4.40 ms = biggest GPU line; grows 1.6→4.4 with width = the 6-conc ceiling).**
+`attn_chunk_kernel` (qsa_decode_attn.cu:120), grid (ceil(cap/64), n_head_kv=2, n_q), CHUNK=64,
+HD=256, G=12, THREADS=256, ~15.5 KB shared. Mechanisms found:
+- ZERO prefetch: 0 cp.async/__pipeline hits in the whole file (the cp.async pipeline exists only in
+  the prompt/i8 variant and in fused_gr's staged kernel). Score loop: K row loaded per cell then
+  immediately consumed; value loop: 64 serial iterations/thread, each a dependent random pool read
+  through page_table indirection (~600-cycle DRAM latency, no overlap). Per block ≈72 dependent
+  round-trips ≈ 70 µs — matches 1.6 ms at n_q=1 (128 blocks, 1 wave) and the growth to 4.4 ms at
+  n_q=6 (768 blocks ≈ 2.3 waves at 3 blocks/SM occupancy).
+- No KV sharing across query rows: each of the 6 rows re-gathers its own selection of the SAME
+  context's pool — the width growth is pure re-gather.
+- CUDA pays 12 warp_sum shuffles/cell (60 shuffle instrs); REDUCE12 butterfly + QUERY_SWIZZLE are
+  compiled only under STRATA_HIP_GFX906 (env STRATA_GFX906_ATTN_REDUCE12 is dead on CUDA).
+- Byte math unchanged: ~125 MB KV/window ≈ 0.28 ms at 450 GB/s → 4.4 ms is 15× off bandwidth;
+  latency/occupancy-bound.
+MEANS (new queue items): R19b cp.async double-buffer of K/V rows (pattern already proven in
+gr_down_staged_kernel); R19c fold n_q INTO the block — one gather per cell, score against all rows'
+q in shared (6×12 KB sq = 72 KB fits Blackwell's 228 KB) → time ~flat in width = THE 6-conc fix;
+R19d port REDUCE12 butterfly to CUDA (claimed bit-identical: same operands, same order — low risk).
+LANE_CELL (STRATA_ATTN_LANECELL=1) already kills the 12 shuffles per cell — add to Tier-0 battery.
+
+**2. hc reads (4.2 ms; 6 launches/layer) — PARALLELISM-starved, not bandwidth.**
+Compiled geometry (fused_gr.cu:25): N=2560, HC=4, LR=320 → each hc down/up matrix = 10240×320 =
+3.28 MB q8; 2 sites (hc_attn/hc_ffn) × 2 matrices × 12 layers = **157 MB of weight reads per
+window** (min 0.35 ms at 450 GB/s; observed 4.2 ms = 37 GB/s). Cause: down kernel =
+DOWN_BLOCKS+1 = LR/WARPS+1 = **41 blocks** on 170 SMs (~2 warps/SM); Little's law in-flight
+≈20 KB/SM → ~80 GB/s ceiling. Up via gr_up_q32_kernel = 80 blocks (QFUSE_HC_LOCAL default ON).
+ENV-ONLY KNOBS FOUND (add to Tier-0 battery): STRATA_HC_SPLIT=0/1 (plain/split; default staged),
+STRATA_GR_V3=1 (stream-split two-kernel down/up — DIFFERENT sum order → MMLU-gated),
+STRATA_GR_DOWN_MAX4, STRATA_NO_MULTI_GR. Code means: split-K down (more blocks per row-group);
+q4 hc weights would halve the 157 MB but changes bits.
+
+**3. Commit stage (1.10–1.22 ms) = fully exposed host block.**
+commit_slot_prefixes (verify.cpp:3129): host writes commitb rows into mapped memory, launches the
+pre-captured batch commit graph (gdn_commit_layers already fused to ONE launch, grid (h_v,4,n_layers)),
+then `cudaStreamSynchronize(cs_)` — the host waits for the whole commit graph before emit/draft
+overlap. ple_stage() also runs CPU ngram_rows per accepted token. Tier-1 "commit double-buffer"
+= launch commit on cs_ and defer the sync until the next stage_batch needs the state buffers.
+
+**4. Doorbell tail — all-or-nothing fallback CONFIRMED at kernel level.**
+resident_plan_kernel: any entry with slot<0 → s_bad → `*skip=0` → the WHOLE layer-group falls back
+to the host doorbell round-trip (wait_flag_ge_or_kernel: `if (*skip == value) return;`). At 86.5%
+expert hit (~13% of entries miss), most layers pay the PCIe round-trip for 1–2 missing experts.
+Prize (Tier-1): per-group PARTIAL device plan — device plans resident entries, host services only
+the misses.
+
+**5. GDN (2.85 VRAM + 0.75 rec).** Commit already fused (gdn_commit_layers, one launch). State is
+fp32 128×128/head; byte-cut = bf16/int8 state — big bit-change, park.
+
+**6. Emit (1.87 ms).** Per-token `printf("BT %d %d")` + per-window fflush (server.py protocol),
+per-slot D2D copy of final_R rows + draft launch on slot streams. printf/fflush ≈ one syscall per
+window — minor; mapped-memory protocol is a later nicety.
+
+**QUEUE CHANGES:** Tier-0 env battery gains STRATA_ATTN_LANECELL=1, STRATA_HC_SPLIT=0,
+STRATA_HC_SPLIT=1, STRATA_GR_V3=1 (V3 = bit-change, MMLU-gated). R19 refined into R19b/R19c/R19d
+above; R19c (fold n_q into block) promoted to top Tier-1 code item — it is the mechanism behind
+the 6-conc ceiling. R20 re-scoped: hc down is 41-block parallelism-starved; env variants first,
+split-K only if they miss.
