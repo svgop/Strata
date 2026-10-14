@@ -6371,3 +6371,37 @@ identity (`ps -o pid= -p <pid>`), that it survived the previous tool-call bounda
 expert cache is warm (first-probe-after-boot is always the coldest); never attribute client-side
 t/s without cross-reading the engine's own "generated in X ms (Y tok/s)" summary — the engine's
 self-reported speed vs client wall is the fastest split-brain detector.
+
+### F-189 — THE BIN LATIN-SQUARE: evening drift swamped the 3135-vs-2835 A/B; bin question deferred, lock config settled at 2835 (2026-10-14 ~20:40, goal round 16 execution)
+
+User toggled SM_CLOCK 2835 → 3135 → 2835 via sysconfig+reload (service handled all three
+transitions flawlessly — re-applied on HUP each time, clocks verified pinned: 2827 / 2962-2970 /
+2827). Two warm probes per bin, same stable server (PID 1163282):
+
+| window | bin | M1 | pair | 6-conc |
+|---|---|---|---|---|
+| A (~19:40) | 2835 | 179.5 (3 runs) | 177.7 | 214.7 |
+| B (~20:00) | 3135 | 167.0 (2 runs) | 168.9 | 204.0 |
+| C (~20:20) | 2835 | 173.3 (2 runs) | 164.1 | 200.0 |
+
+C did NOT rebound to A: all three metrics slid monotonically A→B→C — a GLOBAL evening drift
+gradient (~−1.5%/20min), the re-anchor-v2 phenomenon operating within the hour. **My interim
+"3135 falsified" call (F-188 follow-up) was PREMATURE — the bin effect is confounded by drift and
+UNRESOLVED.** Both F-188's M1 −6.1% and the 3135 deficit are within the same-window-drift fog.
+
+WHAT TONIGHT ACTUALLY ESTABLISHED:
+- The lock SERVICE is production-solid: 3 config reloads, held clocks through boot gaps,
+  released/re-locked correctly, clean journal trail. R8's deliverable stands.
+- Matched-window tooling now trustworthy: within-window repeat spread ±1-2% (was the chaos of
+  the churn era). The A/B protocol requirement is confirmed in the sharpest form yet: **no
+  comparison across a 20+ minute gap, ever, on this box.**
+- All 7 valid locked runs (M1 160-183, mean 174.1) sit inside the campaign's ±8% drift envelope
+  of the anchors; nothing tried today is provably better or worse on means.
+- SW power-cap time at 3135: 0 µs — power was never the limiter; the "boost-hungry decode"
+  model needs revision: unlocked round-15 hit M1 191 in ITS window, but boost may matter less
+  than the window itself.
+
+SETTLED CONFIG: SM_CLOCK=2835 (vendor-sane sustained bin, current state). Bin-vs-bin (2835 vs
+3135 vs unlocked-for-M1) is queued as a MULTI-WINDOW series: 2 probes per bin alternating across
+days/sessions — the only design that beats the drift gradient. Secondary; Tier-0 battery (R10b
+diagnostic, R10c PDL, R10f PIN_BY_NEED) outranks it and must itself run as immediate-toggle pairs.
