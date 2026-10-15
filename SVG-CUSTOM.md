@@ -7332,3 +7332,18 @@ miss-aware (copies x/ids only when any_miss, else ring-bump only — elementwise
 the host pool is residency-aware on its side; partial mode needs only GPU-side plan/wait/dst
 edits.  doorbell_publish_value (#649 store-the-ring) confirmed one env var away for a clean
 re-test.  LANECELL confirmed a pure runtime env (qsa_decode_attn.cu:640).
+
+### F-209 — GitHub backup closed (infra; no engine change, no probes)
+gh 2.102.0 installed to ~/.local/bin (no sudo). Device-flow auth as **svgop** via pty driver
+(lesson: answer gh's ESC[6n CPR query or its TUI stalls; never answer OSC-11 — the reply
+bytes get parsed as prompt input and kill gh). `gh auth setup-git`; repo identity now
+svgop / 94788596+svgop@users.noreply.github.com. Fork **svgop/Strata** fetched: its main =
+upstream 0.1.44.1 (11 commits ahead of our base — the hotfix series, consistent with the
+F-208 baseline note). Our 49-commit campaign line pushed as new branch **master** (no force,
+every journal-cited SHA preserved). Empty repo svgop/strata-custom-2 created before the fork
+redirect — deletion needs delete_repo scope (`gh auth refresh -h github.com -s delete_repo`).
+Secret scan pre-push: API key 3f0940... present in tracked probe scripts + history
+(loopback-only key, private repo — left as-is; rotation = one sed if ever wanted).
+Upstream-PR plan banked: campaign/research/PR-UPSTREAM-plan.md (P1 hc wide-grid, P2 tuned
+defaults, P3 slot drafts, P4 commit parity, P5 split draft, P6 Linux port RFC, P7 doorbell
+RFC; #2075 territory = comment, don't duplicate).
