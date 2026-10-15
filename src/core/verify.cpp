@@ -262,7 +262,11 @@ bool fuse_wait_on() {
     }
     return per_dev[dev] == 2;
 #else
-    return false;
+    // savage-custom F-205: the fused wait+copy doorbell forms were HIP/gfx12-only by history, not
+    // by semantics - on CUDA they compile into the same graphs; arm with STRATA_FUSE_WAIT=1
+    // (default off until the A/B lands; ~144 nodes/window per the F-204 scan).
+    static const bool fw = [] { const char* v = std::getenv("STRATA_FUSE_WAIT"); return v != nullptr && v[0] == '1'; }();
+    return fw;
 #endif
 }
 
