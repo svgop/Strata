@@ -7241,3 +7241,29 @@ survived; the F-206 code was committed BEFORE the re-run, the lesson applied).  
 the R33 build (deployed, healthy).  Standing server restored on it.
 
 Sources: campaign/results/f206-*, /tmp/f206-r33-redo.log (transient).
+
+### F-207 — SOURCE CHECK + QUEUE RECALIBRATION + THE T1.1 IMPLEMENTATION PLAN (2026-10-15 ~13:30, goal round 18 planning)
+
+**THE SOURCES (operator: tqllm.com + the Chawla X post).**  tqllm's headline "16% faster than
+Strata" decoded: the 125B model on a 24GB RTX 3090 (experts streamed from RAM), GREEDY
+1024-token chats, their tuned MTP drafter (mtp-blk48-iq4, 3 drafts) vs STOCK Strata --spec 4 —
+a different lane from ours (32GB, sampled traffic, full recipe); no new technique on the page we
+don't own or have queued (their MoE host-offload = our pinned tier; TqCache = our streaming KV;
+TQ rotation quants = our Tier-3).  MONITOR: their Flash-Next 125B ships "coming soon" with
+exact-reference-identical output claims.  The X post: general spec-decoding explainer, nothing
+beyond our state.  THE STANDING SERVER verified live for the operator's monitor tab (health OK,
+HTTP 200, model resident).
+
+**THE RECALIBRATION (why the queue order changed):** R33's overlap made the batched draft-head
+GEMM's prize mostly bandwidth-shared already (~100µs residual) — it drops below the big lines.
+The F-206 fusion negative calibrated node-count items down.  THE ORDER NOW: **T1.1 partial
+device plan (4.90ms tail) → doorbell posted-write inversion (1.8-3.6ms) → attention row-fold
+(4.40ms line) → batched draft-head (residual) → R31 shape-keyed graphs**.
+
+**THE T1.1 PLAN WRITTEN (research/T1.1-partial-plan-impl-plan.md)** — tonight's flow read
+CONFIRMED the per-entry merge layout already supports mixed resident/CPU splits (m_ymiss rows
+are per-entry; dst lists mark GPU entries; copy_rows_from_mapped fills the rest; skip_ is read
+at RUNTIME by the wait kernels = graph-safe third state).  The edits: partial mode in
+resident_plan_kernel (+miss-entry list to device), publish misses via the EXISTING
+doorbell_publish_res, a third skip state gating flag-only waits, pool placement check.  ~150
+lines; token streams must stay bit-identical (same experts, only WHERE they compute).
