@@ -1,0 +1,12 @@
+# Deep brief 9: NVMe/file-tier (investigative-researcher, 2026-10-15) — 8 findings
+
+1. **RUN-2 STALL SUSPECT CONFIRMED as fsync-class**: one durable write on Gen5 consumer (Crucial T700 class, CedarDB fio) = ~500µs typical, >1ms tail, ~2,000 ops/s/thread vs ~10µs unsynced — PER-CALL, not amortized. Our every-30-rounds profile save = a 0.5-2ms serialization point on the inference thread. DIAGNOSTIC: `strace -e trace=fsync,fdatasync -T -p <pid>` around round 30; `fio --rw=write --bs=4k --sync=1 --latency_percentiles=10` per drive.
+2. **Isolate the sidecar to Gen5#2/Gen4** — zero code, kills same-device SLC-fold vs read contention (ATP: burst perf "drops sharply when cache full"; field reports 200-960ms worst-case stalls). "No heads" — the win is NAND-channel/FTL isolation.
+3. **fdatasync + preallocated fixed-size slot (ring buffer)**: appending files still journal size metadata; a fixed-size in-place slot skips the metadata transaction entirely (0-40% off the floor).
+4. **io_uring deferred persistence / async writer**: writer thread + single in-flight fdatasync; multiple saves collapse into one journal commit (group commit); loss window = last K saves (fine for a learned-profile sidecar).
+5. **Readahead triage**: KEEP 4096KB for the boot stream; `posix_fadvise(FADV_RANDOM)` per-fd on the random expert tier (context readahead mostly self-limits on pure random, but transitions trigger full-window fills: up to ~0.4ms wasted per misjudged window at 9.2GB/s). NEVER `blockdev --setra 0` whole-device (destroys boot stream).
+6. **Keep mmap for experts + MADV_RANDOM on the mapping**: warm random small reads ~2× vs read() (3→6GB/s class); minor faults free after pinning; 2MB PMD huge folios = 512× fewer faults at our chunk sizes; MADV_RANDOM stops fault-around explosion. MAP_POPULATE = the banked boot prefetch.
+7. **fadvise triage**: NOREUSE/DONTNEED worthless (no eviction pressure at 87GB used of 184GB); WILLNEED = banked prefetch. Only FADV_RANDOM is live.
+8. **Stay buffered; no O_DIRECT** (forfeits the cache that absorbs re-fetches; wins only when working set > RAM — not us). If ever needed: RWF_DONTCACHE (6.12+) per-I/O instead.
+
+**Actions ranked: (1) sidecar → other drive (zero code), (2) async single-flight fdatasync writer, (3) FADV_RANDOM/MADV_RANDOM expert tier, (4) readahead stays for boot, (5) keep mmap+THP. OPEN: our drives' fsync p99.9 + fs-vs-fsync deltas unmeasured — fio recipe settles.**
