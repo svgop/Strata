@@ -7267,3 +7267,68 @@ at RUNTIME by the wait kernels = graph-safe third state).  The edits: partial mo
 resident_plan_kernel (+miss-entry list to device), publish misses via the EXISTING
 doorbell_publish_res, a third skip state gating flag-only waits, pool placement check.  ~150
 lines; token streams must stay bit-identical (same experts, only WHERE they compute).
+
+### F-208 — THE FOUR-AGENT RECON: campaign audit + engine hostile review + external SOTA + measurement lanes — the queue rebuilt on four fronts; the 5090 is running the oldest attention kernel in the tree; two goal lanes were unscorable and now have instruments; baseline confirmed safe (2026-10-15 ~15:00, goal round 19 recon)
+
+**THE ASK (operator).** Specialized subagents to recon/research/study our work, progress, next
+steps — find missed high-value items — while the main loop reviews highest-return moves,
+criticizes the engine code itself, and identifies rewrite/overhaul candidates.
+
+**METHOD.** 4 agents in 2 batches (≤2 concurrent, the measured cap): campaign auditor
+(researcher, 1.95M tok), engine hostile reviewer (architect, 3.65M), external SOTA scan
+(researcher, 1.42M), measurement-lane designer (general-purpose, 2.03M).  Briefs:
+**research/F-208-{campaign-audit,engine-overhaul,external-sota,measurement-lanes}-agent.md**.
+Main loop ran its own review in parallel (journal greps, kernel reads, T1.1 publish-side
+pre-verification, git/remote check, server health for the operator's monitor tab: OK).
+
+**THE HEADLINE FINDINGS.**
+1. **The sm_120 build runs the OLDEST attention kernel in the tree.** PR#540's folded kernel
+   (documented bit-for-bit, fewer shuffles + 4-cell fold = directly attacks the dependent-load
+   latency chain F-194 diagnosed) is compiled only under STRATA_EXPERIMENTAL_SM60 and runtime-
+   gated cc<75 (qsa_decode_attn.cu:291/:609) — a V100-era register-count concern.  The 4.40ms
+   line sits ~40× over its bandwidth floor.  Better: upstream PR #2075 (open) does the
+   decode+drafter hookup with a bit-exact merge — cherry-pick first.  Est −1.5-2.5ms.
+2. **hc reads (4.2ms): order-preserving wide-grid fix designed** — 1-warp-per-row, 324 blocks
+   (vs 41), lane chunk order unchanged = bitwise identical (overhaul A3); PR#646/#783's
+   `hc_write_multi` may already be it.  Est −1.5-3.0ms.
+3. **The doorbell tail has a second half T1.1 cannot remove**: a SINGLE service thread
+   serializes layer l+1's flags behind layer l's pool drain (verify.cpp:3080-3130); plus batch
+   windows forfeit the group-split overlap machinery entirely (`!batch_rec_` forces G=1,
+   verify.cpp:882).  Plan-thread decoupling + a G=2 batch arm = the residual tail fix.  This
+   machinery (expert_source.cpp service loops) is the one-week-REWRITE pick — oldest code,
+   caps three other findings, survives T1.1 + posted-write inversion.
+4. **The F-200 void boundary was wrong**: F-205 voided exactly three result sets but the F-200
+   battery's non-adopted arms (LANECELL/GR_V3/L2-72/HC_SPLIT=1/MMQ_KQ) kept stale verdicts BY
+   OMISSION — all bare-based.  LANECELL read +3.6/+5.4/+1.9 ON A BARE BASE (plausibly larger
+   full-stack; #2268 says neutral — re-measure decides).  Re-arm tranche queued (Lane D).
+5. **Two goal lanes were unscorable and now have instruments:** prefill (client
+   `timings.prompt_per_second` = fresh-only rate — NO new engine surface; F-198's stock
+   scoreboard simply lacks the row) and mimic (the M5 tool EXISTS intact on the frozen disk,
+   stdlib-only, 4-diff port).  AND F-198 note 3 was WRONG: stock DOES print acceptance (probe
+   --log misconfig) — the acceptance-vs-stock denominator exists.  A ~2-2.5h catch-up battery
+   (spec written) scores all seven lanes, including the owed RR-0.75 adherence check.
+6. **spec-8 re-queue was incoherent**: depths 4-6 were never OFFERED (chain starves at floor
+   0.5, generate.cpp:12796-12798) — F-203's "tail dead by 6" was an inference over unmeasured
+   depths.  Stair diagnostic FIRST, then depth arms.  T1.3 (deeper slot chains, pair +4-8%)
+   was silently dropped in F-207's recalibration — restored (Lane B).
+7. **Baseline SAFE**: upstream v0.1.44.1 (Oct 13-14) = pure hotfix, answers byte-identical,
+   no CUDA-decode delta on our lane.  The moat is intact; free ideas live in UNMERGED PRs
+   (#2075, #646/#783, #2514 top-k dispatch audit, #2326 PIPED_CONCURRENT).  tqllm's Flash-Next
+   ship still not landed.  #2268 externally CONFIRMS our F-206 fusion negative.
+8. **Stacked arithmetic (overhaul §C):** 4.40→~1.5 · 4.2→~1.5 · 4.90→~0.5 · emit ~1.0 ⇒
+   window ~31.4→21-24ms ⇒ 6-conc clears the 244 bar with margin.  Every item individually
+   Lock-Law-able.
+
+**THE NEW MASTER ORDER (ROADMAP §0, v4):** Lane A code rocks: T1.1 → T1.2a pre75-on-sm120
+(via #2075) + T1.2b row-fold → T1.4 hc wide-grid → A2 plan-thread → A6 batch G=2 → posted-write
+inversion REPRICED post-T1.1 → R28 GDN identity → small class.  Lane B: stair diagnostic →
+stair+spec-6/8 → slot chains → block verification.  Lane C: the catch-up battery.  Lane D:
+env re-arms (LANECELL first).  HYGIENE: phase-table re-measure post-R33 BEFORE committing
+Lane A order; 49 commits unpushed on one SSD (power-cut precedent) — backup needed; ROADMAP
+§4 spacing items marked post-F-206 devalued.
+
+**MAIN-LOOP PRE-VERIFICATION (T1.1's open question closed):** doorbell_publish_res is ALREADY
+miss-aware (copies x/ids only when any_miss, else ring-bump only — elementwise.cu:329-351) and
+the host pool is residency-aware on its side; partial mode needs only GPU-side plan/wait/dst
+edits.  doorbell_publish_value (#649 store-the-ring) confirmed one env var away for a clean
+re-test.  LANECELL confirmed a pure runtime env (qsa_decode_attn.cu:640).
