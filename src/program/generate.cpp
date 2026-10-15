@@ -10269,6 +10269,11 @@ int main(int argc, char** argv) {
                 bt_rows += keep[active[a]];
                 bt_accepted += keep[active[a]] - 1;
             }
+            // savage-custom F-206 (R33): the slot drafts de-serialized — every residual copy and draft
+            // graph is enqueued first (the drafters' streams are independent), THEN the waits.  The old
+            // per-slot draft() was launch->spin->sync, so slot t+1's GPU work began only after slot t's.
+            int launched[8] = {};
+            int n_launched = 0;
             for (int t = 0; t < A; ++t) {
                 const int b = active[t];
                 BSlot& sl = bs[(size_t) b];
@@ -10314,12 +10319,20 @@ int main(int argc, char** argv) {
                                         ver.final_R_all() + (size_t) first[t] * stride,
                                         2 * stride * sizeof(float), cudaMemcpyDeviceToDevice,
                                         slot_mtp[(size_t) b]->stream()) != cudaSuccess ||
-                        !slot_mtp[(size_t) b]->draft(2, outb + first[t], pos[first[t]], keep[b] - 1,
-                                                    sl.draft.data(), err, sl.dprob.data(), (float) o.spec_min_p)) {
+                        !slot_mtp[(size_t) b]->draft_launch(2, outb + first[t], pos[first[t]], keep[b] - 1,
+                                                           sl.draft.data(), err, sl.dprob.data(), (float) o.spec_min_p)) {
                         std::printf("ERR batch MTP slot %d: %s\n", b, err.c_str());
                         return false;
                     }
                     sl.draft_ready = true;
+                    launched[n_launched++] = b;
+                }
+            }
+            for (int i = 0; i < n_launched; ++i) {   // the waits, in launch order — the graphs ran overlapped
+                const int b = launched[i];
+                if (!slot_mtp[(size_t) b]->draft_finish(err)) {
+                    std::printf("ERR batch MTP slot %d: %s\n", b, err.c_str());
+                    return false;
                 }
             }
             std::fflush(stdout);

@@ -1745,6 +1745,113 @@ bool MtpDrafter::draft(int T, const int32_t* tokens, int64_t p, int a, int32_t* 
     return true;
 }
 
+// savage-custom F-206 (R33): the split draft — see mtp.hpp.  draft() above stays the general
+// path; this pair covers the serving shape (max_drafts_ <= 1, min_p > 0), where draft() was
+// launch -> spin -> sync per slot and serialized the emit stage across independent streams.
+bool MtpDrafter::draft_launch(int T, const int32_t* tokens, int64_t p, int a, int32_t* drafts, std::string& err,
+                              float* probs, float min_p, int* n_drafts) {
+#if defined(STRATA_GPU_METAL)
+    err = "mtp: draft_launch is the CUDA split path; Metal uses draft()";
+    return false;
+#else
+    const OnDevice on_device(device_);
+    if (T < 1 || T > max_t_ || a < 0 || a >= T) { err = "mtp: draft arguments out of range"; return false; }
+    if (chain_live_ || draft_pending_) { err = "mtp: a draft is still in flight"; return false; }
+    const int max_steps = (int) std::min<int64_t>(std::min(max_t_ - 1, max_drafts_), st_.max_cells - (p + a));
+    if (max_steps != 1 || min_p <= 0.0f) { err = "mtp: draft_launch covers the one-proposal sampled shape only"; return false; }
+    if (!mtp_catchup_all()) T = a + 1;
+    const bool cp = coupled_active_;
+    if (!capture_round(T, cp, err)) return false;
+    const Clock::time_point t0 = Clock::now();
+    const int64_t NH = g_->n_head;
+    auto put = [&](int row, int64_t cell) {
+        h_step_[row * 4 + 0] = (int32_t) cell;
+        h_step_[row * 4 + 1] = (int32_t) (cell + 1);
+        h_step_[row * 4 + 2] = (int32_t) ((cell + 1) / 4);
+        h_step_[row * 4 + 3] = (int32_t) (cell + 1);
+        for (int64_t h = 0; h < NH; ++h) h_pos_[row * NH + h] = (int32_t) cell;
+    };
+    for (int t = 0; t < T; ++t) {
+        h_tok_[t] = tokens[t];
+        put(t, p + t);
+    }
+    put(2 * max_t_ - 1, coupled_draft_cell(p, a, 0));
+    ((volatile int32_t*) h_out_)[0] = -1;
+    h_row_[0] = a;
+    h_row_[1] = 0;
+    if (h_force_ != nullptr) for (int j = 0; j < 16; ++j) h_force_[j] = -1;
+    std::atomic_thread_fence(std::memory_order_seq_cst);
+    if (!stage_source_R(T, err)) return false;
+    if (g_dt.on) { g_dt.init(); cudaEventRecord(g_dt.eb[0], cs_); }
+    const Clock::time_point tl = Clock::now();
+    if (cudaGraphLaunch(cp ? round_exec_c_[T] : round_exec_[T], cs_) != cudaSuccess) {
+        err = std::string("mtp draft: ") + cudaGetErrorString(cudaGetLastError());
+        return false;
+    }
+    if (g_dt.on) { g_dt.launch_ms += std::chrono::duration<double, std::milli>(Clock::now() - tl).count();
+                   cudaEventRecord(g_dt.ea[0], cs_); }
+    (void) cudaStreamQuery(cs_);
+    SessionState* const pss = ple_ss_ ? ple_ss_ : ss_;
+    pend_do_ple_ = pss != nullptr && pss->ple.ready() && pss->ple.table != nullptr;
+    pend_ple_prev_[0] = pend_do_ple_ ? pss->ple_prev[0] : 0;
+    pend_ple_prev_[1] = pend_do_ple_ ? pss->ple_prev[1] : 0;
+    if (pend_do_ple_ && tokens[a] >= 0) {   // the launch-side PLE prefetch of the window's last token
+        uint32_t rows16[strata::kernels::PLE_N_HEADS];
+        strata::kernels::ngram_rows(&tokens[a], pend_ple_prev_, 1, pss->ple.consts, rows16);
+        pend_ple_prev_[0] = pend_ple_prev_[1];
+        pend_ple_prev_[1] = tokens[a];
+        pss->ple.table->prefetch_rows(rows16);
+    }
+    pend_drafts_ = drafts; pend_probs_ = probs; pend_n_ = n_drafts; pend_min_p_ = min_p;
+    pend_max_steps_ = max_steps; pend_t0_ = t0; pend_cp_ = cp; pend_dth_ = g_dt.on;
+    draft_pending_ = true;
+    return true;
+#endif
+}
+
+bool MtpDrafter::draft_finish(std::string& err) {
+    if (!draft_pending_) { err = "mtp: draft_finish without a pending draft_launch"; return false; }
+    draft_pending_ = false;
+    const OnDevice on_device(device_);
+    progress_at("mtp draft: waiting for the GPU");   // #2065: a stall here read as "decode"
+    const Clock::time_point tw = Clock::now();
+    uint32_t spins = 0;
+    while (((volatile int32_t*) h_out_)[0] < 0) {
+#if defined(_WIN32) || defined(__x86_64__)
+        _mm_pause();
+#endif
+        if ((++spins & 1023u) == 0 && cudaStreamQuery(cs_) != cudaErrorNotReady) break;
+    }
+    const float pj = ((volatile float*) h_prob_)[0];
+    if (cudaStreamSynchronize(cs_) != cudaSuccess) {
+        err = std::string("mtp draft: ") + cudaGetErrorString(cudaGetLastError());
+        return false;
+    }
+    pend_drafts_[0] = ((volatile int32_t*) h_out_)[0];
+    if (pend_probs_) pend_probs_[0] = pj;
+    if (pend_do_ple_ && pend_drafts_[0] >= 0) {
+        SessionState* const pss = ple_ss_ ? ple_ss_ : ss_;
+        uint32_t rows16[strata::kernels::PLE_N_HEADS];
+        strata::kernels::ngram_rows(&pend_drafts_[0], pend_ple_prev_, 1, pss->ple.consts, rows16);
+        pss->ple.table->prefetch_rows(rows16);
+    }
+    const int n = 1;
+    for (int j = n; j < max_t_ - 1; ++j) { pend_drafts_[j] = 0; if (pend_probs_) pend_probs_[j] = 0.0f; }
+    if (pend_n_) *pend_n_ = n;
+    if (pend_dth_) {
+        float ms = 0;
+        if (cudaEventElapsedTime(&ms, g_dt.eb[0], g_dt.ea[0]) == cudaSuccess) g_dt.round_ms += ms;
+        g_dt.wait0_ms += std::chrono::duration<double, std::milli>(Clock::now() - tw).count();
+        g_dt.steps += 0; ++g_dt.rounds;
+        g_dt.wall_ms += ms_since(pend_t0_);
+        if (g_dt.rounds % 300 == 0) g_dt.report();
+    }
+    if (g_mp.on) { g_mp.collect(1); if (g_mp.n[0] % 300 == 0) g_mp.report(); }
+    ms_draft += ms_since(pend_t0_);
+    ++rounds;
+    return true;
+}
+
 bool MtpDrafter::stage_source_R(int T, std::string& err) {
     if (src_R_ == nullptr || src_R_ == window_R_) return true;
     const Clock::time_point t_src = Clock::now();

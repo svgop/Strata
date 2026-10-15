@@ -104,6 +104,15 @@ public:
     bool draft(int T, const int32_t* tokens, int64_t p, int a, int32_t* drafts, std::string& err,
                float* probs = nullptr, float min_p = 0.0f, int* n_drafts = nullptr);
 
+    /// savage-custom F-206 (R33): draft() split in two so the serving loop can overlap all slots'
+    /// draft graphs — the drafters' streams are independent, but draft() is launch->spin->sync, so
+    /// slot t+1's GPU work began only after slot t's finished.  draft_launch() stages and launches
+    /// and returns at once; draft_finish() does the wait/read/sync and the bookkeeping.  Only the
+    /// serving shape (max_drafts_ <= 1, min_p > 0) is split — the general draft() is untouched.
+    bool draft_launch(int T, const int32_t* tokens, int64_t p, int a, int32_t* drafts, std::string& err,
+                      float* probs = nullptr, float min_p = 0.0f, int* n_drafts = nullptr);
+    bool draft_finish(std::string& err);   // completes the pending draft_launch (error if none)
+
     /// The first round: one cell (`cell`) from `R_row` (device) and `token` -> T-1 drafts.
     bool draft_first(int T, const float* R_row, int32_t token, int64_t cell, int32_t* drafts, std::string& err,
                      float* probs = nullptr, float min_p = 0.0f, int* n_drafts = nullptr);
@@ -223,6 +232,13 @@ private:
     // --pipeline-windows 2 (chain_launch)
     bool stage_source_R(int T, std::string& err);   ///< set_source_R's rows into the bound buffer
     bool force_on_ = false, chain_live_ = false;
+    // F-206 (R33): the pending split draft's state (draft_launch -> draft_finish)
+    bool draft_pending_ = false;
+    int32_t* pend_drafts_ = nullptr; float* pend_probs_ = nullptr; int* pend_n_ = nullptr;
+    float pend_min_p_ = 0.0f; int pend_max_steps_ = 0;
+    std::chrono::steady_clock::time_point pend_t0_{};
+    bool pend_cp_ = false, pend_dth_ = false, pend_do_ple_ = false;
+    int32_t pend_ple_prev_[2] = {0, 0};
     const float* src_R_ = nullptr;
     int32_t *h_force_ = nullptr, *m_force_ = nullptr;   ///< the forced tokens (mapped), -1 = the step's own pick
     cudaEvent_t ev_chain_ = nullptr;
