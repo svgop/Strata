@@ -7347,3 +7347,27 @@ Secret scan pre-push: API key 3f0940... present in tracked probe scripts + histo
 Upstream-PR plan banked: campaign/research/PR-UPSTREAM-plan.md (P1 hc wide-grid, P2 tuned
 defaults, P3 slot drafts, P4 commit parity, P5 split draft, P6 Linux port RFC, P7 doorbell
 RFC; #2075 territory = comment, don't duplicate).
+
+### F-210 — upstream 0.1.44.1 merge ADOPTED (validated neutral; 12 boots)
+Merge of upstream/main (11 commits: Metal #2323, serve crash diagnostics #2324 +
+reasoning_effort Responses, CPU-AVX static-init safety, qwen35 f16 widen for CUDA 12.1,
+version 0.1.44.1). Clean auto-merge, 0 conflicts; CMake took only the version bump.
+Battery (all same-hour, standing recipe, means-only):
+- ctl (pre-merge, 13:24-29): M1 195.7 / pair 177.3 / conc 227.5 / M3b 77.1 (3 boots)
+- merged (13:31-36): M1 183.0 / pair 176.8 / conc 220.9 / M3b 77.0 (4 boots, wide 174-193)
+- ABAB r1 (13:40/13:42): old 183.0/178.7/230.3 | new 190.3/184.2/234.9
+- ABAB r2 (3 interleaved pairs, one continuous idle run): old 173.5/160.3/204.3 | new 165.2/161.5/204.5
+POOLED interleaved (old N=4 vs new N=4): M1 175.9 vs 171.5 (-2.5%, SE +-4.6 = noise);
+pair 164.9 vs 167.2 (+1.4 new); conc 210.8 vs 212.1 (+0.6 new); M3b ~76 both.
+The -6.5% first-read gap was WINDOW DRIFT (own session context growth, F-192/F-196 class) -
+binary does not predict the reading, the clock does; ABAB settled it (again).
+MMLU gate on merged: 94.29 (66/70, floor 0.7) inside band 92.86-97.14. VERDICT: neutral, ADOPTED.
+INSTRUMENT LAW (new): response-SHA bit-identity is INVALID on this stack - identical
+temp-0 requests on the same binary+boot give different SHAs (spec drafter samples at
+scaled temp; exact-match verify still ends non-deterministic through batching order).
+Identity lane = engine-log accounting (accept%/windows) + MMLU class only.
+Tooling banked: campaign/battery-boot.sh (boot+probe driver), campaign/abab-run.sh
+(interleave driver; binary paths live in file contents only - footgun #4 law),
+campaign/bit-check.py (RETRACTED instrument, kept for the record). Results in
+campaign/results/f209-*. Branch: fork main fast-forwarded to our line (merge contains
+upstream tip); local master renamed main; fork master deleted.
