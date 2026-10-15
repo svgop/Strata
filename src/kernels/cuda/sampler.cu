@@ -804,12 +804,20 @@ sampler_split_merge_kernel(const int2* __restrict__ cand, int n_blocks, int n_vo
 /// The round's inputs: the request's SamplerParams and the history base (the last h slots before `cap`), from
 /// mapped host memory into the device copies the chain's kernels read.
 __global__ void coupled_stage_kernel(const SamplerParams* __restrict__ mp, const int* __restrict__ mh,
-                                     SamplerParams* __restrict__ dp, int* __restrict__ ring, int cap, int gumbel) {
+                                     SamplerParams* __restrict__ dp, int* __restrict__ ring, int cap, int gumbel,
+                                     float dt) {
     const volatile int* s = (const volatile int*) mp;
     int* d = (int*) dp;
     for (int i = threadIdx.x; i < (int) (sizeof(SamplerParams) / sizeof(int)); i += blockDim.x) d[i] = s[i];
     __syncthreads();                                   // the word holding `gumbel` was just copied
-    if (threadIdx.x == 0) dp->gumbel = gumbel != 0;
+    if (threadIdx.x == 0) {
+        dp->gumbel = gumbel != 0;
+        // savage-custom F-201 (R25): the DRAFT chain's sampling temperature only.  A cooler draft
+        // (STRATA_SPEC_DRAFT_TEMP < 1) sharpens the proposal list toward its own top pick - the
+        // exact-match verifier still emits the target's own picks either way, so the output
+        // distribution is untouched (proposals-only change, no MMLU gate class).
+        if (dt != 1.0f && dp->temperature > 0.0f) dp->temperature *= dt;
+    }
     const int h = strata::core::coupled_hist_len(((const volatile SamplerParams*) mp)->penalty_last_n, cap);
     const volatile int* vh = (const volatile int*) mh;
     for (int i = cap - h + (int) threadIdx.x; i < cap; i += blockDim.x) ring[i] = vh[i];
@@ -1316,8 +1324,14 @@ size_t coupled_draft_scratch_bytes(int nv) {
 
 void coupled_draft_stage(const SamplerParams* mapped_params, const int32_t* mapped_hist, SamplerParams* params,
                          int32_t* ring, int cap, void* stream) {
+    // F-201: STRATA_SPEC_DRAFT_TEMP scales the coupled drafter's sampling temperature (draft-side only)
+    static const float dt = [] {
+        const char* e = std::getenv("STRATA_SPEC_DRAFT_TEMP");
+        const float v = e != nullptr ? (float) std::atof(e) : 1.0f;
+        return v > 0.0f && v <= 4.0f ? v : 1.0f;
+    }();
     coupled_stage_kernel<<<1, 256, 0, (cudaStream_t) stream>>>(mapped_params, mapped_hist, params, ring, cap,
-                                                               gumbel_env() ? 1 : 0);
+                                                               gumbel_env() ? 1 : 0, dt);
     coupled_check("coupled_draft_stage");
 }
 

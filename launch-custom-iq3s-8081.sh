@@ -22,6 +22,7 @@ export STRATA_SPEC_COUPLED=1        # coupled drafts on the serial path
 export STRATA_PLE_BATCH=1           # batched PLE key/value projections
 export STRATA_TYPICAL_DEVICE=1      # F-200 ADOPTED 2026-10-15: device-side typical rescue (parity-proven port; +9.0/+6.7/+6.4 M1/pair/conc vs interpolated control)
 export STRATA_VERIFY_ASYNC_LAUNCH=1 # F-200 ADOPTED 2026-10-15: v0.1.44 HostGraphLaunch (+4.9/+7.9/+8.9 - attacks the 69% GPU-reach wait)
+export STRATA_SPEC_DRAFT_TEMP=0.85  # F-201 ADOPTED 2026-10-15: coupled drafter samples at 0.85x temp (proposals-only; exact-match verify emits the target's picks). Sweep 0.45-0.90 peaked here: M1 +13.4/pair +9.8/conc +7.5%
 
 # (STRATA_ADAPT_OVERLAP / _RESIDENT removed F-187: the engine refuses them while DMA_BATCH=1 —
 #  "is off: not with STRATA_DMA_BATCH" boot line; KEEP_MAPPING removed: dead branch on Linux,
