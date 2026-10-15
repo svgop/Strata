@@ -195,8 +195,8 @@ bool env_on(const char* name) {
 }
 #if defined(STRATA_USE_HIP)
 const bool g_coherent = env_on("STRATA_VERIFY_COHERENT");
-const bool g_doorbell_store = env_on("STRATA_DOORBELL_STORE");
 #endif
+const bool g_doorbell_store = env_on("STRATA_DOORBELL_STORE");   // F-203: un-gated from HIP (store-the-ring publish)
 const bool g_trace = env_on("STRATA_VERIFY_TRACE");
 const bool g_no_multi_gr = env_on("STRATA_NO_MULTI_GR");   // #783 PR-g: per-token GR reads/writes and generic-T kernels again
 const bool g_no_batch_kv = env_on("STRATA_NO_BATCH_KV_STEP");   // #783 PR-d: per-token K/V and indexer appends again
@@ -1520,12 +1520,13 @@ bool Verifier::record_window(int T, cudaStream_t cs, std::string& err) {
                               hits_.cache_base, slot_off_d_, (long long) hits_.blob,
                               plan_ + (size_t) grp * (size_t) (plan_i32_ + 16), (long long) max_t_ * K, skip_ + grp,
                               (uint32_t) ((l - lb_) * G + grp + 1), cs);
-#if defined(STRATA_USE_HIP)
+            // savage-custom F-203: #649's store-the-ring publish un-gated from HIP - on CUDA the ring
+            // value is the same capture-known constant, and the store drops the GPU's read of host
+            // memory (one PCIe RTT per served layer-group) that doorbell_publish's RMW pays.
             if (g_doorbell_store)   // #649 A/B: the step's ring stored, not incremented over PCIe
                 doorbell_publish_value(xm, ids_ + tb * K, w_ + tb * K, (int64_t) n * N, (int64_t) n * K, m_x_ + tb * N,
                                        m_ids_ + tb * K, m_w_ + tb * K, m_seq_, (uint32_t) ((l - lb_) * G + grp + 1), cs);
             else
-#endif
             // #578: the helper GPUs reduce with the routing weights - publish them; set_always_publish: the rows
             // whatever the device's residency table says (pipelined windows)
             if (remote_opt_ || always_publish_)
