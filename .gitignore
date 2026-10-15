@@ -61,3 +61,10 @@ build-vision-cuda12.bat
 
 /.ccache/
 /.rocm-win/
+
+# F-211 hygiene: runtime droppings never to be tracked again
+server-*.out
+build-log*.txt
+*.dmp
+custom-*.log
+strata-*.log

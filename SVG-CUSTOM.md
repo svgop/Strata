@@ -7371,3 +7371,26 @@ Tooling banked: campaign/battery-boot.sh (boot+probe driver), campaign/abab-run.
 campaign/bit-check.py (RETRACTED instrument, kept for the record). Results in
 campaign/results/f209-*. Branch: fork main fast-forwarded to our line (merge contains
 upstream tip); local master renamed main; fork master deleted.
+
+### F-211 — TREE HYGIENE: 123 files purged, root aligned to upstream shape
+User directive: strip mess/old/dirt, keep only what we run + the 262k/1m line,
+delete .bat, get close to niko/Strata. Purged (all preserved in git history):
+- 38 of our Windows-era .bat launchers (launch-v2-* arm/diag/battery zoo, launch-custom-*.bat,
+  build-strata.bat). KEPT niko's own BENCH/SETUP/START-HERE/UPDATE.bat (upstream files -
+  deleting them would DIVERGE from upstream) and llama.cpp's vendored .bat (library content).
+- .dsh/ (3 DeepSeek-Harness survey droppings), AGENTS.d/ (1 extraction), .docs/ (9 early
+  survey digests, superseded by campaign/research/).
+- Old launchers: launch-anchor-recipe.sh, launch-arm-pdl/qfuse.sh, launch-diag-profile.sh,
+  launch-custom-q2_0-8081.sh, run-iq3_s.sh, run-q2_0.sh. KEPT: launch-custom-iq3s-8081.sh
+  (standing), -262k.sh, -1m.sh.
+- Old configs: strata-iq3_s*.json battery-arm zoo (10), strata-q2_0.json, custom-q2_0-8081.json.
+  KEPT: custom-iq3_s-8081.json, custom-iq3s-262k.json, custom-iq3s-1m.json.
+- Runtime droppings: 6 tracked logs, server-8081.out, 3 Windows stall minidumps (.dmp),
+  refusal-r.gguf test artifact. .gitignore now blocks *.dmp/server-*.out/build-log*/custom-*.log/strata-*.log.
+- campaign/: 7 Windows .ps1 probes, 26 F-*-entry/addendum drafts (all already merged into
+  this journal - verified by spot-check), launch-anchor-test.sh + anchor-test.json (F-197 arm, superseded).
+- Old docs: MTP-HEAD-REFERENCE.md, PERF-CHART.md (superseded by campaign/ records).
+KEPT deliberately: third_party/llama.cpp (2821 files - our vendored Linux build system;
+upstream has NO root CMakeLists and no llama.cpp, so this is load-bearing, not baggage),
+CMakeLists.txt, data/ (live expert-profile state), AGENTS.md, SVG-CUSTOM.md, all of
+campaign/ tooling+results+research. No source files touched; live server untouched.
