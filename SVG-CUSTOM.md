@@ -7394,3 +7394,15 @@ KEPT deliberately: third_party/llama.cpp (2821 files - our vendored Linux build 
 upstream has NO root CMakeLists and no llama.cpp, so this is load-bearing, not baggage),
 CMakeLists.txt, data/ (live expert-profile state), AGENTS.md, SVG-CUSTOM.md, all of
 campaign/ tooling+results+research. No source files touched; live server untouched.
+
+### F-212 — F-211 PURGE BUG: refusal-r.gguf restored after first-boot failure (2026-10-16 01:41)
+
+The first post-reboot boot of the standing launcher died at engine start: "control vector:
+cannot open refusal-r.gguf", exit 2. Root cause: F-211's purge deleted refusal-r.gguf from
+the repo root, but the standing config custom-iq3_s-8081.json loads it every boot
+(--control-vector-scaled refusal-r.gguf:1.0, layers 4-24, project mode, per-layer). The
+server had stayed up across the purge, so the break waited for the next reboot to surface.
+Fix: git restore --source=d113423^ -- refusal-r.gguf (483,520 bytes). Law reaffirmed: before
+deleting any file, grep the standing configs for references — the purge list was built from
+directory shape, not from the config's dependency closure. Baseline battery restarted after
+the restore.
