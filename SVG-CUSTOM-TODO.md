@@ -905,3 +905,30 @@ target reachable by MICRO-FIXES before the cohort rewrite (R2-S3); the two audit
 pipeline then compounds on top (it addresses the 16.4ms GPU-serial + the residual inter-layer latency).
 CAVEAT (their honest note): ms_wait+ms_pool is an accounting identity; true exposure = the flagA gate
 (verify.cpp:1684 pre-VRAM-GEMM) + flag_ gate (1713 pre-combine) — exactly what fixes 1/2/8/9 strike.
+
+### T12-MEM/PREFILL audit (agent 3 — full forensic with geometry corrections; calibration: prof221 map + boot logs)
+GEOMETRY CORRECTED: 48 layers x 512 experts = 24,576 pairs (36 GDN + 12 QSA); n_ff 640; avg blob 2.046MB
+(types per native_experts.txt: IQ2_S/IQ3_XXS/IQ3_S gate-up + Q2_0/IQ4_NL down, L47 IQ4_XS = max 2.66MB).
+Residency ledger verified from code: 9,337 slots / 17.71 GiB = 38% of pairs -> 97.7% hit; cache is AT ITS
+VRAM CEILING (50.3GB of pairs > 32GB card; every extra GiB = +512 slots = +2.1pt).
+1. **VRAM-HITS LINE IS AT THE ROOFLINE**: 2,495 hits x 2.05MB = 5.1GB/window -> 2.9ms at peak vs measured
+   3.26 = 87-92% of bandwidth. => SUB-WARP EXPERT PORT RE-PRICED DOWN (its 3090 headroom doesn't exist here);
+   remaining fusible = the small lines (copy+combine 0.93/1.81, quant, gemv) ~0.5-1ms via gather->combine
+   fusion (+2-4%) — that lane, not sub-warp, is the expert-line work.
+2. **NEW: hc reads are ALU/cvt-bound, not bandwidth-bound** (3.93/1.25ms vs 26.2MB/layer — the unpack8 path);
+   FLOP headroom, not byte headroom — a new cheap-to-test lane (bf16-native ops in fused_gr).
+3. **GDN_CHUNKED IS SHIPPED-OFF AND IT'S OURS**: kernels.cu gdn_rec_chunked (WY-form, FP32, parity PASSING
+   at 8192/32768 on this rig — 0 failures; our own bench just ran: T=32768 chunked 8.90 vs standing-kh
+   14.93 = 1.68x; 36 layers per 32K block: recurrence+norm 699 -> 583 ms = -115ms/chunk ~ -2.1% prefill).
+   kGdnChunkedMin=128, SM/smem gates pass (170 SMs). Different bits (FP32 sum order) -> M3b/MMLU gated.
+   PILOT BATTERY RUNNING (gdnc vs gdnn 2v2). STRATA_GDN_CONVL2 = AMD-only by design (#1522: not bitwise on
+   CUDA sm_120) — do NOT arm on CUDA.
+4. Dense prefill CONFIRMED FP16-dequant cuBLAS (native_mmq is HIP-only; moe_mmq.hpp gated __HIPCC__):
+   dense line 25-40% of chunk (~200 TFLOP fp16). The a1444e33 port = CUDA-side run_dense + the tail-zero
+   gotcha — stays prefill #1 after the free chunked arm.
+5. +1 hit-pt via ROUTE_RESIDENT margin sweep (free VRAM-wise; -43.5% miss bytes; -1.95ms pool/window heavy
+   => +2-4% decode while pool serial; output-changing -> 2x MMLU gate).
+6. pcie-mode direct A/B (free measure: mode1 skips staging/flagB for the 0.3-0.4% PCIe share).
+7. Long-context: per-token cost past 32k ~25KB staging ~0.6us — the 6,534->4,343 tok/s decay 157k->824k is
+   staging-SYNC, not bandwidth. Stream reordering at 32K chunks: inert (all experts routed) — 95979cf2 value
+   = mid-size chunks only. Foresight: off + force-disabled beside DEVICE_PLAN (known).
