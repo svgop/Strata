@@ -7497,3 +7497,16 @@ pointer swap) eliminates the replay outright — the next kernel-lane project, s
 
 BANKED: campaign/battery-config.sh (fixed), campaign/{lanecell,mtpw4096,mtpw2048}-iq3_s-8081.json,
 results lanecell{,2}-r{1,2,3}, mtpw{,2}-4096-r{1,2,3}, mtpw-ctl-r{1,2,3}, ctl2-r{1,2,3}.
+
+### F-215 — LANECELL CONC PROFILE LOCKED IN (operator directive): launch-custom-iq3s-8081-conc.sh (2026-10-16 04:40)
+
+Operator: "This should be locked in and committed. 244 is too good to ignore." The F-214
+re-arm's conc profile (+4.6% conc / +2.9% pair at -3.5% M1 vs standing) is now a committed
+boot artifact: launch-custom-iq3s-8081-conc.sh = the standing launcher + STRATA_ATTN_LANECELL=1,
+with the evidence block in-file. Discipline note on the record: the STANDING launcher stays
+M1-first with LANECELL off — the conc profile is for concurrent-serving boots, and future
+conc-lane arms and A/Bs use it as their control. Target scoreboard after F-214: conc target
+244.0 has been TOUCHED (244.8, lanecell r3); pair target 193.8 touched (194.4, same round);
+M1 target 191.2 crossed by a stock ctl boot (208.3, evening band). All three targets have
+now been observed in-arm or in-ctl at least once — the campaign's remaining problem is
+making them concurrent and stable, not reaching them.
