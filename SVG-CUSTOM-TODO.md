@@ -878,3 +878,30 @@ seed-free; comparisons must be boot-vs-boot, never seed-vs-seed.
 5. CHEAP WINS: 2d6b1db8 PLE-beside-layer-0 (+4.1% code decode); R4#3+5 THP+CCD pinning;
    R5's /internal/loglikelihood + the cvec sweep (quality recovery).
 6. QUALITY INFRA: R5's Tier-0 gate before the next numerics-touching adoption.
+
+## T12 — CODE LATENCY AUDITS (2026-10-16 pitstop round; 3 agents: GPU window, HOST path [LANDED], memory/prefill)
+
+### T12-HOST audit (agent 2 — full forensic, file:line everywhere): the pool term is OVERHEAD, not compute
+Accounting fields derived from code: CUDA0 wait = the mapped-doorbell spin (doorbell_publish_value_kernel
+80KB fp32 activation write + seq store per layer-group); ms_pool = the WHOLE pool() call (plan-fill +
+quant + bookkeeping + both phase barriers — matvec is only ~10%: 1.2-1.4 CPU-miss experts/layer x 1.94MB
+at ~27GB/s/core = 85-100us core-time = ~5-7us wall/layer => window matvec 0.25-0.35ms); the remaining
+~4ms = host-side overhead: O(n^2) distinct-scan + tail-rank plan loops (~25-40us/call x 48 — the
+PRE-PUBLISH segment that gates flagA -> the GPU's VRAM GEMM start on every miss layer), the two-phase
+barrier machinery (4x wait_parked + 2x wait_done + futex sleeps at SPIN_US=100), mincore/prefetch
+bookkeeping + O(m^2) std::find miss list, lookahead 80KB memcpy under mutex.
+RANKED HOST FIXES (all scheduling/bookkeeping; bits unchanged except #4):
+1. Plan scans -> single-pass seen-mask using the existing d.job_of array: -1.2..1.7ms/window = +6-9%
+2. Barrier diet: drop the trailing wait_parked (pool.cpp:753; the invariant at 854-860 says begin_batch
+   only needs the pre-publish park) + keep 2-3 workers hot: -0.5..1.0ms exposed = +2-4%
+3. adapt join/apply_pending off the service thread (parity-half protocol like commit): -0.3..0.5ms = +1.5-2%
+4. Doorbell publishes the q8_1 image the GPU already computes (4x less PCIe; host skips act quant):
+   -0.35..0.7ms = +1.5-3% (ride the R4.2h scale-parity rule)
+5-10: emit printf/fflush inside the draft_finish wait; HostGraphLaunch wired into the BATCH path
+   (it is on but solo-only — run_slot_rows:3115 launches inline ~1.3-2k nodes); multi-row sample
+   launch; lookahead double-buffer; miss bitmap; park-storm at window start.
+PACKAGE #1-4: heavy window 22.7 -> 18.3-20.3ms = ~280-320 tok/s aggregate (+12-24%) — the conc-300
+target reachable by MICRO-FIXES before the cohort rewrite (R2-S3); the two audits converge: the cohort
+pipeline then compounds on top (it addresses the 16.4ms GPU-serial + the residual inter-layer latency).
+CAVEAT (their honest note): ms_wait+ms_pool is an accounting identity; true exposure = the flagA gate
+(verify.cpp:1684 pre-VRAM-GEMM) + flag_ gate (1713 pre-combine) — exactly what fixes 1/2/8/9 strike.
