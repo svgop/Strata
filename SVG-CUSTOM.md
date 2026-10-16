@@ -7815,3 +7815,21 @@ stragglers under the host's own setup work.  pool_diet_ member, =0 rollback by c
 HIT-RATE CHECK during the run (both logs): 96.5-99.8% across arm and ctl boots - the expert-profile
 shared state (data/expert-profile-learned.bin, saved every 30 requests) is NOT the band's cause.
 Box clean throughout (load 2.2, only strata busy, GPU 40C/2827MHz).
+
+### F-226 — STRATA_FUSE_HITS=1 ADOPTED: the hits-added combine fold clears the bar on its first-ever arm (2026-10-17 02:0x)
+
+The fold (moe_hit_add -> native_moe_combine_multi_hits_added, ZADD bitwise per native_moe.cu:46) sat
+behind a HIP-only #ifdef until de05c182 honored the env on CUDA - it had NEVER been armed here.  The
+3v3 (fuarm/fuctl r1-r3, same binary, ctl = standing): M1 202.5 vs 194.1 = +4.35% (bar +4%), pair
++2.34%, conc +1.24%, M3b 76.2 vs 75.6 in-band, ZERO lane regressions.  Round deltas +26.0/-11.2/+10.5
+(r2 went the other way, the mean holds).  ADOPTED into both launchers.
+MECHANISM NOTE: F-205 calibrated that node-count cuts (-344/window) do NOT move wall time at our
+spacing - so this win is NOT the node inventory; it is the removed COMBINE PASS work (the separate
+combine kernel's reads/writes) on every window with VRAM hits, which at 97.7% hit rate is every
+window.  Bitwise: the ZADD identity holds per element, M3b confirms in-band.
+ALSO: T13B (concurrency audit agent) landed - binding-constraint verdict: single-window serial chain
+(16.47ms GPU + 3.95ms additive pool + ~1.2ms host tail = 22.32ms for 6.55 rows = ~255 rows/s ceiling
+at 6-conc); NEW candidates: window rows 8->12 (generate.cpp:10144 caps batch_mtp at 4 of 6 slots),
+HostGraphLaunch for the batch path (solo-only today, verify.cpp:2348 vs :3116), emit batching
+(per-token printf + per-window fflush, generate.cpp:10297/:10338), admission sync diet, LFUSE on the
+doorbell path.  Dossier: campaign/research/T13B-concurrency-scheduling.md.

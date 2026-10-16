@@ -7,6 +7,7 @@
 # ABAB 3v3: M1 +6.0 / pair +7.0 / conc +5.3; bit-identical (parity 1172/0 on this GPU).
 export STRATA_ATTN_DAILY=1
 export STRATA_GDN_CHUNKED=1  # F-224 ADOPTED 2026-10-16: prefill DeltaNet recurrence in WY chunks (kernels.cu; OUR gdn_rec_parity --bench: 1.68x at 32K, -115ms/chunk). Paired prefill probe 2x4: -141..168ms (~-4.2%) EVERY pair; decode lanes neutral (3v3 ABAB, all inside noise); M3b in-band; MMLU-Pro 2x gate 95.7/92.9. Different FP32 sum order (prefill only) - the gate covers it
+export STRATA_FUSE_HITS=1  # F-226 ADOPTED 2026-10-17: the moe_hit_add->combine fold (was HARD-FALSE on CUDA, de05c182) - ZADD bitwise per native_moe.cu:46. 3v3 ABAB (fuarm/fuctl): M1 +4.35% (202.5 vs 194.1), pair +2.34%, conc +1.24%, zero lane regressions, M3b in-band (76.2 vs 75.6)
 export STRATA_TYPICAL_ACCEPT=0.2    # Medusa typical acceptance (sampled traffic only; R5: worth +20.6pts accept / +8% M1)
 export STRATA_POOL_SPIN_US=100      # pool workers park after 100us instead of 20ms
 export STRATA_KV_PREFETCH=1         # +5.3%/4.1% prefill at 32K/64K
