@@ -7447,3 +7447,53 @@ not a regression. Standing server restored after the battery (200 on /v1/models)
 The harvest (SVG-CUSTOM-TODO.md T1.x) is unaffected and is the actual point: their engine's
 end-to-end loss reflects their pre-gate MoE-prefill state and 16-24GB-card tuning; the shared-
 expert fusion, cache policies, and rule-table discipline remain the transferable value.
+
+### F-214 — INDEX-SHARE ADAPTATION VOID: the drafter window is not the bottleneck; LANECELL re-arm confirms its conc profile; battery-config.sh env bug caught by the canary (2026-10-16 04:30)
+
+THE QUESTION (operator: "proceed with more genuinely novel work"). T7.A's #1 item, IndexShare-MTP
+(SGLang: freeze the QSA selection at draft-extend, indexer work N->1), was mapped onto OUR engine
+first — static reading found our drafter ALREADY skips the indexer per step (mtp.cpp:463 ident_
+ids precomputed at load; per step only a window slice at :1063). The translatable knob was
+--mtp-window (generate.cpp:670, standing default 32768): the draft layer attends the last N
+cells every step. Hypothesis: 4096 would slash per-step draft attention.
+
+THE INSTRUMENT BUG FIRST (owned, on the record): the new campaign/battery-config.sh booted
+serve/server.py directly and DROPPED the standing launcher's entire env recipe (SPEC_DRAFT_TEMP,
+BATCH_MTP/SPEC_COUPLED, TYPICAL_ACCEPT/DEVICE, ROUTE_RESIDENT, ...). Both first-round "arms" ran
+near-stock: M3b collapsed to ~62% (vs 76 standing) and M1 to ~153 — the acceptance canary caught
+it immediately. Fix: the driver now evals the launcher's export block before boot (prints
+SPEC_DRAFT_TEMP/BATCH_MTP/TYPICAL_ACCEPT for proof). Law reaffirmed: a config-boot battery MUST
+inherit the standing env; the M3b canary is the tripwire that makes such bugs visible in one
+round, not after adoption.
+
+THE CORRECTED BATTERY (9 boots, interleaved [lanecell, mtpw4096, ctl] x3, 04:11-04:24):
+  ctl      M1 195.9 / pair 183.6 / conc 229.6 / M3b 76.7   (181.6/208.3/197.7 — wide spread)
+  LANECELL M1 189.1 (-3.5) / pair 188.9 (+2.9) / conc 240.1 (+4.6) / M3b 75.0 (-1.7pts)
+  mtpw4096 M1 187.8 (-4.1) / pair 187.9 (+2.4) / conc 229.1 (-0.2) / M3b 76.8 (neutral)
+
+VERDICTS (Lock Law, means-only):
+- STRATA_ATTN_LANECELL=1 (F-200 re-arm): NOT ADOPTED for standing — same shape as F-200's
+  +3.6/+5.4/+1.9 read, second independent confirmation: conc-favored (+4.6 at bar), M1-negative.
+  Routed to the conc-profile idea: a serving-profile launcher (6-slot workloads) may want it;
+  single-stream recipe does not. LANECELL r3 touched conc 244.8 / pair 194.4 — the conc/pair
+  targets are INSIDE this arm's reach.
+- --mtp-window 4096: NOT ADOPTED (M1 -4.1 at the bar). Mechanism, corrected: acceptance is
+  NEUTRAL at 4096 (76.8 vs 76.7 — the drafter does NOT need 32K context for acceptance on this
+  workload; the first-round "starvation" was the env bug, retracted), but M1 still falls because
+  the smaller ring streams the drafter's K/V over host-pinned memory (mtp.cpp: KV streaming
+  comment) while the 32768 window keeps the whole state in VRAM. The window knob trades VRAM
+  residency for size, and whole-in-VRAM wins. The draft attention read is NOT the cycle
+  bottleneck — the IndexShare adaptation lane is closed for this engine, with both mechanisms
+  on record.
+
+WHAT REMAINS NOVEL FROM TONIGHT: (1) the ctl band itself — evening means M1 195.9 (r2 hit 208.3)
+vs the morning post-reboot baseline 180.9: +8% intraday drift, spread 181.6-208.3 within one
+hour. The variance-control item (T6.10/9) now has evidence: warm page cache + battery churn
+correlate with the top boots; the learned expert profile (loaded from data/expert-profile.bin,
+unchanged) does NOT explain it. (2) The GDN slot-promotion scope, read directly from the code:
+commit(n_keep) REPLAYS accepted tokens through the GDN scan (verify.hpp:14-19); F-71 measured
+the marginal at 2.47 ms/row; SGLang's design (private state slot per draft column, promote by
+pointer swap) eliminates the replay outright — the next kernel-lane project, scoped, not started.
+
+BANKED: campaign/battery-config.sh (fixed), campaign/{lanecell,mtpw4096,mtpw2048}-iq3_s-8081.json,
+results lanecell{,2}-r{1,2,3}, mtpw{,2}-4096-r{1,2,3}, mtpw-ctl-r{1,2,3}, ctl2-r{1,2,3}.
