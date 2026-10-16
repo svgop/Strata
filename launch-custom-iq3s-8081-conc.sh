@@ -6,6 +6,7 @@
 # F-221 ADOPTED (2026-10-16): PR#540 chunk kernel + bounded merge on sm_120.
 # ABAB 3v3: M1 +6.0 / pair +7.0 / conc +5.3; bit-identical (parity 1172/0 on this GPU).
 export STRATA_ATTN_DAILY=1
+export STRATA_GDN_CHUNKED=1  # F-224 ADOPTED 2026-10-16: prefill DeltaNet recurrence in WY chunks (kernels.cu; OUR gdn_rec_parity --bench: 1.68x at 32K, -115ms/chunk). Paired prefill probe 2x4: -141..168ms (~-4.2%) EVERY pair; decode lanes neutral (3v3 ABAB, all inside noise); M3b in-band; MMLU-Pro 2x gate 95.7/92.9. Different FP32 sum order (prefill only) - the gate covers it
 export STRATA_ATTN_LANECELL=1
 # savage-custom v2 launcher, Linux port (Qwen3.8 IQ3_S + r17 modded draft, port 8081).
 # LAUNCH LAW preserved: starts serve/server.py directly (setup.py rewrites the

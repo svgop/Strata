@@ -7762,3 +7762,25 @@ STATUS: STRATA_BATCH_G2 stays default-off as a characterized instrument; the roa
 G=2 item is CLOSED (negative, with mechanism); M1 in-band 196-204 across all five debug boots
 = binary healthy.  NEXT for the conc lane per all evidence: the pipelined service loop
 (one-step-ahead host pipelining, SGLang v0.4-class) — the genuine rewrite.
+
+### F-224 — STRATA_GDN_CHUNKED=1 ADOPTED: the prefill recurrence 1.68x, prefill −4.2% (the T12 discovery) (2026-10-16 21:4x)
+
+THE DISCOVERY (T12-MEM audit): the chunked WY-form DeltaNet recurrence — flash-linear-attention's
+form, IN OUR TREE SINCE UPSTREAM but opt-in and never armed — beats the standing per-token walk on
+OUR card, measured by our own gdn_rec_parity --bench run: T=32768 chunked 8.90ms vs standing kh
+14.93ms = 1.68x per layer; 36 layers per 32K block: recurrence+norm 699 -> 583ms.  Parity: the
+harness PASSING on this rig (0 failures at 8192/32768; chunked-vs-kh max|diff|/max|value| ~3e-7,
+same order as kh-vs-FP64).  Different FP32 sum order -> distribution-adjacent -> gated.
+VALIDATION (Lock Law): paired prefill probe (campaign/prefill-probe.sh, unique ~8-9k prompts,
+4v4, run TWICE in independent sessions): chunked wins EVERY pair, −141..−168ms (~−4.2% wall);
+decode lanes 3v3 ABAB all inside noise (M1 +1.1 / pair −3.0 / conc −1.1 — prefill-only change,
+decode structurally untouched); M3b in-band (arm 76.1 vs ctl 75.6 mean); MMLU-Pro 2x gate on the
+arm boot: 95.7 / 92.9 (mean 94.3 — inside the standing 92.86-97.14 band).  ADOPTED into BOTH
+launchers.  CONVS: STRATA_GDN_CONVL2 stays OFF on CUDA by design (#1522: not bitwise on
+sm_120 — do not arm).
+ALSO THIS SESSION (T12 pitstop round): the three code audits folded (75b22d94, dccb1c05, 2fdc10ac):
+pool term ~90% bookkeeping (micro-fix package queued: plan single-pass IMPLEMENTED+built default-on
+with STRATA_PLAN_ONEPASS=0 rollback + STRATA_PLAN_DIFF=1 audit harness; barrier diet next),
+VRAM-hits at roofline twice-confirmed (sub-warp port re-priced down), light windows node-latency-
+bound (hc norm-fold + LFUSE-gate + FUSE_HITS queued as free arms), FUSE_HITS env honored on CUDA
+(was hard-false; de05c182).  Binary with planner+FUSE_HITS built; deploy after this adoption.
