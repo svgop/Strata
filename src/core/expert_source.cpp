@@ -3749,7 +3749,10 @@ void expert_pool_dispatch_multi(ExpertDispatch& d, const float* x_f, const int32
         // order.  STRATA_PLAN_ONEPASS=0 keeps the old path (the A/B arm); STRATA_PLAN_DIFF=1 re-derives the
         // old first-of and per-group entry sets and aborts loudly on any difference, so one battery run
         // proves the grouping over the whole corpus (the F-216 audit pattern).
-        static const bool plan_onepass = [] { const char* v = std::getenv("STRATA_PLAN_ONEPASS"); return v == nullptr || std::atoi(v) != 0; }();
+        // F-225: the formal 3v3 (planarm/planctl r1-r3) put the onepass arm at M1 -6.9% vs the old scan
+        // (pair/conc in-band), so the default is OFF again; the 213-215 boots it had been credited with
+        // were the session warm trend - round 3 cleared 208.6-216.7 on BOTH arms.  =1 re-arms it.
+        static const bool plan_onepass = [] { const char* v = std::getenv("STRATA_PLAN_ONEPASS"); return v != nullptr && std::atoi(v) != 0; }();
         static const bool plan_diff = [] { const char* v = std::getenv("STRATA_PLAN_DIFF"); return v != nullptr && std::atoi(v) != 0; }();
         constexpr int kIdPlanIds = 1024;
         static thread_local int32_t s_first[kIdPlanIds], s_gid[kIdPlanIds];

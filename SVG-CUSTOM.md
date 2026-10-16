@@ -7784,3 +7784,34 @@ with STRATA_PLAN_ONEPASS=0 rollback + STRATA_PLAN_DIFF=1 audit harness; barrier 
 VRAM-hits at roofline twice-confirmed (sub-warp port re-priced down), light windows node-latency-
 bound (hc norm-fold + LFUSE-gate + FUSE_HITS queued as free arms), FUSE_HITS env honored on CUDA
 (was hard-false; de05c182).  Binary with planner+FUSE_HITS built; deploy after this adoption.
+
+### F-225 — PLANNER FORMAL 3v3 REVERSES THE CALL: onepass is an M1 REGRESSION (-6.9%), the 213-215 "peak" was the session warm trend; default flipped back OFF; POOL_DIET instrument landed (2026-10-17 01:5x)
+
+THE INTERLEAVE (battery-config 3v3, same binary throughout, arm=standing vs ctl=STRATA_PLAN_ONEPASS=0,
+planarm/planctl-r1..r3): M1 arm 189.3 vs ctl 203.4 = -6.9% (round deltas -13.7/-36.8/+8.1 - r2-arm 171.0
+is the outlier round, but even r1/r3 only give -2.8%: no adoption either way); pair -0.2%, conc +1.4%,
+M3b -0.8pp - all in-band.  THE ADOPTION BAR FAILS on M1 alone.
+
+THE RETRACTION (per the standing law, on the record): F-224's "M1 213.4/214.7 = NEW ALL-TIME PEAK"
+credit to the planner was premature - the formal A/B says the planner did not cause it.  What round 3
+actually shows: BOTH arms clear the old band together (arm-r3 216.7/201.0/253.6, ctl-r3 208.6/197.8/245.2
+- all three stock targets with the planner OFF).  The band is a SESSION WARM phenomenon: successive
+battery boots warm the box (arm 180->171->217, ctl 194->208->209 across r1->r3), so the third boot of
+any series reads ~+20 M1 over the first.  Measurement-protocol lever banked: never compare a cold first
+boot against a warm third boot; a warm protocol (back-to-back boots before scoring) is worth ~+10% on
+paper for free.
+
+DEFAULT FLIPPED: STRATA_PLAN_ONEPASS now defaults OFF (=1 re-arms; STRATA_PLAN_DIFF harness retained);
+rebuilt+deployed b447b539.  The regression's mechanism is NOT established - the planner's own work is
+us-scale and grouping-identical (the F-224 DIFF boot had zero mismatches) - so -6.9% cannot be its
+direct cost; the interleave is the instrument of record and it says no.  Code kept as a gated instrument.
+
+ALSO LANDED: STRATA_POOL_DIET (T12-HOST queue item 3, built, NOT yet armed): run_phase and run skip
+their trailing wait_parked under the env - the epoch-carrying claim protocol (issue #29) already fences
+a straggler out of the next batch (its claims fail on the epoch), so the repark is latency shaping, not
+correctness (the pool.hpp rationale predates #29); skipped, the next phase's leading wait collects the
+stragglers under the host's own setup work.  pool_diet_ member, =0 rollback by construction.
+
+HIT-RATE CHECK during the run (both logs): 96.5-99.8% across arm and ctl boots - the expert-profile
+shared state (data/expert-profile-learned.bin, saved every 30 requests) is NOT the band's cause.
+Box clean throughout (load 2.2, only strata busy, GPU 40C/2827MHz).

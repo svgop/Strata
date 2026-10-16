@@ -236,6 +236,10 @@ private:
 
     int n_ = 0;
     bool host_works_ = true;
+    /// STRATA_POOL_DIET: run() and run_phase() skip their trailing repark wait.  The epoch-carrying
+    /// claim already fences a straggler out of the next batch, so the repark is latency shaping, not
+    /// correctness (see the completion protocol above and the note in run_phase).
+    bool pool_diet_ = false;
     ExpertJob* jobs_ = nullptr;
     int njobs_ = 0;
     /// The host's own scratch when `host_works_`.  A separate object rather than a share of `scratch_[i]`,
