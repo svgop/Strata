@@ -1,0 +1,21 @@
+=== PROBE grwide-r3 | 2026-10-16 12:19:44 | log=/home/svg/LLM/strata-custom-2/custom-iq3s-grwide.log
+    warmup: 0 tok in 0.06s
+    A.short[1]: 0 tok in 3.28s = 0.0 t/s
+    A.short[2]: 0 tok in 15.03s = 0.0 t/s
+    A.short[3]: 0 tok in 3.27s = 0.0 t/s
+    A.short[4]: 0 tok in 15.01s = 0.0 t/s
+    A.short[5]: 0 tok in 3.25s = 0.0 t/s
+    A.short[6]: 0 tok in 15.00s = 0.0 t/s
+    fresh-long-prompt: 0 tok out in 3.31s
+    B.short[1]: 0 tok in 15.07s = 0.0 t/s
+    B.short[2]: 0 tok in 3.28s = 0.0 t/s
+    B.short[3]: 0 tok in 14.95s = 0.0 t/s
+    B.short[4]: 0 tok in 3.27s = 0.0 t/s
+    B.short[5]: 0 tok in 15.02s = 0.0 t/s
+    B.short[6]: 0 tok in 3.30s = 0.0 t/s
+M1 single-stream : 0.0 t/s (0 tok in 14.99s)
+M2 pair          : 0.0 t/s aggregate (0 tok in 3.28s)
+M2 6-conc        : 0.0 t/s aggregate (0 tok in 18.25s)
+--- engine accounting, in order (ms/window is the degradation signal) ---
+M3d per-position : not printed (arm STRATA_SPEC_DEPTH=1 to publish accepted/tested by depth)
+=== PROBE END grwide-r3

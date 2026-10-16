@@ -320,6 +320,58 @@ __global__ void __launch_bounds__(THREADS) gr_down_multi_kernel(GrMulti m) {
 constexpr int UPM_COLS = 16;                      // columns per block (x 4 streams = 64 rows, 8 per warp)
 constexpr int UPM_BLOCKS = N / UPM_COLS;          // 160
 
+// F-217 (A3 wide grid, STRATA_GR_WIDE=1): the 41-block launch feeds at most 41 of the 170 SMs —
+// the down read achieves ~150 GB/s of ~1.8 TB/s, grid-capped. One WARP per row instead (LR + HC
+// blocks of 32 threads): xn is read straight from global (D x T floats, L2-resident after the
+// first rows touch it) instead of a cooperatively staged shared tile. The staged tile only ever
+// changed staging granularity, never the lane chunk order (tile asc, q asc, lane; see the header
+// comment above), so the accumulated sums are BITWISE IDENTICAL to gr_down_multi_kernel's.
+template <int TILEV, int MAX_T = kFusedGrMaxT>
+__global__ void __launch_bounds__(32) gr_down_multi_wide_kernel(GrMulti m) {
+    constexpr int TQ = TILEV / 8 / 32;      // uint4 weight chunks per lane per tile (as the multi kernel's)
+    const int lane = threadIdx.x;
+    const int T = m.T;
+    const bool inject = blockIdx.x >= LR;
+    const int row = inject ? int(blockIdx.x) - LR : int(blockIdx.x);
+    const bool active = !(inject && (m.a[0].w_inject == nullptr || row >= HC));
+    const uint16_t* wrow = (inject ? m.a[0].w_inject : m.a[0].w_down) + (size_t) (active ? row : 0) * D;
+    const uint4* w4 = reinterpret_cast<const uint4*>(wrow);
+    float acc[MAX_T];
+#pragma unroll
+    for (int k = 0; k < MAX_T; ++k) acc[k] = 0.0f;
+    for (int base = 0; base < D; base += TILEV) {
+        uint4 wv[TQ];
+        if (active) {
+#pragma unroll
+            for (int q = 0; q < TQ; ++q) wv[q] = __ldg(w4 + base / 8 + lane + 32 * q);
+        } else {
+            continue;
+        }
+#pragma unroll
+        for (int q = 0; q < TQ; ++q) {
+            const int j = lane + 32 * q;
+#pragma unroll
+            for (int k = 0; k < MAX_T; ++k)
+                if (k < T) acc[k] += dot8(wv[q], m.xn + (size_t) k * D + base + j * 8);
+        }
+    }
+    if (!active) return;   // no w_inject this launch: this row has no destination to write
+    float s[MAX_T];
+#pragma unroll
+    for (int k = 0; k < MAX_T; ++k) s[k] = k < T ? warp_sum(acc[k]) : 0.0f;
+    // lane k writes token k (every lane holds every sum after the xor reduction)
+#pragma unroll
+    for (int k = 0; k < MAX_T; ++k) {
+        if (k >= T || lane != k) continue;
+        if (inject) {
+            m.a[k].inject_out[row] = s[k];
+        } else {
+            const float x = s[k] / (float) HC;
+            m.a[k].lo[row] = x / (1.0f + __expf(-x));
+        }
+    }
+}
+
 // `gr_up_kernel` for T tokens: each row of w_up read once; the T dots reduced by xor so every lane holds every
 // sum, and lane k runs token k's epilogue - the T epilogues in parallel instead of one after another.
 template <int MAX_T = kFusedGrMaxT, bool EXACT_T = false>
@@ -935,7 +987,14 @@ int down_chunk(bool staged, int* tile_out) {
         cudaDeviceGetAttribute(&cc_min, cudaDevAttrComputeCapabilityMinor, dev);
         const bool small_tile = strata::cc_major_of(cc_maj) * 10 + strata::cc_minor_of(cc_min) == 75;
 #endif
-        const int tv = small_tile ? 1280 : 2560;
+        int tv = small_tile ? 1280 : 2560;
+        // F-217: STRATA_GR_TILEV=1280 halves the staged tile's smem (80 -> 40 KiB) so more of the
+        // 41-block grid is resident per SM — the occupancy probe for the hc-read line. Both tile
+        // sizes are documented bitwise-identical (the tile only changes staging granularity).
+        if (const char* e = std::getenv("STRATA_GR_TILEV")) {
+            const int v = std::atoi(e);
+            if (v == 1280 || v == 2560) tv = v;
+        }
         tile[dev] = tv;
         int want = (int) (kFusedGrMaxT * tv * sizeof(float));
         if (optin > 0 && want > optin) want = optin;
@@ -1071,7 +1130,11 @@ void launch_multi(const GrMulti& m, int variant, cudaStream_t st, unsigned long 
         // kFusedGrMaxT - the same tile, block size, accumulation order and plain/split/staged path, so the same bits
         // (decided once per device: this runs per layer when decode is not captured)
         const bool max4 = ct <= 4 && gr_down_max4();
-        if (staged) {
+        static const bool wide = [] { const char* e = std::getenv("STRATA_GR_WIDE"); return e && e[0] == '1'; }();
+        if (wide) {   // F-217 A3: 1 warp per row (324 blocks), xn from global — bitwise identical, grid un-capped
+            if (max4) gr_down_multi_wide_kernel<2560, 4><<<LR + HC, 32, 0, st>>>(c);
+            else gr_down_multi_wide_kernel<2560><<<LR + HC, 32, 0, st>>>(c);
+        } else if (staged) {
             // #783 PR-g (stuchapin909): a launch of exactly ct <= 6 tokens is its own instantiation, the loop bounds
             // are compile-time (the same sums in the same order); STRATA_NO_MULTI_GR=1 keeps the generic kernels
             if (exact_t && ct == 1) gr_down_staged_kernel<1, true><<<DOWN_BLOCKS + 1, THREADS, smem, st>>>(c);

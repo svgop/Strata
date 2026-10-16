@@ -7559,3 +7559,39 @@ killed the invoking shell silently) — the law (binary paths never in invoking 
 reaffirmed with a fresh scar; and the phase-2 binary was initially not deployed to engine/
 strata (proof boot ran the stale phase-1 binary, caught by the missing AUDIT banner — deploy
 check added to the mental checklist: verify the banner before reading a probe).
+
+### F-217 — GOAL ROUND "NEW CEILING": the A3 hc-wide arc — two mechanisms killed, the F-208 hc-line model falsified (2026-10-16 13:20)
+
+Operator goal round started ("keep progressing... raising the ceiling of some logic is capped at
+its ceiling, these things need to be evaluated in order to evolve"). First pick: A3, the
+highest-certainty unimplemented M1 item (hc wide-grid, est -1.5-3.0ms of the 4.2ms hc line).
+
+THE ARC (all banked in campaign/results/):
+1. gr_down_multi_wide_kernel built (1 warp per row, 324 blocks of 32, xn straight from global,
+   lane chunk order preserved = bitwise by the file's own documented invariant). First arm:
+   CRASH — illegal memory access; the port dropped the original's `if (!active) return;`, so
+   inject blocks with no w_inject wrote through garbage inject_out. Fixed, redeployed.
+2. Fixed arm (grwide2, 3 rounds): M1 169.9 / pair 160.8 / conc 209.7 vs ctl 187.1/175.6/225.0
+   => M1 -9.2%. NOT ADOPTED. MECHANISM: the cooperative shared tile is LOAD-BEARING xn reuse —
+   8 rows/block read xn once into SMEM (13 MB/layer L2 traffic); 1-warp-per-row makes all 324
+   warps stream xn from L2 (~106 MB/layer), trading the occupancy cap for an L2-traffic cap and
+   losing badly. The A3 design note ("xn is L2-resident") was true but irrelevant — residency
+   is not reuse.
+3. Occupancy probe (STRATA_GR_TILEV=1280, smem 80->40 KiB => ~2x resident blocks, bitwise by
+   the file's documented tile-granularity proof, 3 rounds): M1 185.3 / pair 178.1 / conc 222.4
+   vs ctl 187.1/175.6/225.0 => NEUTRAL (all deltas noise). Occupancy is NOT the hc line's cap.
+
+THE CORRECTED CEILING MAP (three caps probed today, all falsified as gates):
+- GDN commit replay: NOT the depth/window gate (F-216 — removing it entirely moves nothing).
+- hc-read grid shape: NOT the cap (F-217 — the tile's xn reuse is the real constraint, and
+  breaking it costs -9.2%).
+- hc-read occupancy: NOT the cap (F-217 — 2x resident blocks, zero effect).
+=> The F-208 per-line attribution (4.2ms hc line at 150 GB/s "grid-capped") does not describe
+the CURRENT stack — it predates R33 split-draft/F-206 and the merged 0.1.44.1 base. LAW: no
+more kernel surgery on the hc line without a fresh nsys per-kernel profile; the standing
+window-cost map must be re-measured before T1.2a/T1.4 sizing. What survives as live M1 lanes:
+T1.1 doorbell partial (publish-side, pre-verified plan), the attention lineage work (T1.2a via
+upstream #2075 — still the biggest designed item), and the profile-first re-measurement itself.
+INSTRUMENTS KEPT (env-gated, default off): gr_down_multi_wide_kernel + STRATA_GR_WIDE (the
+L2-traffic cautionary instrument), STRATA_GR_TILEV (the occupancy probe). Standing server
+restored post-battery (goal-restore in band).
