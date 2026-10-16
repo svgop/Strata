@@ -271,8 +271,139 @@ swapped if proven better or higher-ceiling). Distinct domains, no overlap with T
 - T7.C quantization + memory/offload systems (IQ3_S vs MXFP4/NVFP4 per-bit on 5090, expert
   offload policies incl. llama.cpp #29887, KV format frontier, pinned-ring/VMM/L2 windows,
   single-stream ceiling estimate at 3.4-4.5 bpw on 32GB+184GB).
-FINDINGS PENDING — fold in on return, ranked into sure wins / high-ceiling gambles /
-do-not-bother, then merge the best into T6's stack.
+
+ALL THREE REPORTED 2026-10-16. Condensed findings:
+
+### T7.A — kernels/Blackwell (FlashInfer 0.6.14-0.7.2, cuDNN 9.7.1-9.27, TRT-LLM, SGLang, ~36 sources)
+
+**HEADLINE VERDICT: we are overhead-bound, not bandwidth-bound.** Roofline from our own numbers:
+weight-streaming floor ≈ 2.5x current 180.9 (~400-500 tok/s); the surplus is launch gaps, legacy
+grids, GDN serialization, doorbell round-trips. Kernel-level 2x wins ship as +5-8% e2e in every
+engine measured — the 2x lives in step STRUCTURE, not single kernels.
+
+Sure wins (measured on our model class / hardware class):
+- **T7.A.1 IndexShare-MTP indexer reuse** [SGLang day-0 for Qwen3.8-Flash-Next, S10]: capture
+  the QSA top-k selection at draft-extend; all N draft steps reuse the frozen selection.
+  Shipped for this EXACT architecture; "accept length unchanged"; indexer invocations N→1.
+  Output-safe by construction. Small migration (metadata + 1 kernel).
+- **T7.A.2 Wide-grid occupancy fix + occupancy pass over ALL small step kernels** — confirms
+  T6 items 1-2. Kernel-level 1.3-2.4x precedents (KDA 1.33x, HC ~2x, MSA 1.9-2.4x).
+- **T7.A.3 Hyper-connection Mix/Combine fusion into split-K kernels** [SGLang, our model
+  class]: Mix 12.36→6.03 µs (2.05x), e2e +7.6%; Combine 4.17→2.13 µs (1.96x), e2e +5.49%.
+  Same math fused — no quality class.
+- **T7.A.4 Fused top-10 expert gather-matvec** (one launch, precomputed routing) —
+  MegaMoE-class backends with CUDA-graph replay exist on SM120 [FlashInfer 0.7.2].
+- **T7.A.5 cuDNN ≥9.27 for the MTP VERIFY pass only** (2-4 query tokens; FlashInfer 0.7.2
+  auto-routes cuDNN precisely to cut verification latency). Note: sm_120 SDPA needs 9.27
+  (NVRTC-only engines before); head_dim 256 on sm_120 unverified — test.
+
+High-ceiling gambles: **G1 persistent warp-specialized step megakernel** (attention+GDN+MoE
+under one launch/layer-group; doorbells become device-side flags; Fireworks KV-outer design
+1.9-2.4x kernel-level is the reference) — THE post-200 play; **G2** port FlashInfer MSA/VSA
+SM12x block-sparse kernels as the QSA decoder (only shipped native family; hostile contract:
+plan() outside graphs, 64-block pages); **G4** L2 persistence window over the 36 GDN states
+(~37MB — fits the 96MB L2; cheap, untested anywhere, derived not sourced).
+
+Do-not-bother (hard evidence): **SM12x has NO tcgen05/TMEM/2-CTA MMA** (warp-level mma.sync
+only — Colfax + FlashInfer corroborated); Machete (Hopper-only); DeepGEMM sm_120 (unmerged);
+EXL3 decode (119 vs 155 tok/s at matched size on 5090 — prefill-only win); Marlin repack at
+bs1-2 (+25% bytes, no benefit); cuDNN NSA components (SM100+-oriented, block-size mismatch).
+**IQ3_S is byte-optimal at bs1-2**: every tensor-core format costs MORE bytes (NVFP4 4.25bpw
+= 1.24x, Marlin 4.0-4.5bpw = 1.2-1.3x); on RTX PRO 6000 native NVFP4 grouped GEMM measured
+39 tok/s vs Marlin W4A16 46-49. No published µs/token decode-attention numbers for the 5090
+exist anywhere — our nsys timeline is the only source.
+
+### T7.B — speculative decoding SOTA (~40 sources)
+
+Sure wins:
+- **T7.B.1 FastMTP-style MTP head retrain** [arXiv 2509.18362] — THE depth lever: vanilla MTP
+  per-step acceptance collapses ~70%→~10% with depth (GLM-4.5-Air head: 0.92/0.68/0.38);
+  inference-matched retraining recovers it (+82% over vanilla, 2.03x, lossless). Draft-only —
+  output untouched. Strongest published support that our depth-4-6 cap is the HEAD, not theory.
+  Requires a training run (our first).
+- **T7.B.2 PLE/n-gram as a concurrent drafter lane** [TRT-LLM production]: +96% bs=1
+  multi-turn, AL to 4.73 on translation; beats EAGLE outright when prompt-output BLEU>0.6.
+  We already own the PLE tables; exact-match verify unaffected by draft source. Mimic lane.
+- **T7.B.3 Adaptive draft depth** (AdaEDL entropy stopping, +10-57%; oracle +30%; TurboSpec
+  goodput control). Graph-compatible via pad-to-max-depth + mask (SGLang #23330 bug class).
+- **T7.B.4 Top-k tree on the MTP head at bs=1**: +5.7% measured on Qwen3-Next (chain-3 →
+  steps4/topk4/draft8; τ 3.413→4.231). Lossless under exact-match.
+- **T7.B.5 Draft-sharpening sweep 0.7-1.0** — NO published benchmark of coupled-RNG
+  exact-match + sharpened draft exists; theory says our semantics escape the q=p optimum
+  tradeoff. Our 0.85 is unexplored ground; sweep + entropy-conditioned sharpening.
+
+**The stair-diagnostic answer: SGLang's slot-per-draft-token GDN state design** — draft tokens
+write private state slots; acceptance promotes the last accepted slot by POINTER SWAP, no
+replay; tree topk>1 applies each draft's update from its parent slot. Our ~8 replay-column
+budget is a self-imposed tradeoff the published engines did not need. Design-against: vLLM's
+bug class = state-slot bookkeeping under graph replay (repeated/skipped tokens; fix = sync
+accepted-count copies before row moves).
+
+Gambles: TTS online distillation of the drafter from verifier logits (+34-41% AL, proven on a
+hybrid MoE; graph-replay sync barrier needed); DFlash block-diffusion drafter (2.4-3.5x vs
+native MTP 1.7x on the SAME models; needs drafter training + KV-injection); LiLiCorr rerank
+(+7-19% AL at 2.8% overhead, dense-only evidence); SpecExec mega-trees (offload regime).
+Do-not-bother: LayerSkip retrofit (needs training-time early-exit), relaxed/judge acceptance
+(violates MMLU gate), BlockVerify rule swap (+1.5-2.8% AL, redundant under exact-match),
+Medusa retrofit (dominated). Paper ceiling: τ 4.2 (tree on native MTP) to τ 6-9 (DFlash-class)
+→ ~270-400 tok/s single-stream.
+
+### T7.C — quantization + memory/offload (~37 sources)
+
+**HEADLINE VERDICT: nothing strictly dominates IQ3_S per-bit at batch-1 decode on sm_120.**
+Our 180.9 t/s @93% hit is ~2.7x public SOTA on this exact model+GPU (llama.cpp #29887's 67.8
+t/s best). Decode matvec at M=1 is bandwidth-bound; XFP (arXiv 2605.14844, RTX PRO 6000,
+122B-A10B): ~3.97 effective bits beat Marlin INT4 by +49% purely on bytes-read at M=1.
+5090 dense rates: INT8 = FP8 = 838 TOPS; only FP4 doubles again and only for GEMM shapes.
+
+Sure wins:
+- **T7.C.1 Admission control on cache fills + ONE packed H2D per expert** (gate+up+down
+  contiguous): removes the novel-content cliff [llama.cpp #24528: ADMIT_AFTER=64]; packing
+  two H2Ds into one removed 40,596 ops in traces. Persistent slot table + bookkeeping beats
+  staging ("staging buffers are a no-op when made correct", #23170 post-mortem).
+- **T7.C.2 Graph-captured DMA: fixed slot table + memcpy nodes + side-stream next-layer
+  prefetch** [DuoServe arXiv 2509.07379: next-layer expert predictor 54-67% exact top-k,
+  90-95% ≥1-hit; 1.78-7.04x decode on weaker HW]. Graphs +5-18% decode, reuse +13%.
+- **T7.C.3 Hit rate 93→95-96%**: each +1pt ≈ −43% miss bytes at 7% miss. Our decayed-frequency
+  policy IS the community's hypothesized winner; add explicit admission gating.
+- **T7.C.4 ffn_down bit protection (quality insurance, NOT speed)**: super-weight sensitivity
+  concentrates in ffn_down [arXiv 2505.02390: static Q2 −8.9% AIME, Q3 −1.8%, Q4 −0.7%].
+  Mixed-bit ffn_down→IQ4_XS costs ~+5% expert bytes (−2-3% decode) and buys MMLU margin.
+  Only if quality headroom is ever needed.
+Gamble: **MXFP4 expert copy for PREFILL ONLY** (dual-format store in spare host RAM; PP
++26-31% on sm_120 via llama.cpp PR #17906 mxf4nvf4 path; tg untouched; NMSE fails strict
+gates — PPL/AIME passed, gate carefully).
+Do-not-bother: full 2-bit ternary experts (static Q2 −8.9%; incompatible with our MMLU gate
+without QAT); FP4 tensor-core decode matvec (PR #17906 tg unchanged; XFP underperforms
+Marlin on SM120); re-quantizing all experts to 4bpw+ (+25-30% bytes cuts the decode roofline
+~20-25% — the opposite of 200 t/s); GDS (NVMe-only, disk tier −70% throughput); L2
+persistence over EXPERTS (working set ≫96MB, ≤2-3% theoretical — reconcile with T7.A G4:
+states-in-L2 is the plausible variant, experts-in-L2 is not); porting vLLM/SGLang offload
+ideas (nothing merged; RFC-only).
+Ceiling: bytes/token ≈2.9-3.4GB → roofline 450-520, kernel-efficiency-adjusted hard ceiling
+~300-400, realistic 220-300 via 95-96% hit + full DMA overlap + MTP.
+
+### T6 RE-RANK AFTER T7 (the unified stack for M1 > 200 stable)
+
+The three agents converge: overhead-bound, formats already optimal, 200+ needs no quality
+gates. Revised order (old T6 numbers in brackets):
+1. **IndexShare-MTP indexer reuse** (T7.A.1) — NEW, cheap, shipped for our architecture.
+2. **Wide-grid + occupancy pass** (T6.1/T6.2 = T7.A.2) — confirmed.
+3. **GDN slot-promotion redesign** (T7.B) — replaces the replay-optimization direction of the
+   stair diagnostic (T6.5): slot-per-draft-token + promote-on-accept; unlock depths 4-6.
+4. **Hyper-connection kernel fusion** (T7.A.3) — +7.6%/+5.5% e2e measured on our model class.
+5. **LANECELL re-arm tranche** (T6.3) — unchanged, cheapest measured %.
+6. **Fused expert gather-matvec + packed single-H2D + graph-captured DMA slots** (T7.A.4 +
+   T7.C.1/2) — the launch/overhead attack; composes with hit-rate push 93→95-96 (T7.C.3).
+7. **Shared-expert fusion** (T6.4) — unchanged.
+8. **Adaptive depth + tree topk + sharpening sweep** (T7.B.3/4/5) — after 3 lands.
+9. **FastMTP head retrain** (T7.B.1) — biggest single lever but our first training run;
+   scope it as its own project decision.
+10. **Boot-variance control** (T6.9) — unchanged, holds the floor.
+Post-200 ceiling play: **persistent step megakernel** (T7.A G1) — the ~2x; our doorbell/ring
+is exactly the machinery it would replace with device-side scheduling.
+Quality-insurance sidelines (not speed): ffn_down bit protection (T7.C.4), reasoning-budget
+steering + think-strip KV (T4.1/4.2), MXFP4-prefill-only (T7.C gamble).
 
 ## T6 — M1 > 200 t/s stable: ranked move stack (2026-10-16, recon review)
 
