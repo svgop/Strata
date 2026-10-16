@@ -190,6 +190,20 @@ the shared artifact family; our no-spec parity boot was invalid because our nati
 contract requires --spec >= 2. Clone deleted 2026-10-16 per operator directive (harvest and
 battery records remain banked here and in campaign/results/).
 
+## T7 — Deep-dive recon: through-the-stack swap research (2026-10-16)
+
+Three researcher agents dispatched with a full-rewrite mandate (any kernel/format/system may be
+swapped if proven better or higher-ceiling). Distinct domains, no overlap with T3/T4:
+- T7.A decode/attention kernels + Blackwell compute (qsa attention swaps, GDN scan SOTA,
+  MoE low-bit GEMM vs per-expert matvec, sm_120 tcgen05/FP4/FP8 ceilings, L2 persistence).
+- T7.B speculative decoding SOTA (EAGLE-3/Medusa/PLD acceptance-depth frontier, tree vs chain
+  with exact-match verify, DFlash2+LiLiCorr, draft-temp theory, GDN/hybrid state-replay costs).
+- T7.C quantization + memory/offload systems (IQ3_S vs MXFP4/NVFP4 per-bit on 5090, expert
+  offload policies incl. llama.cpp #29887, KV format frontier, pinned-ring/VMM/L2 windows,
+  single-stream ceiling estimate at 3.4-4.5 bpw on 32GB+184GB).
+FINDINGS PENDING — fold in on return, ranked into sure wins / high-ceiling gambles /
+do-not-bother, then merge the best into T6's stack.
+
 ## T6 — M1 > 200 t/s stable: ranked move stack (2026-10-16, recon review)
 
 Gap math: today's 3-round mean 180.9 → 200 needs +10.6%; standing band top 191.6 → +4.4%.
