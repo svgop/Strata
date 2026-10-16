@@ -187,4 +187,47 @@ box. Engineering note: their end-to-end loss does NOT devalue the T1 harvest —
 (shared-expert fusion, expert-cache policies, matvec rule tables) are measured at kernel level
 in their tree and transfer independently. Their GsqRco dialect support (gguf.cpp:232) confirms
 the shared artifact family; our no-spec parity boot was invalid because our native pack
-contract requires --spec >= 2.
+contract requires --spec >= 2. Clone deleted 2026-10-16 per operator directive (harvest and
+battery records remain banked here and in campaign/results/).
+
+## T6 — M1 > 200 t/s stable: ranked move stack (2026-10-16, recon review)
+
+Gap math: today's 3-round mean 180.9 → 200 needs +10.6%; standing band top 191.6 → +4.4%.
+"Stable" = floor above 200, so the target mean is ~205-210. Ranked by value x certainty / effort;
+
+all evidence citations inline (our F-entries or T1.x above).
+
+1. **T1.2a pre75-on-sm120 + row-fold** — F-208: sm_120 runs the OLDEST attention kernel
+   lineage (PR#540 gated cc<75 at qsa_decode_attn.cu:291/:609); upstream PR #2075 is the
+   cherry-pick path; our qsa kernel is byte-identical to upstream so the port is low-friction.
+   The single hottest decode path. Test their branch, measure, adopt, comment our numbers on
+   the PR. Est +5-15%.
+2. **T1.4 hc wide-grid** — designed bit-identical (lane chunk order preserved), 324 blocks vs
+   41, ~30 lines, pure occupancy fix on the same decode window. Bit-identity class (canary
+   boot only). Est +3-8%, stacks with 1 on the same path.
+3. **Re-arm tranche, LANECELL first** — F-200 void boundary corrected; original tranche reads
+   +3.6/+5.4/+1.9 (LANECELL), then GR_V3 / L2-72 / HC_SPLIT / MMQ_KQ on bare base. Env-flip
+   only, one ABAB battery each, OFF one command away. Cheapest measured % on the board.
+   Est +2-4% net after overlap.
+4. **Shared-expert fusion (T1.1 above)** — +5.9% measured on IQ3_S (their tree), identical
+   output; our path provably launches separately (layer.hpp:150). Est +4-6%.
+5. **Stair diagnostic → deeper spec** — depths 4-6 never offered (Lane B law: precedes any
+   spec-8 re-test). tqllm lead: their kGdnReplayCols=8 caps combined draft+lookup depth on
+   hybrid GDN models (src/tree_columns.hpp) — audit our replay-column cap. If depths 5-6
+   become offerable at >=70% acceptance, spec-6 -> spec-8 is the only lever that multiplies
+   tokens/window instead of shaving ms. Est +8-15% IF unlocked; diagnostic is cheap.
+6. **T1.1 doorbell partial plan** — publish-side pre-verified; impl plan written
+   (campaign/research/T1.1-partial-plan-impl-plan.md, bit-identical required). Est +1-3% M1;
+   also groundwork for batch G=2 / service-thread rewrite (conc's big lever).
+7. **Draft-only reduced head (T1.6 clean subset)** — exact by construction. Est +2-5%.
+8. **SPEC_DRAFT_TEMP micro-sweep** — standing 0.85 = peak of the 0.45-0.90 sweep; try
+   0.825/0.875, one battery. Est +0-1%.
+9. **Boot-variance control** — today's boots: 187.8/183.4/171.6 (boot 3 sagged ~9%).
+   Ensure boots load the learned expert profile (profile-save-every 30 writes it), add a
+   fixed pre-warm sequence to the battery driver. This is what converts "peaks near 200"
+   into "floor above 200".
+
+Stack math: (1+2) +8-14% combined, x (3) +3%, x (4) +5% => mean ~211-222; item 5 pushes
+further; item 9 holds the floor. Sequence: 1 -> 2 (one code lane), 3 in parallel (env-only,
+tonight-class), then 4; diagnostic 5 anytime.
+
