@@ -579,3 +579,142 @@ with-offload instantiation — ETC needed a compiler), CDP (measured worse), gre
 (5090 power wall reported).
 METHODOLOGY WARNING (SGLang #5593): the ~2ms "bubble between graph replays" was profiler
 inflation (NVTX/nsys) — re-profile with wall-minus-event accounting, NVTX disabled.
+
+## T9 — third research round (2026-10-16, targets: single 250 STABLE / conc 300; all 3 agents folded same day)
+
+Dispatch: A=Blackwell/CUDA runtime+kernels, B=arXiv/academic frontier, C=serving-systems/OS.
+Stack facts given: post-F-221 band M1 ~192-200 / pair ~182-186 / conc ~226-233; prof221 map
+(attention NO LONGER the top kernel line; GPU-reach wait 10.99/17.78ms = dominant line).
+
+### T9.A — Blackwell/CUDA (9 items + 11 traps)
+1. **PDL IS HALF-WIRED — repo finding**: pdl.hpp sets the launch attribute but
+   cudaGridDependencySynchronize/Trigger appear NOWHERE in the hot path and there is no
+   cudaGraphKernelNodePortProgrammatic edge enrollment in graph.cpp → as-is it can silently
+   no-op OR stale-read (the NaN trap). The rollout must be: intrinsics-first, selective
+   enrollment (GR/QSA/sampler/doorbell consumers), explicit graph edges, parity per kernel.
+   Evidence: CUDA prog guide PDL chapter; TRT-LLM blog14 (TRTLLM_ENABLE_PDL); SGLang #5946
+   (norm kernels, Jun-2026); llama.cpp PR #15480 REJECTED ("marginal on fast GPUs/small
+   models" — value scales with per-kernel launch-gap share); FlashInfer 2501.01005 does NOT
+   contain the claimed 13-17% PDL numbers (verified); GB10 zero-overlap case exists — sm_120
+   overlap is opportunistic, measure don't assume. Est: single +3-7, conc +5-10.
+2. **cp.async.bulk.prefetch.L2** (CC>=9.0, no SMEM/mbarrier/completion = graph-safe):
+   vLLM-decode-attn paper arXiv 2504.06319 — L2 hit 0.06%->43-83%, kernel 1.84-2.15x; trap:
+   regresses 2-5% at high GQA (check KV-head geometry); grows with context (top attention
+   lever at 32k+); ALSO the cheapest mechanism for the banked draft-horizon expert prefetch
+   (wrong guess costs only L2 capacity).
+3. **Green contexts — runtime API in CUDA 13.1** (was T8 do-not-bother; new evidence
+   outranks): SM/queue partition per stream; 5070Ti naive 2-stream +3% vs GC +60% (mixed
+   compute+memory), H200 +34%, NVIDIA example 1.05ms->95us. Traps: cross-stream alloc Xids,
+   clusters may exceed split, L2 NOT partitioned, static split idles SMs — keep a full-SM
+   stream for pure phases; 5090 power-wall caution from T8 stands (cap-aware). Conc +5-15 +
+   the stability lever for 300.
+4. **L2 persistence retarget**: weight persistence dead (85GB vs 96MB); pin the RECYCLED
+   set (KV tail, router logits, doorbell/commit flags, GR staging) + evict_first hints on
+   weight streams (pegainfer ~10% pollution penalty recovered). hitRatio is probabilistic
+   (window/set-aside); window must arm on the CONSUMING stream (PyTorch #101489 trap);
+   measure via lts__t_sector hit-rate, not wall time.
+5. Miss-path ping-pong pinned staging + copy-engine overlap of next-layer misses with
+   current-layer expert compute (adjacent to packed single-H2D; gate on miss rate; small
+   H2D lands ~24.5GB/s on 5090 — why packing matters).
+6. Clocks/power recipe for STABLE: 575->480-500W cap ≈ negligible decode cost, kills boost
+   oscillation; GDDR7 OC = SILENT CORRUPTION (link ECC gap — on-die ECC doesn't cover the
+   link) — hard ban; -lgc for A/B honesty (matches staged F-220 sudo); validate the FE
+   throttling defect once via clocks_event_reasons.
+7-8. Conditional nodes + device graph launch (limits: <=120 fire-and-forget/parent, 1
+   pending self-launch, body graphs can't device-launch, no host updates while
+   device-launched — prototype-gated C); CUDA 13 device-updatable graph nodes (thin docs, C).
+9. Profiling fixes: ncu default LOCKS CLOCKS + FLUSHES CACHES (--clock-control none + -lgc,
+   --cache-control none for L2 work); CUPTI ~2-4%; ncu 2025.1+ required for sm_120.
+TRAPS: TMA for decode GEMV usually a loss (m=1-2; TMA's decode relevance = the prefetch
+form + 1D bulk staging at long ctx); clusters cap 8 portable (16 = B200 only); cuBLASLt
+grouped GEMM skip (can't consume IQ3_S; revisit only dense/shared large-m); zero-copy
+mapped expert reads DON'T (SM-load serialization over PCIe); B200/tcgen05/TMEM results do
+NOT transfer to sm_120 (128KB smem, 48-warp cap).
+
+### T9.B — arXiv/academic frontier (10 items + traps)
+1. **EcoSpec expert-cost-aware tree filling** (arXiv 2607.12696): score nodes S=P/ΔCost
+   where ΔCost = NEW experts forced into HBM, with a coverage buffer; 1.36x vs EAGLE-3's
+   1.22x on Qwen3-235B from node selection ALONE, acceptance unchanged; pair with the
+   marginal-cost stopping rule proven in "Bounding SD in MoE" (2609.22156), OPT-Tree
+   (2406.17276)/Sequoia (2402.12374) topology, AdaEDL (2410.18351) entropy depth. Est single
+   +12-20 (THE 250 lever), conc +8-12. Lands: draft_policy.cpp; our router gates are already
+   materialized → predictor ~0ms. Exactness-safe (candidates only, verifier untouched).
+2. Concurrency goodput governor: optimal horizon FALLS as GPU saturates (Su 2310.18813;
+   TurboSpec 2406.14066; Nightjar 2512.22420 +14.76%/−20.18%; TETRIS ACL25). Conc +10-18.
+3. Expert residency overhaul: MoEpic VERTICAL expert split (2509.08342 — cache the hot top
+   segment of experts, ~2x experts per VRAM budget, 37.5-65.7% latency cut), FluxMoE
+   budget-aware planner (2604.02715), ProMoE proactive prefetch (2410.22134, 2.07x). Conc
+   +15-30 if miss rate >15%; single +5-12 + flatter tail.
+4. QuantSpec dual-view KV (2502.10424 ICML25): low-bit VIEW for drafting, k8v4 verify
+   untouched (bit-exact); >90% acceptance kept; single +5-10 @8-32k, +10-20 long-ctx.
+5. Block verification (2403.10444 ICLR25, provably greedy-safe) + GBV multi-path (2602.16961,
+   >30% block-efficiency, >15% walltime) — TOUCHES the verify contract → needs owner sign-off
+   + differential test; single +8-15.
+6. HOBBIT draft-only shadow experts (2411.01433): low-bit substitutes for DRAFT windows only;
+   +3-8 + variance-flat; +~20GB host.
+7. Fiddler (2402.07033) / KTransformers (SOSP25) deferred CPU experts: conc +10-25 when
+   miss-limited; CPU-vs-GPU bits differ → draft/lookup windows ONLY (verify misses must stay
+   GPU or the contract breaks).
+8. FlashDecoding++ unified-max async softmax (2311.01282): +2-6% @32k+, ~0 short; keep
+   online-softmax fallback with a deterministic trigger.
+9. Long-ctx KV paging/compressed-draft (PiKV 2508.06526, LongSpec 2502.17421, MagicDec
+   2408.11049, LMCache): 262k/1M tier; verify windows must stay resident.
+10. Expert merge/distillation (UniMoMo 2608.08627: ~99.9-102% quality at 4/grp, 1.28-1.63x;
+    Sub-MoE AAAI26): rewrite-tier ceiling (misses vanish if 512->256 fits 32GB) — sequence
+    after #3 quantifies residual miss rate.
+TRAPS: MoE-Spec budgeting is LOSSY (substitution + renormalized gates — off-contract; EcoSpec
+is the lossless route); ProMoE's cache-aware ROUTING changes outputs (prediction only);
+depth-16 @conc-32 collapsed 2486->607 (plateau 3-4 accepted); EqSpec 2510.22876: most batched
+spec impls silently corrupt (position/KV misalignment) AND vLLM/SGLang exact-match ≈ 0 on
+Qwen3 under batching — OUR exact-match verify is the differentiator, never adopt batch-expansion
+verify; sub-4-bit KV drifts on verify (draft-view only); draft-free methods underdeliver vs
+trained MTP (FastMTP retrain stays the right expensive bet; AdaSPEC NeurIPS25 = cheapest KD).
+
+### T9.C — serving-systems/OS (10 items + traps)
+1. Batch-aware spec depth (SGLang MTP blog: draft_token_num=2 under load; Reducto: MTP LOSES
+   at 64-80 conc, target forward 3x vs draft 42%; plateau 3-4 accepted): conc +10-20. Same
+   lever as T9.B#2 — merged there.
+2. **One-step-ahead host pipelining** (SGLang v0.4 zero-overhead scheduler: future tokens +
+   event scheduling, zero GPU idle, overlap alone +20.4%; vLLM V1 same pattern): the service
+   thread processes window N-1's doorbell while the GPU runs N. Conc +10-20, single +5-12.
+   The intermediate step between T1.1 and the multi-thread rewrite — keeps FIFO commit.
+3. Device-resident continuation: conditional nodes + device graph launch as the
+   beyond-doorbell endgame (control-flow round-trips gone): conc +10-25; C until a 20-line
+   sm_120/CUDA-13.4 prototype verifies support + the body-graph limits.
+4. Graph batch-size ladder science (TRT-LLM blog20, measured): default x2 ladder wastes up to
+   ~50% padding mid-gap; +64 ladder up to 1.3x; +8 REGRESSED DeepSeek-V3.2 5% (graphs ate
+   17.2% of KV); ~10MB metadata/graph; capture scales linearly. For us: G∈{1,2,3,4,6} sized
+   to 2-4 lanes, measure padding waste first, watch expert-tier VRAM competition. A-.
+5. CCD pinning (X3D CCD for service thread + driver submission; other CCD for IRQs): eunomia
+   eBPF study — clean host 1.2% cost, contended 8.8-20.5%; taskset+nice recovered +7.6%/96%
+   fewer switches. Variance lever for STABLE 250; near-zero mean gain on our quiet box.
+6. Clock lock (-lgc/-lmc): 50-series multi-second spikes resolved by -lgc (NVIDIA forum) —
+   the staged F-220 sudo; lock during A/Bs for honesty.
+7. Pack off NTFS3 -> ext4/xfs (Phoronix roundups): load/warmup −20-80%, steady ~0-3; mlock/
+   MAP_POPULATE the hot host tier (RLIMIT_MEMLOCK). THP=always is NOT a tg win (llama.cpp
+   #2251); hugetlbfs "10x" is startup-only (#12444).
+8. Prefix-sharing KV cache (RadixAttention 2312.07104, ~6x shared-prefix; block-hash APC):
+   0-40% workload-dependent (battery prompts share prefixes); COW discipline + a verify-mode
+   that recomputes one lane's prefix and diffs.
+9. Same-length window composition (EXSpec 2510.22876: group same-length lanes, δ=0, avoids
+   the ~40%-of-compute repad cycle at batch 8): conc +3-10; trap: P90/P99 1.5-7.7x worse if
+   lanes wait for partners — cap the queue delay.
+10. Draft/verify overlap on side streams: P-EAGLE (vLLM 0.16 PR#32887, 1.55-1.69x) needs a
+    TRAINED mask head (C for our fixed MTP head — check checkpoint first); portable variant =
+    df_branch_ overlap of window N+1's draft with N's verify (single +5-15; tree acceptance
+    is batch-invariant per 2609.24698, throughput peaks near bs≈4 — matches our 2-4 lanes).
+
+### T9 merged queue (updated master priorities)
+1. T1.1 partial device plan — CLOSED NEUTRAL (F-222: flagA round-trip worth only 0.26ms;
+   the tail = service-thread pool compute 4.5ms additive + GPU serial execution 16.4ms) →
+   replaced by: T1.1-v2 device-side PCIe share for partial groups (kills the 4.5ms stage;
+   plumbing landed, env-gated STRATA_PLAN_PARTIAL) + one-step-ahead pipelining (next).
+2. One-step-ahead service-thread pipelining (T9.C#2) — doorbell successor, pairs with T1.1.
+3. EcoSpec tree filling + marginal-cost rule (T9.B#1) — the single-250 lever.
+4. Batch-aware depth governor (T9.B#2 = T9.C#1 merged).
+5. cp.async.bulk.prefetch.L2 (T9.A#2) — 32k+ attention + expert-prefetch mechanism.
+6. Green contexts (T9.A#3; re-test vs T8's power-wall caution) — conc stability.
+7. Residency overhaul MoEpic/FluxMoE/ProMoE + miss-path overlap (T9.B#3 + T9.A#5).
+8. Graph ladder G∈{1..6} (T9.C#4, TRT-LLM blog20 numbers).
+9. Clock lock (user sudo staged) + CCD pinning (T9.A#6 + T9.C#5) — the STABLE half of 250.
+10. QuantSpec dual-view KV (T9.B#4); block verification (T9.B#5, contract sign-off gate).

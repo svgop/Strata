@@ -3781,7 +3781,12 @@ void expert_pool_dispatch_multi(ExpertDispatch& d, const float* x_f, const int32
                 ++d.tail_experts;
             }
         }
-        const bool pcie_ok = d.pcie_num > 0 && d.src->pcie_layer(d.layers);
+        // T1.1 STRATA_PLAN_PARTIAL: the device plans a partial group over its resident entries and never reads the
+        // PCIe staging it cannot know about (its counts[2] is 0), so the pool must not route a miss to the copy
+        // engine under it - every miss runs on the CPU.  v1 keeps the A/B bit-identical at --pcie-frac 0; a
+        // device-side PCIe share is the v2.
+        static const bool plan_partial = [] { const char* v = std::getenv("STRATA_PLAN_PARTIAL"); return v != nullptr && std::atoi(v) != 0; }();
+        const bool pcie_ok = !plan_partial && d.pcie_num > 0 && d.src->pcie_layer(d.layers);
         int m = pcie_ok ? (nmiss * d.pcie_num) >> 8 : 0;
         // STRATA_PCIE_MIN1 (opt-in): the share rounds to 0 for 1-2 misses per layer, so the PCIe lane idles on the typical
         // decode step; with >= 2 misses give it at least one (the last in routing order).  It only flies if its blob is

@@ -1553,11 +1553,17 @@ bool Verifier::record_window(int T, cudaStream_t cs, std::string& err) {
                           hits_.cache_base, slot_off_d_, (long long) hits_.blob,
                           plan_ + (size_t) grp * (size_t) (plan_i32_ + 16), (long long) max_t_ * K, nullptr, 0, cs, m_plan_err_);
         } else {
+            // T1.1 STRATA_PLAN_PARTIAL=1: a group with misses is planned over its resident entries on the device and
+            // only the CPU rows' flag_ is waited (skip carries kPlanPartialSkip) - the resident work no longer sits
+            // behind the host plan round-trip.  The pool routes every miss to the CPU under the same env (v1: no PCIe
+            // share in partial groups; --pcie-frac 0 keeps arms bit-identical for the A/B).
+            static const bool plan_partial = [] { const char* e = std::getenv("STRATA_PLAN_PARTIAL"); return e && e[0] == '1'; }();
             if (device_plan_)   // E-6: every routed expert resident: this group's plan without the host
                 resident_plan(ids_ + tb * K, n * (int) K, (int) K, hits_.d_res + l * g.n_expert, (int) g.n_expert,
                               hits_.cache_base, slot_off_d_, (long long) hits_.blob,
                               plan_ + (size_t) grp * (size_t) (plan_i32_ + 16), (long long) max_t_ * K, skip_ + grp,
-                              (uint32_t) ((l - lb_) * G + grp + 1), cs);
+                              (uint32_t) ((l - lb_) * G + grp + 1), cs, nullptr,
+                              plan_partial ? kPlanPartialSkip : 0u);
             // savage-custom F-203: #649's store-the-ring publish un-gated from HIP - on CUDA the ring
             // value is the same capture-known constant, and the store drops the GPU's read of host
             // memory (one PCIe RTT per served layer-group) that doorbell_publish's RMW pays.
@@ -1667,8 +1673,9 @@ bool Verifier::record_window(int T, cudaStream_t cs, std::string& err) {
             grouped(p_ptr, p_start, p_counts, 0, parts_out);
             stamp(l, 20, grp);
         } else {
-            if (device_plan_) {   // E-6: skipped when the device planned this group (all its experts resident)
-                wait_flag_ge_or(m_flagA_, ring, skip_ + grp, cs);
+            if (device_plan_) {   // E-6: skipped when the device planned this group (all its experts resident, or
+                // T1.1 partially: kPlanPartialSkip skips the host plan and the PCIe staging the plan never reads)
+                wait_flag_ge_planned(m_flagA_, ring, skip_ + grp, cs);
                 copy_i32_from_mapped_unless(pl, m_plan_ + (size_t) grp * (size_t) plan_i32_, plan_i32_, skip_ + grp, ring, cs);
             } else {
                 if (fuse_wait_on() && !prof_on_) {   // 143-amdk: one launch for the wait and the copy
@@ -1681,7 +1688,7 @@ bool Verifier::record_window(int T, cudaStream_t cs, std::string& err) {
             stamp(l, 19, grp);
             grouped(p_ptr, p_start, p_counts, 0, hit_out);
             stamp(l, 20, grp);
-            if (device_plan_) wait_flag_ge_or(m_flagB_, ring, skip_ + grp, cs);
+            if (device_plan_) wait_flag_ge_planned(m_flagB_, ring, skip_ + grp, cs);
             else wait_flag_ge(m_flagB_, ring, cs);                 // the PCIe share is in staging (DMA) or mapped
             if (sink_.pcie_mode == 2) {                            // stage it with a copy kernel, then point at staging
                 const int64_t per = G == 2 ? kStagingBlobs / 2 : kStagingBlobs;
@@ -1694,10 +1701,12 @@ bool Verifier::record_window(int T, cudaStream_t cs, std::string& err) {
             // pcie_frac 0), so its launch is kPcieGroupRows block rows striding over the groups, not cap of them
             grouped(p_ptr2, p_start2, p_counts + 2, kPcieGroupRows, hit_out);
             stamp(l, 22, grp);
-            if (device_plan_) {   // no CPU share when the device planned the group: its rows are zeros
+            if (device_plan_) {   // no CPU share when the device planned the group: its rows are zeros; T1.1 partial:
+                // the misses' rows are the pool's, so flag_ is waited (wait_flag_ge_or skips only a full plan) and the
+                // copy zeroes the rows the plan lists while taking the pool's for the rest
                 wait_flag_ge_or(m_flag_, ring, skip_ + grp, cs);
-                copy_or_zero_from_mapped(parts_out, m_ymiss_ + (size_t) tb * K * N, (long long) n * K * N,
-                                         skip_ + grp, ring, cs);
+                copy_rows_or_zero_from_mapped(parts_out, m_ymiss_ + (size_t) tb * K * N, (int64_t) n * K, N,
+                                              p_dst, p_counts + 1, skip_ + grp, ring, cs);
             } else {
                 const bool fuse_rows = fuse_wait_on() && !prof_on_ && !remote_opt_ && dec_batch;   // 143-amdk
                 if (!fuse_rows) wait_flag_ge(m_flag_, ring, cs);               // the CPU's share is in the mapped rows

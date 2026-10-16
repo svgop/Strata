@@ -1,0 +1,31 @@
+PROF221 — post-F-221 (STRATA_ATTN_DAILY=1) fresh cost map (2026-10-16, STRATA_VERIFY_PROFILE)
+Boot: campaign/prof-iq3_s-8081.json via battery-config.sh (launcher env inherited: DAILY=1 + full standing recipe).
+Probe: M1 191.6 / pair 184.9 agg / conc 241.2 agg / M3b 76.5, TREND 14.9->11.0 stable (~5% profiler tax per F-218).
+
+LIGHT class (12.32 ms/window, n=2373) vs F-218 (13.35, n=2406):
+  VRAM hits 1.87 (GDN 1.41 + QSA 0.46) [F-218: 1.93] | hc reads ~2.33 GDN + ~1.00 QSA
+  copy+combine 0.93 | gemv 0.71 | router+plan+bell 0.89 | shared+quant 0.84 | out-proj 0.68
+  QSA attention 0.42 [F-218: 0.93 — 55% down]
+
+HEAVY class (21.46 ms/window, n=557) vs F-218 (24.31, n=549):
+  **QSA attention 1.96 [F-218: 4.09 — 52% DOWN, -2.13 ms/window: the F-221 DAILY adoption's
+  effect, directly visible in the phase map]**
+  VRAM hits 3.26 (2.47 + 0.79) [3.46] | hc reads ~3.93 GDN + ~1.25 QSA | copy+combine 1.81
+  gemv 1.09 | head 0.74 | rec 0.67 | router+bell 1.25
+
+WINDOW ACCOUNTING (heavy): 24.32 = run 23.07 (CUDA0 GPU-reach wait 17.78 + CPU experts 4.49)
+  + emit 0.60 + adapt 0.62. Routed entries: VRAM 97.7% / PCIe 0.4% / CPU 1.9-2.2% — ~2%
+  misses still cost 4.5 ms of pool time and drive the 17.78 ms GPU-reach wait.
+
+WHAT THIS CHANGES (T-sizing post-DAILY):
+1. Attention is NO LONGER the top kernel line (0.42/1.96 vs 0.93/4.09) — T1.2a's win is now
+   banked in the map; further attention work deferred.
+2. THE dominant line is the GPU-reach wait (10.99 light / 17.78 heavy ms per window) — the
+   host round-trip structure. T1.1 partial plan (in impl this session) + doorbell collapse +
+   plan-thread are THE concurrent-lane moves toward 300.
+3. VRAM expert hits (1.9-3.3) = the biggest stable KERNEL line -> expert gather-matvec fusion
+   + packed single-H2D is the next code lane after T1.1.
+4. hc reads (2.3-5.2 total) -> HC Mix/Combine fusion lane unchanged (SGLang-class, +7.6/+5.5).
+5. CPU experts pool 2.5-4.5 ms on ~2% misses — T1.1 makes these overlap instead of serializing
+   the window behind flagA.
+LAW: re-profile after every adoption (classes shift). Banked: campaign/results/prof221-map.txt.

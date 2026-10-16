@@ -7676,3 +7676,49 @@ noise inside the known spread; the means rule, and the clock-lock + variance wor
 floor's remaining lever). New standing band expectation: M1 ~192-200 / pair ~182-186 /
 conc ~226-232. The F-218 map's #1 line (attention 4.09ms heavy-class) is now attacked; the
 drafter's merge-walk bonus landed with it. Commit chain: cherry-pick + launchers in git.
+
+### F-222 — prof221 map (the DAILY win lands in-map), the first all-three-targets boot, T9 folded, T1.1 executed NEUTRAL with the tail's true mechanism (2026-10-16 14:1x)
+
+1. PRO-F221 (classes-shift law executed): heavy-class QSA attention 4.09 -> 1.96 ms/window
+   (-52%; light 0.93 -> 0.42) — F-221's DAILY adoption visible directly in the phase map;
+   attention is NO LONGER the top kernel line. The dominant line is the GPU-reach wait
+   (10.99 light / 17.78 heavy) with VRAM expert hits (1.87/3.26) the biggest stable KERNEL
+   line and hc reads 2.3/5.2. Probe at ~5% profiler tax: M1 191.6 / pair 184.9 / conc 241.2 /
+   M3b 76.5. Map banked campaign/results/prof221-map.txt; standing server restored after.
+2. STANDING-RESTORE BOOT: M1 206.4 / pair 197.9 / conc 248.3 / M3b 76.5 — the FIRST boot with
+   ALL THREE +30% targets simultaneously (206.4>191.2, 197.9>193.8, 248.3>244.0). The
+   campaign's headline goal is touched simultaneously; the remaining frontier is STABILITY
+   (boot spread), which is the clock-lock + warm-in + variance lane.
+3. T9 THIRD RESEARCH ROUND (3 agents, all folded same day into SVG-CUSTOM-TODO.md T9):
+   PDL is HALF-WIRED in our tree (pdl.hpp sets the launch attribute but no
+   cudaGridDependencySynchronize intrinsics anywhere hot and no programmatic graph edges —
+   a stale-read hazard if enabled; finish it intrinsics-first, selectively); EcoSpec
+   (2607.12696) expert-cost tree filling = the single-250 lever (+12-20 est,
+   draft_policy.cpp, our gates already materialized); one-step-ahead service-thread
+   pipelining (SGLang v0.4 overlap +20.4%) = the doorbell successor; TRT-LLM blog20 graph-
+   ladder math (+8 ladder REGRESSED DSv3.2 — padding waste vs KV memory); EqSpec 2510.22876:
+   batched-spec impls silently corrupt and vLLM/SGLang exact-match ~0 on Qwen3 — our
+   exact-match verify is THE differentiator. Merged queue #1-10 in the doc.
+4. T1.1 PARTIAL DEVICE PLAN EXECUTED AND CLOSED NEUTRAL: resident_plan_kernel partial mode
+   (resident entries only in dst, counts[1]=R, start sentinel R; kPlanPartialSkip=0x80000000
+   written to skip; miss entries absent from the list so the copy takes the pool's rows),
+   wait_flag_ge_planned (flagA/flagB skip for partial too), copy_rows_or_zero_from_mapped
+   (block=row=entry: full plan zeroes all - exactly copy_or_zero; partial zeroes listed rows
+   and copies the pool's for the rest - exactly copy_rows semantics), pool pcie_ok gated off
+   under STRATA_PLAN_PARTIAL (v1: misses all-CPU; A/B at --pcie-frac 0 both arms for
+   bit-parity). ABAB 3v3: arm M1 190.0 / pair 198.5 / conc 249.7 vs ctl 191.2 / 201.7 /
+   251.9 = -0.6 / -1.6 / -0.9 — nothing near the +4% bar -> NOT ADOPTED; env default-off,
+   code stays as a correct env-gated instrument. Correctness held: M3b identical 76.5,
+   acceptance 68.1 (arm) vs 64.1 (ctl) = F-210 nondeterminism class, no engine errors.
+5. THE MECHANISM CORRECTION (this negative's yield): the arm's GPU-reach wait 16.36 vs ctl
+   16.62 ms/window — the flagA host-plan round-trip T1.1 removes is worth only ~0.26ms.
+   F-207's "4.90ms CPU-expert doorbell tail" attribution is CORRECTED: the tail is the
+   service thread's OWN pool miss-row compute (the accounting's "CPU experts" stage,
+   4.2-4.5ms/window), strictly ADDITIVE with the 16.4ms GPU wait (run 21.7 = 16.4 + 4.5,
+   serialized), and the 16.4ms GPU-reach wait is the GPU's serial window execution, not host
+   round-trips. CONSEQUENCE — the conc-300 lane re-aims: (a) kill the 4.5ms stage = T1.1-v2
+   (device-side PCIe share for partial groups — the plumbing landed today makes it small) or
+   the pipelining/multi-thread rewrite (T9.C#2); (b) shrink the 16.4ms = VRAM-hits fusion +
+   hc fusion + PDL launch gaps + batch G=2 amortization. The skip machinery stays live for v2.
+6. Commit: kernel/hpp/verify/expert_source edits + campaign/frac0*.json configs + t11-*
+   results + prof221 map + T9 fold + this entry.

@@ -88,19 +88,40 @@ void copy_rows_strided(float* dst, const float* src, int64_t rows, int64_t w, in
 /// One group's plan, built on the device when every routed expert of its n*k entries is resident: the host pool's
 /// layout (counts | start | dst | tok | pad | ptr | ptr2 | start2, `capx` entries) and order (distinct experts in
 /// routing order, their entries ascending), no PCIe groups.  *skip = ring when it did, else 0.
+/// T1.1 partial mode (partial_skip = kPlanPartialSkip, STRATA_PLAN_PARTIAL=1): a group with misses is planned over
+/// its RESIDENT entries only - counts[1] = the resident entry count, dst lists just those, so the copy kernel takes
+/// the pool's mapped rows for everything not listed - and *skip = partial_skip: the group counts as device-planned
+/// (no flagA/flagB wait; the resident ~98% starts immediately; only the CPU rows' flag_ is waited).  Invalid ids
+/// (outside [0, n_expert)) still fall back to the host plan as before.
 /// #871: without `skip` (the all-resident graph) an entry whose expert is not in VRAM cannot be planned: the plan is
 /// left empty and *plan_err (mapped host memory) is set to 1, so the host sees it instead of running a stale plan.
 void resident_plan(const int32_t* ids, int n_entries, int k, const int32_t* res_layer, int n_expert,
                    const uint8_t* cache_base, const unsigned long long* slot_off, long long blob, int32_t* plan,
-                   long long capx, uint32_t* skip, uint32_t ring, void* stream, uint32_t* plan_err = nullptr);
+                   long long capx, uint32_t* skip, uint32_t ring, void* stream, uint32_t* plan_err = nullptr,
+                   uint32_t partial_skip = 0);
+/// The partial-plan skip value (see resident_plan): no legitimate ring reaches it (a window's groups stay in the
+/// low hundreds).
+constexpr uint32_t kPlanPartialSkip = 0x80000000u;
 /// wait_flag_ge that also returns when *skip == value (device memory).
 void wait_flag_ge_or(const uint32_t* flag, uint32_t value, const uint32_t* skip, void* stream);
+/// wait_flag_ge that returns when *skip == value OR *skip == kPlanPartialSkip: the host-plan (flagA) and PCIe-staging
+/// (flagB) waits skip for a fully device-planned group AND a partial one; the CPU-rows wait keeps wait_flag_ge_or,
+/// which a partial group must still pass.
+void wait_flag_ge_planned(const uint32_t* flag, uint32_t value, const uint32_t* skip, void* stream);
 /// copy_i32_from_mapped unless *skip == value.
 void copy_i32_from_mapped_unless(int32_t* dst, const int32_t* src, long long n, const uint32_t* skip, uint32_t value,
                                  void* stream);
 /// copy_from_mapped, or zeros when *skip == value (n a multiple of 4, 16-byte aligned).
 void copy_or_zero_from_mapped(float* dst, const float* src, long long n, const uint32_t* skip, uint32_t value,
                               void* stream);
+/// T1.1: the device-planned group's parts rows, block = row = entry.  A fully device-planned group
+/// (*skip == ring) zeroes every row, exactly as copy_or_zero_from_mapped; a partial one
+/// (*skip == kPlanPartialSkip) zeroes the rows the plan lists ([0, *count) of hit_rows - the grouped
+/// launch + moe_hit_add fill them) and copies the pool's mapped rows for the misses, exactly as
+/// copy_rows_from_mapped.  Run after the flag_ wait: the pool's rows are what it copies.
+void copy_rows_or_zero_from_mapped(float* dst, const float* src, int64_t rows, int64_t width,
+                                   const int32_t* hit_rows, const int32_t* count, const uint32_t* skip,
+                                   uint32_t value, void* stream);
 
 /// Rows of the S2/S4/S8 embedding for T token ids read from DEVICE memory; out (T, n).  Bitwise `embedding_gather`.
 void embedding_gather_dev(const uint8_t* codes, const float* scales, const float* offsets, const int32_t* tokens,
