@@ -1675,6 +1675,22 @@ bool MtpDrafter::draft(int T, const int32_t* tokens, int64_t p, int a, int32_t* 
         }
         if (dt) g_dt.launch_ms += hms(tl);
         if (dt) cudaEventRecord(g_dt.ea[0], cs_);
+        // STRATA_DRAFT_UNGATED (T13A #3): enqueue every step graph back-to-back - the min_p<=0
+        // twin's launch shape - while the readout below still trims at the first prob under
+        // min_p.  Same graphs, same stream order, same Philox draws: drafts and dprob are
+        // bit-identical; what goes is the per-step host launch bubble (the GPU idled between
+        // steps while the host spun on the previous output).  Paid for by executing the steps
+        // past the trim (~50 us each, max_steps - n of them).
+        static const bool ungated = [] { const char* v = std::getenv("STRATA_DRAFT_UNGATED"); return v != nullptr && std::atoi(v) != 0; }();
+        if (ungated) {
+            for (int j = 1; j < max_steps; ++j) {
+                if (cudaGraphLaunch(cp ? step_exec_c_[j] : step_exec_[j], cs_) != cudaSuccess) {
+                    err = std::string("mtp draft step: ") + cudaGetErrorString(cudaGetLastError());
+                    return false;
+                }
+            }
+            if (dt) g_dt.launch_ms += hms(tl);
+        }
         (void) cudaStreamQuery(cs_);
         prefetch_ple(tokens[a]);
         progress_at("mtp draft: waiting for the GPU");   // #2065: a stall here read as "decode", the verify window before it
@@ -1688,6 +1704,18 @@ bool MtpDrafter::draft(int T, const int32_t* tokens, int64_t p, int a, int32_t* 
             }
         };
         tl = Clock::now();
+        if (ungated) {
+            // the chain is already enqueued: readout only, trimming exactly where the gated loop
+            // would have stopped launching (draft j is kept iff prob[j-1] >= min_p)
+            for (n = 0; n < max_steps; ++n) {
+                wait_step(n);
+                drafts[n] = ((volatile int32_t*) h_out_)[n];
+                if (probs) probs[n] = ((volatile float*) h_prob_)[n];
+                prefetch_ple(drafts[n]);
+                if (((volatile float*) h_prob_)[n] < min_p) { ++n; break; }
+            }
+            if (dt) g_dt.wait0_ms += hms(tl);
+        } else {
         wait_step(0);
         if (dt) g_dt.wait0_ms += hms(tl);
         drafts[0] = ((volatile int32_t*) h_out_)[0];
@@ -1712,6 +1740,7 @@ bool MtpDrafter::draft(int T, const int32_t* tokens, int64_t p, int a, int32_t* 
             pj = ((volatile float*) h_prob_)[j];
             if (probs) probs[j] = pj;
             ++n;
+        }
         }
         prefetch_ple(drafts[n - 1]);
         const Clock::time_point t_pre_sync = Clock::now();
