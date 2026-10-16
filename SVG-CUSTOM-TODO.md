@@ -152,20 +152,85 @@ Our status, verified in-tree 2026-10-16:
   (draft banked in the session record); PR-UPSTREAM-plan.md P3 reclassified into the
   evidence-backed-default-flips class (was P6).**
 
-## T3 — llama.cpp v0.7.0 harvest
+## T3 — llama.cpp v0.7.0 harvest (research agent report, 2026-10-16)
 
-Source: https://github.com/ggml-org/llama.cpp/releases/tag/v0.7.0
-Status: research agent dispatched 2026-10-16 (background). FINDINGS PENDING — fill in on
-return.
+Source: https://github.com/ggml-org/llama.cpp/releases/tag/v0.7.0 (v0.6.0→v0.7.0 = 240
+commits; ggml v0.27.0). Ranked by value to us; every item cites its PR.
 
-## T4 — Star Elastic harvest
+- **T3.1 GDN/recurrent state-snapshot fusion** — [#29807] write recurrent-state snapshots
+  directly into the recurrent cache inside the scan kernel (both K>1 speculative and K==1),
+  no separate cpy pass. Measured: Nemotron-3.5-Lightning-30B-A3B Q4_K_M, RTX PRO 6000, WITH
+  MTP: server decode 432.58→447.63 tok/s (**+3.5%, faster on 80/80 prompts, acceptance
+  unchanged 0.777**). Direct fit: our GDN snapshot writes during MTP verification.
+  [QUEUED → T6]
+- **T3.2 MTP catch-up crop pattern** — [#29928] zero-output forwards (MTP catch-up,
+  draft-context prefill) gather rows so FFN/head run over zero rows: 4-token catch-up
+  6.9→2.9 ms of kernels (**−58%**); `n_outputs` in the graph hash, "no reallocation".
+  Caution: sparse-attention graph reallocation trap documented (#29867) — our qsa+graphs
+  risk area. GLM-5.3-Flash reporter: MTP doubles decode at short ctx (97% acceptance),
+  +52% at 32k. [QUEUED → T6]
+- **T3.3 GPU LRU expert cache for host experts** — [#29887] `--moe-cache-mib`: host-resident
+  experts computed on GPU against an LRU cache; only misses cross PCIe; batch ≤32. RTX 5090,
+  Qwen3.8-Flash-Next Q4_0 93.7GB: 30.8→54.5 t/s (1.77x, 77% hit) → `-cmoe` + 19GB cache
+  **67.8 t/s (2.20x, 89% hit)**. Lessons: bank slots ≥ per-token expert fan-in (GLM-5.3-Flash
+  sizing bug → 0.7% hit); PCIe 3.0 loses. The unmerged follow-ups matter more to us than the
+  base (we already sit at 93% hit): async/overlapped cache updates, LFU-with-decay +
+  admission (91% hit at 36% cache, ~4 uploads/token vs ~30 for LRU). [feeds T1.3 / T7.C]
+- **T3.4 CUDA top-k shape dispatch** — [#28713] bitonic (short rows) / chunked radix (many
+  long rows) / CCCL DeviceTopK (1-2 rows; CCCL ≥3.4.3 — ships with our CUDA 13.4). RTX 5090
+  micro geomean 31x; e2e Qwen3.8-Flash-Next prefill 1.625x on GB300; TG ~1.0. → our qsa
+  cell-selection top-k. Exact-class; prefill-side win. [QUEUED]
+- **T3.5 Chunked GDN prefill (BF16-MMA tensor-core scan)** — [#29353 + #30087] prefill-only,
+  batch >2048, **K==1 only** ("prefill with speculation would not use this kernel").
+  RTX 5090: +16.4-17.9% pp2048 (Qwen3.5-35B-A3B); wikitext ppl 5.7773→5.7818, 98.8% top-token
+  agreement. → our GDN prefill lane. [GATED: mimic/adherence A/B]
+- **T3.6 Correctness audits from contract changes**: ggml `mul_mat_id` with duplicate expert
+  ids per token is now UB by contract (ggml v0.27.0) — audit our router; #29994 k-pool
+  scatter data race on shared sequences — audit our qsa selection; #30014 ggml symbol
+  visibility hidden by default — check vendored linkage at next sync; #30514/#30574
+  draft-model KV checkpoint bloat fixes (37GB class) if we ever persist sessions.
+- **T3.7 Graph discipline**: #30223 reserve and decode must build through the identical code
+  path with identical sampler chain counts (graph-stability law); #30329 realloc callback +
+  perf line (cheap observability for our no-realloc budget); #30042 keep ONE sparse decode
+  path, let attention skip masked rows via an n_kv_max-style bound — never fork graph
+  topology per ubatch (dense-vs-FA gap ~3x on one backend — validate our path); #30480 build
+  the selection tensor in the consumer's layout (byte-identical strides, fewer reshape
+  nodes).
+- **T3.8 Pinned staging ring for bulk uploads** — [#29608; SYCL-only code, pattern
+  transfers]: 4-slot pinned ring, side stream, event-gated (load time 96.8→47.8s on 3x Arc).
+  Companion to our expert-miss upload path.
+- Skip list: all Vulkan/Metal/SYCL/OpenCL backend work, CI/docs, non-our-class archs,
+  tokenizers. Note for next vendored sync: server default port now 9931 and chat output is
+  an array of parts (tooling expectations).
 
-Source: https://arxiv.org/html/2605.07182v1 ("Star Elastic: Many-in-One Reasoning LLMs with
-Efficient Budget Control"; used by NVIDIA to compress Nemotron 3.5 Super VL 120B-A12B →
-Nemotron 3.5 Bolt 74B-A9B 24GB).
-Status: research agent dispatched 2026-10-16 (background). FINDINGS PENDING — fill in on
-return. Prior: likely training-side (useless to a fixed-weight engine) — agent instructed to
-separate "requires training" from "inference-time policy".
+## T4 — Star Elastic harvest (research agent report, 2026-10-16)
+
+Source: https://arxiv.org/abs/2605.07182 (+ Nemotron 3.5 Bolt model card/config.json, HF
+artifacts; LiLiCorr arXiv 2608.20530; QAD arXiv 2601.20088). Verdict up front: the core
+method — nested trained submodels, zero-shot tensor slicing, phase-switching (small model
+thinks / large answers; up to +16% acc, 1.9x lower latency) — is ALL training-side and
+unusable on our fixed GGUF. Layer-skip/early-exit on non-elastic checkpoints is explicitly
+unsupported (depth was the worst axis even WITH training; dropped from final models).
+Usable edges only:
+
+- **T4.1 Prompt-level reasoning-budget control** (pure serve-side logic): hard thinking-token
+  budget + forced `</think>`; `enable_thinking` / `reasoning_effort` are plain chat-template
+  string injections (our model family already ships `reasoning_effort`). Cheap.
+- **T4.2 Strip prior-turn thinking from KV history** (`preserve_thinking=false` pattern /
+  Bolt's `truncate_history_thinking`): multi-turn agent loops carry dead `<think>` blocks in
+  KV — removing them is a context/KV win independent of any training. Cheap.
+- **T4.3 REAP expert-importance for placement** — S_j = mean over active tokens of (router
+  gate × expert output norm), computable OFFLINE on our frozen weights from a calibration
+  corpus; drives VRAM-resident vs host placement + prefetch priority, with PER-LAYER budgets
+  (Bolt's config proves heterogeneity: 240-496 experts/layer kept, widths 1536-2560).
+  Honest caveat: REAP→cache-value is an untested inference (low confidence, worth one A/B
+  against our decayed-frequency policy). [feeds T1.3]
+- **T4.4 Drafter path validation**: NVIDIA's Bolt recipe = separately-trained block drafter
+  (DFlash) + LiLiCorr lattice reranker (+9-19% acceptance length, +4-13% throughput over
+  vanilla DFlash) — target weights untouched. Already parked as T1.7/T7.B.
+- **T4.5 Quality-per-bit datapoint**: Bolt ships IQ2-XXS at 2.0625 bpw recovered by
+  quantization-aware distillation — ~2 bpw is viable ONLY with a training budget we don't
+  have; our floor stays IQ3_S-class ~3.4 bpw. No action.
 
 ## T5 — Head-to-head battery: our Strata vs tqllm, same model (2026-10-16)
 
@@ -249,4 +314,14 @@ all evidence citations inline (our F-entries or T1.x above).
 Stack math: (1+2) +8-14% combined, x (3) +3%, x (4) +5% => mean ~211-222; item 5 pushes
 further; item 9 holds the floor. Sequence: 1 -> 2 (one code lane), 3 in parallel (env-only,
 tonight-class), then 4; diagnostic 5 anytime.
+
+Recon additions (2026-10-, from T3 llama.cpp agent — both measured on our model class, both
+slot into the same MTP window as items 1-2):
+- **T6.10 GDN snapshot-write fusion (T3.1, #29807)**: fuse our GDN recurrent-state snapshot
+  writes into the scan kernel for the speculative path — measured +3.5% decode-under-MTP,
+  acceptance unchanged, composes with CUDA graphs. Small kernel change; pairs with the
+  attention lane.
+- **T6.11 MTP catch-up crop (T3.2, #29928)**: gather rows so catch-up/zero-output forwards
+  skip FFN+head — measured −58% catch-up kernel time; `n_outputs` joins the graph key.
+  Attacks the same tail our doorbell work targets, at a fraction of the code.
 
