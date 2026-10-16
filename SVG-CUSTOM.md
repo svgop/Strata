@@ -7406,3 +7406,44 @@ Fix: git restore --source=d113423^ -- refusal-r.gguf (483,520 bytes). Law reaffi
 deleting any file, grep the standing configs for references — the purge list was built from
 directory shape, not from the config's dependency closure. Baseline battery restarted after
 the restore.
+
+### F-213 — TQLLM HEAD-TO-HEAD: 3.8x BEHIND ON M1; MTP PORT = ARCHITECTURE RECONCILIATION, DECLINED (2026-10-16 03:00)
+
+Setup: turbo-tan/tqllm @c7f9852 cloned to ~/LLM/tqllm, built tqserve + tqfn-stage + tqtokenize
+(CUDA 13.4, arch native=sm_120). One 2-line patch to src/tokenizer.cpp: GsqRco-dialect fallback
+when a shard's tensors carry type 42 (tokenizer needs KV metadata only).
+
+DISCOVERY: tqllm natively reads our GSQ-RCO dialect (src/gguf.cpp:232 maps external type 42 ->
+GSQ_Q2_0, 64 elems/18 bytes) — it is a sibling engine for the same model+artifact family, not a
+stranger. Our shard pair loads as-is via the tqfn --gsq-rco path.
+
+MTP BLOCKER (why no drafting on their side): their Flash-Next serve engine hard-requires a
+manifest mtp= GGUF with blk.48.nextn.* names (enorm/hnorm/eh_proj bridge) in the Native dialect;
+our MTP artifact is Strata-format (mtp.* names, Q2_0 types) with a DIFFERENT bridge wiring
+(fc_embedding/fc_hidden 2560x2560 square projections + hyper-connection mixers vs their
+enorm/hnorm/eh_proj). Porting = architecture reconciliation, not a rename — declined as unsound
+for measurement (mis-wiring would poison acceptance numbers silently). Their standalone decode
+mode runs MTP-less (use_spec = spec_on && mtp_cache).
+
+BATTERY (3 rounds per lane, fresh process per round, prompt x2 per process, warm pass reported;
+campaign/results/tqllm-r{1,2,3}.txt):
+  M1 (REAL, 2000 tok):    warm 47.32 / 47.52 / 47.71 -> 47.5 t/s  (expert hit 93.0%)
+                          cold pass 45.0 (cache warming inside the run)
+  Prefill (1783-tok fresh prompt, chunk 8 = their serve default):
+                          warm 53.9 / 54.5 / 54.2 -> 54.2 t/s (hit 87.4%); cold 36.8
+  Pair / 6-conc: NOT RUNNABLE — serve engine requires the MTP port above.
+  Prefill at larger chunks: chunk 48 + slots 512 ran >20 min without finishing (their cap:
+  chunk*topk <= slots <= experts=512 bounds chunk at 51; each chunk streams hundreds of unique
+  experts). Consistent with their own docs/MOE_STATUS.md marking the MoE prefill lane pre-gate
+  ("do not cite performance until gates pass").
+
+VERDICT (operator, on the stalled no-spec parity round: "taking this long id say its already a
+fail no?" — agreed, cancelled): tqllm end-to-end on this box/model is decisively behind our
+standing engine — M1 47.5 vs our 180.9 = 3.8x, and the no-drafting handicap explains at most
+~1.9x of that; plain-vs-plain remains >=2x. Our no-spec parity boot was additionally invalid:
+the native pack contract refuses --spec 0 ("it needs --spec T (T >= 2)"), engine exits — noted,
+not a regression. Standing server restored after the battery (200 on /v1/models).
+
+The harvest (SVG-CUSTOM-TODO.md T1.x) is unaffected and is the actual point: their engine's
+end-to-end loss reflects their pre-gate MoE-prefill state and 16-24GB-card tuning; the shared-
+expert fusion, cache policies, and rule-table discipline remain the transferable value.
