@@ -909,7 +909,12 @@ bool Verifier::record_window(int T, cudaStream_t cs, std::string& err) {
     const int64_t TS = (s.idx_block - 1) * ID;
     const bool ple_on = ss.ple.ready() && ple_stage();
     auto Rt = [&](int t) { return R_ + (size_t) t * HC * N; };
-    const int G = (split_ && T >= 2 && !batch_rec_) ? 2 : 1;   // a batch window is one group
+    // STRATA_BATCH_G2=1: a batch window of 2+ rows runs the same two-group pipeline a split serial window runs
+    // (the rows are independent streams, so the group cut needs no dependency argument at all): group A's CPU
+    // experts overlap group B's GPU work of the same layer, halving the window's host tail.  Default one group,
+    // as before (--spec-split's serial G=2 stays opt-in: exact but slower there).
+    static const bool batch_g2 = [] { const char* e = std::getenv("STRATA_BATCH_G2"); return e && e[0] == '1'; }();
+    const int G = (T >= 2 && ((!batch_rec_ && split_) || (batch_rec_ && batch_g2))) ? 2 : 1;
     // Pipelined windows must wait for the host verdict/snapshot fence before mutating state.
     const bool self_commit = T == 1 && !always_publish_ && !batch_rec_ && !g_qfuse() && one_token_self_commit();   // see Verifier::commit
     static const bool dec_batch = [] { const char* v = std::getenv("STRATA_DEC_BATCH"); return v == nullptr || std::atoi(v) != 0; }();
@@ -925,6 +930,7 @@ bool Verifier::record_window(int T, cudaStream_t cs, std::string& err) {
     };
     bool sg_gated_[2] = {false, false};   // per group: the combine applies the shared gate
     if (!batch_rec_) groups_[T] = G;
+    else batch_groups_ = G;   // STRATA_BATCH_G2: the batch service loops read this (the graphs are captured once)
     // Programmatic dependent launch (pdl.hpp; sm_90+, opt-in: STRATA_DF_PDL=1): the window's quantizations and dense
     // projections may start while the kernel before them finishes, loading their weights before they wait for its
     // output.  Only a launch whose predecessors in the graph are all kernels gets programmatic edges; every value is
@@ -3111,7 +3117,6 @@ bool Verifier::run_slot_rows(const int* rows, int S, const int32_t* tokens, cons
     (void) cudaStreamQuery(cs_);
     volatile uint32_t* const seq = h_seq_;
     volatile uint32_t* const flag = h_flag_;
-    const int64_t steps = le_ - lb_;
     // #646: a stage whose every expert is resident plans on the device and raises no host doorbells, so the
     // per-layer spin below has nothing to wait for: without the PLE flag the graph finishes with the ring silent
     // ("verify batch: layer K never rang (graph finished)" - K is that stage's first layer), and with it the graph
@@ -3139,8 +3144,14 @@ bool Verifier::run_slot_rows(const int* rows, int S, const int32_t* tokens, cons
         progress_beat();
         return true;
     }
+    // STRATA_BATCH_G2: with two groups the graph rings twice per layer (pre of group A, then B), so the loop
+    // serves doorbell k of layer lb_ + k/G, group k%G - group A's CPU experts overlap group B's GPU work.
+    const int G = batch_groups_;
+    const int gtb[2] = {0, (S + 1) / 2}, gte[2] = {G == 2 ? (S + 1) / 2 : S, S};
+    const int64_t steps = (le_ - lb_) * G;
     for (int64_t k = 0; k < steps; ++k) {
-        const int64_t l = lb_ + k;
+        const int64_t l = lb_ + k / G;
+        const int grp = (int) (k % G);
         const uint32_t want = (uint32_t) (k + 1);
         const Clock::time_point a = Clock::now();
         auto last_flush = a;
@@ -3166,12 +3177,15 @@ bool Verifier::run_slot_rows(const int* rows, int S, const int32_t* tokens, cons
         }
         const Clock::time_point b = Clock::now();
         cur_layer_ = want - 1;
-        set_plan_slot(0);
+        set_plan_slot(grp);
+        const int tb = gtb[grp], n = gte[grp] - gtb[grp];
         progress_at("verify batch: the CPU experts of layer", l);
         // The recorded graph consumes the helper mask and weighted sum just as
         // the solo graph does. Reset both and supply this layer's routing weights.
-        if (remote_opt_) remote_opt_->begin(h_w_, 0, S);
-        if (pool != nullptr) pool(user, h_x_, h_ids_, S, ss_->k, h_ymiss_, l);
+        if (remote_opt_) remote_opt_->begin(h_w_ + (size_t) tb * ss_->k, tb, n);
+        if (pool != nullptr)
+            pool(user, h_x_ + (size_t) tb * g.n_embd, h_ids_ + (size_t) tb * ss_->k, n, ss_->k,
+                 h_ymiss_ + (size_t) tb * ss_->k * g.n_embd, l);
         if (remote_opt_) remote_opt_->end();
         progress_tick();
         std::atomic_thread_fence(std::memory_order_seq_cst);
@@ -3301,7 +3315,7 @@ bool Verifier::batch_launch(int base, int S, const int32_t* tokens, const int64_
         }
     b_running_ = true;
     b_k_ = 0;
-    b_steps_ = le_ - lb_;
+    b_steps_ = (le_ - lb_) * batch_groups_;   // STRATA_BATCH_G2: a doorbell per (layer, group)
     b_last_ = Clock::now();
     return true;
 }
@@ -3320,6 +3334,8 @@ int Verifier::batch_poll(PoolMultiFn pool, void* user, std::string& err) {
         _mm_sfence();
         *h_flag_ = 1;
     }
+    const int G = batch_groups_;   // STRATA_BATCH_G2: doorbell k is layer lb_ + k/G, group k%G
+    const int gtb[2] = {0, (S + 1) / 2}, gte[2] = {G == 2 ? (S + 1) / 2 : S, S};
     while (!ar_on() && b_k_ < b_steps_) {
         const uint32_t want = (uint32_t) (b_k_ + 1);
         if (*seq < want) {
@@ -3327,13 +3343,14 @@ int Verifier::batch_poll(PoolMultiFn pool, void* user, std::string& err) {
             if (now - b_last_ > std::chrono::milliseconds(2)) {
                 const cudaError_t q = cudaStreamQuery(cs_);
                 if (q != cudaErrorNotReady && *seq < want) {
-                    err = "verify batch: layer " + std::to_string(lb_ + b_k_) + " never rang (" +
+                    err = "verify batch: layer " + std::to_string(lb_ + b_k_ / G) + " never rang (" +
                           (q == cudaSuccess ? std::string("graph finished") : std::string(cudaGetErrorString(q))) + ")";
                     b_running_ = false;
                     return -1;
                 }
                 if (now - b_last_ > std::chrono::seconds(20)) {
-                    err = "verify batch: timed out at layer " + std::to_string(lb_ + b_k_) + released_note(release_gpu_waits(5000));
+                    err = "verify batch: timed out at layer " + std::to_string(lb_ + b_k_ / G) +
+                          released_note(release_gpu_waits(5000));
                     b_running_ = false;
                     return -1;
                 }
@@ -3342,9 +3359,13 @@ int Verifier::batch_poll(PoolMultiFn pool, void* user, std::string& err) {
         }
         const Clock::time_point b = Clock::now();
         cur_layer_ = want - 1;
-        set_plan_slot(0);
-        if (remote_opt_) remote_opt_->begin(h_w_, 0, S);
-        if (pool != nullptr) pool(user, h_x_, h_ids_, S, ss_->k, h_ymiss_, lb_ + b_k_);
+        const int grp = (int) (b_k_ % G);
+        const int tb = gtb[grp], n = gte[grp] - gtb[grp];
+        set_plan_slot(grp);
+        if (remote_opt_) remote_opt_->begin(h_w_ + (size_t) tb * ss_->k, tb, n);
+        if (pool != nullptr)
+            pool(user, h_x_ + (size_t) tb * g_->n_embd, h_ids_ + (size_t) tb * ss_->k, n, ss_->k,
+                 h_ymiss_ + (size_t) tb * ss_->k * g_->n_embd, lb_ + b_k_ / G);
         if (remote_opt_) remote_opt_->end();
         progress_tick();
         std::atomic_thread_fence(std::memory_order_seq_cst);

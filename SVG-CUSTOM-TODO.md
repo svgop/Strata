@@ -587,16 +587,15 @@ Stack facts given: post-F-221 band M1 ~192-200 / pair ~182-186 / conc ~226-233; 
 (attention NO LONGER the top kernel line; GPU-reach wait 10.99/17.78ms = dominant line).
 
 ### T9.A — Blackwell/CUDA (9 items + 11 traps)
-1. **PDL IS HALF-WIRED — repo finding**: pdl.hpp sets the launch attribute but
-   cudaGridDependencySynchronize/Trigger appear NOWHERE in the hot path and there is no
-   cudaGraphKernelNodePortProgrammatic edge enrollment in graph.cpp → as-is it can silently
-   no-op OR stale-read (the NaN trap). The rollout must be: intrinsics-first, selective
-   enrollment (GR/QSA/sampler/doorbell consumers), explicit graph edges, parity per kernel.
-   Evidence: CUDA prog guide PDL chapter; TRT-LLM blog14 (TRTLLM_ENABLE_PDL); SGLang #5946
-   (norm kernels, Jun-2026); llama.cpp PR #15480 REJECTED ("marginal on fast GPUs/small
-   models" — value scales with per-kernel launch-gap share); FlashInfer 2501.01005 does NOT
-   contain the claimed 13-17% PDL numbers (verified); GB10 zero-overlap case exists — sm_120
-   overlap is opportunistic, measure don't assume. Est: single +3-7, conc +5-10.
+1. **PDL — CLOSED BY F-191 (agent finding CORRECTED)**: the agent reported PDL "half-wired"
+   (launch attr only, no intrinsics) — WRONG on our tree: pdl.hpp carries the full discipline
+   (pdl_wait/pdl_trigger via griddepcontrol PTX = the intrinsic semantics, STRATA_PDL_RESTRICT,
+   kernel-only capture edges via pdl_launch_ok, parity harness) and F-73 (Oct 12) ADOPTED it,
+   F-107 RETRACTED it on Windows (WDDM −40%), and F-191 (Oct 14, Linux, drift-immune
+   immediate-toggle ABAB) measured it a CLEAN NO-OP (ctl2 ≈ pdl on every metric; launch spacing
+   already hidden behind the host round-trip). Default-off = no live hazard. Re-test ONLY if the
+   window structure changes (post-pipelining/G2). The T8.A "PDL rollout" queue item is hereby
+   marked superseded by F-191.
 2. **cp.async.bulk.prefetch.L2** (CC>=9.0, no SMEM/mbarrier/completion = graph-safe):
    vLLM-decode-attn paper arXiv 2504.06319 — L2 hit 0.06%->43-83%, kernel 1.84-2.15x; trap:
    regresses 2-5% at high GQA (check KV-head geometry); grows with context (top attention

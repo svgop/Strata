@@ -528,6 +528,7 @@ private:
     void set_plan_slot(int grp);
     bool split_ = false;   // opt-in (--spec-split): exact but slower, see the overlap study
     int groups_[9] = {};
+    int batch_groups_ = 1;   // STRATA_BATCH_G2: the captured batch window's group count (the service loops read it)
     float* h_ymiss_ = nullptr;   float* m_ymiss_ = nullptr;     // T * k * n_embd
 
     // device

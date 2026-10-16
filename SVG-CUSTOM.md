@@ -7722,3 +7722,43 @@ drafter's merge-walk bonus landed with it. Commit chain: cherry-pick + launchers
    hc fusion + PDL launch gaps + batch G=2 amortization. The skip machinery stays live for v2.
 6. Commit: kernel/hpp/verify/expert_source edits + campaign/frac0*.json configs + t11-*
    results + prof221 map + T9 fold + this entry.
+
+### F-223 — batch G=2 EXECUTED AND CLOSED: corrupting under the PCIe share, a regression even when clean; the roadmap item retired (2026-10-16 19:0x)
+
+The roadmap's own next structural item ("batch G=2", from F-208's single-service-thread + G=1 note)
+was implemented and falsified in one session.  Edits (all env-gated STRATA_BATCH_G2=1, default
+off, committed): record_window's G gate allows 2 groups for batch windows of 2+ rows (the rows
+are independent slots, so the serial window's mixer-boundary dependency argument is trivially
+satisfied); batch_groups_ member carries the captured G; run_slot_rows' and batch_poll's service
+loops made G-generic (the serial run()/service() pattern: doorbell k = layer lb_+k/G group k%G,
+per-group gtb/gte row ranges, set_plan_slot(grp), per-group pool calls); stage_batch's b_steps_
+= (le_-lb_)*batch_groups_.  Build green; serial paths bit-identical by construction.
+
+RESULTS (5 discriminator boots, all on one binary, sustained-pair reproduction with the
+non-finite count read from the engine's own stdout):
+1. G2 + standing (pcie 0.35): NON-FINITE LOGITS (#879) under sustained concurrency — every
+   multi-slot request dies after 1-4 tokens; M1 untouched (S=1 keeps G=1 — the isolation held).
+2. G2 + STRATA_ATTN_DAILY=0: still corrupts (8 non-finite) — NOT the new attention kernel.
+3. G2 + STRATA_VERIFY_DEVICE_PLAN=0: still corrupts — NOT the device-plan flow.
+4. G2 + --pcie-frac 0: CLEAN (0 non-finite, full token counts) — the corruption boundary is
+   batch x G2 x PCIe-share>0 (the DMA device-alias/flagB per-group path; root cause NOT run to
+   ground — the lane is negative regardless; banked as a characterized boundary).
+5. serial --spec-split (upstream G=2, untouched by our edits) under the FULL standing recipe:
+   CLEAN and in-band (M1 197.4 / pair 198.9 / conc 252.6, 0 non-finite) — the G=2 window
+   machinery is correct on our stack; the bug is in the batch x PCIe interaction.
+
+THE PERFORMANCE VERDICT (clean frac-0 comparison, same binary/hour): G2 26.06 ms/window
+(CUDA0 wait 18.81 + CPU experts 4.80) vs ctl 22.72 (16.62 + 4.20) — pair 157.2 / conc 220.5 vs
+ctl 201.7 / 251.9 = -22% / -12%.  MECHANISM: the pool stage did NOT shrink — the sync service
+loop serializes wait-doorbell -> pool -> raise-flag between doorbells regardless of grouping
+(the pool work never overlaps GPU execution from the host's side), while the GPU wait GREW
++2.2ms (2x launches at half width).  The G=2 pipelining premise only pays with a service loop
+that decouples pool work from doorbell waiting — i.e. the T9.C#2 one-step-ahead/multi-threaded
+service loop remains the ONE structural fix for the 4.5ms CPU-experts stage; row-splitting
+alone cannot do it (and upstream's serial "exact but slower" verdict is now confirmed for
+batch on this engine).
+
+STATUS: STRATA_BATCH_G2 stays default-off as a characterized instrument; the roadmap's batch
+G=2 item is CLOSED (negative, with mechanism); M1 in-band 196-204 across all five debug boots
+= binary healthy.  NEXT for the conc lane per all evidence: the pipelined service loop
+(one-step-ahead host pipelining, SGLang v0.4-class) — the genuine rewrite.
