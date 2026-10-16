@@ -7654,3 +7654,25 @@ Trade (NVIDIA-documented): mean may sit slightly below floating peak; the FLOOR 
 floor-above-200 goal. Persistence daemon already active (checked). Do-not-bother list banked
 in T8.B. Next measurement law: after prewarm+lock, A/A the boots — if round-mean sigma lands
 in the 2-3% class, future +4% claims are single-afternoon testable.
+
+### F-221 — T1.2a ADOPTED: STRATA_ATTN_DAILY=1 — the first simultaneous all-lane win (+6.0/+7.0/+5.3) (2026-10-16 16:2x)
+
+Upstream PR #2075 commit 901de010 cherry-picked clean onto our tree (auto-merge; no merge base
+needed — self-contained kernel commit): PR#540's two-cells-per-step chunk kernel compiled for
+EVERY CUDA card (STRATA_ATTN_DAILY=1 selects it; the cc<75 gate that kept our sm_120 on the
+oldest lineage is gone) + Hardin22's bounded/batched merge (STRATA_ATTN_MERGE_V2; the
+drafter's merge stops walking its whole 32768-cell capacity at every context). BIT-EXACT class:
+construction argument + the PR's parity harness RUN ON OUR 5090 (1172 cases x fp16/int8/q4_0/
+k8v4, 0 differ, PASS) — no MMLU gate required (exact-output class), M3b the canary.
+
+ABAB 3v3 (daily-r{1,2,3} vs daily-ctl-r{1,2,3}, interleaved, prewarmed drivers):
+  arm M1 196.7 (201.3/196.1/192.6) / pair 183.6 / conc 228.1 / M3b 75.2
+  ctl M1 185.6 / pair 171.6 / conc 216.7 / M3b 76.3
+  => M1 +6.0%, pair +7.0%, conc +5.3% — ALL THREE LANES CLEAR THE +4% BAR (the campaign's
+  first simultaneous adoption). M3b -1.0pt = sampling noise (kernels are bit-identical).
+ADOPTED into BOTH launchers (standing + conc profile) with the evidence block in-file;
+adoption boot f221-adopt: pair 184.5 / conc 233.2 (above arm means), M1 181.2 (single-boot
+noise inside the known spread; the means rule, and the clock-lock + variance work is the
+floor's remaining lever). New standing band expectation: M1 ~192-200 / pair ~182-186 /
+conc ~226-232. The F-218 map's #1 line (attention 4.09ms heavy-class) is now attacked; the
+drafter's merge-walk bonus landed with it. Commit chain: cherry-pick + launchers in git.

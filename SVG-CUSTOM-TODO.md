@@ -543,3 +543,39 @@ LimitMEMLOCK override only if pressure ever appears; CPU pinning to the V-Cache 
 bother: power-limit raise, GDDR7 thermal intervention, p99 from short rounds (2000-token
 rounds give p99 CI ±44% — aggregate instead). Watch: GB202 Xid 79/GSP cluster under sustained
 CUDA load — check `journalctl -k | grep -i xid`; PCIe ASPM off mitigates if we're affected.
+
+### T8.A — megakernel/launch-overhead report folded (agent, 2026-10-16) — PDL is the next structural lane
+
+CONVERGENT EVIDENCE: four independent measurements agree the 2x is structural (pegainfer 11.4%
+launch gaps pre-graph; NVIDIA llama.cpp proposal 40% graph-time but +10-15% e2e; Baidu 14.6%
+launch overhead; Hazy: engines use ~50% of achievable BW at bs1, megakernel 78%).
+RANKED (the agent's swap table, adapted to our post-F-221 state):
+1. **PDL (Programmatic Dependent Launch) inside the step graphs** — sm_90+ INCLUDING sm_120
+   (llama.cpp ships it default-on, +5-22% tg on Blackwell-class; TRT-LLM default-on; works in
+   captured graphs via cudaGraphDependencyTypeProgrammatic edges or post-capture attribute
+   rewrite — llama.cpp's approach). DISCIPLINE: parity-gate every kernel vs PDL-off (TRT-LLM
+   hit real NaN/accuracy regressions in quant kernels — our class); use the CUDA intrinsics
+   (cudaGridDependencySynchronize / cudaTriggerProgrammaticLaunchCompletion), NEVER raw
+   inline PTX (FlashInfer #2558 UB, 14-file migration); under exact-match verify a race shows
+   as acceptance drift — the M3b canary is the tripwire. PDL cannot cross two graph launches
+   (intra-graph edges only).
+2. **Doorbell collapse** — publish a 64-128B line (indices + layer/step id) instead of ~80KB
+   of mapped f32 per miss layer; bulk metadata in a device ring the host reads via gdrcopy or
+   one DtoH per step. "The doorbell design, not the DMA, is the anomalous part vs SOTA" — no
+   published hybrid-MoE engine puts per-layer host signaling on the critical path (Fiddler,
+   Pre-gated, DuoServe, KTransformers all ship activations/prefetch/deferral instead).
+   Directly attacks the conc lane's 19.74ms GPU-reach wait (batch accounting line).
+3. **Prefetch across the MTP draft horizon** — mispredicted expert prefetch is SAFE under
+   exact-match verify (costs a re-fetch, never correctness). DuoServe-class: next-layer
+   predictor 54-67% exact top-k, 90-95% >=1-hit.
+4. **Capture hygiene** — we hold the F-91 law; add cudaGraphUpload (first-launch upload
+   penalty 28% class on a fresh graph) and alloc/free-per-step audits (pegainfer found
+   292/step at 5.4us).
+Gambles: conditional nodes (CUDA 12.4/12.8 IF/WHILE/ELSE) + device graph launch (>2x cheaper
+than host launch, structure-independent — but VERIFY 13.4's device-graph memcpy restrictions
+before building the expert-service sub-graph on it); MPK-lite persistent fusion of the
+per-layer control chain. Do-not-bother: full megakernel (no published data-dependent-MoE-
+with-offload instantiation — ETC needed a compiler), CDP (measured worse), green contexts
+(5090 power wall reported).
+METHODOLOGY WARNING (SGLang #5593): the ~2ms "bubble between graph replays" was profiler
+inflation (NVTX/nsys) — re-profile with wall-minus-event accounting, NVTX disabled.

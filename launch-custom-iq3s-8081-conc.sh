@@ -3,6 +3,9 @@
 # F-214 corrected ABAB (9 boots, 04:11-04:24): +4.6% conc / +2.9% pair, -3.5% M1 vs standing.
 # Best round touched conc 244.8 / pair 194.4 — both inside the +30% targets. This profile is
 # for concurrent-serving boots; the standing launcher stays M1-first (LANECELL off there).
+# F-221 ADOPTED (2026-10-16): PR#540 chunk kernel + bounded merge on sm_120.
+# ABAB 3v3: M1 +6.0 / pair +7.0 / conc +5.3; bit-identical (parity 1172/0 on this GPU).
+export STRATA_ATTN_DAILY=1
 export STRATA_ATTN_LANECELL=1
 # savage-custom v2 launcher, Linux port (Qwen3.8 IQ3_S + r17 modded draft, port 8081).
 # LAUNCH LAW preserved: starts serve/server.py directly (setup.py rewrites the

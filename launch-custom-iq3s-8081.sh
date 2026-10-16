@@ -3,6 +3,9 @@
 # LAUNCH LAW preserved: starts serve/server.py directly (setup.py rewrites the
 # "args" key on every setup run and would drop this recipe).
 # --- standing arms (each measured; see SVG-CUSTOM F-05/F-12/F-15b/F-16/F-64) ---
+# F-221 ADOPTED (2026-10-16): PR#540 chunk kernel + bounded merge on sm_120.
+# ABAB 3v3: M1 +6.0 / pair +7.0 / conc +5.3; bit-identical (parity 1172/0 on this GPU).
+export STRATA_ATTN_DAILY=1
 export STRATA_TYPICAL_ACCEPT=0.2    # Medusa typical acceptance (sampled traffic only; R5: worth +20.6pts accept / +8% M1)
 export STRATA_POOL_SPIN_US=100      # pool workers park after 100us instead of 20ms
 export STRATA_KV_PREFETCH=1         # +5.3%/4.1% prefill at 32K/64K
