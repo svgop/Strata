@@ -7510,3 +7510,20 @@ conc-lane arms and A/Bs use it as their control. Target scoreboard after F-214: 
 M1 target 191.2 crossed by a stock ctl boot (208.3, evening band). All three targets have
 now been observed in-arm or in-ctl at least once — the campaign's remaining problem is
 making them concurrent and stable, not reaching them.
+
+### F-216 — GDN SLOT-PROMOTION, PHASE 1: snapshot kernel landed, noop-validated (2026-10-16 04:46)
+
+Operator green-light ("then go pursue with the flag"). The design (campaign/research/GDN-SLOTS-
+impl-plan.md): the verify window's recurrence already computes every column's state in registers
+and discards it, while commit replays the accepted prefix through the same kernel — identical
+arithmetic, prefix semantics, so persisting per-column snapshots is BIT-EQUAL to the replay by
+construction. Phase 1 landed: gdn_step_norm_multi_kernel gains snap + snap_tok_stride (verify-
+mode-only writes of the register state after each column; verify_kernels.cu:337-357), wrapper
+guards refuse snap with STRATA_GDN_SPLIT / commit modes, header defaults keep every existing
+call site untouched (snap == nullptr = zero behavior change). Build green; deployed
+(engine/strata 75,143,944 via rm+cp — ETXTBSY on the live inode); noop boot gdnslots-noop-r1:
+M1 180.7 / pair 179.9 / conc 220.0 / M3b 74.7 — in band, Launch-Law class validated. Phase 2
+next: verify.cpp wiring (T_max x gdn_rec_floats x 36-layer arena ~576MB at init per F-91, the
+window call passes snap, commit swaps the recurrence replay for a snapshot[m-1] -> state promote
+kernel reading *n_keep device-side, conv commit + indexer tail + PLE unchanged), then parity
+mode (STRATA_GDN_SLOTS=2) must log exact 0.0 across its audit windows before any battery.

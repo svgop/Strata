@@ -38,9 +38,14 @@ void gdn_ab_multi(const float* x, const uint16_t* w_alpha, const uint16_t* w_bet
 /// The recurrence + output norm for T tokens (h = (T, conv_channels) as q|k|v, gate/beta (T, h_v), z/y
 /// (T, value_dim)).  With `n_keep == nullptr` the state is read and NOT written (verify); otherwise the first
 /// *n_keep tokens are run and the state is written (commit; `y` may be scratch).  Bitwise `fused_gdn_step_norm`.
+/// F-216 GDN slots: in VERIFY mode a non-null `snap` (with `snap_tok_stride` = floats per token slot) also
+/// persists the state after every column t to `snap + t*snap_tok_stride` — bit-identical to what commit-mode
+/// replay would produce for n_keep = t+1 (same kernel, same per-token arithmetic, prefix acceptance).  Null
+/// (default) = unchanged behavior.  Refused with the split/commit kernels (STRATA_GDN_SPLIT, n_keep != nullptr).
 void gdn_step_norm_multi(float* state, const float* h, int conv_channels, const float* gate, const float* beta,
                          const float* z, const float* gamma, float eps, float* y, int h_k, int h_v, int n_tok,
-                         const int32_t* n_keep, void* stream, int t_out_begin = 0, void* xq_out = nullptr);
+                         const int32_t* n_keep, void* stream, int t_out_begin = 0, void* xq_out = nullptr,
+                         float* snap = nullptr, int64_t snap_tok_stride = 0);
 /// The commit of `n_layers` GDN layers in two launches (engine-latency): layer i's conv history is
 /// `state + i * state_stride + conv_off` and its qkv rows `qkv + i * qkv_stride`, as gdn_conv_commit; its recurrence
 /// state `state + i * state_stride` over the first *n_keep rows of `h + i * h_stride` / `gate|beta + i * gb_stride`, as

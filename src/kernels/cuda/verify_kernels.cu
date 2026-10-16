@@ -291,7 +291,9 @@ __global__ void __launch_bounds__(S * RG) gdn_step_norm_multi_kernel(float* __re
                                                                      const float* __restrict__ gamma, float eps,
                                                                      float* __restrict__ y, int h_k, int h_v, int T,
                                                                      const int32_t* __restrict__ n_keep, int t_out_begin,
-                                                                     GdnQ81* __restrict__ xq) {
+                                                                     GdnQ81* __restrict__ xq,
+                                                                     float* __restrict__ snap,
+                                                                     int64_t snap_tok_stride) {
     __shared__ float sk[2][S], sq[2][S];
     __shared__ float red_kv[RG][S];
     __shared__ float red_o[RG][S];
@@ -335,6 +337,11 @@ __global__ void __launch_bounds__(S * RG) gdn_step_norm_multi_kernel(float* __re
         if (!need_out) {
 #pragma unroll
             for (int r = 0; r < RPG; ++r) s[r] = fmaf(g, s[r], sk[cur][rg * RPG + r] * delta);
+            if (snap) {   // F-216: verify mode only — commit launches pass snap == nullptr
+                float* sp = snap + (size_t) t * snap_tok_stride + ((size_t) (rg * RPG) * h_v + head) * S + col;
+#pragma unroll
+                for (int r = 0; r < RPG; ++r) sp[r * row_stride] = s[r];
+            }
             continue;
         }
         float o = 0.0f;
@@ -342,6 +349,11 @@ __global__ void __launch_bounds__(S * RG) gdn_step_norm_multi_kernel(float* __re
         for (int r = 0; r < RPG; ++r) {
             s[r] = fmaf(g, s[r], sk[cur][rg * RPG + r] * delta);
             o = fmaf(s[r], sq[cur][rg * RPG + r], o);
+        }
+        if (snap) {
+            float* sp = snap + (size_t) t * snap_tok_stride + ((size_t) (rg * RPG) * h_v + head) * S + col;
+#pragma unroll
+            for (int r = 0; r < RPG; ++r) sp[r * row_stride] = s[r];
         }
         red_o[rg][col] = o;
         __syncthreads();
@@ -1061,14 +1073,23 @@ void gdn_ab_multi(const float* x, const uint16_t* w_alpha, const uint16_t* w_bet
 
 void gdn_step_norm_multi(float* state, const float* h, int conv_channels, const float* gate, const float* beta,
                          const float* z, const float* gamma, float eps, float* y, int h_k, int h_v, int n_tok,
-                         const int32_t* n_keep, void* stream, int t_out_begin, void* xq_out) {
+                         const int32_t* n_keep, void* stream, int t_out_begin, void* xq_out,
+                         float* snap, int64_t snap_tok_stride) {
     GdnQ81* const xq = static_cast<GdnQ81*>(xq_out);   // S26: non-null = also the outputs' q8_1 (STRATA_QFUSE)
     if (!state || !h || !gate || !beta || !z || !gamma || !y || h_k <= 0 || h_v % h_k || n_tok < 1 ||
         n_tok > kVerifyMaxT) {
         std::fprintf(stderr, "gdn_step_norm_multi: invalid arguments\n");
         std::exit(1);
     }
+    if (snap != nullptr && (n_keep != nullptr || t_out_begin > 0)) {
+        std::fprintf(stderr, "gdn_step_norm_multi: snapshots are verify-mode only (n_keep == nullptr, whole window)\n");
+        std::exit(1);
+    }
     static const bool split = [] { const char* v = std::getenv("STRATA_GDN_SPLIT"); return v && v[0] == '1'; }();
+    if (snap != nullptr && split) {
+        std::fprintf(stderr, "gdn_step_norm_multi: STRATA_GDN_SLOTS requires the default kernel (STRATA_GDN_SPLIT off)\n");
+        std::exit(1);
+    }
     // S26: the split runs where it is faster (gfx1151 harness, h_v 48: the commit 8-19% per call; a window of 2+ rows
     // 3-13%; one row: no gain, the old kernel stays) - bitwise equal in every case
     if (split && (t_out_begin >= n_tok || n_tok - t_out_begin >= 2)) {
@@ -1103,15 +1124,15 @@ void gdn_step_norm_multi(float* state, const float* h, int conv_channels, const 
     const bool all_out = n_keep == nullptr && t_out_begin <= 0;
     if (xq && t_out_begin < n_tok) {
         if (all_out) gdn_step_norm_multi_kernel<true, true><<<g1, b1, 0, (cudaStream_t) stream>>>(
-            state, h, conv_channels, gate, beta, z, gamma, eps, y, h_k, h_v, n_tok, nullptr, 0, xq);
+            state, h, conv_channels, gate, beta, z, gamma, eps, y, h_k, h_v, n_tok, nullptr, 0, xq, snap, snap_tok_stride);
         else gdn_step_norm_multi_kernel<false, true><<<g1, b1, 0, (cudaStream_t) stream>>>(
-            state, h, conv_channels, gate, beta, z, gamma, eps, y, h_k, h_v, n_tok, n_keep, t_out_begin, xq);
+            state, h, conv_channels, gate, beta, z, gamma, eps, y, h_k, h_v, n_tok, n_keep, t_out_begin, xq, snap, snap_tok_stride);
     } else if (all_out) {
         gdn_step_norm_multi_kernel<true, false><<<g1, b1, 0, (cudaStream_t) stream>>>(
-            state, h, conv_channels, gate, beta, z, gamma, eps, y, h_k, h_v, n_tok, nullptr, 0, nullptr);
+            state, h, conv_channels, gate, beta, z, gamma, eps, y, h_k, h_v, n_tok, nullptr, 0, nullptr, snap, snap_tok_stride);
     } else {
         gdn_step_norm_multi_kernel<false, false><<<g1, b1, 0, (cudaStream_t) stream>>>(
-            state, h, conv_channels, gate, beta, z, gamma, eps, y, h_k, h_v, n_tok, n_keep, t_out_begin, nullptr);
+            state, h, conv_channels, gate, beta, z, gamma, eps, y, h_k, h_v, n_tok, n_keep, t_out_begin, nullptr, snap, snap_tok_stride);
     }
     check("gdn_step_norm_multi");
 }
