@@ -1,0 +1,10 @@
+# calibration: 2000 words -> 6878 tokens (ratio 3.4390); gen 512/run
+ctx    4093 | TTFT    1.09s | prefill    3754 t/s | decode  184.8 t/s | gen 512 in  2.77s | wall    3.86s
+ctx   32191 | TTFT    4.90s | prefill    6564 t/s | decode  189.5 t/s | gen 512 in  2.70s | wall    7.61s
+ctx   64305 | TTFT    9.76s | prefill    6590 t/s | decode  198.4 t/s | gen 512 in  2.58s | wall   12.34s
+ctx  120643 | TTFT   17.30s | prefill    6972 t/s | decode  216.4 t/s | gen 512 in  2.37s | wall   19.67s
+# done
+# calibration: 2000 words -> 6878 tokens (ratio 3.4390); gen 512/run
+ctx    4093 | TTFT    0.06s | prefill   63546 t/s | decode  208.1 t/s | gen 512 in  2.46s | wall    2.52s
+ctx    8143 | TTFT    1.50s | prefill    5419 t/s | decode  209.2 t/s | gen 512 in  2.45s | wall    3.95s
+# done
