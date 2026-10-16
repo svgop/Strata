@@ -456,3 +456,30 @@ slot into the same MTP window as items 1-2):
   skip FFN+head — measured −58% catch-up kernel time; `n_outputs` joins the graph key.
   Attacks the same tail our doorbell work targets, at a fraction of the code.
 
+
+## T8 — GOAL ROUND "NEW CEILING" ledger (2026-10-16, operator directive)
+
+Standing goal: significant, simultaneous, stable improvement on M1/pair/conc + smoothness +
+quality; evaluate capped logic and build new ceilings. Session results:
+- F-214: mtp-window + IndexShare adaptation CLOSED (mechanisms banked); LANECELL re-arm
+  confirmed conc-favored. Battery-env-inheritance law.
+- F-215: LANECELL conc profile LOCKED (launch-custom-iq3s-8081-conc.sh). Scoreboard: all three
+  targets touched (M1 208.3 / pair 194.4 / conc 244.8).
+- F-216: GDN slot-promotion BUILT + bit-parity PROVEN (instrument kept); replay is NOT the
+  depth gate — F-71 attribution corrected.
+- F-217: hc wide-grid -9.2% (SMEM tile = load-bearing xn reuse), occupancy probe neutral;
+  F-208 cost model falsified -> profile-first law.
+- F-218: FRESH COST MAP (STRATA_VERIFY_PROFILE): light 13.35ms (VRAM hits 1.93 / hc 2.39 /
+  copy+combine 1.08 / attn 0.93) vs heavy 24.31ms (**attention 4.09** / VRAM 3.46 / hc 4.00).
+
+PRIORITY ORDER per F-218 (supersedes the T6 re-rank):
+1. T1.2a pre75-on-sm120 via upstream #2075 + row-fold — lands on the 4.09ms heavy-class
+   attention line. Est -1.5-2.5ms heavy windows.
+2. Fused expert gather-matvec + packed single-H2D + admission (T3.3/T7.C) — the 1.9-3.5ms
+   VRAM-hits line, biggest stable across classes.
+3. HC Mix/Combine kernel FUSION (SGLang-class, +7.6/+5.5% e2e on our model class) — the
+   2.4-4.0ms hc line; grid/occupancy already falsified (F-217).
+4. T1.1 doorbell partial (publish-side plan) — the 1.1-1.4ms copy+combine neighborhood.
+5. Variance/smoothness control (boot spread 171-208; agent T8.B researching knobs).
+Background: 3 research agents out (T8.A megakernel/launch-overhead frontier, T8.B serving
+smoothness/jitter science, T8.C sibling-fork + discovery mining) — fold on return.
