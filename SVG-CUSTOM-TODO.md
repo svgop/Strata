@@ -760,3 +760,121 @@ RANKED PORT CANDIDATES (their hash + measured value + port cost):
 10. b2141a7c --expert-math exact (bit-exact GPU-vs-CPU-pool expert math incl shared expf):
     quality/measurement instrument; wide but shallow.
 11. Load lane (LOAD_THREADS/PIN_AFTER_COPY/PLE_RAM_NOWAIT): startup-time only; low priority.
+
+## T11 — fifth research round (2026-10-16 evening; 5 agents: R1 lineage, R2 pipelined-loop dossier, R3 FastMTP, R4 CPU pool, R5 quality gate)
+
+### T11.R1 — lineage mine: ALL SOURCES CLEARED + 3 new portables (agent report folded verbatim-in-summary)
+CLEARANCE: upstream/main FULLY merged (0 unmerged; BOOKKEEPING CORRECTION: d7a2453 was OUR
+merge commit — upstream's real 0.1.44.1 tag = 296b59d2 and our HEAD already carries ~15
+commits past it: #2324 AVX fixes, #2323 Metal, reasoning_effort etc. — we are AHEAD of
+upstream main entirely); eddo/upstream == upstream/main; pr2075 fully ported (our side a
+superset); rc/0.1.30 + 51 tags contained. Zero unmerged engine commits anywhere fetched.
+NEW (verified absent, not in T10):
+1. **a1444e33 prefill DENSE MMQ (run_dense)** — T10 mis-filed this as already-shared (we have
+   the moe_mmq MODULE incl quantize_mmq_q8_1_cuda, NOT the prefill dense wiring; run_dense =
+   0 hits our side). GDN qkv/gate/out + QSA q/out + shared-expert down through dense MMQ on
+   GGUF blocks, q8_1 activations, small 512/640-row shapes stay FP16 GEMM; GOTCHA: zeroed
+   4KiB tail for non-256-multiple rows (NaN×0 poisoned prompts). MEASURED: IQ3_S 2K prefill
+   −27..−30%, 16K −16%, follow-up turns −6.5..−22.7%, KL +1.8e-4 noise, argmax agreement
+   unchanged. PREFILL LANE #1 (our first-listed priority). Port MEDIUM (~130 lines + 5 sites
+   + tail-zeroing).
+2. **2d6b1db8 PLE key/value projections BESIDE LAYER 0** (from jesdga95/basalt) — today they
+   run on the critical path at layer 1 (our verify.cpp `l == 1 && ple_on` ~:1032); the fix
+   branches them at the window's start, waits the PLE flag, runs both beside layer 0, layer 1
+   joins. IQ3_S code +4.1% (thinking −0.2). Decode lane, EASY-MEDIUM (BF16-key path only).
+3. **95979cf2 profile-ordered bounded expert copy-ahead in prefill** (~1ms/32MiB pieces, ≤2
+   queued, until the layer's routing is host-side): single-GPU 3090 IQ3_S 2K −8.9% / 16K
+   −9.9%. MEDIUM-HIGH idea-level adaptation to our ring.
+Plus idea-level: tier moves admitted up to 1.3× the measured window gap (0.49→0.12ms commit,
+pairs with the pipelining lane); TIER LOST-WAKEUP BUG-CLASS audit for OUR expert_cache
+retire path (their 2056b4b4 froze at 35% hits — discriminator audit, not a port);
+instruments: STRATA_TIER_TRACE, per-request tier counters in /metrics, --deterministic-adapt.
+
+### T11.R3 — FastMTP retrain feasibility: VERDICT GO (full dossier in agent report)
+Recipe: FastMTP recursive teacher-forced CE (arXiv 2509.18362; Red Hat Speculators 0.6.0 =
+production form, Qwen3-Next+3.5 MoE SUPPORTED = our head class). Loss weights β^(k-1)
+(β=0.6 → [.51,.31,.18]; OUR adaptation: β≈0.8 for the pos-2-6 deficit, K=6-8 = serve depth).
+Data: SELF-DISTILLED 5k conversations suffice (RH: 5k samples, 443s on 2×H200 for 9B; our
+head-only ≈ 8-14GB VRAM, 5090 fits; ~2-6h/arm; frozen embed + BOUND lm_head — mtp.bind ties
+the backbone head ✓). Harvest: replay our MIMIC CORPUS through Strata prefill-only with a
+hidden-state dump at the MTP input (~2-6h, 160-320GB bf16 fits). Ship: bf16 → DIRECT-CAST Q4
+(never GPTQ — F-201 law). DECISION MATH (calibrated to our 2.78 banked/13.2ms ≈ 205-210):
+RH-scale deltas → ~227; FastMTP-scale → ~237; + depth re-unlock (pos-4-6 conditional
+products lift) → 247-255 = THE 250 PATH; 250 needs AL ≈ 3.25-3.4 (banked +0.55-0.7/window).
+Gates: dry-run on 9B sibling first (pipeline de-risk, 15-30min on 5090); v1 gate pos-2/3
++≥8pp each & pos-0 ≤1pp regression & e2e ≥+8%; kill-rule depth extension only while marginal
+acceptance > 6-9% breakeven. COST: 1-2 days engineering + a weekend of compute. NO CLOUD.
+BONUS ADVANTAGE: train on the QUANTIZED backbone's hiddens (distribution-matched by
+construction — RH trains bf16-serves-bf16; bounded by their deltas, not above).
+
+### T11.R2 — the pipelined service loop DESIGN DOSSIER (conc-300's roadmap; full dossier in agent report)
+THE DECISIVE INSIGHT (matches F-223's falsifications): inside one verify window the residual
+chain is strictly sequential — NO intra-window reordering can hide the pool. Every engine
+that succeeded (SGLang v0.4 zero-overhead, vLLM V1 async, TRT-LLM overlap) keeps ONE STEP OF
+OTHER WORK in flight — for us that means ANOTHER WINDOW: two cohort Verifiers (slots 0-3 /
+4-7), two non-blocking streams (each Verifier already owns one), ONE service reactor — all
+on the EXISTING batch_launch/batch_poll + pump() machinery. Per-verifier buffers/flags make
+the window-N+1 overwrite hazard structurally impossible (the G2 ghost). F-196's commit
+double buffer = the in-repo template (S1 fallback shape). Monotonic-across-windows flag
+values ((window<<6)|step) replace per-window resets. Frozen cohort layouts + pad rows =>
+graph re-keying becomes boot-time. MTP one-model overlap = the TRT-LLM-allowed spec mode.
+STAGES (each env-gated + reversible, byte-exact mimic gate per stage): S0 bench+gates → S1
+defer-raise + F-196-style payload parity (proves machinery, +0-1.5%) → S2 reactor-ize the
+concurrent lane via batch_launch/poll (+3-8%) → S3 TWO COHORT VERIFIERS (+20-45% → 300-360;
+the two-stream contention factor is the one number S3 exists to measure). Failure-mode
+ledger from the wild: SGLang #18168/#6949 overlap×EAGLE crash class; vLLM #29134 spec still
+forces a host sync; EqSpec ragged-batch corruption class => gates are BYTE-EXACT token
+equality + position-contiguity asserts, not scores. Rejected: KTransformers deferred experts
+(numerics-changing), multi-threaded pool (no win), conditional-node host-spin removal.
+
+### T11.R4 — CPU expert pool lane (two decisive numbers + ranked moves)
+(a) The pool is PARALLELISM-limited, NOT bandwidth-limited: 42-84 entries x 1.94MB =
+81-163MB/window at 4.2-4.8ms = 17-38GB/s aggregate vs 64GB/s/CCD fabric + ~60-70GB/s DRAM
+real caps; only ~3-5 unique experts/layer = 3-5 streams at the SINGLE-CORE roofline
+(~26-28GB/s/core). (b) Hiding beats shrinking: full hide = +23-29% t/s; all kernel work caps
+at -0.4..-1.0ms. RANKED: #1 the repo's OWN CPU-TIER-OVERLAP-SPEC.md wait-at-combine finish
+(-4.2..-4.8ms IF staging delivers; NOTE the F-223 additive measurement vs R4's arithmetic
+(C=0.12ms/layer < R=0.43ms/layer => should hide) implies the residual is INTER-LAYER SERVICE
+LATENCY (wake + post-window work) = exactly R2-S2's reactor target — run R4's discriminator
+ms_pool/(ms_wait/n_layers) FIRST); #2 split each expert's matvec across 2 pool threads
+(3-5 streams => row-split to ~40-45us/entry, +7-11% pre-overlap); #3 THP madvise+hugify the
+arena (NOT system always; 474 PTE walks/entry today; file-backed THP needs ext4/xfs —
+NTFS3 untested => pairs with #4); #4 arena off NTFS3 (steady-state ~0, but unlocks #3's
+fs-THP + fixes the fault path; one-time 85GB copy); #5 pool workers on the FREQUENCY CCD
+(X3D L3 useless — zero reuse streaming; 5750 vs 5550 fmax; service thread gets the X3D CCD);
+#6 vpermi2b/VBMI LUT + VNNI Q2_0 down (llamafile/llama.cpp precedents; only if #1 leaves C>R);
+#7 phase-boundary prefetch priming; #8 UMWAIT port (power only). DO-NOT-BOTHER: arena-place
+(symmetric DIMMs), NUMA (AM5 UMA), DDR5-6000+ chasing (4-DIMM 2DPC caps ~5200-5600; bandwidth
+not binding anyway), mlock-as-throughput, T-MAC (activation quant changes tokens), SMT-off
+globally (pinning suffices), routing/residency tail-shrinking (refuted F-125/F-127).
+
+### T11.R5 — the QUALITY GATE design (replaces the two saturated instruments)
+THE PROBLEM (measured): MMLU-70's CI is ±5.1pp vs a 4% adopt bar (F-200 saw 92.86 AND 97.14
+on the SAME build); mimic is ceiling-pinned at 100%. 3-bit damage lands in code/math FIRST
+(arXiv 2404.14047) — MMLU-only is structurally blind. DESIGN: (prereq ~1-2 days) an
+/internal/loglikelihood surface (serve/ has NO logprobs today — stubbed); freeze golden
+prompt sets + goldens under git. TIER-0 per token-stream-affecting adoption (~45-75min):
+G1 spec-vs-nospec DIFFERENTIAL — battery-nospec.sh EXISTS (the "pack contract refuses --spec
+0" belief was wrong for differential boots) — 300 fixed greedy prompts + pair/6-conc shapes,
+0 divergent tokens single-stream, ANY conc divergence = investigate-before-adopt (EqSpec
+class); G2 logit canary: 128k-token corpus NLL + Unsloth-class Divergence-300@32 KL vs
+golden (the field's "lossless" standard = KL-within-noise, never "MMLU unchanged"); G3
+MMLU-Pro n=300 stratified, CLOZE-LOGLIKELIHOOD grading (kills conditional variance, up to
+2/3), paired vs golden (Miller arXiv 2411.00640); G4 steering cost same-boot cvec on/off.
+TIER-1 weekly: generative MMLU-Pro n=300 with McNemar, code/math cell n=150 (3-bit damage
+channel), mimic panel ΔNLL+top1+JS+MAUVE (replaces the 100% ceiling), GPQA-M monthly.
+CONTROL VECTOR finding: scale 1.0 layers 4-24 is on the wrong side of both knobs (early
+layers + high scale = collateral damage per the steering literature); sweep
+{0.6,0.8,1.0}x{4-24,10-20,12-18} within ONE boot likely finds equal refusal at lower damage
+— a possible free capability recovery. Batch-numerics law (Thinking Machines): greedy is
+seed-free; comparisons must be boot-vs-boot, never seed-vs-seed.
+
+### T11 MASTER QUEUE (supersedes T9's; 2026-10-16 evening)
+1. CONC-300: R2's S0→S3 cohort pipeline (start S1+S2; S3 = the decisive stage).
+2. SINGLE-250: T11.R3 FastMTP retrain (GO verdict; 1-2 days eng + weekend compute) — the
+   acceptance lever everything else compounds on.
+3. PREFILL: a1444e33 dense-MMQ prefill (-27..-30% IQ3_S 2K; T11.R1 #1) + 95979cf2 copy-ahead.
+4. KERNELS: sub-warp experts (SUBWARP-EXPERT-PORT-PLAN.md) + MMQ-7-8tok windows (appendix).
+5. CHEAP WINS: 2d6b1db8 PLE-beside-layer-0 (+4.1% code decode); R4#3+5 THP+CCD pinning;
+   R5's /internal/loglikelihood + the cvec sweep (quality recovery).
+6. QUALITY INFRA: R5's Tier-0 gate before the next numerics-touching adoption.
