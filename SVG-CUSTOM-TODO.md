@@ -144,8 +144,13 @@ Our status, verified in-tree 2026-10-16:
   2026-10-14): coupled slot drafting — drafter samples with the target's chain + the same
   Philox draw, quality-safe by construction (the uncoupled and rescue variants were
   quality-banned). Standing env `STRATA_BATCH_MTP=1 STRATA_SPEC_COUPLED=1`; pair +11.5%,
-  MMLU 97.14 PASS. Upstream stock still ships draftless concurrent slots. This is also
-  PR-value item P3 for Niko (campaign/research/PR-UPSTREAM-plan.md).
+  MMLU 97.14 PASS. **2026-10-16 correction, byte-level verification: this is NOT a PR
+  candidate — the whole mechanism (coupled_draft.hpp + --batch-mtp flag + docs + SYCL copy)
+  already lives in upstream/main, and our generate.cpp BATCH_MTP site is byte-identical to
+  theirs. Our delta = one env line + the evidence. Per operator rule ("if it's just a flip
+  there is no PR"), the vehicle is an ISSUE with the measured case for flipping the default
+  (draft banked in the session record); PR-UPSTREAM-plan.md P3 reclassified into the
+  evidence-backed-default-flips class (was P6).**
 
 ## T3 — llama.cpp v0.7.0 harvest
 
