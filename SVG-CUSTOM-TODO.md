@@ -717,3 +717,39 @@ trained MTP (FastMTP retrain stays the right expensive bet; AdaSPEC NeurIPS25 = 
 8. Graph ladder G∈{1..6} (T9.C#4, TRT-LLM blog20 numbers).
 9. Clock lock (user sudo staged) + CCD pinning (T9.A#6 + T9.C#5) — the STABLE half of 250.
 10. QuantSpec dual-view KV (T9.B#4); block verification (T9.B#5, contract sign-off gate).
+
+## T10 — eddoursel fork overlap audit (2026-10-16, background agent, full absence-checks run)
+
+Base: eddo/custom vs our main (367-file delta). F-209 law applied — 30+ mechanisms verified
+ALREADY SHARED (F-1/F-2, HC_Q8, base elastic K/V, commit batch, MMQ_IL, foresight, k8v4, rope
+scaling, ...); N/A list documented (multi-GPU/Metal/SYCL/NVFP4/UD formats). OURS-ONLY list
+noted (--prefill-head-alias, --vram-elastic, --pool-affinity, coupled-draft, KV_PREFETCH ...).
+RANKED PORT CANDIDATES (their hash + measured value + port cost):
+1. **674bf0ca sub-warp grouped expert kernels** (iq_dot.cuh load/fetch/apply + native_gus80
+   half-warp-per-column gate/up for n_embd 2560 = OUR SHAPE + native_down_sub): IQ3_S decode
+   +5.9% code/+5.7% think/+6.4% after-16K; experts 36.7->32.7us @1tok, 75.3->56.1 @4,
+   133.9->94.3 @8 (3090). ATTACKS THE PROF221 VRAM-HITS LINE (biggest stable kernel line).
+   Port: MEDIUM extract-and-adapt (their iq_kernels diverged ~4k lines; parity harness comes).
+2. **2ae47d0f draft-head 2-bit proxy** (draft_proxy.cu +439, mtp.cpp hook, STRATA_DRAFT_PROXY):
+   40,525-row head -> 32.4MB 2-bit proxy; 110->51us/draft; round 1.49->1.31ms; bitwise logits,
+   13/4568 min-p flips (within 0.048). Port: EASY (687 insertions, 6 files, mostly new;
+   selftest + env fallback). THE NEXT PICK (self-contained, decode lane).
+3. 50c83e0f+236c73ba prefill GDN mma chunk-walk (one fused kernel, WY-form, m16n8k16):
+   recurrence 1.30->0.61ms per 2048-tok layer (2.1x, 3090); NOT bitwise (~4e-4) — prefill lane;
+   port MEDIUM.
+4. 78652d23+e6ed2a50 elastic-EXTENDED K/V (pooled keys + rope tables grow): +165 expert slots
+   (+1.8% cache) at our 131072 context, more at 262k+; port MEDIUM (fit to our kvg_ensure).
+5. c7544ef6+4a9669ff QSA top-k past 262,144 cells (dynamic smem by capacity; 1.47M cells on a
+   3090, more on 5090): the 262k/1M enabler; selections bit-equal; EASY-MEDIUM.
+6. 3443d955 MMQ dense projections at 7-8 token windows (+5.7% IQ3_S @8-tok): only matters when
+   lookup chains push windows to 7-8; MEDIUM.
+7. 240c8be7+06dfaa57 --feed-max (short prompt parts via verify windows): interactive-latency
+   floor; MEDIUM (adapt to our serve loop); pairs with ac21812c preemption fix (45 lines).
+8. 9488909a post-prompt tier refill seeded by PROMPT routing counts (batched lent-slot refill,
+   1.3x-gap admission): prompt -2.8/3.5%, post-prompt answers +0.5-2.1%; the "prompt counts
+   into usage" half ports as an IDEA first; skip their --adapt-decay (noise).
+9. ffb5d6f7 --arena-place by measured RAM read rate: +5.4-6.7% UD only, IQ3_S +-0.1 on THEIR
+   asymmetric DDR5 — measure ours first (STRATA_ARENA_PLACE_DRY); likely skip.
+10. b2141a7c --expert-math exact (bit-exact GPU-vs-CPU-pool expert math incl shared expf):
+    quality/measurement instrument; wide but shallow.
+11. Load lane (LOAD_THREADS/PIN_AFTER_COPY/PLE_RAM_NOWAIT): startup-time only; low priority.
