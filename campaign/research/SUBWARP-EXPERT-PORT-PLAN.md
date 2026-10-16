@@ -59,3 +59,23 @@ window-hash discipline.
   windows on their rig. Dense projections (qkv/gate/out-proj) through MMQ tensor cores in the
   big serial windows = a real M1 lane; medium port (MMQ ctx into the captured graph; we
   already build moe_mmq).
+
+## APPENDIX — the MMQ-at-7-8-token-windows lane (eddo 3443d955, recon 2026-10-16)
+
+Their diff is only +90 lines of WIRING (a proj() lambda routing the window's big dense
+projections — GDN qkv/gate/out, QSA q/k/v/out — through quantize-to-q8_1 + a per-stream MMQ
+context's run_dense when n>=7 and n_in/n_out>=n_embd and type!=Q8_0; pre-capture warmup of
+every shape because the context's stream-k scratch pools may not allocate inside a capture —
+our F-91 law's cousin). Measured +5.7% IQ3_S at 8-token windows (their rig); MMQ 1.1-1.65x
+dp4a at these shapes (scratch/aq_bench.cu).
+
+OUR SIDE: include/strata/prefill/moe_mmq.hpp exists with quantize/supported/fits/q8_bytes
+and the expert-grouped Product API — but NOT their per-stream dense run_dense context.
+Port path: host the dense product on OUR Product API (one virtual "expert", identity bounds
+{0,T}, no expert stride) per stream (main + shared-expert branch), or add a thin dense entry
+beside Product. Wire at our verify.cpp projection sites behind STRATA_WINDOW_MMQ=1.
+
+**VALIDATION IS THE STORY**: MMQ (int8 tensor-core mma) is NOT bitwise our dp4a path — the
+first non-bit-exact kernel swap in the campaign's verify window. Gates: M3b in band + MMLU
+battery + mimic + ABAB perf; the exact-match verify CONTRACT is untouched (draft vs target
+consistency is within-window), but acceptance may shift a fraction of a point — measure it.
