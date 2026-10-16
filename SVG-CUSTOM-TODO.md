@@ -732,8 +732,14 @@ RANKED PORT CANDIDATES (their hash + measured value + port cost):
    Port: MEDIUM extract-and-adapt (their iq_kernels diverged ~4k lines; parity harness comes).
 2. **2ae47d0f draft-head 2-bit proxy** (draft_proxy.cu +439, mtp.cpp hook, STRATA_DRAFT_PROXY):
    40,525-row head -> 32.4MB 2-bit proxy; 110->51us/draft; round 1.49->1.31ms; bitwise logits,
-   13/4568 min-p flips (within 0.048). Port: EASY (687 insertions, 6 files, mostly new;
-   selftest + env fallback). THE NEXT PICK (self-contained, decode lane).
+   13/4568 min-p flips (within 0.048). **RE-PRICED 2026-10-16 during integration design: our
+   standing draft mode is the F-184 COUPLED sampler (full-vocab logits + target Philox +
+   penalties) — the proxy's top-1+prob only fits the non-coupled greedy path; a faithful port
+   = top-K exact rescore emission + penalty-aware fallback to the full head = day-class
+   surgery for ~+2-3% (head line 0.43-0.78 ms/window halved). Queue AFTER the sub-warp
+   kernels; kernel read complete, files extracted /tmp/dproxy; Q6_K type 14 + n_in 2560
+   preconditions CONFIRMED for our dhead_.** Sub-warp port plan (T10 #1) + this note banked
+   at campaign/research/SUBWARP-EXPERT-PORT-PLAN.md.
 3. 50c83e0f+236c73ba prefill GDN mma chunk-walk (one fused kernel, WY-form, m16n8k16):
    recurrence 1.30->0.61ms per 2048-tok layer (2.1x, 3090); NOT bitwise (~4e-4) — prefill lane;
    port MEDIUM.
@@ -741,8 +747,9 @@ RANKED PORT CANDIDATES (their hash + measured value + port cost):
    (+1.8% cache) at our 131072 context, more at 262k+; port MEDIUM (fit to our kvg_ensure).
 5. c7544ef6+4a9669ff QSA top-k past 262,144 cells (dynamic smem by capacity; 1.47M cells on a
    3090, more on 5090): the 262k/1M enabler; selections bit-equal; EASY-MEDIUM.
-6. 3443d955 MMQ dense projections at 7-8 token windows (+5.7% IQ3_S @8-tok): only matters when
-   lookup chains push windows to 7-8; MEDIUM.
+6. 3443d955 MMQ dense projections at 7-8 token windows (+5.7% IQ3_S @8-tok): **APPLIES TO OUR
+   M1 SERIAL WINDOWS — today's boots capture 6/7/8-token windows (confirmed in the logs);
+   this is a real M1 lane, not just lookup-chain territory; MEDIUM.**
 7. 240c8be7+06dfaa57 --feed-max (short prompt parts via verify windows): interactive-latency
    floor; MEDIUM (adapt to our serve loop); pairs with ac21812c preemption fix (45 lines).
 8. 9488909a post-prompt tier refill seeded by PROMPT routing counts (batched lent-slot refill,
