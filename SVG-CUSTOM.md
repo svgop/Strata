@@ -7636,3 +7636,21 @@ fix, zero perf delta expected and observed). Second harvest from the same report
 --vram-reserve-mib 2000 already sits in #2612's good regime (their 12288→1500 = +30% via a
 3x bigger expert cache); our 180-208 confirmed top of the public record for 5090+IQ3_S.
 Full ranked harvest list: SVG-CUSTOM-TODO.md T8.C.
+
+### F-220 — SMOOTHNESS KNOB #1 EXECUTED: prewarm pass in every battery boot; clock-lock paste block staged (2026-10-16 13:1x)
+
+Agent T8.B's verdict: the boot-spread's dominant term is page-cache warm-in, not thermal. Fix
+landed: campaign/prewarm.sh (sequential read of pack + both shards, idempotent, 7s warm /
+~15-30s cold) now runs BEFORE the boot step of battery-boot.sh and battery-config.sh — every
+battery round starts from the same warm state; run it manually after any reboot before
+restoring the standing server. Statistical vindication on the record: our ABAB same-window
+interleave is the paired design that detects +4% in 2-5 rounds where naive boots would need
+~49/arm. GPU-side clip (user's sudo, reversible):
+  sudo nvidia-smi -lgc 2700,2700        # lock SM slightly under the ~2827 floating average
+  sudo nvidia-smi -lmc 14001,14001      # memory clocks at max (decode is memory-bound)
+  sudo nvidia-smi -rgc; sudo nvidia-smi -rlmc   # revert
+Trade (NVIDIA-documented): mean may sit slightly below floating peak; the FLOOR rises because
+260-460 MHz idle/burst excursions and post-idle ramps disappear — correct trade for a
+floor-above-200 goal. Persistence daemon already active (checked). Do-not-bother list banked
+in T8.B. Next measurement law: after prewarm+lock, A/A the boots — if round-mean sigma lands
+in the 2-3% class, future +4% claims are single-afternoon testable.

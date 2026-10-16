@@ -17,6 +17,7 @@ pkill -9 -f 'build/strat[a] ' 2>/dev/null
 pkill -9 -f 'build/strat[a]$' 2>/dev/null
 sleep 2
 
+bash campaign/prewarm.sh
 echo "[$(date +%H:%M:%S)] booting standing launcher..."
 nohup ./launch-custom-iq3s-8081.sh > server-8081.out 2>&1 &
 disown

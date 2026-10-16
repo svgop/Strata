@@ -21,6 +21,7 @@ sleep 2
 eval "$(grep '^export ' launch-custom-iq3s-8081.sh)"
 echo "[$(date +%H:%M:%S)] standing env loaded: SPEC_DRAFT_TEMP=$STRATA_SPEC_DRAFT_TEMP BATCH_MTP=$STRATA_BATCH_MTP TYPICAL_ACCEPT=$STRATA_TYPICAL_ACCEPT"
 
+bash campaign/prewarm.sh
 echo "[$(date +%H:%M:%S)] booting config=$CONFIG log=$LOG"
 nohup .venv/bin/python serve/server.py --engine strata --config "$PWD/$CONFIG" --port 8081 --host 127.0.0.1 > server-cfgboot.out 2>&1 &
 disown

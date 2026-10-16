@@ -524,3 +524,22 @@ startup-captured graphs), vLLM phase-data attribution pattern, cudaProfilerStart
 ranges; SGLang #5593: ~2ms idle bubble before first kernel of graph replays — look for it in
 our traces. Not merged/watchlist: #2453 (Windows config-side regression — binary A/B blind),
 #2010/#2038 as rebase regression tests.
+
+### T8.B — smoothness/variance report folded (agent, 2026-10-16) — knob #1 EXECUTED
+
+MECHANISM SETTLED: the morning-evening gap (181 vs 196-208) is HOST-SIDE page-cache warm-in of
+the mmap'd ~85GB, NOT GPU thermal — a warm GPU reading faster contradicts throttling. The
+5090's SM clock does bounce 260-460 MHz on sub-ms bursts (cloudrift measured 84% per-call
+variance at 8us kernels; boost never engages for bursty decode), so clock-locking is the GPU-
+side variance clip. Stats: at our ±5-8% boot CV a naive A/B needs ~49 boots/arm to see +4%;
+our ABAB same-window interleave (paired, sigma_d 2-3%) needs 2-5 rounds — the existing law is
+quantitatively vindicated; CUPED on a prior-round covariate would cut unpaired needs ~2.5x.
+EXECUTED (no sudo needed): campaign/prewarm.sh — full sequential read of pack+shards into the
+page cache before every battery boot (7s warm, ~15-30s post-reboot), wired into battery-boot
+and battery-config. PENDING USER SUDO (paste block in F-220 journal): clock lock ~2700 MHz +
+memory clocks at max + verify. The remaining knob table (pinning/mlock under a systemd
+LimitMEMLOCK override only if pressure ever appears; CPU pinning to the V-Cache CCD cores 0-7
++ EPP performance; THP=skip; power limit=skip +0.1%) ranked in the agent report. Do-not-
+bother: power-limit raise, GDDR7 thermal intervention, p99 from short rounds (2000-token
+rounds give p99 CI ±44% — aggregate instead). Watch: GB202 Xid 79/GSP cluster under sustained
+CUDA load — check `journalctl -k | grep -i xid`; PCIe ASPM off mitigates if we're affected.
