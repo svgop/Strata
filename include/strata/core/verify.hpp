@@ -325,6 +325,16 @@ public:
 private:
     RemoteExpertOpt* remote_opt_ = nullptr;
     bool capture(int T, std::string& err);
+    // F-216 GDN slot-promotion (STRATA_GDN_SLOTS=0 off / 1 promote / 2 promote+audit-the-replay):
+    // serial (non-batch) verify windows persist each column's recurrent state into gdn_snap_
+    // (layer-major: layer gi's token t at gdn_snap_ + gi*max_t_*gdn_rec_floats_ + t*gdn_rec_floats_);
+    // the serial commit then promotes snapshot[m-1] instead of replaying the recurrence.
+    int gdn_slots_ = 0;
+    float* gdn_snap_ = nullptr;
+    int64_t gdn_rec_floats_ = 0;          ///< one layer's recurrent-state floats (conv excluded: conv commit stays)
+    int64_t gdn_snap_layers_ = 0;         ///< GDN layers counted in capture order (gdn_index space)
+    unsigned long long* audit_bad_ = nullptr;   ///< mode 2: device counter of snapshot-vs-replay mismatches
+    unsigned long long audit_windows_ = 0;      ///< mode 2: commits audited so far
     // batch windows (see init_slots)
     std::vector<SessionState*> slots_;
     bool batch_rec_ = false;               ///< record_window is capturing a batch window

@@ -7527,3 +7527,35 @@ next: verify.cpp wiring (T_max x gdn_rec_floats x 36-layer arena ~576MB at init 
 window call passes snap, commit swaps the recurrence replay for a snapshot[m-1] -> state promote
 kernel reading *n_keep device-side, conv commit + indexer tail + PLE unchanged), then parity
 mode (STRATA_GDN_SLOTS=2) must log exact 0.0 across its audit windows before any battery.
+
+### F-216 — GDN SLOT-PROMOTION: BUILT, BIT-PARITY PROVEN, PERF-NEGATIVE — the replay is NOT the depth gate (2026-10-16 08:40)
+
+Phases 1-4 complete in one session. Phase 1: gdn_step_norm_multi persists the register state
+after every column in verify mode (snap + stride; default null = unchanged). Phase 2: verify.cpp
+wiring — arena (36 GDN layers x T x ~2MB, layer-major, alloc at init per F-91), serial windows
+pass snap (batch windows and their commit graphs untouched by design), the serial commit
+promotes snapshot[m-1] (mode 1) or replays + audits (mode 2); promote reads *n_keep on the
+device at graph replay (graph.hpp law). Phase 3, STRATA_GDN_SLOTS=2 proof boot: **193 commits
+audited, 0 mismatches — the snapshots are BIT-IDENTICAL to the replayed states**, exactly as the
+construction predicts (same kernel, same per-token arithmetic, prefix acceptance). M3b 74.5 in
+band. Phase 4, 3v3 ABAB (gdnpromote vs gdnctl, 08:0x-08:2x):
+  arm  M1 181.1 / pair 177.1 / conc 221.4 / M3b 76.2
+  ctl  M1 189.3 / pair 176.9 / conc 221.4 / M3b 75.7
+  => M1 -4.4% (regression bar), pair +0.1, conc EXACTLY 0.0 (batch isolation proven), M3b +0.5.
+VERDICT: NOT ADOPTED for standing. Mechanism: the snapshot stores (~T x 72MB per window, plus
+promote copies) cost more than the replay they replace at our state size and T<=8; possible
+register-pressure contribution in the launch-bounds kernel. The code STAYS env-gated (default
+off, parity-proven) as an instrument.
+
+THE DIAGNOSTIC GOLD (this is why the session was worth it): eliminating the ENTIRE commit-side
+GDN recurrence replay moves pair/conc by ZERO and costs M1 — therefore **F-71's 2.47 ms/row
+window marginal is NOT the GDN replay**. The depth/stair gate lives in the window compute
+itself (dense-weight rows, expert marginal, doorbell tail), not state restoration. F-71's
+attribution is corrected on the record; the stair re-test (Lane B) now targets the window's
+dense-weight/expert marginal and the doorbell tail (T1.1 partial plan), not GDN state costs.
+Also on the record: the self-kill footgun bit the operator's own compound command once tonight
+('cp build/strata engine/strata' in the invoking line matched the drivers' pkill pattern and
+killed the invoking shell silently) — the law (binary paths never in invoking commands) is
+reaffirmed with a fresh scar; and the phase-2 binary was initially not deployed to engine/
+strata (proof boot ran the stale phase-1 binary, caught by the missing AUDIT banner — deploy
+check added to the mental checklist: verify the banner before reading a probe).

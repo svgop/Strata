@@ -46,6 +46,15 @@ void gdn_step_norm_multi(float* state, const float* h, int conv_channels, const 
                          const float* z, const float* gamma, float eps, float* y, int h_k, int h_v, int n_tok,
                          const int32_t* n_keep, void* stream, int t_out_begin = 0, void* xq_out = nullptr,
                          float* snap = nullptr, int64_t snap_tok_stride = 0);
+/// F-216 GDN slots (STRATA_GDN_SLOTS=1): commit-side promotion — state[0, floats) =
+/// snap[(m-1) * snap_tok_stride, ...), m = *n_keep read on the device at graph replay.
+/// Replaces the recurrence replay of the commit for layers whose window snapshotted.
+void gdn_state_promote(float* state, const float* snap, int64_t snap_tok_stride, const int32_t* n_keep,
+                       int64_t floats, void* stream);
+/// F-216 audit (STRATA_GDN_SLOTS=2): after the ORIGINAL replay commit rewrote `state`, count
+/// elements where the window's snapshot disagrees.  Zero across a boot = promote is bit-identical.
+void gdn_snap_audit(const float* state, const float* snap, int64_t snap_tok_stride, const int32_t* n_keep,
+                    int64_t floats, unsigned long long* bad, void* stream);
 /// The commit of `n_layers` GDN layers in two launches (engine-latency): layer i's conv history is
 /// `state + i * state_stride + conv_off` and its qkv rows `qkv + i * qkv_stride`, as gdn_conv_commit; its recurrence
 /// state `state + i * state_stride` over the first *n_keep rows of `h + i * h_stride` / `gate|beta + i * gb_stride`, as

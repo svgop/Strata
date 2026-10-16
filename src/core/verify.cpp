@@ -514,6 +514,8 @@ Verifier::~Verifier() {
     for (auto& kv : commit_bm_)
         if (kv.second) cudaGraphExecDestroy(kv.second);
     if (arena_b_) cudaFree(arena_b_);
+    if (gdn_snap_) cudaFree(gdn_snap_);   // F-216
+    if (audit_bad_) cudaFree(audit_bad_);
     if (h_commitb_) cudaFreeHost(h_commitb_);
     if (qcnt_) cudaFree(qcnt_);
     if (d_spec_) cudaFree(d_spec_);
@@ -587,6 +589,34 @@ bool Verifier::init(const WeightTable& wt, const ModelGeometry& g, SessionState&
     if (max_t < 2 || max_t > strata::kernels::kVerifyMaxT || max_t > strata::kernels::cpu::MAXT) {
         err = "verify: the window must hold 2.." + std::to_string(strata::kernels::kVerifyMaxT) + " tokens";
         return false;
+    }
+    // F-216 GDN slot-promotion: SERIAL verify windows snapshot each column's recurrent state
+    // (see record_window); the serial commit promotes snapshot[m-1] instead of replaying the
+    // recurrence.  Batch windows and their commit graphs keep the replay untouched.
+    if (const char* e = std::getenv("STRATA_GDN_SLOTS")) gdn_slots_ = std::atoi(e) == 2 ? 2 : (std::atoi(e) != 0 ? 1 : 0);
+    if (gdn_slots_ != 0) {
+        gdn_rec_floats_ = (int64_t) g.ssm_state_size * g.ssm_v_heads * g.ssm_state_size;
+        gdn_snap_layers_ = 0;
+        for (int64_t l = 0; l < g.n_layers; ++l)
+            if (!is_qsa_layer(g, l)) ++gdn_snap_layers_;
+        const int64_t floats = gdn_snap_layers_ * max_t_ * gdn_rec_floats_;
+        const cudaError_t am = cudaMalloc(&gdn_snap_, (size_t) floats * sizeof(float));
+        if (am != cudaSuccess || (gdn_slots_ == 2 && cudaMalloc(&audit_bad_, sizeof(unsigned long long)) != cudaSuccess)) {
+            std::fprintf(stderr, "strata verify: STRATA_GDN_SLOTS: no VRAM for the %.0f MB snapshot arena; slots off (%s)\n",
+                         floats * 4.0 / 1048576.0, cudaGetErrorString(am));
+            cudaGetLastError();
+            if (gdn_snap_) { cudaFree(gdn_snap_); gdn_snap_ = nullptr; }
+            if (audit_bad_) { cudaFree(audit_bad_); audit_bad_ = nullptr; }
+            gdn_slots_ = 0;
+        } else if (gdn_slots_ == 2) {
+            cudaMemset(audit_bad_, 0, sizeof(unsigned long long));
+            std::fprintf(stderr, "strata verify: GDN slots AUDIT: the replay commit stays; every commit compares "
+                                 "snapshot[m-1] against it (zero mismatches = promote is bit-identical)\n");
+        } else {
+            std::fprintf(stderr, "strata verify: GDN slots on: %lld GDN layers x T%d, %.0f MB arena; the commit "
+                                 "promotes snapshot[m-1] instead of replaying the recurrence\n",
+                         (long long) gdn_snap_layers_, (int) max_t_, floats * 4.0 / 1048576.0);
+        }
     }
     if (hits.d_res == nullptr || hits.cache_base == nullptr || hits.blob <= 0) {
         err = "verify: needs the profile-filled VRAM expert tier (--expert-profile and --expert-cache); with "
@@ -1213,7 +1243,11 @@ bool Verifier::record_window(int T, cudaStream_t cs, std::string& err) {
                     }
                 } else
                 gdn_step_norm_multi(state, hb, (int) C, gate, beta, z_, (const float*) wnm->data, EPS, y_, (int) HK,
-                                    (int) HV, te, self_commit ? one_ : nullptr, cs, tb, g_qfuse() ? (void*) xq_ : nullptr);
+                                    (int) HV, te, self_commit ? one_ : nullptr, cs, tb, g_qfuse() ? (void*) xq_ : nullptr,
+                                    (gdn_slots_ != 0 && !self_commit)
+                                        ? gdn_snap_ + (size_t) (gi - ss.gdn_ord0) * max_t_ * gdn_rec_floats_
+                                        : nullptr,
+                                    gdn_rec_floats_);   // F-216: snapshot every column; the commit promotes snapshot[m-1]
                 stamp(l, 6, grp);
                 // STRATA_QFUSE: done above by gdn_step_norm_multi - but a batch's per-slot recurrence passes it no q8_1
                 // destination (#1139: the out-projection read stale bytes), so that case quantizes here as without it
@@ -2047,7 +2081,7 @@ bool Verifier::capture_commit(std::string& err) {
         static const bool commit_batch = [] { const char* e = std::getenv("STRATA_COMMIT_BATCH"); return !e || e[0] != '0'; }();
 #endif
         bool gdn_batched = false;
-        if (commit_batch) {
+        if (commit_batch && gdn_slots_ == 0) {   // F-216: slots modes take the per-layer loop (promote/audit replaces the recurrence)
             int64_t n_gdn = 0;
             bool norms_ok = true;   // the per-layer loop checks each layer's ssm_norm.weight: keep that check
             for (int64_t l = lb_; l < le_ && norms_ok; ++l)
@@ -2104,10 +2138,20 @@ bool Verifier::capture_commit(std::string& err) {
                 float* conv = state + (uint64_t) g.ssm_state_size * g.ssm_v_heads * g.ssm_state_size;
                 const float* qkv = qkv_L_ + (size_t) gdn_index * MT * C;
                 gdn_conv_commit(conv, qkv, (int) C, commit_, cs_);
-                gdn_step_norm_multi(state, h_L_ + (size_t) gdn_index * MT * C, (int) C, gate_L_ + (size_t) gdn_index * MT * HV,
-                                    beta_L_ + (size_t) gdn_index * MT * HV, z_, (const float*) wnm->data, EPS, y_dummy_,
-                                    (int) g.ssm_k_heads, (int) HV, (int) MT, commit_, cs_,
-                                    (int) MT);   // S26: t_out_begin = MT - the replay's outputs (y_dummy_) are never read
+                if (gdn_slots_ == 1) {   // F-216: promote instead of replay — same bits, no recurrence work
+                    gdn_state_promote(state,
+                                      gdn_snap_ + (size_t) (gdn_index - ss.gdn_ord0) * max_t_ * gdn_rec_floats_,
+                                      gdn_rec_floats_, commit_, gdn_rec_floats_, cs_);
+                } else {
+                    gdn_step_norm_multi(state, h_L_ + (size_t) gdn_index * MT * C, (int) C, gate_L_ + (size_t) gdn_index * MT * HV,
+                                        beta_L_ + (size_t) gdn_index * MT * HV, z_, (const float*) wnm->data, EPS, y_dummy_,
+                                        (int) g.ssm_k_heads, (int) HV, (int) MT, commit_, cs_,
+                                        (int) MT);   // S26: t_out_begin = MT - the replay's outputs (y_dummy_) are never read
+                    if (gdn_slots_ == 2)   // audit: the replay just wrote the truth; count disagreements with the snapshot
+                        gdn_snap_audit(state,
+                                       gdn_snap_ + (size_t) (gdn_index - ss.gdn_ord0) * max_t_ * gdn_rec_floats_,
+                                       gdn_rec_floats_, commit_, gdn_rec_floats_, audit_bad_, cs_);
+                }
                 ++gdn_index;
             } else {
                 const QsaState& st = ss.qsa_states[qsa_index];
@@ -2685,6 +2729,13 @@ bool Verifier::commit(int n_keep, std::string& err) {
         const cudaError_t le = cudaGraphLaunch(commit_exec_, cs_);
         if (ct.on) { cudaEventRecord(ct.e, cs_); ct.pending = true; }
         if (le != cudaSuccess) { err = std::string("verify: commit launch: ") + cudaGetErrorString(le); return false; }
+        if (gdn_slots_ == 2 && ++audit_windows_ % 64 == 1) {   // F-216 audit report: diagnostic boot, the sync is acceptable
+            unsigned long long bad = 0;
+            cudaStreamSynchronize(cs_);
+            cudaMemcpy(&bad, audit_bad_, sizeof(unsigned long long), cudaMemcpyDeviceToHost);
+            std::fprintf(stderr, "strata verify: gdn slots audit: %llu commits, %llu mismatches (zero = promote is "
+                                 "bit-identical to the replay)\n", audit_windows_, bad);
+        }
         // set_commit_async: no wait here - the next window runs on the same stream after it, and the drafter (its own
         // stream) reads only this window's final rows and its own K/V. h_commit_ is next written after the next window's
         // results are read, i.e. after this graph has run.  Everything else waits on commit_done_ (wait_commit).

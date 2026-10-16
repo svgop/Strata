@@ -1142,7 +1142,48 @@ __global__ void wait_flag_ge_kernel(const volatile uint32_t* flag, uint32_t valu
     while (*flag < value) strata_spin_pause();
     __threadfence_system();
 }
+
+// F-216 GDN slots: commit-side promotion.  The verify window's recurrence persisted the state
+// after every column into `snap` (token t at snap + t*snap_tok_stride); acceptance keeps the
+// prefix, so commit = copy snapshot[m-1] over the layer's recurrent state, m = *n_keep read on
+// the DEVICE (a graph re-reads its input buffers at replay).  Replaces the recurrence replay.
+__global__ void gdn_state_promote_kernel(float* __restrict__ state, const float* __restrict__ snap,
+                                         int64_t snap_tok_stride, const int32_t* __restrict__ n_keep,
+                                         int64_t floats) {
+    const int64_t i = (int64_t) blockIdx.x * blockDim.x + threadIdx.x;
+    const int m = *n_keep;
+    if (i < floats) state[i] = snap[(int64_t) (m - 1) * snap_tok_stride + i];
+}
+
+// F-216 audit (STRATA_GDN_SLOTS=2): runs AFTER the original replay commit rewrote `state`;
+// counts elements where the window's snapshot disagrees with the replayed truth.  Zero for the
+// whole boot = promote is bit-identical to the replay on this workload, proven.
+__global__ void gdn_snap_audit_kernel(const float* __restrict__ state, const float* __restrict__ snap,
+                                      int64_t snap_tok_stride, const int32_t* __restrict__ n_keep,
+                                      int64_t floats, unsigned long long* __restrict__ bad) {
+    const int64_t i = (int64_t) blockIdx.x * blockDim.x + threadIdx.x;
+    const int m = *n_keep;
+    if (i < floats && state[i] != snap[(int64_t) (m - 1) * snap_tok_stride + i]) atomicAdd(bad, 1ULL);
+}
 }  // namespace
+
+void gdn_state_promote(float* state, const float* snap, int64_t snap_tok_stride, const int32_t* n_keep,
+                       int64_t floats, void* stream) {
+    const int64_t threads = 256;
+    const int64_t blocks = (floats + threads - 1) / threads;
+    gdn_state_promote_kernel<<<(unsigned) blocks, (unsigned) threads, 0, (cudaStream_t) stream>>>(
+        state, snap, snap_tok_stride, n_keep, floats);
+    check("gdn_state_promote");
+}
+
+void gdn_snap_audit(const float* state, const float* snap, int64_t snap_tok_stride, const int32_t* n_keep,
+                    int64_t floats, unsigned long long* bad, void* stream) {
+    const int64_t threads = 256;
+    const int64_t blocks = (floats + threads - 1) / threads;
+    gdn_snap_audit_kernel<<<(unsigned) blocks, (unsigned) threads, 0, (cudaStream_t) stream>>>(
+        state, snap, snap_tok_stride, n_keep, floats, bad);
+    check("gdn_snap_audit");
+}
 
 namespace {
 // one thread per window entry: up to kVerifyMaxT tokens x 10 routed experts (80), so 128 (#646 had 64: a window of

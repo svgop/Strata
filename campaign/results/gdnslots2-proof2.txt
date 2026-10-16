@@ -1,0 +1,58 @@
+=== PROBE gdnslots2-proof2 | 2026-10-16 08:07:17 | log=/home/svg/LLM/strata-custom-2/custom-iq3s-gdnslots2.log
+    warmup: 8 tok in 0.34s
+    A.short[1]: 220 tok in 1.71s = 128.9 t/s
+    A.short[2]: 220 tok in 1.27s = 172.6 t/s
+    A.short[3]: 220 tok in 1.30s = 169.4 t/s
+    A.short[4]: 220 tok in 1.19s = 185.6 t/s
+    A.short[5]: 220 tok in 1.28s = 171.4 t/s
+    A.short[6]: 220 tok in 1.30s = 168.7 t/s
+    fresh-long-prompt: 80 tok out in 1.81s
+    B.short[1]: 220 tok in 1.24s = 177.5 t/s
+    B.short[2]: 220 tok in 1.25s = 176.6 t/s
+    B.short[3]: 220 tok in 1.24s = 177.3 t/s
+    B.short[4]: 220 tok in 1.25s = 175.5 t/s
+    B.short[5]: 220 tok in 1.29s = 170.3 t/s
+    B.short[6]: 220 tok in 1.21s = 181.1 t/s
+SHORT-CLASS A/B   : before long prompt 166.1 t/s -> after 176.4 t/s (6%)
+M1 single-stream : 185.3 t/s (2000 tok in 10.79s)
+M2 pair          : 175.5 t/s aggregate (1800 tok in 10.25s)
+M2 6-conc        : 227.2 t/s aggregate (3600 tok in 15.84s)
+--- engine accounting, in order (ms/window is the degradation signal) ---
+    [ 1] prompt   55 gen     8 ->    33.5 ms/window | accept  60.0% (6/10) | hit 88.1%
+    [ 2] prompt   81 gen   220 ->    14.4 ms/window | accept  81.9% (127/155) | hit 95.6%
+    [ 3] prompt   81 gen   220 ->    14.0 ms/window | accept  80.7% (134/166) | hit 97.7%
+    [ 4] prompt   81 gen   220 ->    13.8 ms/window | accept  73.6% (131/178) | hit 98.1%
+    [ 5] prompt   81 gen   220 ->    13.4 ms/window | accept  76.1% (137/180) | hit 98.8%
+    [ 6] prompt   81 gen   220 ->    13.5 ms/window | accept  71.4% (130/182) | hit 99.1%
+    [ 7] prompt   81 gen   220 ->    12.4 ms/window | accept  74.1% (120/162) | hit 99.0%
+    [ 8] prompt 5865 gen    80 ->    15.6 ms/window | accept  71.2% (47/66) | hit 97.1%
+    [ 9] prompt   81 gen   220 ->    12.7 ms/window | accept  81.8% (130/159) | hit 99.1%
+    [10] prompt   81 gen   220 ->    13.6 ms/window | accept  74.3% (133/179) | hit 98.5%
+    [11] prompt   81 gen   220 ->    12.9 ms/window | accept  74.6% (129/173) | hit 99.2%
+    [12] prompt   81 gen   220 ->    13.1 ms/window | accept  75.1% (130/173) | hit 98.5%
+    [13] prompt   81 gen   220 ->    13.6 ms/window | accept  73.9% (130/176) | hit 98.6%
+    [14] prompt   81 gen   220 ->    13.3 ms/window | accept  72.0% (134/186) | hit 99.0%
+    [15] prompt  100 gen  1500 ->    14.1 ms/window | accept  75.0% (939/1252) | hit 98.1%
+    [16] prompt 1618 gen   482 ->    17.5 ms/window | accept  76.0% (338/445) | hit 96.4%
+    [17] prompt   84 gen     1 ->    12.0 ms/window | accept   0.0% (0/0) | hit 86.5%
+    [18] prompt   85 gen     1 ->    13.0 ms/window | accept   0.0% (0/0) | hit 87.8%
+    [19] prompt   84 gen     1 ->    12.0 ms/window | accept   0.0% (0/0) | hit 86.5%
+    [20] prompt  618 gen     1 ->    13.0 ms/window | accept   0.0% (0/0) | hit 81.3%
+    [21] prompt  618 gen     1 ->    11.0 ms/window | accept   0.0% (0/0) | hit 91.8%
+    [22] prompt   84 gen     1 ->    14.0 ms/window | accept   0.0% (0/0) | hit 82.8%
+    [23] prompt   85 gen     1 ->    11.0 ms/window | accept   0.0% (0/0) | hit 86.5%
+    [24] prompt   84 gen     1 ->    10.0 ms/window | accept   0.0% (0/0) | hit 95.0%
+    [25] prompt   84 gen     1 ->     9.0 ms/window | accept   0.0% (0/0) | hit 95.0%
+    [26] prompt   84 gen     1 ->     8.0 ms/window | accept   0.0% (0/0) | hit 98.8%
+    [27] prompt   84 gen     1 ->    10.0 ms/window | accept   0.0% (0/0) | hit 98.8%
+    [28] prompt   84 gen     1 ->     9.0 ms/window | accept   0.0% (0/0) | hit 99.8%
+    [29] prompt  318 gen     1 ->     9.0 ms/window | accept   0.0% (0/0) | hit 94.3%
+    [30] prompt  318 gen     1 ->     9.0 ms/window | accept   0.0% (0/0) | hit 96.7%
+    [31] prompt  318 gen     1 ->     9.0 ms/window | accept   0.0% (0/0) | hit 98.1%
+    [32] prompt  318 gen     1 ->     9.0 ms/window | accept   0.0% (0/0) | hit 99.2%
+    [33] prompt  318 gen     1 ->     8.0 ms/window | accept   0.0% (0/0) | hit 99.4%
+    [34] prompt  318 gen     1 ->     8.0 ms/window | accept   0.0% (0/0) | hit 99.4%
+TREND ms/window: early 14.9 -> late 10.1 (stable)
+M3b rate         : 74.5% mean over 16 requests (diagnostic)
+M3d per-position : not printed (arm STRATA_SPEC_DEPTH=1 to publish accepted/tested by depth)
+=== PROBE END gdnslots2-proof2
