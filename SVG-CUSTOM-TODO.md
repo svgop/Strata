@@ -932,3 +932,34 @@ VRAM CEILING (50.3GB of pairs > 32GB card; every extra GiB = +512 slots = +2.1pt
 7. Long-context: per-token cost past 32k ~25KB staging ~0.6us — the 6,534->4,343 tok/s decay 157k->824k is
    staging-SYNC, not bandwidth. Stream reordering at 32K chunks: inert (all experts routed) — 95979cf2 value
    = mid-size chunks only. Foresight: off + force-disabled beside DEVICE_PLAN (known).
+
+### T12-GPU audit (agent 1 — per-window GPU anatomy from source; roofline vs prof221; reconciled with OUR measurements)
+LAUNCH MAP: ~39 nodes/GDN layer + ~52/QSA layer + head/prologue = ~2,050 nodes/window (matches F-204's
+1,800-2,900 inventory). Budget: light-class BYTE floor ~4.3 ms vs 12.32 measured — the delta lives in
+lines 6,7,8,10,12,13 (shared expert, router+plan+bell, copy+combine, conv/ab, QSA misc, empty PCIe/
+waits): <1.2GB moved for 4.17 ms = SMALL-KERNEL LATENCY, not bytes. Node spacing ~6us light / ~10.7us
+heavy (six graphs sharing SMs).
+RECONCILIATIONS (this audit vs our own falsification record):
+- Its #1 (hc reads 4.4x off floor, 3.08->0.71ms via STRATA_GR_WIDE) = ALREADY MEASURED: F-217 ran the
+  wide grid, -9.2% M1 (SMEM tile is load-bearing xn reuse; wide = 106MB/layer L2 traffic — the L2 cap
+  replaced the occupancy cap). SURVIVING LEVERS: (a) fold gr_norm INTO down/up (-96 nodes, norm itself
+  ~0.34ms of T x 4-block pure latency — bitwise-checkable), (b) an intermediate grid shape never tested
+  (41 -> 324 skipped ~81/162 — but F-217's L2 argument predicts diminishing), (c) the audit's own note
+  that hc is now ALU/cvt-bound (unpack8) -> bf16-native op variant is the untried hc lane.
+- PDL no-op (F-191) is CONSISTENT: spacing is dependency serialization, not raw launch latency.
+- F-206 "node savings != wall time" tempers the node tranche — each fusion gets its own arm, off is
+  one command away.
+VRAM-HITS LINE AT 91-100% OF GDDR7 ROOFLINE (independent confirmation of T12-MEM): expert bytes are
+done; the audit's own conclusion matches: only fewer BYTES (down-proj bits, routing collapse) move it.
+UNNAMED COSTS THE PHASE MAP MISSES: drafter round 1.18 ms/window (diag-phase-table:55; step graphs
+~25-30 nodes each, Q2_0 drafter experts 13.8MB/step, draft head Q6_K 521MB?? — NO: head over 40,525-
+row SUB-VOCAB; the 521MB is the FULL head — verify the line), commit graph 0.57/1.11 ms (4x off its
+227MB floor; F-216 promote measured perf-negative — the remaining idea is replaying only the accepted
+tail, already n_keep-bounded — re-read before spending), in-graph flag spins charged as GPU-reach wait.
+RANKED GPU-LANE MOVES (audit's, as adjusted): 1) hc norm-fold +0.3-0.5ms; 2) dense mmvq sm_120 shapes
++ producer-fused q8_1 (hooks exist: gdn xq_out, gr q8_mixed) ~1ms; 3) router+plan+bell fusion (~150
+nodes); 4) combine hits_added already EXISTS (native_moe.cu:187) — check why verify.cpp:1717 gates it
+off in standing (prof_on_? n>1?); + T1.1 skip machinery; 5) attention merge->chunk epilogue +
+all-masked skip; 6) LFUSE gate extension to the device-plan path (implemented, gated to ar_on() only —
+verify.cpp:927-930 one-line arm); 7) empty-PCIe grouped launch skip (conditional nodes = green field);
+8) gdn_conv_ab_multi retest on sm_120 (built, "-0.3% on gfx1201", the card changed since).

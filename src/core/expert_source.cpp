@@ -3736,7 +3736,28 @@ void expert_pool_dispatch_multi(ExpertDispatch& d, const float* x_f, const int32
     const int64_t n = n_tok * k;
     int32_t kind[kMaxWindowEntries];       // per entry: -1 CPU, 0 VRAM, 1 PCIe
     if (d.plan != nullptr && n <= kMaxWindowEntries && n <= d.plan->cap) {
+        // T12-HOST #1 (the host critical-path audit's exposed segment): the old shape re-scanned the entries
+        // per group - the distinct/first-of pass O(n^2), the tail ranks an O(n x nd) lookup per entry, and
+        // every fill below walked all n entries per group.  All of it is bookkeeping in front of flagA, so it
+        // sat on the GPU's per-layer critical path (~25-40 us x 48 layers/window).  The single pass below
+        // maps an expert id to its first entry and its group through a stamp array (valid for calls with
+        // <= kIdPlanIds experts; an oversized table or an out-of-range id falls back to the old scan for
+        // that entry, which the router never emits), links the entries of a group in ascending order once,
+        // and the fills walk those links.  The plan this emits is the old one byte for byte: the groups are
+        // the distinct experts in order of first occurrence (the same nd sequence), every group's entries
+        // ascending (the links are appended in the i loop), the same kind/dst/tok/ptr writes in the same
+        // order.  STRATA_PLAN_ONEPASS=0 keeps the old path (the A/B arm); STRATA_PLAN_DIFF=1 re-derives the
+        // old first-of and per-group entry sets and aborts loudly on any difference, so one battery run
+        // proves the grouping over the whole corpus (the F-216 audit pattern).
+        static const bool plan_onepass = [] { const char* v = std::getenv("STRATA_PLAN_ONEPASS"); return v == nullptr || std::atoi(v) != 0; }();
+        static const bool plan_diff = [] { const char* v = std::getenv("STRATA_PLAN_DIFF"); return v != nullptr && std::atoi(v) != 0; }();
+        constexpr int kIdPlanIds = 1024;
+        static thread_local int32_t s_first[kIdPlanIds], s_gid[kIdPlanIds];
+        static thread_local uint32_t s_stamp[kIdPlanIds];
+        static thread_local uint32_t s_epoch = 0;
         int64_t distinct[kMaxWindowEntries], first_of[kMaxWindowEntries];
+        int32_t gi[kMaxWindowEntries];               // group index of every entry (-1: fall back per entry)
+        int64_t ghead[kMaxWindowEntries], gtail[kMaxWindowEntries], gnxt[kMaxWindowEntries];
         int nd = 0, nmiss = 0;
         // a helper GPU (RemoteExperts) holding the expert computes it in its own VRAM once begin() claims the row: like
         // the peer tier's, such an expert is no miss of this plan and never part of the PCIe share, which would read it
@@ -3747,15 +3768,61 @@ void expert_pool_dispatch_multi(ExpertDispatch& d, const float* x_f, const int32
                 if (d.remote[r]->holds(d.layers, e)) return true;
             return false;
         };
+        const bool fast_ids = plan_onepass && d.n_expert <= kIdPlanIds;
+        if (fast_ids) {
+            if (s_epoch == 0xFFFFFFFFu) std::memset(s_stamp, 0, sizeof s_stamp);   // wrap: stale stamps die
+            else ++s_epoch;
+        }
         for (int64_t i = 0; i < n; ++i) {
-            first_of[i] = i;
-            for (int64_t j = 0; j < i; ++j)
-                if (ids[j] == ids[i]) { first_of[i] = first_of[j]; break; }
-            if (first_of[i] == i) {
-                distinct[nd++] = i;
-                const int32_t e = ids[i];
-                if (e >= 0 && e < d.n_expert && d.host_res[(size_t) d.layers * (size_t) d.n_expert + (size_t) e] < 0 &&
-                    !(d.peer != nullptr && d.peer->has(d.layers, e)) && !helper_holds(e)) ++nmiss;
+            int64_t fo = i;
+            int q = -1;
+            const int32_t e = ids[i];
+            if (fast_ids && e >= 0 && e < d.n_expert) {
+                if (s_stamp[e] == s_epoch) {
+                    fo = s_first[e];
+                    q = s_gid[e];
+                } else {
+                    s_stamp[e] = s_epoch; s_first[e] = (int32_t) i; s_gid[e] = nd;
+                    q = nd;
+                    distinct[nd] = i;
+                    ++nd;
+                    ghead[q] = -1;
+                    gtail[q] = -1;
+                    if (d.host_res[(size_t) d.layers * (size_t) d.n_expert + (size_t) e] < 0 &&
+                        !(d.peer != nullptr && d.peer->has(d.layers, e)) && !helper_holds(e)) ++nmiss;
+                }
+            } else {
+                for (int64_t j = 0; j < i; ++j)
+                    if (ids[j] == e) { fo = first_of[j]; break; }
+                if (fo == i) {
+                    distinct[nd++] = i;
+                    ghead[nd - 1] = -1;
+                    if (e >= 0 && e < d.n_expert && d.host_res[(size_t) d.layers * (size_t) d.n_expert + (size_t) e] < 0 &&
+                        !(d.peer != nullptr && d.peer->has(d.layers, e)) && !helper_holds(e)) ++nmiss;
+                }
+            }
+            first_of[i] = fo;
+            gi[i] = q;
+            if (q >= 0) {   // link into the group once, ascending
+                if (gtail[q] >= 0) gnxt[gtail[q]] = i; else ghead[q] = i;
+                gtail[q] = i;
+                gnxt[i] = -1;
+            }
+        }
+        if (plan_diff) {   // an independent scan (the old shape) compared entry by entry: per-entry
+            // first-of equality implies equal groups, and the ascending links then equal the old scans' order.
+            static thread_local int32_t diff_calls = 0, diff_bad = 0;
+            ++diff_calls;
+            int64_t fo2[kMaxWindowEntries];
+            for (int64_t i = 0; i < n; ++i) {
+                fo2[i] = i;
+                for (int64_t j = 0; j < i; ++j)
+                    if (ids[j] == ids[i]) { fo2[i] = fo2[j]; break; }
+                if (gi[i] >= 0 && fo2[i] != first_of[i]) {
+                    ++diff_bad;
+                    std::fprintf(stderr, "plan diff: layer %d entry %d fast %lld scan %lld (%d/%d calls)\n",
+                                 (int) d.layers, (int) i, (long long) first_of[i], (long long) fo2[i], diff_bad, diff_calls);
+                }
             }
         }
         // STRATA_ROUTE_TAIL_SKIP=R (default 7 on CUDA serve, =0 off; changes the output): a missed expert that EVERY token of the window routes
@@ -3764,12 +3831,22 @@ void expert_pool_dispatch_multi(ExpertDispatch& d, const float* x_f, const int32
         const int tail_rank = tail_skip_rank();
         bool skip_d[kMaxWindowEntries];
         for (int q = 0; q < nd; ++q) skip_d[q] = false;
+        auto for_entries = [&](int64_t i0, auto&& f) {   // the ascending entries of the group whose first is i0
+            if (gi[i0] >= 0)                             // the fast group: walk the links (built ascending)
+                for (int64_t i = ghead[gi[i0]]; i >= 0; i = gnxt[i]) f(i);
+            else
+                for (int64_t i = i0; i < n; ++i)         // a fallback group: the old scan
+                    if (first_of[i] == i0) f(i);
+        };
         if (tail_rank > 0 && d.peer == nullptr && d.remote_count == 0) {
             int minr[kMaxWindowEntries];
             for (int q = 0; q < nd; ++q) minr[q] = 99;
             for (int64_t i = 0; i < n; ++i) {
-                int q = 0;
-                while (q < nd && distinct[q] != first_of[i]) ++q;
+                int q = gi[i];
+                if (q < 0) {   // a fallback entry: the old scan
+                    q = 0;
+                    while (q < nd && distinct[q] != first_of[i]) ++q;
+                }
                 if (q < nd) minr[q] = std::min(minr[q], (int) (i % k));
             }
             for (int q = 0; q < nd; ++q) {
@@ -3803,8 +3880,7 @@ void expert_pool_dispatch_multi(ExpertDispatch& d, const float* x_f, const int32
             int kd = -1;
             unsigned long long ptr = 0;
             if (skip_d[q]) {                       // STRATA_ROUTE_TAIL_SKIP: neither copied nor computed
-                for (int64_t i = i0; i < n; ++i)
-                    if (first_of[i] == i0) kind[i] = -2;
+                for_entries(i0, [&](int64_t i) { kind[i] = -2; });
                 continue;
             }
             if (e >= 0 && e < d.n_expert) {
@@ -3833,17 +3909,15 @@ void expert_pool_dispatch_multi(ExpertDispatch& d, const float* x_f, const int32
                     ++miss_rank;
                 }
             }
-            for (int64_t i = i0; i < n; ++i)
-                if (first_of[i] == i0) kind[i] = kd;
+            for_entries(i0, [&](int64_t i) { kind[i] = kd; });
             if (kd != 0) continue;                 // the VRAM groups first; the PCIe groups below
             P.ptr[groups] = ptr;
             P.start[groups] = entries;
-            for (int64_t i = i0; i < n; ++i)
-                if (first_of[i] == i0) {
-                    P.dst[entries] = (int32_t) i;
-                    P.tok[entries] = (int32_t) (i / k);
-                    ++entries;
-                }
+            for_entries(i0, [&](int64_t i) {
+                P.dst[entries] = (int32_t) i;
+                P.tok[entries] = (int32_t) (i / k);
+                ++entries;
+            });
             ++groups;
         }
         P.start[groups] = entries;
@@ -3853,12 +3927,11 @@ void expert_pool_dispatch_multi(ExpertDispatch& d, const float* x_f, const int32
             P.ptr2[q] = P.pcie_mode != 0 ? (unsigned long long) d.src->device_alias(d.layers, ids[i0])
                                  : P.staging + (unsigned long long) q * (unsigned long long) bb;
             P.start2[q] = entries;
-            for (int64_t i = i0; i < n; ++i)
-                if (first_of[i] == i0) {
-                    P.dst[entries] = (int32_t) i;
-                    P.tok[entries] = (int32_t) (i / k);
-                    ++entries;
-                }
+            for_entries(i0, [&](int64_t i) {
+                P.dst[entries] = (int32_t) i;
+                P.tok[entries] = (int32_t) (i / k);
+                ++entries;
+            });
             ++d.pcie_experts;
         }
         P.start2[fetches] = entries;
