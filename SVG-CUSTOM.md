@@ -7595,3 +7595,29 @@ upstream #2075 — still the biggest designed item), and the profile-first re-me
 INSTRUMENTS KEPT (env-gated, default off): gr_down_multi_wide_kernel + STRATA_GR_WIDE (the
 L2-traffic cautionary instrument), STRATA_GR_TILEV (the occupancy probe). Standing server
 restored post-battery (goal-restore in band).
+
+### F-218 — THE FRESH COST MAP (profile-first law executed): attention is workload-class-dependent and dominates heavy windows (2026-10-16 14:0x)
+
+STRATA_VERIFY_PROFILE boot + one probe battery (prof-218; profiled M1 173.1 vs ~180-190
+unprofiled = the documented ~5% profiler tax from the disabled fusions — attribution, not
+absolutes). The engine's own phase report (profile_report, means over windows):
+
+LIGHT class (13.35 ms/window, n=2406): VRAM hits 1.93 (GDN 1.46 + QSA 0.47) | hc reads ~2.39
+(hc0 down .57 up .44, hc1 down .58 up .45, norms .35) | copy+combine 1.08 | q8+qkv gemv .73 |
+router+plan+bell .68 | shared+quant .64 | out-proj .53 | head .45 | z .44 | rec .28 | waitA .28.
+
+HEAVY class (24.31 ms/window, n=549): **attention 4.09** (vs 0.93 light — 4.4x) | VRAM hits
+3.46 | hc reads ~4.00 | copy+combine 1.41 | gemv 1.14 | head .78 | rec .70 | router+bell .94.
+
+WHAT THIS CHANGES (vs the falsified F-208 model):
+1. The QSA ATTENTION line is the top target after all — but only in the heavy class; F-208's
+   single 4.40ms number conflated classes. T1.2a (pre75-on-sm120 via upstream #2075) lands on
+   the 4.09ms line; est -1.5-2.5ms on heavy windows. Priority restored to #1 code lane.
+2. VRAM expert hits (1.9-3.5ms) = the biggest STABLE line across classes -> the fused expert
+   gather-matvec / packed-single-H2D lane (T6.6/T3.3) is the #2 target.
+3. hc reads: 2.4-4.0ms confirmed present but grid/occupancy already falsified as its cap
+   (F-217) -> the remaining hc lever is the SGLang-style Mix/Combine FUSION (fewer launches,
+   fused math; measured +7.6/+5.5% e2e on our model class), not grid surgery.
+4. copy+combine 1.1-1.4ms = the T1.1 doorbell/publish neighborhood, as designed.
+LAW REAFFIRMED: this map is the sizing basis for T1.2a/T1.4/T1.1; re-profile after each
+adoption (the classes shift). Banked: campaign/results/prof218-map.txt.
