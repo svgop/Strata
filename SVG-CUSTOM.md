@@ -7621,3 +7621,18 @@ WHAT THIS CHANGES (vs the falsified F-208 model):
 4. copy+combine 1.1-1.4ms = the T1.1 doorbell/publish neighborhood, as designed.
 LAW REAFFIRMED: this map is the sizing basis for T1.2a/T1.4/T1.1; re-profile after each
 adoption (the classes shift). Banked: campaign/results/prof218-map.txt.
+
+### F-219 — UPSTREAM #2758 SILENT-CORRUPTION FIX PORTED (discovery agent T8.C, first harvest) (2026-10-16 15:0x)
+
+The discovery-mining agent's #1 find: upstream PR #2758 (SYCL fix) documents that the CUDA
+engine carries a self-commit condition mismatch — record_window: `T==1 && !always_publish_ &&
+!batch_rec_ && !g_qfuse() && one_token_self_commit()` vs Verifier::commit's one-token skip:
+same WITHOUT `!g_qfuse()`. Under STRATA_QFUSE=1, a one-token window advances the GDN state in
+NEITHER place → silent wrong tokens (no crash, no speed change). AUDITED OUR TREE: present
+(verify.cpp:884 vs :2705). Standing runs QFUSE-off, so latent, not live. FIX PORTED (the
+one-line `!g_qfuse()` in commit's condition, with the #2758 citation in-code), rebuilt,
+deployed (7796d4d0), boot-validated f219-fixport: M1 186.2 / M3b 77.1 — in band (correctness
+fix, zero perf delta expected and observed). Second harvest from the same report: our
+--vram-reserve-mib 2000 already sits in #2612's good regime (their 12288→1500 = +30% via a
+3x bigger expert cache); our 180-208 confirmed top of the public record for 5090+IQ3_S.
+Full ranked harvest list: SVG-CUSTOM-TODO.md T8.C.

@@ -483,3 +483,44 @@ PRIORITY ORDER per F-218 (supersedes the T6 re-rank):
 5. Variance/smoothness control (boot spread 171-208; agent T8.B researching knobs).
 Background: 3 research agents out (T8.A megakernel/launch-overhead frontier, T8.B serving
 smoothness/jitter science, T8.C sibling-fork + discovery mining) — fold on return.
+
+### T8.C — discovery-mining report folded (agent, 2026-10-16; upstream tracker wave + fork census)
+
+UPSTREAM: main FROZEN at 0.1.44.1 (296b59d) — but 12 PRs/~9 issues landed in the tracker
+2026-10-15/16. The ones we need are UNMERGED: we port them ourselves.
+- **#2758 CORRECTNESS — PORTED THIS SESSION (F-219)**: record_window's self-commit carries
+  !g_qfuse() but Verifier::commit's one-token skip didn't → under STRATA_QFUSE=1 GDN state
+  advanced nowhere on one-token rounds (silent wrong tokens). Our tree HAD it (verify.cpp:884
+  vs :2705); one-line fix applied, boot-validated 186.2/77.1.
+- **#2612** (5090 D calib: 140-162 tok/s IQ3_S 500K): vram-reserve 12288→1500 MiB tripled the
+  auto expert cache → +30% same-prompt decode. We already run --vram-reserve-mib 2000 (the
+  good regime) — validates our setting; our 180-208 = top of public record for 5090+IQ3_S.
+- **#2756** STRATA_PF_ATTN_BATCH 32→128 QSA prefill attention (SYCL, bitwise via FP32-hash
+  parity, ~9% QSA prompt-attn time) — port candidate for our prefill lane.
+- **#2746** Q2_0 packed-word decode (Battlemage: 41-45% kernel, all 65,536 words
+  byte-identical, +4.2-4.5% TPOT) — adjacent to our type-42 Q2_0 64/18 dialect; adapt.
+- **#2443** conversation-cache eviction redesign (revisit prefill 1778→90 tokens, sm_120-
+  validated) — if we hit parking refusals.
+- **#2458/#2434** LRFU beats CLOCK 3-4% of misses (real traces) + alloc-inside-capture
+  poisons-the-stream crash pattern + --dump-kv-select tool.
+- **#1242** capture-lifetime bugs (image-position table overwritten under a live captured
+  graph; draft-head type -1 crash on first batch-MTP admission) — audit patterns.
+- **#2745** NVFP4+layer-split peer-prefill tail scales → non-finite logits (landmine only if
+  we adopt NVFP4 packs + splits; STRATA_PREFILL_HELP=0 guard).
+- Task-aware spec: code +91% / prose −29% at draft-6 (r/unsloth); SGLang accept ~3.3 —
+  our --spec defaults should be task-aware for the mimic/prose lanes.
+FORKS: **eddoursul/Strata (custom branch, 539 ahead — the densest portable source; measured
+1.5-1.7x vs upstream on 3090+5070Ti)**: k8v4 hybrid KV (INT8 K + Hadamard-rotated Q4_0 V,
+qsa_prompt_attn mode 3), HC fusions F-1/F-2 (882bb6d/b046845 — REFERENCE for our #3 priority
+lane), expert grouping tables via mapped pinned memory OFF the copy engine (fe609ce), sm_75
+gate relaxation reference (aad5bb1). jmnargi/Strata-V100: sm_70 + MTP + WMMA (gate can go
+lower than we thought), L2/L3 conversation parking. MistVVK/XeStrata: gemm_rows grid-dim-2
+hazard (not in our tree — checked). lighttransport glm53f: GSQ/RCO/GyRot/trellis quant
+research note (1abf442) + llvq ≈ IQ2_XS at 2.06bpw. tqllm fork xhinker/azllm active 10-16
+(MTP experiments — later pass). MODEL CARD verify-list: indexer budget 512 blocks/2048 tokens,
+rotary dim 64, n-gram table at layer 2, 24Q/2KV heads hd256 — audit our constants.
+PROFILING recipes: nsys --cuda-graph-trace=node + nvtx-precapture (names phases inside
+startup-captured graphs), vLLM phase-data attribution pattern, cudaProfilerStart capture
+ranges; SGLang #5593: ~2ms idle bubble before first kernel of graph replays — look for it in
+our traces. Not merged/watchlist: #2453 (Windows config-side regression — binary A/B blind),
+#2010/#2038 as rebase regression tests.
