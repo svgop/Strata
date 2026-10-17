@@ -7848,3 +7848,20 @@ ADOPTED into both launchers (=0 rollback).  Round pattern note: r2 produced an o
 this battery (ctl 177.7) and the planner's (arm 171.0) - watch, not chase.
 NOTE: the micro-package scoreboard so far - onepass planner NEGATIVE (F-225), barrier diet POSITIVE
 (this), hits-fold POSITIVE (F-226): the pool term yields to fewer waits, not to a faster planner.
+
+### F-228 — THE DEPTH STAIR, MEASURED AT LAST: the curve is real but the 0.35 gate-tune is NEGATIVE (-1.75% M1 3v3); the depth lever routes through a BETTER DRAFTER, not a looser gate (2026-10-17 02:2x)
+
+FIRST PER-DEPTH ACCEPTANCE DATA EVER BANKED (STRATA_SPEC_DEPTH=1, stair50/stair35 boots + the s35arm
+3v3 rounds): at standing min-p 0.5 the chain is NOT capped at ~2 - depths 3/4/5 are offered at 35/17/8%
+of windows and accept at ~85/68/75%; mean 2.20 drafts offered, ~2.88 tokens/window.  At min-p 0.35 the
+chain moves to 2.31 offered (P(d>=2) 0.63, d3 0.41, d4 0.19, d5 0.10) and marginal acceptance HOLDS
+(56-90% at depths 3-5) - T13A's acceptance premise was RIGHT, its cost model was WRONG: the marginal
+row costs not ~0.55ms (expert bytes) but the FULL graph's T-scaling (hc lines + attention + head re-run
+per row), so high marginal acceptance still nets negative.  3v3 (s35arm/s35ctl): M1 198.0 vs 201.5 =
+-1.75% (the stair35 diagnostic's +8.9% single-boot read was exactly the boot-noise the interleave
+exists to catch), pair +1.6% noise, conc -0.6% noise, M3b 71.1 vs 74.7 = -4.8pp consistent-mechanistic.
+CLOSED for gate-tuning (0.42 would sit between two measured negatives of a flat-to-negative curve).
+WHAT REMAINS: the offered-chain extension is gate-limited only at the margin - the drafter's own
+probs trim most chains - so depth pays only via a better drafter (FastMTP retrain, R3 GO unchanged)
+or cheaper rows (hc norm-fold, bf16-native).  MMLU gate NOT run (arm rejected on speed alone).
+LEDGER: this entry's M3d data retires the old "depths 4-6 never offered" note.

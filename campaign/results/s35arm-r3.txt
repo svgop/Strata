@@ -1,0 +1,91 @@
+=== PROBE s35arm-r3 | 2026-10-17 02:16:37 | log=/home/svg/LLM/strata-custom-2/custom-iq3s-stair35.log
+    warmup: 8 tok in 0.32s
+    A.short[1]: 220 tok in 1.60s = 137.4 t/s
+    A.short[2]: 220 tok in 1.22s = 180.2 t/s
+    A.short[3]: 220 tok in 1.10s = 199.1 t/s
+    A.short[4]: 220 tok in 1.06s = 207.1 t/s
+    A.short[5]: 220 tok in 1.09s = 202.8 t/s
+    A.short[6]: 220 tok in 1.03s = 213.8 t/s
+    fresh-long-prompt: 80 tok out in 1.61s
+    B.short[1]: 220 tok in 1.09s = 202.1 t/s
+    B.short[2]: 220 tok in 1.08s = 203.8 t/s
+    B.short[3]: 220 tok in 1.06s = 208.1 t/s
+    B.short[4]: 220 tok in 1.06s = 207.8 t/s
+    B.short[5]: 220 tok in 0.99s = 221.4 t/s
+    B.short[6]: 220 tok in 1.09s = 202.4 t/s
+SHORT-CLASS A/B   : before long prompt 190.1 t/s -> after 207.6 t/s (9%)
+M1 single-stream : 193.5 t/s (2000 tok in 10.34s)
+M2 pair          : 208.1 t/s aggregate (1800 tok in 8.65s)
+M2 6-conc        : 255.6 t/s aggregate (3600 tok in 14.09s)
+--- engine accounting, in order (ms/window is the degradation signal) ---
+    [ 1] prompt   55 gen     8 ->    31.0 ms/window | accept  60.0% (6/10) | hit 88.5%
+    [ 2] prompt   81 gen   220 ->    14.6 ms/window | accept  66.2% (135/204) | hit 95.8%
+    [ 3] prompt   81 gen   220 ->    12.9 ms/window | accept  63.1% (130/206) | hit 98.4%
+    [ 4] prompt   81 gen   220 ->    12.7 ms/window | accept  70.1% (138/197) | hit 98.7%
+    [ 5] prompt   81 gen   220 ->    12.0 ms/window | accept  76.5% (137/179) | hit 99.1%
+    [ 6] prompt   81 gen   220 ->    12.6 ms/window | accept  73.2% (139/190) | hit 99.1%
+    [ 7] prompt   81 gen   220 ->    13.6 ms/window | accept  71.0% (149/210) | hit 99.1%
+    [ 8] prompt 5865 gen    80 ->    14.9 ms/window | accept  87.1% (54/62) | hit 96.4%
+    [ 9] prompt   81 gen   220 ->    12.1 ms/window | accept  77.4% (137/177) | hit 99.0%
+    [10] prompt   81 gen   220 ->    12.9 ms/window | accept  69.1% (141/204) | hit 98.9%
+    [11] prompt   81 gen   220 ->    13.0 ms/window | accept  69.9% (144/206) | hit 99.1%
+    [12] prompt   81 gen   220 ->    12.4 ms/window | accept  68.3% (140/205) | hit 99.3%
+    [13] prompt   81 gen   220 ->    12.4 ms/window | accept  80.1% (145/181) | hit 99.3%
+    [14] prompt   81 gen   220 ->    12.6 ms/window | accept  65.6% (139/212) | hit 99.3%
+    [15] prompt  100 gen  1503 ->    14.2 ms/window | accept  71.9% (1028/1429) | hit 97.9%
+    [16] prompt 1618 gen   482 ->    16.4 ms/window | accept  60.1% (326/542) | hit 96.4%
+    [17] prompt   84 gen     6 ->    19.5 ms/window | accept 100.0% (4/4) | hit 85.2%
+    [18] prompt   90 gen     1 ->    11.0 ms/window | accept   0.0% (0/0) | hit 88.5%
+    [19] prompt   84 gen     1 ->     9.0 ms/window | accept   0.0% (0/0) | hit 92.5%
+    [20] prompt  618 gen     1 ->    11.0 ms/window | accept   0.0% (0/0) | hit 86.0%
+    [21] prompt  618 gen     1 ->     8.0 ms/window | accept   0.0% (0/0) | hit 96.9%
+    [22] prompt   84 gen     1 ->    12.0 ms/window | accept   0.0% (0/0) | hit 87.2%
+    [23] prompt   85 gen     1 ->    11.0 ms/window | accept   0.0% (0/0) | hit 88.3%
+    [24] prompt   84 gen     1 ->    11.0 ms/window | accept   0.0% (0/0) | hit 87.2%
+    [25] prompt   84 gen     1 ->     8.0 ms/window | accept   0.0% (0/0) | hit 97.7%
+    [26] prompt   84 gen     1 ->     8.0 ms/window | accept   0.0% (0/0) | hit 99.0%
+    [27] prompt   84 gen     1 ->     8.0 ms/window | accept   0.0% (0/0) | hit 99.0%
+    [28] prompt   84 gen     1 ->     8.0 ms/window | accept   0.0% (0/0) | hit 99.0%
+    [29] prompt  318 gen     1 ->     9.0 ms/window | accept   0.0% (0/0) | hit 92.6%
+    [30] prompt  318 gen     1 ->     8.0 ms/window | accept   0.0% (0/0) | hit 96.2%
+    [31] prompt  318 gen     1 ->     8.0 ms/window | accept   0.0% (0/0) | hit 97.9%
+    [32] prompt  318 gen     1 ->     8.0 ms/window | accept   0.0% (0/0) | hit 98.3%
+    [33] prompt  318 gen     1 ->     8.0 ms/window | accept   0.0% (0/0) | hit 99.6%
+    [34] prompt  318 gen     1 ->     8.0 ms/window | accept   0.0% (0/0) | hit 99.6%
+TREND ms/window: early 14.7 -> late 9.1 (stable)
+M3b rate         : 70.6% mean over 16 requests (diagnostic)
+M3d per-position : strata serve: spec depth: accepted/tested 2/2 1/2 1/1 1/1 1/1
+M3d per-position : strata serve: spec depth: accepted/tested 56/62 36/42 16/22 8/14 4/7
+M3d per-position : strata serve: spec depth: accepted/tested 57/72 30/40 16/21 8/9 4/6
+M3d per-position : strata serve: spec depth: accepted/tested 56/65 35/40 17/23 11/14 4/8
+M3d per-position : strata serve: spec depth: accepted/tested 53/63 33/36 19/20 10/15 7/10
+M3d per-position : strata serve: spec depth: accepted/tested 56/61 37/40 20/26 9/17 5/7
+M3d per-position : strata serve: spec depth: accepted/tested 50/58 36/39 26/30 12/18 10/10
+M3d per-position : strata serve: spec depth: accepted/tested 20/21 14/15 8/8 7/8 5/6
+M3d per-position : strata serve: spec depth: accepted/tested 54/60 32/39 19/23 12/15 8/8
+M3d per-position : strata serve: spec depth: accepted/tested 56/62 36/44 20/26 10/16 4/8
+M3d per-position : strata serve: spec depth: accepted/tested 58/66 35/42 21/25 11/18 7/10
+M3d per-position : strata serve: spec depth: accepted/tested 57/65 35/40 20/27 8/12 5/7
+M3d per-position : strata serve: spec depth: accepted/tested 55/58 34/39 21/24 14/18 6/9
+M3d per-position : strata serve: spec depth: accepted/tested 59/67 33/41 18/26 10/15 4/6
+M3d per-position : strata serve: spec depth: accepted/tested 337/370 257/286 180/215 122/158 90/108
+M3d per-position : strata serve: spec depth: accepted/tested 113/135 88/99 54/77 39/50 28/35
+M3d per-position : strata serve: spec depth: accepted/tested 1/1 1/1 1/1 1/1 0/0
+M3d per-position : strata serve: spec depth: accepted/tested 0/0 0/0 0/0 0/0 0/0
+M3d per-position : strata serve: spec depth: accepted/tested 0/0 0/0 0/0 0/0 0/0
+M3d per-position : strata serve: spec depth: accepted/tested 0/0 0/0 0/0 0/0 0/0
+M3d per-position : strata serve: spec depth: accepted/tested 0/0 0/0 0/0 0/0 0/0
+M3d per-position : strata serve: spec depth: accepted/tested 0/0 0/0 0/0 0/0 0/0
+M3d per-position : strata serve: spec depth: accepted/tested 0/0 0/0 0/0 0/0 0/0
+M3d per-position : strata serve: spec depth: accepted/tested 0/0 0/0 0/0 0/0 0/0
+M3d per-position : strata serve: spec depth: accepted/tested 0/0 0/0 0/0 0/0 0/0
+M3d per-position : strata serve: spec depth: accepted/tested 0/0 0/0 0/0 0/0 0/0
+M3d per-position : strata serve: spec depth: accepted/tested 0/0 0/0 0/0 0/0 0/0
+M3d per-position : strata serve: spec depth: accepted/tested 0/0 0/0 0/0 0/0 0/0
+M3d per-position : strata serve: spec depth: accepted/tested 0/0 0/0 0/0 0/0 0/0
+M3d per-position : strata serve: spec depth: accepted/tested 0/0 0/0 0/0 0/0 0/0
+M3d per-position : strata serve: spec depth: accepted/tested 0/0 0/0 0/0 0/0 0/0
+M3d per-position : strata serve: spec depth: accepted/tested 0/0 0/0 0/0 0/0 0/0
+M3d per-position : strata serve: spec depth: accepted/tested 0/0 0/0 0/0 0/0 0/0
+M3d per-position : strata serve: spec depth: accepted/tested 0/0 0/0 0/0 0/0 0/0
+=== PROBE END s35arm-r3
