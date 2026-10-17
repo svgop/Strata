@@ -988,9 +988,11 @@ ForesightSwap is DEAD CODE under DEVICE_PLAN=1 (expert_source.cpp:5256); the dep
    gemm.cu:812/936 + CMakeLists:72, ~+25-40% prefill. Different bits -> full gate. THE prefill pick.
 5. [QUEUED] rows 8->12 ladder (T13B C3): 4-of-6 slots decode today (generate.cpp:10144, kVerifyMaxT=8);
    +31-36% conc arithmetic. L-cost; run the MTP=0 batch-8 config falsifier FIRST (free).
-6. [QUEUED] HostGraphLaunch for the batch path (T13B C6, verify.cpp:3116 vs :2342): +3-4%, bit-identical.
-7. [QUEUED] emit batching (T13B C7, generate.cpp:10297/:10338): +2-3%, bit-identical, S.
-8. [QUEUED] admission sync diet (T13B C9, generate.cpp:10055-10069): ~2% conc, M.
+6. [DEAD F-232, mechanism read] HostGraphLaunch-batch: nothing to overlap (batch path's next act
+   is the idle doorbell spin; the serial win was post-launch emit overlap). Same wall time.
+7. [DEAD F-232] emit batching: stdout already pipe-buffered; bt_emit = draft waits + bitfield reads.
+8. [DEAD F-232] admission sync diet: copy_nonblocking already syncs per copy; the 36-56ms is PCIe
+   KV bytes. Real levers = fewer bytes / overlap, not syncs.
 9. [QUEUED] R2-S3 two cohort verifiers (T13B C1): +20-28% conc -> ~307-325; THE structural conc-300
    endgame; per-verifier buffers kill the G2 ghost by construction. Cost L.
 10. [QUEUED] FastMTP retrain (T13A/T13C, R3 GO): accept 66.6->~75%, compounds with everything. Cost L.

@@ -7936,3 +7936,26 @@ first (3 more arm-pair rounds would settle it).
 ALSO: the deploy-protocol law re-proven the hard way - a battery wrapper whose own command text
 contains "build/strata " (my md5sum) is killed by battery-config's pkill at the first boot; deploy
 and battery NEVER in one command (the wrapper died after round 1; relaunch clean).
+
+### F-232 — THE HOST-TRANCHE RE-PRICE SWEEP: all three T13B smalls are DEAD on mechanism reads (three batteries saved); the queue's head is R2-S3 (2026-10-17 04:2x)
+
+C6 HostGraphLaunch-batch (+3-4% claimed): DEAD - the batch path's next act after the inline launch at
+verify.cpp:3116 is the idle doorbell spin; a threaded launch saves host time only when there is host
+WORK to overlap (the serial path's win came from its post-launch emit/staging).  Same wall time.
+C7 emit batching (+2-3% claimed): DEAD - stdout is already pipe-buffered (per-token printf = stdio
+memcpy, no syscall); bt_emit's 0.60ms is mostly the draft_finish WAITS (the timer spans the draft
+wait loop, w2..now at :10359) plus nonfinite mask reads (a host bitfield, verify.hpp:121) - not I/O.
+C9 admission sync diet (~2% claimed): DEAD as specified - conversation_copy.hpp:36 copy_nonblocking
+ALREADY cudaStreamSynchronize's every copy ("complete on return"), so the 12 per-QSA-layer
+cudaDeviceSynchronize calls in copy_to_slot/copy_from_slot (generate.cpp:10065/:10110) find an idle
+device; the logged 36-56ms/admission is the KV image bytes over PCIe (save D2H + restore H2D round
+trip), addressable only by fewer bytes (prefix reuse exists) or overlap, not by sync removal.
+LESSON (journal law): T13B's candidate costs came from ACCOUNTING IDENTITIES (unexplained ms
+segments), not mechanism reads - every candidate estimate must survive a code-read of what the
+segment actually spends time on before it earns a battery.  (The T13A hc norm-fold died the same
+death earlier tonight.)
+QUEUE HEAD after the sweep: R2-S3 two cohort verifiers (the conc-300 route, +20-28% arithmetic,
+per-verifier buffers kill the G2 ghost by construction) -> impl plan staged next; FastMTP retrain
+(depth/quality); hc bf16-native dots (the 2.87ms/window line; different-bits, full gate - and note
+the drafter shares the kernels so target/draft stay consistent); head mmvq_il-at-T1 microbench
+(verify.cpp:1863 gate; +2-4 t/s class).
