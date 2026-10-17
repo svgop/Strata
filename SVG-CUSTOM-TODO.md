@@ -1127,3 +1127,22 @@ STRATA_LOOKAHEAD_STATS=1 boot (never run, free), +0.5-2%. C4 profile domain-shif
 corroborated x3 (2511.15015 hot-FP8/cold-INT4, 2512.12990 bit-sliced, 2508.18983 importance).
 SPEND DIRECTIVE: no batteries on prefetch/residency policy beyond C1 stats boot + C4; leap
 energy stays in T16 lanes. vLLM/SGLang port door still shut (RFC #38256 / issue #14233).
+### T17F training/quant/context (campaign/research/T17F-training-quant-context.md; 49 sources, 2.31M tok)
+NEW #1 LEVER — PACK RE-QUANT (HIGH mech / MED mag): routing+imatrix-weighted chooser over the
+pack's EXISTING per-tensor format set (native_experts.txt already mixes IQ2_S/IQ3_XXS/IQ3_S
+gate-up + Q2_0/IQ4_NL down) targeting ~3.0-3.2 bpw effective; monetizes BOTH bytes/token at the
+roofline AND cache slots (+512 slots = +2.1pt). Priced +6-10% M1, ZERO GPU training (~1-2 CPU-days
+over 85 GB), falsifier = one boot (12-layer band + R5 G2 canary + M3b). SEQUENCING LAW: land
+BEFORE the T14A hidden-state harvest so the drafter trains on the serving distribution.
+2. On-policy rejection replay (Draft-OPD 2605.29343, +23% over EAGLE-3 there): our exact-match
+verifier already emits every rejection+pick — rides the T14A dump at ~half-day instrumentation;
++2.4-6.4% M1 via T14C 0.80%/pp elasticity.
+3. Position-offset augmentation (LongSpec 2502.17421) in the harvest — only mechanism targeting
+F-181's deep-acceptance decay; CHEAPEST FALSIFIER ON BOARD: one real-corpus depth-lane probe
+(30 min) separating filler-content from position effects; protects the parked 262k gate.
+4. KV BELOW INT8: PARKED (indexer-bounded reads <=2051 cells x 12 QSA; KIVI-class gains live in
+regimes we never occupy; payoff would be non-binding host RAM).
+CLOSED with reasons: AQLM/QuIP# codebooks, backbone QAT (GEMQ router-only finetune folded into
+item 1), tree/parallel drafting (c_row closure holds post-2026 papers), TriForce/RAPID retrieval
+drafting (QSA indexer already fills that role). Corroboration: MagicDec matches our 173.9 @244k.
+vLLM #37435 hazard noted (draft/target rope divergence) for the 262k work.
