@@ -1192,3 +1192,45 @@ GEMV (dense already MMQ), commit overlap (hides under draft, F-232).
 SEQUENCING LAW: execute T16 as queued; spend the three free boots (DUMMY_NODES, DRAFT_TIMING,
 SPEC_PROB) BEFORE writing any new code — they price whether 250 -> 300+ has a structural lane.
 Delusional 270 stays gated on R1 or a DSpark-class drafter project (parked).
+### T17D sm_120 kernel frontier (campaign/research/T17D-sm120-kernel-frontier.md; 43 sources, 7.65M tok)
+MECHANIZED: CUDA 13.4 CC 12.0 table (Best Practices Table 5, cell-exact) — packed f16x2 2x rate
+is GONE on consumer Blackwell (add.f16x2=64 results/clk/SM vs add.f32=128); video/SIMD pipe
+halved (vabsdiff4 64->32). The hc unpack8 kernel (4 shifts+4 ANDs per uint4 at 64/clk) is capped
+at ~64 MACs/clk = half the FP32 pipe = T12-MEM's ALU/cvt-bound verdict mechanized.
+PLATFORM FACTS: tcgen05/TMEM/wgmma ABSENT on sm_120 (measured GB203, 2507.10789); TMA exists;
+clusters exist (we ship some); CLC work-stealing exists (sm_120f); conditional nodes exist
+(CC 9.0+). PDL docs-confirmed CLOSED (wait semantics = completed+flushed; we already do the
+sanctioned preamble via kPdlPrefetch) — stays closed.
+RANKED LEAPS: (1) TC-hc: mma.sync bf16 f32-accum hc kernels, 4-stream batch on the N axis,
+full/half tile even at T=1 — -0.9..-1.6 ms/window = +9..17% M1, CEILING +21%, effort L. THE new
+king of the kernel tranche; T15A/T15C rungs become the cheap rungs beside it (shared
+fused_gr_bench). (2) packed-f16x2 chunked-f32 hc dot ~2x over the int-capped kernel (issue-count
+win, NOT rate win) = +4..8% M1, effort M; HC_Q8 probe stays the cheap arbitrator. (3) mma port
+into QSA DECODE attention (engine exists in qsa_prompt_attn.cu:49-66) = +3..8% conc growing with
+context — the only candidate whose value GROWS with the 262k switch; TRT-LLM XQA/FlashInfer
+SM120 = shipped existence proof. (4) CLC persistent layer-group kernel = the ~2x spacing gamble
+(no published 5090 CLC bench exists). (5) conditional nodes around flag-spin + empty-PCIe nodes
++2..5% M1, device-side, no host round-trip.
+
+## T17 CONSOLIDATED VERDICT (2026-10-17 night; 6 dossiers, ~288 sources, 33.2M agent-tokens)
+T16 CORE SURVIVES every audit (FastMTP de-risked to production recipe; kernel tranche re-priced
+UPWARD by T17D). THE PLAN, RE-RANKED:
+0. FREE-BOOT SLATE FIRST (all in-tree instruments, never run, zero code): STRATA_DUMMY_NODES
+   (prices per-node tax -> decides the megakernel lane), STRATA_DRAFT_TIMING (R2 conditional
+   nodes), STRATA_SPEC_PROB (acceptance-rule door, lifts bound to SUM min(p,q)),
+   STRATA_LOOKAHEAD_STATS (C1), depth-lane real-corpus probe (position-vs-filler, 30 min),
+   parallel-8 config boot, MTP-off-under-COHORTS, fast-warm package + learned profile
+   (post-pin prewarm; +10-13% first leg, +4-6% on five-boot MEANS - lifts every future battery).
+1. PACK RE-QUANT (+6-10% M1, 1-2 CPU-days, one-boot falsifier) BEFORE the T14A harvest.
+2. KERNEL TRANCHE v2: T15C rungs -> TC-hc mma kernels (+9-17%, ceiling +21%) + QSA decode-attn
+   mma port (+3-8% conc, 262k-synergetic).
+3. RETRAIN v2 (T14B + T17C/T17F upgrades): VAT/LK-loss/AdaSPEC objective swaps + Draft-OPD
+   rejection replay + LongSpec position-offset aug in the dump. Band 225-232 M1 pre-depth.
+4. CONC LADDER: COHORTS=3 (+8-15%, ver_c ~130MiB fits) -> admission overlap (+6-8%) -> staging
+   pipelining; stacked ceiling ~380-420. CLC persistent kernel = the delusional gamble arm.
+DELETED FROM ALL FUTURE QUEUES: tree verify (re-openers recorded), rows 8->12 at 6 clients,
+MoE-serving policy batteries, KV<int8, PDL (docs-confirmed).
+HONEST CEILINGS: 250-single = bankable path (re-quant + tranche + retrain + depth schedule);
+270 = plausible, gated on DUMMY_NODES pricing + TC-hc landing; 300+ = delusional tier (R1
+megakernel, CLC) - each has a priced falsifier before any surgery. Quality floor stands:
+MMLU 95.0 / mimic 87.9, No-Regression Law absolute.
