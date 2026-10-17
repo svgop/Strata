@@ -1170,3 +1170,25 @@ standalone (flat 0.5 ~= SpecDec++ 0.42 threshold), +2-5% POST-retrain (subsumes 
 EXTERNAL VERDICT: nothing 2024-26 beats depth-6 coupled chains at exact-match on our cost
 structure (EAGLE-3/Sequoia tree wins live where rows are ~17% of window vs our 26-30%).
 Corrections: SpecExec mis-cited as 2406.14066 elsewhere — that ID is SmartSpec/TurboSpec.
+### T17A M1 single-lane leap (campaign/research/T17A-m1-single-leap.md; 45 sources, 4.76M tok)
+VERDICT: T16 SURVIVES INTACT — FastMTP retrain de-risked as a production recipe on our exact
+head class (Red Hat Speculators 0.6.0 vLLM, Sep 2026); nothing closed reappeared.
+THE ONLY 300-CLASS LANE = megakernel-class restructure of the AR verify window: our anatomy
+prices ~6-7 ms/window of fixed node-dependency tax (W(1)=8-9 ms vs ~2.1 ms byte floor); 2026
+production proof = Cohere decode megakernel (30B-A3B, 1x H100, bs=1 292 vs vLLM 185 = 1.58x;
+transferable number is the RATIO not the t/s). FREE BOOT #3 ALREADY IN TREE:
+STRATA_DUMMY_NODES (verify.cpp:1152-1155, never run) prices the per-node tax in one A/B —
+decides whether the R1 restructure lane exists on this contract. Serial chain now closed with
+external corroboration (SGLang #27462: exact draft-ahead = accept-outcome enumeration, token-
+conditioned only — ours is hidden-state-conditioned; c_row law kills it).
+FOUR NEW TAIL LEVERS (priced, cheap falsifiers): R2 conditional-node draft chain (+1-2.5 t/s;
+falsifier = STRATA_DRAFT_TIMING g_dt.gap_ms, instrument built never run); R3 sampler-in-graph
+(+1-2 t/s; position-keyed draws defeat the replay objection); R4 first-window draft seeding
+(+0-1%, TTFT -8-9 ms, XS); R5 L2 set-aside retarget from GDN states (at floor) to the drafter's
+~66 MB/step working set (+0.5-1.5 t/s, XS).
+BANKED NEGATIVES: AR-slim graph (already zero-doorbell/device-planned), tqllm T1.1 shared-
+expert fusion (default-on CUDA here, verify.cpp:212-221 — T6.4 retired), separate dense-BF16
+GEMV (dense already MMQ), commit overlap (hides under draft, F-232).
+SEQUENCING LAW: execute T16 as queued; spend the three free boots (DUMMY_NODES, DRAFT_TIMING,
+SPEC_PROB) BEFORE writing any new code — they price whether 250 -> 300+ has a structural lane.
+Delusional 270 stays gated on R1 or a DSpark-class drafter project (parked).
