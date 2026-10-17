@@ -1146,3 +1146,27 @@ CLOSED with reasons: AQLM/QuIP# codebooks, backbone QAT (GEMQ router-only finetu
 item 1), tree/parallel drafting (c_row closure holds post-2026 papers), TriForce/RAPID retrieval
 drafting (QSA indexer already fills that role). Corroboration: MagicDec matches our 173.9 @244k.
 vLLM #37435 hazard noted (draft/target rope divergence) for the 262k work.
+### T17C spec-algo leaps (campaign/research/T17C-spec-algo-leaps.md; 66 sources, 7.04M tok)
+CONTRACT MAP (code-pinned): only three doors exist — drafter training (output-neutral), offer-side
+shaping (row count/sources), acceptance rule (only in-tree STRATA_SPEC_PROB path is output-exact).
+TREE VERIFY: ARITHMETICALLY DEAD under coupled exact-match (<=1 proposal/position can survive;
+hedge EV pays only at m<~0.6 while costing 1-2 rows x c_row 2.2-3.56 ms EVERY window; worse post-
+retrain). Full surgery spec + two re-openers recorded (c_row <~1.2 ms or m<~0.6 regimes) — DELETE
+the tree question from all future queues unless the kernel tranche lands c_row <1.5 ms.
+FREE BOOT #2: STRATA_SPEC_PROB (rejection sampling) complete in-tree, NEVER measured (only sat in
+T15C's env inventory). ERS-D Lemma 3.1 (full-text verified): lifts per-row acceptance from the
+coupled-race bound to SUM(min(p,q)); legalizes the one zero-row multi-draft (k-arrival tip
+proposal, +0.4-0.8% M1 class). One boot answers acceptance-rule + post-retrain depth-schedule
+questions together.
+RETRAIN UPGRADES (objective-swaps on the same T14B/T14A infra): VAT 2608.30135 (trains against
+the simulated verify loop, +11.4% AL class), LK losses 2602.23881 (direct SUM min(p,q), native to
+our 40,525-row sub-vocab head), AdaSPEC 2510.19779, warm-start discipline. r17's 57% plateau
+FULLY ATTRIBUTED (fresh-init + pure-KL + double-quant, F-115/F-116) = not a distillation limit;
+data scale not binding (RH 5k). Retrain band: 225-232 M1 BEFORE depth re-unlock.
+HYBRID LANE ASLEEP, NOT MISSING: suffix-drafter windows + expected-tokens/ms DraftPolicy +
+retrieval DraftSource registry ship in-tree default-off. NEW cheap idea: Token Recycling of
+REJECTED drafts into the n-gram pool (currently discarded). Depth-rising min-p schedule: +0-1%
+standalone (flat 0.5 ~= SpecDec++ 0.42 threshold), +2-5% POST-retrain (subsumes W2.5 re-stair).
+EXTERNAL VERDICT: nothing 2024-26 beats depth-6 coupled chains at exact-match on our cost
+structure (EAGLE-3/Sequoia tree wins live where rows are ~17% of window vs our 26-30%).
+Corrections: SpecExec mis-cited as 2406.14066 elsewhere — that ID is SmartSpec/TurboSpec.
