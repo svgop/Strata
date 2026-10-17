@@ -963,3 +963,37 @@ off in standing (prof_on_? n>1?); + T1.1 skip machinery; 5) attention merge->chu
 all-masked skip; 6) LFUSE gate extension to the device-plan path (implemented, gated to ar_on() only —
 verify.cpp:927-930 one-line arm); 7) empty-PCIe grouped launch skip (conditional nodes = green field);
 8) gdn_conv_ab_multi retest on sm_120 (built, "-0.3% on gfx1201", the card changed since).
+
+---
+
+## T13 MASTER QUEUE (2026-10-17, from the T13A/B/C dossiers — campaign/research/T13A-decode-critical-path.md, T13B-concurrency-scheduling.md, T13C-memory-prefill-frontier.md)
+
+Ledger corrections they banked: standing conc band is 244-260 (not 210-219), pair 194-204 (not 171-175);
+expert slots 9,426-9,454; the 40,525-row head is the DRAFT sub-vocab head (verify's full head is
+248,320x2560 Q6_K); the 4.5ms pool term was the old 2%-miss regime - standing-warm exposure is 0.3-0.7ms;
+ForesightSwap is DEAD CODE under DEVICE_PLAN=1 (expert_source.cpp:5256); the depth counter shows depths
+3-5 ARE offered at standing min-p 0.5 (the old "never offered" note is stale).
+
+1. [RUNNING] spec-min-p 0.35 depth arm (T13A #1): 3v3 s35arm/s35ctl + MMLU-Pro 2x gate. M3b 76.0->70.4
+   is the expected mechanical drop (deeper chains test more marginal positions); MMLU decides quality.
+2. [QUEUED] hc norm-fold + bf16-native (T13A #2): the hc line is 2.87ms/window = the #1 kernel line at
+   warm M1, BIGGER than the VRAM-hits line. Norm-fold bitwise-checkable; bf16-native = full gate.
+3. [QUEUED] STRATA_DRAFT_UNGATED arm (T13A #3, coded c5703c3e, needs build+deploy): +4-9 t/s class,
+   bit-identical; falsifier STRATA_DRAFT_TIMING=1 first (never banked).
+4. [QUEUED] dense-MMQ prefill via the EXISTING Q6_K MMQ instances (T13C #2, re-priced S-M): ungate
+   gemm.cu:812/936 + CMakeLists:72, ~+25-40% prefill. Different bits -> full gate. THE prefill pick.
+5. [QUEUED] rows 8->12 ladder (T13B C3): 4-of-6 slots decode today (generate.cpp:10144, kVerifyMaxT=8);
+   +31-36% conc arithmetic. L-cost; run the MTP=0 batch-8 config falsifier FIRST (free).
+6. [QUEUED] HostGraphLaunch for the batch path (T13B C6, verify.cpp:3116 vs :2342): +3-4%, bit-identical.
+7. [QUEUED] emit batching (T13B C7, generate.cpp:10297/:10338): +2-3%, bit-identical, S.
+8. [QUEUED] admission sync diet (T13B C9, generate.cpp:10055-10069): ~2% conc, M.
+9. [QUEUED] R2-S3 two cohort verifiers (T13B C1): +20-28% conc -> ~307-325; THE structural conc-300
+   endgame; per-verifier buffers kill the G2 ghost by construction. Cost L.
+10. [QUEUED] FastMTP retrain (T13A/T13C, R3 GO): accept 66.6->~75%, compounds with everything. Cost L.
+11. [QUEUED] FUSE_WAIT un-gate + STRATA_DMA_BATCH-for-prefill-stager (T13C #6, prefill.cpp:2362/2441
+    ~24.6k per-blob memcpys/chunk): both env-class, falsify free.
+12. [BANKED] Bole factor-tree GDN verify (arXiv 2608.01651) - only pays if the depth arm unlocks;
+    EcoSpec tree filling (+12-20 single); head mmvq_il-at-T=1 (+2-4); sampler single-sync (+1-2);
+    doorbell-publish fusion (+1.5-3); q8_1 doorbell (M, shared-expert caveat); ROUTE_RESIDENT margin
+    sweep; clock lock v2 (user sudo) = the "stable" half of 250.
+PDL: do NOT re-queue on "half-wired" claims - pdl.hpp is complete, F-191 measured no-op on Linux.
