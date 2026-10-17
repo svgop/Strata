@@ -5873,6 +5873,14 @@ int main(int argc, char** argv) {
 
     if (remote_opt && !remote_opt->init(err)) { std::fprintf(stderr, "strata generate: %s\n", err.c_str()); return 1; }
     Drive drive;
+    // savage-custom F-233 (R2-S3, STRATA_COHORTS=2): the batch lane's second verifier - slots
+    // [0, batch/2) on `ver`, [batch/2, batch) on `ver_b`, two half-width windows in flight per
+    // round (B's pool work runs under A's GPU - the one escape from the F-223 theorem).  The drive
+    // copy is completed lazily (all of drive.d's setup assignments are done by then); B's counters
+    // are its own, the expert cache and source are shared.
+    int cohorts = 1;
+    Drive coh_b_drive;
+    bool coh_b_ready = false;
     // #731 (opt-in, STRATA_DISJOINT_ADAPT=1): the adaptive tiers leave an expert a helper GPU holds out of the primary's
     // promotion candidates (it would sit in both caches).  Asked live, from the helper's own cache (RemoteExperts::holds,
     // #854), so an expert the helper's tier swaps in or out later is followed - never a copy taken at load.
@@ -8095,6 +8103,32 @@ int main(int argc, char** argv) {
                 }
             }
         }
+        // savage-custom F-233: bind `ver_b` for the batch cohort lane on a single GPU (the
+        // --pipeline-windows binding above is multi-GPU-only).  The second verifier owns its
+        // buffers/graphs/doorbells (the G2 ghost is gone by construction); the weights, the expert
+        // cache and the slot sessions are shared.  VRAM: its window/arena/graph set (~200-400 MiB).
+        if (const char* v8c = std::getenv("STRATA_COHORTS"); v8c != nullptr && std::atoi(v8c) >= 2 &&
+            o.batch >= 2 && stages.empty()) {
+            ver_b.set_stage(0, -1, nullptr, nullptr);
+            if (batch_mtp) ver_b.set_batch_graph_limit(64);
+            ver_b.set_pcie_mode(o.pcie_mode == "dma" ? 0 : o.pcie_mode == "direct" ? 1 : 2);
+            std::string cerr_;
+            if (!ver_b.init(wt, g, ss, vh, native_head.loaded() ? &native_head : nullptr,
+                            batch_mtp ? strata::kernels::kVerifyMaxT : std::max(o.spec, o.batch), cerr_)) {
+                std::fprintf(stderr, "strata serve: STRATA_COHORTS=2 off: the second verifier: %s%s\n",
+                             cerr_.c_str(), vram_free_note().c_str());
+            } else {
+                std::vector<strata::core::SessionState*> cptrs;
+                for (auto& u : bslot_ss[0]) cptrs.push_back(u.get());
+                if (!ver_b.init_slots(cptrs, cerr_)) {
+                    std::fprintf(stderr, "strata serve: STRATA_COHORTS=2 off: %s\n", cerr_.c_str());
+                } else {
+                    cohorts = 2;
+                    std::fprintf(stderr, "strata serve: STRATA_COHORTS=2 on: slots [0,%d) on verifier A, [%d,%d) on B\n",
+                                 o.batch / 2, o.batch / 2, o.batch);
+                }
+            }
+        }
         for (int st = 0; st < n_stages && n_stages > 1; ++st) {
             split_drive.plan[st] = stage_ver(st).plan_sink();
             if (st > 0) {
@@ -10149,6 +10183,248 @@ int main(int argc, char** argv) {
             int n_active = 0;
             for (const BSlot& sl : bs) n_active += sl.active ? 1 : 0;
             const bool mtp_use = batch_mtp && (mtp_max_slots <= 0 || n_active <= mtp_max_slots);
+            // savage-custom F-233 (R2-S3, STRATA_COHORTS=2): the two-verifier round.  Slots [0,batch/2)
+            // on `ver`, the rest on `ver_b`; both half-width windows launch, then ONE reactor loop polls
+            // both (each poll serves its verifier's rung layers - B's pool work runs under A's GPU, the
+            // F-223 theorem's only escape), then the per-cohort tails.  Fewer active slots than the split
+            // (solo, pair) leave cohort B empty and the round degenerates to one window.  The code below
+            // this branch is the untouched single-verifier path (cohorts == 1: byte for byte today's).
+            if (cohorts == 2) {
+                struct CohortWin {
+                    int S = 0, A = 0;
+                    int rows[strata::kernels::kVerifyMaxT] = {};
+                    int32_t tok[strata::kernels::kVerifyMaxT] = {};
+                    int64_t pos[strata::kernels::kVerifyMaxT] = {};
+                    int first[strata::kernels::kVerifyMaxT] = {}, active[strata::kernels::kVerifyMaxT] = {};
+                    int nrows[strata::kernels::kVerifyMaxT] = {};
+                };
+                const int split = o.batch / 2;
+                static size_t next_a = 0, next_b = 0;   // each cohort rotates within its own slot span
+                auto collect = [&](int lo, int hi, CohortWin& w, size_t& next_cur) {
+                    const size_t span = (size_t) (hi - lo);
+                    for (size_t offset = 0; offset < span && w.S + (mtp_use ? 2 : 1) <= strata::kernels::kVerifyMaxT; ++offset) {
+                        const int b = lo + (int) ((next_cur + offset) % span);
+                        if (!bs[(size_t) b].active) continue;
+                        w.first[w.A] = w.S;
+                        w.active[w.A] = b;
+                        w.nrows[w.A] = mtp_use && bs[(size_t) b].draft_ready ? 2 : 1;
+                        ++w.A;
+                        w.rows[w.S] = b;
+                        w.tok[w.S] = bs[(size_t) b].x;
+                        w.pos[w.S] = bs[(size_t) b].p;
+                        ++w.S;
+                        if (w.nrows[w.A - 1] == 2) {
+                            w.rows[w.S] = b;
+                            w.tok[w.S] = bs[(size_t) b].draft[0];
+                            w.pos[w.S] = bs[(size_t) b].p + 1;
+                            ++w.S;
+                        }
+                    }
+                    if (mtp_use && w.A > 0) next_cur = ((size_t) (w.active[w.A - 1] - lo) + 1) % span;
+                };
+                CohortWin wa, wb;
+                collect(0, split, wa, next_a);
+                collect(split, o.batch, wb, next_b);
+                if (wa.S + wb.S == 0) return true;
+                const bool was_busy = strata::core::progress().busy.load();
+                strata::core::progress().busy.store(true);
+                drive.d.layers = 0;
+                drive.d.experts = 0;
+                drive.d.failed = false;
+                if (!coh_b_ready) {   // every drive.d setup write is long done by the first round
+                    coh_b_drive = drive;
+                    coh_b_drive.d.plan = ver_b.plan_sink();
+                    coh_b_drive.calls = 0;
+                    coh_b_drive.cpu_ms = 0;
+                    coh_b_ready = true;
+                }
+                if (bt_windows == 0) {
+                    bt_start = Clock::now();
+                    bt_wait0 = ver.ms_wait; bt_pool0 = ver.ms_pool;
+                    bt_miss0 = drive.d.multi_misses; bt_hits0 = drive.d.cache_hits; bt_pcie0 = drive.d.pcie_experts;
+                    bt_cpu_ent0 = drive.d.multi_entries; bt_off_ent0 = drive.d.offload_entries;
+                    bt_a_rounds0 = a_rounds; bt_a_swapped0 = a_swapped;
+                }
+                auto msd2 = [](Clock::time_point a0, Clock::time_point b0) {
+                    return std::chrono::duration<double, std::milli>(b0 - a0).count();
+                };
+                std::fprintf(stderr, "cohorts: round A.S=%d B.S=%d\n", wa.S, wb.S);
+                const Clock::time_point w0c = Clock::now();
+                // stage BOTH cohorts (a lazy capture happens while NO window is in flight - the standing
+                // flow's capture condition), then launch both: B's pool runs under A's GPU from here on
+                if (wa.S > 0 && !ver.batch_stage_rows(wa.rows, wa.S, wa.tok, wa.pos, err)) {
+                    std::fprintf(stderr, "cohorts: A stage: %s\n", err.c_str()); std::printf("ERR cohort A stage: %s\n", err.c_str()); std::fflush(stdout);
+                    return false;
+                }
+                if (wb.S > 0 && !ver_b.batch_stage_rows(wb.rows, wb.S, wb.tok, wb.pos, err)) {
+                    std::fprintf(stderr, "cohorts: B stage: %s\n", err.c_str()); std::printf("ERR cohort B stage: %s\n", err.c_str()); std::fflush(stdout);
+                    return false;
+                }
+                if (wa.S > 0 && !ver.batch_go(err, false)) {
+                    std::fprintf(stderr, "cohorts: A launch: %s\n", err.c_str()); std::printf("ERR cohort A launch: %s\n", err.c_str()); std::fflush(stdout);
+                    return false;
+                }
+                if (wb.S > 0 && !ver_b.batch_go(err, false)) {
+                    std::fprintf(stderr, "cohorts: B launch: %s\n", err.c_str()); std::printf("ERR cohort B launch: %s\n", err.c_str()); std::fflush(stdout);
+                    return false;
+                }
+                bool la = wa.S > 0, lb = wb.S > 0;
+                while (la || lb) {
+                    if (la) {
+                        const int r = ver.batch_poll(win_pool_fn, &drive, err);
+                        if (r < 0) { std::fprintf(stderr, "cohorts: A poll: %s\n", err.c_str()); std::printf("ERR cohort A: %s\n", err.c_str()); std::fflush(stdout); return false; }
+                        la = (r == 0);
+                    }
+                    if (lb) {
+                        const int r = ver_b.batch_poll(win_pool_fn, &coh_b_drive, err);
+                        if (r < 0) { std::fprintf(stderr, "cohorts: B poll: %s\n", err.c_str()); std::printf("ERR cohort B: %s\n", err.c_str()); std::fflush(stdout); return false; }
+                        lb = (r == 0);
+                    }
+                }
+                std::fprintf(stderr, "cohorts: windows done in %.1f ms\n", msd2(w0c, Clock::now()));
+                const Clock::time_point w1c = Clock::now();
+                if (drive.d.failed || coh_b_drive.d.failed) {
+                    std::printf("ERR %s\n", drive.d.failed && drive.d.fail ? drive.d.fail
+                              : coh_b_drive.d.failed && coh_b_drive.d.fail ? coh_b_drive.d.fail
+                              : "a cohort window failed");
+                    return false;
+                }
+                struct AdaptRunC {
+                    std::thread th;
+                    bool ok = true;
+                    ~AdaptRunC() { if (th.joinable()) th.join(); }
+                } adapt_run;
+                if (!drive.d.usage.empty() && !ajob && !in_prompt_read && (++ba_window % o.adapt_every) == 0 && pending.empty())
+                    adapt_run.th = std::thread([&] { adapt_run.ok = adapt(); });
+                // the per-cohort tail: the standing acceptance/commit/emit/draft code, verifier- and
+                // window-parameterized (see the single-verifier tail below for the comments it mirrors)
+                auto finish = [&](strata::core::Verifier& v, CohortWin& w) -> bool {
+                    int32_t* outb = const_cast<int32_t*>(v.batch_out());
+                    std::vector<int> keep(bs.size(), 0);
+                    for (int a = 0; a < w.A; ++a) {
+                        const int b = w.active[a], i = w.first[a];
+                        const BSlot& sl = bs[(size_t) b];
+                        const bool eos = std::find(o.eos_ids.begin(), o.eos_ids.end(), (int64_t) outb[i]) != o.eos_ids.end();
+                        keep[b] = 1;
+                        if (w.nrows[a] == 2 && !eos && !sl.stop &&
+                            sl.produced + 2 <= sl.max_new && sl.p + 3 <= o.max_context) {
+                            ++bt_slot_drafts;
+                            if (outb[i] == w.tok[i + 1]) {
+                                keep[b] = 2;
+                                ++bt_slot_accepts;
+                            } else if (batch_rescue_on() && v.sampling_temperature() > 0.0f && typical_threshold() > 0.0f) {
+                                static const bool ratio_mode = [] { const char* v2 = std::getenv("STRATA_SPEC_RATIO");
+                                                                    return v2 != nullptr && std::atoi(v2) != 0; }();
+                                const float btemp = v.sampling_temperature();
+                                const bool ok = ratio_mode
+                                    ? ratio_accept(v, i, w.tok[i + 1], btemp, (double) sl.dprob[0])
+                                    : typical_accept(v, i, w.tok[i + 1], btemp);
+                                if (ok) {
+                                    outb[i] = w.tok[i + 1];
+                                    keep[b] = 2;
+                                    ++bt_slot_accepts;
+                                }
+                            }
+                        }
+                    }
+                    if (!(mtp_use ? v.commit_slot_prefixes(keep.data(), err) : v.commit_slots(err))) {
+                        std::printf("ERR %s\n", err.c_str());
+                        return false;
+                    }
+                    int launched[8] = {};
+                    int n_launched = 0;
+                    for (int t = 0; t < w.A; ++t) {
+                        const int b = w.active[t];
+                        BSlot& sl = bs[(size_t) b];
+                        bool nf = false;
+                        for (int r = w.first[t]; r < w.first[t] + w.nrows[t]; ++r) nf = nf || v.nonfinite_in(r);
+                        if (nf) {
+                            std::fprintf(stderr, "strata batch: non-finite logits (#879) in slot %d at position %lld: it ends "
+                                                 "(BDONE nonfinite) and the next request reads its prompt from token 0\n", b,
+                                         (long long) w.pos[w.first[t]]);
+                            const double ms = std::chrono::duration<double, std::milli>(Clock::now() - sl.t0).count();
+                            std::printf("BDONE %d %lld nonfinite %.1f\n", b, (long long) sl.produced, ms);
+                            sl.active = false;
+                            sl.cached = false;
+                            sl.checks.clear();
+                            nan_flush = true;
+                            continue;
+                        }
+                        for (int j = 0; j < keep[b]; ++j) {
+                            const int32_t y = outb[w.first[t] + j];
+                            sl.ids.push_back(w.tok[w.first[t] + j]);
+                            std::printf("BT %d %d\n", b, (int) y);
+                            ++sl.produced;
+                            const bool eos = std::find(o.eos_ids.begin(), o.eos_ids.end(), (int64_t) y) != o.eos_ids.end();
+                            const char* fin = eos ? "stop" : sl.stop ? "cancel" : sl.produced >= sl.max_new ? "length"
+                                            : sl.p + 2 > o.max_context ? "length" : nullptr;
+                            if (fin != nullptr) {
+                                const double ms = std::chrono::duration<double, std::milli>(Clock::now() - sl.t0).count();
+                                std::printf("BDONE %d %lld %s %.1f\n", b, (long long) sl.produced, fin, ms);
+                                sl.active = false;
+                                sl.cached = o.prompt_cache > 0 && !sl.img && !sl.tainted;
+                                break;
+                            }
+                            sl.x = y;
+                            sl.p += 1;
+                        }
+                        if (mtp_use && sl.active) {
+                            const strata::core::OnDevice on_slot_mtp(slot_mtp[(size_t) b]->device());
+                            const size_t stride = (size_t) g.hc * (size_t) g.n_embd;
+                            if (w.nrows[t] == 2) {
+                                if (cudaMemcpyAsync(slot_mtp_rows[(size_t) b].get(),
+                                                    v.final_R_all() + (size_t) w.first[t] * stride,
+                                                    2 * stride * sizeof(float), cudaMemcpyDeviceToDevice,
+                                                    slot_mtp[(size_t) b]->stream()) != cudaSuccess ||
+                                    !slot_mtp[(size_t) b]->draft_launch(2, outb + w.first[t], w.pos[w.first[t]], keep[b] - 1,
+                                                                       sl.draft.data(), err, sl.dprob.data(), (float) o.spec_min_p)) {
+                                    std::printf("ERR batch MTP slot %d: %s\n", b, err.c_str());
+                                    return false;
+                                }
+                                launched[n_launched++] = b;
+                            } else if (!slot_mtp[(size_t) b]->draft_first(1, v.final_R_all() + (size_t) w.first[t] * stride,
+                                                                          outb[w.first[t]], w.pos[w.first[t]], sl.draft.data(), err)) {
+                                std::printf("ERR batch MTP slot %d: %s\n", b, err.c_str());
+                                return false;
+                            }
+                            sl.draft_ready = true;
+                        } else if (sl.active) {
+                            sl.draft_ready = false;
+                        }
+                    }
+                    for (int i = 0; i < n_launched; ++i) {
+                        const int b = launched[i];
+                        if (!slot_mtp[(size_t) b]->draft_finish(err)) {
+                            std::printf("ERR batch MTP slot %d: %s\n", b, err.c_str());
+                            return false;
+                        }
+                    }
+                    ++bt_windows;
+                    for (int a = 0; a < w.A; ++a) {
+                        bt_rows += keep[w.active[a]];
+                        bt_accepted += keep[w.active[a]] - 1;
+                    }
+                    std::fflush(stdout);
+                    return true;
+                };
+                if (wa.S > 0 && !finish(ver, wa)) return false;   // an empty cohort has no window to
+                if (wb.S > 0 && !finish(ver_b, wb)) return false; // commit (commit_slots would abort)
+                const Clock::time_point w2c = Clock::now();
+                bt_run += msd2(w0c, w1c);
+                bt_commit += msd2(w1c, w2c) * 0.5;   // both tails ran inside this span; split evenly
+                bt_emit += msd2(w1c, w2c) * 0.5;
+                if (adapt_run.th.joinable()) {
+                    const Clock::time_point wa2 = Clock::now();
+                    adapt_run.th.join();
+                    if (!adapt_run.ok) { std::printf("ERR an adaptive refill failed\n"); return false; }
+                    ++bt_adapt_rounds;
+                    bt_adapt_swaps += (int64_t) pending.size();
+                    apply_pending(true);
+                    bt_adapt_wait += msd2(wa2, Clock::now());
+                }
+                strata::core::progress().busy.store(was_busy);
+                return true;
+            }
             // Each MTP slot uses two rows; rotate slots when more than four are active.
             int A = 0;
             for (size_t offset = 0; offset < bs.size() && S + (mtp_use ? 2 : 1) <= strata::kernels::kVerifyMaxT; ++offset) {

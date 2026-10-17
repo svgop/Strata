@@ -221,6 +221,15 @@ public:
     // a window in flight from one thread (batch_poll does not block).  Stage k can then run group g while stage k+1
     // runs group g-1.  Rows of group `base` use hand-off rows [base, base + S), so groups never share a hand-off row.
     bool batch_launch(int base, int S, const int32_t* tokens, const int64_t* pos, std::string& err);
+    /// F-233 (STRATA_COHORTS): batch_launch over an ARBITRARY slot set - a cohort's active slots are not
+    /// a contiguous [base, base+S) range once requests end mid-flight.  Same staging/launch/commit shape.
+    bool batch_launch_rows(const int* rows, int S, const int32_t* tokens, const int64_t* pos, std::string& err,
+                           bool with_commit = true);
+    /// F-233 two-phase form: batch_stage_rows stages (and lazily CAPTURES - the cohort reactor stages
+    /// every cohort while NO window is in flight, the standing flow's capture condition), then batch_go
+    /// launches the staged window.  with_commit as in batch_launch_rows.
+    bool batch_stage_rows(const int* rows, int S, const int32_t* tokens, const int64_t* pos, std::string& err);
+    bool batch_go(std::string& err, bool with_commit = true);
     /// 1 = this stage's window and commit are done (the last stage's picks are in batch_out), 0 = still running,
     /// -1 = an error (err).  Serves every layer that has rung so far.
     int batch_poll(PoolMultiFn pool, void* user, std::string& err);

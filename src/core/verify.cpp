@@ -3299,26 +3299,47 @@ bool Verifier::sample_rows(int S, std::string& err) {
 }
 
 bool Verifier::batch_launch(int base, int S, const int32_t* tokens, const int64_t* pos, std::string& err) {
-    const OnDevice on_device(device_);
-    if (b_running_) { err = "verify: batch_launch while this stage is busy"; return false; }
     int rows[8] = {};
     for (int t = 0; t < S && t < 8; ++t) rows[t] = base + t;
-    if (!stage_batch(rows, S, base, tokens, pos, err)) return false;
-    cudaError_t le = cudaGraphLaunch(exec_bm_[bkey(rows, S, base)], cs_);
-    if (le == cudaSuccess) le = cudaGraphLaunch(commit_bm_[ckey(rows, S, base, commit_parity_)], cs_);   // right behind it: every row is kept
+    return batch_launch_rows(rows, S, tokens, pos, err);
+}
+
+bool Verifier::batch_stage_rows(const int* rows, int S, const int32_t* tokens, const int64_t* pos,
+                                std::string& err) {
+    const OnDevice on_device(device_);
+    if (b_running_) { err = "verify: batch_stage while this stage is busy"; return false; }
+    return stage_batch(rows, S, rows[0], tokens, pos, err);
+}
+
+bool Verifier::batch_go(std::string& err, bool with_commit) {
+    const OnDevice on_device(device_);
+    if (b_running_) { err = "verify: batch_go while this stage is busy"; return false; }
+    if (!last_batch_ || last_t_ < 1) { err = "verify: batch_go without a staged window"; return false; }
+    cudaError_t le = cudaGraphLaunch(exec_bm_[bkey(last_rows_, last_t_, row_base_)], cs_);
+    // with_commit (the pipe shape): the commit right behind the window - every row is kept there.  The
+    // cohort path (F-233) passes false and commits from its tail via commit_slot_prefixes(keep), the
+    // run_slot_rows shape - a pre-launched commit would collide with the parity commit underneath it.
+    if (with_commit && le == cudaSuccess)
+        le = cudaGraphLaunch(commit_bm_[ckey(last_rows_, last_t_, row_base_, commit_parity_)], cs_);
     if (le != cudaSuccess) { err = std::string("verify: batch launch: ") + cudaGetErrorString(le); return false; }
     (void) cudaStreamQuery(cs_);
     if (ple_stage())   // the host's side of the commit (the hash's last two tokens)
-        for (int t = 0; t < S; ++t) {
-            SessionState& sx = *slots_[(size_t) rows[t]];
+        for (int t = 0; t < last_t_; ++t) {
+            SessionState& sx = *slots_[(size_t) last_rows_[t]];
             sx.ple_prev[0] = sx.ple_prev[1];
-            sx.ple_prev[1] = tokens[t];
+            sx.ple_prev[1] = last_tokens_[t];
         }
     b_running_ = true;
     b_k_ = 0;
     b_steps_ = (le_ - lb_) * batch_groups_;   // STRATA_BATCH_G2: a doorbell per (layer, group)
     b_last_ = Clock::now();
     return true;
+}
+
+bool Verifier::batch_launch_rows(const int* rows, int S, const int32_t* tokens, const int64_t* pos,
+                                 std::string& err, bool with_commit) {
+    if (!batch_stage_rows(rows, S, tokens, pos, err)) return false;
+    return batch_go(err, with_commit);
 }
 
 int Verifier::batch_poll(PoolMultiFn pool, void* user, std::string& err) {

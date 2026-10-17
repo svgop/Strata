@@ -1,0 +1,50 @@
+=== PROBE coharm-gate2 | 2026-10-17 10:18:12 | log=/home/svg/LLM/strata-custom-2/custom-iq3s-cohorts.log
+    warmup: 8 tok in 0.33s
+    A.short[1]: 220 tok in 1.71s = 128.4 t/s
+    A.short[2]: 220 tok in 1.24s = 177.7 t/s
+    A.short[3]: 220 tok in 1.15s = 190.9 t/s
+    A.short[4]: 220 tok in 1.07s = 206.1 t/s
+    A.short[5]: 220 tok in 1.24s = 178.1 t/s
+    A.short[6]: 220 tok in 1.15s = 191.4 t/s
+    fresh-long-prompt: 80 tok out in 1.72s
+    B.short[1]: 220 tok in 1.12s = 196.6 t/s
+    B.short[2]: 220 tok in 1.15s = 191.2 t/s
+    B.short[3]: 220 tok in 1.10s = 200.9 t/s
+    B.short[4]: 220 tok in 1.17s = 187.7 t/s
+    B.short[5]: 220 tok in 1.12s = 195.7 t/s
+    B.short[6]: 220 tok in 1.11s = 197.4 t/s
+SHORT-CLASS A/B   : before long prompt 178.7 t/s -> after 194.9 t/s (9%)
+M1 single-stream : 190.2 t/s (2000 tok in 10.52s)
+M2 pair          : 0.0 t/s aggregate (0 tok in 112.73s)
+M2 6-conc        : 0.0 t/s aggregate (0 tok in 121.32s)
+--- engine accounting, in order (ms/window is the degradation signal) ---
+    [ 1] prompt   55 gen     8 ->    32.5 ms/window | accept  60.0% (6/10) | hit 88.6%
+    [ 2] prompt   81 gen   220 ->    14.7 ms/window | accept  67.4% (128/190) | hit 95.8%
+    [ 3] prompt   81 gen   220 ->    12.1 ms/window | accept  70.3% (123/175) | hit 98.4%
+    [ 4] prompt   81 gen   220 ->    12.6 ms/window | accept  69.8% (134/192) | hit 98.9%
+    [ 5] prompt   81 gen   220 ->    12.3 ms/window | accept  87.4% (139/159) | hit 99.0%
+    [ 6] prompt   81 gen   220 ->    11.3 ms/window | accept  71.3% (117/164) | hit 99.1%
+    [ 7] prompt   81 gen   220 ->    12.2 ms/window | accept  74.4% (131/176) | hit 99.0%
+    [ 8] prompt 5865 gen    80 ->    16.9 ms/window | accept  84.1% (53/63) | hit 93.7%
+    [ 9] prompt   81 gen   220 ->    12.3 ms/window | accept  78.3% (137/175) | hit 99.0%
+    [10] prompt   81 gen   220 ->    12.9 ms/window | accept  75.6% (136/180) | hit 98.9%
+    [11] prompt   81 gen   220 ->    12.4 ms/window | accept  82.5% (137/166) | hit 99.0%
+    [12] prompt   81 gen   220 ->    11.8 ms/window | accept  78.8% (126/160) | hit 99.3%
+    [13] prompt   81 gen   220 ->    12.5 ms/window | accept  69.2% (135/195) | hit 99.2%
+    [14] prompt   81 gen   220 ->    11.3 ms/window | accept  85.8% (127/148) | hit 99.3%
+    [15] prompt  100 gen  1500 ->    12.8 ms/window | accept  78.1% (912/1167) | hit 97.9%
+    [16] prompt 1618 gen   482 ->    14.6 ms/window | accept  75.0% (303/404) | hit 96.2%
+    [17] prompt   84 gen     1 ->    14.0 ms/window | accept   0.0% (0/0) | hit 84.9%
+    [18] prompt   85 gen     1 ->     9.0 ms/window | accept   0.0% (0/0) | hit 93.3%
+    [19] prompt   84 gen     1 ->     8.0 ms/window | accept   0.0% (0/0) | hit 95.6%
+    [20] prompt  618 gen     1 ->    12.0 ms/window | accept   0.0% (0/0) | hit 84.1%
+    [21] prompt  618 gen     1 ->    11.0 ms/window | accept   0.0% (0/0) | hit 84.8%
+    [22] prompt   84 gen     1 ->    13.0 ms/window | accept   0.0% (0/0) | hit 83.8%
+    [23] prompt   85 gen     1 ->    12.0 ms/window | accept   0.0% (0/0) | hit 88.6%
+    [24] prompt   84 gen     1 ->    11.0 ms/window | accept   0.0% (0/0) | hit 83.8%
+    [25] prompt   84 gen     1 ->    12.0 ms/window | accept   0.0% (0/0) | hit 83.8%
+    [26] prompt   84 gen     1 ->    12.0 ms/window | accept   0.0% (0/0) | hit 83.8%
+TREND ms/window: early 14.3 -> late 11.7 (stable)
+M3b rate         : 75.5% mean over 16 requests (diagnostic)
+M3d per-position : not printed (arm STRATA_SPEC_DEPTH=1 to publish accepted/tested by depth)
+=== PROBE END coharm-gate2
