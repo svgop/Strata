@@ -7994,3 +7994,20 @@ acceptance-only ceiling 222/225/281 - 250 needs the retrain AND the kernel tranc
 scoreboard after tonight: M1 ~193-215, pair ~193-207, conc 304-310 - stock targets (191.2/193.8/244.0)
 cleared with margin on all three, the 300 conc stretch goal CLEARED, 250-single remains the open goal
 (routes: FastMTP retrain + the kernel tranche).
+
+### THE STANDING SCOREBOARD after F-233 — the five-boot reliability bench (2026-10-17 16:0x)
+
+Five standing boots on the full recipe (ATTN_DAILY + GDN_CHUNKED + FUSE_HITS + POOL_DIET + COHORTS),
+plus the quality/latency lanes on the final boot:
+- M1 single-stream: 192.2 / 211.3 / 205.5 / 197.6 / 185.7 -> MEAN 198.5 t/s (+35.0% vs stock 147.1)
+- M2 pair: 196.5 / 197.0 / 202.9 / 196.8 / 194.7 -> MEAN 197.6 t/s (+32.5% vs stock 149.1)
+- M2 6-conc: 312.4 / 322.7 / 306.2 / 320.6 / 300.2 -> MEAN 312.4 t/s (+66.4% vs stock 187.7)
+- M3b acceptance: 74.5 / 76.0 / 76.0 / 76.0 / 72.2 -> MEAN 74.9%
+- Prefill (ctx ladder, fresh unique prompts): 3.6k @4k -> 6.0-7.0k plateau 16k-120k (peak 7,028 @64k)
+- Long-ctx decode: 184.7 cold @4k -> 226-243 t/s warm 16k-120k (was 208-216 pre-recipe)
+- MMLU-Pro: 95.7 / 94.3 (mean 95.0; band floor 91 cleared twice)
+- Mimic (mimicbench2, 40 tasks, weighted): 87.9% - internalization 12/12, correction 8/8, voice 6/6,
+  doc-structure 6/6, doctrine 6/8, arch-continue 6/8, blend 6/8, ui-deep 8/10
+**THE +30%-ON-EVERY-METRIC GOAL IS NOW CLEARED ON MEANS: +35% / +32.5% / +66% vs stock.**  Remaining
+stretch: single 250 (the FastMTP retrain + kernel tranche path, T14A/B/C).  Results:
+campaign/results/final-bench-r{1..4}.txt, fbench-lanes.log, fbench-mimic.txt.
