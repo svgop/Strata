@@ -8060,3 +8060,13 @@ M1 144.9 / pair 149.0 / conc 224.4. So .43.1 vs .45 is FLAT WITHIN NOISE at both
 (same-quant deltas +2.4/+1.5/+1.9% favoring .43.1, all inside ±4%) — upstream's .45 perf wave
 does not reach this config, now proven twice. Custom-2 vs .43.1 same-quant: +30.3/+26.0/+21.2%.
 Custom anchor restored on 8081.
+
+F-234a addendum 2 — the 2x2 matrix is COMPLETE (2026-10-17 night): custom-2 on Q2_0 via
+strata-q2_0-custom.json + run-q2_0-custom.sh in the stock install (stock's q2_0 config held
+byte-identical — spec 4, stock mtp/rt, reserve 768, parallel default — custom binary + the
+launcher's 26 arms via custom-arms.env): M1 242.6 / pair 210.1 / conc 215.5 vs stock Q2_0
+205.9 / 170.1 / 173.4 = **+17.8 / +23.5 / +24.3%**. The full matrix: custom wins every
+engine-only cell by +17.8..+33.4% regardless of quant. Note: custom-Q2_0 conc (215.5) < 
+custom-IQ3_S conc (272.0) because stock's config is the narrower one (4-slot default, spec 4 —
+COHORTS pays above 4 active slots; IQ3_S lane runs parallel 6). Also the Q2_0 arm set booted
+clean on the fork. Custom anchor restored on 8081.
