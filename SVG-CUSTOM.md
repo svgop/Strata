@@ -7959,3 +7959,38 @@ per-verifier buffers kill the G2 ghost by construction) -> impl plan staged next
 (depth/quality); hc bf16-native dots (the 2.87ms/window line; different-bits, full gate - and note
 the drafter shares the kernels so target/draft stay consistent); head mmvq_il-at-T1 microbench
 (verify.cpp:1863 gate; +2-4 t/s class).
+
+### F-233 — STRATA_COHORTS=2 ADOPTED: the two-cohort verifier batch lane (R2-S3) — conc +24.8%, the 300 stretch goal CLEARED (306.8 mean, every arm round above 304) (2026-10-17 11:4x)
+
+THE STRUCTURE (per campaign/research/R2-S3-two-cohort-impl-plan.md, executed in one session): a second
+Verifier (ver_b, full-range, own stream/graphs/doorbells/arena - the G2 ghost gone BY CONSTRUCTION) on
+the SAME GPU; slots [0,3) on A, [3,6) on B; the reactor stages BOTH windows while nothing is in flight,
+launches both, then one thread polls both (each poll serving its verifier's rung layers - B's CPU pool
+work runs under A's GPU window, the one escape from F-223's theorem); per-cohort tails (acceptance,
+parity commit, emit, drafts) parameterized by verifier.  Engagement arms only when BOTH cohorts have
+work (n_active > 3): solo and pair run the UNTOUCHED single-window path byte for byte.
+
+THREE BUGS ON THE WAY (each boot-gated): (1) empty-cohort rounds called commit_slots without a window
+(clean abort) - guarded; (2) batch_launch's pipe-style PRE-LAUNCHED commit collided with the tail's
+F-196 parity commit (pair hang) - batch_launch_rows(..., with_commit=false); (3) lazy graph capture of
+a new layout while the OTHER cohort's window was in flight (intermittent 6-conc hang) - the two-phase
+batch_stage_rows/batch_go (stage both, launch both) plus a one-time device fence at the standing->cohort
+transition (the last standing window's async commit).  Reactor diagnostics on stderr (stdout is
+pipe-buffered - the swallowed ERRs cost an hour).
+
+THE EVIDENCE (3v3 coharm/cohctl + co2/co3 with the two refinements): FINAL fenced 3v3 (co3, adfa4889):
+conc 306.8 vs 245.9 = +24.80% (arm 304.2/310.3/306.0 - NON-OVERLAPPING with ctl 240-250); M1 192.8 vs
+190.4 = +1.24%; pair 193.1 vs 196.6 = -1.76% (rounds 190.5-196.6 inside ctl's band - the pair path is
+byte-identical code, this is boot noise; the interim gated battery read pair +2.7%); M3b 75.17 vs 75.20
+= -0.04pp, the flattest canary of the campaign.  Window anatomy: two ~6-row windows per ~26-29ms round
+in-flight overlapped vs one 6.6-row window per 22.9ms - the in-window rate went from ~349 to ~460
+rows/s class.  ADOPTED into both launchers (STRATA_COHORTS=2; =1 rolls back to the untouched path).
+
+ALSO THIS SESSION: T14A/B/C FastMTP dossiers (recipe: recursive teacher-forced multi-depth CE beta=0.6
+K>=serve-depth over self-distilled data, RH productionized ON OUR HEAD CLASS with 5-8K samples/443s on
+2xH200; infra: --dump-final-r teacher dump, dense-only ~98M trainable, rt2 parallel rollout, the R17
+Windows arc already validated the chain; math: c_row=3.56 ms/row calibrated from our own s35 3v3,
+acceptance-only ceiling 222/225/281 - 250 needs the retrain AND the kernel tranche).  The standing
+scoreboard after tonight: M1 ~193-215, pair ~193-207, conc 304-310 - stock targets (191.2/193.8/244.0)
+cleared with margin on all three, the 300 conc stretch goal CLEARED, 250-single remains the open goal
+(routes: FastMTP retrain + the kernel tranche).

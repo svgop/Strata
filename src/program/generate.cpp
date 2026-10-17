@@ -10189,7 +10189,16 @@ int main(int argc, char** argv) {
             // F-223 theorem's only escape), then the per-cohort tails.  Fewer active slots than the split
             // (solo, pair) leave cohort B empty and the round degenerates to one window.  The code below
             // this branch is the untouched single-verifier path (cohorts == 1: byte for byte today's).
-            if (cohorts == 2) {
+            static bool cohort_prev_round = false;   // F-233: the standing->cohort transition fence
+            if (cohorts == 2 && n_active > o.batch / 2) {   // both cohorts must have work; pair scale and below takes the untouched path below
+                if (!cohort_prev_round) {
+                    // the first cohort round after standing-path rounds: the last standing window's
+                    // F-196 async commit may still be in flight while cohort B's stage CAPTURES its
+                    // first layout - fence the device once (a millisecond, once per ramp)
+                    cudaDeviceSynchronize();
+                }
+                cohort_prev_round = true;
+
                 struct CohortWin {
                     int S = 0, A = 0;
                     int rows[strata::kernels::kVerifyMaxT] = {};
@@ -10425,6 +10434,7 @@ int main(int argc, char** argv) {
                 strata::core::progress().busy.store(was_busy);
                 return true;
             }
+            cohort_prev_round = false;
             // Each MTP slot uses two rows; rotate slots when more than four are active.
             int A = 0;
             for (size_t offset = 0; offset < bs.size() && S + (mtp_use ? 2 : 1) <= strata::kernels::kVerifyMaxT; ++offset) {
