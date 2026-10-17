@@ -976,8 +976,12 @@ ForesightSwap is DEAD CODE under DEVICE_PLAN=1 (expert_source.cpp:5256); the dep
 
 1. [RUNNING] spec-min-p 0.35 depth arm (T13A #1): 3v3 s35arm/s35ctl + MMLU-Pro 2x gate. M3b 76.0->70.4
    is the expected mechanical drop (deeper chains test more marginal positions); MMLU decides quality.
-2. [QUEUED] hc norm-fold + bf16-native (T13A #2): the hc line is 2.87ms/window = the #1 kernel line at
-   warm M1, BIGGER than the VRAM-hits line. Norm-fold bitwise-checkable; bf16-native = full gate.
+2. [RE-PRICED 2026-10-17, code-read] hc line (2.87ms/window, the #1 kernel line): the "norm-fold" is
+   ALREADY 90% IN THE CODE - gr_norm_multi writes xn = R.w_norm.rs (fused_gr.cu:237/:252) and the down
+   kernels read xn plain (:291/:355); folding xn into the UP epilogue saves only the w_norm load
+   (~40KB vs w_up's 6.5MB/call = ~0.5%, and rv must load anyway for the R_out residual writeback :414).
+   The REAL hc lever = bf16-native up/down dot path (different bits, full gate, M) or wider grids;
+   the bitwise norm-fold lane is CLOSED-negligible without a battery.
 3. [QUEUED] STRATA_DRAFT_UNGATED arm (T13A #3, coded c5703c3e, needs build+deploy): +4-9 t/s class,
    bit-identical; falsifier STRATA_DRAFT_TIMING=1 first (never banked).
 4. [QUEUED] dense-MMQ prefill via the EXISTING Q6_K MMQ instances (T13C #2, re-priced S-M): ungate
