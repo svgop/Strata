@@ -8054,3 +8054,9 @@ That is the engine+arms delta, isolated. Context the first chart hid: the QUANT 
 stock's faster quant) while beating it outright on pair/conc. Stock .43.1 vs .45 stayed flat
 within noise in every pairing. State: stock install keeps both configs (run-q2_0.sh,
 run-iq3s-stock.sh); custom anchor restored on 8081.
+
+F-234a addendum: completed the same-quant matrix — stock v0.1.43.1 on IQ3_S (same config swap)
+M1 144.9 / pair 149.0 / conc 224.4. So .43.1 vs .45 is FLAT WITHIN NOISE at both quants
+(same-quant deltas +2.4/+1.5/+1.9% favoring .43.1, all inside ±4%) — upstream's .45 perf wave
+does not reach this config, now proven twice. Custom-2 vs .43.1 same-quant: +30.3/+26.0/+21.2%.
+Custom anchor restored on 8081.
