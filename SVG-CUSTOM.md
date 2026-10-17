@@ -7910,3 +7910,29 @@ sum-order shift moved prefill by ~3e-7 AND M3b stayed in-band - the tax scales w
 INSTRUMENT KEPT: STRATA_DENSE_MMQ=1 + STRATA_MMQ_KQ=1 + MAXT re-arms in one config flip; MMLU gate
 not run (speed verdict alone rejects; note: mmlu-pro-gate.py needs .venv python, system python3 lacks
 datasets - fix before the next quality gate).
+
+### F-231 — ADAPTIVE BATCH-MTP (STRATA_BATCH_MTP_MAX_SLOTS): the falsifier's +3.7% conc was one lucky boot; the interleave reads +1.81% conc / pair -3.61%(?) — below the bar, INSTRUMENT KEPT; the window-anatomy finding stands (2026-10-17 03:5x)
+
+THE FALSIFIER (rows->window-time, f6m0 single boot): BATCH_MTP=0 at 6-conc = 5.93 rows @ 19.71ms vs
+standing 6.62 @ 22.9ms, conc 267.5 vs 258.0; pair without drafts COLLAPSES (168.9 vs 193.0).  The
+draft row costs more than its accepted tokens return at 6 slots; at pair scale it returns +14%.
+THE IMPLEMENTATION (env-gated, default off = exactly today's path): batch_step computes mtp_use =
+batch_mtp && (STRATA_BATCH_MTP_MAX_SLOTS <= 0 || n_active <= N); per-slot row widths (nrows[]) with
+stale-draft slots taking one row; post-window, 2-row slots draft_launch as today, stale slots get a
+draft_first refresh (admission shape), and draftless windows INVALIDATE the draft (a position-stale
+draft must never be presented); acceptance/nonfinite/commit sites all row-width-aware.  Built
+763abb81, ENGAGEMENT verified in-log: pair windows keep the 3.15-row MTP shape (14.37ms), 6-conc
+windows run 5.97 rows @ 20.15ms.
+THE VERDICT (3v3 amarm/amctl): conc 256.7 vs 252.1 = +1.81% (arm ahead EVERY round), M1 +1.05%,
+M3b +0.23 in-band, pair 195.0 vs 202.3 = -3.61% (arm 192.0/200.9/192.1 vs ctl 200.5/198.6/207.8 -
+twice at 192; the pair band is 188-209 and a ctl hit 188.1 last night, so noise is plausible but
+NOT exonerated; at pair scale the arm's path is identical by construction).  +1.81% < the +4% bar
+and the pair question stands: NO ADOPTION.  The falsifier's 267.5 was boot luck - the true MTP-off
+conc effect is ~+2%.
+LEFT ON THE TABLE (operator's call, LANECELL precedent F-214/215): the CONC launcher alone could
+carry STRATA_BATCH_MTP_MAX_SLOTS=4 for conc-focused sessions (+2% there, pair untouched because
+those sessions don't run pair).  Not done unilaterally - the pair -3.61% wants an exoneration boot
+first (3 more arm-pair rounds would settle it).
+ALSO: the deploy-protocol law re-proven the hard way - a battery wrapper whose own command text
+contains "build/strata " (my md5sum) is killed by battery-config's pkill at the first boot; deploy
+and battery NEVER in one command (the wrapper died after round 1; relaunch clean).
