@@ -8040,3 +8040,17 @@ at the OLD 2835 clocks (3135 re-bank pending, +3.4% class) — and pair/conc rem
 ours 197.6/312.4 vs stock ~170/174.
 State: stock install now v0.1.45 (engine/strata.0.1.43.1-backup kept, reserve 768); custom
 anchor restored on 8081 after the benches.
+
+### F-234a — the FAIR same-quant A/B: custom-2 vs stock .45 on IQ3_S (2026-10-17 night)
+User's catch: the first three-way mixed quants (stock ran Q2_0). Fix: strata-iq3s-stock.json in
+the stock install — custom-2's config mirrored EXACTLY (same model GGUFs, pack, mtp/rt,
+draft_vocab en, spec 6 / min-p 0.5 / kv int8 / resident / cvec / reserve 2000, parallel 6;
+expert-profile on a COPY so probe traffic can't touch the custom lane's learned file), stock
+v0.1.45 engine, ZERO custom arms. Every config arg accepted by .45 clean.
+Result (M1/pair/6-conc): stock-IQ3_S 141.5 / 146.8 / 220.2 vs custom-2 188.8 / 187.8 / 272.0
+= **+33.4% / +27.9% / +23.5% at identical model bytes** (campaign/results/stock-45-iq3s.txt).
+That is the engine+arms delta, isolated. Context the first chart hid: the QUANT alone is worth
++45% M1 on stock (Q2_0 205.9 vs IQ3_S 141.5) — custom-2 nearly closes even that (188.8 = -8% vs
+stock's faster quant) while beating it outright on pair/conc. Stock .43.1 vs .45 stayed flat
+within noise in every pairing. State: stock install keeps both configs (run-q2_0.sh,
+run-iq3s-stock.sh); custom anchor restored on 8081.
