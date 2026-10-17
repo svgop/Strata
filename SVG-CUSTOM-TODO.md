@@ -1003,3 +1003,111 @@ ForesightSwap is DEAD CODE under DEVICE_PLAN=1 (expert_source.cpp:5256); the dep
     doorbell-publish fusion (+1.5-3); q8_1 doorbell (M, shared-expert caveat); ROUTE_RESIDENT margin
     sweep; clock lock v2 (user sudo) = the "stable" half of 250.
 PDL: do NOT re-queue on "half-wired" claims - pdl.hpp is complete, F-191 measured no-op on Linux.
+
+## T15 QUEUE — easy +10% audit (2026-10-17; dossier campaign/research/T15-easy-wins-audit.md)
+Anatomy-priced per F-232 law; NOTHING batteryed yet. Anchors: M1 198.5 / prefill 6.0-7.0k.
+1. [DECODE #1, S] UPM_COLS 16->8 widen up grid (fused_gr.cu:320/:437/:1175) +3.4-5% BIT-EXACT;
+   gr_q8_tail atomicAdd==1u -> ==3u at 8 cols; rider s26_tsum transposed butterfly ~+1%;
+   proof = fused_gr_selftest + gr_parity QFUSE byte-equality before any boot.
+2. [DECODE #2, M] 82-block staged down, 4-warp THREADS=128 instantiation (fused_gr.cu:864/:1118)
+   +2.5-4% BIT-EXACT; keeps per-block smem tile so F-217's 106 MB/layer L2 blowup does NOT apply.
+   #1+#2 ceiling: hc read 30->19-21 us = +8-9% M1 = THE +10% BUCKET.
+3. [DECODE #4, S] norm_fast_on() CUDA flip (fused_gr.cu:1069 gate hard-false; fast kernel written
+   + bitwise claim at :759-812) +1.3-2% — untested gate, not a measured negative. Sequence before #3'.
+3'. [DECODE #3, M] cooperative norm+down fusion, weight prefetch before grid.sync() +2-3.5%;
+   subsumes #4; distinct from closed arithmetic norm-fold and from PDL/F-191.
+4. [DECODE #5, S, env-only] STRATA_LFUSE=1 on 5090 +1.3-3%; no CUDA arm exists anywhere, bitwise
+   proven HIP only -> acceptance canary + M3b; pair with queued FUSE_WAIT arm in one boot.
+5. [DECODE #6, S] expose env + arm STRATA_FUSE_CONVAB on CUDA (gate hardcoded false,
+   verify.cpp:268-273; kernel built) +0.9-1.7% bit-exact; gfx1201 -0.3% flag is a different card.
+6. [PREFILL #1, S-M] dedup MMQ activation quantize T*K->T rows + q8_1 gather-copy (prefill.cpp:3457;
+   10x DRAM amplification, 3.36 GB vs 335 MB distinct/layer) ~1.6-2.2%/chunk BIT-EXACT;
+   Xq byte-hash proof; side effect ~0.5 GB VRAM freed. Best first prefill battery.
+7. [PREFILL #2, S] per-group copy-stream event ops in streamed walk (prefill.cpp:2439/2448/2487/2496;
+   ~49k event ops/chunk -> per-group) ~1% at 32K, 4-8% where copy stream binds; coordinate with DMA_BATCH.
+8. [PREFILL #3, S-M] fuse swiglu + H-quantize, skip fp32 H round-trip (prefill.cpp:3918-3920)
+   ~0.9-1.0%/chunk BIT-EXACT; Hq byte-hash proof.
+9. [PREFILL #4, LOSSY-FLAG] STRATA_GDN_CHUNKED=1 in-tree WY recurrence ~5-6%/chunk; perturbation
+   ~1e-7 = 3 orders under F-230's 1.8e-4 KL -> decode tax likely far under 2.5% but MUST be priced
+   with the coupled-MTP acceptance battery, not assumed. Largest code-level prefill lever left.
+10. [FREE] One STRATA_PREFILL_TIMING=1 boot prices prefill #1/#4/#5 exactly before writing code.
+CLOSED by this audit: EcoSpec tree filling (+12-20 banked) does NOT survive — chain-only verify
+(DraftPolicy picks size only; linear verdict loop generate.cpp:12957) + T14C c_row=3.56 ms means
+each branch row needs 0.72 accepted tokens; tree = verify-contract surgery, L not M. gemm.cu
+dequant-scratch caching dead (0.1%). Upstream #2756 PF_ATTN_BATCH near-no-op here (flag absent;
+standing path whole-chunk tensor-core). sampler.cu / qsa_select.cu / verify_kernels.cu / head path /
+expert line / host-side reactor+chain+pool all examined-tight.
+
+## T16 QUEUE — M1-250 tranche (2026-10-17 evening; survey-shaped: lane = M1 single, levers = FastMTP
+retrain + hc bf16 kernels + 262k switch + Batch-MTP lane-split, 262k urgency 8/10, evidence bar =
+five-boot means at milestones)
+
+Anchors to defend: M1 198.5 / pair 197.6 / conc 312.4 five-boot means; acceptance 74.9; MMLU 95.0;
+mimic 87.9. ONE variable per battery; ABAB on any contested call; five-boot checkpoint after every
+adoption; off is one command away. Box law: batteries run SERIAL (own-traffic) — dev overlaps,
+batteries don't.
+
+1. [M0, S] Clock bin TESTED AND RAISED (2026-10-17 night, legs clock2835-a / clock3135-a in
+   campaign/results/): strata-gpu-lock (R8) auto-engages on engine ports; SM_CLOCK 2835->3135 via
+   sudo config edit + systemctl reload (live, no restart). Sustained gate: M1 186.0 -> 192.4 t/s
+   (+3.4%), short-class 182.8 -> 195.3, ZERO throttle flags on both legs (only benign 0x400),
+   power peak 356 of 575 W, windows stable (14.2 ms late on both). The card cannot hold 3135 flat —
+   it realizes ~2940-2947 under load / 2962 idle, so the lock now functions as a ~2940 floor
+   (+4.5% clock vs the ~2812 realized at the old bin). KEPT. RE-BANK REQUIRED: the five-boot means
+   (M1 198.5 / pair 197.6 / conc 312.4) were banked at 2835 — re-run the five-boot protocol at 3135
+   before any W1+ comparison; the new means become T16's frozen baselines. F-225 law stands: never
+   compare across boot positions.
+2. [W1a, S] T15C #1 UPM_COLS 16->8 (+3.4-5% BIT-EXACT): fused_gr_selftest + gr_parity QFUSE
+   byte-equality BEFORE any boot, then battery.
+3. [W1b, M] T15C #2 82-block staged down, 4-warp instantiation (+2.5-4% BIT-EXACT; per-block smem
+   tile keeps F-217's L2 blowup inapplicable). Sequence #4 norm_fast flip before #3' cooperative
+   fusion (audit's own ordering). Five-boot checkpoint after the kernel rungs: audit ceiling
+   #1+#2 = +8-9% M1 -> expect ~215-220.
+4. [W2, L] FastMTP retrain execution — T11.R3 GO recipe unchanged: 9B-sibling dry-run (15-30 min
+   de-risk) -> MIMIC-corpus hidden-state harvest -> beta=0.8 K=6-8 recursive teacher-forced CE ->
+   bf16 direct-cast Q4 (never GPTQ, F-201). Gates: pos-2/3 >= +8pp each, pos-0 <= 1pp regression,
+   e2e >= +8%; kill-rule depth extension while marginal acceptance > 6-9% breakeven. Drafter swap =
+   different bits BY DESIGN -> gates are acceptance + 2x MMLU, not M3b. Decision math: ~237
+   FastMTP-scale, + depth re-unlock -> 247-255 = the 250 path.
+5. [W2.5, S] min-p re-stair ON TOP of the new drafter (T15A: post-POOL_DIET depth threshold 0.48
+   is BELOW the 0.35-arm's measured 0.604 blend -> F-228 closure STALE; F-228's own note: depth
+   routes through a better drafter). Breakeven kill-rule from #4 applies.
+6. [W3, S prep now / GO-gated] 262k switch — survey urgency 8/10 is read as "fast-track the prep",
+   NOT as the go (2026-10-17 park directive still standing). Prep: refresh the STALE 262k launcher
+   (T15B TRAP: missing 10 standing arms incl COHORTS) + pre-stage the full T15B test plan (3v3 vs
+   five-boot means, ctx ladder 147k-245k, depth lane 240k, 2x MMLU). EXECUTES ONLY ON USER GO.
+   Post-switch = RE-ANCHOR all three lanes (old means void) — hence sequenced last in the tranche.
+   Standing risk: expert cache 9,337 -> ~8,630 (-7.5%) = F-183's +-500 slots = -+4.9% conc band;
+   F-182 anchor read was statistical zero.
+7. [W4, M, conc rider] Batch-MTP lane-split (F-231 open option): conc-launcher-only. Window law
+   (F-231): draft rows at 6 slots cost more than they return — the split must keep draft rows out
+   of the <4-slot paths COHORTS leaves untouched. Gate: conc five-boot vs 312.4, pair/solo flat.
+   Its battery only runs in otherwise-idle slots, never concurrent with W1/W2 batteries.
+8. [ADJUDICATE, free] LFUSE + FUSE_WAIT contradiction: T15A re-dig marks both DEAD with citations;
+   T15 queue items 4/11 still carry them (+1.3-3% / paired boot). Read the citations, strike one
+   side, THEN anyone may spend a battery. Same pass: T15C #9 GDN_CHUNKED-prefill pricing vs its
+   standing decode-side adoption — confirm which side the T15 item still refers to.
+9. [GATES, standing] Every bits-changing arm (HC_Q8, Q6_PACKED+TSUM, min-p stair, drafter swap):
+   coupled-MTP acceptance battery per F-230 law + 2x MMLU; M3b only where bit-identity is claimed.
+   Quality floor = MMLU 95.0 / mimic 87.9 anchors.
+MILESTONE LADDER: 198.5 -> kernel rungs (~215-220) -> FastMTP (~237) -> + depth re-unlock
+(247-255) -> 250 call on five-boot means; pair/conc means flat at every rung or the rung reverts.
+
+## T17 QUEUE (research wave — dossiers landing; integrated per agent, 2026-10-17 night)
+### T17B conc-leap + warmup forensics (campaign/research/T17B-conc-leap.md; 40 sources, 4.49M tok)
+COLD-START SOLVED: boot-time pin drops page cache via madvise DONTNEED (expert_source.cpp:2847-2860,
+msg :2899) -> first requests re-read 44.5-54.8 GB from storage; prewarm.sh structurally defeated.
+Pool term +33% cold (2.71 vs 2.04 ms/window, +12.9% in-window). LEARNED PROFILE NEVER LOADED:
+launcher points at static Oct-14 profile; expert-profile-learned.bin (saved every 30 req) unused.
+FAST-WARM PACKAGE (S, first falsifier): post-boot prewarm AFTER the pin + --expert-profile
+data/expert-profile-learned.bin + layout self-probe. Priced +10-13% first leg, +4-6% five-boot mean.
+Do NOT arm STRATA_PIN_GUARD=0 (#1250 OOM kill).
+CONC: rows 8->12 ladder DEAD at 6 clients (cohort collect cap already admits 12 <= kVerifyMaxT=8
+... correction: 6 slots x 2 rows = 6 <= 8; cap binds >=10 clients) — T13B C3 retracted. Two-stream
+contention priced 1.45x/row (F-233). Ranked: parallel-8 config boot (FREE falsifier first; watch
+F-183 cache-slope counterpressure), COHORTS=3 (ver_c ~+130MiB fits 1262MiB free; +8-15% est),
+admission overlap (14% of wall; +6-8%), staging pipelining + cross-cohort tail reorder (+2-4%),
+PDL RE-ARM (F-191's re-open condition now met by COHORTS — verify before re-closing), MTP-off-
+under-COHORTS (free falsifier; settles F-231 vs MagicDec contradiction). Stacked ceiling ~380-420.
+Corrections banked: Pre-gated MoE = arXiv 2308.12066 (not 2408.13666); SpecInfer 2305.09781;
+TurboSpec 2406.14066.
