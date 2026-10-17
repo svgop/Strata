@@ -7865,3 +7865,18 @@ WHAT REMAINS: the offered-chain extension is gate-limited only at the margin - t
 probs trim most chains - so depth pays only via a better drafter (FastMTP retrain, R3 GO unchanged)
 or cheaper rows (hc norm-fold, bf16-native).  MMLU gate NOT run (arm rejected on speed alone).
 LEDGER: this entry's M3d data retires the old "depths 4-6 never offered" note.
+
+### F-229 — STRATA_DRAFT_UNGATED: NEGATIVE (-2.73% M1 3v3); the T13A #3 estimate had the sign of the trade backwards; closed, conditionally re-openable (2026-10-17 02:5x)
+
+The instrument (c5703c3e, built+deployed a3f88b0b) enqueues all max_steps draft graphs back-to-back and
+trims in readout - bit-identical, which the canary CONFIRMS: M3b 75.5 vs 75.4 (+0.13pp, the flattest
+arm-vs-ctl M3b of any instrument this campaign, exactly what a same-bits change must produce).  The
+speed verdict went the other way from T13A's +4-9 t/s: M1 201.0 vs 206.7 = -2.73%, ctl ahead in EVERY
+round; pair +0.9%/conc -0.5% noise.  MECHANISM: F-228's curve says the min-p gate trims the chain at
+~2.2 of 6 steps, so the ungated shape executes ~3.8 needless step graphs per window (~50us each on the
+draft stream, serialized ahead of the verify window) - ~0.19ms of new GPU tail bought ~0.1ms of host
+bubble savings.  The draft launch bubbles are SMALLER than the discarded-graph cost at our chain
+length.  STAYS DEFAULT-OFF as an instrument.  Conditional re-open: a deeper mean chain shrinks the
+waste toward zero (chain ~5 of 6 = ~1 wasted step) - if FastMTP lands, one boot re-tests it free.
+Also closed tonight's session arc: 4 formal 3v3s (planner REV/-6.9, FUSE_HITS +4.35, POOL_DIET +4.06,
+min-p .35 -1.75) + this = 5 instruments through the interleave in one night.
