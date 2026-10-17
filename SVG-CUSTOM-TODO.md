@@ -1111,3 +1111,19 @@ PDL RE-ARM (F-191's re-open condition now met by COHORTS — verify before re-cl
 under-COHORTS (free falsifier; settles F-231 vs MagicDec contradiction). Stacked ceiling ~380-420.
 Corrections banked: Pre-gated MoE = arXiv 2308.12066 (not 2408.13666); SpecInfer 2305.09781;
 TurboSpec 2406.14066.
+### T17E MoE expert-serving (campaign/research/T17E-moe-serving-leaps.md; 45 sources, 6.95M tok)
+VERDICT: NO LEAP IN OUR REGIME — lit wins live at 30-90% hits / PCIe-bound; we are 97.7% hits,
+roofline-bound; total recoverable from ALL miss terms ~0.5-0.9 ms of 11.9 ms (+1-3%). Everything
+the literature sells is already implemented/banked here (lookahead=RouterLookahead
+expert_source.cpp:2351-2472; trace residency=adaptive tier; DMA_BATCH; pinned complement;
+prefetch-hiding=cohort reactor). NEGATIVE LEDGER (saves batteries): draft-gated prefetch, trained
+predictors, UVM/cudaMemPrefetch, compressed-experts+GPU-decompress, cacheless, AMX (no AMX on
+Zen5), multi-GPU EP. Calibration: arXiv 2608.12103 — router-lookahead value 0.3%, pinned oracle
+arena 1.09-1.11x FASTER than page-cache = independent validation of --resident-experts.
+TWO SURVIVORS: C1 prediction-driven VRAM staging via existing ForesightSwap::take() hook
+(expert_source.cpp:3899; env gate :5259 init-time not structural) — falsifier = one
+STRATA_LOOKAHEAD_STATS=1 boot (never run, free), +0.5-2%. C4 profile domain-shift guard
+(divergence-triggered un-pin/re-save) — variance class, de-risks the 262k switch. R22 re-
+corroborated x3 (2511.15015 hot-FP8/cold-INT4, 2512.12990 bit-sliced, 2508.18983 importance).
+SPEND DIRECTIVE: no batteries on prefetch/residency policy beyond C1 stats boot + C4; leap
+energy stays in T16 lanes. vLLM/SGLang port door still shut (RFC #38256 / issue #14233).
