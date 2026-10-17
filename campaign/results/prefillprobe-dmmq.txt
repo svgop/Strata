@@ -1,0 +1,11 @@
+[02:44:27] prewarm done in 3s (page cache now carries pack+shards)
+A 1 3.678s
+A 2 3.473s
+A 3 3.399s
+A 4 3.354s
+[02:45:12] prewarm done in 3s (page cache now carries pack+shards)
+B 1 3.617s
+B 2 3.414s
+B 3 3.336s
+B 4 3.295s
+PREFILL-PROBE-DONE

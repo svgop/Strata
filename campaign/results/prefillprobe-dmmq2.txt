@@ -1,0 +1,45 @@
+== LONG swapped (ctl first)
+[02:47:53] prewarm done in 3s (page cache now carries pack+shards)
+A 1 3.616s
+A 2 3.404s
+A 3 3.344s
+A 4 3.287s
+[02:48:38] prewarm done in 3s (page cache now carries pack+shards)
+B 1 3.674s
+B 2 3.467s
+B 3 3.404s
+B 4 3.348s
+PREFILL-PROBE-DONE
+== SHORT 1k-tok (arm first)
+[02:49:23] prewarm done in 3s (page cache now carries pack+shards)
+A 1 0.817s
+A 2 0.769s
+A 3 0.769s
+A 4 0.771s
+A 5 0.769s
+A 6 0.769s
+[02:49:59] prewarm done in 3s (page cache now carries pack+shards)
+B 1 0.817s
+B 2 0.776s
+B 3 0.773s
+B 4 0.774s
+B 5 0.774s
+B 6 0.773s
+PREFILL-PROBE-DONE
+== SHORT 2.7k-tok (arm first)
+[02:50:35] prewarm done in 3s (page cache now carries pack+shards)
+A 1 1.002s
+A 2 0.949s
+A 3 0.946s
+A 4 0.932s
+A 5 0.931s
+A 6 0.929s
+[02:51:12] prewarm done in 3s (page cache now carries pack+shards)
+B 1 1.028s
+B 2 0.979s
+B 3 0.976s
+B 4 0.962s
+B 5 0.968s
+B 6 0.961s
+PREFILL-PROBE-DONE
+PROBE-SET-DONE

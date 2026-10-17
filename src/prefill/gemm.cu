@@ -1,7 +1,12 @@
 // src/prefill/gemm.cu - see include/strata/prefill/gemm.hpp.
 #include "strata/prefill/gemm.hpp"
 #include "strata/kernels/dequant_bf16.hpp"
-#if defined(STRATA_PREFILL_MMQ) && defined(__HIPCC__)
+// F-230: the dense MMQ path (STRATA_DENSE_MMQ=1) un-gated for CUDA - strata_mmq (moe_mmq.cu, namespace
+// strata::prefill::mmq) is built and linked into strata_prefill on CUDA too, and the K-quant products
+// (the pack's Q6_K dense projections) run through the strata_kq DSO (STRATA_MMQ_KQUANTS + STRATA_MMQ_KQ=1,
+// mmq_kq_loader.cpp).  HIP keeps its branch; the runtime gates (STRATA_DENSE_MMQ, the K%256/K>8192 refusal,
+// fits()'s tile probe) are unchanged, so a build or boot without the env runs the dequant+cuBLAS path as before.
+#if defined(STRATA_PREFILL_MMQ) && (defined(__HIPCC__) || defined(__CUDACC__))
 #include "strata/prefill/moe_mmq.hpp"
 #endif
 
@@ -375,7 +380,12 @@ bool prompt_f16() {
 }
 
 Gemm::~Gemm() {
-#if defined(STRATA_PREFILL_MMQ) && defined(__HIPCC__)
+// F-230: the dense MMQ path (STRATA_DENSE_MMQ=1) un-gated for CUDA - strata_mmq (moe_mmq.cu, namespace
+// strata::prefill::mmq) is built and linked into strata_prefill on CUDA too, and the K-quant products
+// (the pack's Q6_K dense projections) run through the strata_kq DSO (STRATA_MMQ_KQUANTS + STRATA_MMQ_KQ=1,
+// mmq_kq_loader.cpp).  HIP keeps its branch; the runtime gates (STRATA_DENSE_MMQ, the K%256/K>8192 refusal,
+// fits()'s tile probe) are unchanged, so a build or boot without the env runs the dequant+cuBLAS path as before.
+#if defined(STRATA_PREFILL_MMQ) && (defined(__HIPCC__) || defined(__CUDACC__))
     delete static_cast<strata::prefill::mmq::Context*>(mmq_ctx_);
     if (mmq_buf_) cudaFree(mmq_buf_);
 #endif
@@ -809,7 +819,12 @@ void Gemm::f16(const uint16_t* X, const uint16_t* W, float* Y, int64_t T, int64_
     STRATA_ABSORB_HIPBLAS_STICKY("cublasGemmEx f16");
 }
 
-#if defined(STRATA_PREFILL_MMQ) && defined(__HIPCC__)
+// F-230: the dense MMQ path (STRATA_DENSE_MMQ=1) un-gated for CUDA - strata_mmq (moe_mmq.cu, namespace
+// strata::prefill::mmq) is built and linked into strata_prefill on CUDA too, and the K-quant products
+// (the pack's Q6_K dense projections) run through the strata_kq DSO (STRATA_MMQ_KQUANTS + STRATA_MMQ_KQ=1,
+// mmq_kq_loader.cpp).  HIP keeps its branch; the runtime gates (STRATA_DENSE_MMQ, the K%256/K>8192 refusal,
+// fits()'s tile probe) are unchanged, so a build or boot without the env runs the dequant+cuBLAS path as before.
+#if defined(STRATA_PREFILL_MMQ) && (defined(__HIPCC__) || defined(__CUDACC__))
 bool Gemm::native_mmq(const uint16_t* X, int type, const void* W, float* Y, int64_t T, int64_t N, int64_t K,
                       int64_t ldy) {
     namespace mmq = strata::prefill::mmq;
@@ -819,6 +834,11 @@ bool Gemm::native_mmq(const uint16_t* X, int type, const void* W, float* Y, int6
         return e && e[0] == '1';
     }();
     if (!enabled || mmq_failed_ || !mmq::built() || !mmq::fits(type, N)) return false;
+    // STRATA_DENSE_MMQ_MAXT: MMQ reads the QUANT weights directly (bandwidth-bound, small T its win regime)
+    // while cuBLAS runs the dequantized FP16 through tensor cores (compute-bound, large T its regime) - the
+    // upstream a1444e33 curve shrinks from -27..30% at 2K to -16% at 16K.  Set to route only the small side.
+    static const int64_t maxt = [] { const char* v = std::getenv("STRATA_DENSE_MMQ_MAXT"); return v ? (int64_t) std::atoll(v) : (int64_t) 0; }();
+    if (maxt > 0 && T > maxt) return false;
     // K must be a multiple of 256: llama.cpp's MMQ loads the weights in 256-value K chunks, and the
     // chunk past a partial row reads past the row (the next row's bytes - or, for the last weight
     // row, bytes past the tensor, which no caller guarantees to be zeros). The MoE path is safe
@@ -933,7 +953,12 @@ void Gemm::native(const uint16_t* X, int ggml_type, const void* W_blocks, float*
                      (long long) ldx, (long long) K);
         std::exit(1);
     }
-#if defined(STRATA_PREFILL_MMQ) && defined(__HIPCC__)
+// F-230: the dense MMQ path (STRATA_DENSE_MMQ=1) un-gated for CUDA - strata_mmq (moe_mmq.cu, namespace
+// strata::prefill::mmq) is built and linked into strata_prefill on CUDA too, and the K-quant products
+// (the pack's Q6_K dense projections) run through the strata_kq DSO (STRATA_MMQ_KQUANTS + STRATA_MMQ_KQ=1,
+// mmq_kq_loader.cpp).  HIP keeps its branch; the runtime gates (STRATA_DENSE_MMQ, the K%256/K>8192 refusal,
+// fits()'s tile probe) are unchanged, so a build or boot without the env runs the dequant+cuBLAS path as before.
+#if defined(STRATA_PREFILL_MMQ) && (defined(__HIPCC__) || defined(__CUDACC__))
     if (beta == 0.0f && (ldx == 0 || ldx == K) && native_mmq(X, ggml_type, W_blocks, Y, T, N, K, ldy)) return;
 #endif
     if (N * K > scratch_elems_) {
