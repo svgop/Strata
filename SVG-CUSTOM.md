@@ -7880,3 +7880,33 @@ length.  STAYS DEFAULT-OFF as an instrument.  Conditional re-open: a deeper mean
 waste toward zero (chain ~5 of 6 = ~1 wasted step) - if FastMTP lands, one boot re-tests it free.
 Also closed tonight's session arc: 4 formal 3v3s (planner REV/-6.9, FUSE_HITS +4.35, POOL_DIET +4.06,
 min-p .35 -1.75) + this = 5 instruments through the interleave in one night.
+
+### F-230 — DENSE-MMQ ON CUDA: implemented, engaged, and CLOSED NEGATIVE — the prefill win is eaten by the decode acceptance tax; a new law for the prefill lane (2026-10-17 03:1x)
+
+THE IMPLEMENTATION (kept, env-gated, default off): gemm.cu's four `STRATA_PREFILL_MMQ && __HIPCC__`
+guards relaxed to `|| defined(__CUDACC__)` (the define is already PUBLIC on strata_prefill in the CUDA
+branch, CMake:1517 - the HIP compiler flag was the only thing hiding native_mmq); moe_mmq.cu's
+f16_to_f32/set_bounds + their kernels un-gated (#820 note updated); STRATA_DENSE_MMQ_MAXT T-gate added
+(MMQ = the small-T bandwidth regime, cuBLAS FP16 tensor cores = the large-T compute regime); build
+reconfigured STRATA_MMQ_KQUANTS=ON -> libstrata_kq.so (14.5MB) deployed beside the engine; d0875ab2.
+ENGAGEMENT proven: "K-quant prompt kernels from engine/libstrata_kq.so" + "dense MMQ on" in the arm
+logs, zero in ctl.
+
+THE PREFILL CURVE (paired probes, BOTH boot orders, 20341bb8): 21k-token prompts -2% (slower - real,
+warm-bias favored the arm), 2.7k +3.1% (0.9385s vs 0.968s median, arm booted colder), 1k +0.45% -
+the a1444e33 curve shape with our crossover ~4k; MAXT=4096 gates to the winning side.
+
+THE VERDICT (gated arm 3v3, mqarm/mqctl): M1 198.7 vs 204.5 = -2.8%, pair -2.4%, conc +0.4%, M3b
+75.3 vs 77.4 = -2.1pp (arm max 76.7 < ctl mean).  MECHANISM (the structural find): the Q8-activation
+prefill changes the prompt's KV by ~1.8e-4 KL (upstream's own number) - invisible to argmax-quality
+metrics, but our coupled MTP acceptance is EXACT-MATCH verification, so borderline accept/reject
+decisions flip: -2.7% relative acceptance = -2.8% M1, -2.4% pair, arithmetic matches.  Slots/hit-rate
+exonerated (9,381 vs 9,337-9,426; 94.8-99.6% both).  NO ADOPTION - never-regress law.
+
+**NEW LAW (the prefill acceptance tax): any optimization that changes prefill BITS pays ~-2.5% on
+every decode t/s metric through acceptance, whatever its prefill speed win.  Price every future
+prefill-accuracy change against this tax before arming it.**  (GDN_CHUNKED passed because its FP32
+sum-order shift moved prefill by ~3e-7 AND M3b stayed in-band - the tax scales with the bits distance.)
+INSTRUMENT KEPT: STRATA_DENSE_MMQ=1 + STRATA_MMQ_KQ=1 + MAXT re-arms in one config flip; MMLU gate
+not run (speed verdict alone rejects; note: mmlu-pro-gate.py needs .venv python, system python3 lacks
+datasets - fix before the next quality gate).
