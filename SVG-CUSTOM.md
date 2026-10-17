@@ -8011,3 +8011,32 @@ plus the quality/latency lanes on the final boot:
 **THE +30%-ON-EVERY-METRIC GOAL IS NOW CLEARED ON MEANS: +35% / +32.5% / +66% vs stock.**  Remaining
 stretch: single 250 (the FastMTP retrain + kernel tranche path, T14A/B/C).  Results:
 campaign/results/final-bench-r{1..4}.txt, fbench-lanes.log, fbench-mimic.txt.
+
+### F-234 — upstream v0.1.45 checked: no stock perf jump worth a merge (2026-10-17 night)
+Trigger: user asked to check .45, bench stock before/after the pull. Stock install found at
+v0.1.43.1 (never took .44). Boot-blocker fixed first: strata-q2_0.json --vram-reserve-mib
+200 -> 768 (the 55 MiB device-arena no-fit; our F-172-era Q2_0-on-32GB law) — change stays.
+A-B-A on the SAME q2_0 config, fresh boot per leg, locked clocks (3135 bin, ~2955 realized,
+zero throttle flags, <360 W): M1/pair/6-conc —
+  .43.1 A1  195.3 / 163.6 / 170.9   (campaign/results/stock-431-fresh.txt)
+  .45    B  205.9 / 170.1 / 173.4   (campaign/results/stock-45-fresh.txt)
+  .43.1 A2  206.8 / 174.6 / 177.9   (campaign/results/stock-431-fresh-b.txt)
+Means: M1 +2.4%, pair +0.6%, conc -0.6% — ALL inside the +-4% band. The first-look +5.4% M1
+was the F-225 warm-trend artifact; the interleave killed it. CALL: v0.1.45 = flat on our config.
+What .45 is (267 files, +30.8k): perf-PR groups aimed at OTHER platforms (sm75, rdna2/34, sycl,
+sm86, cpu, cache, serve, batch groups of the f-145 initiative), multi-GPU peer tier (#2666/#2644/
+#2418), serve QoL (thinking budget, model-card sampling defaults), a Q2_0 side-mixer correctness
+fix. CUDA-side it DID touch our hot files — qsa_select.cu +1353 lines, verify_kernels.cu +132 —
+but the perf levers are OPT-IN and NOT armed by default: STRATA_PROMPT_ATTN_IMMA=1 (int8-KV
+prompt attention on INT8 tensor cores, "closer to FP32"), STRATA_PIPED_READ_PIECE (#2050
+batch-groups decode/give-way). Also documents STRATA_MMVQ_LARGE_GRF / STRATA_Q6_PLANAR Q6_K
+decode switches (#2340/#2207) — overlaps T15A's mmvq sm_120 table finding (plain kernel on 73%
+of windows) and T15C's Q6_PACKED candidate.
+VERDICT: do NOT merge .45 now — default path flat, conflict surface = exactly the verify/qsa
+files we rewrote (COHORTS/ATTN_DAILY land). The two opt-in arms + Q6_K switches become candidate
+T16 battery riders AFTER the standing queue; price with the F-232 cost-anatomy read first.
+"Against ours": stock .45 reads ~204-207 M1 on the FAST q2_0 quant vs our 198.5 on iq3_s banked
+at the OLD 2835 clocks (3135 re-bank pending, +3.4% class) — and pair/conc remain a rout:
+ours 197.6/312.4 vs stock ~170/174.
+State: stock install now v0.1.45 (engine/strata.0.1.43.1-backup kept, reserve 768); custom
+anchor restored on 8081 after the benches.
