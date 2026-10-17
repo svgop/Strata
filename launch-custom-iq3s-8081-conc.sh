@@ -8,6 +8,7 @@
 export STRATA_ATTN_DAILY=1
 export STRATA_GDN_CHUNKED=1  # F-224 ADOPTED 2026-10-16: prefill DeltaNet recurrence in WY chunks (kernels.cu; OUR gdn_rec_parity --bench: 1.68x at 32K, -115ms/chunk). Paired prefill probe 2x4: -141..168ms (~-4.2%) EVERY pair; decode lanes neutral (3v3 ABAB, all inside noise); M3b in-band; MMLU-Pro 2x gate 95.7/92.9. Different FP32 sum order (prefill only) - the gate covers it
 export STRATA_FUSE_HITS=1  # F-226 ADOPTED 2026-10-17: the moe_hit_add->combine fold (was HARD-FALSE on CUDA, de05c182) - ZADD bitwise per native_moe.cu:46. 3v3 ABAB (fuarm/fuctl): M1 +4.35% (202.5 vs 194.1), pair +2.34%, conc +1.24%, zero lane regressions, M3b in-band (76.2 vs 75.6)
+export STRATA_POOL_DIET=1  # F-227 ADOPTED 2026-10-17: trailing repark waits skipped (run_phase + run; epoch-claim protocol makes them latency-shaping not correctness). 3v3 (dietarm/dietctl): M1 +4.06% (196.6 vs 188.9), pair +2.41%, conc -0.34% (noise-level round overlap), M3b in-band. =0 rolls back
 export STRATA_ATTN_LANECELL=1
 # savage-custom v2 launcher, Linux port (Qwen3.8 IQ3_S + r17 modded draft, port 8081).
 # LAUNCH LAW preserved: starts serve/server.py directly (setup.py rewrites the

@@ -7833,3 +7833,18 @@ at 6-conc); NEW candidates: window rows 8->12 (generate.cpp:10144 caps batch_mtp
 HostGraphLaunch for the batch path (solo-only today, verify.cpp:2348 vs :3116), emit batching
 (per-token printf + per-window fflush, generate.cpp:10297/:10338), admission sync diet, LFUSE on the
 doorbell path.  Dossier: campaign/research/T13B-concurrency-scheduling.md.
+
+### F-227 — STRATA_POOL_DIET=1 ADOPTED: the trailing repark waits were pure serialization (+4.06% M1) (2026-10-17 02:1x)
+
+The T12-HOST queue item, executed as planned: run_phase (pool.cpp) and run skip wait_parked("after a
+phase/batch") under the env.  Correctness: the epoch-carrying claim protocol (issue #29, pool.hpp)
+already fences a straggler out of the next batch - its claims fail on the epoch - so the repark is
+latency shaping, not correctness (the pool.hpp lines 14-17 rationale predates #29); skipped, the next
+phase's leading wait collects the stragglers under the host's own setup work instead of serializing
+the slowest park onto the service thread.  3v3 (dietarm/dietctl, same binary b447b539, ctl = standing
+incl. FUSE_HITS): M1 196.6 vs 188.9 = +4.06% (bar +4%), pair +2.41% (201.2 vs 196.5), conc -0.34%
+(254.6 vs 255.5 - noise-level round overlap, arm r3 260.6 best of series), M3b +1.5pp in-band.
+ADOPTED into both launchers (=0 rollback).  Round pattern note: r2 produced an outlier boot in BOTH
+this battery (ctl 177.7) and the planner's (arm 171.0) - watch, not chase.
+NOTE: the micro-package scoreboard so far - onepass planner NEGATIVE (F-225), barrier diet POSITIVE
+(this), hits-fold POSITIVE (F-226): the pool term yields to fewer waits, not to a faster planner.
