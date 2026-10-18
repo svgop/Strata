@@ -1234,3 +1234,34 @@ HONEST CEILINGS: 250-single = bankable path (re-quant + tranche + retrain + dept
 270 = plausible, gated on DUMMY_NODES pricing + TC-hc landing; 300+ = delusional tier (R1
 megakernel, CLC) - each has a priced falsifier before any surgery. Quality floor stands:
 MMLU 95.0 / mimic 87.9, No-Regression Law absolute.
+
+## STEP 0 RESULTS — the free-boot slate (F-235, 2026-10-17 22:35-23:03 + 10-18 recovery; implementer died in the ISP crash 23:10, legs all on disk, closeout by main session)
+Control leg: M1 198.0 / pair 201.8 / conc 326.7 (conc = tonight's high — the 3135 re-bank will
+restore >320-class means; supports M0). All legs campaign/results/t17*.txt + depth-t17f-*.txt.
+1. DUMMY_NODES (per-node tax): 16 dummies FLAT (197.6); 48 dummies M1 -12.5% (173.3, late window
+   9.2->10.3 ms). Tax REAL and material at scale -> the node-count-collapse lane (R1 megakernel)
+   has a live mechanism. INFO WIN, not adoptable.
+2. DRAFT_TIMING: leg ran (M1 208.0 = boot noise) but gap_ms TABLE NOT CAPTURED (log rotated
+   during crash) -> R2 pricing INCONCLUSIVE; needs one dedicated capture boot.
+3. STRATA_SPEC_PROB: M1 -4.2% / pair -5.1% / conc -7.0% vs control. NEGATIVE — rejection
+   sampling loses to the coupled race at flat min-p 0.5 (second-order coupling, GUMBEL-consistent).
+   DOOR CLOSED WITH DATA. No gate spent.
+4. LOOKAHEAD_STATS: leg flat, recall TABLE NOT CAPTURED -> C1 INCONCLUSIVE.
+5. Depth-lane position-vs-content: filler@121k accept 68.0% (924/1358) vs REAL corpus @123k
+   53.1% first-pass (635/1195; 93.6% on the KV-reuse continuation) — the deep-acceptance decay
+   is MOSTLY CONTENT, not position (-14.9pt). MIMIC corpus ABSENT from Custom-data; used repo
+   prose (45 files, depth-lane-real.py). LongSpec position-aug demoted; content-matched draft
+   training data PROMOTED.
+6. Parallel-8: M1 -9.6% / pair -12.7% / conc COLLAPSED (0 tok in 49.6 s). HARD NEGATIVE, DEAD —
+   F-183 cache slope confirmed with interest; 8 slots are not a free boot on 32G iq3_s.
+7. MTP-off-under-COHORTS: M1 -3.5% / pair -21.0% / conc -17.7% without MTP. MTP pays HUGELY under
+   COHORTS — F-231-vs-MagicDec SETTLED (payment >> row cost). MTP stays; lane-split question
+   remains open on its own merits.
+8. Fast-warm ABAB: fw mean M1 195.1 vs ctl 206.1 (-5.4%, driven by ctl-r1's 221.4 outlier),
+   pair flat (203.0 both), conc +0.9% — INCONCLUSIVE: tonight's box was never truly cold (7+
+   boots of page-cache warmth), so the +10-13% cold-leg claim was NOT isolated. prewarm2.sh
+   (post-pin dd repopulate + anti-prefix warm requests) BANKED, untested vs true cold.
+   Learned profile: NOT run as a separate arm — STILL OPEN (one config-copy boot + 2x MMLU).
+NET: two doors closed (SPEC_PROB, parallel-8), one settled (MTP-stays), one mechanism confirmed
+(node tax), one re-scope (content>position), two instruments need re-capture, two still open
+(fast-warm cold test, learned profile). Free-boot slate cost: ~30 min of boots, zero code.
