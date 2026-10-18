@@ -1266,3 +1266,27 @@ restore >320-class means; supports M0). All legs campaign/results/t17*.txt + dep
 NET: two doors closed (SPEC_PROB, parallel-8), one settled (MTP-stays), one mechanism confirmed
 (node tax), one re-scope (content>position), two instruments need re-capture, two still open
 (fast-warm cold test, learned profile). Free-boot slate cost: ~30 min of boots, zero code.
+
+## T14B SPECS COMPLETE (2026-10-18; three execution specs in campaign/T14B-specs/ — harvest/gates/trainer, trio relaunch post-crash; NOTHING executed yet)
+EXECUTION ORDER: pack re-quant (T17F #1, HARD precondition, 1-2 CPU-days; fallback = pack-stamped
+pre-requant harvest + planned ~4-5 h re-harvest — both artifacts are pack-coupled) -> corpus
+assemble (repo prose ~675k seed + self-distilled replies >=50% + optional <=25% /mnt/HQ
+diversifier A/B-gated; MIMIC absent RE-VERIFIED, /mnt/DATA NOT MOUNTED) -> OPD logger (the ONLY
+new engine code, half-day, env-gated default-off; attach points pinned: serial
+generate.cpp:14449-14450, pipelined :12956-12958, batch :10310-10338) -> Pass A decode
+self-distill (Draft-OPD tuples, temp 0.6 / top-p 0.95, coupled drafter live) -> Pass B
+prefill-only R harvest — ZERO ENGINE CODE: STRATA_PREFILL_DUMP_R_ALL already in-tree
+(prefill.cpp:4193-4214, bf16-RNE rows in position order; T14B's priced ~50-line extension turns
+out to be SHIPPED) -> pack (20,480 B/row final-R; 8M rows = 163.8 GB of 705 GB free; per-layer
+dump = 15.8 TB REJECTED) -> gates G0-G5 (gates-spec: G0 = stock round-trip [no 9B sibling on
+box, F-114 sanctioned]; G1 PER-POSITION incl the 120k deep read targeting the -40.5pt deficit;
+adoption bar +4%, clear-win +8%; kill-rule = T14C's corrected 0.72 tok/row M1 / 1.18 conc) ->
+trainer (trainer-spec: custom PyTorch — Speculators 0.6.0 is the recipe not the base, our
+qwen4_exp block unimplementable there; trainable surface = dense-only ~90.5 M warm-start,
+experts + bound head frozen, head gathered at load from Q6_K output.weight mtp.cpp:726-777;
+6-arm matrix, 11-16 GB / 2-6 h each; trainer ships bf16, the runtime's own --mtp-q4 load path
+does the Q4 cast, make_q4_dense/head pinned; rt-r18 beside rt-r17 = structural one-cp rollback).
+DEEP LADDER: 35% of rows at 64k+ (~7-30x natural share), 1.3x over-harvest, pack-time remix =
+re-weighting without re-harvest. One pass CANNOT do both jobs (prefill-only never rejects) =
+two passes over one corpus. COST TO A G5 VERDICT: ~2-3 days (harvest ~4-5 h + gates ~6.5-7 h +
+6 training arms). OPEN DECISION: re-quant go/no-go — decides single vs double harvest.
