@@ -53,7 +53,7 @@ touched.
 
 **Input contract (pinned for leg A).** Harvest records live at `/home/svg/LLM/Custom-data/harvest/` as
 `records-<shard>.f32` or `.bf16`, headerless little-endian streams of fixed records
-`{int32 pos, int32 tok, R float32[4][2560]}` = 40,968 B (f32) or `{int32 pos, int32 tok, R bf16[4][2560]}` =
+`{int64 pos, int64 tok, R float32[4][2560]}` = **40,976 B** (f32; **REVISED 2026-10-18 per T14B-exec-A**: the engine's writer at generate.cpp:13971 emits int64 pos + int64 tok + f32[10240] = 40,976 B — the int32/int32/40,968 B form below was WRONG and would silently misalign every record after the first; the harvest_check.py tok[i]==stream[i] gate is the mandated catcher) or `{int32 pos, int32 tok, R bf16[4][2560]}` =
 20,488 B (bf16) — the exact `--dump-final-r` layout (generate.cpp:13683–13688; T14B §2.2). Sidecar
 `seams-<shard>.json`: sorted int64 record indices that START a conversation (cross-seam pairs are dropped —
 the chunk-seam law, F-77). Sidecar `manifest.json`: record count, dtype, engine build hash, corpus provenance
