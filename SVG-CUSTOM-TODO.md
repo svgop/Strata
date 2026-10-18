@@ -1247,11 +1247,12 @@ restore >320-class means; supports M0). All legs campaign/results/t17*.txt + dep
    sampling loses to the coupled race at flat min-p 0.5 (second-order coupling, GUMBEL-consistent).
    DOOR CLOSED WITH DATA. No gate spent.
 4. LOOKAHEAD_STATS: leg flat, recall TABLE NOT CAPTURED -> C1 INCONCLUSIVE.
-5. Depth-lane position-vs-content: filler@121k accept 68.0% (924/1358) vs REAL corpus @123k
-   53.1% first-pass (635/1195; 93.6% on the KV-reuse continuation) — the deep-acceptance decay
-   is MOSTLY CONTENT, not position (-14.9pt). MIMIC corpus ABSENT from Custom-data; used repo
-   prose (45 files, depth-lane-real.py). LongSpec position-aug demoted; content-matched draft
-   training data PROMOTED.
+5. Depth-lane position-vs-content at ~121k (CORRECTED 10-18, supersedes the first read):
+   POSITION is the primary deficit — real-corpus deep 53.1% (635/1195) vs shallow 93.6%
+   (KV-reuse continuation) = -40.5pt; CONTENT secondary but real — filler 68.0% (924/1358) vs
+   real 53.1% at matched depth = -14.9pt. MIMIC corpus ABSENT from Custom-data; used repo prose
+   (45 files, depth-lane-real.py). Position-oversampling data-spec CONFIRMED (T14B input);
+   content-matched draft data additionally promoted; LongSpec aug keeps its slot.
 6. Parallel-8: M1 -9.6% / pair -12.7% / conc COLLAPSED (0 tok in 49.6 s). HARD NEGATIVE, DEAD —
    F-183 cache slope confirmed with interest; 8 slots are not a free boot on 32G iq3_s.
 7. MTP-off-under-COHORTS: M1 -3.5% / pair -21.0% / conc -17.7% without MTP. MTP pays HUGELY under

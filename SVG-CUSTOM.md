@@ -8101,7 +8101,20 @@ STATE AFTER CLOSEOUT: standing restored on 8081 (post-crash boot); the queue hea
 trio RELAUNCH (harvest/parity/trainer-export execution specs - the crash killed them at zero output),
 then the kernel tranche v2 per T17's re-ranked plan.
 
-### F-235 — STEP 0 executed: 2 doors closed, 1 settled, node tax confirmed; crash cost = 2 tables + 2 open items (2026-10-17 22:35-23:10, completed 10-18 after ISP-crash recovery)
+### F-236 — STEP 0 closeout v2: the full per-item verdict table, completing F-235 with two corrections (legs 2026-10-17 22:35-23:10; table written 10-18 after both crash closeouts)
+Completes F-235's closeout with all 13 legs itemized (SVG-CUSTOM-TODO.md "STEP 0 RESULTS").
+CONCUR with F-235: fast-warm v2 NEGATIVE-leaning / no adoption (with one caveat — tonight's box
+was never truly cold after 7+ boots, so the +10-13% cold-leg claim is UNTESTED, not disproven;
+prewarm2.sh stays banked for a true-cold A/B). SHARPENS two F-235 reads:
+(1) DUMMY_NODES is NOT merely "priced-out": 48 dummies = M1 -12.5% (+1.1 ms late-window) is
+direct CONFIRMATION the per-node tax is real and material — that is the strongest pro-R1
+(megakernel/node-collapse) evidence on record. The diagnostic arm is dead; its finding is a GO
+signal for the lane it prices.
+(2) DEPTH SPLIT corrected — position and content BOTH measured, position primary: deep-position
+real-corpus 53.1% (635/1195) vs shallow 93.6% (KV-reuse continuation) = -40.5pt POSITIONAL; vs
+filler 68.0% at matched ~121k depth = -14.9pt CONTENT. F-235's position-oversampling data-spec
+input CONFIRMED; content-matched draft data additionally promoted; LongSpec aug keeps its slot
+(it was never the whole answer).
 Implementer ran all eight free-boot falsifiers in one session (legs t17a/t17b/t17c/t17e-* +
 depth-t17f-* in campaign/results/, ~30 min of boots); the 23:10 ISP crash killed the agent at
 the closeout (ENOTFOUND zcode.z.ai) — all 13 leg files survived on disk; verdicts extracted and
@@ -8111,9 +8124,10 @@ re-bank restores >320 means). Verdicts: (1) DUMMY_NODES — 16 flat, 48 = M1 -12
 late-window): per-node tax real; R1 megakernel lane ALIVE. (2) DRAFT_TIMING gap_ms table LOST
 to log rotation — R2 INCONCLUSIVE. (3) SPEC_PROB — -4.2/-5.1/-7.0%: rejection sampling loses to
 the coupled race at min-p 0.5; door CLOSED (GUMBEL-consistent). (4) LOOKAHEAD recall table LOST
-— C1 INCONCLUSIVE. (5) depth-lane REAL corpus (repo prose, MIMIC absent) 53.1% vs filler 68.0%
-first-pass: decay is CONTENT not position; content-matched draft data promoted, LongSpec aug
-demoted. (6) parallel-8 — M1 -9.6/pair -12.7/conc collapsed (0 tok/49.6 s): DEAD. (7) MTP-off
+— C1 INCONCLUSIVE. (5) depth-lane corrected: POSITION primary (-40.5pt — real-corpus deep
+53.1% vs shallow 93.6% KV-reuse continuation), CONTENT secondary but real (-14.9pt — filler
+68.0% at matched depth); position-oversampling data-spec CONFIRMED, content-matched data
+additionally promoted. (6) parallel-8 — M1 -9.6/pair -12.7/conc collapsed (0 tok/49.6 s): DEAD. (7) MTP-off
 — pair -21.0/conc -17.7: MTP pays hugely under COHORTS; F-231-vs-MagicDec settled, MTP stays.
 (8) fast-warm ABAB — M1 -5.4% (ctl outlier 221.4), pair flat, conc +0.9%: INCONCLUSIVE on a
 never-cold box; prewarm2.sh banked; learned-profile arm never ran = open. LAW NOTES: nothing
