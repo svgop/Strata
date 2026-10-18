@@ -8070,3 +8070,33 @@ engine-only cell by +17.8..+33.4% regardless of quant. Note: custom-Q2_0 conc (2
 custom-IQ3_S conc (272.0) because stock's config is the narrower one (4-slot default, spec 4 —
 COHORTS pays above 4 active slots; IQ3_S lane runs parallel 6). Also the Q2_0 arm set booted
 clean on the fork. Custom anchor restored on 8081.
+
+### F-235 — THE STEP-0 FREE-BOOT SLATE, CLOSED: all eight falsifiers negative or priced-out (the fast-warm v2 A/B recovered and measured NEGATIVE-leaning); the T17 zero-code program ends clean (2026-10-18, post-ISP-crash closeout)
+
+The implementer's boots survived the crash in campaign/results (verdicts below from the files, not
+memory).  The slate's premise - eight zero-code falsifiers in info-value order, winners become
+candidates-for-battery - produced ZERO winners:
+- FAST-WARM v2 (t17b-fw/fwctl r1-r2, the post-pin prewarm package campaign/prewarm2.sh): arm means
+  M1 195.1 vs ctl 206.1 = -5.3%, pair +0.0%, conc +0.9% - the page-cache re-population after the
+  boot pin does NOT pay (fwctl-r1's 221.4 was the warm-trend boot of the pair).  NO ADOPTION; the
+  cold-start gap stays a named target with no free fix.
+- MTP-OFF (m0): M1 191.1 / pair 159.4 (-19%) / conc 268.9 - reconfirms F-231's anatomy at the
+  current recipe (drafts cost at 6 slots, pay at pair; the adaptive instrument stays the answer).
+- PARALLEL-8 (p8): M1 178.9 / pair 176.2 / conc 0.0 (HUNG) - dead; 8 slots do not fit the recipe.
+- SPEC_PROB (spc): 189.7/191.6/303.8, M3b 76.3 in-band - neutral, priced-out (probabilistic
+  acceptance buys nothing at 74.9% exact-match acceptance).
+- LOOKAHEAD_STATS (las): 208.4/199.4/310.5 in-band - diagnostic data banked, no arm.
+- DEPTH REAL-vs-FILLER at 120k (depth-t17f-real120k, via campaign/depth-lane-real.py - the repo's
+  own technical prose as corpus): deep-position acceptance 635/1195 = 53.1% vs shallow 93.6%,
+  prefill 7229 t/s, warm decode 239.3 - the position/content split is MEASURED: the depth deficit
+  is positional, not corpus-class; pairs with F-228's stair as the FastMTP training-data spec
+  (deep positions must be oversampled - now a T14B-spec input).
+- DUMMY_NODES / DRAFT_TIMING verdicts per the recovered transcript (memory-indexed): negative /
+  priced-out.
+ALSO COMMITTED (the crashed session's unpushed work): T17A-m1-single-leap.md (the M1 leap dossier -
+external sweep de-risking the retrain, +20 t/s per -1.0 ms transfer law), T15-easy-wins-audit.md
+(the operator-survey audit: hc grid occupancy +8-9% M1 bit-exact class = the kernel-tranche head,
+EcoSpec banked DEAD), prewarm2.sh + depth-lane-real.py tools, learned profile.
+STATE AFTER CLOSEOUT: standing restored on 8081 (post-crash boot); the queue head = the T14B spec
+trio RELAUNCH (harvest/parity/trainer-export execution specs - the crash killed them at zero output),
+then the kernel tranche v2 per T17's re-ranked plan.

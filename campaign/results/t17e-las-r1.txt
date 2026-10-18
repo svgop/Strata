@@ -1,0 +1,58 @@
+=== PROBE t17e-las-r1 | 2026-10-17 22:45:57 | log=/home/svg/LLM/strata-custom-2/custom-iq3s-t17-las.log
+    warmup: 8 tok in 0.32s
+    A.short[1]: 220 tok in 1.56s = 141.2 t/s
+    A.short[2]: 220 tok in 1.13s = 194.7 t/s
+    A.short[3]: 220 tok in 1.11s = 197.9 t/s
+    A.short[4]: 220 tok in 1.09s = 202.1 t/s
+    A.short[5]: 220 tok in 1.12s = 196.8 t/s
+    A.short[6]: 220 tok in 1.10s = 200.4 t/s
+    fresh-long-prompt: 80 tok out in 1.66s
+    B.short[1]: 220 tok in 1.09s = 202.3 t/s
+    B.short[2]: 220 tok in 1.20s = 183.8 t/s
+    B.short[3]: 220 tok in 1.01s = 217.0 t/s
+    B.short[4]: 220 tok in 1.02s = 215.1 t/s
+    B.short[5]: 220 tok in 1.03s = 213.0 t/s
+    B.short[6]: 220 tok in 1.12s = 196.1 t/s
+SHORT-CLASS A/B   : before long prompt 188.9 t/s -> after 204.5 t/s (8%)
+M1 single-stream : 208.4 t/s (2000 tok in 9.60s)
+M2 pair          : 199.4 t/s aggregate (1800 tok in 9.02s)
+M2 6-conc        : 310.5 t/s aggregate (3600 tok in 11.59s)
+--- engine accounting, in order (ms/window is the degradation signal) ---
+    [ 1] prompt   55 gen     8 ->    31.5 ms/window | accept  60.0% (6/10) | hit 88.5%
+    [ 2] prompt   81 gen   220 ->    13.9 ms/window | accept  75.8% (135/178) | hit 95.2%
+    [ 3] prompt   81 gen   220 ->    11.7 ms/window | accept  73.3% (129/176) | hit 98.3%
+    [ 4] prompt   81 gen   220 ->    11.1 ms/window | accept  77.8% (126/162) | hit 98.7%
+    [ 5] prompt   81 gen   220 ->    12.0 ms/window | accept  73.8% (135/183) | hit 98.9%
+    [ 6] prompt   81 gen   220 ->    11.5 ms/window | accept  73.7% (129/175) | hit 98.7%
+    [ 7] prompt   81 gen   220 ->    12.2 ms/window | accept  69.0% (136/197) | hit 98.6%
+    [ 8] prompt 5865 gen    80 ->    13.5 ms/window | accept  82.8% (48/58) | hit 95.8%
+    [ 9] prompt   81 gen   220 ->    11.9 ms/window | accept  79.2% (137/173) | hit 98.9%
+    [10] prompt   81 gen   220 ->    10.9 ms/window | accept  69.2% (117/169) | hit 98.8%
+    [11] prompt   81 gen   220 ->    11.4 ms/window | accept  83.1% (138/166) | hit 98.9%
+    [12] prompt   81 gen   220 ->    11.8 ms/window | accept  79.5% (140/176) | hit 99.1%
+    [13] prompt   81 gen   220 ->    11.3 ms/window | accept  82.3% (135/164) | hit 99.0%
+    [14] prompt   81 gen   220 ->    11.0 ms/window | accept  76.2% (125/164) | hit 99.2%
+    [15] prompt  100 gen  1500 ->    12.5 ms/window | accept  76.4% (947/1240) | hit 98.0%
+    [16] prompt 1618 gen   482 ->    15.2 ms/window | accept  77.2% (329/426) | hit 95.9%
+    [17] prompt   84 gen     1 ->    13.0 ms/window | accept   0.0% (0/0) | hit 82.9%
+    [18] prompt   85 gen     1 ->    11.0 ms/window | accept   0.0% (0/0) | hit 88.0%
+    [19] prompt   84 gen     1 ->    11.0 ms/window | accept   0.0% (0/0) | hit 82.9%
+    [20] prompt  618 gen     1 ->    12.0 ms/window | accept   0.0% (0/0) | hit 83.6%
+    [21] prompt  618 gen     1 ->    11.0 ms/window | accept   0.0% (0/0) | hit 86.0%
+    [22] prompt   84 gen     1 ->    13.0 ms/window | accept   0.0% (0/0) | hit 84.6%
+    [23] prompt   85 gen     1 ->    12.0 ms/window | accept   0.0% (0/0) | hit 88.4%
+    [24] prompt   84 gen     1 ->     9.0 ms/window | accept   0.0% (0/0) | hit 94.8%
+    [25] prompt   84 gen     1 ->     8.0 ms/window | accept   0.0% (0/0) | hit 97.5%
+    [26] prompt   84 gen     1 ->     8.0 ms/window | accept   0.0% (0/0) | hit 97.5%
+    [27] prompt   84 gen     1 ->     8.0 ms/window | accept   0.0% (0/0) | hit 97.5%
+    [28] prompt   84 gen     1 ->     9.0 ms/window | accept   0.0% (0/0) | hit 97.5%
+    [29] prompt  318 gen     1 ->     8.0 ms/window | accept   0.0% (0/0) | hit 99.6%
+    [30] prompt  318 gen     1 ->     7.0 ms/window | accept   0.0% (0/0) | hit 99.6%
+    [31] prompt  318 gen     1 ->     7.0 ms/window | accept   0.0% (0/0) | hit 99.6%
+    [32] prompt  318 gen     1 ->     8.0 ms/window | accept   0.0% (0/0) | hit 99.2%
+    [33] prompt  318 gen     1 ->     8.0 ms/window | accept   0.0% (0/0) | hit 99.6%
+    [34] prompt  318 gen     1 ->     7.0 ms/window | accept   0.0% (0/0) | hit 99.6%
+TREND ms/window: early 13.3 -> late 9.2 (stable)
+M3b rate         : 75.6% mean over 16 requests (diagnostic)
+M3d per-position : not printed (arm STRATA_SPEC_DEPTH=1 to publish accepted/tested by depth)
+=== PROBE END t17e-las-r1

@@ -1,0 +1,9 @@
+DEPTH-LANE t17f-filler120k
+depth reached     : 121200 prompt tokens (target 99000)
+decoded           : 1500 tokens
+wall total        : 26.1s
+server timings    : {"cache_n": 0, "prompt_n": 121200, "prompt_ms": 17268.0, "prompt_per_token_ms": 0.142, "prompt_per_second": 7018.8, "predicted_n": 1500, "predicted_ms": 8724.3, "predicted_per_token_ms": 5.883, "predicted_per_second": 170.0, "draft_n": 1358, "draft_n_accepted": 924}
+prefill metric prompt_n = 121200
+prefill metric prompt_ms = 17268.0
+prefill metric prompt_per_token_ms = 0.142
+prefill metric prompt_per_second = 7018.8
