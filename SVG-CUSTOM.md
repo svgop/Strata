@@ -8134,3 +8134,28 @@ never-cold box; prewarm2.sh banked; learned-profile arm never ran = open. LAW NO
 adopted (nothing earned it); zero code written; two instrument boots owed (DRAFT_TIMING,
 LOOKAHEAD_STATS with proper capture); fast-warm owes a true-cold A/B (fresh reboot or cache
 drop); learned profile owes a config-copy boot + 2x MMLU.
+
+### F-237 — THE CONSISTENCY AUDIT: spec-set reconciliation, the unbanked data carried, and the 3135 re-bank declared owed (2026-10-19)
+
+THE AUDIT (campaign/research/AUDIT-2026-10-18.md, read-only agent): the two parallel FastMTP spec
+efforts are ~80% the same plan independently re-derived; the endorsed merge = set 2's architecture
+(campaign/T14B-specs/, TODO :1270-1292) + set 1's folds (exec-B parity wholesale, exec-C evaluator/
+w_deep/H200/OD points, exec-A's S25 caveat + probe gates).  THREE SILENT POISONS in set 2 found and
+to be fixed before execution: (1) trainer config's lr 5e-4 (5-10x the argued 1e-4 - would poison
+every arm); (2) the rt-dir split (gates-spec seds mtp/rt2, trainer-spec retires it for
+mtp-iq3s/rt-r18 - the flip command targets a directory never created); (3) the G4/G5 label collision
+drops F-229's ungated re-open and F-228's min-p re-stair from set 2's post-adoption ladder (they
+survive only in set 1/T14C).
+UNBANKED DATA, now carried: the clock A/B legs (2835->3135 between 19:56-20:03 Oct 17: M1 sustained
+186.0->192.4 = +3.44%, zero throttle, 356/575W, realized ~2940 - previously only in TODO M0);
+custom2-final-warm.txt (conc 299.5 warm same-boot vs the banked 272.0 cold - F-234a's custom-conc
+cell UNDERSTATES the warm lane by ~10%); the STEP-0 leg configs + t17-leg.sh + the never-run
+learned-profile arm (t17-lp.*) - all committed herewith.
+LOST-FROM-QUEUES items restored to the pending list (audit section 5): the six T15A/C env arms, the
+GDN decode ILP rewrite, T11.R5's MMLU CI fix, the cvec sweep, T13's stale RUNNING tags.
+**THE RE-BANK IS OWED: the five-boot means (198.5/197.6/312.4 + MMLU 95.0 + mimic 87.9) are
+2835-class; everything after Oct-17 20:03 runs at 3135.  Until 5 fresh standing boots + 2x MMLU +
+mimic land at 3135, no absolute number crosses the 20:03 boundary.  Point evidence: +3.44% M1,
+STEP-0 control conc 326.7 - the true standing scoreboard is HIGHER than banked.**
+OPERATIONAL: two writers were active on this repo through the audit window - coordinate before any
+spec edit or re-bank (the audit's closing note).
