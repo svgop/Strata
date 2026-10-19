@@ -1241,6 +1241,14 @@ restore >320-class means; supports M0). All legs campaign/results/t17*.txt + dep
 1. DUMMY_NODES (per-node tax): 16 dummies FLAT (197.6); 48 dummies M1 -12.5% (173.3, late window
    9.2->10.3 ms). Tax REAL and material at scale -> the node-count-collapse lane (R1 megakernel)
    has a live mechanism. INFO WIN, not adoptable.
+   CORRECTION (R1 dossier, 10-18): the 48 dummies are PER LAYER = 2,304 nodes -> marginal
+   ~0.5-1.0 us/node, NOT ~23; dispatch was never the whole 6-7 ms — the rest is execution ramp.
+   R1 RE-PRICED: S1 conditional nodes (ar_on() never true on standing -> E-6 spin/empty-PCIe
+   complement exists to delete, post-capture graph surgery) + S2 fusion menu (LFUSE device-plan
+   arm -144 nodes survives first; gr_norm fold DIES) = -600..900 nodes = +3.5-8% M1 BANKABLE;
+   S3 CLC persistent layer-group = the 300-class gamble with a server-free falsifier ladder
+   (20-line sm_120f proto -> 2-layer bench -> 1-group bit-exact). Dossier:
+   campaign/research/R1-design-dossier.md. Falsifiers first: F0/F0b/F1.
 2. DRAFT_TIMING: leg ran (M1 208.0 = boot noise) but gap_ms TABLE NOT CAPTURED (log rotated
    during crash) -> R2 pricing INCONCLUSIVE; needs one dedicated capture boot.
 3. STRATA_SPEC_PROB: M1 -4.2% / pair -5.1% / conc -7.0% vs control. NEGATIVE — rejection
