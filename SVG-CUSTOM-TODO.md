@@ -1047,16 +1047,13 @@ mimic 87.9. ONE variable per battery; ABAB on any contested call; five-boot chec
 adoption; off is one command away. Box law: batteries run SERIAL (own-traffic) — dev overlaps,
 batteries don't.
 
-1. [M0, S] Clock bin TESTED AND RAISED (2026-10-17 night, legs clock2835-a / clock3135-a in
-   campaign/results/): strata-gpu-lock (R8) auto-engages on engine ports; SM_CLOCK 2835->3135 via
-   sudo config edit + systemctl reload (live, no restart). Sustained gate: M1 186.0 -> 192.4 t/s
-   (+3.4%), short-class 182.8 -> 195.3, ZERO throttle flags on both legs (only benign 0x400),
-   power peak 356 of 575 W, windows stable (14.2 ms late on both). The card cannot hold 3135 flat —
-   it realizes ~2940-2947 under load / 2962 idle, so the lock now functions as a ~2940 floor
-   (+4.5% clock vs the ~2812 realized at the old bin). KEPT. RE-BANK REQUIRED: the five-boot means
-   (M1 198.5 / pair 197.6 / conc 312.4) were banked at 2835 — re-run the five-boot protocol at 3135
-   before any W1+ comparison; the new means become T16's frozen baselines. F-225 law stands: never
-   compare across boot positions.
+1. [M0, S — DONE 10-19] Clock bin raised to 3135 and KEPT; FIVE-BOOT RE-BANK DONE (F-238,
+   campaign/results/rebank-3135.log): M1 193.7 (199.8/190.9/196.8/183.8/197.3), pair 199.3,
+   6-conc 303.4 (317.3/287.6/307.9/283.7/320.3 — only 3/5 boots >=300; "every boot >=300" claim
+   RETRACTED, stretch holds on means), M3b 76.2, MMLU 95.71/95.71, mimic 90.9% (60/66). ALL three
+   lanes inside +-4% of the 2835 bank => the +3.44% single-leg clock delta did NOT replicate on
+   means; NO clock gain may be claimed in any scoreboard. These 3135-class means are T16's frozen
+   baselines. F-225 law stands: never compare across boot positions.
 2. [W1a, S] T15C #1 UPM_COLS 16->8 (+3.4-5% BIT-EXACT): fused_gr_selftest + gr_parity QFUSE
    byte-equality BEFORE any boot, then battery.
 3. [W1b, M] T15C #2 82-block staged down, 4-warp instantiation (+2.5-4% BIT-EXACT; per-block smem

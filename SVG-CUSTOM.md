@@ -8159,3 +8159,20 @@ mimic land at 3135, no absolute number crosses the 20:03 boundary.  Point eviden
 STEP-0 control conc 326.7 - the true standing scoreboard is HIGHER than banked.**
 OPERATIONAL: two writers were active on this repo through the audit window - coordinate before any
 spec edit or re-bank (the audit's closing note).
+
+### F-238 — THE 3135 RE-BANK: means say FLAT — the +3.44% clock delta does not replicate; quality holds (2026-10-19 night)
+Five fresh standing boots at the 3135 lock (campaign/rebank-3135.sh -> campaign/results/
+rebank-3135.log, probe --short-n 6 each): M1 199.8/190.9/196.8/183.8/197.3 = 193.7 mean (198.5 at
+2835, -2.4%); pair 200.5/197.4/203.9/192.9/201.6 = 199.3 (+0.8%); 6-conc
+317.3/287.6/307.9/283.7/320.3 = 303.4 (-2.9%). M3b 76.2. Quality at the locked clocks: MMLU-Pro
+95.71 and 95.71 (2x, floor 0.933), mimic 90.9% (60/66 vs the 87.9 anchor).
+VERDICT: every lane inside +-4% -> the Oct-17 +3.44% single-leg A/B (186.0->192.4 sustained) was
+a point estimate, not a mean property. The lock STAYS (harmless, quality clean, point-positive)
+but no clock gain may appear in any scoreboard. Two retractions on the record: (a) "+3.4% flows
+into the 250 ladder" - false at means; (b) "every conc boot >=300" (2835 bank) - false at 3135
+(2 of 5 below 300; the 300 stretch holds on the 303.4 mean only). Post-boundary scoreboard:
+M1 193.7 / pair 199.3 / conc 303.4 @3135-class, MMLU 95.7, mimic 90.9. The 250 path must come
+from re-quant + kernel tranche + retrain, not clocks.
+METHOD NOTE (probe gotchas, from this run): the five-boot loop must kill by PORT (ss) and reap
+strata compute pids by /proc cmdline - a bare server kill can orphan an engine; the port guard
+turns double-writer collisions into loud per-leg aborts.
