@@ -1309,3 +1309,30 @@ not apply (pack bits, not prefill-kernel numerics) but its sensitivity mechanism
 ladder: one-boot falsifier (loader check -> G2 logit canary -> routing-shift check -> probe A/B)
 -> 2x MMLU + mimic -> five-boot No-Regression table. Rollback = config edit + sha256 stamps.
 GO-able immediately after the two scripts + one fork build.
+
+## T18 — KNOB SWEEP RESULTS + THE CRASH BUG (2026-10-20 ~00:00-00:55; leg logs campaign/results/{knob-marathon,knob-battery,knob-confirm}.log)
+The six unarmed S25/S26 env knobs are now SWEPT on the CUDA/sm_120 stack (T15C's inventory
+item closed). Method: 7-leg marathon (single-window), then 3v3 ABAB interleaved per candidate,
+confirm 3v3 for the two at-bar ones. All means drift-differenced; no single-window claims.
+VERDICTS (arm vs ctl, interleaved means):
+- LANECELL=1: M1 -1.5% / pair -5.6% / conc -7.2% -> REJECT (AMD-tuned S25 mapping).
+- TSUM=1: battery +4.4 M1/-1.1 pair/+0.5 conc; confirm +1.3/-3.0/-0.8 -> REJECT (noise; pair neg).
+- Q6_PACKED=1: +0.8/+2.0/-1.6 -> FLAT, no adoption.
+- Q8_PACKED=1: -2.7/-2.7/-5.4 -> REJECT.
+- LEARNED PROFILE (learned as --expert-profile): battery M1 +4.9; confirm M1 +1.6 / pair +5.0 /
+  conc -2.0; MMLU 92.9 + 94.3 (mean 93.6, one run under the 93.3 floor; -2.1 pts vs standing
+  95.7) -> REJECT (routing-changing quality cost not justified; pair-only shelf arm at best).
+- Q6P_SELFTEST: no output captured in two attempts (stdout+stderr both captured on the second) ->
+  instrument needs a dedicated harness; the MMVQ_IL_ROWS pricing stays open, unblocked by boots.
+BYPRODUCT (kept): PRE-FILL PHASE ANATOMY at 32k (campaign/results/knob-pft-engtail.txt):
+combine 16.7% (#1), gemm gate/up 12.1% + down 7.1%, hc read 11.1%, GDN family 26.1%,
+QSA family 17.9%, dequant 3.6%; at 1350 tok wait_copy 43.7% (copy-stream bind) -> prices the
+T15C prefill queue: combine fusion first, QSA IMMA second, copy-stream events for short prompts.
+**CRASH BUG, PRIORITY 1: SIGSEGV in strata::kernels::cpu::vnni::iq4nl_nt (CPU expert pool,
+IQ4_NL down VNNI kernel; threads also in ExpertPool::worker). Three sightings: p8 leg, bat-lp-
+ctl-r3, cf-tsum-ctl-r1 (two of three on STANDING control legs). Signature: multiple pool threads
+at the same IP (0x4723973), fault addresses 0x2/0x3/0x5/0xa = near-null deref; engine degrades
+to ~3 tok/s with thinking requests then dies; server auto-restarts; conc leg reads 0 tok.
+Rate ~2-5% of 6-conc legs. Prime hypothesis: expert-blob lifetime race during ADR exchange
+(~900-1000 swaps/request) -> use-after-free. Evidence: coredumpctl 1152413 (29.4GB core),
+kernel log 00:33:59. IMPACT: real multi-user request failures + silent conc-benchmark poisoning.

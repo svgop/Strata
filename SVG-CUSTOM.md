@@ -8176,3 +8176,20 @@ from re-quant + kernel tranche + retrain, not clocks.
 METHOD NOTE (probe gotchas, from this run): the five-boot loop must kill by PORT (ss) and reap
 strata compute pids by /proc cmdline - a bare server kill can orphan an engine; the port guard
 turns double-writer collisions into loud per-leg aborts.
+
+### F-239 — THE KNOB SWEEP: five S25/S26 arms tested and REJECTED; prefill anatomy banked; a standing-recipe SIGSEGV found (2026-10-20 ~00:00-00:55)
+T15C's "never swept on this stack" env inventory is now closed. Marathon (7 single-window legs)
+showed the window drifting +7% against the 50-min-older control - every leg including the pure
+diagnostics read high - so nothing single-window was claimed; all five candidates then ran 3v3
+ABAB interleaved batteries (drift differences out), with a confirm 3v3 for the two at-bar ones.
+FINAL: LANECELL -1.5/-5.6/-7.2 REJECT; TSUM +4.4 then +1.3 (pair negative) REJECT; Q6_PACKED
+flat; Q8_PACKED -2.7/-2.7/-5.4 REJECT; LEARNED PROFILE pair +5.0 consistent but MMLU 92.9/94.3
+(mean 93.6, -2.1 pts, one run under floor) with conc -2.0 -> REJECT. Zero adoptions - the
+AMD-tuned S25/S26 mapping does not pay on sm_120/CUDA; that is five more negatives with
+mechanisms. Q6P_SELFTEST printed nothing in two captured runs -> needs a dedicated harness.
+BYPRODUCT: the 32k prefill anatomy (STRATA_PREFILL_TIMING): combine 16.7% #1, gemms 19.2%,
+hc 11.1%, GDN 26.1%, QSA 17.9%; short-prompt wait_copy 43.7%. THE CRASH: SIGSEGV in
+strata::kernels::cpu::vnni::iq4nl_nt (CPU pool, IQ4_NL down VNNI) - three sightings incl two
+on standing control legs, ~2-5% of 6-conc legs, near-null fault addresses across multiple pool
+threads at one IP = blob-lifetime race suspicion (ADR exchange). Real-user impact + it silently
+poisons conc means. Priority 1; T18 crash-hunt dispatched.
