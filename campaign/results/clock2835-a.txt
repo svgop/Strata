@@ -1,0 +1,22 @@
+=== PROBE clock2835-a | 2026-10-17 19:56:07 | log=/home/svg/LLM/strata-custom-2/custom-iq3_s.log
+    warmup: 8 tok in 0.46s
+    A.short[1]: 220 tok in 1.68s = 131.2 t/s
+    A.short[2]: 220 tok in 1.15s = 190.5 t/s
+    fresh-long-prompt: 80 tok out in 1.72s
+    B.short[1]: 220 tok in 1.19s = 185.5 t/s
+    B.short[2]: 220 tok in 1.22s = 180.0 t/s
+SHORT-CLASS A/B   : before long prompt 160.8 t/s -> after 182.8 t/s (14%)
+M1 single-stream : 186.0 t/s (3000 tok in 16.13s)
+--- engine accounting, in order (ms/window is the degradation signal) ---
+    [ 1] prompt   55 gen     8 ->    38.5 ms/window | accept  66.7% (6/9) | hit 81.9%
+    [ 2] prompt   81 gen   220 ->    15.8 ms/window | accept  77.1% (131/170) | hit 93.8%
+    [ 3] prompt   81 gen   220 ->    13.5 ms/window | accept  78.9% (138/175) | hit 98.1%
+    [ 4] prompt 5865 gen    80 ->    16.4 ms/window | accept  82.3% (51/62) | hit 94.3%
+    [ 5] prompt   81 gen   220 ->    12.1 ms/window | accept  83.6% (127/152) | hit 98.6%
+    [ 6] prompt   81 gen   220 ->    13.0 ms/window | accept  78.0% (131/168) | hit 98.9%
+    [ 7] prompt  100 gen  2253 ->    14.6 ms/window | accept  77.7% (1484/1909) | hit 97.9%
+    [ 8] prompt 2368 gen   732 ->    17.1 ms/window | accept  75.0% (507/676) | hit 96.5%
+TREND ms/window: early 21.1 -> late 14.2 (stable)
+M3b rate         : 77.4% mean over 8 requests (diagnostic)
+M3d per-position : not printed (arm STRATA_SPEC_DEPTH=1 to publish accepted/tested by depth)
+=== PROBE END clock2835-a
