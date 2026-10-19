@@ -1298,3 +1298,17 @@ DEEP LADDER: 35% of rows at 64k+ (~7-30x natural share), 1.3x over-harvest, pack
 re-weighting without re-harvest. One pass CANNOT do both jobs (prefill-only never rejects) =
 two passes over one corpus. COST TO A G5 VERDICT: ~2-3 days (harvest ~4-5 h + gates ~6.5-7 h +
 6 training arms). OPEN DECISION: re-quant go/no-go — decides single vs double harvest.
+REQUANT SPEC (campaign/T14B-specs/requant-spec.md, 10-18): the open decision is now fully
+informed. RECIPE-alpha = recut the 12 cold layers to (IQ2_S, Q2_0), COPY everything else:
+experts 46.84 -> 42.97 GiB (-8.3%), slots 9,337 -> ~10,129 (+792), only 36/144 tensors touched.
+PRICING CORRECTED vs T17F: +2-4% M1 / +3-6% conc, NOT +6-10% (slot term saturated at 97.7%
+hits; bytes term = -8.3% of a 3.26 ms line in a 14.2 ms window). The slot yield's real prize:
+fully ABSORBS the 262k switch's -7.5% slot risk (10,129 x 0.925 = 9,369 >= 9,337) — the 262k
+launcher refresh should re-derive its slot expectation from ~9,369. No new quantizer needed
+(fork llama.cpp has qwen4exp + --allow-requantize/--imatrix/--tensor-type-file/--keep-split);
+two ~40-line driver scripts; source = local IQ3_S shards (2nd-gen error, confined to 36 cold
+tensors, imatrix-weighted; NO BF16/Q8_0 exists on disk — family-graft = fallback). F-230 does
+not apply (pack bits, not prefill-kernel numerics) but its sensitivity mechanism does -> full
+ladder: one-boot falsifier (loader check -> G2 logit canary -> routing-shift check -> probe A/B)
+-> 2x MMLU + mimic -> five-boot No-Regression table. Rollback = config edit + sha256 stamps.
+GO-able immediately after the two scripts + one fork build.
