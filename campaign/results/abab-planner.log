@@ -1,0 +1,61 @@
+[01:22:59] standing env loaded: SPEC_DRAFT_TEMP=0.85 BATCH_MTP=1 TYPICAL_ACCEPT=0.2
+[01:23:02] prewarm done in 3s (page cache now carries pack+shards)
+[01:23:02] booting config=custom-iq3_s-8081.json log=/home/svg/LLM/strata-custom-2/custom-iq3_s.log
+[01:23:20] ready; settling 10s
+M1 single-stream : 180.1 t/s (2000 tok in 11.11s)
+M2 pair          : 178.9 t/s aggregate (1800 tok in 10.06s)
+M2 6-conc        : 233.8 t/s aggregate (3600 tok in 15.40s)
+TREND ms/window: early 14.7 -> late 10.5 (stable)
+M3b rate         : 74.7% mean over 16 requests (diagnostic)
+[01:24:26] probe done rc=0
+[01:24:31] standing env loaded: SPEC_DRAFT_TEMP=0.85 BATCH_MTP=1 TYPICAL_ACCEPT=0.2
+[01:24:34] prewarm done in 3s (page cache now carries pack+shards)
+[01:24:34] booting config=campaign/planneroff-iq3_s-8081.json log=/home/svg/LLM/strata-custom-2/custom-iq3s-planneroff.log
+[01:24:52] ready; settling 10s
+M1 single-stream : 193.8 t/s (2000 tok in 10.32s)
+M2 pair          : 179.7 t/s aggregate (1800 tok in 10.01s)
+M2 6-conc        : 230.9 t/s aggregate (3600 tok in 15.59s)
+TREND ms/window: early 14.6 -> late 10.1 (stable)
+M3b rate         : 75.6% mean over 16 requests (diagnostic)
+[01:25:57] probe done rc=0
+[01:26:02] standing env loaded: SPEC_DRAFT_TEMP=0.85 BATCH_MTP=1 TYPICAL_ACCEPT=0.2
+[01:26:05] prewarm done in 3s (page cache now carries pack+shards)
+[01:26:05] booting config=custom-iq3_s-8081.json log=/home/svg/LLM/strata-custom-2/custom-iq3_s.log
+[01:26:23] ready; settling 10s
+M1 single-stream : 171.0 t/s (2000 tok in 11.70s)
+M2 pair          : 182.1 t/s aggregate (1800 tok in 9.88s)
+M2 6-conc        : 241.1 t/s aggregate (3600 tok in 14.93s)
+TREND ms/window: early 14.4 -> late 10.2 (stable)
+M3b rate         : 76.7% mean over 16 requests (diagnostic)
+[01:27:29] probe done rc=0
+[01:27:34] standing env loaded: SPEC_DRAFT_TEMP=0.85 BATCH_MTP=1 TYPICAL_ACCEPT=0.2
+[01:27:37] prewarm done in 3s (page cache now carries pack+shards)
+[01:27:37] booting config=campaign/planneroff-iq3_s-8081.json log=/home/svg/LLM/strata-custom-2/custom-iq3s-planneroff.log
+[01:27:55] ready; settling 10s
+M1 single-stream : 207.8 t/s (2000 tok in 9.62s)
+M2 pair          : 185.7 t/s aggregate (1800 tok in 9.69s)
+M2 6-conc        : 242.1 t/s aggregate (3600 tok in 14.87s)
+TREND ms/window: early 14.9 -> late 9.5 (stable)
+M3b rate         : 78.0% mean over 16 requests (diagnostic)
+[01:28:58] probe done rc=0
+[01:29:03] standing env loaded: SPEC_DRAFT_TEMP=0.85 BATCH_MTP=1 TYPICAL_ACCEPT=0.2
+[01:29:06] prewarm done in 3s (page cache now carries pack+shards)
+[01:29:06] booting config=custom-iq3_s-8081.json log=/home/svg/LLM/strata-custom-2/custom-iq3_s.log
+[01:29:21] ready; settling 10s
+M1 single-stream : 216.7 t/s (2000 tok in 9.23s)
+M2 pair          : 201.0 t/s aggregate (1800 tok in 8.96s)
+M2 6-conc        : 253.6 t/s aggregate (3600 tok in 14.20s)
+TREND ms/window: early 13.4 -> late 9.8 (stable)
+M3b rate         : 74.8% mean over 16 requests (diagnostic)
+[01:30:21] probe done rc=0
+[01:30:26] standing env loaded: SPEC_DRAFT_TEMP=0.85 BATCH_MTP=1 TYPICAL_ACCEPT=0.2
+[01:30:29] prewarm done in 3s (page cache now carries pack+shards)
+[01:30:29] booting config=campaign/planneroff-iq3_s-8081.json log=/home/svg/LLM/strata-custom-2/custom-iq3s-planneroff.log
+[01:30:44] ready; settling 10s
+M1 single-stream : 208.6 t/s (2000 tok in 9.59s)
+M2 pair          : 197.8 t/s aggregate (1800 tok in 9.10s)
+M2 6-conc        : 245.2 t/s aggregate (3600 tok in 14.68s)
+TREND ms/window: early 13.5 -> late 9.8 (stable)
+M3b rate         : 75.1% mean over 16 requests (diagnostic)
+[01:31:46] probe done rc=0
+ABAB-PLANNER-DONE

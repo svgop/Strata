@@ -1,0 +1,41 @@
+[15:33:23] standing env loaded: SPEC_DRAFT_TEMP=0.85 BATCH_MTP=1 TYPICAL_ACCEPT=0.2
+[15:33:26] prewarm done in 3s (page cache now carries pack+shards)
+[15:33:26] booting config=custom-iq3_s-8081.json log=/home/svg/LLM/strata-custom-2/custom-iq3_s.log
+[15:33:41] ready; settling 10s
+M1 single-stream : 192.2 t/s (2000 tok in 10.41s)
+M2 pair          : 196.5 t/s aggregate (1800 tok in 9.16s)
+M2 6-conc        : 312.4 t/s aggregate (3600 tok in 11.52s)
+TREND ms/window: early 13.8 -> late 9.6 (stable)
+M3b rate         : 74.5% mean over 16 requests (diagnostic)
+[15:34:40] probe done rc=0
+[15:34:45] standing env loaded: SPEC_DRAFT_TEMP=0.85 BATCH_MTP=1 TYPICAL_ACCEPT=0.2
+[15:34:48] prewarm done in 3s (page cache now carries pack+shards)
+[15:34:48] booting config=custom-iq3_s-8081.json log=/home/svg/LLM/strata-custom-2/custom-iq3_s.log
+[15:35:03] ready; settling 10s
+M1 single-stream : 211.3 t/s (2000 tok in 9.46s)
+M2 pair          : 197.0 t/s aggregate (1800 tok in 9.14s)
+M2 6-conc        : 322.7 t/s aggregate (3600 tok in 11.15s)
+TREND ms/window: early 13.5 -> late 9.6 (stable)
+M3b rate         : 76.0% mean over 16 requests (diagnostic)
+[15:36:01] probe done rc=0
+[15:36:06] standing env loaded: SPEC_DRAFT_TEMP=0.85 BATCH_MTP=1 TYPICAL_ACCEPT=0.2
+[15:36:09] prewarm done in 3s (page cache now carries pack+shards)
+[15:36:09] booting config=custom-iq3_s-8081.json log=/home/svg/LLM/strata-custom-2/custom-iq3_s.log
+[15:36:24] ready; settling 10s
+M1 single-stream : 205.5 t/s (2000 tok in 9.73s)
+M2 pair          : 202.9 t/s aggregate (1800 tok in 8.87s)
+M2 6-conc        : 306.2 t/s aggregate (3600 tok in 11.76s)
+TREND ms/window: early 13.5 -> late 9.3 (stable)
+M3b rate         : 76.0% mean over 16 requests (diagnostic)
+[15:37:22] probe done rc=0
+[15:37:27] standing env loaded: SPEC_DRAFT_TEMP=0.85 BATCH_MTP=1 TYPICAL_ACCEPT=0.2
+[15:37:30] prewarm done in 3s (page cache now carries pack+shards)
+[15:37:30] booting config=custom-iq3_s-8081.json log=/home/svg/LLM/strata-custom-2/custom-iq3_s.log
+[15:37:45] ready; settling 10s
+M1 single-stream : 197.6 t/s (2000 tok in 10.12s)
+M2 pair          : 196.8 t/s aggregate (1800 tok in 9.14s)
+M2 6-conc        : 320.6 t/s aggregate (3600 tok in 11.23s)
+TREND ms/window: early 13.5 -> late 9.5 (stable)
+M3b rate         : 76.0% mean over 16 requests (diagnostic)
+[15:38:44] probe done rc=0
+BENCH-SERIES-DONE

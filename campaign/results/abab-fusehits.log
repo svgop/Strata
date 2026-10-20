@@ -1,0 +1,61 @@
+[01:34:30] standing env loaded: SPEC_DRAFT_TEMP=0.85 BATCH_MTP=1 TYPICAL_ACCEPT=0.2
+[01:34:33] prewarm done in 3s (page cache now carries pack+shards)
+[01:34:33] booting config=campaign/fusehits-iq3_s-8081.json log=/home/svg/LLM/strata-custom-2/custom-iq3s-fusehits.log
+[01:34:48] ready; settling 10s
+M1 single-stream : 211.7 t/s (2000 tok in 9.45s)
+M2 pair          : 201.3 t/s aggregate (1800 tok in 8.94s)
+M2 6-conc        : 252.1 t/s aggregate (3600 tok in 14.28s)
+TREND ms/window: early 14.1 -> late 10.1 (stable)
+M3b rate         : 76.3% mean over 17 requests (diagnostic)
+[01:35:49] probe done rc=0
+[01:35:54] standing env loaded: SPEC_DRAFT_TEMP=0.85 BATCH_MTP=1 TYPICAL_ACCEPT=0.2
+[01:35:57] prewarm done in 3s (page cache now carries pack+shards)
+[01:35:57] booting config=custom-iq3_s-8081.json log=/home/svg/LLM/strata-custom-2/custom-iq3_s.log
+[01:36:12] ready; settling 10s
+M1 single-stream : 185.7 t/s (2000 tok in 10.77s)
+M2 pair          : 196.9 t/s aggregate (1800 tok in 9.14s)
+M2 6-conc        : 245.5 t/s aggregate (3600 tok in 14.67s)
+TREND ms/window: early 13.7 -> late 10.0 (stable)
+M3b rate         : 74.5% mean over 16 requests (diagnostic)
+[01:37:14] probe done rc=0
+[01:37:20] standing env loaded: SPEC_DRAFT_TEMP=0.85 BATCH_MTP=1 TYPICAL_ACCEPT=0.2
+[01:37:22] prewarm done in 2s (page cache now carries pack+shards)
+[01:37:22] booting config=campaign/fusehits-iq3_s-8081.json log=/home/svg/LLM/strata-custom-2/custom-iq3s-fusehits.log
+[01:37:37] ready; settling 10s
+M1 single-stream : 185.4 t/s (2000 tok in 10.79s)
+M2 pair          : 201.1 t/s aggregate (1800 tok in 8.95s)
+M2 6-conc        : 249.3 t/s aggregate (3600 tok in 14.44s)
+TREND ms/window: early 13.6 -> late 9.8 (stable)
+M3b rate         : 76.7% mean over 16 requests (diagnostic)
+[01:38:39] probe done rc=0
+[01:38:44] standing env loaded: SPEC_DRAFT_TEMP=0.85 BATCH_MTP=1 TYPICAL_ACCEPT=0.2
+[01:38:47] prewarm done in 3s (page cache now carries pack+shards)
+[01:38:47] booting config=custom-iq3_s-8081.json log=/home/svg/LLM/strata-custom-2/custom-iq3_s.log
+[01:39:02] ready; settling 10s
+M1 single-stream : 196.6 t/s (2000 tok in 10.17s)
+M2 pair          : 197.3 t/s aggregate (1800 tok in 9.12s)
+M2 6-conc        : 248.5 t/s aggregate (3600 tok in 14.49s)
+TREND ms/window: early 13.7 -> late 9.8 (stable)
+M3b rate         : 76.5% mean over 16 requests (diagnostic)
+[01:40:04] probe done rc=0
+[01:40:09] standing env loaded: SPEC_DRAFT_TEMP=0.85 BATCH_MTP=1 TYPICAL_ACCEPT=0.2
+[01:40:12] prewarm done in 3s (page cache now carries pack+shards)
+[01:40:12] booting config=campaign/fusehits-iq3_s-8081.json log=/home/svg/LLM/strata-custom-2/custom-iq3s-fusehits.log
+[01:40:27] ready; settling 10s
+M1 single-stream : 210.4 t/s (2000 tok in 9.51s)
+M2 pair          : 193.5 t/s aggregate (1800 tok in 9.30s)
+M2 6-conc        : 250.2 t/s aggregate (3600 tok in 14.39s)
+TREND ms/window: early 13.9 -> late 9.6 (stable)
+M3b rate         : 75.6% mean over 16 requests (diagnostic)
+[01:41:28] probe done rc=0
+[01:41:33] standing env loaded: SPEC_DRAFT_TEMP=0.85 BATCH_MTP=1 TYPICAL_ACCEPT=0.2
+[01:41:36] prewarm done in 3s (page cache now carries pack+shards)
+[01:41:36] booting config=custom-iq3_s-8081.json log=/home/svg/LLM/strata-custom-2/custom-iq3_s.log
+[01:41:51] ready; settling 10s
+M1 single-stream : 199.9 t/s (2000 tok in 10.01s)
+M2 pair          : 188.1 t/s aggregate (1800 tok in 9.57s)
+M2 6-conc        : 248.4 t/s aggregate (3600 tok in 14.49s)
+TREND ms/window: early 14.4 -> late 10.2 (stable)
+M3b rate         : 75.7% mean over 16 requests (diagnostic)
+[01:42:54] probe done rc=0
+ABAB-FUSEHITS-DONE

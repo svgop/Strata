@@ -1,0 +1,10 @@
+[10:17:44] standing env loaded: SPEC_DRAFT_TEMP=0.85 BATCH_MTP=1 TYPICAL_ACCEPT=0.2
+[10:17:47] prewarm done in 3s (page cache now carries pack+shards)
+[10:17:47] booting config=campaign/cohorts-iq3_s-8081.json log=/home/svg/LLM/strata-custom-2/custom-iq3s-cohorts.log
+[10:18:02] ready; settling 10s
+M1 single-stream : 190.2 t/s (2000 tok in 10.52s)
+M2 pair          : 0.0 t/s aggregate (0 tok in 112.73s)
+M2 6-conc        : 0.0 t/s aggregate (0 tok in 121.32s)
+TREND ms/window: early 14.3 -> late 11.7 (stable)
+M3b rate         : 75.5% mean over 16 requests (diagnostic)
+[10:22:35] probe done rc=0

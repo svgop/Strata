@@ -1,0 +1,21 @@
+[02:00:29] standing env loaded: SPEC_DRAFT_TEMP=0.85 BATCH_MTP=1 TYPICAL_ACCEPT=0.2
+[02:00:32] prewarm done in 3s (page cache now carries pack+shards)
+[02:00:32] booting config=campaign/stair50-iq3_s-8081.json log=/home/svg/LLM/strata-custom-2/custom-iq3s-stair50.log
+[02:00:47] ready; settling 10s
+M1 single-stream : 193.1 t/s (2000 tok in 10.36s)
+M2 pair          : 205.7 t/s aggregate (1800 tok in 8.75s)
+M2 6-conc        : 257.0 t/s aggregate (3600 tok in 14.01s)
+TREND ms/window: early 14.0 -> late 9.1 (stable)
+M3b rate         : 76.0% mean over 16 requests (diagnostic)
+[02:01:48] probe done rc=0
+[02:01:53] standing env loaded: SPEC_DRAFT_TEMP=0.85 BATCH_MTP=1 TYPICAL_ACCEPT=0.2
+[02:01:56] prewarm done in 3s (page cache now carries pack+shards)
+[02:01:56] booting config=campaign/stair35-iq3_s-8081.json log=/home/svg/LLM/strata-custom-2/custom-iq3s-stair35.log
+[02:02:11] ready; settling 10s
+M1 single-stream : 210.4 t/s (2000 tok in 9.51s)
+M2 pair          : 197.3 t/s aggregate (1800 tok in 9.13s)
+M2 6-conc        : 255.4 t/s aggregate (3600 tok in 14.09s)
+TREND ms/window: early 14.4 -> late 10.1 (stable)
+M3b rate         : 70.4% mean over 16 requests (diagnostic)
+[02:03:11] probe done rc=0
+STAIR-DONE

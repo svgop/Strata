@@ -8436,3 +8436,21 @@ LESSON (build hygiene): the copy's build/ cache had silently pointed at the ORIG
 copied-tree build must be re-configured with absolute paths into the copy and its build.ninja
 spot-checked for the copy's paths before the first object is compiled; a binary's provenance is
 its build.ninja's source paths, not the directory it was produced in.
+
+### F-248 — T20 ADOPTED: the merged v0.2.1 line IS custom-2 now; gates passed; new scoreboard frozen (2026-10-20 evening)
+Adoption executed: original repo reset onto the merged line (edb6c4a2, merge commit 74239c96 with
+15 conflicts 7/7-preserved), rebuilt IN PLACE (163/164 links - no cache trap this time), deployed
+(engine/strata = merged build), smoke-verified live: COHORTS armed ("slots [0,3) on verifier A,
+[3,6) on B"), hc read "checked bit for bit", M1 smoke 205-215. GATES: MMLU-Pro 95.7 + 91.4 (mean
+93.55 >= 93.3 floor; one run low - WATCH RULE armed, mimic 58/66 = 87.9 = anchor). FIVE-BOOT
+RE-BANK of the merged binary (evening window, same session class as the A/B): M1 220.9/211.2/
+206.9/200.6/223.0 = **212.5**; pair 204.9/204.5/194.8/200.8/209.2 = **202.8**; 6-conc 322.2/
+319.8/311.3/303.3/321.6 = **315.7**; M3b ~76.9. vs frozen 203.9/202.0/306.1: +4.2% / +0.4% /
++3.1% at the means, and the same-window A/B's authoritative relative read stays +11.1% M1 / +4.9%
+prefill / +3.2% conc. ROLLBACK: engine/strata.t19-final (one cp); env-level per-arm offs exist
+(SIDE_MIXER/GR_DOWN_TG/GU_SWIGLU/PF_FUSED/MMVQ_IL_WIDE/GR_NORM_FAST=0). Housekeeping: my unpushed
+housekeeping commit was dropped by the reset and re-applied (mimic JSON recovered from reflog);
+the merged tree's !campaign/results/*.log negation makes the older evidence logs visible and
+they are being banked with this entry. LAB COPY: ~/LLM/strata-custom-2-merge retained as the
+merge's provenance archive (delete when convenient). NEXT: quiet-window re-bank confirmation,
+MMLU re-gate at the next adoption round, then COHORTS=3 / re-quant / TC-hc per the ladder.

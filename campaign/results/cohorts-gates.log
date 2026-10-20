@@ -1,0 +1,23 @@
+== GATE 1: COHORTS=1 (standing, must be in-band)
+[10:06:37] standing env loaded: SPEC_DRAFT_TEMP=0.85 BATCH_MTP=1 TYPICAL_ACCEPT=0.2
+[10:06:40] prewarm done in 3s (page cache now carries pack+shards)
+[10:06:40] booting config=custom-iq3_s-8081.json log=/home/svg/LLM/strata-custom-2/custom-iq3_s.log
+[10:06:55] ready; settling 10s
+M1 single-stream : 184.5 t/s (2000 tok in 10.84s)
+M2 pair          : 193.9 t/s aggregate (1800 tok in 9.29s)
+M2 6-conc        : 249.7 t/s aggregate (3600 tok in 14.42s)
+TREND ms/window: early 14.1 -> late 9.6 (stable)
+M3b rate         : 77.6% mean over 16 requests (diagnostic)
+[10:07:58] probe done rc=0
+== GATE 2: COHORTS=2 arm boot
+[10:08:03] standing env loaded: SPEC_DRAFT_TEMP=0.85 BATCH_MTP=1 TYPICAL_ACCEPT=0.2
+[10:08:06] prewarm done in 3s (page cache now carries pack+shards)
+[10:08:06] booting config=campaign/cohorts-iq3_s-8081.json log=/home/svg/LLM/strata-custom-2/custom-iq3s-cohorts.log
+[10:08:21] ready; settling 10s
+M1 single-stream : 203.1 t/s (2000 tok in 9.85s)
+M2 pair          : 0.0 t/s aggregate (0 tok in 3.47s)
+M2 6-conc        : 0.0 t/s aggregate (0 tok in 17.95s)
+TREND ms/window: early 14.9 -> late 12.6 (stable)
+M3b rate         : 74.5% mean over 16 requests (diagnostic)
+[10:09:20] probe done rc=0
+COHORT-GATES-DONE
