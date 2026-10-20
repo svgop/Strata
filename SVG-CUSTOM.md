@@ -8383,3 +8383,20 @@ restored to v0.2.1 (7a5e17d1) after S7. BOX STOPPED at round end.
 NEXT: re-bank the S1 engine (5 boots); the logits-dump A/B harness if the mixer port is re-wanted;
 S3's stock-side check folded into any future stock boot (free rider); the mmvq tables' share of
 S7's residual could be priced by one stock boot with STRATA_MMVQ_IL_WIDE=0/_120=0.
+
+### F-246 — T19 re-bank + the window-shift proof: mmvq_il CONFIRMED (same-window +14.6% conc), no regression (2026-10-20 16:42-17:00)
+Rebank3 on the post-T19 engine read M1 209.5 / pair 194.7 / conc 266.8 - M1 a new best, conc
+-12.8% vs the frozen 306.1. Per the law, no drift excuse without a counterfactual: ran a
+same-window 3v3 ABAB of the post-T19 binary against engine/strata.pre-t19-s1 (norm_fast only),
+16:53-17:00 window. RESULT: pre 195.2/192.0/245.7 vs cur 201.5/191.1/281.5 = M1 +3.2%, pair flat,
+conc **+14.6%** - the T19 binary is AHEAD in-window, so the low absolute conc belongs to the
+WINDOW, not the port (both binaries read 245-282 here vs 310-335 this morning; M1 meanwhile
+matches the 11:38 window's 210-220, so the shift is conc-lane-specific -> host/cohort-reactor
+contention class, first documented instance of a conc-only window shift).
+LEDGER RULE adopted: absolute scoreboard = frozen at the last quiet-window five-boot (morning
+203.9/202.0/306.1 stands as the record until a quiet re-bank); RELATIVE claims (arm vs same-window
+control) are the stable currency. T19 accepted on: S1 battery +8.3% conc / +2.6% M1 (11:38
+window) AND same-window control +14.6% / +3.2% (16:53) - mechanism-consistent both times.
+Post-T19 standing binary preserved as engine/strata.t19-final; pre-T19 as
+engine/strata.pre-t19-s1. OWED: one quiet-window five-boot re-bank to freeze the new absolute
+record (expected ~209-212 / ~195-205 / 310-335 depending on window class).
