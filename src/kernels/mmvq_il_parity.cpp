@@ -105,7 +105,7 @@ int run_case(const Case& c, bool bench, cudaStream_t s) {
             return 1;
     }
     int bad = 0;
-    const int t_max = std::getenv("MMVQ_IL_TMAX") ? std::atoi(std::getenv("MMVQ_IL_TMAX")) : 8;   // T19-S1: 5-8 columns
+    const int t_max = std::getenv("MMVQ_IL_TMAX") ? std::atoi(std::getenv("MMVQ_IL_TMAX")) : 8;   // 147-verify: 5-8 columns
     for (int T = 1; T <= t_max; ++T) {
         std::vector<float> x((std::size_t) T * c.n_in);
         std::normal_distribution<float> nd(0.f, 1.f);
@@ -233,7 +233,7 @@ void emit_table() {
         }
         std::printf("}},   // %s\n", names[ti]);
     }
-    std::printf("// 5-8 columns (kIlRows58_<cc>; rows 4 runs as 2 there):\n");   // T19-S1
+    std::printf("// 5-8 columns (kIlRows58_<cc>; rows 4 runs as 2 there):\n");
     for (int ti = 0; ti < 5; ++ti) {
         std::printf("    {%d, {", types[ti]);
         for (int nc = 5; nc <= 8; ++nc) {
@@ -267,8 +267,8 @@ int check_tables() {
             for (int n_out : {512, 2560, 6144, 10240, 12288, 248320}) {
                 const int a = native_mmvq_il_rows_for(86, type, nc, n_out);
                 // sm_89 has no table of its own: it answers the shared table (what sm_86 answered before its own
-                // 143-dense table, which differs only in Q3_K, a type the shared table does not use); a big 12.0 card
-                // has its own since T19-S1
+                // 143-dense table, which differs only in Q3_K, a type the shared table does not use); sm_120 has its own
+                // since 147-verify
                 const int b = native_mmvq_il_rows_for(89, type, nc, n_out);
                 if ((type != 11 && b != a) || (type == 11 && b != 0)) {
                     ++bad;
