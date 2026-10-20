@@ -8454,3 +8454,18 @@ the merged tree's !campaign/results/*.log negation makes the older evidence logs
 they are being banked with this entry. LAB COPY: ~/LLM/strata-custom-2-merge retained as the
 merge's provenance archive (delete when convenient). NEXT: quiet-window re-bank confirmation,
 MMLU re-gate at the next adoption round, then COHORTS=3 / re-quant / TC-hc per the ladder.
+
+### F-249 — T21: COHORTS=3 measured FLAT (not adopted); MMLU re-gate CLEARS the merged-line watch (2026-10-20 night)
+COHORTS=3 battery (t21b, 3v3 ABAB after a harness fix - the first attempt put the launcher copy in
+campaign/ where its relative .venv resolution broke; lesson: launcher copies live at repo root):
+arm M1 199.1 / pair 189.5 / conc 307.1 vs ctl 202.3 / 194.0 / 306.2 = M1 -1.6%, pair -2.3%, conc
++0.3% - ALL inside noise. VERDICT: NOT ADOPTED - the third verifier buys nothing at exactly 6
+clients. Mechanism read: 6 slots over 2 cohorts = 3+3 fills both reactors; 3 cohorts = 2+2+2
+narrows every window without adding overlap - T17B's +8-15% estimate assumed wider slot counts;
+at 6 streams the split is neutral. Re-test only if parallel grows (>=9 clients) or the reactor
+learns cross-cohort tail reuse. Launcher copy kept as launch-custom-iq3s-8081-c3.sh (dormant).
+MMLU RE-GATE on the standing merged recipe: 95.7 + 94.3 (mean 95.0) - the F-248 watch flag
+(91.4 low run) CLEARS; quality on the v0.2.1 line confirmed at anchor class.
+Verification-method note: the engine log is created lazily per boot (first request flush) - boot-
+line greps must fire after a request-bearing probe, not at health. Control window class tonight:
+evening/mid (M1 ~203, conc ~303-307 on C2).
