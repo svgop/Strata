@@ -8469,3 +8469,12 @@ MMLU RE-GATE on the standing merged recipe: 95.7 + 94.3 (mean 95.0) - the F-248 
 Verification-method note: the engine log is created lazily per boot (first request flush) - boot-
 line greps must fire after a request-bearing probe, not at health. Control window class tonight:
 evening/mid (M1 ~203, conc ~303-307 on C2).
+
+### F-250 — THE HEADLINE A/B, same-window: custom (merged line) vs stock v0.2.1 — +27% M1 / +24% pair / +15% conc at identical bytes (2026-10-20 21:59-22:07)
+3v3 interleaved, alternating boots, both engines on the same IQ3_S config/model/pack/profile:
+stock 160.6 / 156.9 / 267.4 (M1/pair/conc means) vs custom **204.5 / 195.0 / 308.2**. Per-round
+M1 deltas +38.1 / +18.1 / +27.0% - every round, every lane, custom wins. Side observation:
+stock is more window-sensitive (its evening M1 160.6 vs its morning 169.7; custom's spread
+197.9-211.9 vs its own band) - the fork's arms appear to smooth window variance too. The fork
+premium over the LATEST upstream: COHORTS + norm_fast + FUSE_HITS + POOL_DIET + GDN_CHUNKED +
+T18 + the tuned arm set, on top of the shared v0.2.1 kernel package.
