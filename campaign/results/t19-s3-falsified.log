@@ -1,0 +1,15 @@
+=== T19-S3 FALSIFICATION (SIDE_MIXER port ffc30b8d+477ac13c) 2026-10-20T12:15:26+02:00 ===
+identity check: fixed 4-prompt greedy (temperature 0), same binary, env-only flips.
+ctl (no SIDE_MIXER):            b72cd25c419ca671 139 bccc43c087bfb766 115 4268b74ce513ac32 158 7a8adfeeb3c24e06 638 
+SIDE_MIXER=1:                   b72cd25c419ca671 139 bccc43c087bfb766 115 0e2883bdfc01019b 149 7a8adfeeb3c24e06 638 
+SIDE_MIXER=2:                   b72cd25c419ca671 139 bccc43c087bfb766 115 0e2883bdfc01019b 149 153cefab3f1b2abb 669 
+SIDE_MIXER=2 ASYNC_LAUNCH=0:    b72cd25c419ca671 139 bccc43c087bfb766 115 0e2883bdfc01019b 149 7a8adfeeb3c24e06 638 
+
+findings: (a) =1 diverges DETERMINISTICALLY on prompt 3 (same hash across boots) - an output change, not a race;
+(b) =2 diverges on prompt 4 ONLY with STRATA_VERIFY_ASYNC_LAUNCH=1 (fork HostGraphLaunch interaction) and is
+bitwise-clean with =0 - the side_proj branches and the fork's async-launch adoption are incompatible as landed.
+law 10 (the canary is the contract): an output change whatever the mechanism claims -> REJECTED before battery.
+re-open: (i) window-logits A/B dump harness to isolate the first divergent read, or (ii) the same greedy identity
+check on the STOCK v0.2.1 boot (its sm_120 default arms SIDE_MIXER) during the S7 confound legs - prices whether
+the =1 divergence is upstream-core or fork-interaction.
+full applied diff: campaign/results/t19-s3-rejected.diff (verify.cpp + verify.hpp)

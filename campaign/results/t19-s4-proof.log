@@ -1,0 +1,35 @@
+=== T19-S4 PROOF (GU_SWIGLU port, 75afe3f4+8837cb6f) 2026-10-20T12:18:38+02:00 ===
+GPU: NVIDIA GeForce RTX 5090, 12.0
+--- A. iq_multi_parity with STRATA_GU_SWIGLU=1 (arm state: the fused kernel vs the old kernels, bitwise, every gate/up format x down format, 0..11-entry groups)
+IQ3_XXS /IQ4_XS   1024 x  512  native_expert_grouped, 9 groups, 35 entries: bitwise equal to the old kernels
+IQ3_S   /IQ4_NL   2560 x  640  native_expert_grouped, 9 groups, 35 entries: bitwise equal to the old kernels
+IQ3_S   /Q2_0     2560 x  640  native_expert_grouped, 9 groups, 35 entries: bitwise equal to the old kernels
+IQ3_S   /IQ4_XS   1024 x  512  native_expert_grouped, 9 groups, 35 entries: bitwise equal to the old kernels
+IQ2_S   /IQ4_NL   2560 x  640  native_expert_grouped, 9 groups, 35 entries: bitwise equal to the old kernels
+IQ2_S   /Q2_0     2560 x  640  native_expert_grouped, 9 groups, 35 entries: bitwise equal to the old kernels
+IQ2_S   /IQ4_XS   1024 x  512  native_expert_grouped, 9 groups, 35 entries: bitwise equal to the old kernels
+IQ4_XS  /IQ4_NL   2560 x  640  native_expert_grouped, 9 groups, 35 entries: bitwise equal to the old kernels
+IQ4_XS  /Q2_0     2560 x  640  native_expert_grouped, 9 groups, 35 entries: bitwise equal to the old kernels
+IQ4_XS  /IQ4_XS   1024 x  512  native_expert_grouped, 9 groups, 35 entries: bitwise equal to the old kernels
+IQ1_M   /IQ4_NL   2560 x  640  native_expert_grouped, 9 groups, 35 entries: bitwise equal to the old kernels
+IQ1_M   /Q2_0     2560 x  640  native_expert_grouped, 9 groups, 35 entries: bitwise equal to the old kernels
+IQ1_M   /IQ4_XS   1024 x  512  native_expert_grouped, 9 groups, 35 entries: bitwise equal to the old kernels
+Q2_0    /IQ4_NL   2560 x  640  native_expert_grouped, 9 groups, 35 entries: bitwise equal to the old kernels
+Q2_0    /Q2_0     2560 x  640  native_expert_grouped, 9 groups, 35 entries: bitwise equal to the old kernels
+Q2_0    /IQ4_XS   1024 x  512  native_expert_grouped, 9 groups, 35 entries: bitwise equal to the old kernels
+q8_1 finite (quantize_q8_1_rows): 237 finite blocks as before, 3 overflowed blocks clamped finite
+q8_1 finite (native_quantize_q8_1): 237 finite blocks as before, 3 overflowed blocks clamped finite
+q8_1 finite (native_swiglu_quantize_q8_1): 237 finite blocks as before, 3 overflowed blocks clamped finite
+iq_multi_parity: 0 failures
+--- B. iq_multi_parity with STRATA_GU_SWIGLU=0 (ctl state)
+q8_1 finite (native_quantize_q8_1): 237 finite blocks as before, 3 overflowed blocks clamped finite
+q8_1 finite (native_swiglu_quantize_q8_1): 237 finite blocks as before, 3 overflowed blocks clamped finite
+iq_multi_parity: 0 failures
+--- C. iq_multi_parity default env (per-device default: on for this 12.0 card)
+q8_1 finite (native_quantize_q8_1): 237 finite blocks as before, 3 overflowed blocks clamped finite
+q8_1 finite (native_swiglu_quantize_q8_1): 237 finite blocks as before, 3 overflowed blocks clamped finite
+iq_multi_parity: 0 failures
+--- D. native_expert_parity (the engine-path expert parity), default env
+       native_expert_parity --synthetic GU/DOWN ...   (ggml type names, e.g. q4_K/q5_1)
+       native_expert_parity --q5_1-min
+       native_expert_parity --bf16-embd
