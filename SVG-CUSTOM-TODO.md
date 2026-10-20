@@ -1410,3 +1410,20 @@ code, default off, so ctl = the same binary unarmed). Base tree = 0ebeab8f (T18 
   consumed the session; state banked instead).
 State: engine/strata = S1(default-off)+S3(flip) build; backups alongside: engine/strata.pre-t15c
 (pre-tranche = T18-fix build, the full revert), .pre-t15c-s2, .pre-t15c-s3. The box is STOPPED.
+
+## T19 — v0.2.1 WAVE PORT (2026-10-20; dossier campaign/research/v02-wave-analysis.md)
+The wave = an sm_120 KERNEL PACKAGE default-flipped via new sm120_series.hpp, not scheduling/spec:
+ba2c2d5f (SIDE_MIXER=2, ATTN_DAILY=1, GR_UP75=1, GR_DOWN_TG=2; -10.7% window on RTX PRO 5000),
+94104176 (hc down one token per block row, bitwise, -2% more at T2-5), 75fabbd9+44997124
+(mmvq_il to 5-8 cols + sm_120 tables: kills the T4->T5 cliff; explains why OUR delta (+15.6%)
+exceeds upstream's anchor (+11.9-14.0%) - our spec-6 runs 6-8-row windows), 75afe3f4 (gate/up+
+SwiGLU+q8_1 one launch), b1e0fdaa (PF_FUSED prompt experts default-on, +5-7% prompt),
+I/O-tier defaults (possible A-B-A confound; falsifier = stock boot with env-offs).
+RANKED PORTS: 1) mmvq_il wide - PORT NOW (bitwise, self-contained; fork caps at 4 cols,
+native_mmvq.cu:1556/:2706). 2) GR_DOWN_TG=2 (bitwise; conflict work). 3) SIDE_MIXER=2 (serial-
+windows-only, COHORTS structurally untouched). 4) GR_UP75 (bench first - F-241 S4 says norm_fast
+may have absorbed it). 5) GU_SWIGLU (+0.5-0.9%). All bitwise = no MMLU gate.
+CONVERGENCE: ATTN_DAILY (we arm - keep); norm_fast (upstream opt-in +0.5-0.6% on V100 vs our
+default flip pooled +5.2% = WE ARE AHEAD, bank as upstream-issue evidence); FUSE_HITS/POOL_DIET/
+T18 have NO wave counterpart. REBASE HAZARD: upstream rewrote expert_pool_dispatch_multi's
+neighborhood (io-prefetch) - T18 guards are ours and must be re-applied on any merge there.
