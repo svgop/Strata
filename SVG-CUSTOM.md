@@ -8222,3 +8222,66 @@ trigger; the fix makes ANY trigger self-healing. The ADR-exchange suspicion (blo
 is CLEARED for this crash: no exchange path can write a small integer where the pool reads a blob,
 and the fault addresses are y[t], not w. REVERT: `cp engine/strata.pre-t18fix engine/strata`
 (the pre-fix binary, kept alongside; the code revert is `git revert` of this commit).
+
+### F-241 — T15C HC-KERNEL TRANCHE: the norm_fast flip ADOPTS (pooled +5.2% M1), the staged-down widen REJECTS at -7%, the up widen is a flagged non-adopter, LFUSE is adjudicated dead by code read (2026-10-20 04:30-07:00; batteries campaign/results/t15c-*.log, scorer campaign/t15c-score.py, harness campaign/t15c-battery.sh)
+
+The T15C tranche ran proof-first per stage: gr_parity --selftest byte-equality (multi-vs-single across
+T 1-8 direct + captured-graph replays, and the QFUSE q8_1 image vs native_quantize_q8_1) at the EXACT
+env state of the arm, before any boot; then one 3v3 ABAB interleaved battery per stage (fresh boot per
+leg, probe --short-n 6, per-leg .out, the arm env verified by a new boot banner in fused_gr_check). One
+binary per battery — every change env-gated, so arm and ctl differ only by the env. The boot-time hc
+selftest re-proved "checked bit for bit" in EVERY leg of EVERY battery (engine log).
+
+**S3 — norm_fast_on() CUDA flip: ADOPTED (the round's win).** The gate (fused_gr.cu) hard-returned
+false on CUDA since the gfx12-only era; the flip makes the split norm's register kernel
+(gr_norm_split_fast_kernel — loads issued together, xn kept in registers, the second pass's 40 KB/token
+L2 round-trip and one barrier deleted) the default on the standing staged read, STRATA_GR_NORM_FAST=0
+rolls back. Proof: byte-equality at the flip default, at =0, and combined with S1+S2; plus the per-boot
+selftest. s3norm 3v3: M1 +9.68% (212.2 vs 193.4), pair -1.51, conc +3.04, M3b +2.35. The owed confirm
+3v3 (s3confirm) read M1 +0.87% (204.6 vs 202.8), pair +3.10, conc +7.91, M3b +2.23 — the first
+battery's CONTROL window read low, so the single-battery +9.68% is RETRACTED as control-window luck
+(the F-231 lesson, again) and the claim is the POOLED 6v6: **M1 +5.2% (208.4 vs 198.1), pair +0.8%,
+conc +5.5%, M3b +2.3pp — above the +4% bar, no lane negative in any battery.** The flip is the code
+default now (launcher note; rollback = one env). Consequence: F-238's M1 anchor (193.7) is stale for
+M1 claims — the flip-on state boots at ~204-212 across five boots in three batteries; a five-boot
+re-bank is OWED before any scoreboard row cites the new standing. The audit's +1.3-2% price was
+directionally right and magnitude wrong in the interesting direction: the norm's second pass was a
+real wall on this stack, not a hidden one.
+
+**S2 — the staged down at 4 warps (81 blocks): REJECTED, reverted.** The audit's "+2.5-4%" priced
+SM coverage 41->81 and ignored what else halves: 128 threads now fill the same 80 KB staged tile, the
+cp.async fill latency per block doubles, and the down read slows. 3v3: M1 **-6.99%** (192.1 vs 206.5),
+pair -4.00, conc -1.89 — bit-exact (proof passed, per-boot selftest passed) but slower; the code is
+fully reverted and the pre-S2 binary rebuilt and redeployed within the session. F-217's
+"this kernel's grid shape is load-bearing" now has both directions measured.
+
+**S1 — UPM_COLS 16->8 (320-block up grid): proved, under bar solo, flat in stack — flagged, NOT
+adopted.** gr_up_multi_kernel is COLS-templated (the per-row math reads no COLS; gr_q8_tail takes the
+blocks-per-group, ==3u at 8 cols) behind STRATA_GR_UP8=1, default off. Proof passed incl QFUSE at 8
+columns (direct + graph replays). Solo 3v3: M1 +3.83% (212.3 vs 204.5), pair +1.86, conc +2.67 —
+under the bar (all lanes positive = a consistent stack candidate, so it was flagged forward, not
+adopted). The stack battery (S4, UP8 on the adopted flip): M1 -1.01, pair +2.95, conc +1.80 — FLAT:
+once the norm wall is gone, the up grid's extra in-flight bytes buy nothing; the audit's +3.4-5%
+presumed the hc read was grid-capped everywhere, but the cap and the norm stall were the same
+bottleneck wearing two prices. The kernel stays in the tree default-off (zero cost un-armed); the
+full revert is `git checkout` of the S1 hunks of src/kernels/cuda/fused_gr.cu.
+
+**S5 — LFUSE device-plan arm: adjudicated DEAD by code read, no battery spent (T16 #8 resolved).**
+The R1 dossier's "SURVIVES — cheapest, first, -144 nodes" missed three citations: (a) F-206 MEASURED
+STRATA_LFUSE=1 at -3.0% M1 on this box (the fusion tranche's clean negative — node savings were
+latency-hidden); (b) re-priced honestly with F-235's measured node marginal (0.5-1.0 us x 144 =
++0.5-1% M1) the arm is under the +4% bar before it boots; (c) the code read kills it outright: on the
+standing DEVICE_PLAN path, enabling LFUSE sets sg_gated_[grp] (verify.cpp:1624), and hits_in_combine
+explicitly requires `!sg_gated_[grp]` (verify.cpp:1733) — the arm DISPLACES the adopted
+STRATA_FUSE_HITS=1 fold (F-226, +4.35% M1), re-adding ~48 moe_hit_add launches/window and swapping the
+combine to the gated form F-206 already measured losing. Strike T15 queue item #4 and R1's S2 row.
+Re-open clause: a combine form that keeps hits-added under the gate AND node spacing made binding by
+the R1 conditional-node surgery.
+
+**Net:** standing recipe + the norm flip (pooled +5.2% M1 / +5.5% conc, bit-exact). The +8-9% hc-read
+bucket of the T15 audit prices out at +5.2% real: the up-grid half was the norm stall wearing a
+second price, and the down-grid half was a fill-latency loss — exactly the class of discovery the
+proof-then-battery order exists to catch. Reverts: full pre-tranche = `cp engine/strata.pre-t15c
+engine/strata` (+ git checkout of fused_gr.cu hunks); flip alone = `export STRATA_GR_NORM_FAST=0`.
+Box left STOPPED. Harnesses stay reusable: campaign/t15c-battery.sh (<stage> [--ctl-env V=1] [arm
+envs]), campaign/t15c-score.py (<stage>).

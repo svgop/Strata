@@ -177,20 +177,20 @@ struct GrMulti {
 };
 
 
-// S26 STRATA_QFUSE=1: the q8_1 image of `mixed`, written by the up kernels below. A q8_1 block is 32 columns and an
-// up block owns UPM_COLS = 16, so the second of the two blocks that own a 32-column group (a per-group counter,
-// incremented after the block's writes are fenced, reset by that block for the next launch) reads the 32 values back
-// and quantizes them with native_quantize_q8_1_kernel's quantizer: one warp per token, the same XOR-tree max and sum,
+// S26 STRATA_QFUSE=1: the q8_1 image of `mixed`, written by the up kernels below. A q8_1 block is 32 columns and the
+// up blocks that own a 32-column group (a per-group counter, incremented after the block's writes are fenced, reset by
+// the last block for the next launch) read the 32 values back once the LAST of them arrives (per_group = 32 / cols)
+// and quantize them with native_quantize_q8_1_kernel's quantizer: one warp per token, the same XOR-tree max and sum,
 // d = amax / 127, roundf(x / d), ds = (d, sum) - the bytes the separate launch writes.
 struct GrQ81 { half2 ds; int8_t qs[32]; };
-static_assert(2 * 16 == 32, "two up blocks per q8_1 group");
-__device__ __forceinline__ void gr_q8_tail(const GrMulti& m, int d0) {
+static_assert(32 % 16 == 0 && 32 % 8 == 0, "the up blocks of a group tile a q8_1 group exactly");
+__device__ __forceinline__ void gr_q8_tail(const GrMulti& m, int d0, unsigned per_group) {
     __shared__ int last;
     __threadfence();
     __syncthreads();
     if (threadIdx.x == 0) {
         unsigned* c = m.a[0].q8_cnt + d0 / 32;
-        last = atomicAdd(c, 1u) == 1u;
+        last = atomicAdd(c, 1u) == per_group - 1u;
         if (last) atomicExch(c, 0u);
     }
     __syncthreads();
@@ -374,17 +374,20 @@ __global__ void __launch_bounds__(32) gr_down_multi_wide_kernel(GrMulti m) {
 
 // `gr_up_kernel` for T tokens: each row of w_up read once; the T dots reduced by xor so every lane holds every
 // sum, and lane k runs token k's epilogue - the T epilogues in parallel instead of one after another.
-template <int MAX_T = kFusedGrMaxT, bool EXACT_T = false>
+// T15C S1 (STRATA_GR_UP8=1): the block owns 8 columns instead of 16 (320 blocks on the grid instead of 160) -
+// the per-row math (one warp per row, the same chunk order and xor tree) is untouched, so the outputs are
+// bitwise the same; only how many blocks split the columns changes.
+template <int MAX_T = kFusedGrMaxT, bool EXACT_T = false, int COLS = UPM_COLS>
 __global__ void __launch_bounds__(THREADS) gr_up_multi_kernel(GrMulti m) {
     __shared__ __align__(16) float lo[MAX_T][LR];
-    __shared__ float g[MAX_T][HC][UPM_COLS];
+    __shared__ float g[MAX_T][HC][COLS];
     const int t = threadIdx.x, lane = t & 31, warp = t >> 5;
     const int T = EXACT_T ? MAX_T : m.T;
-    const int d0 = blockIdx.x * UPM_COLS;
+    const int d0 = blockIdx.x * COLS;
     for (int i = t; i < T * LR; i += THREADS) lo[i / LR][i % LR] = m.a[i / LR].lo[i % LR];
     __syncthreads();
-    for (int r = warp; r < HC * UPM_COLS; r += WARPS) {
-        const int c = r / UPM_COLS, dd = r - c * UPM_COLS, i = c * N + d0 + dd;
+    for (int r = warp; r < HC * COLS; r += WARPS) {
+        const int c = r / COLS, dd = r - c * COLS, i = c * N + d0 + dd;
         const uint4* w4 = reinterpret_cast<const uint4*>(m.a[0].w_up + (size_t) i * LR);
         const Bf16x8 wa = unpack8(__ldg(w4 + lane));
         const Bf16x8 wb = unpack8(lane < LR / 8 - 32 ? __ldg(w4 + 32 + lane) : make_uint4(0, 0, 0, 0));
@@ -418,14 +421,14 @@ __global__ void __launch_bounds__(THREADS) gr_up_multi_kernel(GrMulti m) {
         }
     }
     __syncthreads();
-    for (int i = t; i < T * UPM_COLS; i += THREADS) {
-        const int k = i / UPM_COLS, col = i - k * UPM_COLS;
+    for (int i = t; i < T * COLS; i += THREADS) {
+        const int k = i / COLS, col = i - k * COLS;
         float s = 0.0f;
 #pragma unroll
         for (int c = 0; c < HC; ++c) s += g[k][c][col];
         m.a[k].mixed[d0 + col] = s / (float) HC;
     }
-    if (m.a[0].q8_mixed != nullptr) gr_q8_tail(m, d0);   // S26 STRATA_QFUSE
+    if (m.a[0].q8_mixed != nullptr) gr_q8_tail(m, d0, 32 / COLS);   // S26 STRATA_QFUSE
 }
 
 
@@ -861,6 +864,9 @@ __device__ __forceinline__ void stage_htile(const GrMulti& m, int T, int h, floa
     }
 }
 
+// T15C S2 REJECTED (3v3: M1 -6.99% / pair -4.00% / conc -1.89%): the 4-warp instantiation of this kernel
+// doubled the grid but halved the staging threads per 80 KB tile - the cp.async fill latency doubled per
+// block and ate the coverage gain (the F-217 lesson again: this kernel's grid shape is load-bearing).
 template <int MAX_T = kFusedGrMaxT, bool EXACT_T = false>
 __global__ void __launch_bounds__(THREADS) gr_down_staged_kernel(GrMulti m) {
     extern __shared__ __align__(16) float4 hbuf[];      // 2 buffers x [T][2][160] float4
@@ -1064,12 +1070,25 @@ bool gr_down_max4() {
     return on;
 }
 
+// T15C S1 (STRATA_GR_UP8=1): the standing up kernel's blocks own 8 columns instead of 16 - the grid doubles
+// (320 blocks), the per-row math is unchanged, so the read stays bitwise the same (fused_gr_selftest +
+// gr_parity byte-equality). =0 rolls back.
+bool gr_up8_on() {
+    static const bool on = [] {
+        const char* v = std::getenv("STRATA_GR_UP8");
+        return v != nullptr && v[0] == '1';
+    }();
+    return on;
+}
+
 // the split norm with registers (gr_norm_split_fast_kernel): gfx12 only until another arch is measured;
-// STRATA_GR_NORM_FAST=0 / 1 forces it off / on
+// STRATA_GR_NORM_FAST=0 / 1 forces it off / on.
+// T15C S3: the gate is FLIPPED on CUDA - the fast kernel carries a bitwise-equality claim that was never
+// measured there (gr_parity's byte-equality proves it on this card before any boot); =0 rolls back.
 bool norm_fast_on() {
-#if defined(__HIPCC__)
     static const int env = [] { const char* e = std::getenv("STRATA_GR_NORM_FAST"); return e != nullptr ? (std::atoi(e) != 0 ? 1 : 0) : -1; }();
     if (env >= 0) return env != 0;
+#if defined(__HIPCC__)
     static int per_dev[64];   // 0 unknown, 1 no, 2 yes
     int dev = 0;
     if (cudaGetDevice(&dev) != cudaSuccess || dev < 0 || dev >= 64) return false;
@@ -1079,7 +1098,7 @@ bool norm_fast_on() {
     }
     return per_dev[dev] == 2;
 #else
-    return false;
+    return true;   // T15C S3: the CUDA flip (was a hard false: "gfx12 only until another arch is measured")
 #endif
 }
 
@@ -1087,6 +1106,20 @@ bool norm_fast_on() {
 bool qfuse_hc_local() {
     static const bool on = [] { const char* e = std::getenv("STRATA_QFUSE_HC_LOCAL"); return e == nullptr || std::atoi(e) != 0; }();
     return on;
+}
+// the standing up kernel at a compile-time column width (the exact-T instantiations keep the loop bounds compile-time)
+template <int COLS>
+void up_multi_by_t(const GrMulti& m, int n_tok, bool no_multi_gr, cudaStream_t st) {
+    constexpr int BLOCKS = N / COLS;
+    switch (no_multi_gr ? kFusedGrMaxT : n_tok) {
+        case 1: gr_up_multi_kernel<1, true, COLS><<<BLOCKS, THREADS, 0, st>>>(m); break;
+        case 2: gr_up_multi_kernel<2, true, COLS><<<BLOCKS, THREADS, 0, st>>>(m); break;
+        case 3: gr_up_multi_kernel<3, true, COLS><<<BLOCKS, THREADS, 0, st>>>(m); break;
+        case 4: gr_up_multi_kernel<4, true, COLS><<<BLOCKS, THREADS, 0, st>>>(m); break;
+        case 5: gr_up_multi_kernel<5, true, COLS><<<BLOCKS, THREADS, 0, st>>>(m); break;
+        case 6: gr_up_multi_kernel<6, true, COLS><<<BLOCKS, THREADS, 0, st>>>(m); break;
+        default: gr_up_multi_kernel<kFusedGrMaxT, false, COLS><<<BLOCKS, THREADS, 0, st>>>(m); break;
+    }
 }
 void launch_multi(const GrMulti& m, int variant, cudaStream_t st, unsigned long long* stamp_buf, int stamp_i0) {
     const int n_tok = m.T;
@@ -1172,15 +1205,9 @@ void launch_multi(const GrMulti& m, int variant, cudaStream_t st, unsigned long 
         return;
     }
 #endif
-    switch (no_multi_gr ? kFusedGrMaxT : n_tok) {
-        case 1: gr_up_multi_kernel<1, true><<<UPM_BLOCKS, THREADS, 0, st>>>(m); break;
-        case 2: gr_up_multi_kernel<2, true><<<UPM_BLOCKS, THREADS, 0, st>>>(m); break;
-        case 3: gr_up_multi_kernel<3, true><<<UPM_BLOCKS, THREADS, 0, st>>>(m); break;
-        case 4: gr_up_multi_kernel<4, true><<<UPM_BLOCKS, THREADS, 0, st>>>(m); break;
-        case 5: gr_up_multi_kernel<5, true><<<UPM_BLOCKS, THREADS, 0, st>>>(m); break;
-        case 6: gr_up_multi_kernel<6, true><<<UPM_BLOCKS, THREADS, 0, st>>>(m); break;
-        default: gr_up_multi_kernel<kFusedGrMaxT, false><<<UPM_BLOCKS, THREADS, 0, st>>>(m); break;
-    }
+    // T15C S1: COLS = 8 under STRATA_GR_UP8=1 (bitwise; the per-row math does not read COLS), else the standing 16
+    if (gr_up8_on()) up_multi_by_t<8>(m, n_tok, no_multi_gr, st);
+    else up_multi_by_t<UPM_COLS>(m, n_tok, no_multi_gr, st);
 }
 
 /// STRATA_HC_SPLIT: unset or 2 = the newest the check accepts (staged), 1 = at most split, 0 = the plain read
@@ -1331,7 +1358,7 @@ __global__ void __launch_bounds__(THREADS) gr_up_fast_kernel(GrMulti m) {
         for (int c = 0; c < HC; ++c) s += g[k][c][col];
         m.a[k].mixed[d0 + col] = s / (float) HC;
     }
-    if (m.a[0].q8_mixed != nullptr) gr_q8_tail(m, d0);   // S26 STRATA_QFUSE, as gr_up_multi_kernel
+    if (m.a[0].q8_mixed != nullptr) gr_q8_tail(m, d0, 32 / UPM_COLS);   // S26 STRATA_QFUSE, as gr_up_multi_kernel
 }
 #endif
 
@@ -1619,7 +1646,7 @@ __global__ void __launch_bounds__(THREADS) gr_up_q8_kernel(GrMulti m, const floa
         for (int c = 0; c < HC; ++c) sum += g[k][c][col];
         m.a[k].mixed[d0 + col] = sum / (float) HC;
     }
-    if (m.a[0].q8_mixed != nullptr) gr_q8_tail(m, d0);   // S26 STRATA_QFUSE
+    if (m.a[0].q8_mixed != nullptr) gr_q8_tail(m, d0, 32 / UPM_COLS);   // S26 STRATA_QFUSE
 }
 
 
@@ -1962,7 +1989,7 @@ __global__ void __launch_bounds__(THREADS) gr_up_q8_fast_kernel(GrMulti m, const
         for (int c = 0; c < HC; ++c) sum += g[k][c][col];
         m.a[k].mixed[d0 + col] = sum / (float) HC;
     }
-    if (m.a[0].q8_mixed != nullptr) gr_q8_tail(m, d0);   // S26 STRATA_QFUSE
+    if (m.a[0].q8_mixed != nullptr) gr_q8_tail(m, d0, 32 / UPM_COLS);   // S26 STRATA_QFUSE
 }
 
 template <int T> void launch_q8_t(const GrMulti& m, float* part, float* ssg, cudaStream_t st, unsigned long long* stamp_buf,
@@ -2359,6 +2386,14 @@ int fused_gr_variant() {
 }
 
 void fused_gr_check() {
+    static const bool arm_banner = [] {   // once per process: which T15C arms the env put on the hc read
+        if (gr_up8_on())
+            std::fprintf(stderr, "strata hc: STRATA_GR_UP8=1: the up kernel runs 8 columns a block (320 blocks)\n");
+        if (norm_fast_on())
+            std::fprintf(stderr, "strata hc: STRATA_GR_NORM_FAST=1 (T15C S3 default): the split norm runs the fast kernel\n");
+        return true;
+    }();
+    (void) arm_banner;
     int dev = 0;
     cudaGetDevice(&dev);
     if (dev < 0 || dev >= 64 || g_variant[dev].load() > 0) return;

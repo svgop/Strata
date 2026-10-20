@@ -1006,6 +1006,10 @@ PDL: do NOT re-queue on "half-wired" claims - pdl.hpp is complete, F-191 measure
 
 ## T15 QUEUE — easy +10% audit (2026-10-17; dossier campaign/research/T15-easy-wins-audit.md)
 Anatomy-priced per F-232 law; NOTHING batteryed yet. Anchors: M1 198.5 / prefill 6.0-7.0k.
+[UPDATE 2026-10-20, T15C tranche below: item 1 = +3.83% under bar solo, FLAT in stack, flagged default-off;
+item 2 (staged 4-warp) = -6.99% REJECTED; item 4/#3 norm_fast flip = ADOPTED pooled +5.2% M1 (F-241);
+item 5 LFUSE = adjudicated DEAD (F-206 sweep + FUSE_HITS displacement, see T15C S5); the TSUM rider was
+already REJECTED in T18 — do not re-test. Anchors stale: post-flip M1 ~204-208 band, five-boot re-bank owed.]
 1. [DECODE #1, S] UPM_COLS 16->8 widen up grid (fused_gr.cu:320/:437/:1175) +3.4-5% BIT-EXACT;
    gr_q8_tail atomicAdd==1u -> ==3u at 8 cols; rider s26_tsum transposed butterfly ~+1%;
    proof = fused_gr_selftest + gr_parity QFUSE byte-equality before any boot.
@@ -1353,3 +1357,50 @@ trigger self-healing. Harnesses stay reusable: campaign/t18-repro.sh (--label/--
 light|probe), campaign/t18-ab.sh (3v3 binary A/B). Revert: cp engine/strata.pre-t18fix engine/strata
 (+ git revert). CLOSED as a stability fix; watch for the trigger surfacing as one-window request
 errors ("the expert source could not produce a blob" / nt-capacity refusal) instead of crashes.
+
+## T15C — HC-KERNEL TRANCHE RESULTS (2026-10-20 04:30-07:00; batteries campaign/results/t15c-*.log + per-leg t15c-*-*.out; scorer campaign/t15c-score.py; harness campaign/t15c-battery.sh)
+Method: every stage proof-first on the card (gr_parity --selftest byte-equality, multi-vs-single + QFUSE,
+at the exact env state), THEN one 3v3 ABAB interleaved battery per stage (fresh boot per leg, probe
+--short-n 6, per-leg .out, arm env verified by its boot banner; binary identical arm/ctl — env-gated
+code, default off, so ctl = the same binary unarmed). Base tree = 0ebeab8f (T18 fix in every binary,
+`strings engine/strata | grep -c t18` = 59). Journal: F-241.
+- S1 UPM_COLS 16->8 (fused_gr.cu gr_up_multi_kernel COLS template + launch_up_multi_by_t<8|16> +
+  gr_q8_tail per_group param, ==3u at 8 cols; STRATA_GR_UP8=1, default off): PROOF PASS (byte-equality
+  incl QFUSE at 8 cols, direct + graph replay). BATTERY s1up8: M1 +3.83% (212.3 vs 204.5), pair +1.86,
+  conc +2.67, M3b +1.16 — UNDER the +4% bar, every lane positive = consistent stack candidate: FLAGGED,
+  NOT adopted. STACK TEST s4stack (UP8 on the adopted S3): M1 -1.01 / pair +2.95 / conc +1.80 — FLAT,
+  the widening adds nothing once the norm wall is gone; stays default-off. Revert: git checkout the
+  S1 hunks of src/kernels/cuda/fused_gr.cu (or simply never set STRATA_GR_UP8 — the default path is
+  bit-identical to pre-tranche).
+- S2 staged down at 4 warps (THREADS=128 instantiation, 81 blocks; STRATA_GR_DOWN_W4): PROOF PASS
+  (byte-equality solo + combined with S1). BATTERY s2w4: M1 -6.99% (192.1 vs 206.5), pair -4.00,
+  conc -1.89 — REJECTED, code FULLY REVERTED in the same session (the binary was rebuilt + redeployed
+  before S3; engine/strata.pre-t15c-s2 keeps the S2-era binary). Mechanism: the 80 KB staged tile is
+  filled by half the threads per block — the cp.async fill latency doubled and ate the doubled SM
+  coverage (F-217's lesson from the other direction: this kernel's grid shape is load-bearing both ways).
+- S3 norm_fast_on() CUDA flip (fused_gr.cu :1085-1103; the hard `return false` becomes env +
+  default TRUE; gr_norm_split_fast_kernel runs on the standing staged read): PROOF PASS (gr_parity
+  byte-equality with the flip default, with STRATA_GR_NORM_FAST=0, and combined S1+S2+S3) + the
+  boot-time hc selftest re-proves "checked bit for bit" EVERY boot (in every battery leg's engine log).
+  BATTERY s3norm: M1 +9.68% (212.2 vs 193.4), pair -1.51, conc +3.04, M3b +2.35. CONFIRM s3confirm:
+  M1 +0.87% (204.6 vs 202.8), pair +3.10, conc +7.91, M3b +2.23 — the first battery's control window
+  read LOW; the honest claim is POOLED 6v6: M1 +5.2% (208.4 vs 198.1), pair +0.8%, conc +5.5%,
+  M3b +2.3pp, no lane negative in any battery. ADOPTED as the code default (the launcher carries the
+  note; rollback = export STRATA_GR_NORM_FAST=0). NOTE: the +9.68% is RETRACTED as control-window
+  luck; the scoreboard's M1 anchor moves to ~204-208 boot-variance band pending the owed five-boot
+  re-bank (F-238's 193.7 is pre-flip and stale for M1 claims).
+- S4 STACKED (survivors S1+S3, one battery): s4stack above — FLAT. S1 does not stack on S3; no adoption.
+- S5 LFUSE device-plan arm: KILLED BY CODE READ per T16 #8 (adjudication) — NO BATTERY SPENT.
+  (a) F-206 measured STRATA_LFUSE=1 at -3.0% M1 ON THIS BOX (fusion negative, node savings
+  latency-hidden); (b) the R1 dossier's "-144 nodes SURVIVES" ignored that sweep and re-priced with
+  the F-235 node marginal (0.5-1.0 us x 144 = +0.5-1% M1) — under the +4% bar on its own arithmetic;
+  (c) the killer: on the device-plan path (standing STRATA_VERIFY_DEVICE_PLAN=1, ~2% misses) enabling
+  LFUSE sets sg_gated_[grp] (verify.cpp:1624) which FORCES hits_in_combine=false (verify.cpp:1733
+  `!sg_gated_[grp]`) — the standing STRATA_FUSE_HITS=1 adoption's folded combine is displaced and
+  moe_hit_add relaunches (~+48 nodes/window back). The arm trades an adopted +4.35%-class fold for a
+  twice-measured-negative fusion. Strike the T15 queue item #4 and the R1 S2 row; re-open only if a
+  future gate regains hits-added under the gated combine AND node spacing becomes binding.
+- S6 cooperative norm+down fusion: NOT STARTED per the brief's own stop rule (S1-S3 + S4 + confirm
+  consumed the session; state banked instead).
+State: engine/strata = S1(default-off)+S3(flip) build; backups alongside: engine/strata.pre-t15c
+(pre-tranche = T18-fix build, the full revert), .pre-t15c-s2, .pre-t15c-s3. The box is STOPPED.

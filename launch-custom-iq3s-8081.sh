@@ -5,6 +5,11 @@
 # --- standing arms (each measured; see SVG-CUSTOM F-05/F-12/F-15b/F-16/F-64) ---
 # F-221 ADOPTED (2026-10-16): PR#540 chunk kernel + bounded merge on sm_120.
 # ABAB 3v3: M1 +6.0 / pair +7.0 / conc +5.3; bit-identical (parity 1172/0 on this GPU).
+# T15C S3 / F-241 ADOPTED (2026-10-20): the STRATA_GR_NORM_FAST CUDA flip is now the CODE default
+# (fused_gr.cu norm_fast_on(): the split norm's register kernel; bitwise per gr_parity byte-equality
+# + the boot-time hc selftest every boot). POOLED 6v6 (s3norm + s3confirm): M1 +5.2% (per-battery
+# +9.68% then +0.87% - the first battery's control window read low), pair +0.8%, conc +5.5%,
+# M3b +2.3pp; no lane negative in any battery. ROLLBACK: export STRATA_GR_NORM_FAST=0
 export STRATA_ATTN_DAILY=1
 export STRATA_GDN_CHUNKED=1  # F-224 ADOPTED 2026-10-16: prefill DeltaNet recurrence in WY chunks (kernels.cu; OUR gdn_rec_parity --bench: 1.68x at 32K, -115ms/chunk). Paired prefill probe 2x4: -141..168ms (~-4.2%) EVERY pair; decode lanes neutral (3v3 ABAB, all inside noise); M3b in-band; MMLU-Pro 2x gate 95.7/92.9. Different FP32 sum order (prefill only) - the gate covers it
 export STRATA_FUSE_HITS=1  # F-226 ADOPTED 2026-10-17: the moe_hit_add->combine fold (was HARD-FALSE on CUDA, de05c182) - ZADD bitwise per native_moe.cu:46. 3v3 ABAB (fuarm/fuctl): M1 +4.35% (202.5 vs 194.1), pair +2.34%, conc +1.24%, zero lane regressions, M3b in-band (76.2 vs 75.6)
