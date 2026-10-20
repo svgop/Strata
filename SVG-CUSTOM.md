@@ -8314,3 +8314,17 @@ via data/mtp-en. RECLAIMED this round: 6.5G (mtp dedupe via links) + 6.5G (mtp-i
 unreferenced) + 479M (dead engine backups) — /home now 244G used of 952G. NOTE for future greps:
 journal/dossier historical entries still say the old paths by design; operational files are all
 on the new layout.
+
+### F-244 — UPSTREAM v0.2.1: the first perf wave that reaches sm_120 (+15.6 IQ3_S / +25.9 Q2_0 M1); custom's lead narrows but holds (2026-10-20)
+Pulled v0.2.1 into the stock install (884 commits since .45; engine 0.1.46), built clean after
+repairing two rename-fallout layers (15 venv shebangs + CMake/ninja absolute paths still pointing
+at Strata/ — F-243's legacy). A-B-A bench on both quants, fresh boot per leg, full probes
+(campaign/results/v02-bench.log): IQ3_S .45 144.5/149.0 M1 (mean 146.8) -> .2.1 **169.7**
+(+15.6%), pair 152.4 -> 169.4 (+11.2%), conc 239.0 -> 281.4 (+17.7%). Q2_0 .45 209.9 ->
+.2.1 **264.3** (+25.9%), pair 181.5 -> 221.4 (+22.0%), conc 188.6 -> 220.8 (+17.1%).
+AGAINST CUSTOM (matched IQ3_S bytes, frozen post-norm_fast scoreboard 203.9/202.0/306.1):
+custom still leads .2.1 by +20.2 / +19.3 / +8.8% - the margin collapsed from +23-33% vs .45.
+Q2_0 CROSS-SESSION CAVEAT: stock .2.1's 264.3 is above our fork's Oct-17 Q2_0 leg (242.6), but
+different session/clocks - a same-session custom-Q2_0 A/B is OWED before any lane claim.
+Stock install now deployed at v0.2.1 (requested); .45 kept as engine/strata.v0.1.45-pre-v02.
+NEXT: commit-level analysis of what produced the wave, ranked for cherry-pick into custom-2.
