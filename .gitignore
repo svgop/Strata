@@ -69,6 +69,10 @@ build-log*.txt
 *.dmp
 custom-*.log
 strata-*.log
+# except the campaign's battery record (law 6: results live in git) - upstream's *.log above
+# must not shadow it (T20 fix)
+!campaign/results/*.log
+!campaign/results/*.txt
 # local Windows HIP packaging output
 dist-hip/
 

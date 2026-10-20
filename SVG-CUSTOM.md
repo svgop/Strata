@@ -8400,3 +8400,39 @@ window) AND same-window control +14.6% / +3.2% (16:53) - mechanism-consistent bo
 Post-T19 standing binary preserved as engine/strata.t19-final; pre-T19 as
 engine/strata.pre-t19-s1. OWED: one quiet-window five-boot re-bank to freeze the new absolute
 record (expected ~209-212 / ~195-205 / 310-335 depending on window class).
+
+### F-247 — T20: the whole v0.2.1 wave merged in one tree and priced in one window: WIN (M1 +11.1%, prefill +4.9%, every other lane in-band positive); the merge replaces cherry-picking if the MMLU gate and a quiet re-bank clear (2026-10-20 18:00-19:15; battery campaign/results/t20-merge-ab.log in the COPY ~/LLM/strata-custom-2-merge)
+The T19 tranche ported the wave one commit at a time with the fork's defaults (S1 adopted, the
+rest flagged off). T20 asked the cheaper, coarser question the wave analysis left open: what does
+the ENTIRE merged engine cost or gain on the same window - including everything the fork had
+refused to arm one-by-one (SIDE_MIXER=2, GR_DOWN_TG on sm_120, GU_SWIGLU on, PF_FUSED, the I/O
+tier, the queue rework)? `git merge v0.2.1` into a full COPY of the fork (original untouched,
+still standing; merge commit 74239c96, local only). 15 conflicted files, 55 hunks, resolved by
+the preservation list (full resolution table: SVG-CUSTOM-TODO.md T20). The batch/cohorts region
+was recomposed by hand after the auto-merge produced duplicate batch_poll definitions: the merged
+batch_poll = our G2 doorbell loop + upstream's ext_serve_ watchdog + their batch_serve rewritten
+with OUR group math (doorbell k = layer lb_+k/G, group k%G); commit graphs stay parity-keyed
+(F-196); upstream's pre_launch_/handoff/stamped-wait hooks wired into our shapes. T18's rebase
+hazard did NOT fire - both guards survived the io-prefetch rewrite inside the auto-merge
+(verified in-source). norm_fast stays OUR flip (upstream opt-in loses to our sm_120 +5.2%).
+Proofs: mmvq_il_parity T 1-8 every rows choice bitwise (preservation item 5 resolved to
+upstream's version - it adds the sm_75 tables); gr/gr_multi parities at default, STRATA_HC_SPLIT=2
+and STRATA_GR_DOWN_TG=0, all 0 failures; iq_multi_parity default + GU_SWIGLU=0; gdn_chunk +
+gdn_rec parities. Boot on 8081 via the ORIGINAL launcher: health OK, the boot-time hc selftest
+("checked bit for bit against the plain read"), norm_fast boot line, "cohorts: round A.S=6 B.S=6"
+rounds live, coherent smoke under the full merged default stack.
+A/B (3v3 ABAB interleaved, fresh boot per leg, probe --short-n 6, ONE window 18:50-19:01; binary
+the only variable, ORIGINAL engine slot): means - M1 194.1 -> 215.8 (**+11.1%**), pair 199.3 ->
+200.9 (+0.8%), 6-conc 311.4 -> 321.3 (+3.2%), M3b 74.4 -> 75.3 (+0.9pp); prefill 32k real-corpus
+(ONE leg per binary, consecutive): 5816.7 -> 6103.1 tok/s (**+4.9%**). Worst lane +0.8%, two
+lanes >= +4% - the stated win rule clears. VERDICT: WIN; replace recommended behind (1) the 2x
+MMLU-Pro gate (PF_FUSED is lossy-tiny and in the default stack) and (2) a quiet-window five-boot
+re-bank of the merged binary. Rollbacks all env (SIDE_MIXER/GR_DOWN_TG/GU_SWIGLU/PF_FUSED/
+MMVQ_IL/GR_NORM_FAST/ATTN_DAILY/SM120_PERF =0). The merged candidate: copy's main @ 74239c96,
+binary md5 b8a21923 (campaign/results/strata.t20-merged); control preserved: engine/strata.t19-final
+(53bbe9fb), still the standing engine - the original repo's files untouched (git diff empty).
+LESSON (build hygiene): the copy's build/ cache had silently pointed at the ORIGINAL's sources -
+"the copy builds clean" had been rebuilding the WRONG TREE into the copy's build dir. Any
+copied-tree build must be re-configured with absolute paths into the copy and its build.ninja
+spot-checked for the copy's paths before the first object is compiled; a binary's provenance is
+its build.ninja's source paths, not the directory it was produced in.

@@ -1574,5 +1574,41 @@ least one lane; else the merge stays a lab result.
   1..8 captured clean; cohorts rounds live; smoke request coherent (finish=stop, sensible
   speculative-decoding answer).
 
-### A/B — SAME-WINDOW LEG TABLE (campaign/results/t20-merge-ab.log; probe --short-n 6, fresh boot per leg)
-(pending - filled by the battery)
+### A/B — SAME-WINDOW LEG TABLE (campaign/results/t20-merge-ab.log; probe --short-n 6, fresh boot per leg; 18:50-19:01, one window)
+| Leg | binary | M1 t/s | pair t/s | 6-conc t/s | M3b % |
+|---|---|---|---|---|---|
+| t19-r1 | t19-final | 199.6 | 197.6 | 307.8 | 74.3 |
+| mrg-r1 | merged | 224.7 | 203.9 | 320.2 | 74.7 |
+| t19-r2 | t19-final | 186.8 | 202.0 | 306.6 | 74.3 |
+| mrg-r2 | merged | 220.0 | 199.2 | 307.8 | 74.1 |
+| t19-r3 | t19-final | 196.0 | 198.2 | 319.7 | 74.6 |
+| mrg-r3 | merged | 202.6 | 199.5 | 335.9 | 77.1 |
+| **MEAN** | t19-final | **194.1** | **199.3** | **311.4** | **74.4** |
+| **MEAN** | merged | **215.8** | **200.9** | **321.3** | **75.3** |
+| **DELTA** | merged vs t19 | **+11.1%** | **+0.8%** | **+3.2%** | **+0.9pp** |
+Prefill (depth-lane-real --depth 32000, one fresh-boot leg each, same 34,123-token corpus read):
+t19 5866 ms = 5816.7 tok/s vs merged 5591 ms = 6103.1 tok/s -> **+4.9% prefill** (same-window
+class: consecutive legs, 19:00/19:01; depth decode read 176.5 vs 180.5 tok/s, merged also drafted
+more - 911/1468 vs 725/1033 accepted).
+
+### VERDICT: WIN by the stated rule - REPLACE is recommended, behind two law items
+Rule check: no lane regresses beyond ±4% (worst lane delta is +0.8%) AND >= +4% on at least one
+lane (M1 +11.1%, prefill +4.9%). The M3b acceptance canary is flat-to-up - the sm_120 default
+flips (SIDE_MIXER=2, GU_SWIGLU, PF_FUSED, GR_DOWN_TG=1, upstream mmvq tables) carry no visible
+acceptance tax on this probe. Attribution is the WHOLE package (one variable = the tree): the
+T19 line already had S1 mmvq_il + the same idea kernels default-off, so the same-window gain is
+mostly upstream's default flips (SIDE_MIXER=2 + GR_DOWN_TG on sm_120 + GU_SWIGLU on + PF_FUSED
+prompt experts + the I/O tier) - exactly what the fork refused to arm one-by-one without
+same-window proof, now priced in one battery.
+BEFORE PROMOTING TO STANDING (the two law items the A/B does not cover):
+1. MMLU-Pro gate x2 (mmlu-pro-gate.py 0.933 <label>) - PF_FUSED is LOSSY-tiny (upstream KL 2e-4)
+   and the merge changes the token stream; the law asks for the gate before a standing flip.
+2. A quiet-window five-boot re-bank of the merged binary (also still owed for T19, F-246).
+Rollbacks if a lane ever needs one (all env, one launcher line): STRATA_SIDE_MIXER=0,
+STRATA_GR_DOWN_TG=0, STRATA_GU_SWIGLU=0, STRATA_PF_FUSED=0, STRATA_MMVQ_IL_WIDE=0 +
+STRATA_MMVQ_IL_120=0, STRATA_GR_NORM_FAST=0, STRATA_ATTN_DAILY=0, STRATA_SM120_PERF=0.
+RECOMMENDATION: replace the fork's tree with the merged line (the copy's main @ 74239c96 is the
+candidate; engine binary = campaign/results/strata.t20-merged, md5 b8a21923...), run the two
+items above at the promotion boot, and keep engine/strata.t19-final as the rollback until the
+re-bank freezes. Fallback if the MMLU gate fails: keep the tree, flip STRATA_PF_FUSED=0 (and
+then =1 the rest stays), re-run the gate once; the merge's speed case does not rest on PF_FUSED.
