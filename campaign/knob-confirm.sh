@@ -3,7 +3,7 @@
 set -u
 REPO=/home/svg/LLM/strata-custom-2
 LAUNCH=$REPO/launch-custom-iq3s-8081.sh
-ARMS=/home/svg/LLM/Strata/custom-arms.env
+ARMS=/home/svg/LLM/strata/custom-arms.env
 PORT=8081
 OUT=$REPO/campaign/results/knob-confirm.log
 RES=$REPO/campaign/results

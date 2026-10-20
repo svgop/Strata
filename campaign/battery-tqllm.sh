@@ -7,7 +7,7 @@ set -u
 cd /home/svg/LLM/tqllm
 LABEL="$1"; MODE="${2:-pln}"
 KEY="3f0940df8efb9c363e4189956ae907d3e4acac221aab39f44804fe0b0df1b8"
-MODEL=/home/svg/LLM/Custom-data/models/Qwen3.8-Flash-Next-GSQ-RCO-IQ3_S-MERGED.gguf
+MODEL=/home/svg/LLM/data/models/Qwen3.8-Flash-Next-GSQ-RCO-IQ3_S-MERGED.gguf
 
 NP=6; EXTRA=""; PROBEFLAGS=""
 if [ "$MODE" = "mtp" ]; then NP=1; EXTRA="--mtp"; PROBEFLAGS="--skip-conc"; fi

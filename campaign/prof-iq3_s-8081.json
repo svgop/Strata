@@ -2,11 +2,11 @@
  "exe": "/home/svg/LLM/strata-custom-2/engine/strata",
  "args": [
   "--pack",
-  "/home/svg/LLM/Custom-data/packs/iq3_s",
+  "/home/svg/LLM/data/packs/iq3_s",
   "--native",
-  "/home/svg/LLM/Custom-data/models/Qwen3.8-Flash-Next-GSQ-RCO-IQ3_S-00001-of-00002.gguf",
+  "/home/svg/LLM/data/models/Qwen3.8-Flash-Next-GSQ-RCO-IQ3_S-00001-of-00002.gguf",
   "--ple-gguf",
-  "/home/svg/LLM/Custom-data/models/Qwen3.8-Flash-Next-GSQ-RCO-IQ3_S-00002-of-00002.gguf",
+  "/home/svg/LLM/data/models/Qwen3.8-Flash-Next-GSQ-RCO-IQ3_S-00002-of-00002.gguf",
   "--expert-cache",
   "auto",
   "--spec",
@@ -54,10 +54,10 @@
   "30",
   "--resident-experts",
   "--mtp",
-  "/home/svg/LLM/Custom-data/mtp/rt"
+  "/home/svg/LLM/data/mtp-en/rt"
  ],
  "cwd": "/home/svg/LLM/strata-custom-2",
- "tokenizer": "/home/svg/LLM/Custom-data/packs/iq3_s/tokenizer",
+ "tokenizer": "/home/svg/LLM/data/packs/iq3_s/tokenizer",
  "model_name": "qwen3.8-flash-next-iq3_s",
  "log": "/home/svg/LLM/strata-custom-2/custom-iq3s-prof.log",
  "lib_dirs": [

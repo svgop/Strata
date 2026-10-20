@@ -8295,3 +8295,22 @@ five boots (T18 fix holding under 30 conc legs). ARCH: M1 203.9 is now above the
 bank (198.5) by +2.7%, pair above (202.0 vs 197.6), conc still under the 2835 bank (306.1 vs
 312.4, -2.0%) but above the pre-flip 3135 mean. New frozen baseline: **203.9 / 202.0 / 306.1**.
 Next: prefill combine (#1 phase, 16.7%) or TC-hc mma (+9-17% class) — both execution-ready.
+
+### F-243 — THE LAYOUT REFACTOR: LLM/{data, strata, strata-custom-2}; both lanes boot-verified (2026-10-20)
+User-directed consolidation, done under "check before doing anything, be double sure": merged
+Strata-data + Custom-data -> /home/svg/LLM/data and renamed Strata -> strata. VERIFICATION
+BEFORE MOVING: mtp trees hashed file-by-file (41 files: 40 byte-identical, EXACTLY ONE difference
+= rt/draft_vocab.bin, the deliberate stock-CJK vs custom-en split — preserved, not merged);
+Custom-data/packs/q2_0 was already a symlink (no dup); zero model-filename collisions; 111 files
+pre-move, all accounted post-move. EN-VARIANT DESIGN: data/mtp = stock tree; data/mtp-en =
+en draft_vocab.bin (f674c934, real file) + absolute symlinks to the shared rt tensors and
+parent assets — the custom lane's --mtp now points there, stock keeps data/mtp/rt. 49 operational
+files in the custom repo + 7 in the stock repo sed'd to the new roots; ~/.config/strata/
+settings.json data_dir -> /home/svg/LLM/data, installs -> [strata-custom-2, strata]. Path audit:
+436 absolute paths checked, ALL real ones resolve (residual misses = boot-created logs, shell
+syntax artifacts, one dead tqllm battery from the merge era). BOOT VERIFIED both lanes: stock
+q2_0 171.0 tok/s decode + normal cache stats; custom iq3_s M1 201.8 (in the post-norm_fast band)
+via data/mtp-en. RECLAIMED this round: 6.5G (mtp dedupe via links) + 6.5G (mtp-iq3s r17 assets,
+unreferenced) + 479M (dead engine backups) — /home now 244G used of 952G. NOTE for future greps:
+journal/dossier historical entries still say the old paths by design; operational files are all
+on the new layout.
