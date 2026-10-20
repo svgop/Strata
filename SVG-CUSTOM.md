@@ -8193,3 +8193,32 @@ strata::kernels::cpu::vnni::iq4nl_nt (CPU pool, IQ4_NL down VNNI) - three sighti
 on standing control legs, ~2-5% of 6-conc legs, near-null fault addresses across multiple pool
 threads at one IP = blob-lifetime race suspicion (ADR exchange). Real-user impact + it silently
 poisons conc means. Priority 1; T18 crash-hunt dispatched.
+
+### F-240 — THE CRASH FOUND, ROOT-CAUSED, FIXED: `job_of` poison from a failed verify window, not the ADR exchange (2026-10-20 01:20-04:15; repro campaign/t18-repro.sh, battery campaign/t18-ab.sh, evidence campaign/results/t18-*)
+The priority-1 SIGSEGV is REPRODUCED (1 crash in 120 pre-fix batches, campaign/results/t18-crashes/
+t18-pre2-iter005-20261020-020302/), and the mechanism is not blob lifetime: it is stale dispatch
+state. `expert_pool_dispatch_multi` mapped expert id -> job through `d.job_of`, reset ONLY on the
+success path. Any early-return failure ("the expert source could not produce a blob", a bad router
+id) left stale indices; the host clears `d.failed` before the NEXT round, which then REUSED the old
+job descriptors: `nt` was never reset and never bounds-checked, so `act[nt]`/`nact[nt]`/`out[nt]`
+(MAXT=8 each) walked into the following jobs' fields, and the pool's drain then read `hq[t]`/`act[t]`
+out of bounds - SplitBufMulti float bytes as pointers, tiny denormals included. THE FAULT ADDRESSES
+DECODE THE BUG: every crash line is `y[t]+2` for y[t] in {0..16} inside `vnni::iq4nl_nt`, six pool
+threads at one IP (0x4723973) - impossible for any valid job, exactly what an OOB `hq[t]` read
+produces (repro: segfault at 2/4/5/6/7/8, same IP). The kill chain needs no blob race, and explains
+the degradation too: nt grows unbounded, the down phase does nt/8x the work per poisoned job, tok/s
+decays 40->10->3 over ~40 s, then a denormal-as-pointer deref kills the engine (repro server tail
+matches the original bat-lp/cf-tsum shape line for line, conc leg reads 0 tok). THE FIX
+(src/core/expert_source.cpp, two guards): reset `job_of` at the START of every call (a failed window
+costs that window, never the round after), and refuse an expert job whose nt reaches MAXT instead of
+writing past it. Bit-identical on the success path by construction (after a clean call job_of is
+already all -1, so the reset is a no-op; the nt check cannot fire within one window), so no env gate.
+PROOF: 60/60 fixed probe-shape batches clean vs 1 crash in the same 60 pre-fix; 3v3 ABAB
+(per-leg binaries string-verified) fix-vs-ctl means M1 205.7 vs 204.1 (+0.77%), pair 203.8 vs 206.6
+(-1.32%), conc 314.3 vs 320.0 (-1.77%) - all inside the +-4% band, M1 protected. RESIDUAL: the
+first domino (which dispatch failure fires first in the wild) is still unobserved live - the
+engine's `ERR` line dies with its buffered stdout, so the repro captures the signature, not the
+trigger; the fix makes ANY trigger self-healing. The ADR-exchange suspicion (blob lifetime, F-239)
+is CLEARED for this crash: no exchange path can write a small integer where the pool reads a blob,
+and the fault addresses are y[t], not w. REVERT: `cp engine/strata.pre-t18fix engine/strata`
+(the pre-fix binary, kept alongside; the code revert is `git revert` of this commit).

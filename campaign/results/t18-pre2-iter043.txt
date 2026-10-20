@@ -1,0 +1,5 @@
+single: ok=True tok=860 5.3s
+m1: ok=True tok=2000 10.2s
+batch2/900: agg_tok=1800 wall=9.8s agg_rate=184.5 t/s errors=0
+batch6/600: agg_tok=3600 wall=15.9s agg_rate=227.0 t/s errors=0
+fresh6 done (errors so far 0)

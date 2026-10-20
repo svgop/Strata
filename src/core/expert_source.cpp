@@ -3718,7 +3718,17 @@ void expert_pool_dispatch_multi(ExpertDispatch& d, const float* x_f, const int32
     const ExpertLayout& lay = expert_layout();
     const bool native = lay.native;
     if (native && d.nact_multi.size() < (size_t) MAXT * kNativeActBytes) d.nact_multi.resize((size_t) MAXT * kNativeActBytes);
+    // T18 (the iq4nl_nt SIGSEGV, 3 sightings under 6-stream load): `job_of` maps an expert id to its job for
+    // THIS call and was reset only on the success path - a dispatch that returned early (`d.failed`: a blob
+    // that could not be produced, a bad router id) left its stale indices behind. The host clears `d.failed`
+    // before the next round, so the next window then REUSED the stale job descriptors: `nt` was never reset
+    // and never bounds-checked, so `act[nt]`/`nact[nt]`/`out[nt]` walked past MAXT into the following jobs'
+    // fields, and the pool's drain then read `hq[t]`/`act[t]` out of bounds - the split buffers' float bytes
+    // as pointers, tiny denormals included - which faults at 0x2/0x3/0x5/0xa inside `vnni::iq4nl_nt`, several
+    // workers at once, at the same instruction. Reset at the START of every call: one failed window costs
+    // that window, never the round after it. (512 int16 stores per layer-window; not measurable.)
     if (d.job_of.size() != (size_t) d.n_expert) d.job_of.assign((size_t) d.n_expert, (int16_t) -1);
+    else std::fill(d.job_of.begin(), d.job_of.end(), (int16_t) -1);
     if (d.jobs_multi.size() < (size_t) (n_tok * k)) d.jobs_multi.resize((size_t) (MAXT * k));
     static const bool ptrace = std::getenv("STRATA_POOL_TRACE") != nullptr;
     auto pt = [&](const char* what, long long a = -1) {
@@ -4052,6 +4062,16 @@ void expert_pool_dispatch_multi(ExpertDispatch& d, const float* x_f, const int32
                 nj.nt = 0;
             }
             ExpertJobMulti& jb = d.jobs_multi[(size_t) jo];
+            // T18: the second wall. Within one window an expert is seen at most n_tok (<= MAXT) times, so this
+            // cannot fire on a clean call - it turns any future stale-descriptor path into a refused window
+            // instead of a write past `act`/`nact`/`out` (MAXT entries each) into the following jobs' fields.
+            if (jb.nt >= MAXT) {
+                d.failed = true;
+                d.fail = "a routed expert job exceeded the verify window's token capacity";
+                d.fail_layer = d.layers;
+                d.fail_expert = e;
+                return;
+            }
             jb.act[jb.nt] = &d.act_multi[(size_t) t];
             jb.nact[jb.nt] = native ? d.nact_multi.data() + (size_t) t * kNativeActBytes : nullptr;
             jb.out[jb.nt] = row;

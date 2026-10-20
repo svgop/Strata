@@ -1336,3 +1336,20 @@ to ~3 tok/s with thinking requests then dies; server auto-restarts; conc leg rea
 Rate ~2-5% of 6-conc legs. Prime hypothesis: expert-blob lifetime race during ADR exchange
 (~900-1000 swaps/request) -> use-after-free. Evidence: coredumpctl 1152413 (29.4GB core),
 kernel log 00:33:59. IMPACT: real multi-user request failures + silent conc-benchmark poisoning.
+
+**T18 CRASH-HUNT RESULT (2026-10-20 01:20-04:15; F-240): ROOT-CAUSED + FIXED.** The ADR/blob-
+lifetime hypothesis is CLEARED - the crash is stale `job_of` dispatch state: a failed verify-window
+dispatch (early return with `d.failed`) left stale expert->job indices; the host clears `d.failed`
+next round, the window then reuses old job descriptors, `nt` (MAXT=8) is never reset nor bounds-
+checked, `act/out/hq[nt]` smash the following jobs, and the pool drains read OOB split-buffer float
+bytes as pointers -> `vnni::iq4nl_nt` faults at y[t]+2 for y[t]={0..16}, six threads at one IP.
+Reproduced pre-fix: 1 crash in 120 batches (light shape 60x clean; probe shape 1 at iter 5), full
+original signature incl the 40 s tok/s decay and the conc leg reading 0 tok. Fix (2 guards in
+`expert_pool_dispatch_multi`): reset `job_of` at call start + refuse nt >= MAXT; bit-identical on
+the success path, no env gate. Proof: 60/60 fixed batches clean; 3v3 ABAB (binaries string-verified
+per leg) M1 +0.77 / pair -1.32 / conc -1.77 - inside the band. Residual: the first domino (which
+failure fires first) is unobserved live (the ERR line dies in buffered stdout); the fix makes any
+trigger self-healing. Harnesses stay reusable: campaign/t18-repro.sh (--label/--max-iters/--shape
+light|probe), campaign/t18-ab.sh (3v3 binary A/B). Revert: cp engine/strata.pre-t18fix engine/strata
+(+ git revert). CLOSED as a stability fix; watch for the trigger surfacing as one-window request
+errors ("the expert source could not produce a blob" / nt-capacity refusal) instead of crashes.

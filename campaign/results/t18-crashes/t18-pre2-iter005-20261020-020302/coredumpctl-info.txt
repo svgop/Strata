@@ -1,0 +1,38 @@
+           PID: 1302239 (strata)
+           TID: 1302257 (strata)
+           UID: 1000 (svg)
+           GID: 1000 (svg)
+        Signal: 11 (SEGV) si_code: SEGV_MAPERR
+     Timestamp: Tue 2026-10-20 02:01:49 SAST (1min 13s ago)
+  Command Line: /home/svg/LLM/strata-custom-2/engine/strata --serve --pack /home/svg/LLM/Custom-data/packs/iq3_s --native /home/svg/LLM/Custom-data/models/Qwen3.8-Flash-Next-GSQ-RCO-IQ3_S-00001-of-00002.gguf --ple-gguf /home/svg/LLM/Custom-data/models/Qwen3.8-Flash-Next-GSQ-RCO-IQ3_S-00002-of-00002.gguf --expert-cache auto --spec 6 --max-context 131072 --kv int8 --kv-resident 32768 --spec-min-p 0.5 --prefill auto:32768 --mtp-q4 all --mtp-hnorm stream --pcie-frac 0.35 --pcie-mode dma --vram-reserve-mib 2000 --conversation-cache-mib 49152 --control-vector-scaled refusal-r.gguf:1.0 --control-vector-layer-range 4 24 --cvec-mode project --cvec-dir per-layer --ple-io mmap --adapt-decay 0.85 --expert-profile data/expert-profile.bin --expert-profile-save data/expert-profile-learned.bin --expert-profile-save-every 30 --resident-experts --mtp /home/svg/LLM/Custom-data/mtp/rt --batch 6
+    Executable: /home/svg/LLM/strata-custom-2/engine/strata
+ Control Group: /user.slice/user-1000.slice/user@1000.service/app.slice/app-zcode-826296.scope
+          Unit: user@1000.service
+     User Unit: app-zcode-826296.scope
+         Slice: user-1000.slice
+     Owner UID: 1000 (svg)
+       Boot ID: 0042bd96de64426885541a4c6bdd36a9
+    Machine ID: 805705ec86054f8e91559d9074a5ca3b
+      Hostname: svg
+       Storage: /var/lib/systemd/coredump/core.strata.1000.0042bd96de64426885541a4c6bdd36a9.1302239.1792454509000000.zst (truncated)
+  Size on Disk: 28.7G
+       Message: Process 1302239 (strata) of user 1000 dumped core.
+                
+                Stack trace of thread 1302257:
+                #0  0x0000000004723973 _ZN6strata7kernels3cpu12_GLOBAL__N_14vnniL8iq4nl_ntEPKhmiPKPK10block_q8_0iPKPfii (/home/svg/LLM/strata-custom-2/engine/strata + 0x4323973)
+                
+                Stack trace of thread 1302263:
+                #0  0x0000000004723973 _ZN6strata7kernels3cpu12_GLOBAL__N_14vnniL8iq4nl_ntEPKhmiPKPK10block_q8_0iPKPfii (/home/svg/LLM/strata-custom-2/engine/strata + 0x4323973)
+                
+                Stack trace of thread 1302258:
+                #0  0x00000000048555c2 ggml_vec_dot_iq4_nl_q8_0 (/home/svg/LLM/strata-custom-2/engine/strata + 0x44555c2)
+                
+                Stack trace of thread 1302259:
+                #0  0x0000000004723973 _ZN6strata7kernels3cpu12_GLOBAL__N_14vnniL8iq4nl_ntEPKhmiPKPK10block_q8_0iPKPfii (/home/svg/LLM/strata-custom-2/engine/strata + 0x4323973)
+                
+                Stack trace of thread 1302264:
+                #0  0x000000000485557a ggml_vec_dot_iq4_nl_q8_0 (/home/svg/LLM/strata-custom-2/engine/strata + 0x445557a)
+                
+                Stack trace of thread 1302241:
+                #0  0x00007f51856f8332 n/a (n/a + 0x0)
+                ELF object binary architecture: AMD x86-64

@@ -1,0 +1,65 @@
+T18 REPRO (pre) start 2026-10-20T01:27:56+02:00 max_iters=60
+booting standing launcher (server out: /home/svg/LLM/strata-custom-2/campaign/results/t18-pre-server.out)
+boot healthy after ~21s 2026-10-20T01:28:24+02:00
+iter 1 OK  
+iter 2 OK  conc6: agg_tok=4200 wall=18.3s agg_rate=230.0 t/s errors=0
+iter 3 OK  conc6: agg_tok=4200 wall=18.7s agg_rate=224.1 t/s errors=0
+iter 4 OK  conc6: agg_tok=4200 wall=17.9s agg_rate=234.1 t/s errors=0
+iter 5 OK  conc6: agg_tok=4200 wall=18.1s agg_rate=231.5 t/s errors=0
+iter 6 OK  conc6: agg_tok=4200 wall=17.3s agg_rate=242.8 t/s errors=0
+iter 7 OK  conc6: agg_tok=4200 wall=16.8s agg_rate=250.0 t/s errors=0
+iter 8 OK  conc6: agg_tok=4200 wall=16.8s agg_rate=249.5 t/s errors=0
+iter 9 OK  conc6: agg_tok=4200 wall=16.9s agg_rate=248.3 t/s errors=0
+iter 10 OK  conc6: agg_tok=4200 wall=18.3s agg_rate=229.2 t/s errors=0
+iter 11 OK  conc6: agg_tok=4200 wall=17.7s agg_rate=237.3 t/s errors=0
+iter 12 OK  conc6: agg_tok=4200 wall=19.6s agg_rate=214.2 t/s errors=0
+iter 13 OK  conc6: agg_tok=4200 wall=17.0s agg_rate=246.8 t/s errors=0
+iter 14 OK  conc6: agg_tok=4200 wall=16.9s agg_rate=248.7 t/s errors=0
+iter 15 OK  conc6: agg_tok=4200 wall=17.8s agg_rate=236.5 t/s errors=0
+iter 16 OK  conc6: agg_tok=4200 wall=16.8s agg_rate=249.4 t/s errors=0
+iter 17 OK  conc6: agg_tok=4200 wall=16.8s agg_rate=249.6 t/s errors=0
+iter 18 OK  conc6: agg_tok=4200 wall=18.7s agg_rate=225.1 t/s errors=0
+iter 19 OK  conc6: agg_tok=4200 wall=16.9s agg_rate=248.0 t/s errors=0
+iter 20 OK  conc6: agg_tok=4200 wall=17.1s agg_rate=246.2 t/s errors=0
+iter 21 OK  conc6: agg_tok=4200 wall=17.3s agg_rate=242.6 t/s errors=0
+iter 22 OK  conc6: agg_tok=4200 wall=19.2s agg_rate=218.8 t/s errors=0
+iter 23 OK  conc6: agg_tok=4200 wall=16.7s agg_rate=251.0 t/s errors=0
+iter 24 OK  conc6: agg_tok=4200 wall=16.3s agg_rate=257.8 t/s errors=0
+iter 25 OK  conc6: agg_tok=4200 wall=17.8s agg_rate=236.3 t/s errors=0
+iter 26 OK  conc6: agg_tok=4200 wall=16.4s agg_rate=255.6 t/s errors=0
+iter 27 OK  conc6: agg_tok=4200 wall=17.9s agg_rate=234.8 t/s errors=0
+iter 28 OK  conc6: agg_tok=4200 wall=17.7s agg_rate=236.9 t/s errors=0
+iter 29 OK  conc6: agg_tok=4200 wall=16.3s agg_rate=258.3 t/s errors=0
+iter 30 OK  conc6: agg_tok=4200 wall=17.2s agg_rate=243.6 t/s errors=0
+iter 31 OK  conc6: agg_tok=4200 wall=17.5s agg_rate=239.5 t/s errors=0
+iter 32 OK  conc6: agg_tok=4200 wall=17.1s agg_rate=246.3 t/s errors=0
+iter 33 OK  conc6: agg_tok=4200 wall=17.3s agg_rate=242.3 t/s errors=0
+iter 34 OK  conc6: agg_tok=4200 wall=18.5s agg_rate=227.1 t/s errors=0
+iter 35 OK  conc6: agg_tok=4200 wall=17.6s agg_rate=238.0 t/s errors=0
+iter 36 OK  conc6: agg_tok=4200 wall=16.9s agg_rate=249.1 t/s errors=0
+iter 37 OK  conc6: agg_tok=4200 wall=17.6s agg_rate=238.4 t/s errors=0
+iter 38 OK  conc6: agg_tok=4200 wall=17.0s agg_rate=247.0 t/s errors=0
+iter 39 OK  conc6: agg_tok=4200 wall=16.6s agg_rate=252.4 t/s errors=0
+iter 40 OK  conc6: agg_tok=4200 wall=17.7s agg_rate=237.5 t/s errors=0
+iter 41 OK  conc6: agg_tok=4200 wall=18.2s agg_rate=230.2 t/s errors=0
+iter 42 OK  conc6: agg_tok=4200 wall=18.3s agg_rate=230.0 t/s errors=0
+iter 43 OK  conc6: agg_tok=4200 wall=17.0s agg_rate=246.5 t/s errors=0
+iter 44 OK  conc6: agg_tok=4200 wall=18.8s agg_rate=223.5 t/s errors=0
+iter 45 OK  conc6: agg_tok=4200 wall=17.6s agg_rate=238.1 t/s errors=0
+iter 46 OK  conc6: agg_tok=4200 wall=17.1s agg_rate=246.2 t/s errors=0
+iter 47 OK  conc6: agg_tok=4200 wall=18.2s agg_rate=230.7 t/s errors=0
+iter 48 OK  conc6: agg_tok=4200 wall=16.8s agg_rate=250.5 t/s errors=0
+iter 49 OK  conc6: agg_tok=4200 wall=17.0s agg_rate=247.2 t/s errors=0
+iter 50 OK  conc6: agg_tok=4200 wall=16.8s agg_rate=250.2 t/s errors=0
+iter 51 OK  conc6: agg_tok=4200 wall=18.0s agg_rate=232.9 t/s errors=0
+iter 52 OK  conc6: agg_tok=4200 wall=17.7s agg_rate=237.1 t/s errors=0
+iter 53 OK  conc6: agg_tok=4200 wall=18.2s agg_rate=230.3 t/s errors=0
+iter 54 OK  conc6: agg_tok=4200 wall=17.9s agg_rate=234.9 t/s errors=0
+iter 55 OK  conc6: agg_tok=4200 wall=18.1s agg_rate=232.6 t/s errors=0
+iter 56 OK  conc6: agg_tok=4200 wall=17.8s agg_rate=235.8 t/s errors=0
+iter 57 OK  conc6: agg_tok=4200 wall=16.6s agg_rate=253.5 t/s errors=0
+iter 58 OK  conc6: agg_tok=4200 wall=18.3s agg_rate=229.0 t/s errors=0
+iter 59 OK  conc6: agg_tok=4200 wall=16.1s agg_rate=260.6 t/s errors=0
+iter 60 OK  conc6: agg_tok=4200 wall=18.8s agg_rate=223.9 t/s errors=0
+T18 REPRO (pre) end 2026-10-20T01:55:56+02:00: iters=60 crashes=0 rate=0.0%
+box stopped (no engine listening) 2026-10-20T01:56:06+02:00

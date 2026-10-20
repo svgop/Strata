@@ -1,0 +1,6 @@
+Oct 20 02:01:49 svg kernel: strata[1302263]: segfault at 8 ip 0000000004723973 sp 00007f5181dcc3e0 error 4 in strata[4323973,4101000+81d000] likely on CPU 7 (core 7, socket 0)
+Oct 20 02:01:49 svg kernel: strata[1302257]: segfault at 2 ip 0000000004723973 sp 00007f5184dd23e0 error 4 in strata[4323973,4101000+81d000] likely on CPU 1 (core 1, socket 0)
+Oct 20 02:01:49 svg kernel: strata[1302259]: segfault at 4 ip 0000000004723973 sp 00007f5183dd03e0 error 4
+Oct 20 02:01:49 svg kernel: strata[1302261]: segfault at 6 ip 0000000004723973 sp 00007f5182dce3e0 error 4
+Oct 20 02:01:49 svg kernel: strata[1302260]: segfault at 5 ip 0000000004723973 sp 00007f51835cf3e0 error 4
+Oct 20 02:01:49 svg kernel: strata[1302262]: segfault at 7 ip 0000000004723973 sp 00007f51825cd3e0 error 4 in strata[4323973,4101000+81d000] likely on CPU 6 (core 6, socket 0)

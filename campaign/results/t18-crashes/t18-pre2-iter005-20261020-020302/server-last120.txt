@@ -1,0 +1,120 @@
+[strata] thinking: 20 of budget 216 (max 600) tokens, 10.8 tok/s, 3 s
+[strata] thinking: 19 of budget 216 (max 600) tokens, 8.5 tok/s, 3 s
+[strata] thinking: 31 of budget 216 (max 600) tokens, 31.7 tok/s, 3 s
+[strata] thinking: 47 of budget 216 (max 600) tokens, 48.7 tok/s, 3 s
+[strata] thinking: 60 of budget 216 (max 600) tokens, 26.8 tok/s, 3 s
+[strata] thinking: 63 of budget 216 (max 600) tokens, 31.8 tok/s, 3 s
+[strata] thinking: 69 of budget 216 (max 600) tokens, 21.3 tok/s, 4 s
+[strata] thinking: 70 of budget 216 (max 600) tokens, 24.4 tok/s, 4 s
+[strata] thinking: 79 of budget 216 (max 600) tokens, 39.9 tok/s, 4 s
+[strata] thinking: 97 of budget 216 (max 600) tokens, 48.8 tok/s, 4 s
+[strata] thinking: 108 of budget 216 (max 600) tokens, 33.2 tok/s, 4 s
+[strata] thinking: 111 of budget 216 (max 600) tokens, 37.0 tok/s, 4 s
+[strata] thinking: 115 of budget 216 (max 600) tokens, 29.6 tok/s, 5 s
+[strata] thinking: 112 of budget 216 (max 600) tokens, 26.2 tok/s, 5 s
+[strata] thinking: 127 of budget 216 (max 600) tokens, 42.0 tok/s, 5 s
+[strata] thinking: 141 of budget 216 (max 600) tokens, 47.2 tok/s, 5 s
+[strata] thinking: 149 of budget 216 (max 600) tokens, 34.8 tok/s, 5 s
+[strata] thinking: 153 of budget 216 (max 600) tokens, 37.9 tok/s, 5 s
+[strata] thinking: 155 of budget 216 (max 600) tokens, 31.6 tok/s, 6 s
+[strata] thinking: 157 of budget 216 (max 600) tokens, 29.7 tok/s, 6 s
+[strata] thinking: 170 of budget 216 (max 600) tokens, 41.9 tok/s, 6 s
+[strata] thinking: 185 of budget 216 (max 600) tokens, 46.0 tok/s, 6 s
+[strata] thinking: 191 of budget 216 (max 600) tokens, 36.0 tok/s, 6 s
+[strata] thinking: 193 of budget 216 (max 600) tokens, 38.2 tok/s, 6 s
+[strata] thinking: 203 of budget 216 (max 600) tokens, 34.1 tok/s, 7 s
+[strata] thinking: 205 of budget 216 (max 600) tokens, 32.4 tok/s, 7 s
+[strata] thinking budget reached (216 tokens): wrapping up the thinking
+[strata] thinking: 211 of budget 216 (max 600) tokens, 41.7 tok/s, 7 s
+[strata] thinking budget reached (216 tokens): wrapping up the thinking
+[strata] thinking budget reached (216 tokens): wrapping up the thinking
+[strata] thinking budget reached (216 tokens): wrapping up the thinking
+[strata] thinking: 234 of max 600 tokens, 44.8 tok/s, 7 s
+[strata] thinking: 210 of budget 216 (max 600) tokens, 34.5 tok/s, 8 s
+[strata] thinking budget reached (216 tokens): wrapping up the thinking
+[strata] thinking: 234 of max 600 tokens, 35.5 tok/s, 8 s
+[strata] answering: 240 of max 600 tokens, 32.3 tok/s, 8 s
+[strata] thinking: 234 of max 600 tokens, 31.8 tok/s, 8 s
+[strata] thinking: 234 of max 600 tokens, 35.2 tok/s, 8 s
+[strata] thinking: 215 of budget 216 (max 600) tokens, 30.1 tok/s, 9 s
+[strata] answering: 242 of max 600 tokens, 37.9 tok/s, 9 s
+[strata] thinking budget reached (216 tokens): wrapping up the thinking
+[strata] answering: 249 of max 600 tokens, 29.2 tok/s, 9 s
+[strata] answering: 245 of max 600 tokens, 31.5 tok/s, 9 s
+[strata] answering: 255 of max 600 tokens, 30.4 tok/s, 9 s
+[strata] answering: 272 of max 600 tokens, 35.4 tok/s, 9 s
+[strata] answering: 272 of max 600 tokens, 33.4 tok/s, 10 s
+[strata] answering: 289 of max 600 tokens, 39.0 tok/s, 10 s
+[strata] answering: 298 of max 600 tokens, 31.2 tok/s, 10 s
+[strata] answering: 302 of max 600 tokens, 34.3 tok/s, 10 s
+[strata] answering: 307 of max 600 tokens, 32.7 tok/s, 10 s
+[strata] answering: 327 of max 600 tokens, 37.6 tok/s, 10 s
+[strata] answering: 324 of max 600 tokens, 35.4 tok/s, 11 s
+[strata] answering: 347 of max 600 tokens, 41.3 tok/s, 11 s
+[strata] answering: 356 of max 600 tokens, 33.7 tok/s, 11 s
+[strata] answering: 365 of max 600 tokens, 37.1 tok/s, 11 s
+[strata] answering: 361 of max 600 tokens, 34.7 tok/s, 11 s
+[strata] answering: 383 of max 600 tokens, 39.5 tok/s, 12 s
+[strata] answering: 369 of max 600 tokens, 36.2 tok/s, 12 s
+[strata] answering: 400 of max 600 tokens, 42.4 tok/s, 12 s
+[strata] answering: 406 of max 600 tokens, 35.0 tok/s, 12 s
+[strata] answering: 418 of max 600 tokens, 38.5 tok/s, 12 s
+[strata] answering: 406 of max 600 tokens, 35.6 tok/s, 12 s
+[strata] answering: 430 of max 600 tokens, 40.2 tok/s, 13 s
+[strata] answering: 412 of max 600 tokens, 19.5 tok/s, 23 s
+[strata] answering: 426 of max 600 tokens, 19.5 tok/s, 23 s
+[strata] answering: 431 of max 600 tokens, 19.4 tok/s, 23 s
+[strata] answering: 447 of max 600 tokens, 20.8 tok/s, 23 s
+[strata] answering: 441 of max 600 tokens, 21.7 tok/s, 23 s
+[strata] answering: 430 of max 600 tokens, 20.8 tok/s, 23 s
+[strata] answering: 412 of max 600 tokens, 13.3 tok/s, 33 s
+[strata] answering: 426 of max 600 tokens, 13.4 tok/s, 33 s
+[strata] answering: 431 of max 600 tokens, 13.4 tok/s, 33 s
+[strata] answering: 447 of max 600 tokens, 14.2 tok/s, 33 s
+[strata] answering: 441 of max 600 tokens, 14.5 tok/s, 33 s
+[strata] answering: 430 of max 600 tokens, 14.0 tok/s, 33 s
+[strata] answering: 412 of max 600 tokens, 10.0 tok/s, 43 s
+[strata] answering: 426 of max 600 tokens, 10.2 tok/s, 43 s
+[strata] answering: 431 of max 600 tokens, 10.2 tok/s, 43 s
+[strata] answering: 441 of max 600 tokens, 10.9 tok/s, 43 s
+[strata] answering: 447 of max 600 tokens, 10.8 tok/s, 43 s
+[strata] answering: 430 of max 600 tokens, 10.6 tok/s, 43 s
+[strata] answering: 412 of max 600 tokens, 8.1 tok/s, 53 s
+[strata] answering: 426 of max 600 tokens, 8.2 tok/s, 53 s
+[strata] answering: 431 of max 600 tokens, 8.3 tok/s, 53 s
+[strata] answering: 441 of max 600 tokens, 8.8 tok/s, 53 s
+[strata] answering: 447 of max 600 tokens, 8.7 tok/s, 53 s
+[strata] answering: 430 of max 600 tokens, 8.5 tok/s, 53 s
+[strata] the engine stopped unexpectedly (exit code -11). The usual cause is running out of RAM: Linux then ends the biggest program (check: sudo dmesg | grep -i -E 'killed process|out of memory'); Windows slows down instead. Close other programs or use a smaller model (Q2_0 / IQ2_XS). The next request starts the engine again. Its log: /home/svg/LLM/strata-custom-2/custom-iq3_s.log
+[strata] the engine stopped unexpectedly (exit code -11). The usual cause is running out of RAM: Linux then ends the biggest program (check: sudo dmesg | grep -i -E 'killed process|out of memory'); Windows slows down instead. Close other programs or use a smaller model (Q2_0 / IQ2_XS). The next request starts the engine again. Its log: /home/svg/LLM/strata-custom-2/custom-iq3_s.log
+[strata] done: 441 tokens in 61 s (7.5 tok/s) (error, cancel=False), expert cache 99.0% hit
+[strata] the engine stopped unexpectedly (exit code -11). The usual cause is running out of RAM: Linux then ends the biggest program (check: sudo dmesg | grep -i -E 'killed process|out of memory'); Windows slows down instead. Close other programs or use a smaller model (Q2_0 / IQ2_XS). The next request starts the engine again. Its log: /home/svg/LLM/strata-custom-2/custom-iq3_s.log
+[strata] the engine stopped unexpectedly (exit code -11). The usual cause is running out of RAM: Linux then ends the biggest program (check: sudo dmesg | grep -i -E 'killed process|out of memory'); Windows slows down instead. Close other programs or use a smaller model (Q2_0 / IQ2_XS). The next request starts the engine again. Its log: /home/svg/LLM/strata-custom-2/custom-iq3_s.log
+[strata] the engine stopped unexpectedly (exit code -11). The usual cause is running out of RAM: Linux then ends the biggest program (check: sudo dmesg | grep -i -E 'killed process|out of memory'); Windows slows down instead. Close other programs or use a smaller model (Q2_0 / IQ2_XS). The next request starts the engine again. Its log: /home/svg/LLM/strata-custom-2/custom-iq3_s.log
+[strata] the engine stopped unexpectedly (exit code -11). The usual cause is running out of RAM: Linux then ends the biggest program (check: sudo dmesg | grep -i -E 'killed process|out of memory'); Windows slows down instead. Close other programs or use a smaller model (Q2_0 / IQ2_XS). The next request starts the engine again. Its log: /home/svg/LLM/strata-custom-2/custom-iq3_s.log
+[strata] done: 430 tokens in 61 s (7.3 tok/s) (error, cancel=False), expert cache 98.8% hit
+[strata] done: 426 tokens in 61 s (7.1 tok/s) (error, cancel=False), expert cache 90.6% hit (+2.3% of the routed experts over PCIe)
+[strata] done: 447 tokens in 61 s (7.4 tok/s) (error, cancel=False), expert cache 95.8% hit
+[strata] done: 412 tokens in 61 s (6.9 tok/s) (error, cancel=False), expert cache 96.7% hit
+[strata] done: 431 tokens in 61 s (7.1 tok/s) (error, cancel=False), expert cache 92.4% hit (+1.0% of the routed experts over PCIe)
+[strata] the engine had stopped (exit code -11); starting it again (a minute or two) ...
+[strata] starting the engine: reading the model's weights ...
+[strata] loading the experts the GPU does not hold into RAM (of about 55 GB) and locking part of them for the GPU.
+         YOUR PC CAN BE SLOW OR STOP RESPONDING FOR 1-3 MINUTES NOW - this is normal.
+         Please wait and don't close this window; the browser opens when it is ready.
+[strata] filling the GPU's expert cache (9279 experts, 17.60 GiB of VRAM) ...
+[strata] almost ready ...
+[strata] the engine is running again
+[strata] thinking: 116 of max 120 tokens, 190.2 tok/s, 1 s
+[strata] done: 120 tokens in 1 s (190.0 tok/s) (length, cancel=False), expert cache 90.7% hit (+2.4% of the routed experts over PCIe)
+[strata] the reply reached max tokens while still thinking, so it has no answer: a thinking budget (reasoning_budget_tokens, in the request or in strata-<model>.json for every request) leaves room to answer
+[strata] done: 120 tokens in 1 s (233.7 tok/s) (length, cancel=False), expert cache 95.9% hit (+1.0% of the routed experts over PCIe)
+[strata] the reply reached max tokens while still thinking, so it has no answer: a thinking budget (reasoning_budget_tokens, in the request or in strata-<model>.json for every request) leaves room to answer
+[strata] done: 120 tokens in 1 s (256.9 tok/s) (length, cancel=False), expert cache 97.2% hit (+0.6% of the routed experts over PCIe)
+[strata] the reply reached max tokens while still thinking, so it has no answer: a thinking budget (reasoning_budget_tokens, in the request or in strata-<model>.json for every request) leaves room to answer
+[strata] done: 120 tokens in 1 s (265.6 tok/s) (length, cancel=False), expert cache 98.0% hit (+0.3% of the routed experts over PCIe)
+[strata] the reply reached max tokens while still thinking, so it has no answer: a thinking budget (reasoning_budget_tokens, in the request or in strata-<model>.json for every request) leaves room to answer
+[strata] done: 120 tokens in 1 s (267.4 tok/s) (length, cancel=False), expert cache 98.1% hit (+0.3% of the routed experts over PCIe)
+[strata] the reply reached max tokens while still thinking, so it has no answer: a thinking budget (reasoning_budget_tokens, in the request or in strata-<model>.json for every request) leaves room to answer
+[strata] done: 120 tokens in 1 s (267.7 tok/s) (length, cancel=False), expert cache 97.8% hit (+0.4% of the routed experts over PCIe)
+[strata] the reply reached max tokens while still thinking, so it has no answer: a thinking budget (reasoning_budget_tokens, in the request or in strata-<model>.json for every request) leaves room to answer

@@ -1,0 +1,11 @@
+single: ok=True tok=840 4.8s
+m1: ok=True tok=2000 9.9s
+batch2/900: agg_tok=1800 wall=9.6s agg_rate=187.6 t/s errors=0
+  req ERROR: HTTPError: HTTP Error 503: Service Unavailable
+  req ERROR: HTTPError: HTTP Error 503: Service Unavailable
+  req ERROR: HTTPError: HTTP Error 503: Service Unavailable
+  req ERROR: HTTPError: HTTP Error 503: Service Unavailable
+  req ERROR: HTTPError: HTTP Error 503: Service Unavailable
+  req ERROR: HTTPError: HTTP Error 503: Service Unavailable
+batch6/600: agg_tok=0 wall=61.1s agg_rate=0.0 t/s errors=6
+fresh6 done (errors so far 6)

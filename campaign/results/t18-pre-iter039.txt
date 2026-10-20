@@ -1,0 +1,2 @@
+single: ok=True tok=830 4.7s
+conc6: agg_tok=4200 wall=16.6s agg_rate=252.4 t/s errors=0

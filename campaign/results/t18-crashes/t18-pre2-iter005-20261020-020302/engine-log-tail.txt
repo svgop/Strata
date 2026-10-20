@@ -1,0 +1,400 @@
+strata serve: conversation cache: restored 86 tokens (live) in 12.0 ms; parked=4 bytes=731264240
+strata KV prefetch: 12 layer prefixes, single existing staging pool
+strata batch: slot 5 takes 320 tokens (copied in 52.0 ms)
+strata serve: prompt 320 tokens = 86 reused + 234 read in 311 ms (752.6 tok/s), 1 generated in 8 ms (131.6 tok/s), drafts accepted 0 of 0, 1 checkpoints
+strata serve: decode expert cache hit rate: 99.0% (475 hits / 480 lookups)
+strata serve: resident RAM: 41.79 GiB of experts in RAM, 6367 exchanged with the VRAM tier, 8 blob reads from the file
+strata serve: expert tiers: GPU 475 hits this request; since the start RAM 1826395 blobs, files 8 blobs 18915.5 MB read (the GGUF in place)
+strata serve: file tier I/O this request: the OS read 0.0 MB from storage (0 major faults) for 0.0 MB of expert reads
+strata serve: KV streaming: 0.00% of 960 block reads hit VRAM, 3.9 MiB read from RAM
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 35.4 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 28.3 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 28.3 ms
+strata serve: conversation cache: parked 320 tokens in 41.6 ms; parked=4 bytes=850019392 evictions=91 snapshot_bytes=243055980 reused_kv_bytes=1282176
+strata batch: slot 1 gave back 303 tokens of this conversation (all it holds) in 35.8 ms
+strata batch: slot 1 takes 321 tokens (copied in 33.3 ms)
+strata serve: prompt 321 tokens = 303 reused + 18 read in 138 ms (130.2 tok/s), 1 generated in 8 ms (124.2 tok/s), drafts accepted 0 of 0, 0 checkpoints
+strata serve: decode expert cache hit rate: 98.3% (472 hits / 480 lookups)
+strata serve: resident RAM: 41.79 GiB of experts in RAM, 6367 exchanged with the VRAM tier, 8 blob reads from the file
+strata serve: expert tiers: GPU 472 hits this request; since the start RAM 1827917 blobs, files 8 blobs 18915.5 MB read (the GGUF in place)
+strata serve: file tier I/O this request: the OS read 0.0 MB from storage (0 major faults) for 0.0 MB of expert reads
+strata serve: KV streaming: 94.27% of 16956 block reads hit VRAM, 3.9 MiB read from RAM
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 29.2 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 28.9 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 29.1 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 33.3 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 31.3 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 30.0 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 31.0 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 29.6 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 31.6 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 30.7 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 33.4 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 33.2 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 29.5 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 29.2 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 29.2 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 32.5 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 27.4 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 29.2 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 27.0 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 28.0 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 31.5 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 27.8 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 30.9 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 26.4 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 28.2 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 29.2 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 29.0 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 27.5 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 29.0 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 27.2 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 29.2 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 29.5 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 28.4 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 30.4 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 27.7 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 27.9 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 27.3 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 27.0 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 27.5 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 27.6 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 27.2 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 30.8 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 29.1 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 26.9 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 26.4 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 27.9 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 28.2 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 27.5 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 29.0 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 27.5 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 34.0 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 27.7 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 27.8 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 26.5 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 28.0 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 27.1 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 27.8 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 28.0 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 29.1 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 29.9 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 28.5 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 28.5 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 28.9 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 25.9 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 27.3 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 27.9 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 28.8 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 28.5 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 28.3 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 28.0 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 28.5 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 27.2 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 29.6 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 26.4 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 32.0 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 29.3 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 30.9 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 30.8 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 27.5 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 28.5 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 27.5 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 27.9 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 34.5 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 31.9 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 27.1 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 27.4 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 28.5 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 31.7 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 32.4 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 31.8 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 31.1 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 31.4 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 27.6 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 29.5 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 31.4 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 34.4 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 29.2 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 35.5 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 34.5 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 32.8 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 30.7 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 30.1 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 33.9 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 29.1 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 27.6 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 30.5 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 30.2 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 29.9 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 30.2 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 31.4 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 39.8 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 44.8 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 37.3 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 36.7 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 35.5 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 37.8 ms
+cohorts: round A.S=6 B.S=6
+[strata] 2026-10-20 02:02:37 engine started: /home/svg/LLM/strata-custom-2/engine/strata --serve --pack /home/svg/LLM/Custom-data/packs/iq3_s --native /home/svg/LLM/Custom-data/models/Qwen3.8-Flash-Next-GSQ-RCO-IQ3_S-00001-of-00002.gguf --ple-gguf /home/svg/LLM/Custom-data/models/Qwen3.8-Flash-Next-GSQ-RCO-IQ3_S-00002-of-00002.gguf --expert-cache auto --spec 6 --max-context 131072 --kv int8 --kv-resident 32768 --spec-min-p 0.5 --prefill auto:32768 --mtp-q4 all --mtp-hnorm stream --pcie-frac 0.35 --pcie-mode dma --vram-reserve-mib 2000 --conversation-cache-mib 49152 --control-vector-scaled refusal-r.gguf:1.0 --control-vector-layer-range 4 24 --cvec-mode project --cvec-dir per-layer --ple-io mmap --adapt-decay 0.85 --expert-profile data/expert-profile.bin --expert-profile-save data/expert-profile-learned.bin --expert-profile-save-every 30 --resident-experts --mtp /home/svg/LLM/Custom-data/mtp/rt --batch 6
+strata generate: memory guard: limit 184.2 GiB (source: meminfo), current 10.3 GiB, reclaimable cache credited 0.0 GiB; available 173.8 GiB (MemAvailable 173.8 GiB), floor 2560 MiB
+strata generate: native pack: /home/svg/LLM/Custom-data/packs/iq3_s experts (largest blob 2.66 MB), token embedding IQ4_XS in mapped host memory (322 MiB, 0.4 s)
+strata generate: 1466 MiB of weights loaded from /home/svg/LLM/Custom-data/packs/iq3_s in 0.5 s (302 canonical tensors skipped: served natively)
+strata generate: 300 native projection matrices, 2018.88 MiB of weights, in 0.7 s
+strata generate: control vector mode = project, dir = per-layer, layers 4..24 (21 steered)
+strata generate: profile data/expert-profile.bin: 24576 ranked pairs, built for 24576 slots
+strata generate: KV streaming: 32768 of 131072 cells per QSA layer in VRAM, the K/V in 1.55 GiB of pinned RAM
+strata generate: PLE on, table 320001536 rows of /home/svg/LLM/Custom-data/models/Qwen3.8-Flash-Next-GSQ-RCO-IQ3_S-00002-of-00002.gguf
+strata generate: --batch: 6 slot sessions on CUDA0 (0.73 GiB each); 21.35 GiB free
+strata generate: --batch 6: the slot sessions take 4.37 GiB of VRAM on CUDA0 that the expert cache would otherwise hold
+strata mtp: --mtp-q4: 10 projections as Q4_0 (37.3 MiB)
+strata mtp: draft layer loaded, 874 MiB of VRAM (experts 675, dense 111), files read in 0.41 s (1924 MiB/s)
+strata mtp: shared draft weights, 51 MiB of private state and buffers
+strata mtp: shared draft weights, 51 MiB of private state and buffers
+strata mtp: shared draft weights, 51 MiB of private state and buffers
+strata mtp: shared draft weights, 51 MiB of private state and buffers
+strata mtp: shared draft weights, 51 MiB of private state and buffers
+strata mtp: shared draft weights, 51 MiB of private state and buffers
+strata generate: --batch-mtp: 6 slot drafters on CUDA0 (51 MiB of private K/V state and buffers each, sharing the solo drafter's weights); 20.18 GiB free there
+strata generate: experimental native Q5_K head, 521472000 bytes, in 0.2 s
+strata generate: GPU 0: NVIDIA GeForce RTX 5090, compute capability 12.0
+strata generate: experts via mmap (--mmap-experts; the GGUF shards in place, no experts.bin)
+strata generate: GPU host-callback thread started before host-core pinning
+strata generate: CPU pool tasks/phase: 48 (automatic), participating threads: 16
+strata generate: 15 pool workers on logical processors 1,2,3,4,5,6,7,8,9,10,11,12,13,14,15, the host thread on 0 (draining too) (--host-core first)
+strata aux cpus: threads that are neither pool workers nor the host go to CPUs 16 (off at start; a request's aux_cpus=1 turns it on)
+strata generate: expert cache auto: 19.69 GiB free, 2000 MiB reserved (+141 MiB for the draft head) -> 7098 slots
+strata generate: expert cache 9279 slots, 17.60 GiB of VRAM; policy is
+strata generate: the GPU computes the experts in the cache; it rounds differently from the CPU,
+                 so a reply can differ slightly from a run without the cache (same quality:
+                 bench/results/2026-09-27-cache-parity).
+                 PROFILE, ranked by routing frequency, no eviction.
+strata generate: the profile fill asks for 256 pairs ahead (STRATA_FILL_AHEAD)
+strata generate: pre-filled 9279 of 9279 slots from the profile in 2.5 s (7417 MB/s); slot 0 verified
+strata generate: routing-aware prefetch on (the next layer's router, file tier)
+strata generate: R4 hit path ON - resident experts are computed on the GPU
+strata generate: 15 expert-pool workers + the host thread
+strata generate: session is up (engine 0.1.44.1)
+strata generate: token graph hit path: 9279 resident experts, decided on the device
+FileExpertSource: allocating 41.79 GiB page-locked cache complement
+FileExpertSource: copied cache complement through layer 8/48 (8.98 GiB, 1 s)
+FileExpertSource: copied cache complement through layer 16/48 (15.19 GiB, 1 s)
+FileExpertSource: copied cache complement through layer 24/48 (21.89 GiB, 2 s)
+FileExpertSource: copied cache complement through layer 32/48 (29.36 GiB, 2 s)
+FileExpertSource: copied cache complement through layer 40/48 (36.35 GiB, 3 s)
+FileExpertSource: copied cache complement through layer 48/48 (41.79 GiB, 3 s)
+FileExpertSource: mapped pinned cache complement ready: resident 41.79 GiB, pinned 41.79 GiB in 8 s; page-locked and mapped
+FileExpertSource: 6650 of the prompt path's 6650 lendable slots keep their experts in RAM too
+strata generate: resident RAM mode: 41.79 GiB of experts in RAM (page-locked), 9279 in the GPU cache; adaptive swaps exchange them with the GPU cache (no file reads)
+strata serve: prompt chunk auto: 32768 tokens, a 96-slot ring
+strata serve: the prompt path borrows 6650 CUDA0 cache slots (12.55 GiB)
+prefill: the GGUF experts are 100% in the page cache; the stager takes the RAM profile
+strata generate: STRATA_ROUTE_RESIDENT_MTP: the MTP draft's router is biased toward layer 47's resident experts (margin 0.75, ranks 6-9; experimental)
+strata hc: CUDA0: the hyper-connection read runs as staged (the norm per token and stream, the down projection's activations staged ahead by cp.async); checked bit for bit against the plain read on this card (STRATA_HC_SPLIT=1 or 0 for the earlier ones)
+strata verify: window up to 8 tokens, 127.2 MiB of device buffers
+strata mtp: draft head over 40525 tokens (81.2 MiB)
+strata mtp: --mtp-q4: draft head over 40525 tokens as Q4_0 (55.7 MiB read per step, was 81.2)
+strata mtp: coupled draft sampling on (STRATA_SPEC_COUPLED): sampled requests draft with the target's chain and Philox draw over 40525 tokens
+strata verify: capturing the 1-token window (1486 MiB of VRAM free)
+strata verify: captured the 1-token window (upload no error, sync no error)
+strata verify: capturing the 2-token window (1482 MiB of VRAM free)
+strata verify: captured the 2-token window (upload no error, sync no error)
+strata verify: capturing the 3-token window (1476 MiB of VRAM free)
+strata verify: captured the 3-token window (upload no error, sync no error)
+strata verify: capturing the 4-token window (1470 MiB of VRAM free)
+strata verify: captured the 4-token window (upload no error, sync no error)
+strata verify: capturing the 5-token window (1464 MiB of VRAM free)
+strata verify: captured the 5-token window (upload no error, sync no error)
+strata verify: capturing the 6-token window (1458 MiB of VRAM free)
+strata verify: captured the 6-token window (upload no error, sync no error)
+strata verify: capturing the 7-token window (1452 MiB of VRAM free)
+strata verify: captured the 7-token window (upload no error, sync no error)
+strata verify: capturing the 8-token window (1446 MiB of VRAM free)
+strata verify: captured the 8-token window (upload no error, sync no error)
+strata: L2 set-aside: 60 MiB window / 60 MiB carve over a 112 MiB span on 3 stream(s)
+strata mtp: coupled draft sampling on (STRATA_SPEC_COUPLED): sampled requests draft with the target's chain and Philox draw over 40525 tokens
+strata mtp: coupled draft sampling on (STRATA_SPEC_COUPLED): sampled requests draft with the target's chain and Philox draw over 40525 tokens
+strata mtp: coupled draft sampling on (STRATA_SPEC_COUPLED): sampled requests draft with the target's chain and Philox draw over 40525 tokens
+strata mtp: coupled draft sampling on (STRATA_SPEC_COUPLED): sampled requests draft with the target's chain and Philox draw over 40525 tokens
+strata mtp: coupled draft sampling on (STRATA_SPEC_COUPLED): sampled requests draft with the target's chain and Philox draw over 40525 tokens
+strata mtp: coupled draft sampling on (STRATA_SPEC_COUPLED): sampled requests draft with the target's chain and Philox draw over 40525 tokens
+strata verify: batch windows of up to 6 sequences (layers [0, 48))
+strata verify: window up to 8 tokens, 127.2 MiB of device buffers
+strata verify: batch windows of up to 6 sequences (layers [0, 48))
+strata serve: STRATA_COHORTS=2 on: slots [0,3) on verifier A, [3,6) on B
+strata serve: adaptive overlap: off: not with STRATA_DMA_BATCH
+strata serve: 1254 MiB of VRAM free with everything loaded
+strata KV prefetch: 0 layer prefixes, single existing staging pool
+strata serve: typical acceptance: 5 of 8 first-rejections rescued (threshold 0.20)
+strata serve: prompt 120 tokens = 0 reused + 120 read in 378 ms (317.6 tok/s), 120 generated in 643 ms (186.6 tok/s), drafts accepted 84 of 90, 1 checkpoints
+strata serve: decode expert cache hit rate: 90.7% (53525 hits / 59022 lookups); 1458 more read by the GPU over PCIe or from another GPU (2.4% of all 60480 routed)
+strata serve: resident RAM: 41.79 GiB of experts in RAM, 48 exchanged with the VRAM tier, 0 blob reads from the file
+strata serve: expert tiers: GPU 53525 hits this request; since the start RAM 11363 blobs, files 0 blobs 18899.0 MB read (the GGUF in place)
+strata serve: file tier I/O this request: the OS read 5351.8 MB from storage (34 major faults) for 18899.0 MB of expert reads
+strata serve: KV streaming: 98.98% of 70512 block reads hit VRAM, 2.9 MiB read from RAM
+strata serve: suffix drafts: 7 windows, 37 of 37 drafts accepted
+strata serve: conversation cache: parked 239 tokens in 43.6 ms; parked=1 bytes=239795632 evictions=0 snapshot_bytes=239795632 reused_kv_bytes=0
+strata KV prefetch: 0 layer prefixes, single existing staging pool
+strata serve: typical acceptance: 4 of 6 first-rejections rescued (threshold 0.20)
+strata serve: prompt 120 tokens = 0 reused + 120 read in 328 ms (366.0 tok/s), 120 generated in 523 ms (229.4 tok/s), drafts accepted 88 of 93, 1 checkpoints
+strata serve: decode expert cache hit rate: 95.9% (57410 hits / 59853 lookups); 627 more read by the GPU over PCIe or from another GPU (1.0% of all 60480 routed)
+strata serve: resident RAM: 41.79 GiB of experts in RAM, 74 exchanged with the VRAM tier, 0 blob reads from the file
+strata serve: expert tiers: GPU 57410 hits this request; since the start RAM 19669 blobs, files 0 blobs 18899.0 MB read (the GGUF in place)
+strata serve: file tier I/O this request: the OS read 0.3 MB from storage (0 major faults) for 0.0 MB of expert reads
+strata serve: KV streaming: 98.98% of 70800 block reads hit VRAM, 2.9 MiB read from RAM
+strata serve: conversation cache: parked 240 tokens in 43.5 ms; parked=2 bytes=479597412 evictions=0 snapshot_bytes=239801780 reused_kv_bytes=0
+strata KV prefetch: 0 layer prefixes, single existing staging pool
+strata serve: typical acceptance: 5 of 7 first-rejections rescued (threshold 0.20)
+strata serve: prompt 120 tokens = 0 reused + 120 read in 317 ms (378.0 tok/s), 120 generated in 475 ms (252.4 tok/s), drafts accepted 87 of 90, 1 checkpoints
+strata serve: decode expert cache hit rate: 97.2% (57038 hits / 58686 lookups); 354 more read by the GPU over PCIe or from another GPU (0.6% of all 59040 routed)
+strata serve: resident RAM: 41.79 GiB of experts in RAM, 99 exchanged with the VRAM tier, 1 blob reads from the file
+strata serve: expert tiers: GPU 57038 hits this request; since the start RAM 26618 blobs, files 1 blobs 18900.6 MB read (the GGUF in place)
+strata serve: file tier I/O this request: the OS read 0.3 MB from storage (0 major faults) for 1.5 MB of expert reads
+strata serve: KV streaming: 98.95% of 68616 block reads hit VRAM, 2.9 MiB read from RAM
+strata serve: conversation cache: parked 239 tokens in 43.6 ms; parked=3 bytes=719393044 evictions=0 snapshot_bytes=239795632 reused_kv_bytes=0
+strata KV prefetch: 0 layer prefixes, single existing staging pool
+strata serve: typical acceptance: 6 of 11 first-rejections rescued (threshold 0.20)
+strata serve: prompt 120 tokens = 0 reused + 120 read in 311 ms (386.4 tok/s), 120 generated in 460 ms (260.8 tok/s), drafts accepted 87 of 97, 1 checkpoints
+strata serve: decode expert cache hit rate: 98.0% (60911 hits / 62182 lookups); 218 more read by the GPU over PCIe or from another GPU (0.3% of all 62400 routed)
+strata serve: resident RAM: 41.79 GiB of experts in RAM, 103 exchanged with the VRAM tier, 1 blob reads from the file
+strata serve: expert tiers: GPU 60911 hits this request; since the start RAM 32720 blobs, files 1 blobs 18900.6 MB read (the GGUF in place)
+strata serve: file tier I/O this request: the OS read 0.3 MB from storage (0 major faults) for 0.0 MB of expert reads
+strata serve: KV streaming: 99.01% of 72948 block reads hit VRAM, 2.9 MiB read from RAM
+strata serve: conversation cache: parked 239 tokens in 42.8 ms; parked=4 bytes=959188676 evictions=0 snapshot_bytes=239795632 reused_kv_bytes=0
+strata KV prefetch: 0 layer prefixes, single existing staging pool
+strata serve: typical acceptance: 7 of 12 first-rejections rescued (threshold 0.20)
+strata serve: prompt 120 tokens = 0 reused + 120 read in 307 ms (390.3 tok/s), 120 generated in 456 ms (262.9 tok/s), drafts accepted 87 of 97, 1 checkpoints
+strata serve: decode expert cache hit rate: 98.1% (61050 hits / 62217 lookups); 183 more read by the GPU over PCIe or from another GPU (0.3% of all 62400 routed)
+strata serve: resident RAM: 41.79 GiB of experts in RAM, 109 exchanged with the VRAM tier, 3 blob reads from the file
+strata serve: expert tiers: GPU 61050 hits this request; since the start RAM 38600 blobs, files 3 blobs 18904.5 MB read (the GGUF in place)
+strata serve: file tier I/O this request: the OS read 0.2 MB from storage (0 major faults) for 3.9 MB of expert reads
+strata serve: KV streaming: 99.02% of 73152 block reads hit VRAM, 2.9 MiB read from RAM
+strata serve: suffix drafts: 7 windows, 34 of 35 drafts accepted
+strata serve: conversation cache: parked 239 tokens in 41.0 ms; parked=4 bytes=959188676 evictions=1 snapshot_bytes=239795632 reused_kv_bytes=0
+strata KV prefetch: 0 layer prefixes, single existing staging pool
+strata serve: typical acceptance: 7 of 8 first-rejections rescued (threshold 0.20)
+strata serve: prompt 120 tokens = 0 reused + 120 read in 309 ms (388.8 tok/s), 120 generated in 456 ms (263.0 tok/s), drafts accepted 86 of 90, 1 checkpoints
+strata serve: decode expert cache hit rate: 97.8% (57944 hits / 59255 lookups); 265 more read by the GPU over PCIe or from another GPU (0.4% of all 59520 routed)
+strata serve: resident RAM: 41.79 GiB of experts in RAM, 116 exchanged with the VRAM tier, 4 blob reads from the file
+strata serve: expert tiers: GPU 57944 hits this request; since the start RAM 44605 blobs, files 4 blobs 18906.5 MB read (the GGUF in place)
+strata serve: file tier I/O this request: the OS read 0.2 MB from storage (0 major faults) for 2.0 MB of expert reads
+strata serve: KV streaming: 98.96% of 69036 block reads hit VRAM, 2.9 MiB read from RAM
