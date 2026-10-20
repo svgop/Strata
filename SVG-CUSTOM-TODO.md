@@ -1433,3 +1433,29 @@ sm_120 number, not the mechanism; it qualifies as terse upstream evidence (issue
 the upstream discipline - and only with explicit user go). FUSE_HITS/POOL_DIET/T18 have NO wave
 counterpart. REBASE HAZARD: upstream rewrote expert_pool_dispatch_multi's
 neighborhood (io-prefetch) - T18 guards are ours and must be re-applied on any merge there.
+
+### V0.2 SERIES FEATURE AUDIT (2026-10-20, read-only while T19 ran; source: v0.2.1 tree docs + release notes)
+WHAT .2 HAS THAT WE LACK, and the speed verdict for each:
+1. NVFP4 routed experts (docs/NVFP4.md; ModelOpt format, converter tools/nvfp4_convert.py, three
+   variants incl a QA-distilled one) — MEASURED ON OUR EXACT BOX by the fork author: NVFP4 decode
+   114-116 t/s vs IQ2_XS 132-139 on the same 5090 (blob 2.76MB vs 1.51MB, half the cache slots,
+   2x PCIe miss bytes) -> SLOWER for decode. QUALITY is the real story: NVFP4 GPTQ = 92.09%
+   same-top / KL 0.070 vs our IQ3_S 87.69% / 0.144. VERDICT: a QUALITY lane, not a speed path;
+   would land far below our 203.9 M1; needs a ~50GB ModelOpt checkpoint download. NOT record-pushing.
+2. Linux GGUF-in-place: zero-copy page-cached experts + I/O prefetch + gate + RAM/SSD-aware prompt
+   chunk (release notes: 1.14-1.47x decode on a 3060 zero-copy alone) — BUT "packs in experts.bin
+   keep the old behaviour": our lanes run PACKS and the file tier is idle (3 blob reads/day).
+   NOT OUR REGIME. Exception to check someday: COLD_OVERLAP (149-cold, background claimed-blob
+   reads) may reach RAM-tier stalls independent of mmap — cheap falsifier if ever ported.
+3. sm_86/sm_60 per-arch tables, AMD WMMA/q2_0 prompt defaults, Intel XMX/int8 experts, iGPU prompt
+   sets (HC_UPMIX, PF_GEMM, PA_FAST), Gyro low-memory, app/Terminal/pictures/Qwen3.6/web-search/
+   CORS/user_args, standard bench suite — other platforms or product surface. The bench suite is
+   worth adopting for protocol discipline; nothing else is a speed lever for us.
+4. s_gemv_pair.cu (shared expert gate/up+SwiGLU one launch) — if T19's GU_SWIGLU port does not
+   already cover the shared-expert path, this is a +0.5-1% class rider. gdn_chunk.cu = upstream's
+   own prefill chunked GDN; we run OUR adopted version (gdn_rec_chunked), no action unless a
+   comparison shows theirs is better.
+VERDICT: NOTHING in the .2 feature set pushes past our record. The record-pushing content of the
+.2 series IS the kernel package + mmvq_il already in T19. NVFP4 = quality lane; zero-copy = other
+regime; the rest = product. The .2 series' real value to us: T19 ports + the quality path for
+whenever speed stops being the objective.
