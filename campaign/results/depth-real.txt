@@ -1,0 +1,7 @@
+DEPTH-LANE-REAL real
+source corpus    : repo technical prose (45 files, real text; MIMIC corpus ABSENT from Custom-data)
+depth reached     : 34123 prompt tokens (target 32000)
+decoded           : 1500 tokens
+wall total        : 13.9s
+engine accept    : strata serve: prompt 34123 tokens = 0 reused + 34123 read in 5617 ms (6074.8 tok/s), 1117 generated in 6151 ms (181.6 tok/s), drafts accepted 741 of 1048, 2 checkpoints
+engine accept    : strata serve: prompt 35257 tokens = 35239 reused + 18 read in 67 ms (269.8 tok/s), 366 generated in 2035 ms (179.9 tok/s), drafts accepted 232 of 376, 2 checkpoints

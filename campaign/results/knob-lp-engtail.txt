@@ -1,0 +1,400 @@
+strata serve: decode expert cache hit rate: 99.2% (476 hits / 480 lookups)
+strata serve: resident RAM: 41.85 GiB of experts in RAM, 297 exchanged with the VRAM tier, 1 blob reads from the file
+strata serve: expert tiers: GPU 476 hits this request; since the start RAM 185221 blobs, files 1 blobs 18841.8 MB read (the GGUF in place)
+strata serve: file tier I/O this request: the OS read 0.0 MB from storage (0 major faults) for 0.0 MB of expert reads
+strata serve: KV streaming: 94.29% of 16800 block reads hit VRAM, 3.9 MiB read from RAM
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 23.5 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 23.3 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 23.8 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 23.6 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 23.0 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 23.4 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 22.9 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 22.6 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 22.8 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 22.5 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 23.0 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 22.9 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 22.9 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 22.8 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 22.1 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 22.6 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 23.1 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 24.3 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 22.2 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 23.0 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 21.2 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 22.9 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 22.7 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 23.3 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 22.2 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 23.5 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 23.6 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 23.5 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 23.1 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 23.2 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 23.4 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 23.4 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 22.0 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 22.4 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 23.3 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 23.4 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 23.2 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 24.1 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 22.4 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 22.1 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 22.3 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 22.8 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 22.7 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 22.6 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 22.0 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 23.6 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 23.7 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 23.4 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 21.9 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 23.7 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 23.6 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 23.1 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 23.0 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 24.5 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 24.3 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 23.2 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 21.8 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 23.2 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 23.4 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 23.5 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 23.7 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 24.1 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 23.3 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 24.3 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 22.7 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 25.1 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 23.4 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 26.3 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 26.2 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 26.3 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 24.9 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 23.3 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 31.6 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 23.5 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 25.1 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 25.0 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 24.1 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 23.8 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 24.5 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 24.5 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 24.3 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 25.0 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 24.4 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 25.4 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 25.2 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 24.6 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 25.9 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 27.7 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 27.1 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 26.5 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 25.1 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 23.5 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 23.6 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 24.8 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 26.2 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 24.8 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 25.6 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 24.8 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 24.9 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 24.3 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 22.9 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 23.6 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 22.9 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 24.5 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 25.2 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 25.8 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 25.3 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 24.6 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 24.6 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 26.6 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 24.1 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 24.3 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 23.3 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 24.0 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 23.5 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 25.1 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 26.1 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 24.7 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 28.1 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 26.2 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 27.2 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 24.7 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 30.9 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 25.7 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 24.6 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 24.1 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 25.2 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 23.9 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 23.5 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 24.4 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 24.6 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 24.2 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 25.1 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 24.8 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 24.5 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 24.6 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 22.3 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 23.3 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 23.3 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 25.1 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 25.2 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 23.3 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 23.7 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 23.0 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 23.3 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 24.4 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 23.8 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 24.2 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 25.1 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 26.1 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 24.5 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 30.5 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 28.0 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 26.4 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 29.0 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 25.1 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 24.4 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 24.7 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 25.7 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 26.0 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 25.5 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 25.9 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 22.3 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 24.4 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 24.7 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 23.4 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 24.4 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 25.2 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 23.8 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 24.4 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 24.0 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 25.5 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 25.6 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 26.0 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 26.0 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 25.6 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 26.3 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 24.0 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 24.2 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 24.7 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 22.5 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 24.5 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 25.8 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 24.8 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 23.6 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 23.6 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 23.3 ms
+cohorts: round A.S=6 B.S=4
+strata verify: captured the batch window over slots 3,3,5,5
+cohorts: windows done in 27.9 ms
+cohorts: round A.S=6 B.S=4
+cohorts: windows done in 21.4 ms
+cohorts: round A.S=6 B.S=4
+cohorts: windows done in 21.5 ms
+cohorts: round A.S=6 B.S=4
+cohorts: windows done in 21.9 ms
+cohorts: round A.S=6 B.S=4
+cohorts: windows done in 20.7 ms
+cohorts: round A.S=6 B.S=2
+strata verify: captured the batch window over slots 3,3
+cohorts: windows done in 25.8 ms
+cohorts: round A.S=6 B.S=2
+cohorts: windows done in 19.4 ms
+strata verify: captured the batch window over slots 1,1,2,2,3,3
+strata verify: captured the batch window over slots 1,1,2,2
+strata verify: captured the batch window over slots 2,2
+strata batch: 700 windows, avg 4.98 rows, 13.68 ms/window = run 12.92 (CUDA0 GPU-reach wait 0.53 + CPU experts 2.58) + commit 0.30 + emit 0.31 + adapt wait 0.15; per stage (ms/window): CUDA0 wait 0.53 + pool 2.58; per layer-window: CPU experts 0.81, VRAM hits 29.93, PCIe 0.22; routed entries per window: VRAM 1436.7 (96.1%), PCIe 11.2 (0.7%), CPU 47.6 (3.2%); adaptive tier: 56 rounds, 3434 experts swapped in; 293.9 rows/s over 11870 ms of wall time (admissions included); slot drafts accepted 1419 of 2061 (68.9%)
+strata batch: MTP proposals accepted 1419 of 2070 (68.6%)
