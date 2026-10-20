@@ -1423,7 +1423,13 @@ RANKED PORTS: 1) mmvq_il wide - PORT NOW (bitwise, self-contained; fork caps at 
 native_mmvq.cu:1556/:2706). 2) GR_DOWN_TG=2 (bitwise; conflict work). 3) SIDE_MIXER=2 (serial-
 windows-only, COHORTS structurally untouched). 4) GR_UP75 (bench first - F-241 S4 says norm_fast
 may have absorbed it). 5) GU_SWIGLU (+0.5-0.9%). All bitwise = no MMLU gate.
-CONVERGENCE: ATTN_DAILY (we arm - keep); norm_fast (upstream opt-in +0.5-0.6% on V100 vs our
-default flip pooled +5.2% = WE ARE AHEAD, bank as upstream-issue evidence); FUSE_HITS/POOL_DIET/
-T18 have NO wave counterpart. REBASE HAZARD: upstream rewrote expert_pool_dispatch_multi's
+CONVERGENCE (corrected 10-20 after provenance check): ATTN_DAILY - we arm it, keep.
+norm_fast PROVENANCE: the kernel is UPSTREAM'S OWN (7fc02cb5, gfx12 split HC norm; CUDA opt-in
+via aaa323fe "Volta runs gfx906's...", issue #2358, docs/NVIDIA_V100.md:103 = +0.5-0.6% decode;
+present in v0.1.45, ZERO commits touch it in the .45->.2.1 wave). Nothing was taken from us and
+we took nothing: the code comment says "gfx12 only until another arch is measured" - our T15C S3
+IS that measurement (sm_120, pooled +5.2%) and flipped the default. The new information is the
+sm_120 number, not the mechanism; it qualifies as terse upstream evidence (issue, not PR, per
+the upstream discipline - and only with explicit user go). FUSE_HITS/POOL_DIET/T18 have NO wave
+counterpart. REBASE HAZARD: upstream rewrote expert_pool_dispatch_multi's
 neighborhood (io-prefetch) - T18 guards are ours and must be re-applied on any merge there.
