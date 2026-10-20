@@ -8328,3 +8328,58 @@ Q2_0 CROSS-SESSION CAVEAT: stock .2.1's 264.3 is above our fork's Oct-17 Q2_0 le
 different session/clocks - a same-session custom-Q2_0 A/B is OWED before any lane claim.
 Stock install now deployed at v0.2.1 (requested); .45 kept as engine/strata.v0.1.45-pre-v02.
 NEXT: commit-level analysis of what produced the wave, ranked for cherry-pick into custom-2.
+
+### F-245 — T19: the v0.2.1 wave ported one variable at a time; S1 adopted, two flagged, S3 reverted, the greedy-identity instrument invalidated (2026-10-20 11:20-13:10)
+The tranche followed the wave dossier (campaign/research/v02-wave-analysis.md) stage by stage:
+port -> server-free bitwise proof at arm AND ctl env states -> one 3v3 ABAB (fresh boot per leg,
+--short-n 6, binary md5 + t18 marker per leg). Full per-stage detail in SVG-CUSTOM-TODO.md
+"T19 TRANCHE RESULTS"; batteries campaign/results/t19-*.log, proofs t19-s*-proof*.log.
+- **S1 mmvq_il WIDE (75fabbd9+44997124) — ADOPTED, the round's engine.** 5-8 column interleaved
+  matvec + the sm_120 tables (kIlRows_120/kIlRows58_120 keyed 1201 = 12.0 with 80+ SMs). Bitwise
+  (mmvq_il_parity T 1-8, every rows choice, both env states). Our 5090 bench kills the cliff: head
+  T5 491.6 -> 290.6 us, T8 627.6 -> 372.8 (-41%). Battery 3v3: **conc +8.34%** (309.6 -> 335.4),
+  M1 +2.63% (under the solo bar — flagged honestly), pair -1.70 (in band), M3b +0.48pp flat.
+  Adopted on the targeted conc lane (dossier band +6-12%); M1's sub-bar solo ride is why the
+  scoreboard re-bank is owed. Rollback: STRATA_MMVQ_IL_WIDE=0 STRATA_MMVQ_IL_120=0.
+- **S2 GR_DOWN_TG (94104176) — FLAGGED, default-off.** Kernel win real (staged down T8 17.5 vs
+  27.3 us cold, whole read -21%; bitwise at STRATA_HC_SPLIT=2 arm+ctl) but the battery read every
+  lane inside the band (M1 +1.56 / pair +2.25 / conc +2.43). Env-only: STRATA_GR_DOWN_TG=n.
+  Lesson banked: the hc harnesses run the PLAIN read unless STRATA_HC_SPLIT=2 — the first proof
+  proved nothing before it was corrected.
+- **S3 SIDE_MIXER (ffc30b8d+477ac13c) — REVERTED, and the falsifier itself invalidated.** The
+  fixed-prompt greedy identity check "diverged" deterministically at =1 (3 boots, one hash) vs ctl
+  (2 boots, one hash) — and =2 diverged only under STRATA_VERIFY_ASYNC_LAUNCH=1. Reverted per law
+  10. THEN S7's greedy riders on the STOCK tree showed the truth about the instrument: stock .2.1
+  greedy outputs are NOT stable across boots at identical env (prompt 1: three distinct outputs in
+  three same-env legs; the fork's "divergent" hash appears in a stock OFF leg). Cross-boot greedy
+  text is NOT a bitwise instrument on this engine. The S3 rejection STANDS on the honest grounds:
+  its bitwise-safety claim could not be established (the proving instrument doesn't work), the
+  3v0-vs-0v2 hash pattern still reads probably-real (~p=0.02), and the =2 x ASYNC_LAUNCH anomaly
+  is unresolved — an unprovable change does not boot on this lane. Re-open: a logits-dump A/B
+  harness with per-state output distributions; also check STRATA_VERIFY_ASYNC_LAUNCH interaction
+  in isolation. Applied hunks banked: campaign/results/t19-s3-rejected.diff.
+- **S4 GU_SWIGLU (75afe3f4+8837cb6f) — FLAGGED, default-off.** Bitwise (iq_multi_parity, every
+  gate/up x down format, arm+ctl+default). First battery VOIDED by a 180.6-221.8 control-window
+  drift (new worst case for the interleave law — the box moved ~20% inside one 8-minute window);
+  re-run read +5.25 M1; pooled 6v6 is the honest read: **M1 +0.4 / pair -0.4 / conc +1.0 — FLAT.**
+  Upstream's +0.5-0.9% is under our noise floor. STRATA_GU_SWIGLU=1 arms it.
+- **S5 GR_UP75 — KILLED BY CODE READ, no port.** Upstream's kernel static-asserts the 256-thread
+  geometry (RPW==8); our gr_up_multi_kernel is 512-thread/RPW=4 — a port is a rewrite. The
+  absorption prior is same-path and direct: F-241 S4 (gr_up8 FLAT post-norm_fast). Upstream's own
+  per-switch number is the smallest/noisiest (-1.7% cumulative).
+- **S6 STACK (riders on S1): NOT ADOPTED.** M1 +1.80 / pair +5.60 / conc +2.40 / M3b -1.87pp. The
+  pair spike contradicts the riders' mechanism (kernel savings must surface in M1/conc — both
+  sub-band); pair swung +-6% across today's batteries. F-191 again: a single-lane spike is a rumor.
+- **S7 CONFOUND (stock v0.2.1, 3v3, four package switches on vs off) — F-244 ANSWERED.** The
+  ba2c2d5f+94104176 package prices at **M1 +9.13% (159.7 vs 146.4), pair +7.57%, conc +15.73%**
+  (272.9 vs 235.8) of the +15.6/+11.2/+17.7 wave: the kernel package IS the wave (~60% of M1, ~90%
+  of conc); the I/O-tier + remaining defaults are the M1 residual (~+6.5) and are negligible on
+  conc. Our +15.6 M1 exceeded upstream's +11.9-14.0 anchor mainly because our --spec 6 windows pay
+  the 5-8 column matvec more — S1 is our share of exactly that.
+STATE: engine/strata = S1-default build; backups .pre-t19-s1..s4 alongside. Scoreboard: the frozen
+203.9/202.0/306.1 (F-242) is pre-S1; S1's window read ~215/204.6/335.4 arm vs 209.5/208.1/309.6
+ctl — a five-boot re-bank of the S1 engine is OWED before any cross-session claim. Stock deploy
+restored to v0.2.1 (7a5e17d1) after S7. BOX STOPPED at round end.
+NEXT: re-bank the S1 engine (5 boots); the logits-dump A/B harness if the mixer port is re-wanted;
+S3's stock-side check folded into any future stock boot (free rider); the mmvq tables' share of
+S7's residual could be priced by one stock boot with STRATA_MMVQ_IL_WIDE=0/_120=0.

@@ -1434,6 +1434,58 @@ the upstream discipline - and only with explicit user go). FUSE_HITS/POOL_DIET/T
 counterpart. REBASE HAZARD: upstream rewrote expert_pool_dispatch_multi's
 neighborhood (io-prefetch) - T18 guards are ours and must be re-applied on any merge there.
 
+### T19 TRANCHE RESULTS (2026-10-20 11:20-13:00; journal F-245; batteries campaign/results/t19-*.log; proofs t19-s*-proof*.log)
+Method per stage: port -> server-free bitwise proof at the exact arm/ctl env states -> one 3v3 ABAB
+battery (t19-battery.sh: fresh boot per leg, probe --short-n 6, per-leg .out, binary md5 + t18-marker
+per leg). Standing base = T18 fix + norm_fast flip + T15C state; S1 lands on top and stays.
+- S1 mmvq_il WIDE (75fabbd9+44997124): 5-8 column interleaved matvec (cp=8 copy, R<=2 rows/warp) +
+  the sm_120 tables (kIlRows_120 2-4 col + kIlRows58_120, keyed 1201 = 12.0 with 80+ SMs via il_cc).
+  PROOF: mmvq_il_parity T 1-8, every rows choice, bitwise, arm AND ctl env states. Bench on OUR
+  5090: the head cliff kills - T5 491.6 -> 290.6 us, T8 627.6 -> 372.8 (-41%). BATTERY 3v3: conc
+  +8.34% (309.6 -> 335.4), M1 +2.63% (210.0 vs 209.5 - under the solo bar, flagged), pair -1.70
+  (in band), M3b +0.48pp flat. **ADOPTED as code default** on the targeted conc lane (dossier band
+  +6-12%); rollback: STRATA_MMVQ_IL_WIDE=0 STRATA_MMVQ_IL_120=0.
+- S2 GR_DOWN_TG (94104176, rides fork's staged down; NO sm75 machinery needed): one token a block
+  row (gridDim.y = ct/tg; same per-(row,token) warp sums). PROOF: gr_parity + gr_multi_parity at
+  STRATA_HC_SPLIT=2, arm+ctl, bitwise; fused_gr_bench 0 differing; staged down T8 17.5 vs 27.3 us
+  cold, whole read -21%. BATTERY 3v3: M1 +1.56 / pair +2.25 / conc +2.43 / M3b -0.87pp - EVERY lane
+  inside the band. **FLAGGED, default-off** (STRATA_GR_DOWN_TG=n env-only; upstream defaults it on
+  for 12.0). NOTE: the harness variants matter - without STRATA_HC_SPLIT=2 the harnesses run the
+  PLAIN read and never touch the staged kernel (first proof attempt proved nothing).
+- S3 SIDE_MIXER (ffc30b8d+477ac13c): **REVERTED BEFORE BATTERY; the falsifier itself was later
+  invalidated.** Applied clean (1 hand hunk), then the identity check: fixed 4-prompt greedy (temp
+  0), env-only flips, same binary. =1 diverged "deterministically" on prompt 3 (3 boots, one hash
+  vs ctl's 2 boots, another hash); =2 diverged further on prompt 4 ONLY with
+  STRATA_VERIFY_ASYNC_LAUNCH=1 (bitwise-clean with =0). Reverted per law 10. THEN S7's greedy
+  riders on the STOCK tree showed cross-boot greedy text is NOT stable at identical env (prompt 1:
+  three distinct outputs in three same-env legs; the fork's "divergent" hash appeared in a stock
+  OFF leg) - the instrument cannot prove bitwise safety across boots. The REVERSION STANDS on the
+  honest grounds: the bitwise-safety claim is unprovable with current instruments, the hash pattern
+  still reads probably-real (~p=0.02), and the =2 x ASYNC_LAUNCH anomaly is unresolved. Hunks
+  banked (campaign/results/t19-s3-rejected.diff); re-open: logits-dump A/B harness with per-state
+  output distributions; ASYNC_LAUNCH interaction checked in isolation.
+- S4 GU_SWIGLU (75afe3f4+8837cb6f): gate/up + SwiGLU + q8_1 one 512-thread launch. PROOF:
+  iq_multi_parity bitwise on every gate/up x down format, 0..11-entry groups, arm+ctl+default.
+  BATTERY 3v3 x2: first read M1 -4.21 on a WILD control window (ctl legs 180.6/210.7/221.8 - new
+  worst-case box drift, battery voided); re-run +5.25; **pooled 6v6 = the honest read: M1 +0.4 /
+  pair -0.4 / conc +1.0 - FLAT.** **FLAGGED, default-off** (STRATA_GU_SWIGLU=1; upstream's own
+  +0.5-0.9% is under our noise floor at window level).
+- S5 GR_UP75: **KILLED BY CODE READ, no port.** Upstream's gr_up75_kernel static-asserts the
+  256-thread geometry (RPW==8, UPM_COLS==2*WARPS); the fork's gr_up_multi_kernel runs 512 threads /
+  RPW=4 - a port is a rewrite, not a transplant. The absorption prior is direct and same-path:
+  F-241 S4 measured gr_up8 FLAT post-norm_fast. Upstream's own per-switch number is the smallest
+  and noisiest of the four (-1.7%, cumulative runs). Re-open: a fork-geometry hoisted kernel only
+  if the up kernel re-emerges as a window fraction.
+- S6 STACK (both flagged riders STRATA_GR_DOWN_TG=1 + STRATA_GU_SWIGLU=1 on the S1 standing base,
+  same binary): M1 +1.80 / pair +5.60 / conc +2.40 / M3b -1.87pp. **RIDERS NOT ADOPTED**: the pair
+  spike contradicts the riders' mechanism (per-window kernel savings must surface in M1/conc -
+  both sub-band; pair swung +-6% across today's batteries), F-191's single-lane-spike rule.
+- S7 CONFOUND (stock v0.2.1, 3v3 ABAB package-on vs package-off): see F-245.
+STATE: engine/strata = S1-default build (53bbe9fb); backups alongside: .pre-t19-s1 (pre-tranche),
+.pre-t19-s2, .pre-t19-s3, .pre-t19-s4. The scoreboard M1 anchor: S1's window read ~210-215
+(vs ctl 209.5); a five-boot re-bank of the S1 engine is owed at the next scoreboard round - the
+frozen 203.9/202.0/306.1 (F-242) is pre-S1.
+
 ### V0.2 SERIES FEATURE AUDIT (2026-10-20, read-only while T19 ran; source: v0.2.1 tree docs + release notes)
 WHAT .2 HAS THAT WE LACK, and the speed verdict for each:
 1. NVFP4 routed experts (docs/NVFP4.md; ModelOpt format, converter tools/nvfp4_convert.py, three
