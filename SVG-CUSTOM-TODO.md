@@ -1511,3 +1511,68 @@ VERDICT: NOTHING in the .2 feature set pushes past our record. The record-pushin
 .2 series IS the kernel package + mmvq_il already in T19. NVFP4 = quality lane; zero-copy = other
 regime; the rest = product. The .2 series' real value to us: T19 ports + the quality path for
 whenever speed stops being the objective.
+
+## T20 — THE v0.2.1 MERGE EXPERIMENT (2026-10-20 evening; merge commit 74239c96 in the COPY ~/LLM/strata-custom-2-merge, local only, do NOT push)
+Question: is the whole-wave merged engine faster than our standing T19 line on the same window?
+Method: git merge v0.2.1 into a FULL COPY of the fork (original untouched, still the standing
+engine; merge semantics from the .44.1 precedent d7a24532). 15 conflicted files resolved by the
+preservation list; where upstream superseded a fork port of the same commits, upstream's version
+was taken and recorded. Build (sm_120 CUDA, Release), parity proofs, boot test, then one
+same-window 3v3 ABAB (leg A = merged, leg B = engine/strata.t19-final; ORIGINAL launcher +
+ORIGINAL engine slot, binary swap as the only variable; campaign/t20-merge-ab.sh) plus one
+depth-lane-real 32k prefill leg per binary. Win = no lane regression beyond ±4% AND ≥ +4% on at
+least one lane; else the merge stays a lab result.
+
+### CONFLICTS AND RESOLUTIONS (15 files; 55 hunks)
+| File (conflicts) | Resolution | Why |
+|---|---|---|
+| .gitignore (1) | both sides | fork hygiene + upstream packaging ignores |
+| CMakeLists.txt (2) | theirs (HEAD-empty additions) | upstream's qsa_slots/scores parity + qsa_rows_bench targets |
+| include/strata/kernels/qsa_decode_attn.hpp (2) | theirs | upstream's slots/batch-rows declarations |
+| include/strata/kernels/verify_kernels.hpp (1) | BOTH | our F-216 snap doc stays; upstream's GdnGroups + gdn_step_norm_groups added |
+| serve/server.py (1) | COMBINED | our F-14 FIFO admission tickets stay the default path; upstream's STRATA_ADMIT_SHORT_FIRST race path + queue deadline (QueueWaitExpired) wired in; the two are mutually exclusive by env (ticket deadlock with short-first reordering avoided by construction) |
+| src/core/expert_source.cpp (2) | COMBINED | (a) router lookahead: our PREDICT_CREDIT fractional credit + upstream's wconf/warm_scored confidence both kept; (b) PCIe share: our STRATA_PLAN_PARTIAL kill-switch kept AND upstream's pcie_model.pick cost model; T18 guards were NOT clobbered - both survived the auto-merge inside the rewritten dispatch_multi (verified: job_of reset at entry + nt>=MAXT refusal) |
+| src/core/verify.cpp (8) | MIXED, batch region rewritten deliberately | kept OURS: fuse-wait superseded by upstream's tiers (same default on sm_120: off); xil_ buffer comment; device-plan planned wait (wait_flag_ge_planned, T1.1 partial-aware) preferred over upstream's wait_flag_ge_or at the device-plan branch; capture_commit_batch PARITY signature (F-196 double buffer) over upstream's batch_self_commits early-out (unwired); the whole two-phase batch API (batch_launch wrapper / batch_stage_rows / batch_go(with_commit) / batch_launch_rows) with upstream's pre_launch_ hook added at stage; upstream's batch_serve + ext_serve_ watchdog merged INTO our batch_poll with the G2 group math (doorbell k = layer lb_+k/G, group k%G) so their external-serve thread serves OUR doorbells; upstream's handoff bounds + stamped waits kept in the captures. The auto-merge had produced duplicate batch_poll definitions - region 3892-4107 recomposed by hand |
+| src/kernels/cpu/pool.cpp (1) | BOTH | our POOL_DIET env read + upstream's PoolPlan worker planning |
+| src/kernels/cuda/fused_gr.cu (10) | COMBINED | gr_up_multi_kernel template = COLS (our gr_up8, default-off) + Q8 (upstream REQ8); dispatch order q8w -> up75_on() (upstream default ON sm_120) -> gr_up8 -> plain; down_tg() = UPSTREAM'S per-device body (80+SM sm_120 defaults to ONE token a block row; STRATA_GR_DOWN_TG=0 rolls back) - supersedes our env-only port, our 3v3 was in-band, upstream's default is the wave package; gr_up75_kernel's gr_q8_tail call fixed to our 3-arg form (per_group=2); norm_fast_on() CUDA = OURS (return true, the T15C flip - upstream's opt-in loses to our sm_120 +5.2% pooled); upstream's up75_on() + fuse_wait tiers added; our T19-S2 comments kept |
+| src/kernels/cuda/iq_kernels.cu (8) | THEIRS | upstream's GU_SWIGLU line supersedes our T19-S4 port of the same commits (adds APR/qk-128/12-13 guards, STRATA_EXP_LAYOUTS variants, sm_120 default ON) |
+| src/kernels/cuda/native_mmvq.cu (8) | THEIRS | upstream's 147-verify line supersedes our T19-S1 port (same tables PLUS the sm_75 rows we never ported); preservation item 5 resolved to upstream per the brief (equivalent + proven bitwise below) |
+| src/kernels/cuda/qsa_decode_attn.cu (5) | THEIRS | upstream's maintained line: per-device ATTN_DAILY default (single gate - no double path with our launcher arm), lane_cell_attn(), attn_v3, env tiers for MERGE_V2; our fork's Daily work was itself a port of upstream's be4cf1c/3effa9d5 |
+| src/kernels/cuda/verify_kernels.cu (2) | BOTH | gdn_step_norm_multi_kernel signature = our snap/snap_tok_stride + upstream's GdnGroups grp={} (group prologue); F-216 promote/audit kernels kept verbatim; upstream's strata_now_ns/wait_handoff/handoff_publish/stamped-wait kernels added in their own namespace block; their gdn_step_norm_groups launcher calls fixed to pass our snap params (nullptr, 0) |
+| src/kernels/mmvq_il_parity.cpp (3) | THEIRS | harness matches the kernel file's provenance |
+| src/program/generate.cpp (2) | BOTH | our F-27 <random> + upstream's batch_telemetry include; our F-17 cvec phase arming kept + upstream's !merged draft-counter guard adopted |
+
+### PRESERVATION CHECKLIST (checked in the merged tree, all PASS)
+1. COHORTS=2: batch_stage_rows/batch_go two-phase + ver_b (29 refs in generate.cpp) + parity
+   commit graphs + the standing->cohort transition fence - and the boot shows "cohorts: round
+   A.S=6 B.S=6" rounds. PASS.
+2. T18 guards: job_of reset at expert_pool_dispatch_multi entry + the nt>=MAXT refusal, both
+   present in the merged file (auto-merge kept them inside upstream's io-prefetch rewrite - the
+   dossier's hazard did not fire). PASS.
+3. norm_fast flip: fused_gr.cu norm_fast_on() returns true on CUDA; boot line "STRATA_GR_NORM_FAST=1
+   (T15C S3 default): the split norm runs the fast kernel". PASS.
+4. FUSE_HITS fold (verify.cpp), POOL_DIET repark (pool.cpp run_phase+run), GDN_CHUNKED
+   (prefill/kernels.cu, gdn_rec_parity 0 failures), ATTN_DAILY (upstream's per-device default IS
+   the single gate now; our launcher arm kept; no double path). PASS.
+5. mmvq_il wide: UPSTREAM'S version; mmvq_il_parity on the merged build: "OK (every case, T 1-8,
+   rows 1/2/4 and the table, bitwise)". PASS.
+6. Launcher arms + gr_up8: launch-custom-iq3s-8081.sh untouched by the merge (30 STRATA_ arms);
+   STRATA_GR_UP8 default-off re-based on the Q8-templated kernel. PASS.
+7. campaign/, SVG-CUSTOM*.md, harnesses: untouched (merge diff empty there). PASS.
+
+### BUILD / SELFTEST / BOOT
+- Build: clean (sm_120, CUDA 13.4, Release; 376 targets; warnings = pre-existing classes only).
+  NOTE: the copy's build/ cache had silently referenced the ORIGINAL's sources (the ".44.1 copy
+  paths fixed" claim was wrong for build/) - wiped and reconfigured with absolute paths into the
+  copy before any merged build; the earlier baseline "sanity build" had rebuilt the original's
+  objects into the copy's build dir (original sources untouched).
+- Parity proofs (build/*_parity on the merged tree): mmvq_il T1-8 bitwise; gr_parity + gr_multi
+  _parity at default AND STRATA_HC_SPLIT=2 AND STRATA_GR_DOWN_TG=0 (0 failures); iq_multi_parity
+  default + STRATA_GU_SWIGLU=0 (0 failures); gdn_chunk_parity, gdn_rec_parity (0 failures).
+- Boot (8081 via the ORIGINAL launcher): health OK; "strata hc: CUDA0: the hyper-connection read
+  runs as staged ... checked bit for bit against the plain read on this card"; verify windows
+  1..8 captured clean; cohorts rounds live; smoke request coherent (finish=stop, sensible
+  speculative-decoding answer).
+
+### A/B — SAME-WINDOW LEG TABLE (campaign/results/t20-merge-ab.log; probe --short-n 6, fresh boot per leg)
+(pending - filled by the battery)
