@@ -1,0 +1,9 @@
+=== T19-S1 PROOF (mmvq_il wide port, 75fabbd9+44997124) 2026-10-20T11:36:10+02:00 ===
+GPU: NVIDIA GeForce RTX 5090, 12.0
+--- A. default env (wide+120 tables ON = the arm state), T 1-8 every rows choice, bitwise
+mmvq_il_parity: OK (every case, T 1-8, rows 1/2/4 and the table, bitwise)
+--- B. STRATA_MMVQ_IL_WIDE=0 STRATA_MMVQ_IL_120=0 (the ctl state: pre-port routing)
+mmvq_il_parity: OK (every case, T 1-8, rows 1/2/4 and the table, bitwise)
+--- C. sanity: mmvq_multi_parity (untouched multi kernels)
+
+mmvq_multi_parity: ok. With multi_exact on every column is bitwise equal to a single-column call; with it off the control finds differences at T > 4 in every case, so the comparison has power.
