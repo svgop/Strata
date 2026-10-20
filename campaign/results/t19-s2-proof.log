@@ -1,0 +1,42 @@
+=== T19-S2 PROOF (GR_DOWN_TG=1 port, 94104176) 2026-10-20T11:50:41+02:00 ===
+GPU: NVIDIA GeForce RTX 5090, 12.0
+--- A. gr_parity --selftest, default env (down_tg=1 active on this 12.0 card: the arm state)
+  scalar final mixer native pinned GR pass
+
+gr_read/gr_write: 0 failures
+gr_parity OK
+--- B. gr_parity --selftest, STRATA_GR_DOWN_TG=0 (the ctl state)
+  scalar final mixer native pinned GR pass
+
+gr_read/gr_write: 0 failures
+gr_parity OK
+--- C. gr_multi_parity (the multi read against single-token calls), default env
+gr_multi: 32 cases, 0 failures
+gr_multi_parity OK
+--- D. fused_gr_bench cold, T 2..8, default (arm) vs STRATA_GR_DOWN_TG=0 (ctl)
+-- arm (down_tg=1):
+COLD(4 sets) fast 1 T 5 | read   27.8 us (events) | stamps median: norm   4.0 down  19.2 up   6.3 us (incl. a stamp kernel each)
+COLD(4 sets) fast 2 T 5 | read   20.2 us (events) | stamps median: norm   0.6 down   8.2 up  13.3 us (incl. a stamp kernel each)
+COLD(4 sets) fast 0 T 6 | read   39.0 us (events) | stamps median: norm   5.2 down  21.4 up  14.1 us (incl. a stamp kernel each)
+COLD(4 sets) fast 1 T 6 | read   30.7 us (events) | stamps median: norm   4.0 down  21.5 up   7.0 us (incl. a stamp kernel each)
+COLD(4 sets) fast 2 T 6 | read   23.7 us (events) | stamps median: norm   0.6 down   9.8 up  15.1 us (incl. a stamp kernel each)
+COLD(4 sets) fast 0 T 7 | read   44.1 us (events) | stamps median: norm   5.2 down  24.2 up  16.4 us (incl. a stamp kernel each)
+COLD(4 sets) fast 1 T 7 | read   34.1 us (events) | stamps median: norm   4.0 down  24.3 up   7.7 us (incl. a stamp kernel each)
+COLD(4 sets) fast 2 T 7 | read   26.0 us (events) | stamps median: norm   0.6 down  10.7 up  16.6 us (incl. a stamp kernel each)
+COLD(4 sets) fast 0 T 8 | read   47.8 us (events) | stamps median: norm   5.2 down  26.3 up  17.9 us (incl. a stamp kernel each)
+COLD(4 sets) fast 1 T 8 | read   37.0 us (events) | stamps median: norm   4.0 down  26.4 up   8.4 us (incl. a stamp kernel each)
+COLD(4 sets) fast 2 T 8 | read   27.4 us (events) | stamps median: norm   0.6 down  10.6 up  18.0 us (incl. a stamp kernel each)
+fused_gr_bench: 0 differing
+-- ctl (down_tg=0):
+COLD(4 sets) fast 1 T 5 | read   27.8 us (events) | stamps median: norm   4.0 down  19.2 up   6.3 us (incl. a stamp kernel each)
+COLD(4 sets) fast 2 T 5 | read   20.2 us (events) | stamps median: norm   0.6 down   8.1 up  13.2 us (incl. a stamp kernel each)
+COLD(4 sets) fast 0 T 6 | read   39.0 us (events) | stamps median: norm   5.2 down  21.4 up  14.1 us (incl. a stamp kernel each)
+COLD(4 sets) fast 1 T 6 | read   30.6 us (events) | stamps median: norm   4.0 down  21.4 up   7.0 us (incl. a stamp kernel each)
+COLD(4 sets) fast 2 T 6 | read   23.7 us (events) | stamps median: norm   0.6 down   9.8 up  15.1 us (incl. a stamp kernel each)
+COLD(4 sets) fast 0 T 7 | read   44.1 us (events) | stamps median: norm   5.2 down  24.2 up  16.4 us (incl. a stamp kernel each)
+COLD(4 sets) fast 1 T 7 | read   34.1 us (events) | stamps median: norm   4.0 down  24.2 up   7.7 us (incl. a stamp kernel each)
+COLD(4 sets) fast 2 T 7 | read   26.1 us (events) | stamps median: norm   0.6 down  10.7 up  16.6 us (incl. a stamp kernel each)
+COLD(4 sets) fast 0 T 8 | read   47.8 us (events) | stamps median: norm   5.3 down  26.4 up  17.9 us (incl. a stamp kernel each)
+COLD(4 sets) fast 1 T 8 | read   37.0 us (events) | stamps median: norm   4.0 down  26.4 up   8.4 us (incl. a stamp kernel each)
+COLD(4 sets) fast 2 T 8 | read   27.4 us (events) | stamps median: norm   0.6 down  10.6 up  18.0 us (incl. a stamp kernel each)
+fused_gr_bench: 0 differing

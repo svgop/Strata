@@ -856,10 +856,11 @@ __device__ __forceinline__ float dot8v(const uint4 w, const float4 x0, const flo
 }
 
 // Stage tile `h` of every token into `buf`: [T][2 planes][160 chunks] float4, plane 0 = floats 0-3 of a chunk.
-__device__ __forceinline__ void stage_htile(const GrMulti& m, int T, int h, float4* buf, int t) {
+// T19-S2 (94104176): k0 = the launch's first token (a blockIdx.y group reads its own window of xn).
+__device__ __forceinline__ void stage_htile(const GrMulti& m, int T, int h, float4* buf, int t, int k0 = 0) {
     for (int i = t; i < T * (H_TILE / 4); i += THREADS) {
         const int k = i / (H_TILE / 4), s4 = i - k * (H_TILE / 4);   // s4: float4 of the tile, chunk s4/2, half s4&1
-        const float* src = m.xn + (size_t) k * D + (size_t) h * H_TILE + (size_t) s4 * 4;
+        const float* src = m.xn + (size_t) (k0 + k) * D + (size_t) h * H_TILE + (size_t) s4 * 4;
         cp_async16(buf + (size_t) k * (H_TILE / 4) + (s4 & 1) * (H_TILE / 8) + (s4 >> 1), src);
     }
 }
@@ -872,6 +873,9 @@ __global__ void __launch_bounds__(THREADS) gr_down_staged_kernel(GrMulti m) {
     extern __shared__ __align__(16) float4 hbuf[];      // 2 buffers x [T][2][160] float4
     const int t = threadIdx.x, lane = t & 31, warp = t >> 5;
     const int T = EXACT_T ? MAX_T : m.T;
+    // T19-S2 (94104176): a launch of EXACT_T groups of MAX_T tokens, one per blockIdx.y (gridDim.y 1: the whole
+    // launch); every (row, token) is summed by one warp exactly as before - only more blocks share the card
+    const int k0 = EXACT_T ? (int) blockIdx.y * MAX_T : 0;
     const bool inject_block = blockIdx.x == DOWN_BLOCKS;
     const int row = inject_block ? warp : blockIdx.x * WARPS + warp;
     const bool active = !(inject_block && (m.a[0].w_inject == nullptr || warp >= HC));
@@ -886,9 +890,9 @@ __global__ void __launch_bounds__(THREADS) gr_down_staged_kernel(GrMulti m) {
 #pragma unroll
         for (int q = 0; q < HQ; ++q) wv[q] = __ldg(w4 + lane + 32 * q);
     }
-    stage_htile(m, T, 0, hbuf, t);
+    stage_htile(m, T, 0, hbuf, t, k0);
     cp_async_commit();
-    stage_htile(m, T, 1, hbuf + buf_f4, t);
+    stage_htile(m, T, 1, hbuf + buf_f4, t, k0);
     cp_async_commit();
 #pragma unroll 1
     for (int h = 0; h < N_HTILES; ++h) {
@@ -915,7 +919,7 @@ __global__ void __launch_bounds__(THREADS) gr_down_staged_kernel(GrMulti m) {
             }
         }
         __syncthreads();                                // every warp is done with buffer h & 1
-        if (h + 2 < N_HTILES) stage_htile(m, T, h + 2, hbuf + (h & 1) * buf_f4, t);
+        if (h + 2 < N_HTILES) stage_htile(m, T, h + 2, hbuf + (h & 1) * buf_f4, t, k0);
         cp_async_commit();                              // an empty group at the end keeps the wait counts simple
         if (h + 1 < N_HTILES) {
 #pragma unroll
@@ -931,10 +935,10 @@ __global__ void __launch_bounds__(THREADS) gr_down_staged_kernel(GrMulti m) {
     for (int k = 0; k < MAX_T; ++k) {
         if ((!EXACT_T && k >= T) || lane != k) continue;
         if (inject_block) {
-            m.a[k].inject_out[row] = s[k];
+            m.a[k0 + k].inject_out[row] = s[k];
         } else {
             const float x = s[k] / (float) HC;
-            m.a[k].lo[row] = x / (1.0f + __expf(-x));
+            m.a[k0 + k].lo[row] = x / (1.0f + __expf(-x));
         }
     }
 }
@@ -1121,6 +1125,22 @@ void up_multi_by_t(const GrMulti& m, int n_tok, bool no_multi_gr, cudaStream_t s
         default: gr_up_multi_kernel<kFusedGrMaxT, false, COLS><<<BLOCKS, THREADS, 0, st>>>(m); break;
     }
 }
+// T19-S2 (94104176): the staged down kernel's tokens per block row (gridDim.y = ct / tg), 0 = one block row for
+// all of them.  STRATA_GR_DOWN_TG=n forces n where it divides the launch; DEFAULT OFF in the fork: the 3v3 battery
+// (campaign/results/t19-s2.log) read every lane inside the noise band (M1 +1.56 / pair +2.25 / conc +2.43, M3b
+// -0.87pp) - flagged a stack rider, not a standing adoption (upstream defaults it on for 12.0: their fixed rounds
+// vs token pairs -2.1/-2.3/-0.2/-2.5%; the fork's kernel-level bench agrees: staged down T8 17.5 vs 27.3 us cold).
+int down_tg(int ct) {
+#if defined(__HIPCC__)
+    (void) ct;
+    return 0;
+#else
+    static const int env = [] { const char* v = std::getenv("STRATA_GR_DOWN_TG"); return v ? std::atoi(v) : -1; }();
+    if (ct < 2 || env <= 0) return 0;
+    return env <= 3 && ct % env == 0 ? env : 0;
+#endif
+}
+
 void launch_multi(const GrMulti& m, int variant, cudaStream_t st, unsigned long long* stamp_buf, int stamp_i0) {
     const int n_tok = m.T;
 #if STRATA_GR_FAST_BUILD
@@ -1170,6 +1190,16 @@ void launch_multi(const GrMulti& m, int variant, cudaStream_t st, unsigned long 
         } else if (staged) {
             // #783 PR-g (stuchapin909): a launch of exactly ct <= 6 tokens is its own instantiation, the loop bounds
             // are compile-time (the same sums in the same order); STRATA_NO_MULTI_GR=1 keeps the generic kernels
+            // T19-S2 (94104176): tg tokens a block row, gridDim.y = ct / tg groups (the same per-(row, token) warp
+            // sums; STRATA_GR_DOWN_TG=0 keeps the single block row)
+            const int tg = down_tg(ct);
+            if (exact_t && tg > 0 && tg < ct) {
+                const dim3 grid(DOWN_BLOCKS + 1, (unsigned) (ct / tg));
+                const size_t sm_g = (size_t) tg * per_tok;
+                if (tg == 1) gr_down_staged_kernel<1, true><<<grid, THREADS, sm_g, st>>>(c);
+                else if (tg == 2) gr_down_staged_kernel<2, true><<<grid, THREADS, sm_g, st>>>(c);
+                else gr_down_staged_kernel<3, true><<<grid, THREADS, sm_g, st>>>(c);
+            } else
             if (exact_t && ct == 1) gr_down_staged_kernel<1, true><<<DOWN_BLOCKS + 1, THREADS, smem, st>>>(c);
             else if (exact_t && ct == 2) gr_down_staged_kernel<2, true><<<DOWN_BLOCKS + 1, THREADS, smem, st>>>(c);
             else if (exact_t && ct == 3) gr_down_staged_kernel<3, true><<<DOWN_BLOCKS + 1, THREADS, smem, st>>>(c);

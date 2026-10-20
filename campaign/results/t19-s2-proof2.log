@@ -1,0 +1,61 @@
+=== T19-S2 PROOF, corrected variant routing 2026-10-20T11:52:18+02:00 ===
+the first proof ran the PLAIN read (fused_gr_variant defaults kHcPlain without fused_gr_check / STRATA_HC_SPLIT);
+the engine runs the STAGED read (fused_gr_check at boot), so proofs must set STRATA_HC_SPLIT=2.
+--- A. gr_parity --selftest, STRATA_HC_SPLIT=2 (staged; down_tg=1 default = arm state)
+
+gr_read/gr_write: 0 failures
+gr_parity OK
+--- B. gr_parity --selftest, STRATA_HC_SPLIT=2 STRATA_GR_DOWN_TG=0 (ctl state)
+
+gr_read/gr_write: 0 failures
+gr_parity OK
+--- C. gr_multi_parity staged, arm vs ctl
+gr_multi: 32 cases, 0 failures
+gr_multi_parity OK
+gr_multi: 32 cases, 0 failures
+gr_multi_parity OK
+--- D. fused_gr_bench cold staged, arm (tg=1) vs ctl (tg=0), T 2..8
+-- arm:
+COLD(4 sets) fast 0 T 2 | read   17.6 us (events) | stamps median: norm   2.6 down   8.5 up   8.3 us (incl. a stamp kernel each)
+COLD(4 sets) fast 1 T 2 | read   13.9 us (events) | stamps median: norm   2.6 down   8.5 up   4.5 us (incl. a stamp kernel each)
+COLD(4 sets) fast 2 T 2 | read   13.6 us (events) | stamps median: norm   0.6 down   4.7 up  10.1 us (incl. a stamp kernel each)
+COLD(4 sets) fast 0 T 3 | read   20.3 us (events) | stamps median: norm   2.6 down  10.0 up   9.5 us (incl. a stamp kernel each)
+COLD(4 sets) fast 1 T 3 | read   16.1 us (events) | stamps median: norm   2.6 down  10.0 up   5.2 us (incl. a stamp kernel each)
+COLD(4 sets) fast 2 T 3 | read   14.8 us (events) | stamps median: norm   0.6 down   5.7 up  10.4 us (incl. a stamp kernel each)
+COLD(4 sets) fast 0 T 4 | read   24.1 us (events) | stamps median: norm   2.7 down  12.1 up  11.1 us (incl. a stamp kernel each)
+COLD(4 sets) fast 1 T 4 | read   18.5 us (events) | stamps median: norm   2.7 down  12.1 up   5.5 us (incl. a stamp kernel each)
+COLD(4 sets) fast 2 T 4 | read   17.8 us (events) | stamps median: norm   0.6 down   6.8 up  12.2 us (incl. a stamp kernel each)
+COLD(4 sets) fast 0 T 5 | read   28.0 us (events) | stamps median: norm   2.7 down  14.3 up  12.8 us (incl. a stamp kernel each)
+COLD(4 sets) fast 1 T 5 | read   21.7 us (events) | stamps median: norm   2.7 down  14.3 up   6.4 us (incl. a stamp kernel each)
+COLD(4 sets) fast 2 T 5 | read   20.4 us (events) | stamps median: norm   0.6 down   8.2 up  13.4 us (incl. a stamp kernel each)
+COLD(4 sets) fast 0 T 6 | read   30.5 us (events) | stamps median: norm   2.7 down  15.5 up  14.2 us (incl. a stamp kernel each)
+COLD(4 sets) fast 1 T 6 | read   23.4 us (events) | stamps median: norm   2.7 down  15.5 up   7.0 us (incl. a stamp kernel each)
+COLD(4 sets) fast 2 T 6 | read   23.7 us (events) | stamps median: norm   0.6 down   9.8 up  15.1 us (incl. a stamp kernel each)
+COLD(4 sets) fast 0 T 7 | read   33.6 us (events) | stamps median: norm   2.7 down  16.2 up  16.5 us (incl. a stamp kernel each)
+COLD(4 sets) fast 1 T 7 | read   24.8 us (events) | stamps median: norm   2.7 down  16.2 up   7.7 us (incl. a stamp kernel each)
+COLD(4 sets) fast 2 T 7 | read   25.9 us (events) | stamps median: norm   0.6 down  10.7 up  16.4 us (incl. a stamp kernel each)
+COLD(4 sets) fast 0 T 8 | read   36.4 us (events) | stamps median: norm   2.7 down  17.5 up  18.0 us (incl. a stamp kernel each)
+COLD(4 sets) fast 1 T 8 | read   26.8 us (events) | stamps median: norm   2.7 down  17.5 up   8.4 us (incl. a stamp kernel each)
+COLD(4 sets) fast 2 T 8 | read   27.3 us (events) | stamps median: norm   0.6 down  10.6 up  17.9 us (incl. a stamp kernel each)
+-- ctl:
+COLD(4 sets) fast 0 T 2 | read   18.4 us (events) | stamps median: norm   2.6 down   9.3 up   8.3 us (incl. a stamp kernel each)
+COLD(4 sets) fast 1 T 2 | read   14.7 us (events) | stamps median: norm   2.6 down   9.3 up   4.5 us (incl. a stamp kernel each)
+COLD(4 sets) fast 2 T 2 | read   13.6 us (events) | stamps median: norm   0.6 down   4.7 up  10.1 us (incl. a stamp kernel each)
+COLD(4 sets) fast 0 T 3 | read   22.4 us (events) | stamps median: norm   2.6 down  12.2 up   9.5 us (incl. a stamp kernel each)
+COLD(4 sets) fast 1 T 3 | read   18.2 us (events) | stamps median: norm   2.6 down  12.2 up   5.2 us (incl. a stamp kernel each)
+COLD(4 sets) fast 2 T 3 | read   14.8 us (events) | stamps median: norm   0.6 down   5.6 up  10.4 us (incl. a stamp kernel each)
+COLD(4 sets) fast 0 T 4 | read   27.1 us (events) | stamps median: norm   2.7 down  15.1 up  11.1 us (incl. a stamp kernel each)
+COLD(4 sets) fast 1 T 4 | read   21.5 us (events) | stamps median: norm   2.7 down  15.1 up   5.5 us (incl. a stamp kernel each)
+COLD(4 sets) fast 2 T 4 | read   17.9 us (events) | stamps median: norm   0.6 down   6.8 up  12.3 us (incl. a stamp kernel each)
+COLD(4 sets) fast 0 T 5 | read   30.7 us (events) | stamps median: norm   2.7 down  17.1 up  12.7 us (incl. a stamp kernel each)
+COLD(4 sets) fast 1 T 5 | read   24.4 us (events) | stamps median: norm   2.7 down  17.2 up   6.4 us (incl. a stamp kernel each)
+COLD(4 sets) fast 2 T 5 | read   20.4 us (events) | stamps median: norm   0.6 down   8.2 up  13.4 us (incl. a stamp kernel each)
+COLD(4 sets) fast 0 T 6 | read   36.0 us (events) | stamps median: norm   2.7 down  21.0 up  14.2 us (incl. a stamp kernel each)
+COLD(4 sets) fast 1 T 6 | read   28.8 us (events) | stamps median: norm   2.7 down  21.0 up   7.0 us (incl. a stamp kernel each)
+COLD(4 sets) fast 2 T 6 | read   23.7 us (events) | stamps median: norm   0.6 down   9.8 up  15.1 us (incl. a stamp kernel each)
+COLD(4 sets) fast 0 T 7 | read   42.4 us (events) | stamps median: norm   2.7 down  25.1 up  16.4 us (incl. a stamp kernel each)
+COLD(4 sets) fast 1 T 7 | read   33.7 us (events) | stamps median: norm   2.7 down  25.1 up   7.7 us (incl. a stamp kernel each)
+COLD(4 sets) fast 2 T 7 | read   26.0 us (events) | stamps median: norm   0.6 down  10.7 up  16.5 us (incl. a stamp kernel each)
+COLD(4 sets) fast 0 T 8 | read   46.0 us (events) | stamps median: norm   2.7 down  27.1 up  18.0 us (incl. a stamp kernel each)
+COLD(4 sets) fast 1 T 8 | read   36.5 us (events) | stamps median: norm   2.7 down  27.3 up   8.4 us (incl. a stamp kernel each)
+COLD(4 sets) fast 2 T 8 | read   27.3 us (events) | stamps median: norm   0.6 down  10.6 up  17.9 us (incl. a stamp kernel each)
