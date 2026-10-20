@@ -1314,6 +1314,12 @@ ladder: one-boot falsifier (loader check -> G2 logit canary -> routing-shift che
 -> 2x MMLU + mimic -> five-boot No-Regression table. Rollback = config edit + sha256 stamps.
 GO-able immediately after the two scripts + one fork build.
 
+## SCOREBOARD — 2026-10-20 morning (post-T18-fix, post-norm_fast; F-242): M1 **203.9** /
+pair **202.0** / 6-conc **306.1**, M3b 77.1 — five-boot means, zero crashes. This supersedes all
+prior anchors. History: 2835 bank 198.5/197.6/312.4 -> 3135 re-bank 193.7/199.3/303.4 -> +T18 fix
+-> +norm_fast 203.9/202.0/306.1. Next levers: prefill combine fusion (16.7% of prefill), TC-hc
+mma kernels (+9-17% M1 class), re-quant (user go).
+
 ## T18 — KNOB SWEEP RESULTS + THE CRASH BUG (2026-10-20 ~00:00-00:55; leg logs campaign/results/{knob-marathon,knob-battery,knob-confirm}.log)
 The six unarmed S25/S26 env knobs are now SWEPT on the CUDA/sm_120 stack (T15C's inventory
 item closed). Method: 7-leg marathon (single-window), then 3v3 ABAB interleaved per candidate,

@@ -8285,3 +8285,13 @@ proof-then-battery order exists to catch. Reverts: full pre-tranche = `cp engine
 engine/strata` (+ git checkout of fused_gr.cu hunks); flip alone = `export STRATA_GR_NORM_FAST=0`.
 Box left STOPPED. Harnesses stay reusable: campaign/t15c-battery.sh (<stage> [--ctl-env V=1] [arm
 envs]), campaign/t15c-score.py (<stage>).
+
+### F-242 — RE-BANK v2: norm_fast is CONFIRMED at means; the 3135 scoreboard moves to 203.9 / 202.0 / 306.1 (2026-10-20 morning)
+Five fresh boots on the post-flip standing recipe (campaign/rebank2.sh -> campaign/results/
+rebank2-normfast.log): M1 202.9/198.8/200.7/203.7/213.5 = **203.9 mean** (F-238 pre-flip 193.7:
+**+5.3%**, outside +-4%); pair 201.7/200.9/205.8/199.9/201.7 = 202.0 (+1.4%, flat); 6-conc
+311.0/312.7/310.9/300.9/295.1 = 306.1 (+0.9%, flat); M3b 76.2 -> 77.1. Zero crashes in all
+five boots (T18 fix holding under 30 conc legs). ARCH: M1 203.9 is now above the old 2835-class
+bank (198.5) by +2.7%, pair above (202.0 vs 197.6), conc still under the 2835 bank (306.1 vs
+312.4, -2.0%) but above the pre-flip 3135 mean. New frozen baseline: **203.9 / 202.0 / 306.1**.
+Next: prefill combine (#1 phase, 16.7%) or TC-hc mma (+9-17% class) — both execution-ready.
