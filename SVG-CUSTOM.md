@@ -8820,3 +8820,28 @@ the unchanged GemmEx; CMake links cublasLt on CUDA; HIP untouched). Engine rebui
 verified in ldd), engine/strata.pre-t28 is the rollback; the binary also carries the default-off
 STRATA_SPEC_TRACE instrument. A/B 3v3 running (t28-lt-arm.log); adoption would owe MMLU 2x (the Lt
 algo may reorder reductions - the F-224 numerics class).
+
+## F-260 — 2026-10-21 night close: Lt arm falsified on the pipeline; the spec trace's FIRST DATA (and the new recipe's first solo 222.4)
+LT ARM (STRATA_GEMM_LT=1, 3v3 on the new standing line, t28-lt-arm.log): arm M1 204.7 / pair 196.4 /
+conc 295.7 vs ctl 209.0/195.9/312.9 = M1 -2.1% (EVERY round: 208.3<210.4, 204.6<208.0, 201.3<208.7),
+pair +0.3%, conc -5.5%, prefill flat (fresh-long 1.72-1.75 vs 1.67-1.74 s) -> NOT ADOPTED. The sweep's
+shape-level +9..25% does not compose: the hc shapes are a small FLOP share, the >=2048 gate misses most
+chunks, and the heuristic's top pick wins a microbench but not a pipeline. Arm stays default-off in-tree
+(one env to re-arm); engine/strata.pre-t28 is the pre-LT binary but the deployed binary carries the arm
+unarmed = harmless. CLASSIC LAW REINFORCED: microbench wins are hypotheses; the pipeline is the judge.
+SPEC TRACE FIRST DATA (solo boot, 1,615 windows, campaign/results/spec-trace.txt + analysis):
+- offered T is BIMODAL: 1:374 2:372 3:219 4:184 5:99 6:367 - depth 6 fires almost as often as depth 1.
+- accepted mean 1.734; acceptance by dprob decile is MONOTONE and STEEP: 0.5-0.6 -> 57.1%, 0.6-0.7 ->
+  61.3%, 0.7-0.8 -> 64.3%, 0.8-0.9 -> 72.2%, 0.9-1.0 -> 83.5% (n=3593 positions). dprob is informative -
+  the keep rule's premise holds on our drafter.
+- RAW product thresholds barely cut (th 0.05..0.20 all keep 2.222/2.225; th 0.50 -> 2.028) because most
+  dprob >= 0.9: the refit MUST use CALIBRATED acceptance bins (basalt's acc(p) form, i.e. the decile
+  table above), not raw products. Next-session analysis: bins + th* + the T14C c_row cost model.
+- RESCUE FREQUENCY: 387/1615 windows (24.0%) advance via rescue - rescue-inclusive observe() is not a
+  corner case, it is a quarter of the data (T26-2's port amendment was right).
+THE NEW RECIPE'S FIRST SOLO BOOT (frac 0.55 + share 1.0 + the new binary): M1 222.4 / pair 195.6 /
+conc 302.8 - the night's best M1 leg, consistent with the pooled +2.8% adoption read. The five-boot
+re-bank of the new recipe (with per-leg clock/temp/power) is the owed next measurement; scoreboard
+absolutes remain the banked 212.5/202.8/315.7 until then.
+BOX: idle, ports clear. Standing recipe now: FIVE adopted arms + norm_fast + frac 0.55 + share 1.0,
+revert lines: --pcie-frac 0.35 / unset STRATA_BATCH_DECODE_SHARE.
