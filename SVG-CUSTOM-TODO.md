@@ -1633,6 +1633,7 @@ SEQUENCE: S1 dense_tc (proof -> 3v3 -> adopt/revert), S2 hc8, S3 PDL-chain env-g
 with-work items by price. All under the merged v0.2.1 base with COHORTS/norm_fast/T18 intact.
 
 ## T25 — CONSOLIDATED FAMILY ROADMAP (2026-10-21; six subsystem dossiers campaign/research/T25-{1..6}-*.md + T23 set + T23-basalt-portstudy; T24 port tranche in flight)
+> AMENDED IN PART by the T26 verdict layer at the end of this file (six source-level dossiers, F-253): MoE port amplified + new gates, mid_chain unblocked, PIPED falsifier dead -> port, adapt-every disarmed, re-quant arithmetic verified, fp16-accum disputed -> gate first.
 THE FAMILY MAP: basalt is the ONLY decode-kernel donor (upstream v0.2.1..v0.2.1.4 kernel range EMPTY; xolotl/maya model-bound). Our conc 315.7 may already lead the family served numbers (basalt publishes none).
 F-252 HARDWARE LAW (measured on our card, campaign/mma-accum-ratelock.cu): consumer Blackwell
 half-rates the fp32-accumulate tensor pipe (476 fp16-accum vs 238 fp32-accum TFLOPS, ratio
@@ -1718,3 +1719,55 @@ at our execution density — the F-180-era note ("hc bf16->Q8 byte cut ~0.4 ms �
 fixed") was the correct price, and the +9..17% band assumed basalt's fp16-scale copies AND their
 persistent hc_fused form, not this read. MMLU gates not owed (no adoption; M3b watched in-band). The
 basalt hc8_gr/hc_fused port stays CLOSED unless the hc_fused persistent form is priced separately.
+
+## T26 — DEEP-DIVE VERDICT LAYER (2026-10-21; six source-level dossiers campaign/research/T26-{1..6}-*.md; F-253)
+SCOPE: each researcher owned one subsystem (decode/MoE, spec lane, prefill/window, serving/conc, numerics/
+quality, memory/host/hw-lock), read basalt/DFlash2/DeepInfer/Xolotl/maya/Strata AND our tree to file:line,
+and returned keep/amend/kill verdicts on the T25 items. PLAN HOLDS on the big calls; below are the changes.
+
+| T25 item | verdict | what changed |
+|---|---|---|
+| basalt MoE-tail port | CONFIRMED, AMPLIFIED | our live launcher never enables the device plan (STRATA_VERIFY_DEVICE_PLAN unset -> device_plan_=false, verify.cpp:1015); per (layer,group) pays a host-plan RTT. Phase A = one env boot; bit-identity free (our pairs all in DM_PAIRS). New gates: pcie-frac 0 pairing, per-group DmPlan (G=2 split), cvec/hand_in check, dm_test_kernel parity + DM_WAIT_STATS instrument boot first |
+| mid_chain | NEW — UNBLOCKED | T25-1's Q8_0 blocker was the F-251 index misread; qkv/ssm_out sit inside type_ok {12,13,14,21,23} (mid_chain.cu:443). One attn_gate(z) header check, then it runs via the generic triple. Jumps the GDN ladder |
+| dec_gdn_rec | AMENDED | band halved (+0.5..1.5%): our GDN already fuses conv+ab and side-streams gates/z |
+| dense_tc | KILLED | n<4 gate vs our M1 mix mean T=2.47 — inert by construction for this pack; do not re-arm via the gate |
+| hc8 (STRATA_HC_REQ8) | KILLED | mechanism confirmed and broader: q8w also disables split variants and staged chunk tiling; byte ceiling ~0.29 ms vs -0.83 measured |
+| small bitwise tranche | CONFIRMED, re-sized small | commit finisher ~0 (already async/batched); QSA 2/SM = 5-line falsifier on our attn_chunk_q8_v3; 16B stores warm-lane only |
+| window project (diet+PDL+priority) | CONFIRMED, CORRECTED | it is a DECODE lever (prefill is stream-launched, <1.5% overhead there): -900..-1000 nodes -> ~1100-1200, -0.43..-0.95 ms/window. Standing PDL = 0 today (STRATA_DF_PDL unset AND dense_tc off); UseNodePriority missing = one-flag arm |
+| fp16-accum prefill (F-252 lead) | NEW, DISPUTED -> GATE FIRST | R3: +10-17% prefill via COMPUTE_16F but carries the F-230 acceptance tax; R5: blanket KLD 0.15-0.40 >> 0.05 gate, only K=640/2560 scopes survive. Sequence = KL yardstick, scoped arm, M3b + 2x MMLU |
+| draft_cum keep rule | CONFIRMED, AMENDED calibration | 8 f32 bins, keep iff prod(acc)>=th, base 0.35, EMA(0.97) (draft_cum.hpp:25-76); refit bins on our coupled DT-0.85 drafter, th* from our replay not 0.35, scale 1.0 v1; observe() MUST be rescue-inclusive (our rescue passes the exact-match walk) |
+| device-conditional draft graph | CONFIRMED, band down | applicable (CUDA 13, no cooperative kernels); +0.3-0.9%; can run bit-identical (th=0) ahead of the keep rule |
+| DFlash2 multi-tap | CONFIRMED T14C+ rider | taps [5,15,25,35,45] hc-means, 12,800 feats verified from source; drafter internals unverifiable (LFS pointers); +2-4% class estimate, their AL delta (+0.18-0.42) < our target; pipeline lacks 5 pieces |
+| DSpark confidence arm | KILLED | dprob is the free confidence; folded into the refit |
+| DeepInfer varlen | KILLED single-stream | flat c_row; conc parked |
+| adapt-every falsifier | AMENDED (disarmed) | it is expert-TIER adaptation: default 4, decay 0.7 / serve 0.93 (generate.cpp:495-496,5723,9253); "0.85" was never basalt's number and it was never depth scheduling; +0-2% conc best case |
+| PIPED_CONCURRENT falsifier | AMENDED -> PORT (M) | dead as an env boot: the overlap branch needs piped = batch>0 && batch_groups>1 && n_pipe>1 (generate.cpp:13850,12025) — our single-GPU COHORTS lane never satisfies it; DMA_BATCH=0 does not clear the gate. dma refusal is exact (cudaMemcpyAsync + cudaLaunchHostFunc under driver lock). Reader-thread port = +3-6% net est. (335-350 conc) |
+| prompt-read-beside-windows | AMENDED | not runnable without code on our lane; basalt shape is the template |
+| elastic KV + batch slots | AMENDED | conflicts with our live --kv-resident streaming; ~0 standalone; parallel-8 enabler only |
+| ADMIT_SHORT_FIRST | NEW arm (env, S) | TTFT-only at 7+ clients; 0% conc at 6 |
+| maya fair-slice | CONFIRMED fairness-only | needs a PAUSE verb we lack; 0% conc |
+| COHORTS>3 | KILLED at 6 clients | F-249 stands |
+| NEW: STRATA_BATCH_DECODE_SHARE raise | NEW (env, S) | admission overlap into the reactor, which currently stops during every read piece; +1-4% conc est. |
+| re-quant GO | CONFIRMED, AMENDED | 28 tensors ~11 GB in / ~7 GB out (not 36/~5 GB); arithmetic verified: 42.97 GiB (-8.26%), 10,129 slots = +792, direct M1 +1.90% -> band honest; 262k absorption 9,362 >= 9,337 |
+| KL yardstick | NEW, in-tree, fixture verified | set.ids.json byte-matches the tokenizer; thresholds top-1 >=97%, mean KL <=0.05, p99 <=1.0; ctl-vs-ctl self-noise first; fence vs the live 8081 (it launches its own engine) |
+| fast-warm package | AMENDED | learned-profile lever already dead (T18: MMLU 93.6 < floor); surviving package = campaign/prewarm2.sh post-boot, zero code, +3-5% five-boot means (est.) |
+| cold-start law | NEW | back-to-back-boot conditional (pin_depends_on_reclaim -> drop_file_cache); lone restarts do not pay it |
+| gpu-unlock | CONFIRMED watch / KILLED action | Blackwell whitepaper documents the 5090 at 209.5/419 = the same 2:1 as GA102; module is GA102/104 PCI-ID-gated |
+| 262k VRAM plan | CONFIRMED | the +792 slots absorb the ~-724 slot move; deep KV tail lives in pinned host RAM |
+
+REVISED ORDER (value/effort, after T26):
+1. Device-plan falsifier: STRATA_VERIFY_DEVICE_PLAN=1 (prices the host-plan RTT the port removes) — one boot.
+2. KL yardstick + STRATA_SPEC_TRACE boot (gates the keep rule, DSpark, and the fp16-accum question).
+3. STRATA_BATCH_DECODE_SHARE raise (env, S, conc).
+4. tools/calibrate.py (pcie-frac 0.35 is hand-set and never measured).
+5. campaign/prewarm2.sh (zero code, +3-5% five-boot means est.).
+6. UseNodePriority one-flag arm; quiet-window re-bank.
+7. draft_cum keep rule (~50 lines, rescue-inclusive) + conditional graph (th=0 can go first, bit-identical).
+8. mid_chain header check -> run via the generic triple.
+9. Re-quant GO (user) -> +2-4% M1, +792 slots, 262k safety.
+10. MoE-tail port (device plan + dm port; +5-10% M1 est.; instrument boot first).
+11. Window diet (-900..-1000 nodes; decode lever).
+12. dec_gdn_rec (+0.5..1.5%); fp16-accum scoped K=640/2560 (gate first).
+13. PIPED reader-thread port (M; conc 335-350) -> elastic KV / parallel-8 (380-420).
+14. T14B retrain (+ DFlash2 multi-tap rider) -> 262k switch after the re-quant.
+15. Debt: draft_vocab EN contract trap, empty Custom-data paths in four specs, quant_quality fence, stale cleanup, sudo items.

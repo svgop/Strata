@@ -8570,3 +8570,75 @@ Consequences for the record:
     3090 report's flat decode.
 No action: the unlock is Ampere-only; keep a watch for a Blackwell port. Bench committed,
 binary not.
+
+## F-253 — 2026-10-21: T26 DEEP-DIVE WAVE (6 source-level researchers, family repos vs our tree) — THE PLAN HOLDS, NINE AMENDMENTS, FOUR NEW ITEMS
+Six researchers, one subsystem each, read both trees to file:line (dossiers campaign/research/T26-{1..6}-*.md,
+~180 KB). The T25 calls survive, with these corrections — every one below is a plan change, not a detail.
+THE BIG ONE (decode): our LIVE launcher never enables the device plan — STRATA_VERIFY_DEVICE_PLAN is unset,
+device_plan_=false (verify.cpp:1015), so every (layer, group) pays the host-plan round trip (~12-14 nodes)
+where basalt runs ~6-7 (route -> PDL swiglu/down -> in-kernel dm_wait poll -> combine pre-loading under the
+wait). The MoE-tail port is therefore STRONGER than T25-1 priced (+5-10% M1 est.), and its Phase A is one
+env boot. Bit-identity is free by construction: our pack's pairs (14x(18,20), 3x(18,42), 9x(21,20),
+1x(21,42), 15x(22,20), 5x(22,42), 1x(23,20)) are all in DM_PAIRS (dec_moe.cuh:1024-1027), (23,20) via the
+glue fallback; group ordering matches algebraically (dm_group/dm_glue vs resident_plan_par_kernel), combine
+sums match incl. the +0.0f hit edge. NEW GATES for the port: --pcie-frac 0 pairing precedent, per-group
+DmPlan for our G=2 split, cvec/hand_in stand-down check, and dm_test_kernel parity + DM_WAIT_STATS as a
+read-only instrument boot BEFORE surgery.
+NEW: mid_chain is probably NOT blocked — T25-1's "our qkv/z/out are Q8_0" was the F-251 index-column
+misread; per the GGUF headers (qkv in {Q6_K,Q5_K,Q4_K,IQ4_XS}, ssm_out in {Q6_K,Q5_K,Q4_K}) the types sit
+inside type_ok {12,13,14,21,23} (mid_chain.cu:443). Pending one attn_gate(z) header check, mid_chain runs
+today via the generic triple with no re-quant. It JUMPS the GDN ladder.
+T24 closures hold at source: dense_tc's n<4 gate makes it inert on our M1 mix (mean T=2.47) — killed for
+this pack, never re-arm via the gate; hc8's mechanism is confirmed and broader than we wrote (q8w forces
+staged=false at fused_gr.cu:1358 AND disables the split variants :2379/:2415 and the staged chunk tiling;
+byte ceiling ~0.29 ms vs -0.83 ms measured).
+SPEC LANE: the keep rule is 8 f32 bins, keep iff prod(acc(p_i)) >= th, th=0 = flat min-p, base 0.35,
+EMA(0.97) adapt (draft_cum.hpp:25-76); our side is the flat gate only (generate.cpp:15162-15164) — port is
+a ~50-line header + 5 edits, with one delta basalt never faced: our rescue advances past the exact-match
+walk (generate.cpp:15390-15413) so observe() must be rescue-inclusive. Conditional draft graph is
+applicable (CUDA 13, no cooperative kernels in the path) but the band drops to +0.3-0.9% ; it can run
+bit-identical (th=0) AHEAD of the keep rule. DFlash2 taps VERIFIED from source ([5,15,25,35,45] hc-means,
+12,800 feats); drafter internals unverifiable (weights are LFS pointers); +2-4% is a class estimate and
+their own AL delta (+0.18-0.42) sits BELOW our T14B target — T14C+ rider only. DSpark KILLED as a serve
+arm (dprob is the free confidence; folded into the refit). DeepInfer varlen KILLED single-stream (flat
+c_row), conc parked.
+CORRECTION THAT DISARMS A FALSIFIER: --adapt-every is expert-TIER adaptation, default 4, decay 0.7 (serve
+fast path 0.93) — generate.cpp:495-496,5723,9253; the "0.85" in T25-3 was not basalt's number and the
+item was never depth scheduling. Repriced: +0-2% conc at best.
+CONC: the PIPED_CONCURRENT one-boot falsifier is DEAD as written — the overlap branch requires
+piped = batch>0 && batch_groups>1 && n_pipe>1 (generate.cpp:13850,12025), which our single-GPU COHORTS
+lane never satisfies; the env arm is a silent no-op and STRATA_DMA_BATCH=0 does not clear the gate (the
+gate reads pcie_mode). The dma refusal itself is exact: one doorbell under dma = cudaMemcpyAsync +
+cudaLaunchHostFunc holding the driver lock (expert_source.cpp:4776 -> verify.cpp:3166-3192) while the
+window spins on that flag. Port = reader thread over {ver, ver_b} mail jobs, M cost, +3-6% net est.
+(335-350 conc). Elastic KV conflicts with our live --kv-resident streaming (~0 standalone; parallel-8
+enabler only). NEW cheap lever: raise STRATA_BATCH_DECODE_SHARE (env, S, +1-4% est.) — admission overlap
+into the reactor, where the reactor currently stops during every read piece. ADMIT_SHORT_FIRST is
+TTFT-only at 7+ clients (0% conc at 6); maya fair-slice is fairness-only. COHORTS>3 stays killed at 6.
+LADDER REVISED: decode-share raise -> PIPED port -> parallel-8 (380-420 band, elastic/reserve funded).
+PREFILL: the plateau attributes to the flat per-token pipeline — MoE complex 41.4% + dense fp16 GEMMs
+25-33% running at 60-75% of the 238-TFLOPS fp32-accum lock; attention is a growing but minor term. The
+launch-map diet is a DECODE lever, not a prefill one (prefill is stream-launched; launch overhead <1.5%
+there): -900..-1000 nodes -> ~1100-1200, -0.43..-0.95 ms/window. Standing PDL value today = 0
+(STRATA_DF_PDL unset AND STRATA_DENSE_TC off); UseNodePriority is missing (we pass 0) = new one-flag arm.
+F-252 FOLLOW-THROUGH, DISPUTED PRICING: R3 prices a blanket fp16-accumulate prefill at +10-17% (cublas
+COMPUTE_16F swap, XS) but flags the F-230 acceptance tax; R5's error analysis says blanket KLD 0.15-0.40
+(>> the 0.05 gate; PV accumulation stagnates at ULP) = killed blanket, only the K=640 and maybe K=2560
+dense scopes survive. RESOLUTION: gate first (KL yardstick), scope to K=640/2560, M3b + 2x MMLU mandated —
+recorded as a disputable candidate, not a plan item until the gate speaks.
+NUMERICS: RECIPE-alpha arithmetic VERIFIED against the live native_experts.txt — 42.97 GiB (-8.26%),
+3.0556 bpw, 10,129 slots = +792 confirmed; direct M1 +1.90% (3.26 ms hits / 14.2 ms window), band honest;
+262k absorption 9,362 >= 9,337. AMENDED: alpha requantizes 28 tensors (~11 GB in / ~7 GB out), not "36,
+~5 GB". KL yardstick is fully in-tree (set.ids.json byte-matches the tokenizer; STRATA_LOGPOS + TOPK=64 +
+--short-read + quant_quality.py run/compare, prompt/pcompare mandatory, ctl-vs-ctl self-noise first;
+thresholds top-1 >=97%, mean KL <=0.05, p99 <=1.0). TRAPS: draft_vocab EN — production serves mtp-en's
+162 KB subset but gates-spec G0 copies the 425 KB full vocab (wrong contract); /home/svg/LLM/Custom-data
+is now EMPTY (four specs' paths stale); quant_quality.py launches its own engine (fence vs the live 8081).
+MEMORY/HOST: cold start is a BACK-TO-BACK-BOOT phenomenon — boot N caches the shards, boot N+1's pin drops
+the whole file cache (pin_depends_on_reclaim, expert_source.cpp:100-102 -> drop_file_cache :3474-3484) and
+the first lane re-reads 44-55 GB; a lone restart does not pay it (today's 14:30 boot read 297 MB). FAST-WARM
+AMENDED: the learned-profile lever is ALREADY DEAD (T18: MMLU 93.6 < floor, conc -2.0); the surviving
+package is campaign/prewarm2.sh post-boot (never run, zero code) = +3-5% five-boot means (est.).
+HW LOCK: the RTX Blackwell whitepaper itself lists the 5090's BF16-fp32acc at 209.5/419 — the same
+documented 2:1 as GA102's 71/142. F-252 stands as documented spec, not a hidden fuse; gpu-unlock stays
+WATCH-ONLY (it is GA102/GA104 PCI-ID-gated; a Blackwell equivalent would need a GB202 selector/PLM payload).
