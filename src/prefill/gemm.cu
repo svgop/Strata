@@ -15,11 +15,22 @@
 #endif
 
 #include <cublas_v2.h>
+#if !defined(__HIPCC__)
+// T28: the selective cuBLASLt path for the prefill BF16 GEMMs (STRATA_GEMM_LT=1) - the heuristic
+// sweep measured cuBLAS's default picks losing +9..25% to Lt-best on the hc projections at large
+// chunk sizes on sm_120. Headers only; the arm is runtime-gated.
+#include <cublasLt.h>
+#endif
 #include <cuda_fp16.h>
 #include <cuda_runtime.h>
 
 #include <algorithm>
 #include <atomic>
+#if !defined(__HIPCC__)
+#include <cmath>
+#include <mutex>
+#include <unordered_map>
+#endif
 
 #if defined(__HIPCC__) && defined(STRATA_HIPBLASLT_AVAILABLE)
 // The HIP compatibility shim maps CUDA shuffle spellings to Strata helpers.
@@ -565,6 +576,86 @@ bool prompt_f16() {
 #endif
 }
 
+#if !defined(__HIPCC__)
+// T28 STRATA_GEMM_LT=1: the heuristic-tuned cuBLASLt path for the prefill BF16 GEMMs. The sweep
+// (campaign/cublaslt-sweep.cu) measured cuBLAS's default GemmEx pick losing +9..25% to Lt-best on
+// the hc projections at large chunk sizes on sm_120. Runtime-gated, algo cached per (N,K,T), and
+// ANY failure falls back to the GemmEx call unchanged. Numerics: Lt may pick a different reduction
+// order than GemmEx - a prefill-numerics change in the F-224 class, gated by M3b/MMLU at adoption.
+namespace {
+struct LtState {
+    cublasLtHandle_t lt = nullptr;
+    void* ws = nullptr;
+    size_t ws_bytes = 0;
+    std::mutex mu;
+    std::unordered_map<uint64_t, cublasLtMatmulAlgo_t> algo_cache;
+};
+LtState& lt_state() {
+    static LtState s;
+    if (!s.lt) {
+        if (cublasLtCreate(&s.lt) != CUBLAS_STATUS_SUCCESS) {
+            s.lt = reinterpret_cast<cublasLtHandle_t>(1);  // poison: never retry this process
+        } else {
+            s.ws_bytes = size_t{32} << 20;
+            if (cudaMalloc(&s.ws, s.ws_bytes) != cudaSuccess) { s.ws = nullptr; s.ws_bytes = 0; }
+        }
+    }
+    return s;
+}
+bool lt_bf16(cublasLtHandle_t lt, void* ws, size_t ws_bytes, cudaStream_t stream,
+             const void* W, const void* X, float* Y,
+             int64_t T, int64_t N, int64_t K, int64_t ldx, int64_t ldy, float beta,
+             std::unordered_map<uint64_t, cublasLtMatmulAlgo_t>& cache, std::mutex& mu) {
+    // Column-major view identical to the GemmEx call it replaces:
+    //   Y^T[N,T] = opT(W_c[K,N]) . X_c[ldx,T], fp32 accumulate, fp32 out.
+    cublasLtMatmulDesc_t op = nullptr;
+    cublasLtMatrixLayout_t lw = nullptr, lx = nullptr, ly = nullptr;
+    cublasLtMatmulPreference_t pref = nullptr;
+    bool ok = false;
+    const float one = 1.0f;
+    const uint64_t key = ((uint64_t) (uint32_t) N << 44) ^ ((uint64_t) (uint32_t) K << 24) ^ (uint64_t) (uint32_t) T;
+    do {
+        if (cublasLtMatmulDescCreate(&op, CUBLAS_COMPUTE_32F, CUDA_R_32F) != CUBLAS_STATUS_SUCCESS) break;
+        cublasOperation_t tA = CUBLAS_OP_T, nB = CUBLAS_OP_N;
+        cublasLtMatmulDescSetAttribute(op, CUBLASLT_MATMUL_DESC_TRANSA, &tA, sizeof(tA));
+        cublasLtMatmulDescSetAttribute(op, CUBLASLT_MATMUL_DESC_TRANSB, &nB, sizeof(nB));
+        if (cublasLtMatrixLayoutCreate(&lw, CUDA_R_16BF, (uint32_t) K, (uint32_t) N, (int) K) != CUBLAS_STATUS_SUCCESS) break;
+        if (cublasLtMatrixLayoutCreate(&lx, CUDA_R_16BF, (uint32_t) ldx, (uint32_t) T, (int) ldx) != CUBLAS_STATUS_SUCCESS) break;
+        if (cublasLtMatrixLayoutCreate(&ly, CUDA_R_32F, (uint32_t) N, (uint32_t) T, (int) ldy) != CUBLAS_STATUS_SUCCESS) break;
+        cublasLtMatmulAlgo_t algo;
+        bool have = false;
+        {
+            std::lock_guard<std::mutex> g(mu);
+            const auto it = cache.find(key);
+            if (it != cache.end()) { algo = it->second; have = true; }
+        }
+        if (!have) {
+            if (cublasLtMatmulPreferenceCreate(&pref) != CUBLAS_STATUS_SUCCESS) break;
+            size_t wsb = ws_bytes;
+            cublasLtMatmulPreferenceSetAttribute(pref, CUBLASLT_MATMUL_PREF_MAX_WORKSPACE_BYTES, &wsb, sizeof(wsb));
+            cublasLtMatmulHeuristicResult_t res[4]; int nres = 0;
+            if (cublasLtMatmulAlgoGetHeuristic(lt, op, lw, lx, ly, ly, pref, 4, res, &nres) != CUBLAS_STATUS_SUCCESS ||
+                nres == 0 || res[0].state != CUBLAS_STATUS_SUCCESS)
+                break;
+            algo = res[0].algo;  // the heuristic's own top pick
+            std::lock_guard<std::mutex> g(mu);
+            if (cache.size() < 128) cache.emplace(key, algo);
+        }
+        if (cublasLtMatmul(lt, op, &one, W, lw, X, lx, &beta, Y, ly, Y, ly, &algo, ws, ws_bytes, stream) !=
+            CUBLAS_STATUS_SUCCESS)
+            break;
+        ok = true;
+    } while (false);
+    if (pref) cublasLtMatmulPreferenceDestroy(pref);
+    if (ly) cublasLtMatrixLayoutDestroy(ly);
+    if (lx) cublasLtMatrixLayoutDestroy(lx);
+    if (lw) cublasLtMatrixLayoutDestroy(lw);
+    if (op) cublasLtMatmulDescDestroy(op);
+    return ok;
+}
+}  // namespace
+#endif
+
 Gemm::~Gemm() {
 // F-230: the dense MMQ path (STRATA_DENSE_MMQ=1) un-gated for CUDA - strata_mmq (moe_mmq.cu, namespace
 // strata::prefill::mmq) is built and linked into strata_prefill on CUDA too, and the K-quant products
@@ -1049,6 +1140,19 @@ void Gemm::bf16(const uint16_t* X, const uint16_t* W, float* Y, int64_t T, int64
     }
 #endif
     // Column-major view: Y^T[N, T] = W[N, K] (stored K x N col-major, transposed) . X^T[K, T].
+    // T28 STRATA_GEMM_LT=1 [+ STRATA_GEMM_LT_MIN_T, default 2048]: the heuristic-tuned cuBLASLt path
+    // for large chunks; GemmEx stays the fallback and the default.
+#if !defined(__HIPCC__)
+    static const bool gemm_lt_on = [] { const char* v = std::getenv("STRATA_GEMM_LT"); return v && v[0] == '1'; }();
+    static const int64_t gemm_lt_min_t = [] { const char* v = std::getenv("STRATA_GEMM_LT_MIN_T"); return v ? (int64_t) std::atoll(v) : (int64_t) 2048; }();
+    if (gemm_lt_on && T >= gemm_lt_min_t) {
+        auto& s = lt_state();
+        if (s.lt != reinterpret_cast<cublasLtHandle_t>(1) &&
+            lt_bf16(s.lt, s.ws, s.ws_bytes, (cudaStream_t) stream_, W, X, Y, T, N, K, ldx ? ldx : K, ldy, beta,
+                    s.algo_cache, s.mu))
+            return;
+    }
+#endif
     ck(cublasGemmEx((cublasHandle_t) handle_, CUBLAS_OP_T, CUBLAS_OP_N, (int) N, (int) T, (int) K, &alpha, W,
                     CUDA_R_16BF, (int) K, X, CUDA_R_16BF, (int) (ldx ? ldx : K), &beta, Y, CUDA_R_32F, (int) ldy,
                     CUBLAS_COMPUTE_32F, CUBLAS_GEMM_DEFAULT),

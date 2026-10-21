@@ -8794,3 +8794,29 @@ BOX: left idle after cleanup (ports clear, GPU 900MHz idle). NEXT: the STRATA_SP
 boot (instrument already in-tree, default-off), the KL yardstick, then the kernel tranche per the T26/T27
 order. The re-quant GO remains the user's call, now carrying tonight's evidence that config-level knobs
 are exhausted on this box - the remaining gains are in code.
+
+## F-259 — 2026-10-21 late: USER RELAXES THE BAR — pooled evidence doctrine; TWO ADOPTIONS (pcie-frac 0.55, decode-share 1.0); the Lt arm rebuilt and under test
+DOCTRINE CHANGE (user, tonight): an arm does NOT need the +4% single-battery bar - the verdict is
+pooled evidence over multiple tests, "secure wins". Protected-lane law still applies (no real
+regression), and numerics-class changes still owe quality gates.
+ADOPTION 1 — PCIE-FRAC 0.55 (config, was 0.35): the 5v5 confirm (t28-frac55-confirm.log) settled the
+first battery's drift question. Pooled across BOTH batteries (16 legs): arm M1 204.1 vs ctl 198.5 =
++2.8%, the arm mean higher in each battery independently (205.4 vs 198.3; 203.3 vs 198.6); pair -1.3%
+and conc -0.7% pooled, both inside tonight's +-8% leg noise (pair legs ranged 176.8-209.2). Round
+pair-deltas were mixed (+25.3/-8.9 etc) because the box itself swung between a slow early window
+(175-195 both arms) and a warm one (195-225) - the pooled mean is the instrument. QUALITY: MMLU 2x on
+the arm 94.29 / 92.86, mean 93.57 >= floor 93.3 (the F-224 mean-rule precedent: 95.7/92.9 adopted).
+ADOPTED: standing config custom-iq3_s-8081.json --pcie-frac 0.55; the boot log confirms
+"pcie_frac 0.55 (default 0.55)". REVERT: set 0.35. Duplicates (custom-iq3s-frac55.json,
+launch-frac55.sh) removed.
+ADOPTION 2 — STRATA_BATCH_DECODE_SHARE=1.0 (env, was code-default 0.5): curve end tested after 0.75
+read conc +1.1. On the NEW frac-0.55 standing line, 3v3: conc +2.4% (287.1 vs 280.3), M1 +1.9%,
+pair -0.6% - all lanes non-negative at the means, direction consistent across both share batteries.
+Timing-only (changes read/decode interleaving, not computation) so no quality gate owed. ADOPTED into
+the standing launcher (one unset to roll back).
+THE Lt ARM (T28): selective cuBLASLt path for the prefill BF16 GEMMs (gemm.cu: env STRATA_GEMM_LT=1 +
+STRATA_GEMM_LT_MIN_T default 2048; heuristic-top algo cached per (N,K,T); any failure falls back to
+the unchanged GemmEx; CMake links cublasLt on CUDA; HIP untouched). Engine rebuilt (libcublasLt.so.13
+verified in ldd), engine/strata.pre-t28 is the rollback; the binary also carries the default-off
+STRATA_SPEC_TRACE instrument. A/B 3v3 running (t28-lt-arm.log); adoption would owe MMLU 2x (the Lt
+algo may reorder reductions - the F-224 numerics class).
