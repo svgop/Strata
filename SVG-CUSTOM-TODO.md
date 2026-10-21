@@ -1631,3 +1631,48 @@ their side with root-cause (re-proves R1 skepticism); tree verify dead both side
 NOT APPLICABLE: peer tier, NVFP4 lane, their suffix drafter (we are the donor).
 SEQUENCE: S1 dense_tc (proof -> 3v3 -> adopt/revert), S2 hc8, S3 PDL-chain env-gated, S4 the
 with-work items by price. All under the merged v0.2.1 base with COHORTS/norm_fast/T18 intact.
+
+## T25 — CONSOLIDATED FAMILY ROADMAP (2026-10-21; six subsystem dossiers campaign/research/T25-{1..6}-*.md + T23 set + T23-basalt-portstudy; T24 port tranche in flight)
+THE FAMILY MAP: basalt is the ONLY decode-kernel donor (upstream v0.2.1..v0.2.1.4 kernel range EMPTY; xolotl/maya model-bound). Our conc 315.7 may already lead the family served numbers (basalt publishes none).
+A. ZERO/ONE-BOOT FALSIFIERS FIRST (all free, price the ports): (1) STRATA_HC_Q8 + STRATA_TSUM env
+boot - prices the whole hc8 class BEFORE porting (T25-1: in-tree never armed); (2) --adapt-every 1
+at our decay 0.85 (basalt ABBA +3.6-4.2% switchy traffic); (3) PIPED_CONCURRENT vs our armed
+pcie-mode dma conflict (T25-3: machinery in-tree, refused by dma; +6-8% conc candidate);
+(4) tools/calibrate.py (in-tree, never run - measured pcie-frac); (5) DRAFT_TIMING recapture
+(log to file this time); (6) quant_quality.py prompt/pcompare scorers + KL-gate adoption
+(Python-only; hooks STRATA_LOGPOS already in our line - T25-6 #1); (7) routing-trace boot: c_row(T)
+curve + dprob/acceptance bins (draft_cum offline refit = zero-boot).
+B. PORT TRANCHE (T24 running: dense_tc S1 + hc8 S2): + NEW #3 basalt device-planned MoE tail
+(route kernel + plan-inside-gate/up + in-kernel tier wait + folded combine; covers our exact
+gu18/21/22 x down20/42 pairs; -0.5..-1.2ms = +5..12% M1 - T25-1's big unranked find); dec_gdn_rec
+(bitwise GDN rung; mid_chain itself blocked: our qkv/z/out are Q8_0, excluded); small bitwise
+tranche (QSA occupancy 2/SM, qsa_dec_fused kv/q_post, one-launch draft head+argmax+prob, commit
+finisher, 16-byte dequant stores). NOTE: dense_tc takes Q8_0 since 6e53eee6 - features.md prose
+stale; port does NOT require the Q6_K requant.
+C. WINDOW-ARCHITECTURE PROJECT (T25-5, ONE project not gambits): launch-map diet (~640-750 nodes
+vs our 2050; -0.8..-1.7ms) + PDL TRIGGER chain (in-kernel pdl_launch_dependents + pre-wait weight
+staging; ~79 sites; our pdl.hpp already has pdl_trigger; -0.5..-1.5ms) + wait/combine restructure
+(-0.2..-0.5ms) + cudaGraphInstantiateFlagUseNodePriority (one flag). Composed band -2.0..-4.3ms;
+remainder of the 6.675-vs-11.5 gap = config (their empty CPU pool) + our byte-floored expert line.
+D. SPEC LANE (T25-2): draft_cum keep rule (~50 lines; +1-3% POST-retrain = the principled W2.5
+re-stair; recalibrate bins on our logged pairs - zero-boot); device-conditional draft graph
+(cudaGraphSetConditional; +0.5-1.5% M1); DFlash2 multi-tap input SPEC for T14C+ (taps [5,15,25,35,
+45] completed-layer outputs + hc-mean, 12800 feats; +2-4% band; breaks rt contract deliberately);
+DeepInfer varlen parked (0-2% at 6 slots - left of crossover). T14B STAYS KING with riders:
+CONFLOG telemetry, two-tier split-parity gate, probe-head tap study, DSpark FP8-scale lesson.
+E. SERVING (T25-3): prompt-read-beside-windows (falsifier first); elastic KV + batch slots (the
+parallel-8 enabler + kv-resident mid-depth fix); ADMIT_SHORT_FIRST arm (S); maya fair-slice for
+7-12 clients later. CLOSED by family data: ForesightSwap (0.91-0.98x), ds41 pool bench, coalescing
+(nonexistent), COLD_OVERLAP-class (nonexistent - our cold gap unclaimed family-wide).
+F. TOOLING (T25-4/6): KL yardstick FIRST MMLU LAST; BENCHMARK_PROTOCOL conformance run (~30min);
+re-quant upgrades (append-only assembler 84GB-read/4GB-write; resumable iq_pack cherry-pick from
+v0.2.1.4; 16-32k calib slice + per-segment KL; unseen-floor; maya validates RECIPE-alpha - GPTQ-on-
+down measured worse); UPSTREAM_SYNC/MERGE_SCOPE practices for v0.2.2+ merges.
+NEGATIVE LEDGER (family-measured, saves ~6 boots): pk_moe/dec_shx built-not-dispatched; hc
+HCX/SK/NU/RPF neutral-or-reverted; whole-layer persistent slower both sides; CLC zero family-wide;
+tree verify dead; SPEC_PROB closure corroborated 5-way; Xolotl confidence-verify 10x-scaled-down
+(25ms rows vs our 2.47ms).
+CEILING: M1 212.5 -> dense_tc + MoE-tail + hc-class + window-project compose toward 250-280
+(multi-path); conc 315.7 -> piped-concurrent + elastic KV toward 340-360+. Re-quant (user go)
+carries its tooling upgrades. SEQUENCE: A falsifiers -> T24 close -> B/C ports as one window
+project -> D/E -> T14B.
