@@ -8769,3 +8769,28 @@ CORRECTION (T27-1's "one-flag arm"): our graph instantiates are the LEGACY 3-arg
 + per-node priorities, else the flag is inert. Not a flag flip; a small design item.
 NEXT IN THE LOOP (running now): the adapt-tier arm 1/80/0.97 (calibrator's +14% synthetic claim), then
 spec-min-p 0.7, then the cuBLASLt sweep on a free GPU.
+
+## F-258 — 2026-10-21 night: EPOCH 1 CLOSES — all three calibrator arms falsified on real traffic; the standing recipe survives every A/B
+ADAPT-TIER 1/80/0.97 (ABAB 3v3, config-copy): arm M1 202.1 / pair 185.8 / conc 288.8 vs ctl
+201.6/191.0/301.9 = M1 +0.2%, pair -2.7%, CONC -4.3% -> NOT ADOPTED (regression on the conc lane; the
+calibrator's +14% synthetic did not transfer - swap churn every window disturbs the cohort lane).
+SPEC-MIN-P 0.7 (ABAB 3v3): arm M1 198.4 / pair 188.2 / conc 299.0 vs ctl 200.4/187.4/297.6 = M1 -1.0%,
+pair +0.4%, conc +0.5% -> NOT ADOPTED (noise). The arm's acceptance "rose" to 82-84% purely by offering
+fewer drafts - the numerator effect, worth nothing. F-228's 0.5 stands.
+SCORE: the calibrator's three measured recommendations (frac 0.55, minp 0.7, tier 1/80/0.97) all failed
+the transfer to real traffic (frac55: M1 +3.6 drift-confused/pair-conc flat-negative; adapt: conc -4.3;
+minp: noise). LAW BANKED: calibrate.py prices DIRECTION on this box, never magnitude - its synthetic
+single-stream lane (121-142 tok/s class) is not our probe's traffic; treat its output as a candidate
+generator, never as evidence. Zero adoptions tonight: the standing recipe at M1 ~200 / conc ~300 (this
+window) beat everything thrown at it - the negative ledger grew by three priced falsifications
+(~18 boots of evidence) and the recipe itself is untouched.
+CUBLASLT SWEEP (campaign/cublaslt-sweep, 6 shapes x 6 M values, results/t27-cublaslt-sweep.txt):
+GemmEx is at parity mid-range (M 1024-2048, ratio 0.96-1.02); headroom at the edges and concentrated in
+the bf16 hc projections: hc_down 320x10240 M=8192 Lt-best +25% (169.8 -> 211.9), hc_up 10240x320
++9..17% at M 256-2048-8192, router 512x2560 M=512 +22%, gate M=256 +17%. Recorded as a MARGINAL
+candidate: a selective cublasLtMatmul path for the hc shapes at large M (~1% prefill class); not
+scheduled ahead of the kernel tranche.
+BOX: left idle after cleanup (ports clear, GPU 900MHz idle). NEXT: the STRATA_SPEC_TRACE rebuild + solo
+boot (instrument already in-tree, default-off), the KL yardstick, then the kernel tranche per the T26/T27
+order. The re-quant GO remains the user's call, now carrying tonight's evidence that config-level knobs
+are exhausted on this box - the remaining gains are in code.
