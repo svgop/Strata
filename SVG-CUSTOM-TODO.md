@@ -1773,3 +1773,32 @@ REVISED ORDER (value/effort, after T26; corrected by F-254 — the device-plan b
 12. PIPED reader-thread port (M; conc 335-350) -> elastic KV / parallel-8 (380-420).
 13. T14B retrain (+ DFlash2 multi-tap rider) -> 262k switch after the re-quant.
 14. Debt: draft_vocab EN contract trap, empty Custom-data paths in four specs, quant_quality fence, stale cleanup, sudo items.
+
+## T27 — FRONTIER AUDIT LAYER (2026-10-21; campaign/research/T27-{1,2,3}-*.md; F-255)
+External state of the art checked online (arxiv/GitHub/NVIDIA/news). Verdict: the roadmap survives
+external scrutiny; the field converged on our mechanisms (SGLang low-latency MoE-tail; vLLM spec-length
+RFC closed with our two mechanisms as future work). Amendments below; the a-slate now captures stability
+in the same boots.
+
+| item | verdict | change |
+|---|---|---|
+| MoE-tail port | CONFIRMED, spec AMENDED | add bitmap/popcount route-skip + launch-before-routing (SGLang 2026-10-18 convergence) to Phase B |
+| PDL trigger chain | CONFIRMED, AMENDED | per-pair kill switch + accuracy record + one nsys probe per pair (TRT-LLM WAR casebook) |
+| UseNodePriority | CONFIRMED | flag=8 semantics documented; our instantiate passes 0 (verify.cpp:2628/3588/3595) |
+| Window diet | CONFIRMED | Event Tensor/MLSys'26 prices non-graph boundaries 5-10 us (our in-graph marginal stands) |
+| scoped fp16-accum | CONFIRMED gated | no scope change |
+| F-252 hw lock | CONFIRMED watch-only | no Blackwell unlock exists; whitepaper 2:1 is spec |
+| NEW: cuBLASLt heuristic sweep | ZERO-BOOT microbench | our 8-10 prefill shapes; cuBLAS mis-picks on 5090 in an adjacent public report |
+| keep rule draft_cum | CONFIRMED | 3 more independent convergences; no better rule found |
+| device-conditional draft graph | CONFIRMED | vLLM names it future work |
+| DFlash2 T14C+ rider | CONFIRMED + AMENDED | checkpoint now public & inspectable CPU-side; block-4 ceiling; T23 verdict stands |
+| T14B riders | CONFIRMED + EXPANDED | RIDER #1 EAGLE-3.1 anti-drift (attention-drift diagnosis = our F-235 deep-position deficit; FC-norm + post-norm feedback, export-shape-preserving); RIDER #2 Draft-OPD rejected-position replay (our rescue already localizes rejections; +13-23% AL donor-reported) |
+| draft-vocab EN trap | FIXED IN SPEC | pin mtp-en 162,100 B sha 369151522226a5ed in gates-spec (T27 AMENDMENT block); 32 stale Custom-data paths flagged |
+| STRATA_BATCH_DECODE_SHARE raise | CONFIRMED + canary | TTFT p99 added as the canary metric (vLLM decode-priority convergence) |
+| PIPED reader-thread port | CONFIRMED | SGLang overlap scheduler = 2nd independent confirmation |
+| elastic KV + parallel-8 | CONFIRMED enabler | P/D disaggregation dead here (2-GPU) |
+| ADMIT_SHORT_FIRST | CONFIRMED, value UP | becomes the precedent for a VTC-lite admission-order fairness arm (~40 lines in _admit_next, no PAUSE verb) BEFORE maya fair-slice; TWP pacing is the 7+-client follow-on |
+| prewarm2.sh | CONFIRMED | vLLM cold-start anatomy (arXiv 2606.07362) maps 1:1 to our page-cache/capture buckets |
+| quiet-window re-bank | AMENDED | record sm_clock/temp/power per leg (the 2835->3135 epoch was found post-hoc) |
+| NEW: probe-metrics.py | STAGED + WIRED | TTFT/ITL/E2E p50/p95/p99 scrape of existing histograms; clock/temp/power per leg; golden-response hash per boot = drift alarm; JSONL at campaign/results/metrics.jsonl; runs inside every a-slate leg |
+| NEW negatives | KILLED | whole-model decode megakernels (Lucebox sm_120 205 < our 212.5); AdaSD (non-lossless); DSpine/TiDAR/SpecFormer (contract break); Pascal multi-instance; batch-invariant kernels; PreScope; sleep/CRIU boots; "ACES" (unverified, treated nonexistent) |

@@ -8666,3 +8666,53 @@ re-derived from THOSE mechanics before it earns a tranche; its first boot is the
 instrument, not a flag. The roadmap's #1 slot moves to the genuinely unarmed items (decode-share, KL
 yardstick, calibrate.py, prewarm2.sh). Lesson repeated from F-232: an agent's headline is a hypothesis
 until the launcher and the history are read — especially when it claims "prior studies didn't know".
+
+## F-255 — 2026-10-21: T27 FRONTIER WAVE (3 researchers, online: arxiv/GitHub/NVIDIA/news) — THE ROADMAP IS EXTERNALLY CORROBORATED; FOUR NEW RIDERS, ONE ORDERING FIX
+Three frontier dossiers (campaign/research/T27-{1,2,3}-*.md). Headline: the field converged on OUR
+mechanisms — SGLang's low-latency mode (2026-10-18) ships exactly the MoE-tail mechanics T26-1 found in
+basalt (bitmap+popcount route skip, expert GEMMs launched before routing, dependency release inside the
+MoE polling loop, tag-monotone in-kernel waits = our wait_flag_ge), and vLLM's Dynamic Speculation Length
+RFC closed NOT-PLANNED with our two mechanisms (confidence-threshold halt + device-side control flow =
+draft_cum + conditional graph) named as the future work. Our lanes are the right lanes.
+T27-1 (kernel/hardware): sm_120 silicon map pinned — NO tcgen05/TMEM, NO wgmma (mma.sync only; every
+SM100 donor kernel is inapplicable), clusters+DSMEM present (dec_gdn_rec safe), UseNodePriority=8 now
+documented, CUDA 13.1 adds device graph-launch tooling. MoE-tail port CONFIRMED as top kernel item with
+AMENDED spec (add SGLang's bitmap/popcount route-skip + launch-before-routing to Phase B). PDL chain
+CONFIRMED + AMENDED: TRT-LLM's casebook shows PDL default-on with per-kernel WAR DISABLES for accuracy
+(quant/routing/MoE) — our chain needs a per-pair kill switch + accuracy record + one nsys probe per pair.
+cuBLASLt heuristic sweep on our 8-10 prefill shapes = un-run ZERO-BOOT microbench (cuBLAS demonstrably
+mis-picks on 5090 in an adjacent report). No Blackwell fp32-accum unlock exists (whitepaper's 2:1 is
+documented spec; only hardware-blocked vGPU unlocks). NEGATIVE: whole-model decode megakernels
+(megakernel/Lucebox class — their own sm_120 number 205 tok/s < our 212.5; our pool-tiered byte-floored
+expert line is unhideable; T-column contract unverifiable across a rewrite). "ACES" could not be verified
+to exist — treated as nonexistent until a source appears.
+T27-2 (spec/model): EAGLE 3.1 (vLLM blog 2026-05-26) names "attention drift" — the drafter's focus decays
+to its own tokens with depth — and fixes it with FC-normalization of target hiddens pre-fusion + post-norm
+feedback into the recursion. This is a MECHANISTIC DIAGNOSIS OF OUR F-235 DEEP-POSITION DEFICIT (53.1% vs
+93.6%) and both fixes are T14B-side, export-shape-preserving: NEW T14B RIDER #1. Draft-OPD rejected-
+position replay (arXiv 2605.29343) +13-23% AL donor-reported; our engine already localizes rejections
+(generate.cpp:15384-15413 walk+rescue) so the harvest v2 is cheap: RIDER #2. DFlash2's checkpoint is now
+public (inspectable CPU-side; card pins block-4, QSA-limited, below our S_mtp 6-8; AL delta still below
+our target) — T23 verdict stands, T14C+ rider unchanged. The draft-vocab EN trap got MEASURED bytes:
+production mtp-en = 162,100 B sha 369151522226a5ed vs mtp full = 425,196 B — gates-spec amended in-file
+today (T27 AMENDMENT block) with the pin + the stale-Custom-data warning (32 references). NEGATIVE: AdaSD
+(its acceptance half is non-lossless by its own report — fatal under bit-identity), DSpine/TiDAR/SpecFormer
+class (separate 0.6-1B models break the 31-tensor contract).
+T27-3 (serving/ops/stability): OUR OBSERVABILITY GAP IS PROBE-SIDE — the server ALREADY emits vLLM-named
+TTFT/ITL/E2E histograms (serve/prometheus.py; render at server.py:6000) and probe-lane.py never scraped
+them; it also throws away a temperature-0 deterministic response every run. STAGED TODAY:
+campaign/probe-metrics.py (self-tested: labelled + bare Prometheus formats, quantile with +Inf clamp) —
+scrapes the histograms, computes p50/p95/p99, records clock/temp/power per leg, hashes the golden
+response as a per-boot drift alarm, appends JSONL; WIRED INTO THE A-SLATE legs so one boot prices conc
+delta AND TTFT p99 AND drift. vLLM V1's decode-priority token budget + always-on chunked prefill = third
+independent confirmation of the STRATA_BATCH_DECODE_SHARE shape (audit: TTFT p99 is the canary metric,
+not just conc). VTC (OSDI'24) locality-aware admission-order fairness = ~40 lines in _admit_next, no
+PAUSE verb — the cheaper sibling that precedes maya fair-slice; TWP admission pacing (arXiv 2610.17689)
+is the 7+-client follow-on. Re-bank AMENDED: record clock/temp/power per leg (the 2835->3135 epoch was
+discovered post-hoc). NEGATIVE: Pascal multi-instance (one box), batch-invariant kernels (dead — our
+hand-built int8 graphs), PreScope prefetch (ForesightSwap family), sleep-mode/CRIU boots.
+WHAT CHANGED IN OUR ORDER: (1) the metrics harness now runs INSIDE every a-slate leg (stability and
+throughput priced in the same boot); (2) the draft-vocab contract is pinned in the spec before any G0;
+(3) T14B gains two named riders (EAGLE-3.1 anti-drift, Draft-OPD replay) whose data comes free from the
+queued STRATA_SPEC_TRACE instrument; (4) the MoE port's Phase B spec and the PDL chain gained explicit
+safety amendments; (5) one new zero-boot microbench (cuBLASLt heuristic sweep) enters the slate.

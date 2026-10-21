@@ -43,11 +43,21 @@ below-bar at +1.81% and did NOT adopt.
 
 ## 1. Prerequisites and pre-flight artifacts
 
+> **T27 AMENDMENT (2026-10-21) — THE PRODUCTION rt CONTRACT IS `mtp-en`, PINNED.**
+> The standing launcher serves `--mtp /home/svg/LLM/data/mtp-en/rt`; its `draft_vocab.bin` is
+> **162,100 B, sha256 369151522226a5ed…** (measured 2026-10-21). The full-vocab `mtp/rt` file is
+> 425,196 B (b1e1d3a7a9e4bf86…). Every G0 copy step below must source the **mtp-en** file: copying
+> the 425 KB full vocab binds the WRONG contract and the pre-flight byte-audit must fail loudly on
+> a size/SHA mismatch, not silently pass. Also note `/home/svg/LLM/Custom-data` no longer exists
+> (all 32 references in this spec set are stale paths) — resolve them to `/home/svg/LLM/data/`
+> before any G0 run.
+
 Inputs this spec assumes (produced by the sibling specs — none of them are gates here):
 1. `/home/svg/LLM/Custom-data/mtp/rt2/` exists: trainer-exported `dense.bin` + `dense.txt`, with
    `experts.bin` and `draft_vocab.bin` copied BYTE-IDENTICAL from production `rt/` (the F-114
    validated shipping config — train dense only, stock experts; T14B §2.1/§3-P4,
-   campaign/research/T14B-fastmtp-training-infra.md:29, 183-186).
+   campaign/research/T14B-fastmtp-training-infra.md:29, 183-186). **Production = `mtp-en/rt`
+   per the T27 amendment above.**
 2. The rt2 value-audit is clean: every UNtrained tensor byte/quant-equal to stock rt
    (T14B P4 "value-audit", :185-186; the F-111..F-113 audit class).
 3. The parity spec's STRATA_MTP_TAP gate passed (torch-vs-engine parity, cos > 0.9999 per

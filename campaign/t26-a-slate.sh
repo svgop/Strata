@@ -54,6 +54,8 @@ boot() {  # $1 extra env (may be empty) $2 label
 leg() {  # $1 extra env $2 label
   boot "$1" "$2" || return
   ( cd "$REPO" && python3 campaign/probe-lane.py --port "$PORT" --label "t26-$2" --short-n 6 >> "$OUT" 2>&1 )
+  # T27-B stability capture, same leg: TTFT/ITL/E2E p50/p99 + acceptance + clock/temp/power + golden-hash drift
+  ( cd "$REPO" && .venv/bin/python campaign/probe-metrics.py --port "$PORT" --label "t26-$2" 2>&1 | tee -a "$OUT" )
   grep -aE 'first token|window up to|device plan' "$REPO/custom-iq3_s.log" | tail -2 >> "$OUT" 2>/dev/null
   cleanup_engine
 }
