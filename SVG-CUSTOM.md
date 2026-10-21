@@ -8642,3 +8642,27 @@ package is campaign/prewarm2.sh post-boot (never run, zero code) = +3-5% five-bo
 HW LOCK: the RTX Blackwell whitepaper itself lists the 5090's BF16-fp32acc at 209.5/419 — the same
 documented 2:1 as GA102's 71/142. F-252 stands as documented spec, not a hidden fuse; gpu-unlock stays
 WATCH-ONLY (it is GA102/GA104 PCI-ID-gated; a Blackwell equivalent would need a GB202 selector/PLM payload).
+
+## F-254 — 2026-10-21: T26-1's HEADLINE RETRACTED (verified against launcher + history) — THE DEVICE PLAN IS ALREADY ON, AND THE HOST-PLAN RTT WAS ALREADY PRICED AT ~0.26 ms
+What T26-1 claimed: "our live launcher never enables the device plan (STRATA_VERIFY_DEVICE_PLAN unset)
+=> every (layer,group) pays a host-plan RTT = MoE port Phase A is one env boot, +5-10% M1 est."
+Verification (before any boot): launch-custom-iq3s-8081.sh:23 exports STRATA_VERIFY_DEVICE_PLAN=1 and
+nothing overrides it (the launcher is 47 lines, no arms-env source, no later unset). verify.cpp:1015 sets
+device_plan_ = !all_resident_ && !always_publish_ && env; all_resident_ is a per-layer-range 100%-VRAM test
+(verify.cpp:978-997) and our cache (9,390-9,435 slots of ~24.6k experts) is nowhere near it, so
+device_plan_ = TRUE in the standing recipe. The researcher read campaign/daily-iq3_s-8081.json — an env
+flag, not a config key — and stopped there. --resident-experts in that config is a RAM mode
+(generate.cpp:1122-1126), not the residency graph.
+And the prize was already measured: T1.1's partial device plan (STRATA_PLAN_PARTIAL=1, fully wired on both
+sides — verify_kernels kPlanPartialSkip, verify.cpp:1965-1975, expert_source.cpp:4691-4697) was executed
+and CLOSED NEUTRAL on 2026-10-16: ABAB 3v3 arm 190.0/198.5/249.7 vs ctl 191.2/201.7/251.9 = -0.6/-1.6/-0.9%,
+and the mechanism correction recorded there prices the flagA host-plan round trip it removes at ~0.26 ms.
+CONSEQUENCES: (1) the "device-plan falsifier" is VOID — it is already on and there is no free boot;
+(2) the MoE-tail port's prize is NOT the host plan. What survives from T26-1 is the part that never
+depended on the premise: our expert pairs map onto DM_PAIRS bit-identically (incl. the (23,20) glue
+fallback), the plan-list ordering matches algebraically, and the donor's in-kernel tier wait + folded
+combine + doorbell count is a different mechanism from the plan RTT. The port's value must now be
+re-derived from THOSE mechanics before it earns a tranche; its first boot is the dm parity + DM_WAIT_STATS
+instrument, not a flag. The roadmap's #1 slot moves to the genuinely unarmed items (decode-share, KL
+yardstick, calibrate.py, prewarm2.sh). Lesson repeated from F-232: an agent's headline is a hypothesis
+until the launcher and the history are read — especially when it claims "prior studies didn't know".

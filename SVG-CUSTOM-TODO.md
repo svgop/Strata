@@ -1727,7 +1727,7 @@ and returned keep/amend/kill verdicts on the T25 items. PLAN HOLDS on the big ca
 
 | T25 item | verdict | what changed |
 |---|---|---|
-| basalt MoE-tail port | CONFIRMED, AMPLIFIED | our live launcher never enables the device plan (STRATA_VERIFY_DEVICE_PLAN unset -> device_plan_=false, verify.cpp:1015); per (layer,group) pays a host-plan RTT. Phase A = one env boot; bit-identity free (our pairs all in DM_PAIRS). New gates: pcie-frac 0 pairing, per-group DmPlan (G=2 split), cvec/hand_in check, dm_test_kernel parity + DM_WAIT_STATS instrument boot first |
+| basalt MoE-tail port | CONFIRMED — BUT ITS PRIZE IS RE-DERIVED (F-254) | T26-1's headline was WRONG: the standing launcher already exports STRATA_VERIFY_DEVICE_PLAN=1 (launch-custom-iq3s-8081.sh:23), all_resident_ is false for our cache, so device_plan_ is ON today; and the host-plan RTT it claimed was already measured by T1.1's STRATA_PLAN_PARTIAL at ~0.26 ms (closed neutral -0.6/-1.6/-0.9%). What survives: bit-identity (all pairs in DM_PAIRS incl. the (23,20) glue fallback), plan-order equivalence, and the donor's DIFFERENT mechanics (in-kernel tier wait, folded combine, doorbell count). Price the port from those; first boot = dm parity + DM_WAIT_STATS instrument, not a flag |
 | mid_chain | NEW — UNBLOCKED | T25-1's Q8_0 blocker was the F-251 index misread; qkv/ssm_out sit inside type_ok {12,13,14,21,23} (mid_chain.cu:443). One attn_gate(z) header check, then it runs via the generic triple. Jumps the GDN ladder |
 | dec_gdn_rec | AMENDED | band halved (+0.5..1.5%): our GDN already fuses conv+ab and side-streams gates/z |
 | dense_tc | KILLED | n<4 gate vs our M1 mix mean T=2.47 — inert by construction for this pack; do not re-arm via the gate |
@@ -1755,19 +1755,21 @@ and returned keep/amend/kill verdicts on the T25 items. PLAN HOLDS on the big ca
 | gpu-unlock | CONFIRMED watch / KILLED action | Blackwell whitepaper documents the 5090 at 209.5/419 = the same 2:1 as GA102; module is GA102/104 PCI-ID-gated |
 | 262k VRAM plan | CONFIRMED | the +792 slots absorb the ~-724 slot move; deep KV tail lives in pinned host RAM |
 
-REVISED ORDER (value/effort, after T26):
-1. Device-plan falsifier: STRATA_VERIFY_DEVICE_PLAN=1 (prices the host-plan RTT the port removes) — one boot.
-2. KL yardstick + STRATA_SPEC_TRACE boot (gates the keep rule, DSpark, and the fp16-accum question).
-3. STRATA_BATCH_DECODE_SHARE raise (env, S, conc).
-4. tools/calibrate.py (pcie-frac 0.35 is hand-set and never measured).
-5. campaign/prewarm2.sh (zero code, +3-5% five-boot means est.).
-6. UseNodePriority one-flag arm; quiet-window re-bank.
-7. draft_cum keep rule (~50 lines, rescue-inclusive) + conditional graph (th=0 can go first, bit-identical).
-8. mid_chain header check -> run via the generic triple.
-9. Re-quant GO (user) -> +2-4% M1, +792 slots, 262k safety.
-10. MoE-tail port (device plan + dm port; +5-10% M1 est.; instrument boot first).
-11. Window diet (-900..-1000 nodes; decode lever).
-12. dec_gdn_rec (+0.5..1.5%); fp16-accum scoped K=640/2560 (gate first).
-13. PIPED reader-thread port (M; conc 335-350) -> elastic KV / parallel-8 (380-420).
-14. T14B retrain (+ DFlash2 multi-tap rider) -> 262k switch after the re-quant.
-15. Debt: draft_vocab EN contract trap, empty Custom-data paths in four specs, quant_quality fence, stale cleanup, sudo items.
+REVISED ORDER (value/effort, after T26; corrected by F-254 — the device-plan boot is void, it is already armed):
+1. STRATA_BATCH_DECODE_SHARE raise (env, S, conc) — the first genuinely unarmed lever; one boot A/B.
+2. tools/calibrate.py boot (pcie-frac 0.35 is hand-set and never measured) — one instrument boot.
+3. campaign/prewarm2.sh (zero code, +3-5% five-boot means est.) — post-boot warm package.
+4. KL yardstick (in-tree, fixture verified) + the small spec-trace instrument that must be WRITTEN first
+   (no STRATA_SPEC_TRACE exists today; per-window dprob/a rows, ~20 lines) -> gates the keep rule, DSpark,
+   and the fp16-accum question.
+5. UseNodePriority one-flag arm; quiet-window re-bank.
+6. draft_cum keep rule (~50 lines, rescue-inclusive) + conditional graph (th=0 can go first, bit-identical).
+7. mid_chain header check -> run via the generic triple.
+8. Re-quant GO (user) -> +2-4% M1, +792 slots, 262k safety.
+9. MoE-tail port (F-254: price from dm's in-kernel wait/combine/doorbell count; dm parity + DM_WAIT_STATS
+   instrument boot first; the "enable the plan" Phase A does not exist).
+10. Window diet (-900..-1000 nodes; decode lever).
+11. dec_gdn_rec (+0.5..1.5%); fp16-accum scoped K=640/2560 (gate first).
+12. PIPED reader-thread port (M; conc 335-350) -> elastic KV / parallel-8 (380-420).
+13. T14B retrain (+ DFlash2 multi-tap rider) -> 262k switch after the re-quant.
+14. Debt: draft_vocab EN contract trap, empty Custom-data paths in four specs, quant_quality fence, stale cleanup, sudo items.
