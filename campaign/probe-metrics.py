@@ -75,7 +75,7 @@ def gpu():
 
 def golden(port, key):
     body = json.dumps({'messages': [{'role': 'user', 'content': GOLDEN_PROMPT}],
-                       'max_tokens': 32, 'temperature': 0}).encode()
+                       'max_tokens': 128, 'temperature': 0}).encode()
     req = urllib.request.Request(f'http://127.0.0.1:{port}/v1/chat/completions', data=body,
                                  headers={'Content-Type': 'application/json'})
     if key:
@@ -84,7 +84,8 @@ def golden(port, key):
     try:
         with urllib.request.urlopen(req, timeout=600) as r:
             d = json.load(r)
-        txt = d['choices'][0]['message'].get('content') or ''
+        msg = d['choices'][0]['message']
+        txt = (msg.get('content') or '') + '|' + (msg.get('reasoning_content') or '')
         h = hashlib.sha256(txt.encode()).hexdigest()[:16]
         return {'hash': h, 'chars': len(txt), 'sec': round(time.time() - t0, 3)}
     except Exception as e:
