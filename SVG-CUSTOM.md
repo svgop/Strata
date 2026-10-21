@@ -8546,3 +8546,27 @@ pack's dense is K-quant mixed - relevant to EVERY future dense-line candidate), 
 (quantize =COPY), two registered harnesses (dense_tc_parity, hc_q8_parity), two shelf arms with stamped
 quality, and the standing recipe untouched at every step. T18 guards verified in the deployed binary
 (job_of reset + the nt>=MAXT marker). Box STOPPED at 13:30; basalt clone /tmp/basalt-t24 deleted.
+
+## F-252 — 2026-10-21: THE FMLA32-STYLE HALF-RATE LOCK EXISTS ON OUR 5090 — MEASURED, NOT INFERRED
+Probe: pure-register mma.sync rate bench (campaign/mma-accum-ratelock.cu, sm_120, warp-level
+m16n8k16, no memory), two ABAB legs. Window: the user's 8081 server was live (96% util), so the
+absolute TFLOPS are contended — the RATIO is the instrument, and it is stable.
+Result: fp16-accum mma = 476 TFLOPS; fp32-accum (fp16 in) = 238; bf16-in/fp32-accum = 238.
+Ratio f16/f32 = 1.99 / 1.97 across legs. Consumer Blackwell half-rates the fp32-accumulate
+tensor pipe exactly like the Ampere 3090 "FMLA32 = 1/2" story (Alexey Fateev's tweet thread,
+2026-10-21, github.com/Zagitta/gpu-unlock).
+Comparators: the module itself is Ampere GA102/GA104 ONLY — other chips explicitly rejected —
+so it cannot run on our card and no Blackwell unlocker exists. Fateev's own Strata numbers on
+the 3090 price the unlock: +10-12% prefill (GEMM phases ~40% of prefill; int8 experts/CUDA-core
+kernels unaffected), decode flat.
+Consequences for the record:
+(1) Every GEMM/WMMA line in our prefill that accumulates in fp32 (prefill/kernels.cu WMMA
+    waves included) runs at half the tensor-pipe rate by design; if a Blackwell unlock ever
+    appears, ~10% prefill is the family-measured price, free.
+(2) The TC-hc mma plan must be priced at 238 TFLOPS bf16-f32-accum, not 476 — the +9-17%
+    ceiling already assumed the fp32-accum rate; the fp16-accum form would be the 2x pipe but
+    breaks bit-identity at K=2560 and needs the KL yardstick before it is even a candidate.
+(3) Decode is untouched by this law (int8 experts, CUDA-core dequant) — consistent with the
+    3090 report's flat decode.
+No action: the unlock is Ampere-only; keep a watch for a Blackwell port. Bench committed,
+binary not.

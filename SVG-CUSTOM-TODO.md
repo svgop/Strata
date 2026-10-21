@@ -1634,6 +1634,10 @@ with-work items by price. All under the merged v0.2.1 base with COHORTS/norm_fas
 
 ## T25 — CONSOLIDATED FAMILY ROADMAP (2026-10-21; six subsystem dossiers campaign/research/T25-{1..6}-*.md + T23 set + T23-basalt-portstudy; T24 port tranche in flight)
 THE FAMILY MAP: basalt is the ONLY decode-kernel donor (upstream v0.2.1..v0.2.1.4 kernel range EMPTY; xolotl/maya model-bound). Our conc 315.7 may already lead the family served numbers (basalt publishes none).
+F-252 HARDWARE LAW (measured on our card, campaign/mma-accum-ratelock.cu): consumer Blackwell
+half-rates the fp32-accumulate tensor pipe (476 fp16-accum vs 238 fp32-accum TFLOPS, ratio
+1.99/1.97). Prefill WMMA/GEMM lines are half-rate by design; TC-hc mma plans at 238 not 476;
+the gpu-unlock module is Ampere-only - watch for a Blackwell port (~10% prefill free if it lands).
 A. ZERO/ONE-BOOT FALSIFIERS FIRST (all free, price the ports): (1) STRATA_HC_Q8 + STRATA_TSUM env
 boot - prices the whole hc8 class BEFORE porting (T25-1: in-tree never armed); (2) --adapt-every 1
 at our decay 0.85 (basalt ABBA +3.6-4.2% switchy traffic); (3) PIPED_CONCURRENT vs our armed
