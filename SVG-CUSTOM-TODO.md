@@ -1612,3 +1612,22 @@ candidate; engine binary = campaign/results/strata.t20-merged, md5 b8a21923...),
 items above at the promotion boot, and keep engine/strata.t19-final as the rollback until the
 re-bank freezes. Fallback if the MMLU gate fails: keep the tree, flip STRATA_PF_FUSED=0 (and
 then =1 the rest stays), re-run the gate once; the merge's speed case does not rest on PF_FUSED.
+
+## T24 — BASALT PORT TRANCHE (2026-10-21; study campaign/research/T23-basalt-portstudy.md, pinned sha fb0944c7)
+COMPARABILITY SOLVED: their 324.6 (short-prompt fixture, peer tier, spec 7) is not our M1 - but
+their 8-bit-dense arm on the same fixture ran 213.4 ~= our 212.5: ENGINES AT PARITY pre-wave;
+the whole ~1.52x per-token gap is named portable commits. They win per-WINDOW (6.675 vs ~11.5ms);
+WE win per-window-TOKENS (2.47 vs 2.17) - port targets are window-time kernels, not drafting.
+PORT NOW: (1) dense_tc int8-TC dense path + Q6_K dense re-quant (their +5.6-10.2%; our 3.3ms
+dense line; SERVES the queued re-quant); (2) int8 hc copies hc8_gr.cu (drop-in shaped for our
+fused_gr entry points; our 2.87ms ALU-bound hc line; T17D's +9-17% band).
+PORT WITH WORK: PDL chain (F-191 partial reversal - their HOW = in-kernel pdl_launch_dependents
+early triggers + staging weight reads BEFORE pdl_wait across 11 kernel files; our wait-semantics
+closure stays technically true, the mechanism was attribute-only tested), mid_chain+finisher,
+two-stage Q6_K verify head (re-opens retired T1.6 WITH a passed quality gate), device-conditional
+drafting + draft_cum keep rule.
+DEAD-END SCORECARD (external confirmation): whole-layer persistent kernel retired SLOWER on
+their side with root-cause (re-proves R1 skepticism); tree verify dead both sides; CLC zero hits.
+NOT APPLICABLE: peer tier, NVFP4 lane, their suffix drafter (we are the donor).
+SEQUENCE: S1 dense_tc (proof -> 3v3 -> adopt/revert), S2 hc8, S3 PDL-chain env-gated, S4 the
+with-work items by price. All under the merged v0.2.1 base with COHORTS/norm_fast/T18 intact.
