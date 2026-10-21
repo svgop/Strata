@@ -8716,3 +8716,18 @@ throughput priced in the same boot); (2) the draft-vocab contract is pinned in t
 (3) T14B gains two named riders (EAGLE-3.1 anti-drift, Draft-OPD replay) whose data comes free from the
 queued STRATA_SPEC_TRACE instrument; (4) the MoE port's Phase B spec and the PDL chain gained explicit
 safety amendments; (5) one new zero-boot microbench (cuBLASLt heuristic sweep) enters the slate.
+
+## F-256 — 2026-10-21: STALE CLEANUP + THE MEASUREMENT EPOCH OPENS (probe-metrics rides every leg from here)
+Cleanup (all untracked/ignored paths; journal is the record): engine/ 737M -> 249M — deleted the seven
+superseded intermediates (strata.pre-t15c/-t18fix/-t19-s1..s4 = 433M + strata.t20-merged-artifact 84.5M,
+whose md5 provenance is banked in F-248); KEPT the rollback chain engine/strata (current) ->
+strata.pre-t24-s1 (T24-era rollback) -> strata.t19-final (pre-merge rollback) + libstrata_kq.so + BUILD.json.
+Root boot logs: 42 stale per-arm logs + the 27M live log archived to campaign/results/old-logs/ (9.0M
+gzipped); the next boot recreates custom-iq3_s.log. No tracked file changed; no harness deleted;
+campaign/results leg evidence (21M) kept. Reviewed for relevance: build/ .venv/ third_party/ all live;
+upstream files untouched.
+THE EPOCH: from this entry every battery leg also captures campaign/probe-metrics.py (TTFT/ITL/E2E
+p50/p95/p99 from the server's existing histograms, acceptance, sm clock/temp/power, golden-response hash
+drift) appended to campaign/results/metrics.jsonl. First measurement epoch of the improvement loop:
+baseline (3 standing boots) -> a-slate (decode-share A/B 3v3 + calibrate.py + prewarm2) -> adopt/reject
+against the baseline with the no-regression law.
