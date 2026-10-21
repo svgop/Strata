@@ -8478,3 +8478,71 @@ stock is more window-sensitive (its evening M1 160.6 vs its morning 169.7; custo
 197.9-211.9 vs its own band) - the fork's arms appear to smooth window variance too. The fork
 premium over the LATEST upstream: COHORTS + norm_fast + FUSE_HITS + POOL_DIET + GDN_CHUNKED +
 T18 + the tuned arm set, on top of the shared v0.2.1 kernel package.
+
+### F-251 — T24 BASALT PORT TRANCHE, S1+S2: two port-now candidates meet the same-window truth — dense_tc a wash (shelf), in-tree hc8 a regression (recorded) (2026-10-21, goal round 11)
+
+**THE TRANCHE'S MAP HELD; ITS PREMISES NEEDED THE BOX.** T23 ranked dense_tc (#1) and hc8 (#2) PORT NOW
+on the 8-bit-arm calibration (their 213.4 ~= our 212.5). Both ports close the same way: the class was
+already correctly priced by OUR tree — dense_tc loses to the T19-wide mmvq on our K-quant dense mix, and
+the hc8 falsifier was literally an env var (STRATA_HC_REQ8) waiting for its first A/B.
+
+**S1 — dense_tc, PORTED AND PROVEN, THEN FALSIFIED ON THE NUMBERS.** Port: basalt
+src/kernels/cuda/dense_tc.cu @ fb0944c7 -> src/kernels/cuda/dense_tc.cu (+ dense_tc.hpp), namespace
+strata::kernels, our pdl.hpp underneath (pdl_trigger for pdl_launch_dependents; launch_pdl falls back to
+plain launches - the env default never arms PDL), dense_tc_mask() reads STRATA_DENSE_TC (default 0; 1 =
+the donor's mask 29: GDN qkv/out + QSA q/out) instead of their constant-on. Dispatch in verify.cpp's
+mm()/q_chain with a width gate n >= 4 (the microbench crossover: cold-L2 per our card, every covered
+type/shape >= 1.0x from T=4, up to 1.9x at T=8; T=1 is 0.72-0.9x and the window mix lives at 2.47
+accepted/window). Parity (dense_tc_parity, the donor's harness ported): ALL PASS - T-column bitwise
+contract every type T=1..8, ~1e-7 rms vs float64 (the same class native_mmvq sits at), our exact shapes
+incl. the pair kernels. PREMISE CORRECTION (the tranche's one real discovery on the pack): the T23 study's
+"our dense is Q8_0" was an index-column misread - the GGUF headers say the dense projections are a K-quant
+MIXTURE (qkv 22 Q6_K/10 Q5_K/2 Q4_K/2 IQ4_XS; ssm_out 29 Q6_K/4 Q5_K/3 Q4_K; attn_q 5 Q6_K/3
+Q5_K/3 IQ4_XS/1 Q4_K; attn_output 11 Q6_K/1 Q4_K). dense_tc consumes them all natively, so the Q6_K dense
+re-quant the study queued is MOOT - built, proven unnecessary by the header check, deleted (165 GB
+transients reclaimed); the =COPY patch on third_party/llama.cpp's quantize (restoring the runbook's
+documented name=COPY; the pin only knew whole-file COPY) is banked for the T14B experts-requant.
+Battery 3v3 ABAB, same binary, one env (campaign/results/t24-s1-battery.log):
+
+| | M1 | pair | 6-conc | M3b |
+|---|---|---|---|---|
+| ctl mean | 216.77 | 204.70 | 335.80 | 74.77 |
+| arm mean (STRATA_DENSE_TC=1) | 216.33 | 207.67 | 332.17 | 76.77 |
+| delta | **-0.20%** | +1.45% | -1.08% | +2.7pp |
+
+VERDICT: the targeted lane is a WASH - the +4% bar fails, NOT ADOPTED. The donor's +5.6-10.2% was priced
+against their weaker mmvq and bundled their Q8_0->Q6_K byte cut; T19 already banked our equivalent. The
+port stays as a LABELED SHELF ARM (STRATA_DENSE_TC=1 = one launcher line; default-off proven bit-neutral
+by the battery's own control legs on the new binary). 2x MMLU on the arm: 95.71 / 92.86 = the standing
+class (mmlu-t24s1-arm-g{1,2}.json) - the shelf is quality-stamped for any future re-arming. Backup:
+engine/strata.pre-t24-s1.
+
+**S2 — hc8: THE FALSIFIER WAS IN-TREE (T25-1 was right), AND IT REGRESSES.** No port: our tree's
+STRATA_HC_REQ8 (weights.cpp load_hc_q8; the hc projections requantized at load to int8 + fp32 scale/32 -
+675 MiB - with the freed VRAM growing the expert cache 17.7 -> 17.90 GiB; fused_gr.cu:1340 routes the
+reads to its q8 variants) is the hc8 mechanism, one env boot from its first-ever A/B. New harness
+hc_q8_parity (registered in CMake): 18/18 PASS - q8-vs-bf16 rel rms 2.3-2.4e-3 (quantization-noise class),
+the T-column bitwise contract every T, inject rows exact (stay bf16). Battery 3v3 ABAB
+(campaign/results/t24-s2-battery.log):
+
+| | M1 | pair | 6-conc | M3b |
+|---|---|---|---|---|
+| ctl mean | 221.37 | 213.87 | 332.93 | 75.97 |
+| arm mean (STRATA_HC_REQ8=1) | 205.50 | 198.97 | 337.50 | 77.23 |
+| delta | **-7.17%** | **-6.97%** | +1.37% | +1.7pp |
+
+M1 regressed in EVERY round (-2.4/-11.9/-6.8) - the single-stream protection law alone rejects it.
+Mechanism: the q8 read runs the NON-staged variant (fused_gr.cu:1358), surrendering the staged bf16
+read's cp.async overlap; the byte cut (0.56x) does not pay for it at our node density - exactly the
+F-180-era pricing ("hc bf16->Q8 byte cut ~0.4 ms - LOW until node spacing is fixed"). REJECT + record;
+nothing standing changed (env default-off). The basalt hc8_gr/hc_fused port closes with it: their +9..17%
+band assumed fp16-scale copies AND the persistent one-kernel form, not this read.
+
+**S3 — PDL chain: NOT RUN (the tranche's own gate: only if S1+S2 close cleanly; S2 regressed).** F-191's
+partial reversal stands open with T25-1's port-with-work plan as the map.
+
+**The tranche's compounding:** two clean falsifications with mechanisms, one premise correction (the
+pack's dense is K-quant mixed - relevant to EVERY future dense-line candidate), one tooling bank
+(quantize =COPY), two registered harnesses (dense_tc_parity, hc_q8_parity), two shelf arms with stamped
+quality, and the standing recipe untouched at every step. T18 guards verified in the deployed binary
+(job_of reset + the nt>=MAXT marker). Box STOPPED at 13:30; basalt clone /tmp/basalt-t24 deleted.

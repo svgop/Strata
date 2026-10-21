@@ -336,6 +336,14 @@ static bool parse_tensor_type(const char * data, std::vector<tensor_type_option>
     sep++;
     tensor_type_option tensor_type_opt;
     tensor_type_opt.name = tn;
+    if (striequals(sep, "COPY")) {
+        // strata-custom-2 T24-S1: "name=COPY" keeps that tensor byte-identical while other entries
+        // quantize (the requant-spec.md runbook's explicit-everything discipline).  The sentinel type
+        // is resolved by llama-quant.cpp's force-copy check; never a real target type.
+        tensor_type_opt.type = GGML_TYPE_COUNT;
+        tensor_type.emplace_back(std::move(tensor_type_opt));
+        return true;
+    }
     tensor_type_opt.type = parse_ggml_type(sep);
     tensor_type.emplace_back(std::move(tensor_type_opt));
     if (tensor_type_opt.type == GGML_TYPE_COUNT) {

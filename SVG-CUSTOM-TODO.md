@@ -1676,3 +1676,41 @@ CEILING: M1 212.5 -> dense_tc + MoE-tail + hc-class + window-project compose tow
 (multi-path); conc 315.7 -> piped-concurrent + elastic KV toward 340-360+. Re-quant (user go)
 carries its tooling upgrades. SEQUENCE: A falsifiers -> T24 close -> B/C ports as one window
 project -> D/E -> T14B.
+
+### T24 S1 RESULT — dense_tc (2026-10-21; F-251): PORTED, PROVEN, FALSIFIED ON OUR STACK — default-off shelf arm
+The port (basalt dense_tc.cu @ fb0944c7 -> src/kernels/cuda/dense_tc.cu + dense_tc.hpp, strata::kernels;
+verify.cpp dispatch in mm()/q_chain, bits 1|4|8|16 = GDN qkv/out + QSA q/out; STRATA_DENSE_TC env, default
+OFF; width gate n>=4). Proofs: dense_tc_parity (ported harness) ALL PASS on this card - T-column bitwise
+contract every type T=1..8, 1e-7 rms vs float64 (same class as native_mmvq), incl our exact shapes. The
+T23 study's premise HALF-CORRECTED: our pack's dense is NOT Q8_0 - the GGUF says a K-quant MIXTURE
+(qkv: 22 Q6_K/10 Q5_K/2 Q4_K/2 IQ4_XS; ssm_out 29 Q6_K; attn_q 5 Q6_K...; the study's "type 8" column
+reading of index.txt was wrong). dense_tc takes all of them natively -> NO re-quant needed (the runbook
+requant was built, proven wrong-headed by the header check, deleted; the =COPY tool patch on
+third_party/llama.cpp quantize is banked for the queued T14B experts-requant). Microbench (cold-L2, our
+card): the T19-wide mmvq holds 1.3-1.5 GB/s on these types, so dense_tc's crossover is T=4 (>=1.0x every
+covered type/shape from T=4, up to 1.9x at T=8; T=1 is 0.72-0.9x - hence the dispatch gate). Battery 3v3
+ABAB same binary (campaign/results/t24-s1-battery.log): M1 ctl 216.77 vs arm 216.33 = -0.20%; pair +1.45%;
+6-conc -1.08%; M3b 74.77 -> 76.77 (+2.7pp, acceptance up). VERDICT: bar NOT met (targeted lane +4%
+required) -> NOT ADOPTED; the standing recipe is untouched (default-off), the port stays as a labeled
+shelf arm (STRATA_DENSE_TC=1, one launcher line) with 2x MMLU on the arm 95.71/92.86 = standing class
+(mmlu-t24s1-arm-g{1,2}.json). The honest mechanism: the donor's +5.6-10.2% was measured against their
+weaker mmvq baseline and bundled their Q8_0->Q6_K dense byte cut; we already banked the equivalent via
+T19 mmvq_il wide. Ledger: engine/strata.pre-t24-s1 backup; T18 marker verified in the deployed binary.
+
+### T24 S2 RESULT — int8 hc copies (2026-10-21; F-251): THE HC8 FALSIFIER WAS IN-TREE ALL ALONG — ARMED, REGRESSES, RECORDED
+T25-1's prescription ("our S23/S25 HC_Q8 is in-tree and never A/B'd — arm them FIRST; the falsifier is one
+env boot") was right: no port needed. The tree's own STRATA_HC_REQ8 (generate.cpp:3836 -> weights.cpp
+load_hc_q8: the hc projections skip the BF16 arena, requantized at load to int8 + fp32 scale/32, 675 MiB
+copied, the freed VRAM grows the expert cache 17.7 -> 17.90 GiB; fused_gr.cu:1340 routes the reads to the
+q8 variants) IS the hc8 mechanism — fp32 scales where basalt uses fp16, inject kept bf16-exact, and the
+non-staged read variant (fused_gr.cu:1358 gives up the cp.async staging under q8). New proof harness
+hc_q8_parity (18/18 PASS): q8-vs-bf16 rel rms 2.3-2.4e-3 (max|d| 4.5e-3, quantization-noise class), the
+T-column bitwise contract holds every T, inject exact. Battery 3v3 ABAB
+(campaign/results/t24-s2-battery.log): M1 ctl 221.37 vs arm 205.50 = -7.17% (every round negative:
+-2.4/-11.9/-6.8); pair -6.97%; conc +1.37%; M3b 75.97 -> 77.23. VERDICT: REGRESSION beyond the -4% law on
+the protected lane -> REJECT, box reverted (env default-off; nothing standing changed). Mechanism for the
+record: the staged bf16 read's cp.async overlap (T15C norm_fast line) is worth more than the hc byte cut
+at our execution density — the F-180-era note ("hc bf16->Q8 byte cut ~0.4 ms — LOW until node spacing is
+fixed") was the correct price, and the +9..17% band assumed basalt's fp16-scale copies AND their
+persistent hc_fused form, not this read. MMLU gates not owed (no adoption; M3b watched in-band). The
+basalt hc8_gr/hc_fused port stays CLOSED unless the hc_fused persistent form is priced separately.

@@ -392,6 +392,7 @@ if(STRATA_ENABLE_CUDA OR STRATA_ENABLE_HIP)
                           src/kernels/cuda/elementwise.cu
                           src/kernels/cuda/bf16_gemv.cu
                           src/kernels/cuda/native_mmvq.cu
+                          src/kernels/cuda/dense_tc.cu
                           src/kernels/cuda/native_bf16.cu
                           src/kernels/cuda/native_gr_norm.cu
                           src/kernels/cuda/native_moe.cu
@@ -455,6 +456,20 @@ if(STRATA_ENABLE_CUDA OR STRATA_ENABLE_HIP)
   # #512: the top-k's active-block bound (Turing's dispatch, forced on any card by STRATA_TOPK_ACTIVE_ANY) against
   # the capacity rule, selected ids bitwise
   if(STRATA_BUILD_TESTS AND STRATA_ENABLE_CUDA)
+    # T24-S1 (basalt port): dense_tc against native_mmvq (column contract, T-independence, float64 for
+    # Q8_0) plus a per-width microbench; GPU, synthetic, no model.
+    add_executable(dense_tc_parity src/kernels/dense_tc_parity.cpp)
+    target_include_directories(dense_tc_parity PRIVATE ${CMAKE_CUDA_TOOLKIT_INCLUDE_DIRECTORIES} third_party/ggml)
+    target_link_libraries(dense_tc_parity PRIVATE strata_kernels CUDA::cudart)
+    add_test(NAME dense_tc_parity COMMAND dense_tc_parity)
+    set_tests_properties(dense_tc_parity PROPERTIES SKIP_RETURN_CODE 77 TIMEOUT 600)
+    # T24-S2: the hyper-connection read on STRATA_HC_REQ8's int8 copies (s_down/s_up path) against the bf16
+    # read - error bound + the q8 path's T-column bitwise contract; GPU, synthetic, no model.
+    add_executable(hc_q8_parity src/kernels/hc_q8_parity.cpp)
+    target_include_directories(hc_q8_parity PRIVATE ${CMAKE_CUDA_TOOLKIT_INCLUDE_DIRECTORIES})
+    target_link_libraries(hc_q8_parity PRIVATE strata_kernels CUDA::cudart)
+    add_test(NAME hc_q8_parity COMMAND hc_q8_parity)
+    set_tests_properties(hc_q8_parity PROPERTIES SKIP_RETURN_CODE 77 TIMEOUT 300)
     add_executable(qsa_topk_active_parity src/kernels/qsa_topk_active_parity.cpp)
     target_include_directories(qsa_topk_active_parity PRIVATE ${CMAKE_CUDA_TOOLKIT_INCLUDE_DIRECTORIES})
     target_link_libraries(qsa_topk_active_parity PRIVATE strata_kernels CUDA::cudart)

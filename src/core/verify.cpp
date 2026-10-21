@@ -38,6 +38,7 @@
 #include "strata/kernels/kv_q4.hpp"
 #include "strata/kernels/kv_q8.hpp"
 #include "strata/kernels/native_mmvq.hpp"
+#include "strata/kernels/dense_tc.hpp"   // T24-S1: the int8-TC dense decode path (basalt port)
 #include "strata/kernels/native_gr_postops.hpp"
 #include "strata/kernels/native_ple_postops.hpp"
 #include "strata/kernels/native_qsa.hpp"
@@ -1337,6 +1338,18 @@ bool Verifier::record_window(int T, cudaStream_t cs, std::string& err) {
         // a projection input's q8_1 blocks and their interleaved copy in one launch (native_quantize_q8_1_il, the same
         // bytes): Turing default (+0.5..+1 % decode, two launches fewer per GDN layer and per QSA layer); STRATA_QIL=0 / 1
         // forces it off / on
+        // T24-S1 (basalt dense_tc port): the int8-tensor-core dense path, STRATA_DENSE_TC-gated default
+        // off.  Bits (the donor's dense_tc_mask semantics): 1 GDN qkv, 2 GDN z, 4 GDN out, 8 QSA q,
+        // 16 QSA out, 32 QSA k/v.  Output-changing vs native_mmvq (fixed-order fp32 scale sum) - gated
+        // by the acceptance canary + the MMLU law, not by parity.  Width gate n >= 4: our dense side is
+        // a K-quant mixture (Q6_K/Q5_K/Q4_K/IQ4_XS) where the T19-wide mmvq tables hold the card to
+        // 1.3-1.5 GB/s, so the microbench crossover is T=4 (dense_tc_parity --bench-cases: every covered
+        // type/shape >= 1.0x from T=4; at T=1 dense_tc is 0.72-0.9x - a window mix concentrated at
+        // 2.47 accepted/window must not pay that).  Shallow windows stay on the bitwise mmvq path.
+        auto dtc_ok = [&](int bit, const WeightRef* w, int n_in, int n_out) {
+            if (n < 4 || n > 8 || (strata::kernels::dense_tc_mask() & bit) == 0) return false;
+            return strata::kernels::dense_tc_supported(w->native_type, n_in, n_out, w->native_data);
+        };
         auto quant_in = [&](const float* x, int n_in) {
 #if !defined(STRATA_USE_HIP)
             static const int qil_env = [] { const char* v = std::getenv("STRATA_QIL"); return v != nullptr ? std::atoi(v) : -1; }();
@@ -1350,7 +1363,11 @@ bool Verifier::record_window(int T, cudaStream_t cs, std::string& err) {
             native_quantize_q8_1(x, xq_, n_in, n, cs);
             il_ready = false;
         };
-        auto mm = [&](const WeightRef* w, float* out, int n_in, int n_out) {
+        auto mm = [&](const WeightRef* w, float* out, int n_in, int n_out, int dtc_bit = 0) {
+            if (dtc_bit && dtc_ok(dtc_bit, w, n_in, n_out)) {
+                strata::kernels::dense_tc(w->native_type, w->native_data, xq_, out, n_in, n_out, n, cs);
+                return;
+            }
             if (g_mmvq_il() && strata::kernels::native_mmvq_il_supported(w->native_type, n, n_out)) {
                 if (!il_ready && n >= 2) {   // one column reads the plain q8_1 blocks
                     strata::kernels::native_q8_1_interleave(xq_, xil_, n_in, n, cs);
@@ -1398,7 +1415,7 @@ bool Verifier::record_window(int T, cudaStream_t cs, std::string& err) {
                         il_ready = true;
                     }
                     if (!branch(pfork_, cs, side2_, "fork")) return false;
-                    mm(wqkv, qkv + (size_t) tb * C, (int) N, (int) C);
+                    mm(wqkv, qkv + (size_t) tb * C, (int) N, (int) C, 1);
                     if (g_il) strata::kernels::native_mmvq_il(wg->native_type, wg->native_data, xq_, xil_, z_ + (size_t) tb * ZV,
                                                               (int) N, (int) ZV, n, side2_);
                     else native_mmvq(wg->native_type, wg->native_data, xq_, z_ + (size_t) tb * ZV, (int) N, (int) ZV, n, side2_);
@@ -1414,7 +1431,7 @@ bool Verifier::record_window(int T, cudaStream_t cs, std::string& err) {
                                 df_side_[1]);
                 }
                 const bool fuse_ab = fuse_convab_on() && !br && !batch_rec_ && !prof_on_ && !sidem;   // the side mixer computes the gates on its branch
-                if (!side_proj) mm(wqkv, qkv + (size_t) tb * C, (int) N, (int) C);   // with side_proj: above, first
+                if (!side_proj) mm(wqkv, qkv + (size_t) tb * C, (int) N, (int) C, 1);   // with side_proj: above, first
                 stamp(l, 2, grp);
                 if (batch_rec_) {   // contiguous rows may be proposals for the same slot
                     for (int t = tb; t < te;) {
@@ -1447,7 +1464,7 @@ bool Verifier::record_window(int T, cudaStream_t cs, std::string& err) {
                              (const float*) wsa->data, gate + (size_t) tb * HV, beta + (size_t) tb * HV, (int) N, (int) HV,
                              n, cs);
                 stamp(l, 4, grp);
-                if (!side_proj) mm(wg, z_ + (size_t) tb * ZV, (int) N, (int) ZV);
+                if (!side_proj) mm(wg, z_ + (size_t) tb * ZV, (int) N, (int) ZV, 2);
                 stamp(l, 5, grp);
                 if (side_proj && cudaStreamWaitEvent(cs, pjoin_, 0) != cudaSuccess) {
                     err = "verify: the gate projection's branch could not join";
@@ -1500,7 +1517,7 @@ bool Verifier::record_window(int T, cudaStream_t cs, std::string& err) {
                 // destination (#1139: the out-projection read stale bytes), so that case quantizes here as without it
                 if (!g_qfuse() || batch_rec_) quant_in(y_ + (size_t) tb * ZV, (int) ZV);
                 else il_ready = false;
-                mm(wout, bo_ + tb * N, (int) ZV, (int) N);
+                mm(wout, bo_ + tb * N, (int) ZV, (int) N, 4);
             } else {
                 // ======================= QSA =======================
                 const int64_t qi = qsa_idx[(size_t) l];
@@ -1631,7 +1648,10 @@ bool Verifier::record_window(int T, cudaStream_t cs, std::string& err) {
                 const bool q_il = side_proj && g_mmvq_il() &&
                                   strata::kernels::native_mmvq_il_supported(wq->native_type, n, (int) (NH * 2 * HD));
                 auto q_chain = [&](cudaStream_t ns) -> bool {
-                    if (ns == cs) mm(wq, qfull_ + tb * NH * 2 * HD, (int) N, (int) (NH * 2 * HD));
+                    if (dtc_ok(8, wq, (int) N, (int) (NH * 2 * HD)))   // T24-S1: dense_tc on any of q_chain's streams
+                        strata::kernels::dense_tc(wq->native_type, wq->native_data, xq_, qfull_ + tb * NH * 2 * HD,
+                                                  (int) N, (int) (NH * 2 * HD), n, ns);
+                    else if (ns == cs) mm(wq, qfull_ + tb * NH * 2 * HD, (int) N, (int) (NH * 2 * HD));
                     else if (q_il) strata::kernels::native_mmvq_il(wq->native_type, wq->native_data, xq_, xil_,
                                                                    qfull_ + tb * NH * 2 * HD, (int) N, (int) (NH * 2 * HD), n, ns);
                     else native_mmvq(wq->native_type, wq->native_data, xq_, qfull_ + tb * NH * 2 * HD, (int) N,
@@ -1684,8 +1704,8 @@ bool Verifier::record_window(int T, cudaStream_t cs, std::string& err) {
                 }
                 if (!sidem) idx_key(cs);
                 stamp(l, 7, grp);
-                mm(wk, kcur_ + tb * NKV * HD, (int) N, (int) (NKV * HD));
-                mm(wv, vcur_ + tb * NKV * HD, (int) N, (int) (NKV * HD));
+                mm(wk, kcur_ + tb * NKV * HD, (int) N, (int) (NKV * HD), 32);
+                mm(wv, vcur_ + tb * NKV * HD, (int) N, (int) (NKV * HD), 32);
                 if (qb) norm_rope(kcur_ + tb * NKV * HD, wkn, (int) (n * NKV), (int) HD, pos_k + tb * NKV);
                 else for (int t = tb; t < te; ++t) norm_rope(kcur_ + t * NKV * HD, wkn, (int) NKV, (int) HD, pos_ + t * NH);
                 if (st.kv_rot) {   // K and V rotated before they are stored (kv_q4.hpp)
@@ -1869,7 +1889,7 @@ bool Verifier::record_window(int T, cudaStream_t cs, std::string& err) {
                 }
                 stamp(l, 14, grp);
                 quant_in(attn32_ + tb * NH * HD, (int) (NH * HD));
-                mm(wo, bo_ + tb * N, (int) (NH * HD), (int) N);
+                mm(wo, bo_ + tb * N, (int) (NH * HD), (int) N, 16);
             }
         } catch (const std::exception& e) {
             err = "verify layer " + std::to_string(l) + ": " + e.what();

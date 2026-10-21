@@ -680,7 +680,25 @@ static ggml_type llama_tensor_get_type_impl(quantize_state_impl & qs, ggml_type 
 }
 
 // outer wrapper: determine the ggml_type that this tensor should be quantized to
+// strata-custom-2 T24-S1: a tensor-type override with the GGML_TYPE_COUNT sentinel ("name=COPY") keeps
+// the tensor byte-identical; see tools/quantize/quantize.cpp's parse_tensor_type.
+static bool tensor_force_copies(const quantize_state_impl & qs, const ggml_tensor * tensor) {
+    if (qs.tensor_type_patterns.empty()) {
+        return false;
+    }
+    const std::string tensor_name(tensor->name);
+    for (const auto & [pattern, qtype] : qs.tensor_type_patterns) {
+        if (qtype == GGML_TYPE_COUNT && std::regex_search(tensor_name, pattern)) {
+            return true;
+        }
+    }
+    return false;
+}
+
 static ggml_type llama_tensor_get_type(quantize_state_impl & qs, const llama_model_quantize_params * params, const ggml_tensor * tensor, ggml_type default_type, const tensor_metadata & tm) {
+    if (tensor_force_copies(qs, tensor)) {
+        return tensor->type;
+    }
     if (!tensor_allows_quantization(params, qs.model.arch, tensor)) {
         return tensor->type;
     }
@@ -1084,7 +1102,8 @@ static void llama_model_quantize_impl(const std::string & fname_inp, const std::
         }
         gguf_add_tensor(ctx_outs[i_split].get(), tensor);
 
-        metadata[i].allows_quantization = tensor_allows_quantization(params, model->arch, tensor);
+        metadata[i].allows_quantization = tensor_allows_quantization(params, model->arch, tensor) &&
+                                          !tensor_force_copies(qs, tensor);
 
         if (metadata[i].allows_quantization) {
             metadata[i].target_type = llama_tensor_get_type(qs, params, tensor, default_type, metadata[i]);
