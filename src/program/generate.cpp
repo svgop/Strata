@@ -15415,6 +15415,18 @@ int main(int argc, char** argv) {
                 if (chain_n > 0) { ++chain_windows; chain_drafts += chain_n; chain_ok += std::max(0, a - (T_mtp - 1)); }
                 if (!from_sfx && !first_window)
                     for (int d = 0; d < T_mtp - 1 && d < 8 && d <= a; ++d) { ++dp_tested[d]; dp_ok[d] += d < a; }
+                // T26-2/T27-2 STRATA_SPEC_TRACE=<path>: per-window keep-rule telemetry (offered T,
+                // accepted a, cumulative rescues for delta-detection, per-position dprob) - the
+                // offline draft_cum refit input; default off, no math touched. Solo-lane boot only
+                // (concurrent requests interleave lines).
+                static FILE* spec_trace_f = [] { const char* p = std::getenv("STRATA_SPEC_TRACE"); return (p && p[0]) ? std::fopen(p, "a") : nullptr; }();
+                if (spec_trace_f && !from_sfx && !first_window) {
+                    std::fprintf(spec_trace_f, "w T=%d a=%d resc=%lld d=", T, a, (long long) typical_rescues);
+                    for (int i = 0; i + 1 < T && i < 8; ++i)
+                        std::fprintf(spec_trace_f, "%s%.4f", i ? "," : "", (double) dprob[(size_t) i]);
+                    std::fputc('\n', spec_trace_f);
+                    if (((chain_windows + sfx_windows) & 63) == 0) std::fflush(spec_trace_f);
+                }
                 if (strata::core::MtpDrafter::top2_env() && !from_sfx && !first_window && a < T_mtp - 1 && a < 8) {
                     ++t2_rej[a];
                     if (mtp.top2(a) == outv[(size_t) a]) ++t2_hit[a];

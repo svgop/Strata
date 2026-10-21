@@ -8731,3 +8731,41 @@ p50/p95/p99 from the server's existing histograms, acceptance, sm clock/temp/pow
 drift) appended to campaign/results/metrics.jsonl. First measurement epoch of the improvement loop:
 baseline (3 standing boots) -> a-slate (decode-share A/B 3v3 + calibrate.py + prewarm2) -> adopt/reject
 against the baseline with the no-regression law.
+
+## F-257 — 2026-10-21 evening: THE IMPROVEMENT LOOP, EPOCH 1 — baseline banked, two falsifiers run, calibrate.py finally speaks
+BASELINE (3 standing boots, same evening window, t27-baseline.log): M1 188.3 / pair 186.4 / conc 297.8
+(mean; legs M1 198.5/178.9/187.5). These are WINDOW numbers - the banked five-boot absolutes
+(212.5/202.8/315.7) stand; tonight's batteries compare only within tonight. STABILITY CAPTURE per leg
+(metrics.jsonl): TTFT p50/p99 175ms/2155ms every leg, ITL p99 20ms, acceptance 74.1-76.0%, sm clock
+2955-2962MHz at 36-44C / 88-93W, window trend early->late 13-14 -> ~10ms stable. GOLDEN-HASH FINDING:
+the temp-0 deterministic response takes 3 distinct hashes across boots (a974/dbb/3b68) - the alarm's
+true semantics are BOOT-TO-BOOT OUTPUT VARIANCE (the known layout/batching nondeterminism class), not
+hard drift; keep it as a variance signal, one hash per boot.
+DECODE-SHARE 0.75 (a-slate, ABAB 3v3): arm M1 199.97 / pair 187.9 / conc 298.9 vs ctl 196.0/189.1/295.6
+= M1 +2.0%, conc +1.1%, pair -0.6% -> NOT ADOPTED (targeted lane +4% bar; M1's +2.0% is warm-trend -
+ctl r1 188.4 was the sequence's cold leg and the flat-gate path has no read pieces at single stream).
+CALIBRATE.PY (tools/calibrate.py, first-ever successful run - 389s standalone; my a-slate leg had
+booted the 8081 server beside its own engine = the collision the fence warns about): PCIe probe
+54.5 GB/s; pcie_frac median-of-3: 0->129.4, 0.35(ours)->129.4, 0.55->138.1 BEST, 0.75->133.9, 1->124.3;
+spec_min_p: 0.3->123.5, 0.5(ours)->137.9, 0.7->140.1; confirm grid 0.55/0.7->140.8; workers 15 (matches
+standing); expert-tier 1/80/0.97->138.7 vs default 121.5. NOTE: its lane is a synthetic single stream
+~130-140 tok/s - it prices DIRECTION on our box, not magnitude on our traffic.
+FRAC55 BATTERY (arm 0.55 vs ctl 0.35, ABAB 3v3, config-copies): arm M1 205.4 / pair 184.2 / conc 296.4
+vs ctl 198.3/185.1/298.4 = M1 +3.6%, pair -0.5%, conc -0.7% -> NOT ADOPTED (below the +4% bar; the ctl
+rounds drift down through the battery 208->196->190 so the M1 signal is drift-confused; the calibrator's
++6.7% did not transfer to real traffic). One honest note FOR the arm: its M1 was flat-stable ~205 every
+round while ctl swung - if a fresh-window confirm is ever run, that stability is the reason.
+PREWARM2: mechanically verified (complement pin confirmed, page cache re-warmed in 7s, replay 2 short +
+1 mid prefill + 6-way burst in 17s); its +3-5% five-boot-mean claim is judged at the NEXT re-bank's
+first legs, not on a single mid-sequence boot.
+HARNESS LESSONS (both repeats of banked law F-249): (1) launcher copies MUST live at the repo ROOT -
+the campaign/ copy broke .venv resolution and cost two aborted runs before the fix; (2) calibrate.py
+boots its own engine - NEVER run it beside a live server.
+INSTRUMENTS: STRATA_SPEC_TRACE per-window keep-rule telemetry patched into generate.cpp (env-gated,
+default-off, no math; needs a rebuild + solo boot to collect); cuBLASLt heuristic sweep built
+(campaign/cublaslt-sweep, CUDA-13 pointer-before-descriptor API) awaiting a free GPU.
+CORRECTION (T27-1's "one-flag arm"): our graph instantiates are the LEGACY 3-arg cudaGraphInstantiate
+(flags reserved = 0) at verify.cpp:2628/3588/3595 - arming UseNodePriority means cudaGraphInstantiateWithFlags
++ per-node priorities, else the flag is inert. Not a flag flip; a small design item.
+NEXT IN THE LOOP (running now): the adapt-tier arm 1/80/0.97 (calibrator's +14% synthetic claim), then
+spec-min-p 0.7, then the cuBLASLt sweep on a free GPU.
