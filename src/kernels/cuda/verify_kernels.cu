@@ -1319,6 +1319,53 @@ __global__ void wait_flag_ge_stats_kernel(const volatile uint32_t* flag, uint32_
         if (w > acc2[2]) acc2[2] = w;
     }
 }
+// r2: the same record behind wait_flag_ge_planned's guard - the flagA/flagB variant the standing recipe takes
+// (STRATA_VERIFY_DEVICE_PLAN=1): a group the device planned wholly (*skip == ring) or partially
+// (kPlanPartialSkip) has no host wait, so nothing is recorded for it.
+__global__ void wait_flag_ge_planned_stats_kernel(const volatile uint32_t* flag, uint32_t value,
+                                                  const volatile uint32_t* skip,
+                                                  unsigned long long* acc, unsigned long long* acc2,
+                                                  const volatile unsigned long long* prev_t1) {
+    const uint32_t s = *skip;
+    if (s == value || s == kPlanPartialSkip) return;
+    const unsigned long long t0 = strata_now_ns();
+    while (*flag < value) strata_spin_pause();
+    __threadfence_system();
+    const unsigned long long t1 = strata_now_ns();
+    const unsigned long long w = t1 > t0 ? t1 - t0 : 0ull;
+    acc[0] += 1;
+    acc[1] += w;
+    if (w > acc[2]) acc[2] = w;
+    if (prev_t1 != nullptr && t0 > *prev_t1) acc[3] += t0 - *prev_t1;
+    acc[4] = t1;
+    if (acc2 != nullptr) {
+        acc2[0] += 1;
+        acc2[1] += w;
+        if (w > acc2[2]) acc2[2] = w;
+    }
+}
+// r2: the same record behind wait_flag_ge_or's guard - the device-planned group's CPU-rows wait.
+__global__ void wait_flag_ge_or_stats_kernel(const volatile uint32_t* flag, uint32_t value,
+                                             const volatile uint32_t* skip,
+                                             unsigned long long* acc, unsigned long long* acc2,
+                                             const volatile unsigned long long* prev_t1) {
+    if (*skip == value) return;
+    const unsigned long long t0 = strata_now_ns();
+    while (*flag < value) strata_spin_pause();
+    __threadfence_system();
+    const unsigned long long t1 = strata_now_ns();
+    const unsigned long long w = t1 > t0 ? t1 - t0 : 0ull;
+    acc[0] += 1;
+    acc[1] += w;
+    if (w > acc[2]) acc[2] = w;
+    if (prev_t1 != nullptr && t0 > *prev_t1) acc[3] += t0 - *prev_t1;
+    acc[4] = t1;
+    if (acc2 != nullptr) {
+        acc2[0] += 1;
+        acc2[1] += w;
+        if (w > acc2[2]) acc2[2] = w;
+    }
+}
 }  // namespace
 
 void wait_handoff(const uint32_t* flag, uint32_t value, uint32_t* err, unsigned long long timeout_ns, void* stream) {
@@ -1631,11 +1678,36 @@ __global__ void wait_copy_i32_kernel(const volatile uint32_t* flag, uint32_t val
     __syncthreads();
     for (int i = threadIdx.x; i < n; i += blockDim.x) dst[i] = src[i];
 }
+// r2 STRATA_DM_WAIT_STATS: the fused wait keeps its stamp - thread 0 records the wait_flag_ge_stats record
+// (slot words, prev_t1's reach), then the block copies as wait_copy_i32_kernel does.
+__global__ void wait_copy_i32_stats_kernel(const volatile uint32_t* flag, uint32_t value, int32_t* __restrict__ dst,
+                                           const volatile int32_t* src, int n, unsigned long long* acc,
+                                           const volatile unsigned long long* prev_t1) {
+    if (threadIdx.x == 0) {
+        const unsigned long long t0 = strata_now_ns();
+        while (*flag < value) strata_spin_pause();
+        __threadfence_system();
+        const unsigned long long t1 = strata_now_ns();
+        const unsigned long long w = t1 > t0 ? t1 - t0 : 0ull;
+        acc[0] += 1;
+        acc[1] += w;
+        if (w > acc[2]) acc[2] = w;
+        if (prev_t1 != nullptr && t0 > *prev_t1) acc[3] += t0 - *prev_t1;
+        acc[4] = t1;
+    }
+    __syncthreads();
+    for (int i = threadIdx.x; i < n; i += blockDim.x) dst[i] = src[i];
+}
 }  // namespace
 void wait_copy_i32_from_mapped(const uint32_t* flag, uint32_t value, int32_t* dst, const int32_t* src, int64_t n,
                                void* stream) {
     wait_copy_i32_kernel<<<1, 128, 0, (cudaStream_t) stream>>>(flag, value, dst, src, (int) n);
     check("wait_copy_i32_from_mapped");
+}
+void wait_copy_i32_stats(const uint32_t* flag, uint32_t value, int32_t* dst, const int32_t* src, int64_t n,
+                         unsigned long long* acc, const unsigned long long* prev_t1, void* stream) {
+    wait_copy_i32_stats_kernel<<<1, 128, 0, (cudaStream_t) stream>>>(flag, value, dst, src, (int) n, acc, prev_t1);
+    check("wait_copy_i32_stats");
 }
 
 void wait_flag_ge(const uint32_t* flag, uint32_t value, void* stream) {
@@ -1653,6 +1725,18 @@ void wait_flag_ge_stats(const uint32_t* flag, uint32_t value, unsigned long long
                         const unsigned long long* prev_t1, void* stream) {
     wait_flag_ge_stats_kernel<<<1, 1, 0, (cudaStream_t) stream>>>(flag, value, acc, acc2, prev_t1);
     check("wait_flag_ge_stats");
+}
+
+void wait_flag_ge_planned_stats(const uint32_t* flag, uint32_t value, const uint32_t* skip, unsigned long long* acc,
+                                unsigned long long* acc2, const unsigned long long* prev_t1, void* stream) {
+    wait_flag_ge_planned_stats_kernel<<<1, 1, 0, (cudaStream_t) stream>>>(flag, value, skip, acc, acc2, prev_t1);
+    check("wait_flag_ge_planned_stats");
+}
+
+void wait_flag_ge_or_stats(const uint32_t* flag, uint32_t value, const uint32_t* skip, unsigned long long* acc,
+                           unsigned long long* acc2, const unsigned long long* prev_t1, void* stream) {
+    wait_flag_ge_or_stats_kernel<<<1, 1, 0, (cudaStream_t) stream>>>(flag, value, skip, acc, acc2, prev_t1);
+    check("wait_flag_ge_or_stats");
 }
 
 void embedding_gather_dev(const uint8_t* codes, const float* scales, const float* offsets, const int32_t* tokens,

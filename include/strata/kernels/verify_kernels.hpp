@@ -113,6 +113,20 @@ void wait_flag_ge_stamped(const uint32_t* flag, uint32_t value, unsigned long lo
 constexpr int kDmWaitStatsWords = 5;
 void wait_flag_ge_stats(const uint32_t* flag, uint32_t value, unsigned long long* acc, unsigned long long* acc2,
                         const unsigned long long* prev_t1, void* stream);
+/// The same record on the T1.1 device-plan waits: returns with nothing recorded when *skip is `value` or
+/// kPlanPartialSkip (a group the device planned wholly or in part has no host wait), exactly
+/// wait_flag_ge_planned's guard - otherwise the wait_flag_ge_stats body.  r2: this is the variant the standing
+/// recipe's flagA/flagB take (STRATA_VERIFY_DEVICE_PLAN=1).
+void wait_flag_ge_planned_stats(const uint32_t* flag, uint32_t value, const uint32_t* skip, unsigned long long* acc,
+                                unsigned long long* acc2, const unsigned long long* prev_t1, void* stream);
+/// The same record behind wait_flag_ge_or's guard (*skip == value returns, nothing recorded): the CPU rows'
+/// wait of a device-planned group.
+void wait_flag_ge_or_stats(const uint32_t* flag, uint32_t value, const uint32_t* skip, unsigned long long* acc,
+                           unsigned long long* acc2, const unsigned long long* prev_t1, void* stream);
+/// The same record folded into 143-amdk's fused wait-copy (wait_copy_i32_from_mapped): thread 0 stamps, waits
+/// and records, then the block copies `n` i32 as that kernel does - the flagA node of a STRATA_FUSE_WAIT line.
+void wait_copy_i32_stats(const uint32_t* flag, uint32_t value, int32_t* dst, const int32_t* src, int64_t n,
+                         unsigned long long* acc, const unsigned long long* prev_t1, void* stream);
 /// the GPU's %globaltimer (ns) into buf[i] (a one-thread kernel: the verify window's stage profiler).  Inside a PDL
 /// stretch (pdl.hpp) the stamp passes the early launch on, so a profiled window keeps the chain it measures.
 void gpu_stamp(unsigned long long* buf, int i, void* stream);

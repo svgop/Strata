@@ -2181,11 +2181,18 @@ bool Verifier::record_window(int T, cudaStream_t cs, std::string& err) {
         } else {
             if (device_plan_) {   // E-6: skipped when the device planned this group (all its experts resident, or
                 // T1.1 partially: kPlanPartialSkip skips the host plan and the PCIe staging the plan never reads)
-                wait_flag_ge_planned(m_flagA_, ring, skip_ + grp, cs);
+                if (g_dmws.live())   // STRATA_DM_WAIT_STATS r2: slot 0 on the standing recipe's own path
+                    wait_flag_ge_planned_stats(m_flagA_, ring, skip_ + grp, g_dmws.slot(0), nullptr, nullptr, cs);
+                else
+                    wait_flag_ge_planned(m_flagA_, ring, skip_ + grp, cs);
                 copy_i32_from_mapped_unless(pl, m_plan_ + (size_t) grp * (size_t) plan_i32_, plan_i32_, skip_ + grp, ring, cs);
             } else {
                 if (fuse_wait_on() && !prof_on_ && m_bal_ == nullptr) {   // 143-amdk: one launch for the wait and the copy
-                    wait_copy_i32_from_mapped(m_flagA_, ring, pl, m_plan_ + (size_t) grp * (size_t) plan_i32_, plan_i32_, cs);
+                    if (g_dmws.live())   // STRATA_DM_WAIT_STATS r2: slot 0, the fused wait keeps its stamp
+                        wait_copy_i32_stats(m_flagA_, ring, pl, m_plan_ + (size_t) grp * (size_t) plan_i32_, plan_i32_,
+                                            g_dmws.slot(0), nullptr, cs);
+                    else
+                        wait_copy_i32_from_mapped(m_flagA_, ring, pl, m_plan_ + (size_t) grp * (size_t) plan_i32_, plan_i32_, cs);
                 } else {
                 if (m_bal_ != nullptr)   // set_pcie_balance: the GPU's share starts as the plan arrives
                     wait_flag_ge_stamped(m_flagA_, ring, nullptr, m_bal_ + ((l - lb_) * 2 + grp) * 4, cs);
@@ -2199,11 +2206,12 @@ bool Verifier::record_window(int T, cudaStream_t cs, std::string& err) {
             stamp(l, 19, grp);
             grouped(p_ptr, p_start, p_counts, 0, hit_out);
             stamp(l, 20, grp);
-            if (device_plan_) wait_flag_ge_planned(m_flagB_, ring, skip_ + grp, cs);   // fork T1.1: partial-plan aware
+            if (g_dmws.live())   // STRATA_DM_WAIT_STATS r2: slot 1 on both paths (the planned kernel's skip guard
+                // is inert unless device_plan_ armed the group: skip_ then carries ring or kPlanPartialSkip)
+                wait_flag_ge_planned_stats(m_flagB_, ring, skip_ + grp, g_dmws.slot(1), nullptr, g_dmws.slot_end(0), cs);
+            else if (device_plan_) wait_flag_ge_planned(m_flagB_, ring, skip_ + grp, cs);   // fork T1.1: partial-plan aware
             else if (m_bal_ != nullptr)   // set_pcie_balance: the PCIe part starts
                 wait_flag_ge_stamped(m_flagB_, ring, m_bal_ + ((l - lb_) * 2 + grp) * 4 + 1, nullptr, cs);
-            else if (g_dmws.live())   // STRATA_DM_WAIT_STATS: slot 1, the PCIe staging publish
-                wait_flag_ge_stats(m_flagB_, ring, g_dmws.slot(1), nullptr, g_dmws.slot_end(0), cs);
             else wait_flag_ge(m_flagB_, ring, cs);                 // the PCIe share is in staging (DMA) or mapped
             if (sink_.pcie_mode == 2) {                            // stage it with a copy kernel, then point at staging
                 const int64_t per = G == 2 ? kStagingBlobs / 2 : kStagingBlobs;
@@ -2219,11 +2227,18 @@ bool Verifier::record_window(int T, cudaStream_t cs, std::string& err) {
             if (device_plan_) {   // no CPU share when the device planned the group: its rows are zeros; T1.1 partial:
                 // the misses' rows are the pool's, so flag_ is waited (wait_flag_ge_or skips only a full plan) and the
                 // copy zeroes the rows the plan lists while taking the pool's for the rest
-                wait_flag_ge_or(m_flag_, ring, skip_ + grp, cs);
+                if (g_dmws.live())   // STRATA_DM_WAIT_STATS r2: slot 2 + the layer's slot on the standing path
+                    wait_flag_ge_or_stats(m_flag_, ring, skip_ + grp, g_dmws.slot(2), g_dmws.layer_slot((int) (l - lb_)),
+                                          g_dmws.slot_end(1), cs);
+                else
+                    wait_flag_ge_or(m_flag_, ring, skip_ + grp, cs);
                 copy_rows_or_zero_from_mapped(parts_out, m_ymiss_ + (size_t) tb * K * N, (int64_t) n * K, N,
                                               p_dst, p_counts + 1, skip_ + grp, ring, cs);
             } else {
-                const bool fuse_rows = fuse_rows_on() && !prof_on_ && !remote_opt_ && dec_batch && m_bal_ == nullptr;   // 143-amdk
+                // (r2: the stats arm takes the unfused wait so its waitCPU slot is stamped; the fuse is a
+                // STRATA_FUSE_WAIT opt-in, never the standing line)
+                const bool fuse_rows = fuse_rows_on() && !prof_on_ && !remote_opt_ && dec_batch && m_bal_ == nullptr &&
+                                       !g_dmws.live();   // 143-amdk
                 if (!fuse_rows) {
                     if (m_bal_ != nullptr)   // set_pcie_balance: ... and ends as it waits for the CPU's rows
                         wait_flag_ge_stamped(m_flag_, ring, m_bal_ + ((l - lb_) * 2 + grp) * 4 + 2, nullptr, cs);
