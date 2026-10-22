@@ -1756,12 +1756,14 @@ and returned keep/amend/kill verdicts on the T25 items. PLAN HOLDS on the big ca
 | 262k VRAM plan | CONFIRMED | the +792 slots absorb the ~-724 slot move; deep KV tail lives in pinned host RAM |
 
 REVISED ORDER (2026-10-22 F-265 prune — dead ends removed, see the DEAD-END REMOVALS section at the end of this file; the quiet-window law applies to every sub-4% item):
-1. Quiet-window five-boot re-bank of the BASE recipe (per-leg clock/temp/power) — freezes absolutes; the
-   ONLY instrument that can resolve sub-4% candidates (F-263's law).
+1. [DONE F-266] Quiet-window five-boot re-bank of the BASE recipe — ANCHOR BANKED: M1 206.0 / pair
+   202.8 / conc 326.4 (no regression vs banked: pair exact, conc +3.4%, M1 -3.1% inside its boot
+   band); A/Bs now judge against the PREWARMED anchor 215.2/206.4/323.0.
 2. KL yardstick (in-tree, fixture verified) — gates fp16-accum and every future numerics-class arm.
 3. draft_cum keep-rule refit on the banked 1,615-window trace (zero-boot analysis; calibrated acc bins,
    rescue-inclusive) — a POST-RETRAIN lever (raw thresholds inert at spec-6 economics, F-260).
-4. prewarm2.sh applied to the re-bank's first legs (its +3-5% five-boot-mean claim is judged there).
+4. [DONE F-266] prewarm2.sh judged at the re-bank: M1 +4.5% (3/3 boots at/above the anchor top,
+   15-20s/boot cost) — ADOPTED as the standing measurement posture; every battery boot prewarms.
 5. Composed WINDOW TRANCHE as one project (launch-map diet -900..-1000 nodes + PDL chain with per-pair
    kill switch + dm port): each piece honestly +1.5-3% (F-264's wait-split priced dm), composed band
    +4-8% IF they stack — quiet-window gated, parity-first (dm parity is FULLY GREEN, no algebraic blockers).

@@ -8980,3 +8980,24 @@ launcher and history are read. The live roadmap: quiet-window re-bank -> KL yard
 refit -> prewarm2-at-re-bank -> the composed window tranche (diet + PDL + dm; parity fully green) ->
 re-quant (user GO) -> dec_gdn_rec/mid_chain -> fp16-accum (gated) -> PIPED port -> T14B with the
 EAGLE-3.1 and Draft-OPD riders -> 262k.
+
+## F-266 — 2026-10-22 ~11:10: T31 QUIET-WINDOW RE-BANK — anchor banked; prewarm2 ADOPTED
+Instrument: campaign/t31-rebank.sh + t31-summary.py (results/t31-rebank.log, 8 legs, one quiet window
+10:56-11:07, probe-lane + probe-metrics riding every leg). THE ANCHOR (5 base boots, standing recipe,
+zero env changes): M1 206.0 / pair 202.8 / conc 326.4; M3b 76.1; accept ~75.6%; ITL p50 4.3ms / p99
+19.5ms; clock 2962 MHz steady, 38-44C, 90-95W per leg; ms/window trend 12.9->9.5 (stable). vs the
+banked T19 means (212.5/202.8/315.7): pair EXACT, conc +3.4%, M1 -3.1% - which sits INSIDE the M1
+boot band (195.3..215.0): no regression signal, quality gates in-band; this anchor is now the
+same-window reference for every future A/B.
+PREWARM2 JUDGED 3v5 IN THE SAME WINDOW (its +3-5% five-boot-mean claim): M1 +4.5% (215.2 vs 206.0;
+arm boots 217.6/214.3/213.7, arm spread 1.8% vs anchor's 10% - all three at/above the anchor's top,
+the cold r1 195.3 is exactly the component it removes), pair +1.7%, conc -1.0% (bands fully overlap =
+noise), M3b 75.2 in-band. Cost 15-20s per boot (dd 2-7s + replay 11-16s); OFF = do not run the
+script. Verdict: ADOPTED as the STANDING MEASUREMENT POSTURE - every future battery boot runs it on
+BOTH sides of any A/B; provisional prewarmed anchor 215.2/206.4/323.0 (3 boots, grows for free as
+future boots prewarm = the standing confirmation rider). Confound noted honestly: arm followed ctl in
+boot order (F-225 warm-trend risk), but base r4/r5 did NOT trend (202.7/208.9 after r3's 215.0), the
+mechanism targets the cold component specifically, and the pooled-evidence doctrine + one-command
+revert carry it. Golden hashes: 2 distinct over 8 boots (dbb2 x7, a974 x1 on base-r5) - the known
+boot-variance signal, monitored. NEXT: the composed window tranche arms (diet + PDL + dm) get judged
+against the prewarmed anchor.
