@@ -481,6 +481,18 @@ DmWaitStats g_dmws;
 // the diagnostic counters live for the process; this frees them at exit (after g_dmws is constructed)
 const bool g_dmws_cleanup = [] { return std::atexit([] { if (g_dmws.d != nullptr) cudaFree(g_dmws.d); }) == 0; }();
 
+// T32 phase-1b (STRATA_DM=1, default off): the basalt dec_moe port's minimal mechanism - the group's CPU-rows
+// wait, the pool rows' read and the combine folded into ONE kernel (kernels' dm_wait_combine) on the
+// device-plan route the standing recipe takes (STRATA_VERIFY_DEVICE_PLAN=1).  Unset: the byte-identical
+// standing chain (wait_flag_ge_or -> copy_rows_or_zero_from_mapped -> native_moe_combine_multi_hits_added);
+// the gate is a capture-time constant, so the OFF arm's graph is exactly today's.  Not with the wait-stats
+// instrument (its slot-2 wait is one of the nodes the fold deletes) or a profiled window (the fold skips the
+// stamps it replaces).
+bool dm_fold_on() {
+    static const bool on = [] { const char* e = std::getenv("STRATA_DM"); return e != nullptr && e[0] == '1'; }();
+    return on;
+}
+
 bool mapped(size_t bytes, void** h, void** d) {
 #if defined(STRATA_USE_HIP)
     if (g_coherent) {
@@ -1121,6 +1133,11 @@ bool Verifier::init(const WeightTable& wt, const ModelGeometry& g, SessionState&
         if (!ok2) { cudaGetLastError(); all_resident_ = false; device_plan_ = false; }
     }
     if (g_dmws.on) g_dmws.arm((int) g.n_layers);   // T26-1: the MoE-tail wait counters (device words, see post())
+    if (dm_fold_on())
+        std::fprintf(stderr, "strata verify: STRATA_DM %s\n", device_plan_
+                             ? "armed (dm_wait_combine: the CPU-rows wait, the pool rows' read and the combine in "
+                               "one launch on the device-plan route)"
+                             : "requested but the device-plan route is off (STRATA_VERIFY_DEVICE_PLAN unset?); nothing changed");
     std::fprintf(stderr, "strata verify: window up to %d tokens, %.1f MiB of device buffers%s\n", max_t,
                  (double) count.used / 1048576.0,
                  all_resident_ ? " (100% VRAM resident: zero-doorbell graph)" : "");
@@ -2174,6 +2191,19 @@ bool Verifier::record_window(int T, cudaStream_t cs, std::string& err) {
             }
         };
         bool hits_in_combine = false;
+        // STRATA_DM (T32 phase-1b, dm_fold_on(), default off): the group's CPU-rows wait, the pool rows' read and
+        // the combine as ONE launch (dm_wait_combine) instead of the standing wait_flag_ge_or ->
+        // copy_rows_or_zero_from_mapped -> native_moe_combine_multi_hits_added chain - the donor dm_combine4's
+        // "every row read from where its tier left it" on our shapes, with the weights/shared/hit rows staged
+        // under the wait (two graph nodes fewer per group, no parts round trip).  Bitwise the chain it replaces
+        // (dm_plan_parity's fold section); OFF or any non-standing neighbor (profiled, balance-stamped,
+        // remote-optimized, LFUSE-gated, wait-stats instrument, a one-token group) keeps the standing chain.
+        const bool dm_fold = dm_fold_on() && device_plan_ && !prof_on_ && remote_opt_ == nullptr &&
+                             m_bal_ == nullptr && !g_dmws.live() && !sg_gated_[grp] && dec_batch && n > 1 && n <= 8 &&
+                             native_moe_combine_enabled() &&
+                             native_moe_combine_hits_supported(parts_ + (size_t) tb * K * N, shared_ + tb * N,
+                                                               bo_ + tb * N, N, K, n) &&
+                             (((uintptr_t) hit_out | (uintptr_t) (m_ymiss_ + (size_t) tb * K * N)) & 15u) == 0;
         if (ar_on()) {
             stamp(l, 19, grp);
             grouped(p_ptr, p_start, p_counts, 0, parts_out);
@@ -2227,13 +2257,18 @@ bool Verifier::record_window(int T, cudaStream_t cs, std::string& err) {
             if (device_plan_) {   // no CPU share when the device planned the group: its rows are zeros; T1.1 partial:
                 // the misses' rows are the pool's, so flag_ is waited (wait_flag_ge_or skips only a full plan) and the
                 // copy zeroes the rows the plan lists while taking the pool's for the rest
+                if (dm_fold) {
+                    // STRATA_DM: the wait and the copy are folded into the combine launch below the shared expert's
+                    // join (dm_wait_combine carries wait_flag_ge_or's guard itself)
+                } else
                 if (g_dmws.live())   // STRATA_DM_WAIT_STATS r2: slot 2 + the layer's slot on the standing path
                     wait_flag_ge_or_stats(m_flag_, ring, skip_ + grp, g_dmws.slot(2), g_dmws.layer_slot((int) (l - lb_)),
                                           g_dmws.slot_end(1), cs);
                 else
                     wait_flag_ge_or(m_flag_, ring, skip_ + grp, cs);
-                copy_rows_or_zero_from_mapped(parts_out, m_ymiss_ + (size_t) tb * K * N, (int64_t) n * K, N,
-                                              p_dst, p_counts + 1, skip_ + grp, ring, cs);
+                if (!dm_fold)
+                    copy_rows_or_zero_from_mapped(parts_out, m_ymiss_ + (size_t) tb * K * N, (int64_t) n * K, N,
+                                                  p_dst, p_counts + 1, skip_ + grp, ring, cs);
             } else {
                 // (r2: the stats arm takes the unfused wait so its waitCPU slot is stamped; the fuse is a
                 // STRATA_FUSE_WAIT opt-in, never the standing line)
@@ -2262,9 +2297,9 @@ bool Verifier::record_window(int T, cudaStream_t cs, std::string& err) {
             }
             // 143-amdk: the add of the GPU's hit rows is done by the combine that follows (one launch fewer)
             hits_in_combine = fuse_hits_on() && !prof_on_ && !remote_opt_ && !sg_gated_[grp] && dec_batch && n > 1 &&
-                              native_moe_combine_enabled() && n <= 8 &&
+                              native_moe_combine_enabled() &&
                               native_moe_combine_hits_supported(parts_ + (size_t) tb * K * N, shared_ + tb * N, bo_ + tb * N, N, K, n);
-            if (!hits_in_combine) moe_hit_add(parts_out, hit_out, p_dst, p_counts + 1, cap, N, cs);
+            if (!hits_in_combine && !dm_fold) moe_hit_add(parts_out, hit_out, p_dst, p_counts + 1, cap, N, cs);
         }
         // Same condition as `sh_fork` above, which is per group and out of scope here: wait only when the fork
         // actually ran (a wait on an event never recorded is a no-op, but saying it outright reads better).
@@ -2275,6 +2310,10 @@ bool Verifier::record_window(int T, cudaStream_t cs, std::string& err) {
             try {
                 native_moe_combine_multi_hits_gated(parts_out, w_ + tb * K, shared_ + tb * N, sh_g_ + tb, bo_ + tb * N, N, K, n, cs);
             } catch (const std::exception& e) { err = "verify combine: " + std::string(e.what()); return false; }
+        } else
+        if (dm_fold) {   // STRATA_DM (T32 phase-1b): the folded wait + combine, one launch; see dm_fold above
+            strata::kernels::dm_wait_combine(hit_out, m_ymiss_ + (size_t) tb * K * N, p_dst, p_counts + 1, w_ + tb * K,
+                                             shared_ + tb * N, bo_ + tb * N, N, K, n, m_flag_, ring, skip_ + grp, cs);
         } else
         if (hits_in_combine) {
             try {

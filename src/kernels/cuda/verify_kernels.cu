@@ -1622,6 +1622,75 @@ __global__ void copy_rows_or_zero_from_mapped_kernel(float4* __restrict__ dst, c
         for (int64_t i = threadIdx.x; i < row4; i += blockDim.x) d[i] = const_cast<const float4*>(sr)[i];
     }
 }
+
+// STRATA_DM (T32 phase-1b): the CPU-rows wait + the combine in one launch - the donor dm_combine4's mechanism on
+// our standing shapes.  The arithmetic statements are combine_k10_vec4_hits's own (first product rounded, one
+// fmaf per expert in order, shared added once; see native_moe.cu), so the output bits are the standing chain's.
+// The weights, the shared row and the hit rows are read before the poll (stream-final data); the pool's mapped
+// rows only after it, thread 0 spinning with wait_flag_ge_or_kernel's guard exactly (skip == ring: the fully
+// device-planned group, whose entries are all listed, reads no mapped row at all).
+__global__ void dm_wait_combine_kernel(const float4* __restrict__ hits4, const volatile float4* cpu4,
+                                       const int32_t* __restrict__ dst, const int32_t* __restrict__ count,
+                                       const float* __restrict__ weights, const float4* __restrict__ shared4,
+                                       float4* __restrict__ output4, int64_t n4, const volatile uint32_t* flag,
+                                       uint32_t value, const volatile uint32_t* skip) {
+    const int64_t tk = blockIdx.y;
+    __shared__ int hit_mask;
+    if (threadIdx.x == 0) hit_mask = 0;
+    __syncthreads();
+    const int nh = *count;
+    for (int h = threadIdx.x; h < nh; h += blockDim.x) {
+        const int r = dst[h];
+        if (r / 10 == (int) tk) atomicOr(&hit_mask, 1 << (r % 10));
+    }
+    __syncthreads();
+    const int mask = hit_mask;
+    hits4 += tk * 10 * n4;
+    cpu4 += tk * 10 * n4;
+    weights += tk * 10;
+    shared4 += tk * n4;
+    output4 += tk * n4;
+    const int64_t c4 = int64_t(blockIdx.x) * blockDim.x + threadIdx.x;
+    const bool live = c4 < n4;
+    float w[10];
+    float4 v[10];
+#pragma unroll
+    for (int j = 0; j < 10; ++j) {
+        w[j] = __ldg(weights + j);
+        if (live && (mask & (1 << j))) {   // a listed entry: the zeroed parts row plus the hit add
+            const float4 hh = hits4[int64_t(j) * n4 + c4];
+            v[j] = make_float4(0.0f + hh.x, 0.0f + hh.y, 0.0f + hh.z, 0.0f + hh.w);
+        }
+    }
+    const float4 sh = live ? shared4[c4] : make_float4(0.f, 0.f, 0.f, 0.f);
+    if (threadIdx.x == 0) {   // wait_flag_ge_or_kernel's guard and spin
+        if (*skip != value) {
+            while (*flag < value) strata_spin_pause();
+            __threadfence_system();
+        }
+    }
+    __syncthreads();
+    if (!live) return;
+#pragma unroll
+    for (int j = 0; j < 10; ++j)
+        if ((mask & (1 << j)) == 0) {   // the pool's row, read in place as copy_rows_or_zero's volatile read
+            const volatile float4* sr = cpu4 + int64_t(j) * n4 + c4;
+            v[j] = const_cast<const float4*>(sr)[0];
+        }
+    float4 sum = make_float4(v[0].x * w[0], v[0].y * w[0], v[0].z * w[0], v[0].w * w[0]);
+#pragma unroll
+    for (int j = 1; j < 10; ++j) {
+        sum.x = fmaf(v[j].x, w[j], sum.x);
+        sum.y = fmaf(v[j].y, w[j], sum.y);
+        sum.z = fmaf(v[j].z, w[j], sum.z);
+        sum.w = fmaf(v[j].w, w[j], sum.w);
+    }
+    sum.x += sh.x;
+    sum.y += sh.y;
+    sum.z += sh.z;
+    sum.w += sh.w;
+    output4[c4] = sum;
+}
 }  // namespace
 
 void resident_plan(const int32_t* ids, int n_entries, int k, const int32_t* res_layer, int n_expert,
@@ -1666,6 +1735,23 @@ void copy_rows_or_zero_from_mapped(float* dst, const float* src, int64_t rows, i
     copy_rows_or_zero_from_mapped_kernel<<<(unsigned) rows, 128, 0, (cudaStream_t) stream>>>(
         (float4*) dst, (const volatile float4*) src, width / 4, hit_rows, count, skip, value);
     check("copy_rows_or_zero_from_mapped");
+}
+
+void dm_wait_combine(const float* hits, const volatile float* cpu_rows, const int32_t* dst, const int32_t* count,
+                     const float* weights, const float* shared, float* output, int64_t n_embd, int64_t k, int n_tok,
+                     const uint32_t* flag, uint32_t value, const uint32_t* skip, void* stream) {
+    if (k != 10 || (n_embd & 3) != 0 || n_tok < 1 || n_tok > kVerifyMaxT ||
+        (((uintptr_t) hits | (uintptr_t) cpu_rows | (uintptr_t) weights | (uintptr_t) shared |
+          (uintptr_t) output) & 15u) != 0) {
+        std::fprintf(stderr, "dm_wait_combine: k must be 10, n_embd a multiple of 4, 1..%d tokens and every span "
+                             "16-byte aligned\n", kVerifyMaxT);
+        std::exit(1);
+    }
+    const int64_t n4 = n_embd >> 2;
+    dm_wait_combine_kernel<<<dim3(unsigned((n4 + 127) / 128), (unsigned) n_tok), 128, 0, (cudaStream_t) stream>>>(
+        (const float4*) hits, (const volatile float4*) cpu_rows, dst, count, weights, (const float4*) shared,
+        (float4*) output, n4, (const volatile uint32_t*) flag, value, (const volatile uint32_t*) skip);
+    check("dm_wait_combine");
 }
 
 namespace {

@@ -17,6 +17,11 @@
 //     add, including the -0 edge.  Also measured: the donor's source form UNcontracted (product rounded, then
 //     added) - what nvcc's default fmad=true must keep contracting to for the port to stay bit-identical.
 //   - the pack's seven (gate/up, down) pairs against a mirror of the donor's DM_PAIRS table.
+//   - THE FOLD (T32 phase-1b, STRATA_DM): the ported dm_wait_combine against the standing trio it replaces
+//     (wait_flag_ge_or + copy_rows_or_zero_from_mapped + native_moe_combine_multi_hits_added), kernel against
+//     kernel, bitwise over T = 1..8 x {mixed, none, all} hits x the skip/flag forms the engine produces (host
+//     plan raised, T1.1 partial raised, fully-planned ring with the flag never raised), plus the poll-blocks
+//     proof (a down flag parks the launch; the host's raise ends it bitwise-correct).
 // The documented divergences (asserted to be EXACTLY these, not failures): a repeat within a token goes to
 // the CPU pool in dm (kind -1) while our plan keeps it (our router never emits one - top-k indices are
 // distinct); an out-of-range id makes our kernel fall back to the host plan (skip = 0) while dm plans the
@@ -28,6 +33,7 @@
 #include <cuda_runtime.h>
 
 #include <algorithm>
+#include <atomic>
 #include <cmath>
 #include <cstdint>
 #include <cstdio>
@@ -36,6 +42,7 @@
 #include <memory>
 #include <random>
 #include <string>
+#include <thread>
 #include <vector>
 
 namespace {
@@ -546,6 +553,198 @@ bool combine_parity(cudaStream_t s) {
     return bad_a == 0 && bad_b == 0 && bad_c == 0 && zero_edge;
 }
 
+// ---------------------------------------------------------------- the fold: dm_wait_combine vs the standing chain
+// (STRATA_DM, T32 phase-1b) kernel against kernel on the GPU: the standing trio post() launches on the
+// device-plan route (wait_flag_ge_or + copy_rows_or_zero_from_mapped + native_moe_combine_multi_hits_added,
+// the FUSE_HITS line) against the ported dm_wait_combine, over the pack's window shapes (T = 1..8), the hit
+// regimes (mixed ~70%, no hits, all hits) and the skip/flag forms the engine produces:
+//   - skip = 0, the flag raised (a mixed group on the host plan; the fold's poll passes),
+//   - skip = kPlanPartialSkip, the flag raised (T1.1: the poll runs, only the misses are the pool's),
+//   - skip = ring, the flag NEVER raised (a fully device-planned group: no poll - resident_plan's rule, proven
+//     by the plan section above, sets skip = ring only when every entry is planned, so this form pairs with the
+//     all-hits regime only, which is the only pairing the engine can produce).
+// The flag is a MAPPED host word raised by host stores (exactly the engine's flag_), the skip a device word
+// (the engine's skip_).  The standing chain's parts start as garbage: copy_rows_or_zero writes every row, so
+// its output must not depend on them - the fold reads no parts at all.  The -0 edge and NaN propagation ride
+// the value streams of every case.
+int g_fold_cases = 0;
+long long g_fold_columns = 0;
+
+bool fold_case(int T, const char* name, int regime, uint32_t skip_word, bool raise_flag, std::mt19937& rng,
+               cudaStream_t s, uint32_t* d_flag_dev, uint32_t* h_flag, uint32_t* d_skip) {
+    ++g_fold_cases;
+    const int64_t n = (int64_t) T * K, N = N_EMBD;
+    constexpr uint32_t ring = 37u;
+    std::normal_distribution<float> nd(0.f, 1.f);
+    std::uniform_int_distribution<int> coin(0, 39);
+    std::uniform_real_distribution<double> u(0.0, 1.0);
+    std::vector<float> hits((size_t) n * N), cpu((size_t) n * N), w((size_t) T * K), sh((size_t) T * N);
+    for (auto& v : hits) v = coin(rng) == 0 ? -0.0f : nd(rng);
+    for (auto& v : cpu) v = coin(rng) == 0 ? -0.0f : (coin(rng) == 1 ? std::nanf("1") : nd(rng));
+    for (auto& v : w) v = nd(rng);
+    for (auto& v : sh) v = coin(rng) == 0 ? -0.0f : nd(rng);
+    std::vector<int32_t> dst;   // the plan's listed (VRAM/PCIe) entries: dst[i] = t*K + j, ascending
+    for (int t = 0; t < T; ++t)
+        for (int j = 0; j < K; ++j) {
+            const bool hit = regime == 2 ? true : (regime == 0 ? u(rng) < 0.7 : false);
+            if (hit) dst.push_back(t * K + j);
+        }
+    const int32_t nhit = (int32_t) dst.size();
+    std::vector<float> garbage((size_t) n * N);
+    for (auto& v : garbage) v = nd(rng);
+
+    float *d_hits = nullptr, *d_cpu = nullptr, *d_w = nullptr, *d_sh = nullptr, *d_parts = nullptr, *d_a = nullptr,
+          *d_b = nullptr;
+    int32_t* d_dst = nullptr;
+    bool ok = ck(cudaMalloc((void**) &d_hits, hits.size() * 4), "malloc") && ck(cudaMalloc((void**) &d_cpu, cpu.size() * 4), "malloc") &&
+              ck(cudaMalloc((void**) &d_w, w.size() * 4), "malloc") && ck(cudaMalloc((void**) &d_sh, sh.size() * 4), "malloc") &&
+              ck(cudaMalloc((void**) &d_parts, garbage.size() * 4), "malloc") &&
+              ck(cudaMalloc((void**) &d_a, sh.size() * 4), "malloc") && ck(cudaMalloc((void**) &d_b, sh.size() * 4), "malloc") &&
+              ck(cudaMalloc((void**) &d_dst, std::max<size_t>(dst.size(), 1) * 4), "malloc");
+    if (ok)
+        ok = ck(cudaMemcpy(d_hits, hits.data(), hits.size() * 4, cudaMemcpyHostToDevice), "H2D") &&
+             ck(cudaMemcpy(d_cpu, cpu.data(), cpu.size() * 4, cudaMemcpyHostToDevice), "H2D") &&
+             ck(cudaMemcpy(d_w, w.data(), w.size() * 4, cudaMemcpyHostToDevice), "H2D") &&
+             ck(cudaMemcpy(d_sh, sh.data(), sh.size() * 4, cudaMemcpyHostToDevice), "H2D") &&
+             ck(cudaMemcpy(d_parts, garbage.data(), garbage.size() * 4, cudaMemcpyHostToDevice), "H2D") &&
+             (dst.empty() || ck(cudaMemcpy(d_dst, dst.data(), dst.size() * 4, cudaMemcpyHostToDevice), "H2D"));
+    if (!ok) return false;
+    ck(cudaMemset(d_a, 0, sh.size() * 4), "zero");
+    ck(cudaMemset(d_b, 0, sh.size() * 4), "zero");
+    ck(cudaMemcpy(d_skip, &skip_word, 4, cudaMemcpyHostToDevice), "skip H2D");
+    std::atomic_thread_fence(std::memory_order_seq_cst);   // the flag word, as the engine raises it
+    *(volatile uint32_t*) h_flag = raise_flag ? ring : 0u;
+
+    // A: the standing chain, exactly the trio post() launches (FUSE_HITS standing, device-plan route)
+    strata::kernels::wait_flag_ge_or(d_flag_dev, ring, d_skip, s);
+    strata::kernels::copy_rows_or_zero_from_mapped(d_parts, d_cpu, n, N, d_dst, &nhit, d_skip, ring, s);
+    strata::kernels::native_moe_combine_multi_hits_added(d_parts, d_hits, d_dst, &nhit, d_w, d_sh, d_a, N, K, T, s);
+    // B: the ported fold (one launch)
+    strata::kernels::dm_wait_combine(d_hits, d_cpu, d_dst, &nhit, d_w, d_sh, d_b, N, K, T, d_flag_dev, ring, d_skip, s);
+    if (!ck(cudaStreamSynchronize(s), "fold run")) ok = false;
+    std::vector<float> ha((size_t) T * N), hb((size_t) T * N);
+    if (ok) {
+        ck(cudaMemcpy(ha.data(), d_a, ha.size() * 4, cudaMemcpyDeviceToHost), "D2H");
+        ck(cudaMemcpy(hb.data(), d_b, hb.size() * 4, cudaMemcpyDeviceToHost), "D2H");
+    }
+    long long bad = 0;
+    for (size_t i = 0; i < ha.size(); ++i) bad += std::memcmp(&ha[i], &hb[i], 4) != 0;
+    g_fold_columns += (long long) ha.size();
+    const char* skip_txt = skip_word == 0 ? "0(host)" : (skip_word == ring ? "ring(full)" : "partial");
+    std::printf("   fold T=%d %-10s hits=%d/%-2d skip=%-10s flag=%s: %s", T, name, nhit, (int) n, skip_txt,
+                raise_flag ? "raised" : "never", bad == 0 ? "bitwise" : "MISMATCH");
+    if (bad != 0) std::printf(" (%lld columns)", bad);
+    std::printf("\n");
+    ck(cudaFree(d_hits), "free"); ck(cudaFree(d_cpu), "free"); ck(cudaFree(d_w), "free"); ck(cudaFree(d_sh), "free");
+    ck(cudaFree(d_parts), "free"); ck(cudaFree(d_a), "free"); ck(cudaFree(d_b), "free"); ck(cudaFree(d_dst), "free");
+    return ok && bad == 0;
+}
+
+// the poll itself: with the flag down and skip = 0 the launch must still be running 100 ms in (the stream busy),
+// then finish bitwise-correct once the host raises the flag - the engine's stall-watchdog semantics ride this.
+bool fold_poll_blocks(cudaStream_t s, uint32_t* d_flag_dev, uint32_t* h_flag, uint32_t* d_skip) {
+    constexpr uint32_t ring = 37u;
+    const int T = 4;
+    const int64_t n = (int64_t) T * K, N = N_EMBD;
+    std::mt19937 rng(991u);
+    std::normal_distribution<float> nd(0.f, 1.f);
+    std::uniform_int_distribution<int> coin(0, 39);
+    std::vector<float> hits((size_t) n * N), cpu((size_t) n * N), w((size_t) T * K), sh((size_t) T * N);
+    for (auto& v : hits) v = nd(rng);
+    for (auto& v : cpu) v = coin(rng) == 0 ? -0.0f : nd(rng);
+    for (auto& v : w) v = nd(rng);
+    for (auto& v : sh) v = nd(rng);
+    std::vector<int32_t> dst;
+    for (int t = 0; t < T; ++t)
+        for (int j = 0; j < K; ++j)
+            if (((t * 7 + j * 3) & 3) != 0) dst.push_back(t * K + j);   // ~75% hits, irregular
+    const int32_t nhit = (int32_t) dst.size();
+    std::vector<float> garbage((size_t) n * N);
+    for (auto& v : garbage) v = nd(rng) + 5.55f;   // differs from every real row the launch must read
+    const uint32_t zero = 0;
+    float *d_hits = nullptr, *d_cpu = nullptr, *d_w = nullptr, *d_sh = nullptr, *d_parts = nullptr, *d_a = nullptr,
+          *d_b = nullptr;
+    int32_t* d_dst = nullptr;
+    bool ok = ck(cudaMalloc((void**) &d_hits, hits.size() * 4), "malloc") && ck(cudaMalloc((void**) &d_cpu, cpu.size() * 4), "malloc") &&
+              ck(cudaMalloc((void**) &d_w, w.size() * 4), "malloc") && ck(cudaMalloc((void**) &d_sh, sh.size() * 4), "malloc") &&
+              ck(cudaMalloc((void**) &d_parts, (size_t) n * N * 4), "malloc") &&
+              ck(cudaMalloc((void**) &d_a, sh.size() * 4), "malloc") && ck(cudaMalloc((void**) &d_b, sh.size() * 4), "malloc") &&
+              ck(cudaMalloc((void**) &d_dst, dst.size() * 4), "malloc");
+    if (!ok) return false;
+    ck(cudaMemcpy(d_hits, hits.data(), hits.size() * 4, cudaMemcpyHostToDevice), "H2D");
+    ck(cudaMemcpy(d_cpu, cpu.data(), cpu.size() * 4, cudaMemcpyHostToDevice), "H2D");
+    ck(cudaMemcpy(d_w, w.data(), w.size() * 4, cudaMemcpyHostToDevice), "H2D");
+    ck(cudaMemcpy(d_sh, sh.data(), sh.size() * 4, cudaMemcpyHostToDevice), "H2D");
+    ck(cudaMemcpy(d_dst, dst.data(), dst.size() * 4, cudaMemcpyHostToDevice), "H2D");
+    ck(cudaMemset(d_parts, 0, (size_t) n * N * 4), "zero");
+    ck(cudaMemcpy(d_skip, &zero, 4, cudaMemcpyHostToDevice), "skip H2D");
+    std::atomic_thread_fence(std::memory_order_seq_cst);
+    *(volatile uint32_t*) h_flag = ring;   // the reference runs with the flag up
+    strata::kernels::wait_flag_ge_or(d_flag_dev, ring, d_skip, s);
+    strata::kernels::copy_rows_or_zero_from_mapped(d_parts, d_cpu, n, N, d_dst, &nhit, d_skip, ring, s);
+    strata::kernels::native_moe_combine_multi_hits_added(d_parts, d_hits, d_dst, &nhit, d_w, d_sh, d_a, N, K, T, s);
+    if (!ck(cudaStreamSynchronize(s), "ref run")) return false;
+    // now the fold against a down flag with GARBAGE in the pool rows: it must park, take the rows the pool
+    // writes while it parks (the copy below is the pool's late landing), and only then finish - a read before
+    // the raise would mix garbage in and fail the compare.  This is the engine's exact protocol: the pool
+    // writes the rows, then raises the flag with a host store.
+    ck(cudaMemcpy(d_cpu, garbage.data(), garbage.size() * 4, cudaMemcpyHostToDevice), "garbage H2D");
+    if (!ck(cudaStreamSynchronize(s), "garbage")) return false;
+    cudaStream_t s2 = nullptr;   // the pool's late landing runs beside the parked launch, never through it
+    if (!ck(cudaStreamCreateWithFlags(&s2, cudaStreamNonBlocking), "stream2")) return false;
+    std::atomic_thread_fence(std::memory_order_seq_cst);
+    *(volatile uint32_t*) h_flag = 0u;
+    strata::kernels::dm_wait_combine(d_hits, d_cpu, d_dst, &nhit, d_w, d_sh, d_b, N, K, T, d_flag_dev, ring, d_skip, s);
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    const bool busy = cudaStreamQuery(s) == cudaErrorNotReady;
+    ck(cudaMemcpyAsync(d_cpu, cpu.data(), cpu.size() * 4, cudaMemcpyHostToDevice, s2), "pool lands the real rows");
+    if (!ck(cudaStreamSynchronize(s2), "rows land")) return false;   // the engine's write, completed before the raise
+    ck(cudaStreamDestroy(s2), "stream2 free");
+    std::atomic_thread_fence(std::memory_order_seq_cst);
+    *(volatile uint32_t*) h_flag = ring;   // the engine's raise: the host store the poll spins on
+    if (!ck(cudaStreamSynchronize(s), "fold run")) return false;
+    std::vector<float> ha((size_t) T * N), hb((size_t) T * N);
+    ck(cudaMemcpy(ha.data(), d_a, ha.size() * 4, cudaMemcpyDeviceToHost), "D2H");
+    ck(cudaMemcpy(hb.data(), d_b, hb.size() * 4, cudaMemcpyDeviceToHost), "D2H");
+    long long bad = 0;
+    for (size_t i = 0; i < ha.size(); ++i) bad += std::memcmp(&ha[i], &hb[i], 4) != 0;
+    ++g_fold_cases;
+    g_fold_columns += (long long) ha.size();
+    std::printf("   fold poll T=%d skip=0 garbage-rows-land-then-raise: %s, busy-at-100ms %s%s\n", T,
+                bad == 0 ? "bitwise" : "MISMATCH", busy ? "yes" : "NO (the launch did not wait!)",
+                busy ? "" : " FAIL");
+    ck(cudaFree(d_hits), "free"); ck(cudaFree(d_cpu), "free"); ck(cudaFree(d_w), "free"); ck(cudaFree(d_sh), "free");
+    ck(cudaFree(d_parts), "free"); ck(cudaFree(d_a), "free"); ck(cudaFree(d_b), "free"); ck(cudaFree(d_dst), "free");
+    return busy && bad == 0;
+}
+
+bool dm_fold_parity(cudaStream_t s) {
+    // the engine's flag_: one mapped host word, raised by host stores (h_flag) and read by the kernels at its
+    // device alias (d_flag_dev); the skip word is device memory, as the engine's skip_ is
+    uint32_t* h_flag = nullptr;
+    uint32_t* d_flag_dev = nullptr;
+    uint32_t* d_skip = nullptr;
+    if (!ck(cudaHostAlloc((void**) &h_flag, 64, cudaHostAllocMapped), "flag host alloc") ||
+        !ck(cudaHostGetDevicePointer((void**) &d_flag_dev, h_flag, 0), "flag alias") ||
+        !ck(cudaMalloc((void**) &d_skip, 4), "skip malloc"))
+        return false;
+    constexpr uint32_t ring = 37u;
+    bool ok = true;
+    std::mt19937 rng(4242u);
+    for (int T = 1; T <= 8; ++T) {
+        ok = fold_case(T, "mixed", 0, 0u, true, rng, s, d_flag_dev, h_flag, d_skip) && ok;          // host plan, flag up
+        ok = fold_case(T, "none", 1, 0u, true, rng, s, d_flag_dev, h_flag, d_skip) && ok;           // the empty plan
+        ok = fold_case(T, "all", 2, ring, false, rng, s, d_flag_dev, h_flag, d_skip) && ok;         // fully planned, no poll
+        if (T >= 2 && T <= 4)
+            ok = fold_case(T, "mixed", 0, strata::kernels::kPlanPartialSkip, true, rng, s, d_flag_dev, h_flag,
+                           d_skip) && ok;   // T1.1 partial: the poll runs, the misses are the pool's
+    }
+    ok = fold_poll_blocks(s, d_flag_dev, h_flag, d_skip) && ok;
+    ck(cudaFreeHost(h_flag), "flag free");
+    ck(cudaFree(d_skip), "skip free");
+    return ok;
+}
+
 bool pairs_covered() {
     int total = 0;
     bool ok = true;
@@ -596,7 +795,11 @@ int main() {
     std::printf("combine order: ours (combine_k10_vec4 family) vs dm_combine4's sums\n");
     ok = combine_parity(s) && ok;
 
-    std::printf("plan cases %d, plan fields compared >= %lld\n", g_cases, g_field_checks);
+    std::printf("dm fold: dm_wait_combine (STRATA_DM, T32 phase-1b) vs the standing wait+copy+combine trio, bitwise\n");
+    ok = dm_fold_parity(s) && ok;
+
+    std::printf("plan cases %d, plan fields compared >= %lld; fold cases %d, fold columns compared %lld\n", g_cases,
+                g_field_checks, g_fold_cases, g_fold_columns);
     std::printf("%s\n", ok ? "PASS" : "FAIL");
     ck(cudaFree(d_cache), "cache free");
     return ok ? 0 : 1;

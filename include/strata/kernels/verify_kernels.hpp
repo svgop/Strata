@@ -176,6 +176,25 @@ void copy_rows_or_zero_from_mapped(float* dst, const float* src, int64_t rows, i
                                    const int32_t* hit_rows, const int32_t* count, const uint32_t* skip,
                                    uint32_t value, void* stream);
 
+/// STRATA_DM (T32 phase-1b, the basalt dec_moe port's minimal mechanism, default off): the CPU-rows wait, the
+/// pool rows' read and the combine in ONE launch - the donor's dm_combine4 idea ("every row read from where its
+/// tier left it") on our standing shapes.  Per token of `n_tok`, the plan's (dst, count) tables build the hit
+/// mask exactly as combine_k10_vec4_hits does; a listed entry's row comes from `hits` as __fadd_rn(0.0f, row)
+/// (the zeroed parts row plus the hit add the old path made), every other entry's row straight from the mapped
+/// `cpu_rows` (volatile reads, as copy_rows_or_zero_from_mapped_kernel read them).  The weights, the shared row
+/// and the hit rows are read BEFORE the wait (stream-final data: useful resident work under the wait - what the
+/// donor stages before pdl_wait; the poll is in the kernel, so no PDL launch semantics are involved), the pool's
+/// rows after it.  The wait is wait_flag_ge_or's guard exactly: thread 0 returns at once when *skip == value
+/// (a fully device-planned group, whose every entry is listed - resident_plan's rule), else spins *flag >= value
+/// and fences system-wide.  The sums are combine_k10_vec4_hits's own statement shapes (first product rounded,
+/// one fmaf per expert j = 1..9 in order, shared added once), so the output bits are the standing chain's
+/// [wait_flag_ge_or + copy_rows_or_zero_from_mapped + native_moe_combine_multi_hits_added] bits - proven
+/// bitwise by dm_plan_parity's fold section over T = 1..8.  k must be 10, n_embd a multiple of 4, n_tok in
+/// [1, 8], and hits/cpu_rows/weights/shared/output 16-byte aligned.
+void dm_wait_combine(const float* hits, const volatile float* cpu_rows, const int32_t* dst, const int32_t* count,
+                     const float* weights, const float* shared, float* output, int64_t n_embd, int64_t k, int n_tok,
+                     const uint32_t* flag, uint32_t value, const uint32_t* skip, void* stream);
+
 /// Rows of the S2/S4/S8 embedding for T token ids read from DEVICE memory; out (T, n).  Bitwise `embedding_gather`.
 void embedding_gather_dev(const uint8_t* codes, const float* scales, const float* offsets, const int32_t* tokens,
                           int n_tok, int64_t n, int code_bits, int code_bias, int group_elems, uint64_t row_codes,
