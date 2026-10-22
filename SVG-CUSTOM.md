@@ -9113,3 +9113,38 @@ lazy allocation to max-9 + the re-quant's +3.9 GiB is the path that makes 9 fit.
 --conc-n (kept, committed); the b9 test config/launcher deleted (falsified, journal carries them).
 Tweet note (Axitek 3090 tips): both dead here - gpu-unlock is GA102/104-only (F-252, our sm_120 is
 whitepaper 2:1), P2P needs a second GPU.
+
+## F-271 — 2026-10-22 ~19:30: THE LEARNED PROFILE CAN POISON THE ADAPTIVE TIER (2.2x degradation
+found, root-caused, fixed) + clean re-tests of reserve-600/parallel-9 + the driver-unlock/P2P research
+USER-DIRECTED TESTS (reserve 600, parallel 9) initially read CATASTROPHE: standing-recipe M1 94.7.
+ROOT CAUSE (bisected through 4 boots): data/expert-profile-learned.bin - saved by the engine every 30
+rounds and accumulating across EVERY session - had crossed a threshold after today's 27 boots and
+poisoned the adaptive tier: 21,200 expert swaps per boot (vs 2,614 fresh), GPU-reach wait 6-10
+ms/window (vs 0.62), CPU-expert spill 4.2-4.7 ms/window, solo rerouted through wide batch windows.
+REMOVING THE FILE RESTORED EVERYTHING: M1 94.7 -> 201.8, GPU-reach wait 10.12 -> 0.62 ms/window,
+adapt swaps 21,200 -> 2,614 - same desktop session active (the desktop/chrome theory REFUTED), same
+binary, same config. The poisoned profile preserved as evidence:
+campaign/results/expert-profile-learned.poisoned-t33.bin. TWO COROLLARIES: (1) F-239's "learned
+profile moved MMLU -2.1pts" anomaly now has a mechanism candidate (accumulated profile state, not
+numerics) - treat that rejection as confounded, not understood; (2) HYGIENE LAW: batteries and any
+A/B must control the learned profile (back up + reset, or pin) - it is a hidden variable that
+accumulates across boots; the t31/t32 batteries were internally consistent (same accumulating state
+both sides) but the hazard is now named.
+CLEAN RE-TESTS (fresh profile per boot, desktop active): parallel 9 (reserve 2000/600 irrelevant -
+see below) = M1 182.4 vs clean standing 201.8 = -9.6% SOLO, pair -9.5%, conc 6 -8.1%, M3b in-band -
+STATIC 9-slot allocation costs solo ~10% (pool 9,064->8,155 slots + slot-lane routing). The user's
+requirement stands: a 9-lane needs DYNAMIC session allocation (VRAM and routing by active clients) -
+that is the follow-up engine feature, not a config. Reserve 600 = DEAD END, closed: with parallel 6
+the pool auto-sizing consumes the freed VRAM and the MTP DRAFT HEAD DOES NOT FIT (engine line: needs
+81 MiB, 138 free -> boot never healthy) - this is WHY the engine auto-raises low reserves by ~600
+(the observed 600->1200/2600 adjustments): the draft head + slack floor. The 2000 standing reserve is
+only ~800 over the engine's own floor; nothing to reclaim at config level.
+TWEET RESEARCH (campaign/research/T33-driver-unlock-p2p.md, 17 sources): Zagitta/gpu-unlock is REAL
+but Ampere-only (GA102/104; speed-selector SS0/SS1 registers pre-driver-bind via initramfs module;
+3090/3080Ti community-measured BF16 +59%) - NO Blackwell issue/PR exists, and it lifts the BF16/TF32
+INPUT-rate lock, NOT our fp32-accum 2:1 (F-252); lineage = cmpunlocker ecosystem, not "Fateev".
+aikitoria/open-gpu-kernel-modules = tinygrad P2P fork rebased to 615.71.09, genuinely Blackwell-
+capable BUT P2P needs >=2 GPUs - zero single-GPU benefit. Blackwell gates are fuse-enforced per the
+vgpu-unlock research (GSP blocked by fused-off VF PRIV). VERDICT: watch-only unchanged; triggers = a
+GB202 PLM/SS writable-mask demo, or a second GPU in this box. Standing config restored + verified
+healthy; box idle; fresh profile left in place.
