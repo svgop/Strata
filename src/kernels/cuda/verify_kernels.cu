@@ -1295,6 +1295,30 @@ __global__ void wait_flag_ge_stamped_kernel(const volatile uint32_t* flag, uint3
     __threadfence_system();
     if (t_out != nullptr) *t_out = strata_now_ns();
 }
+// STRATA_DM_WAIT_STATS: the same wait, its cost accumulated on the device (basalt's dm_wait stat split,
+// dec_moe.cuh:314-328/20-38, mapped onto our three MoE-tail waits).  One slot a wait: arrivals, total and max
+// ns waited, the ns the stream spent reaching the wait since the previous stats wait returned (prev_t1), and
+// the end stamp the next slot's reach reads.  acc2 (the CPU-rows wait's per-layer slot) takes the same record
+// without the reach.  One thread, plain adds; the counters accumulate over every replay of the captured graph.
+__global__ void wait_flag_ge_stats_kernel(const volatile uint32_t* flag, uint32_t value,
+                                          unsigned long long* acc, unsigned long long* acc2,
+                                          const volatile unsigned long long* prev_t1) {
+    const unsigned long long t0 = strata_now_ns();
+    while (*flag < value) strata_spin_pause();
+    __threadfence_system();
+    const unsigned long long t1 = strata_now_ns();
+    const unsigned long long w = t1 > t0 ? t1 - t0 : 0ull;
+    acc[0] += 1;
+    acc[1] += w;
+    if (w > acc[2]) acc[2] = w;
+    if (prev_t1 != nullptr && t0 > *prev_t1) acc[3] += t0 - *prev_t1;
+    acc[4] = t1;
+    if (acc2 != nullptr) {
+        acc2[0] += 1;
+        acc2[1] += w;
+        if (w > acc2[2]) acc2[2] = w;
+    }
+}
 }  // namespace
 
 void wait_handoff(const uint32_t* flag, uint32_t value, uint32_t* err, unsigned long long timeout_ns, void* stream) {
@@ -1623,6 +1647,12 @@ void wait_flag_ge_stamped(const uint32_t* flag, uint32_t value, unsigned long lo
                           void* stream) {
     wait_flag_ge_stamped_kernel<<<1, 1, 0, (cudaStream_t) stream>>>(flag, value, t_in, t_out);
     check("wait_flag_ge_stamped");
+}
+
+void wait_flag_ge_stats(const uint32_t* flag, uint32_t value, unsigned long long* acc, unsigned long long* acc2,
+                        const unsigned long long* prev_t1, void* stream) {
+    wait_flag_ge_stats_kernel<<<1, 1, 0, (cudaStream_t) stream>>>(flag, value, acc, acc2, prev_t1);
+    check("wait_flag_ge_stats");
 }
 
 void embedding_gather_dev(const uint8_t* codes, const float* scales, const float* offsets, const int32_t* tokens,

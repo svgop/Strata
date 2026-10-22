@@ -395,6 +395,92 @@ bool one_token_self_commit() {
 #endif
 }
 
+// T26-1/T27-1 (STRATA_DM_WAIT_STATS=1, default off): where the MoE tail's per-group wait time goes on the
+// host-plan path - basalt's dm_wait split (dec_moe.cuh:16-38) mapped onto our three nodes: slot 0 = flagA
+// (the pool's GPU plan round trip), slot 1 = flagB (the PCIe staging publish), slot 2 = flag_ (the CPU rows),
+// each a kDmWaitStatsWords device slot (arrivals / total ns / max ns / ns the stream spent REACHING the wait
+// since the previous stats wait returned / end stamp), then a per-layer slot for the CPU rows' wait.  The
+// captured graph's stats kernels add to the words on every replay; the D2H read and the line land every
+// kDmWaitReportWindows windows (the DRAFT_TIMING print style).  Unset env keeps the plain wait kernels: the
+// armed path changes no value the window computes.
+struct DmWaitStats {
+    static constexpr int kSlots = 3;
+    static constexpr int kReportEvery = 512;
+    bool on = false;
+    int dev = -1;
+    int64_t windows = 0;
+    int layers = 0;
+    unsigned long long* d = nullptr;   // [kSlots slots | per-layer slots] of kDmWaitStatsWords words
+
+    DmWaitStats() {
+        const char* e = std::getenv("STRATA_DM_WAIT_STATS");
+        on = e != nullptr && e[0] == '1';
+    }
+    bool live() const {   // armed, allocated, and this thread is on the allocating device (a stage's context)
+        int cur = -1;
+        return on && d != nullptr && cudaGetDevice(&cur) == cudaSuccess && cur == dev;
+    }
+    unsigned long long* slot(int i) const { return d + (size_t) i * strata::kernels::kDmWaitStatsWords; }
+    unsigned long long* slot_end(int i) const { return slot(i) + 4; }
+    unsigned long long* layer_slot(int l) const {
+        return d + (size_t) (kSlots + l) * strata::kernels::kDmWaitStatsWords;
+    }
+    void arm(int n_layers) {
+        if (!on || d != nullptr) return;
+        int cur = -1;
+        if (cudaGetDevice(&cur) != cudaSuccess) { on = false; return; }
+        const size_t words = (size_t) (kSlots + n_layers) * strata::kernels::kDmWaitStatsWords;
+        if (cudaMalloc((void**) &d, words * 8) != cudaSuccess || cudaMemset(d, 0, words * 8) != cudaSuccess) {
+            cudaGetLastError();
+            if (d != nullptr) cudaFree(d);
+            d = nullptr;
+            on = false;
+            std::fprintf(stderr, "strata verify: STRATA_DM_WAIT_STATS: the counter alloc failed, staying off\n");
+            return;
+        }
+        dev = cur;
+        layers = n_layers;
+        std::fprintf(stderr, "strata verify: STRATA_DM_WAIT_STATS armed (flagA/flagB/CPU-rows + reach, %d layers, "
+                             "a line every %d windows)\n", n_layers, kReportEvery);
+    }
+    void maybe_report(cudaStream_t cs) {
+        if (!on || d == nullptr) return;
+        ++windows;
+        if (windows % kReportEvery != 0) return;
+        std::vector<unsigned long long> h((size_t) (kSlots + layers) * strata::kernels::kDmWaitStatsWords, 0);
+        if (cudaMemcpy(h.data(), d, h.size() * 8, cudaMemcpyDeviceToHost) != cudaSuccess) {
+            cudaGetLastError();
+            return;
+        }
+        const auto& st = h;
+        char b[256];
+        const double groups = (double) std::max(st[0], 1ull);
+        std::snprintf(b, sizeof b,
+                      "strata verify dm-wait-stats over %lld windows (%.0f groups): waitA (host plan) %.2f us/group "
+                      "(max %.1f), waitB (PCIe) %.2f (max %.1f), waitCPU (rows) %.2f (max %.1f)\n",
+                      (long long) windows, (double) st[0], st[1] / groups / 1e3, st[2] / 1e3,
+                      st[6] / groups / 1e3, st[7] / 1e3, st[11] / groups / 1e3, st[12] / 1e3);
+        std::fprintf(stderr, "%s", b);
+        std::snprintf(b, sizeof b,
+                      "strata verify dm-wait-stats reach before the wait: waitB %.2f us, waitCPU %.2f us/group "
+                      "(the GPU's own queued work over that span)\n", st[8] / groups / 1e3, st[13] / groups / 1e3);
+        std::fprintf(stderr, "%s", b);
+        std::string out = "strata verify dm-wait-stats per-layer waitCPU us:";
+        for (int l = 0; l < layers; ++l) {
+            const unsigned long long* s = &st[(size_t) (kSlots + l) * strata::kernels::kDmWaitStatsWords];
+            if (s[0] == 0) continue;
+            std::snprintf(b, sizeof b, " L%d %.1f", l, s[1] / (double) s[0] / 1e3);
+            out += b;
+        }
+        std::fprintf(stderr, "%s\n", out.c_str());
+        cudaMemsetAsync(d, 0, h.size() * 8, cs);
+        cudaGetLastError();
+    }
+};
+DmWaitStats g_dmws;
+// the diagnostic counters live for the process; this frees them at exit (after g_dmws is constructed)
+const bool g_dmws_cleanup = [] { return std::atexit([] { if (g_dmws.d != nullptr) cudaFree(g_dmws.d); }) == 0; }();
+
 bool mapped(size_t bytes, void** h, void** d) {
 #if defined(STRATA_USE_HIP)
     if (g_coherent) {
@@ -1034,6 +1120,7 @@ bool Verifier::init(const WeightTable& wt, const ModelGeometry& g, SessionState&
         }
         if (!ok2) { cudaGetLastError(); all_resident_ = false; device_plan_ = false; }
     }
+    if (g_dmws.on) g_dmws.arm((int) g.n_layers);   // T26-1: the MoE-tail wait counters (device words, see post())
     std::fprintf(stderr, "strata verify: window up to %d tokens, %.1f MiB of device buffers%s\n", max_t,
                  (double) count.used / 1048576.0,
                  all_resident_ ? " (100% VRAM resident: zero-doorbell graph)" : "");
@@ -2102,6 +2189,8 @@ bool Verifier::record_window(int T, cudaStream_t cs, std::string& err) {
                 } else {
                 if (m_bal_ != nullptr)   // set_pcie_balance: the GPU's share starts as the plan arrives
                     wait_flag_ge_stamped(m_flagA_, ring, nullptr, m_bal_ + ((l - lb_) * 2 + grp) * 4, cs);
+                else if (g_dmws.live())   // STRATA_DM_WAIT_STATS: slot 0, the pool's GPU plan round trip
+                    wait_flag_ge_stats(m_flagA_, ring, g_dmws.slot(0), nullptr, nullptr, cs);
                 else
                     wait_flag_ge(m_flagA_, ring, cs);              // the pool published this group's GPU plan
                 copy_i32_from_mapped(pl, m_plan_ + (size_t) grp * (size_t) plan_i32_, plan_i32_, cs);
@@ -2113,6 +2202,8 @@ bool Verifier::record_window(int T, cudaStream_t cs, std::string& err) {
             if (device_plan_) wait_flag_ge_planned(m_flagB_, ring, skip_ + grp, cs);   // fork T1.1: partial-plan aware
             else if (m_bal_ != nullptr)   // set_pcie_balance: the PCIe part starts
                 wait_flag_ge_stamped(m_flagB_, ring, m_bal_ + ((l - lb_) * 2 + grp) * 4 + 1, nullptr, cs);
+            else if (g_dmws.live())   // STRATA_DM_WAIT_STATS: slot 1, the PCIe staging publish
+                wait_flag_ge_stats(m_flagB_, ring, g_dmws.slot(1), nullptr, g_dmws.slot_end(0), cs);
             else wait_flag_ge(m_flagB_, ring, cs);                 // the PCIe share is in staging (DMA) or mapped
             if (sink_.pcie_mode == 2) {                            // stage it with a copy kernel, then point at staging
                 const int64_t per = G == 2 ? kStagingBlobs / 2 : kStagingBlobs;
@@ -2136,6 +2227,9 @@ bool Verifier::record_window(int T, cudaStream_t cs, std::string& err) {
                 if (!fuse_rows) {
                     if (m_bal_ != nullptr)   // set_pcie_balance: ... and ends as it waits for the CPU's rows
                         wait_flag_ge_stamped(m_flag_, ring, m_bal_ + ((l - lb_) * 2 + grp) * 4 + 2, nullptr, cs);
+                    else if (g_dmws.live())   // STRATA_DM_WAIT_STATS: slot 2 and the layer's own slot, the CPU rows
+                        wait_flag_ge_stats(m_flag_, ring, g_dmws.slot(2), g_dmws.layer_slot((int) (l - lb_)),
+                                           g_dmws.slot_end(1), cs);
                     else
                         wait_flag_ge(m_flag_, ring, cs);           // the CPU's share is in the mapped rows
                 }
@@ -3013,6 +3107,7 @@ bool Verifier::run(int T, const int32_t* tokens, int64_t pos0, PoolMultiFn pool,
         }
         commit_pending_ = false;
         if (prof_on_ && G == 1) collect_profile();
+        if (g_dmws.on) g_dmws.maybe_report(cs_);   // the host-graph-launch path's own early return
         return true;
     }
     progress_at("verify window: waiting for the GPU to finish the window (flags A/B/M raised)", (int64_t) T);
@@ -3046,6 +3141,7 @@ bool Verifier::run(int T, const int32_t* tokens, int64_t pos0, PoolMultiFn pool,
     }
     if (h_bal_ != nullptr && !all_resident_ && !bal_paused_) pcie_balance_window(steps, G);
     if (prof_on_ && G == 1) collect_profile();   // the window's GPU stage stamps
+    if (g_dmws.on) g_dmws.maybe_report(cs_);   // STRATA_DM_WAIT_STATS: a summary line every kDmWaitStats windows
     // ---- a sampled or penalized request: the head's sampling again, host-side so its parameters are this call's
     // own (a captured kernel would replay the same draws forever).  Row t's draw is Philox(seed, pos0 + t): tied to
     // the POSITION it samples, not to how the text was cut into windows, so a seed replays the same text whatever

@@ -103,6 +103,16 @@ void wait_handoff(const uint32_t* flag, uint32_t value, uint32_t* err, unsigned 
 /// into *t_out (either may be null): the verify window's PCIe-share balance, at no extra launch.
 void wait_flag_ge_stamped(const uint32_t* flag, uint32_t value, unsigned long long* t_in, unsigned long long* t_out,
                           void* stream);
+/// STRATA_DM_WAIT_STATS=1 (T26-1/T27-1, the dm port's read-only boot): a wait_flag_ge that accumulates its own
+/// cost into device counter words the replayed graph keeps adding to - basalt's dm_wait split mapped onto our
+/// three MoE-tail waits.  Each 5-word slot: [0] arrivals, [1] total ns waited, [2] max ns waited, [3] total ns
+/// the stream spent reaching this wait since the previous stats wait returned (`prev_t1`, null: none), [4] this
+/// wait's end stamp (the next slot's reach reads it).  `acc2` (may be null) takes the same record (reach
+/// excepted) - the CPU-rows wait also fills its per-layer slot.  Same spin and fence as wait_flag_ge; one
+/// thread, plain adds.  Unset env keeps the plain kernel: nothing else changes.
+constexpr int kDmWaitStatsWords = 5;
+void wait_flag_ge_stats(const uint32_t* flag, uint32_t value, unsigned long long* acc, unsigned long long* acc2,
+                        const unsigned long long* prev_t1, void* stream);
 /// the GPU's %globaltimer (ns) into buf[i] (a one-thread kernel: the verify window's stage profiler).  Inside a PDL
 /// stretch (pdl.hpp) the stamp passes the early launch on, so a profiled window keeps the chain it measures.
 void gpu_stamp(unsigned long long* buf, int i, void* stream);

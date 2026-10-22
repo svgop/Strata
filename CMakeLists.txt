@@ -479,6 +479,14 @@ if(STRATA_ENABLE_CUDA OR STRATA_ENABLE_HIP)
     target_link_libraries(hc_q8_parity PRIVATE strata_kernels CUDA::cudart)
     add_test(NAME hc_q8_parity COMMAND hc_q8_parity)
     set_tests_properties(hc_q8_parity PROPERTIES SKIP_RETURN_CODE 77 TIMEOUT 300)
+    # T26-1/T27-1 (basalt dm port, the read-only boot before any dm surgery): OUR resident_plan against host
+    # transcriptions of the donor's dm_group and dm_glue mask grouping, and our combine's sums against
+    # dm_combine4's, on the pack's seven (gate/up, down) pairs and T = 1..8; GPU, synthetic, no model.
+    add_executable(dm_plan_parity src/kernels/dm_plan_parity.cpp)
+    target_include_directories(dm_plan_parity PRIVATE ${CMAKE_CUDA_TOOLKIT_INCLUDE_DIRECTORIES})
+    target_link_libraries(dm_plan_parity PRIVATE strata_kernels CUDA::cudart)
+    add_test(NAME dm_plan_parity COMMAND dm_plan_parity)
+    set_tests_properties(dm_plan_parity PROPERTIES SKIP_RETURN_CODE 77 TIMEOUT 300)
     add_executable(qsa_topk_active_parity src/kernels/qsa_topk_active_parity.cpp)
     target_include_directories(qsa_topk_active_parity PRIVATE ${CMAKE_CUDA_TOOLKIT_INCLUDE_DIRECTORIES})
     target_link_libraries(qsa_topk_active_parity PRIVATE strata_kernels CUDA::cudart)
