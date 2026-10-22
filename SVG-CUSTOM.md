@@ -9019,3 +9019,25 @@ gates-spec). /tmp prewarm2 + kl test fixtures removed. UNTOUCHED BY DESIGN: data
 learned.bin (engine's own output, stays dirty), campaign/t31-keeprefit.py (refit agent LIVE at press
 time), /home/svg/LLM/data/references (450MB, extracted value), the stock ~/LLM/strata harness, and
 the parallel session's workspace/default/nvme-data-recover staging.
+
+## F-268 — 2026-10-22 ~12:00: STRUCTURAL CLEANUP — campaign/ + root reorganized (user directive)
+98 dead files deleted (git history = the archive), 10 relocated, layout documented in
+campaign/README.md + an AGENTS.md layout section (future agents). LIVING INSTRUMENTS stay at campaign/
+top (paths referenced by batteries): probe-lane.py, probe-metrics.py, prewarm2.sh, mmlu-pro-gate.py,
+mimicbench2.py, bit-check.py, ctx-probe.py, depth-lane.py, depth-lane-real.py, mma-accum-ratelock.cu.
+campaign/batteries/ = the reusable harnesses: abab-run.sh, t20-gates.sh, t22-custom-vs-stock.sh,
+t31-rebank.sh + t31-summary.py (syntax re-verified post-move; their instrument references resolve
+unchanged). campaign/arms/ = parked future work: the 262k launcher+config pair (refresh owed at GO
+time - internal paths predate the move). research/ absorbed the loose specs (CPU-TIER-OVERLAP-SPEC,
+GOAL-LINUX-SUPERIORITY, ROADMAP-30-VS-STOCK, perf-chart-entry2). DELETED, all closed questions
+recoverable at their old paths in git history: 41 one-off arm configs (g2*/gdn*/frac*/t17-*/stair*/
+cohorts/fusehits/pooldiet/...), 38 run-once harnesses (knob-*, rebank2/3/-3135 superseded by
+t31-rebank, t17-leg, t18/t19/t20/t21/t24/t26..t30 one-offs, battery-boot/config/nospec/tqllm,
+prefill-probe*, v02-bench, prewarm v1, f197-analyze, t15c-battery/score, cublaslt-sweep.cu), the
+root launcher strays (calib-adapt/minp, 1m pair, c3/conc/t24s1/t24s2, olds7 + spec8 pairs),
+t17-lp-profile.bin (dead learned-profile lever), 19 ignored server-*.out boot strays + __pycache__.
+KEPT AT ROOT BY LAW: launch-custom-iq3s-8081.sh + custom-iq3_s-8081.json + refusal-r.gguf
+(config-referenced asset, F-212) - the launcher resolves .venv and config relative to itself (LAUNCH
+LAW + F-249). Root is now: upstream's own files + the standing boot pair + SVG-CUSTOM.md/TODO.md/
+AGENTS.md + the live log. Policy going forward: run-once harnesses die with their question; battery
+.outs commit with their battery; live log rotates gz at cleanup passes.

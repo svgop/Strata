@@ -227,9 +227,22 @@ follow it whether a person or an agent writes the text. The short version:
   testing, and say what you did not test.
 - Open test requests and the hardware that is wanted are listed in [docs/TEST_REQUESTS.md](docs/TEST_REQUESTS.md).
 
+## Repo layout for campaign artifacts (svg's fork — F-268 restructure)
+
+`campaign/README.md` is the authoritative map. Short version: living instruments (probe-lane,
+probe-metrics, prewarm2, gates, ctx/depth probes) sit at `campaign/` top level — batteries reference
+those paths, do not move them. Reusable harnesses live in `campaign/batteries/` (abab-run, t20-gates,
+t22-custom-vs-stock, t31-rebank + summary). Parked future work in `campaign/arms/` (the 262k pair,
+refresh owed at GO). Dossiers/specs in `campaign/research/`, evidence in `campaign/results/`,
+execution specs in `campaign/T14B-specs/`. The standing boot pair (`launch-custom-iq3s-8081.sh`,
+`custom-iq3_s-8081.json`, `refusal-r.gguf`) stays at REPO ROOT — the launcher resolves `.venv` and
+the config relative to itself (LAUNCH LAW + F-249). Run-once harnesses for closed questions are
+DELETED when the question closes; git history is the archive. Historical journal references to
+pre-F-268 paths (e.g. `campaign/t27-baseline.sh`) resolve in git history, not the working tree.
+
 ## The performance campaign law (svg's fork — ENFORCED on every optimization; supersedes nothing above, adds to it)
 
-This repo is the Linux superiority campaign lane. Read `campaign/GOAL-LINUX-SUPERIORITY.md` (the
+This repo is the Linux superiority campaign lane. Read `campaign/research/GOAL-LINUX-SUPERIORITY.md` (the
 queue and bar table) and the last F-entries in `SVG-CUSTOM.md` before proposing changes. The
 following are binding for ANY performance-affecting change — env arm, config, engine code, kernel
 port, merge:
