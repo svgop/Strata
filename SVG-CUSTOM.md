@@ -8845,3 +8845,25 @@ re-bank of the new recipe (with per-leg clock/temp/power) is the owed next measu
 absolutes remain the banked 212.5/202.8/315.7 until then.
 BOX: idle, ports clear. Standing recipe now: FIVE adopted arms + norm_fast + frac 0.55 + share 1.0,
 revert lines: --pcie-frac 0.35 / unset STRATA_BATCH_DECODE_SHARE.
+
+## F-261 — 2026-10-22 early: THE TRACE PAYS — DEPTH 7 ADOPTED (+8.5% M1, 3/3 rounds); the dm parity instrument lands
+THE CHAIN: F-260's spec trace said 53% of windows accept EVERYTHING offered and 12% (196/1615) hit the
+T=6 cap with mean dprob 0.944 - the drafter was being stopped mid-stride on its hottest chains. Per-
+position acceptance: pos0 91.7% > pos1 82.9% > pos2 71.8% > pos3 60.1% > pos4 53.4% - the marginal row
+on a confident continuation (~0.8 accept) sits above the ~0.6 break-even the minp-0.7 neutral priced.
+THE BATTERY (t29-spec7.log, ABAB 3v3, config-copy): arm M1 186.9/209.9/198.8 (mean 198.5) vs ctl
+186.0/175.0/187.6 (mean 182.9) = +8.5% M1, 3/3 rounds positive (+0.5/+20.0/+6.0); pair +0.6%; conc
++1.8%. The arm's acceptance reads lower (72.4-74.0 vs 73.5-75.5) = the numerator effect, while tok/s
+rose - the real signal. Depth is window-shape only under exact-match verify -> NO quality gate owed.
+ADOPTED: standing config --spec 7 (revert: set 6). --spec 8 battery running against the new line (the
+engine's captured set goes to 8; if 8 wins it supersedes).
+ALSO LANDED (implementer, commit ae3cebee): the dm parity instrument - dm_plan_parity harness
+(registered after hc_q8_parity; covers all 7 of our pack's pairs, T=1..8, all-resident/mixed-partial/
+shared-expert/G=2 regimes; our resident_plan vs donor dm_group+dm_glue transcriptions, combine family
+vs dm_combine4's sums incl. the +0.0f/-0 edge) + STRATA_DM_WAIT_STATS (waitA/waitB/waitCPU device-
+accumulated, per-512-window stderr line). BOTH default-off. TWO REAL CORRECTIONS to T26-1: (1) the
+'algebraically identical' claim is exact only on distinct-in-token ids - the donor mask form holds one
+bit per token and cannot represent a repeat at all; (2) dm_combine4 as written is a different sum than
+ours (fma chain) - the port must compile with fmad on; the harness measures the diff. Plan transcriptions
+CPU-validated on 35,055 random cases (0 fails); the GPU parity run + the DM_WAIT_STATS boot are the next
+box steps (batteries own the box until they clear).

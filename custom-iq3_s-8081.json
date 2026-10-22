@@ -10,7 +10,7 @@
     "--expert-cache",
     "auto",
     "--spec",
-    "6",
+    "7",
     "--max-context",
     "131072",
     "--kv",
