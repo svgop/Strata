@@ -8943,3 +8943,26 @@ combine SAME sum under fmad - the round-1 'divergence' was a harness bug, fixed 
 DM_WAIT_STATS fused-path arming (round-2); six priced falsifications (Lt arm, spec 8, frac 0.55,
 share 1.0, spec 7 as gain, adapt-tier) and the calibrator-direction law. The recipe is untouched and
 proven; the instruments are sharper than when the night started.
+
+## F-264 — 2026-10-22 ~03:15: THE WAIT-SPLIT PRICES THE MoE-TAIL PORT — and the base is confirmed unregressed
+THE INSTRUMENT BOOT (rebuilt engine b298f7e8 deployed; rollback engine/strata.t28-instr; base recipe,
+STRATA_DM_WAIT_STATS=1, full probe): M1 200.2 / pair 199.1 / conc 303.4 - the RESTORED BASE at its
+historical band (the no-regression proof: tonight's base legs ran 197-207 M1 / 281-304 conc all night).
+THE SPLIT (1,536 windows, 9,942 groups): waitA (host plan) 7.09 us/group (max 8,253) | waitB (PCIe)
+12.44 (max 2,100) | waitCPU (rows) 53.93 (max 8,286); reach-before-wait: waitB 51.28 us, waitCPU 4.54.
+Per window ~6.5 groups -> ~477 us of wait, 74% of it waitCPU (the host pool's miss-expert compute).
+THE HONEST PRICE OF THE dm PORT: basalt's in-kernel tier wait + folded combine hides the waitCPU span
+under useful resident work; ceiling ~3.5% of the window, realistic +1.5-3% M1 - NOT the +5-10% band
+T25-1/T26-1 carried. The port remains the largest single kernel item but should ship as PART of a
+composed window tranche (diet + PDL + dm), never alone.
+DM PARITY IS NOW FULLY GREEN (round-2 harness, PASS, 51 cases, 11,636 fields): plan algebra bitwise
+across T=1..8 AND the combine bit-compatible in EVERY form incl. multi-row (keep fmad on) - round-1's
+"multi divergence" was a harness emulation bug (contiguous vs strided), fixed in b298f7e8. THE dm PORT
+HAS NO KNOWN ALGEBRAIC BLOCKERS LEFT.
+NIGHT LEDGER (the full session): 9 falsifications (Lt arm, spec 8, frac 0.55, share 1.0, spec 7-as-
+gain, adapt-tier, decode-share-as-gain, + the round-1 harness bug), 0 surviving adoptions, 0
+regressions in the standing recipe - WHICH IS UNTOUCHED AND SERVING AT ITS BANKED BAND. The permanent
+bank: stability harness riding every leg, spec-trace dataset, dm parity + wait-stats instruments, the
+quiet-window law with teeth, and the honest prices (dm +1.5-3%; config knobs exhausted).
+NEXT THAT CAN PAY (all need quiet-window five-boot means): the composed window tranche (diet + PDL +
+dm at +1.5-3 each if they compose), re-quant (user GO), T14B retrain. Nothing else on the config level.
