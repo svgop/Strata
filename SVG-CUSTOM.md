@@ -8915,3 +8915,31 @@ DISCRIMINATING BATTERY RUNNING (t30-discriminate.sh, 3 arms x 3 rounds, same win
 BEFORE the data: whichever arm wins M1 without losing pair/conc beyond noise becomes the standing
 recipe; if OLDS7 >= NEW, the frac+share interaction is confirmed and both revert pending per-arm
 re-tests on the spec-7 base. No adoption survives without a same-window win.
+
+## F-263 FINAL — 2026-10-22 ~03:00: THE DISCRIMINATOR'S VERDICT — all three recipes indistinguishable; REVERTED to the proven base; the single-window adoption law is broken and now fixed
+THE 3-ARM DISCRIMINATOR (t30-discriminate.log, 3 rounds x 3 arms interleaved, same window):
+  OLD   (frac .35 + share .5  + spec 6): M1 197.1 / pair 186.6 / conc 287.0
+  OLDS7 (frac .35 + share .5  + spec 7): M1 194.6 / pair 182.9 / conc 281.0
+  NEW   (frac .55 + share 1.0 + spec 7): M1 193.9 / pair 185.5 / conc 287.8
+M1 spread 1.7% with +-8% per-leg swings = STATISTICALLY INDISTINGUISHABLE. With the proof battery's
+old +2.4%, the honest verdict: the three T28/T29 "adoptions" (frac 0.55, share 1.0, spec 7) have NO
+reproducible composed gain - every individual single-battery win sat inside the window noise band
+(the same OLD recipe read M1 182.9 and 198.5 in different windows tonight). The +8.5% spec-7 reading
+was a ctl-dip artifact. THE PRE-SET DECISION RULE FIRED: no arm won -> revert.
+REVERTED: standing config frac 0.35 + spec 6; launcher share export -> shelf comment. The arms stay
+as labeled shelf launchers (launch-spec8.sh, launch-olds7.sh, launch-calib-*.sh) for a QUIET-WINDOW
+re-test. The banked scoreboard (M1 212.5 / pair 202.8 / conc 315.7, five-boot means) belongs to the
+base recipe and STANDS. The deployed binary (spec-trace + Lt + dm instruments, all default-off) is
+proven harmless - the discriminator's OLD legs ran on it at historical values.
+THE LAW THIS NIGHT RE-LEARNED (a F-246 restatement with teeth): a single-window 3v3 canNOT resolve
+1-3% effects on this box - only quiet-window five-boot means can. Adoption bar for sub-4% candidates
+is hereby: five-boot means in a quiet window, or it does not ship. The 4%+ single-battery bar that
+served the kernel arms well was doing quiet-window work implicitly; relaxing it (F-259) without
+raising the sample count was the error - the relaxation is AMENDED, not repealed: pooled evidence
+across WINDOWS, not across legs of one window.
+WHAT THE NIGHT ACTUALLY BANKED (real, permanent): the stability harness riding every leg; the spec
+trace + its 1,615-window dataset; the dm parity instrument + its GPU run (plan algebra bitwise-green;
+combine SAME sum under fmad - the round-1 'divergence' was a harness bug, fixed in b298f7e8); the
+DM_WAIT_STATS fused-path arming (round-2); six priced falsifications (Lt arm, spec 8, frac 0.55,
+share 1.0, spec 7 as gain, adapt-tier) and the calibrator-direction law. The recipe is untouched and
+proven; the instruments are sharper than when the night started.
