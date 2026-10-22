@@ -2351,11 +2351,61 @@ static void prime_hw_queues() {
 }
 #endif
 
+// savage-custom F-269: the calibrated draft_cum keep rule (T31 refit, +4.9% modeled). Shared by the
+// pipeline lane's t_rule and the serial lane's offer gate. CUT-ONLY: a window may shrink, never
+// grow. acc(d, pos) is the shrunk (position x d-bin) acceptance table fitted on the banked
+// 1,615-window trace; the joint product c_j = prod acc(d_i, i) must stay >= th or the rest of the
+// window is withheld. Offers-only: verification stays exact-match, zero quality surface.
+// STRATA_SPEC_KEEP=<th> arms it (unset/0 = off); STRATA_SPEC_KEEP_STATS=1 logs every 1024 cuts.
+struct SpecKeep {
+    float th;
+    bool stats;
+    long long cuts = 0, rows = 0;
+    static const float L[6];
+    static const float A[5][6];
+    SpecKeep() : th(init_th()), stats(std::getenv("STRATA_SPEC_KEEP_STATS") != nullptr) {}
+    static float init_th() {
+        const char* p = std::getenv("STRATA_SPEC_KEEP");
+        return (p && p[0]) ? (float) std::atof(p) : 0.0f;
+    }
+    // largest token-count K (1..T) whose every prefix product stays >= th; T itself when armed off
+    int apply(const float* d_at, int T) {
+        if (th <= 0.0f) return T;
+        float c = 1.0f;
+        int K = 1;
+        for (int i = 0; i + 1 < T; ++i) {
+            const float d = d_at[i];
+            int b = 0;
+            while (b < 5 && d >= L[b + 1]) ++b;   // d < 0.50 clamps into bin 0
+            c *= A[i < 5 ? i : 4][b];
+            if (c < th) break;
+            K = i + 2;
+        }
+        if (K < T) {
+            if (cuts == 0)
+                std::fprintf(stderr, "strata spec-keep: armed th=%.3f (calibrated 5x6 table)\n", (double) th);
+            rows += T - K;
+            cuts++;
+            if (stats && (cuts & 1023) == 0)
+                std::fprintf(stderr, "strata spec-keep: %lld windows cut, %lld draft rows withheld\n", cuts, rows);
+        }
+        return K;
+    }
+};
+const float SpecKeep::L[6] = {0.50f, 0.70f, 0.80f, 0.90f, 0.95f, 0.99f};
+const float SpecKeep::A[5][6] = {
+    {0.6101f, 0.6392f, 0.7672f, 0.7330f, 0.8816f, 0.9833f},
+    {0.4305f, 0.6387f, 0.7394f, 0.6456f, 0.8925f, 0.9568f},
+    {0.5118f, 0.6085f, 0.7962f, 0.6929f, 0.7610f, 0.9711f},
+    {0.5150f, 0.5700f, 0.5916f, 0.5732f, 0.7839f, 0.8985f},
+    {0.5464f, 0.6127f, 0.6898f, 0.7212f, 0.7950f, 0.9812f}};
+
 int main(int argc, char** argv) {
     // **UNBUFFERED, BECAUSE THE INTERESTING OUTPUT IS THE OUTPUT BEFORE A CRASH.**  `stdout` redirected to a
     // pipe or a file is block-buffered, so a program that dies loses every line it had already printed - which
     // turns "it crashed at step 7" into "it crashed somewhere", and the difference is a debugging session.
     std::setvbuf(stdout, nullptr, _IONBF, 0);
+    static SpecKeep sk;   // savage-custom F-269: shared by the pipeline t_rule and the serial offer gate
     // `strata --version` / `-V` (also `strata generate --version`): the version and nothing else, before any GPU is touched
     for (int i = 1; i < argc && i < 3; ++i) {
         if (std::strcmp(argv[i], "--version") == 0 || std::strcmp(argv[i], "-V") == 0) {
@@ -14638,7 +14688,8 @@ int main(int argc, char** argv) {
                         T = 1;
                         while (T < S_mtp && from + T - 1 < avail && pr[from + T - 1] >= (float) req_spec_min_p) ++T;
                     }
-                    return std::max(1, std::min(T, 1 + avail - from));
+                    T = std::max(1, std::min(T, 1 + avail - from));
+                    return sk.apply(pr + from, T);   // savage-custom F-269 keep rule, cut-only
                 };
                 // B from the chain's outputs: its row 0 is the guess at index `base`, its drafts follow
                 auto make_b = [&](const int32_t* oc, const float* op, int base, int avail, float pa) {
@@ -15163,6 +15214,7 @@ int main(int argc, char** argv) {
                     T = 1;
                     while (T < S_mtp && dprob[(size_t) T - 1] >= (float) req_spec_min_p) ++T;
                 }
+                T = sk.apply(dprob.data(), T);   // savage-custom F-269 keep rule, cut-only (serial-lane twin)
                 if (first_window) T = merge_T > 0 ? merge_T : 1;
                 const bool merged = first_window && merge_T > 0;   // the prompt's last tokens and the first token
                 // a repeat of earlier context (prompt lookup) where the MTP's own first guess agrees: the policy takes it
