@@ -1767,10 +1767,12 @@ REVISED ORDER (2026-10-22 F-265 prune — dead ends removed, see the DEAD-END RE
    (retire after successful T14B; never double-count with the retrain).
 4. [DONE F-266] prewarm2.sh judged at the re-bank: M1 +4.5% (3/3 boots at/above the anchor top,
    15-20s/boot cost) — ADOPTED as the standing measurement posture; every battery boot prewarms.
-5. Composed WINDOW TRANCHE as one project (launch-map diet -900..-1000 nodes + PDL chain with per-pair
-   kill switch + dm port + the F-269 keep-rule arm): each piece honestly +1.5-3% (F-264's wait-split
-   priced dm), composed band +4-8% IF they stack — quiet-window gated, parity-first (dm parity is
-   FULLY GREEN, no algebraic blockers).
+5. [PHASE-1 JUDGED F-270] Composed WINDOW TRANCHE — keep rule FALSIFIED for solo economics (M1 −4.4%;
+    fixed-shape graphs make withheld rows free options; M3b 76.9→86.6 = works as designed; arm stays
+    default-off, retires to the conditional-graph era) — dm port +2.8% M1 (F-264 band), both composes
+    to pair +4.9% (bar cleared)/M1 +3.0%/conc +3.0%. OWED: five-boot pooled extension (dm ×5, both ×5,
+    cross-window) + 2× MMLU/mimic gates on the candidate. Phase 2 unchanged: launch-map diet
+    (−900..−1000 nodes) + PDL chain with per-pair kill switch + mid_chain/dec_gdn_rec port spec.
 6. Re-quant GO (user) -> +2-4% M1, +792 slots, 262k safety.
 7. dec_gdn_rec (+0.5..1.5%); mid_chain header check -> generic triple.
 8. fp16-accum scoped K=640/2560 (DISPUTED: R3 +10-17% vs R5 KL blowout — the KL yardstick decides, item 2).
