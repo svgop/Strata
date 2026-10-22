@@ -69,3 +69,50 @@ background promotion; demotion happens only on idle; resize never runs inside a 
 - Re-quant (+792 slots): widens the pool the watermark draws from — the two stack.
 - 262k switch (−708 slots): dynamic sessions make even that switch's capacity elastic.
 - ≥9-client conc ladder + COHORTS=3 re-test (F-249): this feature is the on-ramp for both.
+
+---
+
+## v2 — prior-art integration (2026-10-22; dossiers: T33-priorart-materialization.md,
+T33-priorart-serving.md; 50+ sources across both)
+
+The research CONFIRMS the zero-delay contract is achievable and DOWNGRADES the promotion path from
+"allocate + capture (~1-2 s)" to "assign + remap + tail-flip (tens of ms)". The amended design:
+
+**Materialization (was: shrink→alloc→capture→migrate, 1-2 s):**
+- NO per-session capture, ever. Every serious engine (vLLM, TRT-LLM, SGLang) captures a FIXED
+  shape set once and pads; SGLang's zero-length sentinel slots transplant directly to our session
+  lane. ggml's own 2026 numbers: per-session graphs worth only 2-3% on our platform class.
+- Sessions = FIXED-ADDRESS slots carved from ONE pre-grown arena (graphs bake in addresses; static
+  buffers + copy-in replay is the universal companion). The arena's cudaMemPool runs with
+  ReleaseThreshold=UINT64_MAX so 0.78 GiB materializes in µs of bookkeeping, not allocation.
+- Slot graphs + pool PERSIST across demote/promote cycles (vLLM sleep-mode precedent: replay, not
+  recapture — backed to host, restored in place, ~3% bs1 overhead class). Promotion = remap/page-in.
+- Hot-swap = Llumnix tail-flip (arXiv 2406.03243): append-only pipelined migration, 20-30 ms
+  downtime ~constant in length — our measured 34-59 ms is already in this class; make it a tail
+  flip, not a stop-and-copy.
+- Expert-cache shrink never touches capture validity: device slot-map indirection (llama.cpp
+  #28248, our lineage: +84% decode at 64 slots on a 4090) + side-stream table copies. Experts are
+  host-authoritative → returning memory is VMM unmap, no DMA.
+
+**Watermarks (was: k_empty alone) — three floors now:**
+- Expert-cache FLOOR: MoE-Infinity's published anti-pattern (+137 ms/token degradation when the
+  expert buffer yields to KV growth) sets the floor we must never cross.
+- KV watermark + session cap: SGLang's canonical priority (sessions beat cache, grow-by-evict-
+  retry) with Mooncake-style admission control for the burst case.
+- The draft-head/engine floor (F-271) unchanged.
+
+**Demotion (was: idle hysteresis alone):** hysteresis stays (no LLM-serving prior art exists —
+tune from scratch), plus forget-vs-park by context length (short conversations forget KV, long
+ones park), COW shared prefixes across sessions (refcounted, vLLM pattern), and the Sarathi token
+budget on a promoted session's first prefill so promotion never tramples running decode.
+
+**Explicitly NOT adopting:** process splitting, weight swapping (AlpaServe: seconds), P/D
+disaggregation (2-GPU), trained pre-gates (Pre-gated is training-time), runtime lazy capture
+(vLLM RFC #20098 rejected it for maintenance/OOM reasons — our bounded closed shape set with
+eager-fallback-on-deadline-miss answers each stated objection, but only because the set is small
+and pre-budgeted), conditional nodes (not needed with sentinel padding).
+
+**Open measurements owed before implementation:** our true capture/instantiate cost on sm_120
+(API floor ~1.5 µs/node vs framework ceremony); PCIe 5 H2D time of the conversation hot-swap
+payload (the new dominant promotion term); whether cudaGraphExecUpdate clones across identical
+slots (no prior art — if yes, per-slot capture disappears entirely even for the initial set).
