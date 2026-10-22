@@ -240,6 +240,13 @@ the config relative to itself (LAUNCH LAW + F-249). Run-once harnesses for close
 DELETED when the question closes; git history is the archive. Historical journal references to
 pre-F-268 paths (e.g. `campaign/t27-baseline.sh`) resolve in git history, not the working tree.
 
+**Learned-profile hazard (F-271):** `data/expert-profile-learned.bin` accumulates across EVERY
+session (saved every 30 rounds) and can poison the adaptive tier after enough synthetic-traffic boots
+(21k swaps/boot, GPU-reach waits 6-10 ms/window, M1 down 2.2x - silently). Any battery or A/B must
+control it: back it up and remove it (fresh profile) or pin one copy for both sides. A 2x-slower
+standing recipe with hit rates still ~99% and normal ms/window accounting = check the adapt tier
+line before suspecting config or code.
+
 ## The performance campaign law (svg's fork — ENFORCED on every optimization; supersedes nothing above, adds to it)
 
 This repo is the Linux superiority campaign lane. Read `campaign/research/GOAL-LINUX-SUPERIORITY.md` (the
