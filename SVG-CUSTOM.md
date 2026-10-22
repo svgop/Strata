@@ -8966,3 +8966,17 @@ bank: stability harness riding every leg, spec-trace dataset, dm parity + wait-s
 quiet-window law with teeth, and the honest prices (dm +1.5-3%; config knobs exhausted).
 NEXT THAT CAN PAY (all need quiet-window five-boot means): the composed window tranche (diet + PDL +
 dm at +1.5-3 each if they compose), re-quant (user GO), T14B retrain. Nothing else on the config level.
+
+## F-265 — 2026-10-22: ROADMAP PRUNED — the dead-end ledger consolidated (user directive)
+Everything proven dead this campaign is now REMOVED from the active roadmap (SVG-CUSTOM-TODO.md) and
+consolidated in its DEAD-END REMOVALS table with evidence refs: decode-share raise, --pcie-frac 0.55,
+--spec 7/8, adapt-tier 1/80/0.97, --spec-min-p 0.7, STRATA_GEMM_LT, the cuBLASLt sweep as a lever, the
+device-plan falsifier (void), PIPED-as-env-boot, adapt-every-as-depth-scheduling, and the T27 external
+negatives (megakernels, AdaSD, DSpine-class, Pascal, batch-invariant kernels, PreScope, sleep/CRIU,
+"ACES"). The individual falsifications are journaled at F-253..F-264; the four standing laws they
+produced: quiet-window five-boot means for sub-4% effects; calibrate.py prices direction not magnitude;
+microbench wins are hypotheses until the pipeline judges; an agent's headline is a hypothesis until the
+launcher and history are read. The live roadmap: quiet-window re-bank -> KL yardstick -> keep-rule
+refit -> prewarm2-at-re-bank -> the composed window tranche (diet + PDL + dm; parity fully green) ->
+re-quant (user GO) -> dec_gdn_rec/mid_chain -> fp16-accum (gated) -> PIPED port -> T14B with the
+EAGLE-3.1 and Draft-OPD riders -> 262k.
