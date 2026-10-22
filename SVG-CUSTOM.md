@@ -8867,3 +8867,29 @@ bit per token and cannot represent a repeat at all; (2) dm_combine4 as written i
 ours (fma chain) - the port must compile with fmad on; the harness measures the diff. Plan transcriptions
 CPU-validated on 35,055 random cases (0 fails); the GPU parity run + the DM_WAIT_STATS boot are the next
 box steps (batteries own the box until they clear).
+
+## F-262 — 2026-10-22 ~02:30: spec8 closed (conc regresses); dm parity's FIRST GPU RUN finds the real divergence surface; wait-stats needs wider arming
+SPEC 8 (vs the adopted 7, ABAB 3v3, t29-spec8.log): arm M1 202.9 / pair 193.3 / conc 280.4 vs ctl
+205.4/188.0/298.9 = M1 -1.2%, pair +2.8%, CONC -6.1% (all three rounds negative) -> NOT ADOPTED.
+The 8-token window is kVerifyMaxT itself - at conc the batch lane pays for the widest window and the
+cohorts serialize. DEPTH 7 IS THE SWEET SPOT (the ctl legs confirm the new line healthy: ~205 M1 /
+~299 conc in the same window). Night's adoption tally: frac 0.55 + share 1.0 + spec 7.
+DM PARITY, FIRST GPU RUN (build/dm_plan_parity, executed on the card): plan algebra GREEN everywhere
+it applies - 51 cases, >=8752 fields compared, our resident_plan bitwise vs dm_group + dm_glue-mask
+across T=1..8, all-resident / mixed-partial / cross-token-shared / G=2 regimes; the two documented
+divergences (in-token repeat -> CPU pool; invalid id -> host fallback) behave as asserted. FINDINGS:
+(1) two harness FAILs on the all-resident PARTIAL call at T=7/T=8 - "the partial call did not take
+the partial skip": the T1.1 partial path was built for the <=6-token era and does not arm the same
+way at 7/8 (PLAN_PARTIAL is default-off and closed-neutral, so this is a note + a harness-expectation
+fix, not a standing-path defect); (2) THE LOAD-BEARING ONE: the combine family vs dm_combine4 -
+hits-added and ZADD forms are BITWISE clean, but the plain multi-row combine MISMATCHES the donor
+sum order, and the donor's uncontracted form differs on 9287/20480 columns (45.3%). Consequence for
+the port: the dm combine CANNOT be transplanted verbatim for multi-row windows - it must reproduce
+OUR multi-row order (or the port is restricted to the bitwise-proven forms); fmad must stay on.
+DM_WAIT_STATS BOOT (STRATA_DM_WAIT_STATS=1 + full probe, standing line, M1 206.1): the instrument
+printed NOTHING - its stat arms sit on the plain wait_flag_ge sites (verify.cpp:2192/2206/2231), but
+the standing recipe takes the FUSED wait-copy path (143-amdk, :2188) and the device-plan variants, so
+the armed sites never run. FOLLOW-UP (queued, implementer round 2): arm wait_copy_i32_from_mapped +
+the planned waits, fix the T=7/8 partial harness expectations, investigate the multi-combine order.
+Standing recipe after tonight: COHORTS=2 + ATTN_DAILY + GDN_CHUNKED + FUSE_HITS + POOL_DIET +
+norm_fast + frac 0.55 + share 1.0 + spec 7. Owed: the five-boot re-bank (quiet window) + the dm round-2.
