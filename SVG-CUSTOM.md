@@ -9001,3 +9001,21 @@ mechanism targets the cold component specifically, and the pooled-evidence doctr
 revert carry it. Golden hashes: 2 distinct over 8 boots (dbb2 x7, a974 x1 on base-r5) - the known
 boot-variance signal, monitored. NEXT: the composed window tranche arms (diet + PDL + dm) get judged
 against the prewarmed anchor.
+
+## F-267 — 2026-10-22 ~11:35: HOUSEKEEPING PASS 2 (user directive: clean up, avoid runaway mess)
+~1.15G freed, working tree clean. engine/ 408M->163M: deleted the intermediates pre-t24-s1 / pre-t28 /
+t28-instr (all instrument-era binaries, env-gated default-off = functionally identical on the standing
+path; the named rollback is engine/strata.t19-final, older states rebuild from git); kept strata
+(deployed), t19-final, libstrata_kq.so, BUILD.json. build/ 1.2G->309M: 132 stale test/engine
+executables deleted (f209 pair, q36/q36ref, gemm parity pair, the 10-17 prefill/mmq/nvfp4 test bins,
+all parity/bench exes - everything ninja-regenerable); kept build/strata + the .a/.so link state.
+campaign/results/: the 75 drifted-untracked t26..t30 boot .outs COMMITTED (label provenance, 2.2M
+total - convention: harness .outs commit with their battery); live custom-iq3_s.log (8.4M, unique
+per-boot request accounting for the T26..T31 era) rotated to old-logs/custom-iq3_s.20261022-t31.log.gz
+(910K, committed) and the live log truncated. spec7 shelf strays launch-spec7.sh +
+custom-iq3s-spec7.json DELETED (spec 7 died at F-263; launcher comment + journal carry it). Empty
+upstream skeleton ~/LLM/Custom-data rmdir'd (the 32 stale Custom-data spec refs stay flagged in
+gates-spec). /tmp prewarm2 + kl test fixtures removed. UNTOUCHED BY DESIGN: data/expert-profile-
+learned.bin (engine's own output, stays dirty), campaign/t31-keeprefit.py (refit agent LIVE at press
+time), /home/svg/LLM/data/references (450MB, extracted value), the stock ~/LLM/strata harness, and
+the parallel session's workspace/default/nvme-data-recover staging.

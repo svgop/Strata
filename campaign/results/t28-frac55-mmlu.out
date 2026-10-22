@@ -1,0 +1,715 @@
+[strata] WARNING: This session has a real-time CPU limit (RLIMIT_RTTIME hard limit 200000; the desktop's audio system sets it to 0 when rtkit is not installed). Linux can then end a program with signal 9 for no visible reason. Install rtkit, or start Strata outside the desktop session's limits, for example: systemd-run --user --collect -p LimitRTTIME=infinity -- strata serve ...
+loading the model (the first start takes a minute or two) ...
+[strata] starting the engine: reading the model's weights ...
+[strata] loading the experts the GPU does not hold into RAM (of about 55 GB) and locking part of them for the GPU.
+         YOUR PC CAN BE SLOW OR STOP RESPONDING FOR 1-3 MINUTES NOW - this is normal.
+         Please wait and don't close this window; the server says when it is ready.
+[strata] filling the GPU's expert cache (9114 experts, 17.29 GiB of VRAM) ...
+[strata] almost ready ...
+ready: http://127.0.0.1:8081/v1  (OpenAI: /v1/chat/completions, Anthropic: /v1/messages, context 131072 tokens, API key required)
+       open http://127.0.0.1:8081/ in a browser to chat; close this window to stop the model
+       from other devices: http://192.168.0.22:8081/   (API: http://192.168.0.22:8081/v1)
+       from other devices: http://192.168.0.182:8081/   (API: http://192.168.0.182:8081/v1)
+[strata] done: 20 tokens in 0 s (132.0 tok/s) (length, cancel=False), expert cache 88.6% hit (+6.3% of the routed experts over PCIe)
+[strata] thinking limited to 3000 of max_tokens 4000 so the answer has room ("answer_room": false in the config turns this off)
+[strata] thinking: 54 of budget 3000 (max 4000) tokens, 109.3 tok/s, 1 s
+[strata] done: 190 tokens in 2 s (136.2 tok/s) (stop, cancel=False), expert cache 93.9% hit (+3.4% of the routed experts over PCIe)
+[strata] thinking limited to 3000 of max_tokens 4000 so the answer has room ("answer_room": false in the config turns this off)
+[strata] thinking: 91 of budget 3000 (max 4000) tokens, 157.1 tok/s, 1 s
+[strata] done: 168 tokens in 1 s (163.2 tok/s) (stop, cancel=False), expert cache 96.5% hit (+2.0% of the routed experts over PCIe)
+[strata] thinking limited to 3000 of max_tokens 4000 so the answer has room ("answer_room": false in the config turns this off)
+[strata] thinking: 104 of budget 3000 (max 4000) tokens, 171.7 tok/s, 1 s
+[strata] thinking: 299 of budget 3000 (max 4000) tokens, 184.5 tok/s, 2 s
+[strata] done: 453 tokens in 3 s (180.7 tok/s) (stop, cancel=False), expert cache 96.7% hit (+2.0% of the routed experts over PCIe)
+[strata] thinking limited to 3000 of max_tokens 4000 so the answer has room ("answer_room": false in the config turns this off)
+[strata] thinking: 89 of budget 3000 (max 4000) tokens, 166.9 tok/s, 1 s
+[strata] done: 244 tokens in 2 s (179.1 tok/s) (stop, cancel=False), expert cache 95.5% hit (+2.6% of the routed experts over PCIe)
+[strata] thinking limited to 3000 of max_tokens 4000 so the answer has room ("answer_room": false in the config turns this off)
+[strata] done: 44 tokens in 1 s (165.5 tok/s) (stop, cancel=False), expert cache 94.9% hit (+3.2% of the routed experts over PCIe)
+[strata] thinking limited to 3000 of max_tokens 4000 so the answer has room ("answer_room": false in the config turns this off)
+[strata] done: 59 tokens in 1 s (142.6 tok/s) (stop, cancel=False), expert cache 90.5% hit (+5.9% of the routed experts over PCIe)
+[strata] thinking limited to 3000 of max_tokens 4000 so the answer has room ("answer_room": false in the config turns this off)
+[strata] thinking: 74 of budget 3000 (max 4000) tokens, 133.8 tok/s, 1 s
+[strata] done: 119 tokens in 1 s (124.6 tok/s) (stop, cancel=False), expert cache 94.6% hit (+3.7% of the routed experts over PCIe)
+[strata] thinking limited to 3000 of max_tokens 4000 so the answer has room ("answer_room": false in the config turns this off)
+[strata] thinking: 86 of budget 3000 (max 4000) tokens, 159.4 tok/s, 1 s
+[strata] thinking: 265 of budget 3000 (max 4000) tokens, 170.4 tok/s, 2 s
+[strata] done: 354 tokens in 3 s (166.4 tok/s) (stop, cancel=False), expert cache 95.5% hit (+2.9% of the routed experts over PCIe)
+[strata] thinking limited to 3000 of max_tokens 4000 so the answer has room ("answer_room": false in the config turns this off)
+[strata] thinking: 94 of budget 3000 (max 4000) tokens, 169.6 tok/s, 1 s
+[strata] thinking: 255 of budget 3000 (max 4000) tokens, 161.7 tok/s, 2 s
+[strata] done: 290 tokens in 2 s (160.5 tok/s) (stop, cancel=False), expert cache 94.5% hit (+3.7% of the routed experts over PCIe)
+[strata] thinking limited to 3000 of max_tokens 4000 so the answer has room ("answer_room": false in the config turns this off)
+[strata] thinking: 74 of budget 3000 (max 4000) tokens, 124.1 tok/s, 1 s
+[strata] thinking: 244 of budget 3000 (max 4000) tokens, 152.5 tok/s, 2 s
+[strata] done: 356 tokens in 3 s (151.8 tok/s) (stop, cancel=False), expert cache 96.1% hit (+2.2% of the routed experts over PCIe)
+[strata] thinking limited to 3000 of max_tokens 4000 so the answer has room ("answer_room": false in the config turns this off)
+[strata] thinking: 50 of budget 3000 (max 4000) tokens, 91.2 tok/s, 1 s
+[strata] done: 106 tokens in 1 s (112.8 tok/s) (stop, cancel=False), expert cache 87.0% hit (+8.6% of the routed experts over PCIe)
+[strata] thinking limited to 3000 of max_tokens 4000 so the answer has room ("answer_room": false in the config turns this off)
+[strata] thinking: 88 of budget 3000 (max 4000) tokens, 173.3 tok/s, 1 s
+[strata] done: 95 tokens in 1 s (178.9 tok/s) (stop, cancel=False), expert cache 94.2% hit (+3.2% of the routed experts over PCIe)
+[strata] thinking limited to 3000 of max_tokens 4000 so the answer has room ("answer_room": false in the config turns this off)
+[strata] thinking: 96 of budget 3000 (max 4000) tokens, 165.8 tok/s, 1 s
+[strata] done: 205 tokens in 2 s (165.2 tok/s) (stop, cancel=False), expert cache 95.8% hit (+2.5% of the routed experts over PCIe)
+[strata] thinking limited to 3000 of max_tokens 4000 so the answer has room ("answer_room": false in the config turns this off)
+[strata] done: 46 tokens in 1 s (154.8 tok/s) (stop, cancel=False), expert cache 96.1% hit (+2.4% of the routed experts over PCIe)
+[strata] thinking limited to 3000 of max_tokens 4000 so the answer has room ("answer_room": false in the config turns this off)
+[strata] done: 41 tokens in 1 s (206.8 tok/s) (stop, cancel=False), expert cache 96.7% hit (+1.9% of the routed experts over PCIe)
+[strata] thinking limited to 3000 of max_tokens 4000 so the answer has room ("answer_room": false in the config turns this off)
+[strata] thinking: 66 of budget 3000 (max 4000) tokens, 126.9 tok/s, 1 s
+[strata] done: 194 tokens in 2 s (132.5 tok/s) (stop, cancel=False), expert cache 93.2% hit (+4.7% of the routed experts over PCIe)
+[strata] thinking limited to 3000 of max_tokens 4000 so the answer has room ("answer_room": false in the config turns this off)
+[strata] done: 57 tokens in 1 s (203.8 tok/s) (stop, cancel=False), expert cache 95.1% hit (+2.7% of the routed experts over PCIe)
+[strata] thinking limited to 3000 of max_tokens 4000 so the answer has room ("answer_room": false in the config turns this off)
+[strata] thinking: 115 of budget 3000 (max 4000) tokens, 180.9 tok/s, 1 s
+[strata] thinking: 261 of budget 3000 (max 4000) tokens, 158.4 tok/s, 2 s
+[strata] done: 387 tokens in 3 s (165.6 tok/s) (stop, cancel=False), expert cache 97.1% hit (+1.7% of the routed experts over PCIe)
+[strata] thinking limited to 3000 of max_tokens 4000 so the answer has room ("answer_room": false in the config turns this off)
+[strata] thinking: 106 of budget 3000 (max 4000) tokens, 171.1 tok/s, 1 s
+[strata] thinking: 287 of budget 3000 (max 4000) tokens, 176.9 tok/s, 2 s
+[strata] done: 294 tokens in 2 s (178.0 tok/s) (stop, cancel=False), expert cache 97.2% hit (+1.6% of the routed experts over PCIe)
+[strata] thinking limited to 3000 of max_tokens 4000 so the answer has room ("answer_room": false in the config turns this off)
+[strata] done: 81 tokens in 1 s (206.2 tok/s) (stop, cancel=False), expert cache 96.8% hit (+2.0% of the routed experts over PCIe)
+[strata] thinking limited to 3000 of max_tokens 4000 so the answer has room ("answer_room": false in the config turns this off)
+[strata] thinking: 82 of budget 3000 (max 4000) tokens, 137.8 tok/s, 1 s
+[strata] done: 133 tokens in 1 s (136.2 tok/s) (stop, cancel=False), expert cache 92.6% hit (+4.5% of the routed experts over PCIe)
+[strata] thinking limited to 3000 of max_tokens 4000 so the answer has room ("answer_room": false in the config turns this off)
+[strata] thinking: 58 of budget 3000 (max 4000) tokens, 106.3 tok/s, 1 s
+[strata] done: 133 tokens in 2 s (122.4 tok/s) (stop, cancel=False), expert cache 88.9% hit (+7.5% of the routed experts over PCIe)
+[strata] thinking limited to 3000 of max_tokens 4000 so the answer has room ("answer_room": false in the config turns this off)
+[strata] thinking: 79 of budget 3000 (max 4000) tokens, 140.8 tok/s, 1 s
+[strata] done: 131 tokens in 1 s (145.9 tok/s) (stop, cancel=False), expert cache 95.6% hit (+2.6% of the routed experts over PCIe)
+[strata] thinking limited to 3000 of max_tokens 4000 so the answer has room ("answer_room": false in the config turns this off)
+[strata] thinking: 99 of budget 3000 (max 4000) tokens, 154.1 tok/s, 1 s
+[strata] done: 103 tokens in 1 s (160.2 tok/s) (stop, cancel=False), expert cache 97.0% hit (+1.8% of the routed experts over PCIe)
+[strata] thinking limited to 3000 of max_tokens 4000 so the answer has room ("answer_room": false in the config turns this off)
+[strata] thinking: 123 of budget 3000 (max 4000) tokens, 189.1 tok/s, 1 s
+[strata] thinking: 288 of budget 3000 (max 4000) tokens, 172.8 tok/s, 2 s
+[strata] thinking: 461 of budget 3000 (max 4000) tokens, 172.3 tok/s, 3 s
+[strata] thinking: 639 of budget 3000 (max 4000) tokens, 173.5 tok/s, 4 s
+[strata] thinking: 830 of budget 3000 (max 4000) tokens, 177.2 tok/s, 5 s
+[strata] thinking: 1033 of budget 3000 (max 4000) tokens, 181.3 tok/s, 6 s
+[strata] thinking: 1195 of budget 3000 (max 4000) tokens, 178.2 tok/s, 7 s
+[strata] thinking: 1368 of budget 3000 (max 4000) tokens, 177.5 tok/s, 8 s
+[strata] thinking: 1536 of budget 3000 (max 4000) tokens, 176.1 tok/s, 9 s
+[strata] thinking: 1714 of budget 3000 (max 4000) tokens, 176.0 tok/s, 10 s
+[strata] thinking: 1883 of budget 3000 (max 4000) tokens, 175.2 tok/s, 11 s
+[strata] thinking: 2051 of budget 3000 (max 4000) tokens, 174.6 tok/s, 12 s
+[strata] done: 2108 tokens in 13 s (172.8 tok/s) (stop, cancel=False), expert cache 97.9% hit (+1.1% of the routed experts over PCIe)
+[strata] thinking limited to 3000 of max_tokens 4000 so the answer has room ("answer_room": false in the config turns this off)
+[strata] thinking: 63 of budget 3000 (max 4000) tokens, 114.5 tok/s, 1 s
+[strata] thinking: 197 of budget 3000 (max 4000) tokens, 125.7 tok/s, 2 s
+[strata] thinking: 356 of budget 3000 (max 4000) tokens, 138.3 tok/s, 3 s
+[strata] done: 383 tokens in 3 s (141.1 tok/s) (stop, cancel=False), expert cache 95.6% hit (+2.6% of the routed experts over PCIe)
+[strata] thinking limited to 3000 of max_tokens 4000 so the answer has room ("answer_room": false in the config turns this off)
+[strata] thinking: 76 of budget 3000 (max 4000) tokens, 148.1 tok/s, 1 s
+[strata] done: 193 tokens in 2 s (168.3 tok/s) (stop, cancel=False), expert cache 96.2% hit (+2.3% of the routed experts over PCIe)
+[strata] thinking limited to 3000 of max_tokens 4000 so the answer has room ("answer_room": false in the config turns this off)
+[strata] thinking: 112 of budget 3000 (max 4000) tokens, 185.5 tok/s, 1 s
+[strata] done: 201 tokens in 2 s (181.0 tok/s) (stop, cancel=False), expert cache 96.3% hit (+2.3% of the routed experts over PCIe)
+[strata] thinking limited to 3000 of max_tokens 4000 so the answer has room ("answer_room": false in the config turns this off)
+[strata] thinking: 90 of budget 3000 (max 4000) tokens, 160.7 tok/s, 1 s
+[strata] thinking: 259 of budget 3000 (max 4000) tokens, 163.9 tok/s, 2 s
+[strata] done: 404 tokens in 3 s (168.8 tok/s) (stop, cancel=False), expert cache 95.2% hit (+3.1% of the routed experts over PCIe)
+[strata] thinking limited to 3000 of max_tokens 4000 so the answer has room ("answer_room": false in the config turns this off)
+[strata] thinking: 71 of budget 3000 (max 4000) tokens, 130.3 tok/s, 1 s
+[strata] thinking: 220 of budget 3000 (max 4000) tokens, 142.0 tok/s, 2 s
+[strata] thinking: 391 of budget 3000 (max 4000) tokens, 152.7 tok/s, 3 s
+[strata] thinking: 562 of budget 3000 (max 4000) tokens, 157.4 tok/s, 4 s
+[strata] done: 665 tokens in 5 s (154.9 tok/s) (stop, cancel=False), expert cache 97.1% hit (+1.7% of the routed experts over PCIe)
+[strata] thinking limited to 3000 of max_tokens 4000 so the answer has room ("answer_room": false in the config turns this off)
+[strata] thinking: 68 of budget 3000 (max 4000) tokens, 139.8 tok/s, 1 s
+[strata] thinking: 207 of budget 3000 (max 4000) tokens, 138.7 tok/s, 2 s
+[strata] thinking: 371 of budget 3000 (max 4000) tokens, 148.7 tok/s, 3 s
+[strata] thinking: 532 of budget 3000 (max 4000) tokens, 152.0 tok/s, 4 s
+[strata] thinking: 709 of budget 3000 (max 4000) tokens, 157.4 tok/s, 5 s
+[strata] thinking: 914 of budget 3000 (max 4000) tokens, 165.8 tok/s, 6 s
+[strata] thinking: 1060 of budget 3000 (max 4000) tokens, 162.6 tok/s, 7 s
+[strata] thinking: 1274 of budget 3000 (max 4000) tokens, 169.3 tok/s, 8 s
+[strata] thinking: 1427 of budget 3000 (max 4000) tokens, 167.3 tok/s, 9 s
+[strata] thinking: 1583 of budget 3000 (max 4000) tokens, 165.9 tok/s, 10 s
+[strata] thinking: 1748 of budget 3000 (max 4000) tokens, 165.8 tok/s, 11 s
+[strata] thinking: 1925 of budget 3000 (max 4000) tokens, 166.4 tok/s, 12 s
+[strata] thinking: 2099 of budget 3000 (max 4000) tokens, 166.9 tok/s, 13 s
+[strata] thinking: 2277 of budget 3000 (max 4000) tokens, 167.6 tok/s, 14 s
+[strata] thinking: 2433 of budget 3000 (max 4000) tokens, 166.6 tok/s, 15 s
+[strata] thinking: 2583 of budget 3000 (max 4000) tokens, 165.5 tok/s, 16 s
+[strata] thinking: 2747 of budget 3000 (max 4000) tokens, 165.4 tok/s, 17 s
+[strata] thinking: 2926 of budget 3000 (max 4000) tokens, 166.1 tok/s, 18 s
+[strata] thinking budget reached (3000 tokens): wrapping up the thinking
+[strata] done: 3020 tokens in 19 s (165.4 tok/s) (stop, cancel=False), expert cache 98.3% hit (+0.8% of the routed experts over PCIe)
+[strata] thinking limited to 3000 of max_tokens 4000 so the answer has room ("answer_room": false in the config turns this off)
+[strata] thinking: 106 of budget 3000 (max 4000) tokens, 193.7 tok/s, 1 s
+[strata] thinking: 272 of budget 3000 (max 4000) tokens, 175.4 tok/s, 2 s
+[strata] thinking: 415 of budget 3000 (max 4000) tokens, 162.6 tok/s, 3 s
+[strata] thinking: 591 of budget 3000 (max 4000) tokens, 165.8 tok/s, 4 s
+[strata] thinking: 763 of budget 3000 (max 4000) tokens, 167.2 tok/s, 5 s
+[strata] thinking: 927 of budget 3000 (max 4000) tokens, 166.5 tok/s, 6 s
+[strata] thinking: 1090 of budget 3000 (max 4000) tokens, 165.6 tok/s, 7 s
+[strata] thinking: 1252 of budget 3000 (max 4000) tokens, 165.0 tok/s, 8 s
+[strata] thinking: 1414 of budget 3000 (max 4000) tokens, 164.3 tok/s, 9 s
+[strata] thinking: 1594 of budget 3000 (max 4000) tokens, 165.9 tok/s, 10 s
+[strata] thinking: 1753 of budget 3000 (max 4000) tokens, 165.0 tok/s, 11 s
+[strata] thinking: 1906 of budget 3000 (max 4000) tokens, 163.9 tok/s, 12 s
+[strata] done: 1913 tokens in 12 s (163.8 tok/s) (stop, cancel=False), expert cache 98.2% hit (+0.9% of the routed experts over PCIe)
+[strata] thinking limited to 3000 of max_tokens 4000 so the answer has room ("answer_room": false in the config turns this off)
+[strata] done: 39 tokens in 1 s (159.1 tok/s) (stop, cancel=False), expert cache 92.4% hit (+4.6% of the routed experts over PCIe)
+[strata] thinking limited to 3000 of max_tokens 4000 so the answer has room ("answer_room": false in the config turns this off)
+[strata] thinking: 67 of budget 3000 (max 4000) tokens, 120.1 tok/s, 1 s
+[strata] done: 90 tokens in 1 s (117.9 tok/s) (stop, cancel=False), expert cache 92.0% hit (+5.4% of the routed experts over PCIe)
+[strata] thinking limited to 3000 of max_tokens 4000 so the answer has room ("answer_room": false in the config turns this off)
+[strata] done: 66 tokens in 1 s (154.7 tok/s) (stop, cancel=False), expert cache 92.8% hit (+4.6% of the routed experts over PCIe)
+[strata] thinking limited to 3000 of max_tokens 4000 so the answer has room ("answer_room": false in the config turns this off)
+[strata] done: 46 tokens in 1 s (132.7 tok/s) (stop, cancel=False), expert cache 92.6% hit (+3.8% of the routed experts over PCIe)
+[strata] thinking limited to 3000 of max_tokens 4000 so the answer has room ("answer_room": false in the config turns this off)
+[strata] thinking: 86 of budget 3000 (max 4000) tokens, 147.6 tok/s, 1 s
+[strata] done: 106 tokens in 1 s (162.5 tok/s) (stop, cancel=False), expert cache 92.8% hit (+4.3% of the routed experts over PCIe)
+[strata] thinking limited to 3000 of max_tokens 4000 so the answer has room ("answer_room": false in the config turns this off)
+[strata] thinking: 91 of budget 3000 (max 4000) tokens, 168.9 tok/s, 1 s
+[strata] thinking: 269 of budget 3000 (max 4000) tokens, 173.4 tok/s, 2 s
+[strata] thinking: 457 of budget 3000 (max 4000) tokens, 178.4 tok/s, 3 s
+[strata] thinking: 620 of budget 3000 (max 4000) tokens, 174.1 tok/s, 4 s
+[strata] thinking: 762 of budget 3000 (max 4000) tokens, 166.8 tok/s, 5 s
+[strata] thinking: 913 of budget 3000 (max 4000) tokens, 163.6 tok/s, 6 s
+[strata] thinking: 1100 of budget 3000 (max 4000) tokens, 167.1 tok/s, 7 s
+[strata] thinking: 1275 of budget 3000 (max 4000) tokens, 167.9 tok/s, 8 s
+[strata] thinking: 1424 of budget 3000 (max 4000) tokens, 165.4 tok/s, 9 s
+[strata] thinking: 1619 of budget 3000 (max 4000) tokens, 168.4 tok/s, 10 s
+[strata] thinking: 1807 of budget 3000 (max 4000) tokens, 170.2 tok/s, 11 s
+[strata] thinking: 1976 of budget 3000 (max 4000) tokens, 170.0 tok/s, 12 s
+[strata] thinking: 2139 of budget 3000 (max 4000) tokens, 169.1 tok/s, 13 s
+[strata] thinking: 2310 of budget 3000 (max 4000) tokens, 169.2 tok/s, 14 s
+[strata] thinking: 2478 of budget 3000 (max 4000) tokens, 168.9 tok/s, 15 s
+[strata] thinking: 2641 of budget 3000 (max 4000) tokens, 168.4 tok/s, 16 s
+[strata] thinking: 2825 of budget 3000 (max 4000) tokens, 169.3 tok/s, 17 s
+[strata] done: 2899 tokens in 18 s (168.6 tok/s) (stop, cancel=False), expert cache 97.2% hit (+1.6% of the routed experts over PCIe)
+[strata] thinking limited to 3000 of max_tokens 4000 so the answer has room ("answer_room": false in the config turns this off)
+[strata] thinking: 58 of budget 3000 (max 4000) tokens, 100.1 tok/s, 1 s
+[strata] done: 106 tokens in 1 s (116.6 tok/s) (stop, cancel=False), expert cache 93.2% hit (+4.1% of the routed experts over PCIe)
+[strata] thinking limited to 3000 of max_tokens 4000 so the answer has room ("answer_room": false in the config turns this off)
+[strata] done: 69 tokens in 1 s (160.1 tok/s) (stop, cancel=False), expert cache 94.2% hit (+3.7% of the routed experts over PCIe)
+[strata] thinking limited to 3000 of max_tokens 4000 so the answer has room ("answer_room": false in the config turns this off)
+[strata] thinking: 72 of budget 3000 (max 4000) tokens, 133.4 tok/s, 1 s
+[strata] thinking: 262 of budget 3000 (max 4000) tokens, 169.6 tok/s, 2 s
+[strata] thinking: 436 of budget 3000 (max 4000) tokens, 171.2 tok/s, 3 s
+[strata] thinking: 634 of budget 3000 (max 4000) tokens, 177.9 tok/s, 4 s
+[strata] thinking: 854 of budget 3000 (max 4000) tokens, 187.0 tok/s, 5 s
+[strata] thinking: 1068 of budget 3000 (max 4000) tokens, 191.5 tok/s, 6 s
+[strata] thinking: 1255 of budget 3000 (max 4000) tokens, 190.4 tok/s, 7 s
+[strata] thinking: 1473 of budget 3000 (max 4000) tokens, 193.8 tok/s, 8 s
+[strata] thinking: 1656 of budget 3000 (max 4000) tokens, 192.3 tok/s, 9 s
+[strata] thinking: 1856 of budget 3000 (max 4000) tokens, 193.1 tok/s, 10 s
+[strata] thinking: 2074 of budget 3000 (max 4000) tokens, 195.2 tok/s, 11 s
+[strata] thinking: 2264 of budget 3000 (max 4000) tokens, 194.7 tok/s, 12 s
+[strata] done: 2272 tokens in 12 s (194.1 tok/s) (stop, cancel=False), expert cache 97.4% hit (+1.5% of the routed experts over PCIe)
+[strata] thinking limited to 3000 of max_tokens 4000 so the answer has room ("answer_room": false in the config turns this off)
+[strata] thinking: 102 of budget 3000 (max 4000) tokens, 187.9 tok/s, 1 s
+[strata] thinking: 306 of budget 3000 (max 4000) tokens, 196.4 tok/s, 2 s
+[strata] done: 398 tokens in 2 s (204.6 tok/s) (stop, cancel=False), expert cache 94.9% hit (+3.4% of the routed experts over PCIe)
+[strata] thinking limited to 3000 of max_tokens 4000 so the answer has room ("answer_room": false in the config turns this off)
+[strata] thinking: 57 of budget 3000 (max 4000) tokens, 99.3 tok/s, 1 s
+[strata] done: 100 tokens in 1 s (103.5 tok/s) (stop, cancel=False), expert cache 93.2% hit (+4.6% of the routed experts over PCIe)
+[strata] thinking limited to 3000 of max_tokens 4000 so the answer has room ("answer_room": false in the config turns this off)
+[strata] thinking: 118 of budget 3000 (max 4000) tokens, 202.1 tok/s, 1 s
+[strata] done: 195 tokens in 1 s (208.2 tok/s) (stop, cancel=False), expert cache 97.2% hit (+1.7% of the routed experts over PCIe)
+[strata] thinking limited to 3000 of max_tokens 4000 so the answer has room ("answer_room": false in the config turns this off)
+[strata] thinking: 101 of budget 3000 (max 4000) tokens, 174.1 tok/s, 1 s
+[strata] done: 281 tokens in 2 s (183.1 tok/s) (stop, cancel=False), expert cache 97.2% hit (+1.7% of the routed experts over PCIe)
+[strata] thinking limited to 3000 of max_tokens 4000 so the answer has room ("answer_room": false in the config turns this off)
+[strata] thinking: 84 of budget 3000 (max 4000) tokens, 150.8 tok/s, 1 s
+[strata] thinking: 254 of budget 3000 (max 4000) tokens, 161.8 tok/s, 2 s
+[strata] done: 292 tokens in 2 s (158.2 tok/s) (stop, cancel=False), expert cache 96.1% hit (+2.5% of the routed experts over PCIe)
+[strata] thinking limited to 3000 of max_tokens 4000 so the answer has room ("answer_room": false in the config turns this off)
+[strata] thinking: 96 of budget 3000 (max 4000) tokens, 160.4 tok/s, 1 s
+[strata] done: 194 tokens in 2 s (158.3 tok/s) (stop, cancel=False), expert cache 97.6% hit (+1.4% of the routed experts over PCIe)
+[strata] thinking limited to 3000 of max_tokens 4000 so the answer has room ("answer_room": false in the config turns this off)
+[strata] thinking: 102 of budget 3000 (max 4000) tokens, 166.2 tok/s, 1 s
+[strata] thinking: 260 of budget 3000 (max 4000) tokens, 160.0 tok/s, 2 s
+[strata] done: 270 tokens in 2 s (161.7 tok/s) (stop, cancel=False), expert cache 95.7% hit (+2.6% of the routed experts over PCIe)
+[strata] thinking limited to 3000 of max_tokens 4000 so the answer has room ("answer_room": false in the config turns this off)
+[strata] thinking: 114 of budget 3000 (max 4000) tokens, 179.8 tok/s, 1 s
+[strata] done: 140 tokens in 1 s (178.6 tok/s) (stop, cancel=False), expert cache 96.7% hit (+1.7% of the routed experts over PCIe)
+[strata] thinking limited to 3000 of max_tokens 4000 so the answer has room ("answer_room": false in the config turns this off)
+[strata] done: 68 tokens in 1 s (156.5 tok/s) (stop, cancel=False), expert cache 96.3% hit (+2.1% of the routed experts over PCIe)
+[strata] thinking limited to 3000 of max_tokens 4000 so the answer has room ("answer_room": false in the config turns this off)
+[strata] thinking: 99 of budget 3000 (max 4000) tokens, 169.3 tok/s, 1 s
+[strata] thinking: 274 of budget 3000 (max 4000) tokens, 171.7 tok/s, 2 s
+[strata] done: 279 tokens in 2 s (174.8 tok/s) (stop, cancel=False), expert cache 93.7% hit (+4.4% of the routed experts over PCIe)
+[strata] thinking limited to 3000 of max_tokens 4000 so the answer has room ("answer_room": false in the config turns this off)
+[strata] thinking: 64 of budget 3000 (max 4000) tokens, 102.9 tok/s, 1 s
+[strata] done: 95 tokens in 1 s (106.4 tok/s) (stop, cancel=False), expert cache 94.2% hit (+3.6% of the routed experts over PCIe)
+[strata] thinking limited to 3000 of max_tokens 4000 so the answer has room ("answer_room": false in the config turns this off)
+[strata] done: 64 tokens in 1 s (179.9 tok/s) (stop, cancel=False), expert cache 95.0% hit (+2.7% of the routed experts over PCIe)
+[strata] thinking limited to 3000 of max_tokens 4000 so the answer has room ("answer_room": false in the config turns this off)
+[strata] thinking: 89 of budget 3000 (max 4000) tokens, 147.3 tok/s, 1 s
+[strata] thinking: 233 of budget 3000 (max 4000) tokens, 144.1 tok/s, 2 s
+[strata] thinking: 379 of budget 3000 (max 4000) tokens, 144.8 tok/s, 3 s
+[strata] done: 465 tokens in 4 s (145.2 tok/s) (stop, cancel=False), expert cache 97.2% hit (+1.5% of the routed experts over PCIe)
+[strata] thinking limited to 3000 of max_tokens 4000 so the answer has room ("answer_room": false in the config turns this off)
+[strata] thinking: 69 of budget 3000 (max 4000) tokens, 114.6 tok/s, 1 s
+[strata] done: 107 tokens in 1 s (123.4 tok/s) (stop, cancel=False), expert cache 93.0% hit (+4.3% of the routed experts over PCIe)
+[strata] thinking limited to 3000 of max_tokens 4000 so the answer has room ("answer_room": false in the config turns this off)
+[strata] thinking: 78 of budget 3000 (max 4000) tokens, 179.2 tok/s, 1 s
+[strata] thinking: 233 of budget 3000 (max 4000) tokens, 162.0 tok/s, 2 s
+[strata] thinking: 385 of budget 3000 (max 4000) tokens, 157.0 tok/s, 3 s
+[strata] thinking: 563 of budget 3000 (max 4000) tokens, 163.0 tok/s, 4 s
+[strata] thinking: 695 of budget 3000 (max 4000) tokens, 156.0 tok/s, 5 s
+[strata] thinking: 835 of budget 3000 (max 4000) tokens, 152.9 tok/s, 6 s
+[strata] thinking: 1000 of budget 3000 (max 4000) tokens, 154.5 tok/s, 7 s
+[strata] thinking: 1182 of budget 3000 (max 4000) tokens, 157.9 tok/s, 8 s
+[strata] thinking: 1329 of budget 3000 (max 4000) tokens, 156.4 tok/s, 9 s
+[strata] thinking: 1531 of budget 3000 (max 4000) tokens, 160.9 tok/s, 10 s
+[strata] thinking: 1702 of budget 3000 (max 4000) tokens, 161.8 tok/s, 11 s
+[strata] thinking: 1868 of budget 3000 (max 4000) tokens, 162.1 tok/s, 12 s
+[strata] thinking: 2026 of budget 3000 (max 4000) tokens, 161.6 tok/s, 13 s
+[strata] thinking: 2157 of budget 3000 (max 4000) tokens, 159.2 tok/s, 14 s
+[strata] thinking: 2321 of budget 3000 (max 4000) tokens, 159.4 tok/s, 15 s
+[strata] thinking: 2496 of budget 3000 (max 4000) tokens, 160.3 tok/s, 16 s
+[strata] thinking: 2680 of budget 3000 (max 4000) tokens, 161.6 tok/s, 17 s
+[strata] thinking: 2868 of budget 3000 (max 4000) tokens, 163.0 tok/s, 18 s
+[strata] thinking budget reached (3000 tokens): wrapping up the thinking
+[strata] thinking: 3018 of max 4000 tokens, 157.8 tok/s, 20 s
+[strata] done: 3020 tokens in 20 s (157.2 tok/s) (stop, cancel=False), expert cache 97.6% hit (+1.3% of the routed experts over PCIe)
+[strata] thinking limited to 3000 of max_tokens 4000 so the answer has room ("answer_room": false in the config turns this off)
+[strata] done: 46 tokens in 1 s (140.9 tok/s) (stop, cancel=False), expert cache 91.7% hit (+5.8% of the routed experts over PCIe)
+[strata] thinking limited to 3000 of max_tokens 4000 so the answer has room ("answer_room": false in the config turns this off)
+[strata] thinking: 88 of budget 3000 (max 4000) tokens, 171.9 tok/s, 1 s
+[strata] done: 166 tokens in 2 s (150.6 tok/s) (stop, cancel=False), expert cache 96.3% hit (+2.1% of the routed experts over PCIe)
+[strata] thinking limited to 3000 of max_tokens 4000 so the answer has room ("answer_room": false in the config turns this off)
+[strata] thinking: 68 of budget 3000 (max 4000) tokens, 117.8 tok/s, 1 s
+[strata] thinking: 241 of budget 3000 (max 4000) tokens, 151.1 tok/s, 2 s
+[strata] thinking: 417 of budget 3000 (max 4000) tokens, 160.3 tok/s, 3 s
+[strata] thinking: 591 of budget 3000 (max 4000) tokens, 163.9 tok/s, 4 s
+[strata] done: 631 tokens in 4 s (164.6 tok/s) (stop, cancel=False), expert cache 96.0% hit (+2.4% of the routed experts over PCIe)
+[strata] thinking limited to 3000 of max_tokens 4000 so the answer has room ("answer_room": false in the config turns this off)
+[strata] thinking: 91 of budget 3000 (max 4000) tokens, 171.6 tok/s, 1 s
+[strata] thinking: 245 of budget 3000 (max 4000) tokens, 159.7 tok/s, 2 s
+[strata] thinking: 418 of budget 3000 (max 4000) tokens, 164.1 tok/s, 3 s
+[strata] thinking: 587 of budget 3000 (max 4000) tokens, 165.1 tok/s, 4 s
+[strata] thinking: 786 of budget 3000 (max 4000) tokens, 172.3 tok/s, 5 s
+[strata] thinking: 984 of budget 3000 (max 4000) tokens, 176.6 tok/s, 6 s
+[strata] thinking: 1160 of budget 3000 (max 4000) tokens, 176.2 tok/s, 7 s
+[strata] thinking: 1350 of budget 3000 (max 4000) tokens, 177.6 tok/s, 8 s
+[strata] thinking: 1502 of budget 3000 (max 4000) tokens, 174.4 tok/s, 9 s
+[strata] done: 1516 tokens in 9 s (173.8 tok/s) (stop, cancel=False), expert cache 96.5% hit (+2.2% of the routed experts over PCIe)
+[strata] thinking limited to 3000 of max_tokens 4000 so the answer has room ("answer_room": false in the config turns this off)
+[strata] thinking: 76 of budget 3000 (max 4000) tokens, 128.1 tok/s, 1 s
+[strata] thinking: 221 of budget 3000 (max 4000) tokens, 138.5 tok/s, 2 s
+[strata] done: 338 tokens in 3 s (152.8 tok/s) (stop, cancel=False), expert cache 96.8% hit (+1.8% of the routed experts over PCIe)
+[strata] thinking limited to 3000 of max_tokens 4000 so the answer has room ("answer_room": false in the config turns this off)
+[strata] thinking: 87 of budget 3000 (max 4000) tokens, 149.2 tok/s, 1 s
+[strata] done: 195 tokens in 2 s (162.3 tok/s) (stop, cancel=False), expert cache 97.3% hit (+1.5% of the routed experts over PCIe)
+[strata] thinking limited to 3000 of max_tokens 4000 so the answer has room ("answer_room": false in the config turns this off)
+[strata] thinking: 89 of budget 3000 (max 4000) tokens, 147.1 tok/s, 1 s
+[strata] thinking: 252 of budget 3000 (max 4000) tokens, 156.9 tok/s, 2 s
+[strata] thinking: 421 of budget 3000 (max 4000) tokens, 161.0 tok/s, 3 s
+[strata] thinking: 603 of budget 3000 (max 4000) tokens, 166.4 tok/s, 4 s
+[strata] done: 633 tokens in 4 s (166.0 tok/s) (stop, cancel=False), expert cache 97.6% hit (+1.3% of the routed experts over PCIe)
+[strata] thinking limited to 3000 of max_tokens 4000 so the answer has room ("answer_room": false in the config turns this off)
+[strata] done: 58 tokens in 1 s (150.5 tok/s) (stop, cancel=False), expert cache 94.2% hit (+3.3% of the routed experts over PCIe)
+[strata] thinking limited to 3000 of max_tokens 4000 so the answer has room ("answer_room": false in the config turns this off)
+[strata] thinking: 85 of budget 3000 (max 4000) tokens, 147.4 tok/s, 1 s
+[strata] thinking: 221 of budget 3000 (max 4000) tokens, 140.0 tok/s, 2 s
+[strata] thinking: 391 of budget 3000 (max 4000) tokens, 151.5 tok/s, 3 s
+[strata] thinking: 580 of budget 3000 (max 4000) tokens, 161.9 tok/s, 4 s
+[strata] thinking: 766 of budget 3000 (max 4000) tokens, 166.9 tok/s, 5 s
+[strata] thinking: 924 of budget 3000 (max 4000) tokens, 165.1 tok/s, 6 s
+[strata] thinking: 1103 of budget 3000 (max 4000) tokens, 167.0 tok/s, 7 s
+[strata] thinking: 1276 of budget 3000 (max 4000) tokens, 167.7 tok/s, 8 s
+[strata] thinking: 1486 of budget 3000 (max 4000) tokens, 172.5 tok/s, 9 s
+[strata] thinking: 1675 of budget 3000 (max 4000) tokens, 174.1 tok/s, 10 s
+[strata] done: 1797 tokens in 11 s (175.7 tok/s) (stop, cancel=False), expert cache 96.6% hit (+2.0% of the routed experts over PCIe)
+[strata] thinking limited to 3000 of max_tokens 4000 so the answer has room ("answer_room": false in the config turns this off)
+[strata] thinking: 66 of budget 3000 (max 4000) tokens, 124.0 tok/s, 1 s
+[strata] done: 86 tokens in 1 s (132.1 tok/s) (stop, cancel=False), expert cache 92.5% hit (+4.1% of the routed experts over PCIe)
+[strata] thinking limited to 3000 of max_tokens 4000 so the answer has room ("answer_room": false in the config turns this off)
+[strata] thinking: 89 of budget 3000 (max 4000) tokens, 144.9 tok/s, 1 s
+[strata] thinking: 256 of budget 3000 (max 4000) tokens, 157.4 tok/s, 2 s
+[strata] thinking: 439 of budget 3000 (max 4000) tokens, 166.8 tok/s, 3 s
+[strata] thinking: 627 of budget 3000 (max 4000) tokens, 172.6 tok/s, 4 s
+[strata] thinking: 818 of budget 3000 (max 4000) tokens, 176.5 tok/s, 5 s
+[strata] thinking: 965 of budget 3000 (max 4000) tokens, 171.1 tok/s, 6 s
+[strata] thinking: 1157 of budget 3000 (max 4000) tokens, 173.8 tok/s, 7 s
+[strata] thinking: 1358 of budget 3000 (max 4000) tokens, 177.1 tok/s, 8 s
+[strata] thinking: 1562 of budget 3000 (max 4000) tokens, 180.0 tok/s, 9 s
+[strata] thinking: 1740 of budget 3000 (max 4000) tokens, 179.5 tok/s, 10 s
+[strata] thinking: 1937 of budget 3000 (max 4000) tokens, 181.1 tok/s, 11 s
+[strata] thinking: 2104 of budget 3000 (max 4000) tokens, 179.6 tok/s, 12 s
+[strata] thinking: 2301 of budget 3000 (max 4000) tokens, 180.9 tok/s, 13 s
+[strata] thinking: 2514 of budget 3000 (max 4000) tokens, 183.2 tok/s, 14 s
+[strata] thinking: 2726 of budget 3000 (max 4000) tokens, 185.1 tok/s, 15 s
+[strata] thinking: 2919 of budget 3000 (max 4000) tokens, 185.6 tok/s, 16 s
+[strata] thinking budget reached (3000 tokens): wrapping up the thinking
+[strata] done: 3020 tokens in 17 s (184.2 tok/s) (stop, cancel=False), expert cache 97.4% hit (+1.5% of the routed experts over PCIe)
+[strata] thinking limited to 3000 of max_tokens 4000 so the answer has room ("answer_room": false in the config turns this off)
+[strata] thinking: 91 of budget 3000 (max 4000) tokens, 147.5 tok/s, 1 s
+[strata] thinking: 270 of budget 3000 (max 4000) tokens, 166.4 tok/s, 2 s
+[strata] done: 352 tokens in 2 s (169.0 tok/s) (stop, cancel=False), expert cache 97.4% hit (+1.5% of the routed experts over PCIe)
+[strata] thinking limited to 3000 of max_tokens 4000 so the answer has room ("answer_room": false in the config turns this off)
+[strata] thinking: 105 of budget 3000 (max 4000) tokens, 161.8 tok/s, 1 s
+[strata] thinking: 267 of budget 3000 (max 4000) tokens, 161.5 tok/s, 2 s
+[strata] thinking: 433 of budget 3000 (max 4000) tokens, 162.6 tok/s, 3 s
+[strata] thinking: 616 of budget 3000 (max 4000) tokens, 167.8 tok/s, 4 s
+[strata] done: 691 tokens in 5 s (166.1 tok/s) (stop, cancel=False), expert cache 98.1% hit (+0.9% of the routed experts over PCIe)
+[strata] thinking limited to 3000 of max_tokens 4000 so the answer has room ("answer_room": false in the config turns this off)
+[strata] thinking: 54 of budget 3000 (max 4000) tokens, 113.0 tok/s, 1 s
+[strata] thinking: 203 of budget 3000 (max 4000) tokens, 137.2 tok/s, 2 s
+[strata] thinking: 343 of budget 3000 (max 4000) tokens, 138.3 tok/s, 3 s
+[strata] thinking: 517 of budget 3000 (max 4000) tokens, 148.3 tok/s, 4 s
+[strata] thinking: 718 of budget 3000 (max 4000) tokens, 159.7 tok/s, 5 s
+[strata] thinking: 877 of budget 3000 (max 4000) tokens, 159.5 tok/s, 6 s
+[strata] thinking: 1043 of budget 3000 (max 4000) tokens, 160.2 tok/s, 7 s
+[strata] done: 1132 tokens in 8 s (159.2 tok/s) (stop, cancel=False), expert cache 97.7% hit (+1.3% of the routed experts over PCIe)
+[strata] done: 20 tokens in 0 s (125.9 tok/s) (length, cancel=False), expert cache 91.7% hit (+4.5% of the routed experts over PCIe)
+[strata] thinking limited to 3000 of max_tokens 4000 so the answer has room ("answer_room": false in the config turns this off)
+[strata] thinking: 66 of budget 3000 (max 4000) tokens, 118.0 tok/s, 1 s
+[strata] done: 201 tokens in 2 s (132.1 tok/s) (stop, cancel=False), expert cache 94.5% hit (+3.4% of the routed experts over PCIe)
+[strata] thinking limited to 3000 of max_tokens 4000 so the answer has room ("answer_room": false in the config turns this off)
+[strata] thinking: 93 of budget 3000 (max 4000) tokens, 159.6 tok/s, 1 s
+[strata] done: 124 tokens in 1 s (170.7 tok/s) (stop, cancel=False), expert cache 95.7% hit (+2.5% of the routed experts over PCIe)
+[strata] thinking limited to 3000 of max_tokens 4000 so the answer has room ("answer_room": false in the config turns this off)
+[strata] thinking: 109 of budget 3000 (max 4000) tokens, 185.0 tok/s, 1 s
+[strata] thinking: 299 of budget 3000 (max 4000) tokens, 186.7 tok/s, 2 s
+[strata] done: 406 tokens in 3 s (183.0 tok/s) (stop, cancel=False), expert cache 96.7% hit (+2.0% of the routed experts over PCIe)
+[strata] thinking limited to 3000 of max_tokens 4000 so the answer has room ("answer_room": false in the config turns this off)
+[strata] thinking: 84 of budget 3000 (max 4000) tokens, 161.4 tok/s, 1 s
+[strata] done: 235 tokens in 2 s (187.7 tok/s) (stop, cancel=False), expert cache 95.4% hit (+2.7% of the routed experts over PCIe)
+[strata] thinking limited to 3000 of max_tokens 4000 so the answer has room ("answer_room": false in the config turns this off)
+[strata] done: 44 tokens in 1 s (179.0 tok/s) (stop, cancel=False), expert cache 95.3% hit (+3.1% of the routed experts over PCIe)
+[strata] thinking limited to 3000 of max_tokens 4000 so the answer has room ("answer_room": false in the config turns this off)
+[strata] done: 50 tokens in 1 s (112.8 tok/s) (stop, cancel=False), expert cache 89.9% hit (+6.1% of the routed experts over PCIe)
+[strata] thinking limited to 3000 of max_tokens 4000 so the answer has room ("answer_room": false in the config turns this off)
+[strata] thinking: 76 of budget 3000 (max 4000) tokens, 135.4 tok/s, 1 s
+[strata] done: 153 tokens in 2 s (131.3 tok/s) (stop, cancel=False), expert cache 95.1% hit (+3.2% of the routed experts over PCIe)
+[strata] thinking limited to 3000 of max_tokens 4000 so the answer has room ("answer_room": false in the config turns this off)
+[strata] thinking: 77 of budget 3000 (max 4000) tokens, 141.3 tok/s, 1 s
+[strata] done: 117 tokens in 1 s (140.4 tok/s) (stop, cancel=False), expert cache 95.8% hit (+2.5% of the routed experts over PCIe)
+[strata] thinking limited to 3000 of max_tokens 4000 so the answer has room ("answer_room": false in the config turns this off)
+[strata] thinking: 107 of budget 3000 (max 4000) tokens, 185.5 tok/s, 1 s
+[strata] thinking: 238 of budget 3000 (max 4000) tokens, 150.4 tok/s, 2 s
+[strata] done: 266 tokens in 2 s (149.7 tok/s) (stop, cancel=False), expert cache 94.0% hit (+4.0% of the routed experts over PCIe)
+[strata] thinking limited to 3000 of max_tokens 4000 so the answer has room ("answer_room": false in the config turns this off)
+[strata] thinking: 76 of budget 3000 (max 4000) tokens, 131.7 tok/s, 1 s
+[strata] thinking: 242 of budget 3000 (max 4000) tokens, 152.8 tok/s, 2 s
+[strata] thinking: 392 of budget 3000 (max 4000) tokens, 151.0 tok/s, 3 s
+[strata] thinking: 559 of budget 3000 (max 4000) tokens, 155.2 tok/s, 4 s
+[strata] thinking: 736 of budget 3000 (max 4000) tokens, 159.5 tok/s, 5 s
+[strata] done: 831 tokens in 6 s (160.0 tok/s) (stop, cancel=False), expert cache 97.3% hit (+1.5% of the routed experts over PCIe)
+[strata] thinking limited to 3000 of max_tokens 4000 so the answer has room ("answer_room": false in the config turns this off)
+[strata] thinking: 51 of budget 3000 (max 4000) tokens, 90.8 tok/s, 1 s
+[strata] done: 106 tokens in 1 s (109.4 tok/s) (stop, cancel=False), expert cache 84.6% hit (+10.0% of the routed experts over PCIe)
+[strata] thinking limited to 3000 of max_tokens 4000 so the answer has room ("answer_room": false in the config turns this off)
+[strata] thinking: 73 of budget 3000 (max 4000) tokens, 143.4 tok/s, 1 s
+[strata] done: 89 tokens in 1 s (151.7 tok/s) (stop, cancel=False), expert cache 94.4% hit (+3.4% of the routed experts over PCIe)
+[strata] thinking limited to 3000 of max_tokens 4000 so the answer has room ("answer_room": false in the config turns this off)
+[strata] thinking: 94 of budget 3000 (max 4000) tokens, 165.9 tok/s, 1 s
+[strata] done: 174 tokens in 2 s (155.2 tok/s) (stop, cancel=False), expert cache 95.2% hit (+2.9% of the routed experts over PCIe)
+[strata] thinking limited to 3000 of max_tokens 4000 so the answer has room ("answer_room": false in the config turns this off)
+[strata] done: 37 tokens in 1 s (159.1 tok/s) (stop, cancel=False), expert cache 96.5% hit (+1.8% of the routed experts over PCIe)
+[strata] thinking limited to 3000 of max_tokens 4000 so the answer has room ("answer_room": false in the config turns this off)
+[strata] done: 41 tokens in 1 s (204.7 tok/s) (stop, cancel=False), expert cache 96.4% hit (+2.2% of the routed experts over PCIe)
+[strata] thinking limited to 3000 of max_tokens 4000 so the answer has room ("answer_room": false in the config turns this off)
+[strata] thinking: 66 of budget 3000 (max 4000) tokens, 130.1 tok/s, 1 s
+[strata] done: 190 tokens in 2 s (147.8 tok/s) (stop, cancel=False), expert cache 92.3% hit (+5.3% of the routed experts over PCIe)
+[strata] thinking limited to 3000 of max_tokens 4000 so the answer has room ("answer_room": false in the config turns this off)
+[strata] done: 57 tokens in 1 s (201.2 tok/s) (stop, cancel=False), expert cache 95.4% hit (+2.6% of the routed experts over PCIe)
+[strata] thinking limited to 3000 of max_tokens 4000 so the answer has room ("answer_room": false in the config turns this off)
+[strata] thinking: 121 of budget 3000 (max 4000) tokens, 185.9 tok/s, 1 s
+[strata] thinking: 281 of budget 3000 (max 4000) tokens, 169.7 tok/s, 2 s
+[strata] done: 410 tokens in 3 s (169.4 tok/s) (stop, cancel=False), expert cache 96.7% hit (+2.0% of the routed experts over PCIe)
+[strata] thinking limited to 3000 of max_tokens 4000 so the answer has room ("answer_room": false in the config turns this off)
+[strata] thinking: 114 of budget 3000 (max 4000) tokens, 189.9 tok/s, 1 s
+[strata] done: 215 tokens in 2 s (158.9 tok/s) (stop, cancel=False), expert cache 96.7% hit (+1.9% of the routed experts over PCIe)
+[strata] thinking limited to 3000 of max_tokens 4000 so the answer has room ("answer_room": false in the config turns this off)
+[strata] done: 95 tokens in 1 s (176.2 tok/s) (stop, cancel=False), expert cache 97.6% hit (+1.3% of the routed experts over PCIe)
+[strata] thinking limited to 3000 of max_tokens 4000 so the answer has room ("answer_room": false in the config turns this off)
+[strata] thinking: 82 of budget 3000 (max 4000) tokens, 140.4 tok/s, 1 s
+[strata] done: 133 tokens in 1 s (146.6 tok/s) (stop, cancel=False), expert cache 93.3% hit (+3.9% of the routed experts over PCIe)
+[strata] thinking limited to 3000 of max_tokens 4000 so the answer has room ("answer_room": false in the config turns this off)
+[strata] thinking: 58 of budget 3000 (max 4000) tokens, 107.5 tok/s, 1 s
+[strata] done: 141 tokens in 2 s (125.6 tok/s) (stop, cancel=False), expert cache 89.9% hit (+6.5% of the routed experts over PCIe)
+[strata] thinking limited to 3000 of max_tokens 4000 so the answer has room ("answer_room": false in the config turns this off)
+[strata] thinking: 72 of budget 3000 (max 4000) tokens, 128.7 tok/s, 1 s
+[strata] done: 95 tokens in 1 s (138.6 tok/s) (stop, cancel=False), expert cache 96.0% hit (+2.4% of the routed experts over PCIe)
+[strata] thinking limited to 3000 of max_tokens 4000 so the answer has room ("answer_room": false in the config turns this off)
+[strata] thinking: 93 of budget 3000 (max 4000) tokens, 145.4 tok/s, 1 s
+[strata] done: 100 tokens in 1 s (151.4 tok/s) (stop, cancel=False), expert cache 96.7% hit (+1.9% of the routed experts over PCIe)
+[strata] thinking limited to 3000 of max_tokens 4000 so the answer has room ("answer_room": false in the config turns this off)
+[strata] thinking: 124 of budget 3000 (max 4000) tokens, 193.8 tok/s, 1 s
+[strata] thinking: 289 of budget 3000 (max 4000) tokens, 175.7 tok/s, 2 s
+[strata] thinking: 450 of budget 3000 (max 4000) tokens, 169.8 tok/s, 3 s
+[strata] done: 565 tokens in 4 s (164.6 tok/s) (stop, cancel=False), expert cache 97.8% hit (+1.2% of the routed experts over PCIe)
+[strata] thinking limited to 3000 of max_tokens 4000 so the answer has room ("answer_room": false in the config turns this off)
+[strata] thinking: 74 of budget 3000 (max 4000) tokens, 128.7 tok/s, 1 s
+[strata] thinking: 218 of budget 3000 (max 4000) tokens, 137.0 tok/s, 2 s
+[strata] thinking: 382 of budget 3000 (max 4000) tokens, 146.5 tok/s, 3 s
+[strata] done: 389 tokens in 3 s (146.8 tok/s) (stop, cancel=False), expert cache 95.3% hit (+2.8% of the routed experts over PCIe)
+[strata] thinking limited to 3000 of max_tokens 4000 so the answer has room ("answer_room": false in the config turns this off)
+[strata] thinking: 83 of budget 3000 (max 4000) tokens, 159.2 tok/s, 1 s
+[strata] done: 140 tokens in 1 s (170.5 tok/s) (stop, cancel=False), expert cache 95.2% hit (+2.8% of the routed experts over PCIe)
+[strata] thinking limited to 3000 of max_tokens 4000 so the answer has room ("answer_room": false in the config turns this off)
+[strata] thinking: 112 of budget 3000 (max 4000) tokens, 181.3 tok/s, 1 s
+[strata] done: 198 tokens in 2 s (177.2 tok/s) (stop, cancel=False), expert cache 96.3% hit (+2.3% of the routed experts over PCIe)
+[strata] thinking limited to 3000 of max_tokens 4000 so the answer has room ("answer_room": false in the config turns this off)
+[strata] thinking: 83 of budget 3000 (max 4000) tokens, 143.2 tok/s, 1 s
+[strata] thinking: 265 of budget 3000 (max 4000) tokens, 165.3 tok/s, 2 s
+[strata] done: 340 tokens in 2 s (169.7 tok/s) (stop, cancel=False), expert cache 95.2% hit (+3.1% of the routed experts over PCIe)
+[strata] thinking limited to 3000 of max_tokens 4000 so the answer has room ("answer_room": false in the config turns this off)
+[strata] thinking: 88 of budget 3000 (max 4000) tokens, 160.1 tok/s, 1 s
+[strata] thinking: 242 of budget 3000 (max 4000) tokens, 154.6 tok/s, 2 s
+[strata] thinking: 421 of budget 3000 (max 4000) tokens, 162.9 tok/s, 3 s
+[strata] done: 555 tokens in 4 s (158.4 tok/s) (stop, cancel=False), expert cache 96.8% hit (+2.0% of the routed experts over PCIe)
+[strata] thinking limited to 3000 of max_tokens 4000 so the answer has room ("answer_room": false in the config turns this off)
+[strata] thinking: 68 of budget 3000 (max 4000) tokens, 135.7 tok/s, 1 s
+[strata] thinking: 224 of budget 3000 (max 4000) tokens, 149.2 tok/s, 2 s
+[strata] thinking: 378 of budget 3000 (max 4000) tokens, 150.2 tok/s, 3 s
+[strata] thinking: 552 of budget 3000 (max 4000) tokens, 156.8 tok/s, 4 s
+[strata] thinking: 715 of budget 3000 (max 4000) tokens, 157.6 tok/s, 5 s
+[strata] thinking: 883 of budget 3000 (max 4000) tokens, 159.3 tok/s, 6 s
+[strata] thinking: 1048 of budget 3000 (max 4000) tokens, 160.0 tok/s, 7 s
+[strata] thinking: 1208 of budget 3000 (max 4000) tokens, 159.9 tok/s, 8 s
+[strata] thinking: 1392 of budget 3000 (max 4000) tokens, 162.5 tok/s, 9 s
+[strata] thinking: 1551 of budget 3000 (max 4000) tokens, 162.1 tok/s, 10 s
+[strata] thinking: 1764 of budget 3000 (max 4000) tokens, 166.9 tok/s, 11 s
+[strata] thinking: 1919 of budget 3000 (max 4000) tokens, 165.7 tok/s, 12 s
+[strata] thinking: 2091 of budget 3000 (max 4000) tokens, 166.0 tok/s, 13 s
+[strata] thinking: 2278 of budget 3000 (max 4000) tokens, 167.5 tok/s, 14 s
+[strata] thinking: 2471 of budget 3000 (max 4000) tokens, 169.1 tok/s, 15 s
+[strata] thinking: 2632 of budget 3000 (max 4000) tokens, 168.5 tok/s, 16 s
+[strata] thinking: 2796 of budget 3000 (max 4000) tokens, 168.1 tok/s, 17 s
+[strata] thinking: 2972 of budget 3000 (max 4000) tokens, 168.5 tok/s, 18 s
+[strata] thinking budget reached (3000 tokens): wrapping up the thinking
+[strata] done: 3020 tokens in 18 s (168.4 tok/s) (stop, cancel=False), expert cache 98.2% hit (+0.9% of the routed experts over PCIe)
+[strata] thinking limited to 3000 of max_tokens 4000 so the answer has room ("answer_room": false in the config turns this off)
+[strata] thinking: 95 of budget 3000 (max 4000) tokens, 180.1 tok/s, 1 s
+[strata] thinking: 258 of budget 3000 (max 4000) tokens, 168.7 tok/s, 2 s
+[strata] thinking: 432 of budget 3000 (max 4000) tokens, 170.7 tok/s, 3 s
+[strata] thinking: 605 of budget 3000 (max 4000) tokens, 170.9 tok/s, 4 s
+[strata] thinking: 772 of budget 3000 (max 4000) tokens, 170.0 tok/s, 5 s
+[strata] thinking: 929 of budget 3000 (max 4000) tokens, 167.6 tok/s, 6 s
+[strata] thinking: 1125 of budget 3000 (max 4000) tokens, 171.8 tok/s, 7 s
+[strata] thinking: 1300 of budget 3000 (max 4000) tokens, 172.1 tok/s, 8 s
+[strata] thinking: 1443 of budget 3000 (max 4000) tokens, 168.5 tok/s, 9 s
+[strata] thinking: 1598 of budget 3000 (max 4000) tokens, 166.7 tok/s, 10 s
+[strata] thinking: 1778 of budget 3000 (max 4000) tokens, 167.7 tok/s, 11 s
+[strata] thinking: 1928 of budget 3000 (max 4000) tokens, 166.1 tok/s, 12 s
+[strata] thinking: 2101 of budget 3000 (max 4000) tokens, 166.5 tok/s, 13 s
+[strata] thinking: 2262 of budget 3000 (max 4000) tokens, 166.1 tok/s, 14 s
+[strata] thinking: 2430 of budget 3000 (max 4000) tokens, 166.1 tok/s, 15 s
+[strata] thinking: 2602 of budget 3000 (max 4000) tokens, 166.3 tok/s, 16 s
+[strata] thinking: 2771 of budget 3000 (max 4000) tokens, 166.4 tok/s, 17 s
+[strata] thinking: 2945 of budget 3000 (max 4000) tokens, 166.8 tok/s, 18 s
+[strata] thinking budget reached (3000 tokens): wrapping up the thinking
+[strata] thinking: 3018 of max 4000 tokens, 159.2 tok/s, 19 s
+[strata] done: 3020 tokens in 20 s (158.4 tok/s) (stop, cancel=False), expert cache 98.3% hit (+0.9% of the routed experts over PCIe)
+[strata] thinking limited to 3000 of max_tokens 4000 so the answer has room ("answer_room": false in the config turns this off)
+[strata] done: 41 tokens in 1 s (133.4 tok/s) (stop, cancel=False), expert cache 88.4% hit (+7.2% of the routed experts over PCIe)
+[strata] thinking limited to 3000 of max_tokens 4000 so the answer has room ("answer_room": false in the config turns this off)
+[strata] thinking: 68 of budget 3000 (max 4000) tokens, 122.1 tok/s, 1 s
+[strata] done: 111 tokens in 1 s (126.4 tok/s) (stop, cancel=False), expert cache 91.9% hit (+5.4% of the routed experts over PCIe)
+[strata] thinking limited to 3000 of max_tokens 4000 so the answer has room ("answer_room": false in the config turns this off)
+[strata] done: 65 tokens in 1 s (152.5 tok/s) (stop, cancel=False), expert cache 92.4% hit (+4.9% of the routed experts over PCIe)
+[strata] thinking limited to 3000 of max_tokens 4000 so the answer has room ("answer_room": false in the config turns this off)
+[strata] thinking: 78 of budget 3000 (max 4000) tokens, 127.2 tok/s, 1 s
+[strata] done: 92 tokens in 1 s (137.1 tok/s) (stop, cancel=False), expert cache 95.3% hit (+2.6% of the routed experts over PCIe)
+[strata] thinking limited to 3000 of max_tokens 4000 so the answer has room ("answer_room": false in the config turns this off)
+[strata] thinking: 92 of budget 3000 (max 4000) tokens, 156.6 tok/s, 1 s
+[strata] done: 107 tokens in 1 s (154.4 tok/s) (stop, cancel=False), expert cache 93.5% hit (+4.2% of the routed experts over PCIe)
+[strata] thinking limited to 3000 of max_tokens 4000 so the answer has room ("answer_room": false in the config turns this off)
+[strata] thinking: 94 of budget 3000 (max 4000) tokens, 180.9 tok/s, 1 s
+[strata] thinking: 251 of budget 3000 (max 4000) tokens, 163.7 tok/s, 2 s
+[strata] thinking: 425 of budget 3000 (max 4000) tokens, 167.3 tok/s, 3 s
+[strata] thinking: 610 of budget 3000 (max 4000) tokens, 172.1 tok/s, 4 s
+[strata] thinking: 776 of budget 3000 (max 4000) tokens, 169.8 tok/s, 5 s
+[strata] thinking: 948 of budget 3000 (max 4000) tokens, 169.7 tok/s, 6 s
+[strata] thinking: 1125 of budget 3000 (max 4000) tokens, 170.4 tok/s, 7 s
+[strata] thinking: 1281 of budget 3000 (max 4000) tokens, 168.3 tok/s, 8 s
+[strata] thinking: 1456 of budget 3000 (max 4000) tokens, 169.1 tok/s, 9 s
+[strata] thinking: 1632 of budget 3000 (max 4000) tokens, 169.5 tok/s, 10 s
+[strata] thinking: 1829 of budget 3000 (max 4000) tokens, 172.1 tok/s, 11 s
+[strata] thinking: 2024 of budget 3000 (max 4000) tokens, 173.8 tok/s, 12 s
+[strata] thinking: 2193 of budget 3000 (max 4000) tokens, 173.2 tok/s, 13 s
+[strata] thinking: 2358 of budget 3000 (max 4000) tokens, 172.5 tok/s, 14 s
+[strata] thinking: 2530 of budget 3000 (max 4000) tokens, 172.3 tok/s, 15 s
+[strata] thinking: 2696 of budget 3000 (max 4000) tokens, 171.8 tok/s, 16 s
+[strata] thinking: 2868 of budget 3000 (max 4000) tokens, 171.6 tok/s, 17 s
+[strata] thinking budget reached (3000 tokens): wrapping up the thinking
+[strata] thinking: 3018 of max 4000 tokens, 164.3 tok/s, 19 s
+[strata] done: 3020 tokens in 19 s (163.6 tok/s) (stop, cancel=False), expert cache 97.0% hit (+1.8% of the routed experts over PCIe)
+[strata] thinking limited to 3000 of max_tokens 4000 so the answer has room ("answer_room": false in the config turns this off)
+[strata] thinking: 61 of budget 3000 (max 4000) tokens, 107.6 tok/s, 1 s
+[strata] done: 164 tokens in 2 s (123.8 tok/s) (stop, cancel=False), expert cache 93.5% hit (+4.0% of the routed experts over PCIe)
+[strata] thinking limited to 3000 of max_tokens 4000 so the answer has room ("answer_room": false in the config turns this off)
+[strata] done: 76 tokens in 1 s (177.1 tok/s) (stop, cancel=False), expert cache 95.5% hit (+2.7% of the routed experts over PCIe)
+[strata] thinking limited to 3000 of max_tokens 4000 so the answer has room ("answer_room": false in the config turns this off)
+[strata] thinking: 68 of budget 3000 (max 4000) tokens, 127.8 tok/s, 1 s
+[strata] thinking: 249 of budget 3000 (max 4000) tokens, 160.4 tok/s, 2 s
+[strata] thinking: 425 of budget 3000 (max 4000) tokens, 166.4 tok/s, 3 s
+[strata] thinking: 607 of budget 3000 (max 4000) tokens, 170.3 tok/s, 4 s
+[strata] thinking: 806 of budget 3000 (max 4000) tokens, 176.3 tok/s, 5 s
+[strata] thinking: 1010 of budget 3000 (max 4000) tokens, 180.9 tok/s, 6 s
+[strata] thinking: 1220 of budget 3000 (max 4000) tokens, 185.1 tok/s, 7 s
+[strata] thinking: 1393 of budget 3000 (max 4000) tokens, 183.2 tok/s, 8 s
+[strata] thinking: 1611 of budget 3000 (max 4000) tokens, 187.3 tok/s, 9 s
+[strata] thinking: 1838 of budget 3000 (max 4000) tokens, 191.1 tok/s, 10 s
+[strata] done: 1979 tokens in 11 s (187.7 tok/s) (stop, cancel=False), expert cache 96.9% hit (+1.9% of the routed experts over PCIe)
+[strata] thinking limited to 3000 of max_tokens 4000 so the answer has room ("answer_room": false in the config turns this off)
+[strata] thinking: 105 of budget 3000 (max 4000) tokens, 189.6 tok/s, 1 s
+[strata] thinking: 316 of budget 3000 (max 4000) tokens, 200.7 tok/s, 2 s
+[strata] done: 349 tokens in 2 s (200.5 tok/s) (stop, cancel=False), expert cache 95.6% hit (+2.9% of the routed experts over PCIe)
+[strata] thinking limited to 3000 of max_tokens 4000 so the answer has room ("answer_room": false in the config turns this off)
+[strata] thinking: 62 of budget 3000 (max 4000) tokens, 110.9 tok/s, 1 s
+[strata] done: 150 tokens in 2 s (137.3 tok/s) (stop, cancel=False), expert cache 94.2% hit (+3.9% of the routed experts over PCIe)
+[strata] thinking limited to 3000 of max_tokens 4000 so the answer has room ("answer_room": false in the config turns this off)
+[strata] thinking: 126 of budget 3000 (max 4000) tokens, 210.6 tok/s, 1 s
+[strata] done: 194 tokens in 1 s (216.6 tok/s) (stop, cancel=False), expert cache 97.1% hit (+1.8% of the routed experts over PCIe)
+[strata] thinking limited to 3000 of max_tokens 4000 so the answer has room ("answer_room": false in the config turns this off)
+[strata] thinking: 105 of budget 3000 (max 4000) tokens, 174.4 tok/s, 1 s
+[strata] done: 241 tokens in 2 s (191.7 tok/s) (stop, cancel=False), expert cache 97.2% hit (+1.7% of the routed experts over PCIe)
+[strata] thinking limited to 3000 of max_tokens 4000 so the answer has room ("answer_room": false in the config turns this off)
+[strata] thinking: 73 of budget 3000 (max 4000) tokens, 129.8 tok/s, 1 s
+[strata] done: 125 tokens in 1 s (139.4 tok/s) (stop, cancel=False), expert cache 94.8% hit (+3.4% of the routed experts over PCIe)
+[strata] thinking limited to 3000 of max_tokens 4000 so the answer has room ("answer_room": false in the config turns this off)
+[strata] thinking: 93 of budget 3000 (max 4000) tokens, 163.7 tok/s, 1 s
+[strata] done: 201 tokens in 2 s (158.7 tok/s) (stop, cancel=False), expert cache 97.2% hit (+1.7% of the routed experts over PCIe)
+[strata] thinking limited to 3000 of max_tokens 4000 so the answer has room ("answer_room": false in the config turns this off)
+[strata] thinking: 100 of budget 3000 (max 4000) tokens, 165.2 tok/s, 1 s
+[strata] done: 199 tokens in 2 s (157.8 tok/s) (stop, cancel=False), expert cache 95.3% hit (+2.9% of the routed experts over PCIe)
+[strata] thinking limited to 3000 of max_tokens 4000 so the answer has room ("answer_room": false in the config turns this off)
+[strata] thinking: 99 of budget 3000 (max 4000) tokens, 154.7 tok/s, 1 s
+[strata] done: 120 tokens in 1 s (163.4 tok/s) (stop, cancel=False), expert cache 96.6% hit (+1.9% of the routed experts over PCIe)
+[strata] thinking limited to 3000 of max_tokens 4000 so the answer has room ("answer_room": false in the config turns this off)
+[strata] done: 68 tokens in 1 s (152.4 tok/s) (stop, cancel=False), expert cache 95.9% hit (+2.3% of the routed experts over PCIe)
+[strata] thinking limited to 3000 of max_tokens 4000 so the answer has room ("answer_room": false in the config turns this off)
+[strata] thinking: 98 of budget 3000 (max 4000) tokens, 165.5 tok/s, 1 s
+[strata] thinking: 240 of budget 3000 (max 4000) tokens, 150.7 tok/s, 2 s
+[strata] done: 322 tokens in 2 s (164.2 tok/s) (stop, cancel=False), expert cache 93.9% hit (+4.0% of the routed experts over PCIe)
+[strata] thinking limited to 3000 of max_tokens 4000 so the answer has room ("answer_room": false in the config turns this off)
+[strata] thinking: 75 of budget 3000 (max 4000) tokens, 122.3 tok/s, 1 s
+[strata] done: 89 tokens in 1 s (125.4 tok/s) (stop, cancel=False), expert cache 94.1% hit (+3.6% of the routed experts over PCIe)
+[strata] thinking limited to 3000 of max_tokens 4000 so the answer has room ("answer_room": false in the config turns this off)
+[strata] done: 56 tokens in 1 s (141.6 tok/s) (stop, cancel=False), expert cache 93.6% hit (+3.5% of the routed experts over PCIe)
+[strata] thinking limited to 3000 of max_tokens 4000 so the answer has room ("answer_room": false in the config turns this off)
+[strata] thinking: 87 of budget 3000 (max 4000) tokens, 143.7 tok/s, 1 s
+[strata] thinking: 202 of budget 3000 (max 4000) tokens, 124.6 tok/s, 2 s
+[strata] thinking: 348 of budget 3000 (max 4000) tokens, 132.0 tok/s, 3 s
+[strata] thinking: 516 of budget 3000 (max 4000) tokens, 141.7 tok/s, 4 s
+[strata] thinking: 673 of budget 3000 (max 4000) tokens, 144.9 tok/s, 5 s
+[strata] done: 704 tokens in 5 s (144.1 tok/s) (stop, cancel=False), expert cache 97.5% hit (+1.4% of the routed experts over PCIe)
+[strata] thinking limited to 3000 of max_tokens 4000 so the answer has room ("answer_room": false in the config turns this off)
+[strata] thinking: 66 of budget 3000 (max 4000) tokens, 110.9 tok/s, 1 s
+[strata] done: 118 tokens in 1 s (123.3 tok/s) (stop, cancel=False), expert cache 92.2% hit (+4.8% of the routed experts over PCIe)
+[strata] thinking limited to 3000 of max_tokens 4000 so the answer has room ("answer_room": false in the config turns this off)
+[strata] thinking: 67 of budget 3000 (max 4000) tokens, 151.4 tok/s, 1 s
+[strata] thinking: 200 of budget 3000 (max 4000) tokens, 138.5 tok/s, 2 s
+[strata] thinking: 370 of budget 3000 (max 4000) tokens, 151.3 tok/s, 3 s
+[strata] thinking: 532 of budget 3000 (max 4000) tokens, 153.9 tok/s, 4 s
+[strata] thinking: 711 of budget 3000 (max 4000) tokens, 159.3 tok/s, 5 s
+[strata] thinking: 964 of budget 3000 (max 4000) tokens, 176.1 tok/s, 6 s
+[strata] thinking: 1162 of budget 3000 (max 4000) tokens, 179.3 tok/s, 7 s
+[strata] thinking: 1311 of budget 3000 (max 4000) tokens, 174.9 tok/s, 8 s
+[strata] thinking: 1475 of budget 3000 (max 4000) tokens, 173.5 tok/s, 9 s
+[strata] thinking: 1642 of budget 3000 (max 4000) tokens, 172.5 tok/s, 10 s
+[strata] thinking: 1816 of budget 3000 (max 4000) tokens, 172.5 tok/s, 11 s
+[strata] thinking: 1970 of budget 3000 (max 4000) tokens, 170.6 tok/s, 12 s
+[strata] thinking: 2151 of budget 3000 (max 4000) tokens, 171.4 tok/s, 13 s
+[strata] thinking: 2319 of budget 3000 (max 4000) tokens, 171.1 tok/s, 14 s
+[strata] thinking: 2488 of budget 3000 (max 4000) tokens, 170.8 tok/s, 15 s
+[strata] thinking: 2670 of budget 3000 (max 4000) tokens, 171.3 tok/s, 16 s
+[strata] thinking: 2833 of budget 3000 (max 4000) tokens, 170.7 tok/s, 17 s
+[strata] thinking: 2993 of budget 3000 (max 4000) tokens, 169.9 tok/s, 18 s
+[strata] thinking budget reached (3000 tokens): wrapping up the thinking
+[strata] done: 3020 tokens in 18 s (169.9 tok/s) (stop, cancel=False), expert cache 97.3% hit (+1.5% of the routed experts over PCIe)
+[strata] thinking limited to 3000 of max_tokens 4000 so the answer has room ("answer_room": false in the config turns this off)
+[strata] thinking: 49 of budget 3000 (max 4000) tokens, 108.5 tok/s, 1 s
+[strata] done: 63 tokens in 1 s (118.9 tok/s) (stop, cancel=False), expert cache 95.1% hit (+2.9% of the routed experts over PCIe)
+[strata] thinking limited to 3000 of max_tokens 4000 so the answer has room ("answer_room": false in the config turns this off)
+[strata] thinking: 84 of budget 3000 (max 4000) tokens, 159.7 tok/s, 1 s
+[strata] done: 114 tokens in 1 s (165.0 tok/s) (stop, cancel=False), expert cache 96.9% hit (+1.7% of the routed experts over PCIe)
+[strata] thinking limited to 3000 of max_tokens 4000 so the answer has room ("answer_room": false in the config turns this off)
+[strata] thinking: 70 of budget 3000 (max 4000) tokens, 126.8 tok/s, 1 s
+[strata] thinking: 247 of budget 3000 (max 4000) tokens, 157.3 tok/s, 2 s
+[strata] thinking: 447 of budget 3000 (max 4000) tokens, 173.4 tok/s, 3 s
+[strata] thinking: 653 of budget 3000 (max 4000) tokens, 182.3 tok/s, 4 s
+[strata] thinking: 853 of budget 3000 (max 4000) tokens, 186.0 tok/s, 5 s
+[strata] thinking: 1027 of budget 3000 (max 4000) tokens, 183.3 tok/s, 6 s
+[strata] done: 1239 tokens in 7 s (188.9 tok/s) (stop, cancel=False), expert cache 97.0% hit (+1.8% of the routed experts over PCIe)
+[strata] thinking limited to 3000 of max_tokens 4000 so the answer has room ("answer_room": false in the config turns this off)
+[strata] thinking: 73 of budget 3000 (max 4000) tokens, 143.7 tok/s, 1 s
+[strata] thinking: 261 of budget 3000 (max 4000) tokens, 172.1 tok/s, 2 s
+[strata] thinking: 414 of budget 3000 (max 4000) tokens, 163.5 tok/s, 3 s
+[strata] thinking: 580 of budget 3000 (max 4000) tokens, 164.2 tok/s, 4 s
+[strata] thinking: 769 of budget 3000 (max 4000) tokens, 169.3 tok/s, 5 s
+[strata] thinking: 944 of budget 3000 (max 4000) tokens, 169.8 tok/s, 6 s
+[strata] thinking: 1117 of budget 3000 (max 4000) tokens, 169.9 tok/s, 7 s
+[strata] thinking: 1284 of budget 3000 (max 4000) tokens, 169.5 tok/s, 8 s
+[strata] thinking: 1480 of budget 3000 (max 4000) tokens, 172.2 tok/s, 9 s
+[strata] thinking: 1628 of budget 3000 (max 4000) tokens, 169.6 tok/s, 10 s
+[strata] thinking: 1793 of budget 3000 (max 4000) tokens, 169.1 tok/s, 11 s
+[strata] thinking: 1964 of budget 3000 (max 4000) tokens, 169.0 tok/s, 12 s
+[strata] thinking: 2176 of budget 3000 (max 4000) tokens, 172.3 tok/s, 13 s
+[strata] done: 2350 tokens in 14 s (173.0 tok/s) (stop, cancel=False), expert cache 97.0% hit (+1.8% of the routed experts over PCIe)
+[strata] thinking limited to 3000 of max_tokens 4000 so the answer has room ("answer_room": false in the config turns this off)
+[strata] thinking: 87 of budget 3000 (max 4000) tokens, 144.1 tok/s, 1 s
+[strata] thinking: 253 of budget 3000 (max 4000) tokens, 156.5 tok/s, 2 s
+[strata] thinking: 438 of budget 3000 (max 4000) tokens, 166.3 tok/s, 3 s
+[strata] done: 448 tokens in 3 s (167.9 tok/s) (stop, cancel=False), expert cache 97.2% hit (+1.5% of the routed experts over PCIe)
+[strata] thinking limited to 3000 of max_tokens 4000 so the answer has room ("answer_room": false in the config turns this off)
+[strata] thinking: 85 of budget 3000 (max 4000) tokens, 146.6 tok/s, 1 s
+[strata] done: 202 tokens in 2 s (156.9 tok/s) (stop, cancel=False), expert cache 96.6% hit (+1.9% of the routed experts over PCIe)
+[strata] thinking limited to 3000 of max_tokens 4000 so the answer has room ("answer_room": false in the config turns this off)
+[strata] thinking: 80 of budget 3000 (max 4000) tokens, 135.1 tok/s, 1 s
+[strata] thinking: 238 of budget 3000 (max 4000) tokens, 149.4 tok/s, 2 s
+[strata] thinking: 400 of budget 3000 (max 4000) tokens, 153.4 tok/s, 3 s
+[strata] thinking: 572 of budget 3000 (max 4000) tokens, 158.5 tok/s, 4 s
+[strata] thinking: 736 of budget 3000 (max 4000) tokens, 159.3 tok/s, 5 s
+[strata] thinking: 906 of budget 3000 (max 4000) tokens, 161.2 tok/s, 6 s
+[strata] thinking: 1067 of budget 3000 (max 4000) tokens, 160.8 tok/s, 7 s
+[strata] thinking: 1272 of budget 3000 (max 4000) tokens, 166.5 tok/s, 8 s
+[strata] done: 1376 tokens in 9 s (164.9 tok/s) (stop, cancel=False), expert cache 97.6% hit (+1.3% of the routed experts over PCIe)
+[strata] thinking limited to 3000 of max_tokens 4000 so the answer has room ("answer_room": false in the config turns this off)
+[strata] done: 63 tokens in 1 s (131.0 tok/s) (stop, cancel=False), expert cache 92.0% hit (+5.0% of the routed experts over PCIe)
+[strata] thinking limited to 3000 of max_tokens 4000 so the answer has room ("answer_room": false in the config turns this off)
+[strata] thinking: 87 of budget 3000 (max 4000) tokens, 150.2 tok/s, 1 s
+[strata] thinking: 221 of budget 3000 (max 4000) tokens, 138.3 tok/s, 2 s
+[strata] thinking: 360 of budget 3000 (max 4000) tokens, 138.5 tok/s, 3 s
+[strata] done: 451 tokens in 4 s (142.5 tok/s) (stop, cancel=False), expert cache 95.8% hit (+2.5% of the routed experts over PCIe)
+[strata] thinking limited to 3000 of max_tokens 4000 so the answer has room ("answer_room": false in the config turns this off)
+[strata] thinking: 65 of budget 3000 (max 4000) tokens, 128.3 tok/s, 1 s
+[strata] thinking: 213 of budget 3000 (max 4000) tokens, 140.8 tok/s, 2 s
+[strata] done: 218 tokens in 2 s (144.0 tok/s) (stop, cancel=False), expert cache 96.2% hit (+2.0% of the routed experts over PCIe)
+[strata] thinking limited to 3000 of max_tokens 4000 so the answer has room ("answer_room": false in the config turns this off)
+[strata] thinking: 103 of budget 3000 (max 4000) tokens, 167.0 tok/s, 1 s
+[strata] thinking: 294 of budget 3000 (max 4000) tokens, 181.8 tok/s, 2 s
+[strata] thinking: 492 of budget 3000 (max 4000) tokens, 187.9 tok/s, 3 s
+[strata] thinking: 675 of budget 3000 (max 4000) tokens, 185.6 tok/s, 4 s
+[strata] thinking: 865 of budget 3000 (max 4000) tokens, 186.0 tok/s, 5 s
+[strata] done: 988 tokens in 6 s (184.9 tok/s) (stop, cancel=False), expert cache 96.9% hit (+1.8% of the routed experts over PCIe)
+[strata] thinking limited to 3000 of max_tokens 4000 so the answer has room ("answer_room": false in the config turns this off)
+[strata] thinking: 104 of budget 3000 (max 4000) tokens, 165.3 tok/s, 1 s
+[strata] thinking: 271 of budget 3000 (max 4000) tokens, 164.9 tok/s, 2 s
+[strata] done: 275 tokens in 2 s (167.1 tok/s) (stop, cancel=False), expert cache 97.2% hit (+1.6% of the routed experts over PCIe)
+[strata] thinking limited to 3000 of max_tokens 4000 so the answer has room ("answer_room": false in the config turns this off)
+[strata] thinking: 108 of budget 3000 (max 4000) tokens, 170.5 tok/s, 1 s
+[strata] thinking: 259 of budget 3000 (max 4000) tokens, 157.9 tok/s, 2 s
+[strata] thinking: 432 of budget 3000 (max 4000) tokens, 163.4 tok/s, 3 s
+[strata] thinking: 616 of budget 3000 (max 4000) tokens, 168.7 tok/s, 4 s
+[strata] thinking: 776 of budget 3000 (max 4000) tokens, 166.8 tok/s, 5 s
+[strata] thinking: 966 of budget 3000 (max 4000) tokens, 170.5 tok/s, 6 s
+[strata] done: 1062 tokens in 7 s (170.3 tok/s) (stop, cancel=False), expert cache 98.0% hit (+1.0% of the routed experts over PCIe)
+[strata] thinking limited to 3000 of max_tokens 4000 so the answer has room ("answer_room": false in the config turns this off)
+[strata] thinking: 64 of budget 3000 (max 4000) tokens, 130.1 tok/s, 1 s
+[strata] thinking: 208 of budget 3000 (max 4000) tokens, 138.5 tok/s, 2 s
+[strata] thinking: 347 of budget 3000 (max 4000) tokens, 138.0 tok/s, 3 s
+[strata] thinking: 487 of budget 3000 (max 4000) tokens, 138.2 tok/s, 4 s
+[strata] thinking: 636 of budget 3000 (max 4000) tokens, 140.0 tok/s, 5 s
+[strata] thinking: 835 of budget 3000 (max 4000) tokens, 150.5 tok/s, 6 s
+[strata] thinking: 996 of budget 3000 (max 4000) tokens, 151.8 tok/s, 7 s
+[strata] thinking: 1192 of budget 3000 (max 4000) tokens, 157.5 tok/s, 8 s
+[strata] thinking: 1334 of budget 3000 (max 4000) tokens, 155.6 tok/s, 9 s
+[strata] thinking: 1492 of budget 3000 (max 4000) tokens, 155.6 tok/s, 10 s
+[strata] done: 1550 tokens in 10 s (155.6 tok/s) (stop, cancel=False), expert cache 97.7% hit (+1.2% of the routed experts over PCIe)
+
+[strata] stopping (Ctrl+C again to end the engine at once) ...
+[strata] stopped
