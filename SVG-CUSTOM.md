@@ -8893,3 +8893,25 @@ the armed sites never run. FOLLOW-UP (queued, implementer round 2): arm wait_cop
 the planned waits, fix the T=7/8 partial harness expectations, investigate the multi-combine order.
 Standing recipe after tonight: COHORTS=2 + ATTN_DAILY + GDN_CHUNKED + FUSE_HITS + POOL_DIET +
 norm_fast + frac 0.55 + share 1.0 + spec 7. Owed: the five-boot re-bank (quiet window) + the dm round-2.
+
+## F-263 — 2026-10-22 ~02:40: THE PROOF BATTERY FAILS TO CONFIRM — the composed recipe reads BELOW the pre-T28 base; all three adoptions under review
+THE USER ASKED FOR PROOF WE GOT BETTER. The answer the box gave: not yet proven, and possibly no.
+THE PROOF (t30-proof.log, 5v5 ABAB, same window 02:24-02:37, standing binary throughout):
+  NEW (frac .55 + share 1.0 + spec 7): M1 193.7 / pair 181.2 / conc 289.4
+  OLD (frac .35 + share 0.5 + spec 6): M1 198.5 / pair 187.3 / conc 296.4
+  = OLD wins all three lanes by ~2.4-3.2%. Round pairs (new-old): M1 -18.9/+4.1/-2.5/-4.9/+0.8.
+Each adoption won its OWN battery (frac +3.6 pooled, share +1.9, spec7 +8.5 3/3) - but the frac+share
+COMBINATION was never A/B'd against the base before this proof, and the algebra that reconciles all four
+batteries is: spec7 = +8.5% over the frac+share line, while frac55+share10 TOGETHER cost ~-10% vs base.
+MECHANISM (hypothesis, mechanically plausible): share=1.0 hands the read-piece window wholly to decode
+while frac=0.55 streams MORE missing experts over PCIe during exactly that window - the two fight for
+the same channel. Individually each was measured with the other at its neutral setting.
+THE NIGHT'S LEG VARIANCE for scale: the same OLD recipe read M1 182.9 (spec7 battery ctl) and 198.5
+(proof) in different windows (+8.5% swing); the NEW recipe read 198.5-205 in its batteries and 193.7 in
+the proof. The single-battery "+8.5%" readings are INSIDE this band. Pooled across all legs each recipe
+ran tonight: new 198.9 (12 legs) vs old 196.3 (22 legs) = +1.3% - ambiguous.
+DISCRIMINATING BATTERY RUNNING (t30-discriminate.sh, 3 arms x 3 rounds, same window): NEW vs OLDS7
+(frac .35 + share .5 + spec 7 - isolates spec7's true value on the old base) vs OLD. Decision rule set
+BEFORE the data: whichever arm wins M1 without losing pair/conc beyond noise becomes the standing
+recipe; if OLDS7 >= NEW, the frac+share interaction is confirmed and both revert pending per-arm
+re-tests on the spec-7 base. No adoption survives without a same-window win.
