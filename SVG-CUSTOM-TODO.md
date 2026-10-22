@@ -1755,24 +1755,23 @@ and returned keep/amend/kill verdicts on the T25 items. PLAN HOLDS on the big ca
 | gpu-unlock | CONFIRMED watch / KILLED action | Blackwell whitepaper documents the 5090 at 209.5/419 = the same 2:1 as GA102; module is GA102/104 PCI-ID-gated |
 | 262k VRAM plan | CONFIRMED | the +792 slots absorb the ~-724 slot move; deep KV tail lives in pinned host RAM |
 
-REVISED ORDER (value/effort, after T26; corrected by F-254 — the device-plan boot is void, it is already armed):
-1. STRATA_BATCH_DECODE_SHARE raise (env, S, conc) — the first genuinely unarmed lever; one boot A/B.
-2. tools/calibrate.py boot (pcie-frac 0.35 is hand-set and never measured) — one instrument boot.
-3. campaign/prewarm2.sh (zero code, +3-5% five-boot means est.) — post-boot warm package.
-4. KL yardstick (in-tree, fixture verified) + the small spec-trace instrument that must be WRITTEN first
-   (no STRATA_SPEC_TRACE exists today; per-window dprob/a rows, ~20 lines) -> gates the keep rule, DSpark,
-   and the fp16-accum question.
-5. UseNodePriority one-flag arm; quiet-window re-bank.
-6. draft_cum keep rule (~50 lines, rescue-inclusive) + conditional graph (th=0 can go first, bit-identical).
-7. mid_chain header check -> run via the generic triple.
-8. Re-quant GO (user) -> +2-4% M1, +792 slots, 262k safety.
-9. MoE-tail port (F-254: price from dm's in-kernel wait/combine/doorbell count; dm parity + DM_WAIT_STATS
-   instrument boot first; the "enable the plan" Phase A does not exist).
-10. Window diet (-900..-1000 nodes; decode lever).
-11. dec_gdn_rec (+0.5..1.5%); fp16-accum scoped K=640/2560 (gate first).
-12. PIPED reader-thread port (M; conc 335-350) -> elastic KV / parallel-8 (380-420).
-13. T14B retrain (+ DFlash2 multi-tap rider) -> 262k switch after the re-quant.
-14. Debt: draft_vocab EN contract trap, empty Custom-data paths in four specs, quant_quality fence, stale cleanup, sudo items.
+REVISED ORDER (2026-10-22 F-265 prune — dead ends removed, see the DEAD-END REMOVALS section at the end of this file; the quiet-window law applies to every sub-4% item):
+1. Quiet-window five-boot re-bank of the BASE recipe (per-leg clock/temp/power) — freezes absolutes; the
+   ONLY instrument that can resolve sub-4% candidates (F-263's law).
+2. KL yardstick (in-tree, fixture verified) — gates fp16-accum and every future numerics-class arm.
+3. draft_cum keep-rule refit on the banked 1,615-window trace (zero-boot analysis; calibrated acc bins,
+   rescue-inclusive) — a POST-RETRAIN lever (raw thresholds inert at spec-6 economics, F-260).
+4. prewarm2.sh applied to the re-bank's first legs (its +3-5% five-boot-mean claim is judged there).
+5. Composed WINDOW TRANCHE as one project (launch-map diet -900..-1000 nodes + PDL chain with per-pair
+   kill switch + dm port): each piece honestly +1.5-3% (F-264's wait-split priced dm), composed band
+   +4-8% IF they stack — quiet-window gated, parity-first (dm parity is FULLY GREEN, no algebraic blockers).
+6. Re-quant GO (user) -> +2-4% M1, +792 slots, 262k safety.
+7. dec_gdn_rec (+0.5..1.5%); mid_chain header check -> generic triple.
+8. fp16-accum scoped K=640/2560 (DISPUTED: R3 +10-17% vs R5 KL blowout — the KL yardstick decides, item 2).
+9. PIPED reader-thread port (M; conc 335-350) -> elastic KV / parallel-8 (380-420).
+10. T14B retrain (+ EAGLE-3.1 anti-drift rider + Draft-OPD replay rider; DFlash2 multi-tap as T14C+)
+    -> 262k switch after the re-quant.
+11. Debt: draft_vocab EN contract trap, empty Custom-data paths in four specs, quant_quality fence, sudo items.
 
 ## T27 — FRONTIER AUDIT LAYER (2026-10-21; campaign/research/T27-{1,2,3}-*.md; F-255)
 External state of the art checked online (arxiv/GitHub/NVIDIA/news). Verdict: the roadmap survives
@@ -1788,13 +1787,13 @@ in the same boots.
 | Window diet | CONFIRMED | Event Tensor/MLSys'26 prices non-graph boundaries 5-10 us (our in-graph marginal stands) |
 | scoped fp16-accum | CONFIRMED gated | no scope change |
 | F-252 hw lock | CONFIRMED watch-only | no Blackwell unlock exists; whitepaper 2:1 is spec |
-| NEW: cuBLASLt heuristic sweep | ZERO-BOOT microbench | our 8-10 prefill shapes; cuBLAS mis-picks on 5090 in an adjacent public report |
+| NEW: cuBLASLt heuristic sweep | CLOSED (ran, F-257/F-260) | sweep banked; the GEMM_LT arm built on it FALSIFIED on the pipeline (M1 -2.1 every round) — REMOVED from the roadmap |
 | keep rule draft_cum | CONFIRMED | 3 more independent convergences; no better rule found |
 | device-conditional draft graph | CONFIRMED | vLLM names it future work |
 | DFlash2 T14C+ rider | CONFIRMED + AMENDED | checkpoint now public & inspectable CPU-side; block-4 ceiling; T23 verdict stands |
 | T14B riders | CONFIRMED + EXPANDED | RIDER #1 EAGLE-3.1 anti-drift (attention-drift diagnosis = our F-235 deep-position deficit; FC-norm + post-norm feedback, export-shape-preserving); RIDER #2 Draft-OPD rejected-position replay (our rescue already localizes rejections; +13-23% AL donor-reported) |
 | draft-vocab EN trap | FIXED IN SPEC | pin mtp-en 162,100 B sha 369151522226a5ed in gates-spec (T27 AMENDMENT block); 32 stale Custom-data paths flagged |
-| STRATA_BATCH_DECODE_SHARE raise | CONFIRMED + canary | TTFT p99 added as the canary metric (vLLM decode-priority convergence) |
+| STRATA_BATCH_DECODE_SHARE raise | REMOVED (F-263) | falsified as a gain: 0.75 and 1.0 single-window wins were noise; the 3-arm discriminator put all recipes indistinguishable — shelf arm only, quiet-window re-test would be the only path |
 | PIPED reader-thread port | CONFIRMED | SGLang overlap scheduler = 2nd independent confirmation |
 | elastic KV + parallel-8 | CONFIRMED enabler | P/D disaggregation dead here (2-GPU) |
 | ADMIT_SHORT_FIRST | CONFIRMED, value UP | becomes the precedent for a VTC-lite admission-order fairness arm (~40 lines in _admit_next, no PAUSE verb) BEFORE maya fair-slice; TWP pacing is the 7+-client follow-on |
@@ -1802,3 +1801,24 @@ in the same boots.
 | quiet-window re-bank | AMENDED | record sm_clock/temp/power per leg (the 2835->3135 epoch was found post-hoc) |
 | NEW: probe-metrics.py | STAGED + WIRED | TTFT/ITL/E2E p50/p95/p99 scrape of existing histograms; clock/temp/power per leg; golden-response hash per boot = drift alarm; JSONL at campaign/results/metrics.jsonl; runs inside every a-slate leg |
 | NEW negatives | KILLED | whole-model decode megakernels (Lucebox sm_120 205 < our 212.5); AdaSD (non-lossless); DSpine/TiDAR/SpecFormer (contract break); Pascal multi-instance; batch-invariant kernels; PreScope; sleep/CRIU boots; "ACES" (unverified, treated nonexistent) |
+
+## F-265 — DEAD-END REMOVALS from the roadmap (2026-10-22; every removal journaled in SVG-CUSTOM.md F-253..F-264)
+The roadmap above carries only live items. Everything proven dead this campaign, removed from the
+active lists and retained here + in the journal with its evidence:
+| removed item | evidence | what survives |
+|---|---|---|
+| STRATA_BATCH_DECODE_SHARE raise (0.75, 1.0) | F-257/F-263: single-window wins were noise; 3-arm discriminator indistinguishable (M1 193.9-197.1, ±8% leg swings) | the env knob; shelf re-test only via quiet-window five-boot means |
+| --pcie-frac 0.55 | F-259 adopted then F-263 reverted: no reproducible composed gain (old base won the 5v5 proof by ~2.4% all lanes) | the calibrate.py measurement (PCIe 54.5 GB/s, frac curve banked); config stays 0.35 |
+| --spec 7 / --spec 8 (depth extension) | spec8: conc −6.1% every round (F-262); spec7's +8.5% was a ctl-dip artifact, discriminator indistinguishable (F-263) | config stays 6; the depth-economics data (T bimodal, per-position acceptance) feeds T14B's depth design |
+| --adapt-every 1 / 80 swaps / decay 0.97 | F-258: conc −4.3% REGRESSION on real traffic (calibrator's +14% synthetic did not transfer) | the direction-not-magnitude law; calibrate.py as a candidate generator |
+| --spec-min-p 0.7 | F-258: pure noise (its "acceptance rise" was the numerator effect); F-228's 0.5 stands | the dprob decile table (57→84%) for the T14B riders |
+| STRATA_GEMM_LT selective cuBLASLt bf16 path | F-260: M1 −2.1% every round, conc −5.5%, prefill flat — microbench shape-wins do not compose | the arm stays in-tree default-off; the sweep table (hc +9..25% at edge M) recorded |
+| cuBLASLt heuristic sweep as a lever | F-257: ran; parity mid-range, marginal candidate only — closed with the Lt arm above | campaign/cublaslt-sweep.cu (the instrument) |
+| device-plan falsifier (STRATA_VERIFY_DEVICE_PLAN) | F-254: VOID — already exported by the launcher; T1.1 priced the host-plan RTT at ~0.26 ms | nothing (it was never off) |
+| PIPED_CONCURRENT as an env boot | F-253: needs batch_groups>1 — silent no-op on the cohort lane | the reader-thread PORT (live, item 9 of the order) |
+| --adapt-every as "depth scheduling" | F-253: it is expert-TIER adaptation; the 0.85 figure was never basalt's | the corrected semantics |
+| whole-model decode megakernels / AdaSD / DSpine-class / Pascal multi-instance / batch-invariant kernels / PreScope / sleep-CRIU / "ACES" | T27 negatives (F-255): their own numbers lose to our standing recipe or break the contract | nothing |
+Standing laws these deaths produced: (1) single-window 3v3s cannot resolve 1-3% effects — quiet-window
+five-boot means only (F-263); (2) calibrate.py prices direction, never magnitude (F-258); (3) microbench
+wins are hypotheses — the pipeline is the judge (F-260); (4) an agent's headline is a hypothesis until
+the launcher and the history are read (F-254).
