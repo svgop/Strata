@@ -51,6 +51,7 @@ def main():
     ap.add_argument('--log', default='/home/svg/LLM/strata-custom-2/custom-iq3_s.log')
     ap.add_argument('--key', default='3f0940df8efb9c363e4189956ae907d3e4acac221aab39f44804fe0b0df1b8')
     ap.add_argument('--short-n', type=int, default=6)
+    ap.add_argument('--conc-n', type=int, default=6)
     ap.add_argument('--long-tok', type=int, default=2000)
     ap.add_argument('--fresh-sections', type=int, default=90)
     ap.add_argument('--skip-conc', action='store_true')
@@ -94,8 +95,8 @@ def main():
     if not a.skip_conc:
         tok, wall = conc_run(base, 2, 900, a.key)
         print(f"M2 pair          : {tok/wall:.1f} t/s aggregate ({tok} tok in {wall:.2f}s)")
-        tok, wall = conc_run(base, 6, 600, a.key)
-        print(f"M2 6-conc        : {tok/wall:.1f} t/s aggregate ({tok} tok in {wall:.2f}s)")
+        tok, wall = conc_run(base, a.conc_n, 600, a.key)
+        print(f"M2 {a.conc_n}-conc        : {tok/wall:.1f} t/s aggregate ({tok} tok in {wall:.2f}s)")
 
     time.sleep(2)
     with open(a.log, 'r', errors='replace') as f:

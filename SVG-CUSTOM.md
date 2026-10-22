@@ -9090,3 +9090,26 @@ BOTH (dm+keep): M1 219.8 (+3.0%), pair 216.0 (+4.9%, bar cleared), conc 332.1 (+
 NEXT: the five-boot extension (dm x5, both x5, pooled across windows vs ctl) + the 2x MMLU/mimic
 gates on the candidate recipe; phase 2 (diet + PDL kill-switch + mid_chain/dec_gdn_rec) unchanged
 in the queue. Arms all remain default-off; standing recipe UNTOUCHED and unregressed.
+
+## F-271 — 2026-10-22 ~19:45: RESERVE-600 + BATCH-9 FALSIFIED (user-directed quick test); a
+## methodology law earned the hard way
+USER ASK: --vram-reserve-mib 600, then parallel 9, quick test, solo must not slow, 9 should only
+take VRAM when used. FALSIFICATIONS: (1) reserve 600 kills engine 1 at LATE boot allocations at
+EVERY batch width - b9+600 died at "batch MTP slot 0: draft logits do not fit (64 MiB free)", b6+600
+died 19s later too; server.py's restart path AUTO-RAISES the reserve to 2000 (#735/#2065 class) - a
+user reserve below the floor never survives to steady state; the 2000 default IS the anti-paging
+floor, not slack. (2) batch 9 does not boot single-engine on 32 GB with this pack: 9 sessions
+(6.55 GiB) + 9 drafters + WIDE 9-row graph captures claimed at REQUEST time exceed the boot-time
+sizing even at reserve 2600 (engines: 2 - restart cycle every attempt). THE METHODOLOGY LAW (earned
+by publishing then retracting four M1 reads): every collapsed number tonight (M1 57.7-73.8) was
+measured against a DEATH/RESTART cycle - health came from engine 1, the probe hit the restarted
+engine 2's FIRST REQUEST = the lazy-capture tax (~3x window cost ~= 71 t/s - the exact band) +
+TTFT p99 8.4s + golden HTTPError. ALL RETRACTED as measurements. LAW: before any probe on a fresh
+boot, verify SINGLE-ENGINE (exactly one "engine started" line in the log, 90s stable) - a restart
+cycle invalidates every number from that boot. WHAT SURVIVES: the lazy-session feature the user
+described ("only take VRAM if used") IS the unlock for 9-wide - sessions are carved eagerly at boot
+(generate.cpp:5313 "--batch: every stage carves o.batch more sessions") so 9 costs 6.55 GiB always;
+lazy allocation to max-9 + the re-quant's +3.9 GiB is the path that makes 9 fit. probe-lane gained
+--conc-n (kept, committed); the b9 test config/launcher deleted (falsified, journal carries them).
+Tweet note (Axitek 3090 tips): both dead here - gpu-unlock is GA102/104-only (F-252, our sm_120 is
+whitepaper 2:1), P2P needs a second GPU.
