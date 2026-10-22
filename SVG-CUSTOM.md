@@ -9064,3 +9064,29 @@ boot segments (resc counter resets 14x), not one boot; rescue = 466 events in 39
 / 1955 exact) so its rates were deflated; "53% accept-all" = 69.4% of DRAFTING windows (53.3% of
 all); "12% cap-hit" = 53.4% of T=6 windows; exact-match mean C=2.4458 ~= T14C's standing 2.47 (the
 2.734 headline was rescue-inflated +10.6%); prior raw-th kept-means reproduce byte-for-byte.
+
+## F-270 — 2026-10-22 ~16:20: T32 WINDOW TRANCHE, PHASE 1 JUDGED (keep falsified-solo; dm +2.8%;
+both pair +4.9% — confirmations owed)
+Battery: campaign/batteries/t32-tranche.sh, 12 legs = 3 interleaved rounds x {ctl, keep(0.5), dm,
+both}, every leg prewarmed + probe-lane + probe-metrics (results/t32-tranche.log). ANCHOR
+REPLICATION: ctl means 213.4/205.8/322.5 vs the banked F-266 prewarmed anchor 215.2/206.4/323.0
+(-0.8/-0.3/-0.2%) - the anchor reproduces inside a fresh window; the measurement chain is trusted.
+THE KEEP RULE IS FALSIFIED FOR STANDING SOLO ECONOMICS: keep alone = M1 204.0 (-4.4%), pair -3.2%,
+conc -1.8%. Mechanically it works EXACTLY as designed - M3b 76.9 -> 86.6 (offer quality up ~10pts,
+fewer wasted rows) - but the refit's +4.9% priced row-LINEAR window cost (c_row 2.4 ms) and the
+engine's solo windows are CAPTURED FIXED-SHAPE GRAPHS: a cut window still pays the same graph, so a
+withheld draft row was a FREE OPTION we should never have declined. NEW LAW (the F-183 contradiction
+RESOLVED, in the probe's direction): on fixed-shape captured windows, never withhold draft rows on
+the solo lane - row-cutting pays only where row cost is REAL, i.e. batch contention. Supporting
+evidence inside the same battery: BOTH's pair = 216.0 (+4.9% = the pair-bar CLEARED) - dm's fold +
+keep's row cuts COMPOSE on the batch lanes where rows do cost. The keep arm stays in-tree
+default-off (zero cost); it retires to the conditional-graph era (it is precisely vLLM's named
+future work - pays when window shapes become dynamic, e.g. post-retrain).
+THE DM PORT (F-270 phase-1b): M1 219.5 (+2.8%), pair +0.7%, conc +1.6%, M3b 76.1 in-band,
+acceptance 70-83% in-band, dm armed verified per leg - INSIDE the F-264 honest band (+1.5-3%),
+interleave wins rounds 1 and 3 (r3 230.4 vs ctl 213.6, r2 -1.3%). Sub-4% -> the five-boot pooled
+confirmation is OWED before adoption.
+BOTH (dm+keep): M1 219.8 (+3.0%), pair 216.0 (+4.9%, bar cleared), conc 332.1 (+3.0%), M3b 87.9.
+NEXT: the five-boot extension (dm x5, both x5, pooled across windows vs ctl) + the 2x MMLU/mimic
+gates on the candidate recipe; phase 2 (diet + PDL kill-switch + mid_chain/dec_gdn_rec) unchanged
+in the queue. Arms all remain default-off; standing recipe UNTOUCHED and unregressed.
