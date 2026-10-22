@@ -262,6 +262,17 @@ port, merge:
    including changes that target concurrency. A concurrency-for-M1 trade is a SHELF VARIANT
    (labeled, in `~/LLM/backup/`), never a standing adoption — F-183 precedent, re-tested and
    confirmed twice.
+4b. **NO TERMINAL TRADE-OFFS (the scoping law — user doctrine, 2026-10-22).** A lane-negative
+   result is a SCOPING PROBLEM, not a verdict. When an arm helps one traffic class and hurts
+   another, the NEXT move is to scope it — apply only under the condition where it pays (client
+   count, contention level, window shape, lane, traffic class) — before the arm is closed or
+   adopted unscoped. Wins are kept; losses are contained or converted; "X pays for Y" is the LAST
+   resort, never the first answer. Runs in both directions: a conc-taxing solo win gets solo-scoped
+   exactly like a solo-taxing conc win gets contended-scoped. Precedent: F-270 — the keep rule
+   alone hurt every lane (M1 −4.4%), yet composed with dm the solo penalty VANISHED (M1 219.8 vs
+   dm's 219.5) while pair cleared the bar (+4.9%): the composition was the scope. The structural
+   form (cut only at ≥2 active requests) is the designed fallback whenever five-boot means show
+   residual solo cost.
 5. **One variable per leg.** Diagnostic boots (telemetry env) are not arms. Sustained-reasoning
    probe is MANDATORY before adopting anything launch/overlap class (PDL precedent: a Windows −40%
    lived there).
