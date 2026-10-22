@@ -9041,3 +9041,26 @@ KEPT AT ROOT BY LAW: launch-custom-iq3s-8081.sh + custom-iq3_s-8081.json + refus
 LAW + F-249). Root is now: upstream's own files + the standing boot pair + SVG-CUSTOM.md/TODO.md/
 AGENTS.md + the live log. Policy going forward: run-once harnesses die with their question; battery
 .outs commit with their battery; live log rotates gz at cleanup passes.
+
+## F-269 — 2026-10-22 ~13:40: KEEP-RULE REFIT (T31 zero-boot, agent deliverable, VERIFIED)
+campaign/research/T31-keeprefit.md + campaign/t31-keeprefit.py (re-runnable sim, MC + bootstrap;
+main-loop re-ran it: plug-in dA/w -0.20074 vs MC -0.20198 on 474 affected windows; the 0..4-positions
+claim checked against generate.cpp:15427 `i + 1 < T`). NOW VERDICT - F-260's "post-retrain only" is
+REFUTED model-side, with a catch: best rule = CUM-CALIBRATED joint product, flat th*=0.50 (plateau
+0.40-0.60) -> cuts 0.60 offered rows/window, loses 0.20 accepted/window = +4.9% net at central
+c_row=2.4ms (break-even 0.510 tok/row vs cut-mass carry 0.334), positive in ALL 15 boot segments
+(+3.4..+6.0%), bootstrap p5-p95 +4.0..+6.3%, P(net>0)=1.00. Raw-d products inert (+1.0% at th 0.5 -
+F-260 CONFIRMED and explained: 69.6% of printed d >= 0.9). THE CATCH: the pooled-bins bound reads
++0.05% - the entire edge is the deep-position acceptance deficit (F-235), and F-183's probe-grade
+min-p 0.7 read -3.0% real vs this model's +3.1% prediction (contradiction CARRIED, only a five-boot
+battery decides). DISPOSITION: battery arm, not adoption - ~50 lines, default-off, offers-only-exact
+(zero quality risk); joins the composed window-tranche battery queue; F-263 law governs.
+RETRAIN INTERPLAY INVERTED: delta*=0.00 - the rule pays NOW if ever and its value DECAYS with drafter
+quality (zero by additive shift +0.30): battery BEFORE T14B, expect retirement after a successful
+retrain (the EAGLE-3.1 anti-drift rider attacks the same deficit the rule monetizes) - never
+double-count it with the retrain in composed bands. TRACE CORRECTIONS: the dataset is ~15 appended
+boot segments (resc counter resets 14x), not one boot; rescue = 466 events in 391/1615 windows
+(24.2%), the field is cumulative; prior decile "tested 3593" was OFFERED not tested (true 3181 incl
+/ 1955 exact) so its rates were deflated; "53% accept-all" = 69.4% of DRAFTING windows (53.3% of
+all); "12% cap-hit" = 53.4% of T=6 windows; exact-match mean C=2.4458 ~= T14C's standing 2.47 (the
+2.734 headline was rescue-inflated +10.6%); prior raw-th kept-means reproduce byte-for-byte.

@@ -1760,13 +1760,17 @@ REVISED ORDER (2026-10-22 F-265 prune — dead ends removed, see the DEAD-END RE
    202.8 / conc 326.4 (no regression vs banked: pair exact, conc +3.4%, M1 -3.1% inside its boot
    band); A/Bs now judge against the PREWARMED anchor 215.2/206.4/323.0.
 2. KL yardstick (in-tree, fixture verified) — gates fp16-accum and every future numerics-class arm.
-3. draft_cum keep-rule refit on the banked 1,615-window trace (zero-boot analysis; calibrated acc bins,
-   rescue-inclusive) — a POST-RETRAIN lever (raw thresholds inert at spec-6 economics, F-260).
+3. [DONE F-269] draft_cum keep-rule refit on the banked 1,615-window trace — NOW verdict +4.9% net
+   model-side (cum-calibrated joint product, flat th 0.50, all 15 segments positive) BUT battery-arm
+   only: pooled-bins bound +0.05%, F-183 contradiction carried; ~50-line default-off offers-only-exact
+   arm -> JOINS the tranche battery (item 5). delta*=0: pays NOW if ever, decays with drafter quality
+   (retire after successful T14B; never double-count with the retrain).
 4. [DONE F-266] prewarm2.sh judged at the re-bank: M1 +4.5% (3/3 boots at/above the anchor top,
    15-20s/boot cost) — ADOPTED as the standing measurement posture; every battery boot prewarms.
 5. Composed WINDOW TRANCHE as one project (launch-map diet -900..-1000 nodes + PDL chain with per-pair
-   kill switch + dm port): each piece honestly +1.5-3% (F-264's wait-split priced dm), composed band
-   +4-8% IF they stack — quiet-window gated, parity-first (dm parity is FULLY GREEN, no algebraic blockers).
+   kill switch + dm port + the F-269 keep-rule arm): each piece honestly +1.5-3% (F-264's wait-split
+   priced dm), composed band +4-8% IF they stack — quiet-window gated, parity-first (dm parity is
+   FULLY GREEN, no algebraic blockers).
 6. Re-quant GO (user) -> +2-4% M1, +792 slots, 262k safety.
 7. dec_gdn_rec (+0.5..1.5%); mid_chain header check -> generic triple.
 8. fp16-accum scoped K=640/2560 (DISPUTED: R3 +10-17% vs R5 KL blowout — the KL yardstick decides, item 2).
