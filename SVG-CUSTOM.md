@@ -9411,3 +9411,41 @@ NEXT: T40 implementer on C5b + C2a-lite + E2/E3 (park/restore pathway) + E5 tern
 + E6 + the batch trace twin; main-loop boots: A1 diagnostics (VERIFY_NODES=2), E1 eviction
 verification, tau+SPEC_PROB battery, the 2 drop-tests; five-boot pooled vs the records
 215.2/206.4/323.0 (dm pool already 222.4/209.9/319.6 — conc is the battle).
+
+## F-282 — 2026-10-23 ~20:25: THE T41 JUDGMENT BATTERY — SPEC_PROB ADOPTED (the never-measured
+## arm pays); c2a shelved honestly; tau 0.15 falsified; the night's full arc closed
+BATTERY (t41, 10 prewarmed legs, ctl/c2a 3v3 interleaved + tau015 x2 + SPEC_PROB x2; the ctl
+carries the new standing posture = slots-24 + min-tokens-200): ctl M1 205.8 / pair 203.1 /
+conc 304.6 (the evening window ran COOL - ctl sat below the afternoon pools 217/315 all
+night; interleaved deltas are the honest read). VERDICTS:
+(1) SPEC_PROB=1 ADOPTED — M1 +5.8% (217.8; legs 220.5/215.1 BOTH above every ctl leg
+203.1-209.6, non-overlapping), conc +4.4% (318.1), M3b +2.0pp (78.2 - mechanism-correlated:
+the acceptance instrument moved with the arm's own mechanism). Gates: MMLU 4-run set
+94.3/92.9/95.7/94.3 = mean 94.3 with ONE sub-floor read (B leg 92.9 < 93.3; tiebreaker legs
+C 95.7 / D 94.3 clean) - the pre-declared rule (mean >=94-class, <=1 sub-floor) PASSED.
+Mimic 56/66 = the night's BENCH LOW-MODE (third occurrence across THREE different configs -
+dm arm, template, prob; both paired interleaves tonight showed the true 60-62 band; rides as
+a documented watch, not a veto). Launcher arm added; five-boot pooled rider + mimic watch on
+the next battery. Expected standing recipe on a fair window: solo ~230+, conc record (323.0)
+in reach - the next clean re-bank decides.
+(2) c2a (STRATA_COHORT_OVERLAP) SHELVED - its target lane is FLAT (conc +0.6%, rounds split
+2-1); the arm's M1 "wins" (+6.0%, 3/3) are on a lane it STRUCTURALLY CANNOT TOUCH (solo
+never rides the cohort path) = window variance masquerading as signal (the F-225 lesson,
+relearned cheap). Stays default-off in-tree; the +5-8% arithmetic needs the true tail split
+from the C5b histogram before any retry (the smoke-test p50 read 27.3 vs 23.1 - the overlap
+may even cost; the 3v3 says ~flat).
+(3) tau 0.15 FALSIFIED all-lane negative (M1 -1.9 / pair -5.0 / conc -2.6 / M3b -0.2) -
+0.2 stands; the loosened-rescue direction is closed on this stack.
+NIGHT LEDGER (the user's "push past the record, WTF moments" directive): ADOPTED - dm
+(pooled solo record fallen), terse-dialect template (thinking -4%/-35% puzzle-class,
+answers natural, style-defer), cache slots 24 (evictions 10/boot -> 0), min-tokens 200
+(E6), PDL pinned honest, C5b phase-correct cohort telemetry (first true round p50s),
+batch acceptance trace (594-line sample banked), SPEC_PROB (+5.8% M1). FALSIFIED/CLOSED -
+tau 0.15, c2a current form, mid_chain at this donor revision, CONV_COMPRESS at the bound,
+spec-8/frac-0.55 restatements, COHORTS=3 myth. INSTRUMENTS - the trace twin, the phase-fixed
+histogram, template-probe. THE PROVIDER ROUTE killed three implementer attempts (network,
+~30 min in each) - the pathway cluster (E2/E3), E5 ternary, E7 go to the next session with
+full file:line specs; subagent route to be re-tried then.
+RECORDS: solo 222.4 (dm pool, now + SPEC_PROB expected ~230+), pair 209.9, conc 319.6 vs
+323.0 - the conc record is the standing target; the ternary reactor (band 355-390) is the
+queued kill-shot.

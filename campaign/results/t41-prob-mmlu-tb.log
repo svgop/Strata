@@ -1,0 +1,179 @@
+T41 MMLU TIEBREAKER start Fri Oct 23 08:20:07 PM SAST 2026
+=== BOOT tb health=1 20:20:31 ===
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+[PASS] math               pred=A gold=A
+[PASS] math               pred=H gold=H
+[PASS] math               pred=E gold=E
+[PASS] math               pred=I gold=I
+[PASS] math               pred=B gold=B
+[PASS] health             pred=J gold=J
+[PASS] health             pred=G gold=G
+[PASS] health             pred=F gold=F
+[PASS] health             pred=F gold=F
+[PASS] health             pred=D gold=D
+[PASS] physics            pred=E gold=E
+[PASS] physics            pred=A gold=A
+[PASS] physics            pred=H gold=H
+[PASS] physics            pred=E gold=E
+[PASS] physics            pred=A gold=A
+[PASS] business           pred=F gold=F
+[PASS] business           pred=D gold=D
+[PASS] business           pred=A gold=A
+[FAIL] business           pred=F gold=G
+[PASS] business           pred=H gold=H
+[PASS] biology            pred=B gold=B
+[PASS] biology            pred=D gold=D
+[PASS] biology            pred=D gold=D
+[PASS] biology            pred=A gold=A
+[PASS] biology            pred=H gold=H
+[PASS] chemistry          pred=B gold=B
+[PASS] chemistry          pred=J gold=J
+[PASS] chemistry          pred=E gold=E
+[PASS] chemistry          pred=A gold=A
+[PASS] chemistry          pred=J gold=J
+[PASS] computer science   pred=B gold=B
+[PASS] computer science   pred=I gold=I
+[PASS] computer science   pred=C gold=C
+[PASS] computer science   pred=I gold=I
+[PASS] computer science   pred=A gold=A
+[PASS] economics          pred=F gold=F
+[PASS] economics          pred=H gold=H
+[PASS] economics          pred=C gold=C
+[PASS] economics          pred=G gold=G
+[PASS] economics          pred=F gold=F
+[PASS] engineering        pred=C gold=C
+[PASS] engineering        pred=A gold=A
+[PASS] engineering        pred=C gold=C
+[PASS] engineering        pred=I gold=I
+[PASS] engineering        pred=A gold=A
+[PASS] philosophy         pred=B gold=B
+[PASS] philosophy         pred=J gold=J
+[PASS] philosophy         pred=B gold=B
+[PASS] philosophy         pred=I gold=I
+[PASS] philosophy         pred=D gold=D
+[PASS] other              pred=E gold=E
+[PASS] other              pred=B gold=B
+[PASS] other              pred=B gold=B
+[PASS] other              pred=J gold=J
+[PASS] other              pred=J gold=J
+[FAIL] history            pred=B gold=A
+[PASS] history            pred=C gold=C
+[PASS] history            pred=E gold=E
+[FAIL] history            pred=J gold=E
+[PASS] history            pred=G gold=G
+[PASS] psychology         pred=H gold=H
+[PASS] psychology         pred=H gold=H
+[PASS] psychology         pred=A gold=A
+[PASS] psychology         pred=J gold=J
+[PASS] psychology         pred=E gold=E
+[PASS] law                pred=I gold=I
+[PASS] law                pred=I gold=I
+[PASS] law                pred=J gold=J
+[PASS] law                pred=G gold=G
+[PASS] law                pred=F gold=F
+
+=== MMLU-Pro (70 Qs) [floor 0.933, t41-prob-mmlu-c]: 67/70 = 95.7%  (1-sigma = 2.42 pts) ===
+  biology            5/5
+  business           4/5
+  chemistry          5/5
+  computer science   5/5
+  economics          5/5
+  engineering        5/5
+  health             5/5
+  history            3/5
+  law                5/5
+  math               5/5
+  other              5/5
+  philosophy         5/5
+  physics            5/5
+  psychology         5/5
+WROTE /home/svg/LLM/strata-custom-2/campaign/results/mmlu-t41-prob-mmlu-c.json
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+[PASS] math               pred=A gold=A
+[PASS] math               pred=H gold=H
+[PASS] math               pred=E gold=E
+[PASS] math               pred=I gold=I
+[PASS] math               pred=B gold=B
+[PASS] health             pred=J gold=J
+[PASS] health             pred=G gold=G
+[PASS] health             pred=F gold=F
+[PASS] health             pred=F gold=F
+[PASS] health             pred=D gold=D
+[PASS] physics            pred=E gold=E
+[PASS] physics            pred=A gold=A
+[PASS] physics            pred=H gold=H
+[PASS] physics            pred=E gold=E
+[PASS] physics            pred=A gold=A
+[PASS] business           pred=F gold=F
+[PASS] business           pred=D gold=D
+[PASS] business           pred=A gold=A
+[FAIL] business           pred=F gold=G
+[PASS] business           pred=H gold=H
+[PASS] biology            pred=B gold=B
+[PASS] biology            pred=D gold=D
+[PASS] biology            pred=D gold=D
+[PASS] biology            pred=A gold=A
+[PASS] biology            pred=H gold=H
+[PASS] chemistry          pred=B gold=B
+[PASS] chemistry          pred=J gold=J
+[PASS] chemistry          pred=E gold=E
+[PASS] chemistry          pred=A gold=A
+[PASS] chemistry          pred=J gold=J
+[FAIL] computer science   pred=H gold=B
+[PASS] computer science   pred=I gold=I
+[PASS] computer science   pred=C gold=C
+[PASS] computer science   pred=I gold=I
+[PASS] computer science   pred=A gold=A
+[PASS] economics          pred=F gold=F
+[PASS] economics          pred=H gold=H
+[PASS] economics          pred=C gold=C
+[PASS] economics          pred=G gold=G
+[PASS] economics          pred=F gold=F
+[PASS] engineering        pred=C gold=C
+[PASS] engineering        pred=A gold=A
+[PASS] engineering        pred=C gold=C
+[PASS] engineering        pred=I gold=I
+[PASS] engineering        pred=A gold=A
+[PASS] philosophy         pred=B gold=B
+[PASS] philosophy         pred=J gold=J
+[PASS] philosophy         pred=B gold=B
+[PASS] philosophy         pred=I gold=I
+[PASS] philosophy         pred=D gold=D
+[PASS] other              pred=E gold=E
+[PASS] other              pred=B gold=B
+[PASS] other              pred=B gold=B
+[PASS] other              pred=J gold=J
+[PASS] other              pred=J gold=J
+[PASS] history            pred=A gold=A
+[PASS] history            pred=C gold=C
+[PASS] history            pred=E gold=E
+[FAIL] history            pred=J gold=E
+[PASS] history            pred=G gold=G
+[PASS] psychology         pred=H gold=H
+[PASS] psychology         pred=H gold=H
+[PASS] psychology         pred=A gold=A
+[PASS] psychology         pred=J gold=J
+[FAIL] psychology         pred=F gold=E
+[PASS] law                pred=I gold=I
+[PASS] law                pred=I gold=I
+[PASS] law                pred=J gold=J
+[PASS] law                pred=G gold=G
+[PASS] law                pred=F gold=F
+
+=== MMLU-Pro (70 Qs) [floor 0.933, t41-prob-mmlu-d]: 66/70 = 94.3%  (1-sigma = 2.77 pts) ===
+  biology            5/5
+  business           4/5
+  chemistry          5/5
+  computer science   4/5
+  economics          5/5
+  engineering        5/5
+  health             5/5
+  history            4/5
+  law                5/5
+  math               5/5
+  other              5/5
+  philosophy         5/5
+  physics            5/5
+  psychology         4/5
+WROTE /home/svg/LLM/strata-custom-2/campaign/results/mmlu-t41-prob-mmlu-d.json
+done
