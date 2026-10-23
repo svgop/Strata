@@ -35,6 +35,8 @@
     "49152",
     "--conversation-cache-slots",
     "24",
+    "--conversation-cache-min-tokens",
+    "200",
     "--control-vector-scaled",
     "refusal-r.gguf:1.0",
     "--control-vector-layer-range",

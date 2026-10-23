@@ -12061,42 +12061,6 @@ int main(int argc, char** argv) {
                     std::fprintf(stderr, "cohorts: B launch: %s\n", err.c_str()); std::printf("ERR cohort B launch: %s\n", err.c_str()); std::fflush(stdout);
                     return false;
                 }
-                bool la = wa.S > 0, lb = wb.S > 0;
-                while (la || lb) {
-                    if (la) {
-                        const int r = ver.batch_poll(win_pool_fn, &drive, err);
-                        if (r < 0) { std::fprintf(stderr, "cohorts: A poll: %s\n", err.c_str()); std::printf("ERR cohort A: %s\n", err.c_str()); std::fflush(stdout); return false; }
-                        la = (r == 0);
-                    }
-                    if (lb) {
-                        const int r = ver_b.batch_poll(win_pool_fn, &coh_b_drive, err);
-                        if (r < 0) { std::fprintf(stderr, "cohorts: B poll: %s\n", err.c_str()); std::printf("ERR cohort B: %s\n", err.c_str()); std::fflush(stdout); return false; }
-                        lb = (r == 0);
-                    }
-                }
-                std::fprintf(stderr, "cohorts: windows done in %.1f ms\n", msd2(w0c, Clock::now()));
-                const Clock::time_point w1c = Clock::now();
-                if (drive.d.failed || coh_b_drive.d.failed) {
-                    std::printf("ERR %s\n", drive.d.failed && drive.d.fail ? drive.d.fail
-                              : coh_b_drive.d.failed && coh_b_drive.d.fail ? coh_b_drive.d.fail
-                              : "a cohort window failed");
-                    return false;
-                }
-                // T38 C5: the cohort lane feeds the WSTAT sample too.  The standing path's single push site (the
-                // single-window tail below) left the F-276 window p50/p99 instrument cohort-blind: at HEAD a
-                // 15,307-cohort-round boot printed zero WSTAT lines.  One sample per cohort round, the "windows
-                // done" span named just above - the same phase the standing sample covers (stage through the
-                // windows; the tails below are the TREND line's commit/emit terms).  A failed round returns above,
-                // so only completed windows enter the histogram.
-                struct AdaptRunC {
-                    std::thread th;
-                    bool ok = true;
-                    ~AdaptRunC() { if (th.joinable()) th.join(); }
-                } adapt_run;
-                if (!drive.d.usage.empty() && !ajob && !in_prompt_read && (++ba_window % o.adapt_every) == 0 && pending.empty())
-                    adapt_run.th = std::thread([&] { adapt_run.ok = adapt(); });
-                // the per-cohort tail: the standing acceptance/commit/emit/draft code, verifier- and
-                // window-parameterized (see the single-verifier tail below for the comments it mirrors)
                 auto finish = [&](strata::core::Verifier& v, CohortWin& w) -> bool {
                     int32_t* outb = const_cast<int32_t*>(v.batch_out());
                     std::vector<int> keep(bs.size(), 0);
@@ -12218,8 +12182,65 @@ int main(int argc, char** argv) {
                     std::fflush(stdout);
                     return true;
                 };
-                if (wa.S > 0 && !finish(ver, wa)) return false;   // an empty cohort has no window to
-                if (wb.S > 0 && !finish(ver_b, wb)) return false; // commit (commit_slots would abort)
+                // T39 C2a-lite (STRATA_COHORT_OVERLAP=1): finish each cohort's tail as soon as ITS
+                // window completes, under the other's still-in-flight window. The serialized A-then-B
+                // tails were the measured remainder of the 2x cohort round (T39-window-anatomy §A4);
+                // safe by the dossier's stream analysis: commit graphs are per-verifier
+                // (capture_commit_batch), drafts run on per-slot streams - no cross-verifier coupling.
+                // Default off = today's poll-both-then-finish-A-then-B order, byte-identical.
+                static const bool cohort_overlap = [] { const char* v = std::getenv("STRATA_COHORT_OVERLAP"); return v != nullptr && v[0] == '1'; }();
+                bool la = wa.S > 0, lb = wb.S > 0, fa = !cohort_overlap || !la, fb = !cohort_overlap || !lb;
+                while (la || lb || !fa || !fb) {
+                    if (la) {
+                        const int r = ver.batch_poll(win_pool_fn, &drive, err);
+                        if (r < 0) { std::fprintf(stderr, "cohorts: A poll: %s\n", err.c_str()); std::printf("ERR cohort A: %s\n", err.c_str()); std::fflush(stdout); return false; }
+                        if (r == 0) {
+                            la = false;
+                            if (cohort_overlap && drive.d.failed) {
+                                std::printf("ERR %s\n", drive.d.fail ? drive.d.fail : "a cohort window failed");
+                                return false;
+                            }
+                        }
+                    }
+                    if (!la && !fa) { fa = true; if (!finish(ver, wa)) return false; }
+                    if (lb) {
+                        const int r = ver_b.batch_poll(win_pool_fn, &coh_b_drive, err);
+                        if (r < 0) { std::fprintf(stderr, "cohorts: B poll: %s\n", err.c_str()); std::printf("ERR cohort B: %s\n", err.c_str()); std::fflush(stdout); return false; }
+                        if (r == 0) {
+                            lb = false;
+                            if (cohort_overlap && coh_b_drive.d.failed) {
+                                std::printf("ERR %s\n", coh_b_drive.d.fail ? coh_b_drive.d.fail : "a cohort window failed");
+                                return false;
+                            }
+                        }
+                    }
+                    if (!lb && !fb) { fb = true; if (!finish(ver_b, wb)) return false; }
+                }
+                std::fprintf(stderr, "cohorts: windows done in %.1f ms\n", msd2(w0c, Clock::now()));
+                const Clock::time_point w1c = Clock::now();
+                if (drive.d.failed || coh_b_drive.d.failed) {
+                    std::printf("ERR %s\n", drive.d.failed && drive.d.fail ? drive.d.fail
+                              : coh_b_drive.d.failed && coh_b_drive.d.fail ? coh_b_drive.d.fail
+                              : "a cohort window failed");
+                    return false;
+                }
+                // T38 C5: the cohort lane feeds the WSTAT sample too.  The standing path's single push site (the
+                // single-window tail below) left the F-276 window p50/p99 instrument cohort-blind: at HEAD a
+                // 15,307-cohort-round boot printed zero WSTAT lines.  One sample per cohort round, the "windows
+                // done" span named just above - the same phase the standing sample covers (stage through the
+                // windows; the tails below are the TREND line's commit/emit terms).  A failed round returns above,
+                // so only completed windows enter the histogram.
+                struct AdaptRunC {
+                    std::thread th;
+                    bool ok = true;
+                    ~AdaptRunC() { if (th.joinable()) th.join(); }
+                } adapt_run;
+                if (!drive.d.usage.empty() && !ajob && !in_prompt_read && (++ba_window % o.adapt_every) == 0 && pending.empty())
+                    adapt_run.th = std::thread([&] { adapt_run.ok = adapt(); });
+                // the per-cohort tail: the standing acceptance/commit/emit/draft code, verifier- and
+                // window-parameterized (see the single-verifier tail below for the comments it mirrors)
+                if (!cohort_overlap && wa.S > 0 && !finish(ver, wa)) return false;   // an empty cohort has no
+                if (!cohort_overlap && wb.S > 0 && !finish(ver_b, wb)) return false; // window to commit (would abort)
                 const Clock::time_point w2c = Clock::now();
                 // T39 C5b: the cohort sample now covers the SAME phase as the standing push (window +
                 // commit + emit). The T38 C5 placement (stage-to-windows-done, w0c..w1c) understated the

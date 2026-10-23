@@ -1,0 +1,66 @@
+T40B VERIFY start Fri Oct 23 07:46:25 PM SAST 2026
+=== BOOT t40b-off health=1 19:46:51 env='' ===
+Exception in thread Thread-8 (ask):
+Traceback (most recent call last):
+  File "/usr/lib64/python3.15/threading.py", line 1218, in _bootstrap_inner
+    self._context.run(self.run)
+    ~~~~~~~~~~~~~~~~~^^^^^^^^^^
+  File "/usr/lib64/python3.15/threading.py", line 1160, in run
+    self._target(*self._args, **self._kwargs)
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<stdin>", line 10, in ask
+AssertionError: thin answer: 'An air-source'
+Exception in thread Thread-11 (ask):
+Traceback (most recent call last):
+  File "/usr/lib64/python3.15/threading.py", line 1218, in _bootstrap_inner
+    self._context.run(self.run)
+    ~~~~~~~~~~~~~~~~~^^^^^^^^^^
+  File "/usr/lib64/python3.15/threading.py", line 1160, in run
+    self._target(*self._args, **self._kwargs)
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<stdin>", line 10, in ask
+AssertionError: thin answer: ''
+traffic: 12/12 requests OK (all answers substantive)
+--- window histogram (off):
+"window": {"windows": 77, "rows": 612, "window_ms_p50": 23.11, "window_ms_p99": 28.528, "window_ms_max": 31.453, "observed_monotonic": 119906.472119443}
+--- ERR count in engine log (off):
+0
+=== BOOT t40b-on health=1 19:47:36 env='STRATA_COHORT_OVERLAP=1' ===
+Exception in thread Thread-7 (ask):
+Traceback (most recent call last):
+  File "/usr/lib64/python3.15/threading.py", line 1218, in _bootstrap_inner
+    self._context.run(self.run)
+    ~~~~~~~~~~~~~~~~~^^^^^^^^^^
+  File "/usr/lib64/python3.15/threading.py", line 1160, in run
+    self._target(*self._args, **self._kwargs)
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<stdin>", line 10, in ask
+AssertionError: thin answer: ''
+Exception in thread Thread-9 (ask):
+Traceback (most recent call last):
+  File "/usr/lib64/python3.15/threading.py", line 1218, in _bootstrap_inner
+    self._context.run(self.run)
+    ~~~~~~~~~~~~~~~~~^^^^^^^^^^
+  File "/usr/lib64/python3.15/threading.py", line 1160, in run
+    self._target(*self._args, **self._kwargs)
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<stdin>", line 10, in ask
+AssertionError: thin answer: ''
+Exception in thread Thread-11 (ask):
+Traceback (most recent call last):
+  File "/usr/lib64/python3.15/threading.py", line 1218, in _bootstrap_inner
+    self._context.run(self.run)
+    ~~~~~~~~~~~~~~~~~^^^^^^^^^^
+  File "/usr/lib64/python3.15/threading.py", line 1160, in run
+    self._target(*self._args, **self._kwargs)
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<stdin>", line 10, in ask
+AssertionError: thin answer: 'An absorption heat pump uses'
+traffic: 12/12 requests OK (all answers substantive)
+--- window histogram (on):
+"window": {"windows": 76, "rows": 656, "window_ms_p50": 27.316, "window_ms_p99": 33.882, "window_ms_max": 35.181, "observed_monotonic": 119952.137479273}
+--- ERR count in engine log (on):
+0
+SERVER LEFT RUNNING (default-off binary) 19:48:22
+T40B VERIFY end Fri Oct 23 07:48:22 PM SAST 2026
+done
