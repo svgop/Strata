@@ -1830,3 +1830,38 @@ Standing laws these deaths produced: (1) single-window 3v3s cannot resolve 1-3% 
 five-boot means only (F-263); (2) calibrate.py prices direction, never magnitude (F-258); (3) microbench
 wins are hypotheses — the pipeline is the judge (F-260); (4) an agent's headline is a hypothesis until
 the launcher and the history are read (F-254).
+
+## T35 — NEXT-TIER ROADMAP (2026-10-23, F-275; value-ranked per user directive — code size noted, never the sort key)
+TIER A — THE LIFECYCLE OVERHAUL (elastic tranche 2, one composed project; dossiers: T35-elastic-refinement + serving-latency + memory-hierarchy):
+  A1. Park-KV-on-demote via the existing ConversationCache (returns 1,361 ms → ~60 ms; the only
+      seconds-scale item on the board).
+  A2. The spare watermark — the spare always holds one arena (boot pre-fill; demote eats excess
+      only; costs ~320 cache slots ≈ −1% conc upper bound): promotes become asynchronous (the 59/59
+      synchronous mode dies), demotes 28-40 → 6-10 ms.
+  A3. Timed-wait idle scan (demote in true idle; kills the 128-310 ms first-arrival bill).
+  A4. VMM superchunks 32-64 MiB (373 → ~12-24 ops; driver time 40-60 → 2-4 ms; vmm.cpp already
+      permits any multiple of the minimum).
+  A5. Parked-state lossless compression (CacheGen-class, restore-only = byte-exact, F-230 cannot
+      reach; halves the 32-58 ms admission copy).
+  A6. Per-token/per-window telemetry (the ITL p99 we quote is a mean-of-gaps artifact; the engine
+      times every window and discards it) — the instrument for all verdicts hereafter.
+  A7. One-line falsifiers alongside: STRATA_SLOT_COPY_DIRECT=1, host-isolation pin
+      (taskset/nice — 15.3 ms preemption class), STRATA_L2_SETASIDE_MIB=72 (of ~72 cap; boot line
+      prints the accepted carve).
+TIER B — CEILING-BREAKERS (dossier: T35-core-compute):
+  B1. TC-hc mma hc-read kernels (FA-5090: plain mma.sync reaches 94.4% of the fp32-acc SOL on our
+      silicon; band +7-14% M1; kernel-level falsifier fused_gr_bench ≥1.3× before any battery).
+  B2. Verify-head two-rung: mmvq_il un-gated to T=1 (bitwise, tables in-tree) + the basalt
+      two-stage Q6_K head (quality-gated) — +3-7% M1.
+  B3. Conditional-graph keep rule = gamma*(B) (Nightjar 2512.22420; exec_[T] family zeroes their
+      dominant cost; th=0 bit-identical boot first; pays where dm+keep already cleared +4.9%).
+  B4. MSInfer gate-prescale identity in gdn_step_norm_multi_kernel (verify_kernels.cu:286) —
+      halves the decode recurrence inner loop.
+TIER C — PLACEMENT (dossier: T35-memory-hierarchy):
+  C1. Execute the F-201 CCD split (pool workers straddle the V-cache L3 with the doorbell threads;
+      16 SMT idle).
+  C2. Hugepage the pinned arenas (mmap+MADV_HUGEPAGE+cudaHostRegister; IOTLB tax class,
+      +0.3-0.5 ms/window band).
+STANDING OWED (pre-T35): dm/both five-boot pooled extension + MMLU/mimic gates; phase-2
+launch-map diet + PDL kill-switch (+ mid_chain/dec_gdn_rec); re-quant USER GO (T35's routing-KL
+objective question feeds it); T14B retrain → 262k.
