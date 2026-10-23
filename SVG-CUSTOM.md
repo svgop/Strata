@@ -9148,3 +9148,23 @@ capable BUT P2P needs >=2 GPUs - zero single-GPU benefit. Blackwell gates are fu
 vgpu-unlock research (GSP blocked by fused-off VF PRIV). VERDICT: watch-only unchanged; triggers = a
 GB202 PLM/SS writable-mask demo, or a second GPU in this box. Standing config restored + verified
 healthy; box idle; fresh profile left in place.
+
+## F-272 — 2026-10-23 ~05:30: T33 TRANCHE 1 LANDED — elastic sessions work (agent + verified)
+STRATA_ELASTIC_SESSIONS=1 (+321/-29, generate.cpp only; unset = byte-identical eager path, re-verified
+after the review-fixed gate inversion): 6 slot arenas as VmmRanges at stable VA, S_min=2 mapped at
+boot, boot frees 2.91 GiB in 38 ms -> cache 8,226 slots vs 6,923 standing at the same reserve;
+promotes 11-19 ms (map 12-17 + zero 0.6), demotes 28-40 ms (unmap 6-10; the cache eats the chunks
+and refills from the profile); F0 PASS, F2 ramp 1->9->1 PASS twice on the deployed binary (zero
+floor warnings, single engine per boot, promoted slots admit + capture immediately at the same VA);
+F1 solo bracketed 211.5-249.8 vs OFF 234.3 - the five-boot battery decides. CAPTURE AUDIT: all four
+families bake slot+lane+model-level memory only (batch graphs strictly through slots_[rows[t]];
+cross-arena = never-unmapped primary scratch) - VMM sessions graph-safe by construction, as v3
+predicted. DEVIATIONS (accepted): host pins held per process (pins are baked into captured graphs;
+bounded --batch x 1.55 GiB; instrumented), promote's cache-release at the admission quiesce point
+(11-19 ms, inside contract), give_way refuses unmapped slots, demote drops the slot's conv cache
+(re-read on return - tranche-2 refinement: refill from the learned profile). CORRECTION TO SPEC v1:
+the pl_want routing fix is INERT on this box (pipe requires a >=2-GPU layer split; with --batch the
+pipeline is not constructed) - the measured -9.6% static-9 solo penalty was NOT half lane
+disengagement; pool-shrink + profile-class effects carry it. The gate carries the right semantic
+for future multi-GPU elastic configs. Rollback: engine/strata.pre-t34, or boot without the env.
+NEXT: the F3 battery (standing vs elastic 3v3) + F4 (parallel-9 elastic = the F-271 question re-asked).
