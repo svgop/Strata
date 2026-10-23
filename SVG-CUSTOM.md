@@ -9515,3 +9515,60 @@ evening feel cold-path slow too (2.5k vs 6-7k prefill until warm). Lane spot-che
 (193.4/187.5/296.9) ran AFTER 10 UX requests (unusual context — first thing after prewarm
 is the banked pattern); single boot, low edge of swing, no verdict — the owed five-boot
 pooled re-bank of the F-282 recipe remains the instrument for engine-speed certification.
+
+## F-284 — 2026-10-24 ~01:45: THE "CORE KNOWLEDGE v2" EXTERNAL DOC CHECKED (findings-only,
+no boots; 3 Explore maps + main-loop verification + live-log telemetry). The user delivered a
+~1,200-line external synthesis claiming the binding constraint is "DDR bytes of host-resident
+experts touched per verify pass" on a miss-bound engine, ranking 12+ levers. VERDICT AGAINST
+THIS TREE (campaign/research/T42-knowledge-check.md + T42-r1/r2/r3 maps):
+
+(1) MODEL ID RIGHT: Qwen3.8-Flash-Next confirmed from the pack index (v1's Qwen3-Next
+assumption was wrong); geometry matches (2560/248,320/512-experts; 47 per-layer quant rows).
+Platform corrected: 184GB RAM not 128.
+
+(2) THE HEADLINE THESIS IS HALF-RIGHT — it binds the TAIL, not the median. Live n=4,192
+window telemetry: expert-cache hit p50 97.2% / p10 88.7% / mean 95.5%; misses ≈ 8% of the
+median ~15.6ms forward, ≈ 31% at p10. The U(P) law is REAL and measured: 3-6-position verify
+windows hit only 71.0% (speculation inflates misses — exactly the doc's mechanism), while
+warmed conc/cohort windows recover to 97.1%. The MEDIAN binding term is the GPU kernel chain
+(288-291 HC launches/forward — 3x the doc's count; 12 QSA indexer launch-quads), which is
+what T15 (hc occupancy, bit-exact +8-9%) and T17 (hc ALU-cap mma, +9-17% ceiling) already
+priced. The doc's own escape clause ("if handshakes or kernel chains dominate, items 5/8/11
+move up") fires here.
+
+(3) THE DOC'S "MOVES" ARE ALMOST ALL ALREADY BUILT IN THIS ENGINE — the campaign built them
+across the B/F series: prefill ncmoe weight-streaming (>=1024-token chunks GPU-compute by
+default, prefill.cpp:179 — "prefill misses compute on CPU" is WRONG here); the 149-prefetch
+predictor (vote-ranked next-layer routing, confidence admission, recall/precision telemetry);
+doorbell + polled mapped flags + batched DMA (pure overhead ~10-40us/layer vs ~0.2ms real
+fetch wait); the 40,525-row Q4_0 draft shortlist (55.7 MiB/step — the "248k lm_head" claim
+wrong); draft experts hard-VRAM (675MiB, no miss tier — §7.3 moot); the ENTIRE §5 engram
+design (sample-time gather, IQ4_NL 90B/row = the 4-bit floor, page dedup, draft->verify row
+reuse — "PLE disabled in draft" is BACKWARDS, the draft prefetches for verify — NG_HIST=9
+rollback+park); L2 set-aside; COHORTS = the two-batch overlap; int8 KV; PcieAuto online
+share regression. Residency: ~26.5% by count in VRAM (13.3GiB) + a 42.29GiB PAGE-LOCKED
+complement = ALL experts resident somewhere (file tier first-touch only, ~5-6K reads/boot
+decaying to 0) — the doc's "42-47% resident" describes a different design; profile-ranked
+placement + prediction is why 26.5% count yields 97% hits.
+
+(4) FALSIFIED-BY-JOURNAL BEFORE ANY BOOT (the verify-first law pays again): the doc's biggest
+GPU lever "GDN row-split (48 CTAs = 28% of SMs)" — STRATA_GDN_SPLIT=1 already tested T1a,
+"neutral on sm_120, NOT adopted" (SVG-CUSTOM.md:2175). The 48-CTA grid is real
+(verify_kernels.cu:1215) but the kernel is not SM-starved in the window path. Likewise "K+1
+sequential state passes" is wrong (in-kernel register loop, R2 Q3).
+
+(5) GENUINELY NEW (the doc's real contribution, all falsifier-first, queued as Tier B):
+QSA below-2051 HOST-SIDE LAUNCH SKIP (no bypass exists; 3-4 degenerate launches/layer/step;
+exact-output class); GDN bf16 STATE (no bf16 mode exists — pairs with T17's bf16-native
+tranche as one arm, KL-gated); MISS-AWARE VERIFY WIDTH (DSpark-style scheduling aimed at the
+measured 71% band); --ple-io ram one-flag (mlock 28.8GB; robustness); PDL-RACE SCREEN (20x
+greedy, the bimodality hunt's cheapest probe); per-expert popularity requant acknowledged as
+NOT done (pack heterogeneity is per-layer).
+
+(6) MERGED BREAKTHROUGH QUEUE (T42 §5): Tier A banked record-breakers = T15 hc occupancy
+(+8-9% M1 bit-exact) / E5 ternary (conc 355-390 band vs 323.0) / FastMTP T14B. Tier B = the
+new cheap boots above + T39's +460-slot dedup (+1.9pt hit, bit-exact class). Tier C = TC-hc
+mma tranche / verify-width / stream-level overlap / requant (USER GO). RESCOPE: the
+PREDICT_CREDIT/BUDGET + POOL_SPIN_US drop-tests become TUNE-tests — they run the predictive
+tier the doc independently ranks #1-4. Records context: solo/pair past on pooled means
+(222.4/209.9 + SPEC_PROB rider), conc 319.6 vs 323.0 = the target lane.
