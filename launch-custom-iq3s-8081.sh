@@ -22,7 +22,12 @@ export STRATA_KV_PREFETCH=1         # +5.3%/4.1% prefill at 32K/64K
 export STRATA_ADAPT_LAG=2           # kills the lag-1 event sync stall in the adapt tier
 export STRATA_DMA_BATCH=1           # 84.9% fewer DMA submit cycles
 export STRATA_VERIFY_DEVICE_PLAN=1  # device-side routing plan when all experts resident
-export STRATA_ELASTIC_SESSIONS=1  # F-273 ADOPTED (T33/T34): slot arenas VMM-elastic - S_min=2 mapped, promote ~12-17ms, demote feeds the cache; conc +4.0% 3/3 rounds, M1 no-regression, 9-wide with zero solo tax. OFF: unset
+export STRATA_ELASTIC_SESSIONS=1
+export STRATA_ELASTIC_PARK=1        # F-276 ADOPTED: demote parks via ConversationCache - returns restore 9-15ms vs 275-326ms re-reads
+export STRATA_ELASTIC_WATERMARK=1   # F-276 ADOPTED: spare always holds one arena - promotes background 2.2-8ms, demote unmap 2-2.8ms
+export STRATA_ELASTIC_TIMED_SCAN=1  # F-276 ADOPTED: demotes in true idle - the 128-310ms first-arrival bill removed
+export STRATA_VMM_CHUNK_MIB=32      # F-276 ADOPTED: superchunks - 24 driver ops/arena vs 373 (29-51us/op GSP-measured)
+export STRATA_SERVE_TELEMETRY=1     # F-276 ADOPTED: window p50/p99 + true per-token gaps + admission waits in /metrics  # F-273 ADOPTED (T33/T34): slot arenas VMM-elastic - S_min=2 mapped, promote ~12-17ms, demote feeds the cache; conc +4.0% 3/3 rounds, M1 no-regression, 9-wide with zero solo tax. OFF: unset
 
 export STRATA_PREDICT_CREDIT=1.0    # prediction credit (proven at 103k: 128 t/s / 97.6%)
 export STRATA_PREDICT_BUDGET=2

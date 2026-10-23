@@ -9217,3 +9217,22 @@ COUNT is the lever). EXTERNAL VALIDATION: TreeWY/SpecLA/ReplaySSM each built the
 our chain design and lost on chains - our dead laws are the field's consensus; F-252
 double-confirmed; no banked law fell. STANDING OWED: dm/both five-boot + gates; phase-2
 diet/PDL; re-quant USER GO (the routing-KL objective question feeds it).
+
+## F-276 — 2026-10-23 ~15:20: T36 LIFECYCLE OVERHAUL JUDGED + ADOPTED (user directive honored:
+## studied-not-abandoned)
+Battery (t36, 3v3+1 interleaved, single-engine all legs): LIFE (park+watermark+timed-scan+
+superchunks+telemetry) vs same-window CTL: M1 215.2 vs 212.2 (+1.4%), pair 205.3 vs 199.9 (+2.7%,
+ahead EVERY round), conc 317.1 vs 314.8 (+0.7%), M3b 76.0 in-band — AND the battery's best M1
+(228.3) came from the parallel-9 lifecycle boot (solo at 9-slot config, now routine). The interim
+scare was the CTL's own 14% boot swing (193.8-221.6) — the quiet-window law's reason for existing.
+ADOPTED into the standing launcher: the four lifecycle gates + telemetry (each one-command
+revertible; pooled-confirmation rider per the prewarm2 precedent). Mechanism wins banked: restores
+9-15ms (vs 275-326 re-reads), background promotes 2.2-8ms, 24 driver ops/arena vs 373, demotes in
+true idle, TRUE per-token tails now in /metrics (mean-of-gaps era over). STAY OFF: GDN_PRESCALE
+(canary moved 90->75-81% composed — isolated attribution owed before any reconsideration),
+CCD_SPLIT (isolation leg lost to a script label bug — battery owed), CONV_COMPRESS (bit-exact but
+1.01x on int8 KV — structure-aware codec owed). NEGATIVES BANKED: L2-72 falsified by the device
+(persisting cap = 60 MiB), complement one-shot hugepage register stalls (kept cudaHostAlloc there).
+FIVE-BOOT pooled extension of the life-vs-ctl means rides future batteries (sub-4% law); the
+conc-vs-anchor gap (317 vs 323 class this window) gets the watermark-slot-cost + superchunk-
+granularity + learned-profile-refill tunables if the pooled read confirms it.
