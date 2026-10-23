@@ -11785,6 +11785,11 @@ int main(int argc, char** argv) {
         // savage-custom F-31: slot-draft acceptance telemetry (the coupled-in-slots diagnostic) -
         // with the rescue off, keep==2 IS the exact-match agreement rate.
         int64_t bt_slot_drafts = 0, bt_slot_accepts = 0;
+        // T39 (R3): the batch-lane twin of the serial STRATA_SPEC_TRACE - per-round tested/accepted +
+        // rescue outcome + dprob as "b " lines into the same file (the serial lane writes "w " lines).
+        // Settles the 9-conc acceptance denominator artifact (exact vs rescue-inclusive vs offered).
+        // Default off (env-gated), no math touched.
+        static FILE* bt_trace_f = [] { const char* p = std::getenv("STRATA_SPEC_TRACE"); return (p && p[0]) ? std::fopen(p, "a") : nullptr; }();
         // savage-custom F-39 note (v0.1.43 rebase): our port of upstream e989c671 and our
         // prompt_read_active guard - batch_step() interleaved inside a yielded prompt chunk read -
         // are upstream-native now (the adapt vars above, `in_prompt_read`); the port retired,
@@ -12083,7 +12088,6 @@ int main(int argc, char** argv) {
                 // done" span named just above - the same phase the standing sample covers (stage through the
                 // windows; the tails below are the TREND line's commit/emit terms).  A failed round returns above,
                 // so only completed windows enter the histogram.
-                if (window_stats_on) window_ms.push_back((float) msd2(w0c, w1c));
                 struct AdaptRunC {
                     std::thread th;
                     bool ok = true;
@@ -12096,6 +12100,7 @@ int main(int argc, char** argv) {
                 auto finish = [&](strata::core::Verifier& v, CohortWin& w) -> bool {
                     int32_t* outb = const_cast<int32_t*>(v.batch_out());
                     std::vector<int> keep(bs.size(), 0);
+                    std::vector<int> rescued(bs.size(), 0);
                     for (int a = 0; a < w.A; ++a) {
                         const int b = w.active[a], i = w.first[a];
                         const BSlot& sl = bs[(size_t) b];
@@ -12117,10 +12122,21 @@ int main(int argc, char** argv) {
                                 if (ok) {
                                     outb[i] = w.tok[i + 1];
                                     keep[b] = 2;
+                                    rescued[b] = 1;
                                     ++bt_slot_accepts;
                                 }
                             }
                         }
+                    }
+                    if (bt_trace_f) {
+                        for (int a2 = 0; a2 < w.A; ++a2) {
+                            const int b2 = w.active[a2];
+                            const BSlot& sl2 = bs[(size_t) b2];
+                            std::fprintf(bt_trace_f, "b b=%d nrows=%d keep=%d resc=%d d=%.4f\n",
+                                         b2, w.nrows[a2], keep[b2], rescued[b2],
+                                         sl2.dprob.empty() ? 0.0f : (double) sl2.dprob[0]);
+                        }
+                        if ((bt_windows & 63) == 0) std::fflush(bt_trace_f);
                     }
                     if (!(mtp_use ? v.commit_slot_prefixes(keep.data(), err) : v.commit_slots(err))) {
                         std::printf("ERR %s\n", err.c_str());
@@ -12205,6 +12221,10 @@ int main(int argc, char** argv) {
                 if (wa.S > 0 && !finish(ver, wa)) return false;   // an empty cohort has no window to
                 if (wb.S > 0 && !finish(ver_b, wb)) return false; // commit (commit_slots would abort)
                 const Clock::time_point w2c = Clock::now();
+                // T39 C5b: the cohort sample now covers the SAME phase as the standing push (window +
+                // commit + emit). The T38 C5 placement (stage-to-windows-done, w0c..w1c) understated the
+                // cohort round by the finish tails this span includes.
+                if (window_stats_on) window_ms.push_back((float) msd2(w0c, w2c));
                 bt_run += msd2(w0c, w1c);
                 bt_commit += msd2(w1c, w2c) * 0.5;   // both tails ran inside this span; split evenly
                 bt_emit += msd2(w1c, w2c) * 0.5;

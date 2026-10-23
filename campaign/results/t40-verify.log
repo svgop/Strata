@@ -1,0 +1,21 @@
+T40 VERIFY start Fri Oct 23 07:04:08 PM SAST 2026
+deployed T40-instruments binary; rollback engine/strata.pre-t40
+=== BOOT t40-verify health=1 19:04:34 ===
+[strata] 2026-10-23 19:04:17 engine started: /home/svg/LLM/strata-custom-2/engine/strata --serve --pack /home/svg/LLM/data/packs/iq3_s --native /home/svg/LLM/data/models/Qwen3.8-Flash-Next-GSQ-RCO-IQ3_S-00001-of-00002.gguf --ple-gguf /home/svg/LLM/data/models/Qwen3.8-Flash-Next-GSQ-RCO-IQ3_S-00002-of-00002.gguf --expert-cache auto --spec 6 --max-context 131072 --kv int8 --kv-resident 32768 --spec-min-p 0.5 --prefill auto:32768 --mtp-q4 all --mtp-hnorm stream --pcie-frac 0.35 --pcie-mode dma --vram-reserve-mib 2000 --conversation-cache-mib 49152 --conversation-cache-slots 24 --control-vector-scaled refusal-r.gguf:1.0 --control-vector-layer-range 4 24 --cvec-mode project --cvec-dir per-layer --ple-io mmap --adapt-decay 0.85 --expert-profile data/expert-profile.bin --expert-profile-save data/expert-profile-learned.bin --expert-profile-save-every 30 --resident-experts --mtp /home/svg/LLM/data/mtp-en/rt --batch 6
+strata verify: STRATA_DM armed (dm_wait_combine: the CPU-rows wait, the pool rows' read and the combine in one launch on the device-plan route)
+strata verify: STRATA_DM armed (dm_wait_combine: the CPU-rows wait, the pool rows' read and the combine in one launch on the device-plan route)
+strata serve: STRATA_COHORTS=2 on: slots [0,3) on verifier A, [3,6) on B
+cohort traffic done: 12 requests in 16s
+--- /metrics after cohort traffic:
+"conversation_cache": {"enabled": true, "budget_mib": 49152, "slots": 24, "parked": 6, "bytes": 1429682272, "evictions": 0, "parks": 15, "restores": 0, "last_event": "parked", "last_tokens": 183, "last_at": 1792775091.7701528, "requests": 12, "requests_reused": 6, "reused_tokens": 358, "prompt_tokens": 776, "last_reused": 60, "last_prompt": 65}
+"window": {"windows": 73, "rows": 635, "window_ms_p50": 24.662, "window_ms_p99": 35.911, "window_ms_max": 45.727, "observed_monotonic": 117370.3611153}
+"elastic": {"promotes": 4, "demotes": 4, "park_demotes": 4, "forget_demotes": 0, "last_promote_ms": 2.3, "last_release_ms": 1.3, "last_map_ms": 0.4, "last_demote_ms": 65.1, "last_park_ms": 45.9, "last_unmap_ms": 3.9, "spare_chunks": 24}
+--- trace twin (b lines):
+b b=0 nrows=2 keep=1 resc=0 d=0.6264
+b b=1 nrows=2 keep=2 resc=0 d=1.0000
+b b=2 nrows=2 keep=2 resc=0 d=1.0000
+594 /tmp/t40-btrace.txt
+--- WSTAT lines:
+SERVER LEFT RUNNING 19:04:54
+T40 VERIFY end Fri Oct 23 07:04:54 PM SAST 2026
+done
