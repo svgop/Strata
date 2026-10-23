@@ -1,0 +1,266 @@
+{
+ "label": "t32b-mimic",
+ "suite": "mimicbench2-v1 (31 tasks, weighted)",
+ "score_pct": 84.84848484848484,
+ "weighted": "56/66",
+ "by_category": {
+  "doctrine": "6/8",
+  "voice": "4/6",
+  "arch-continue": "8/8",
+  "correction": "8/8",
+  "blend": "4/8",
+  "ui-deep": "8/10",
+  "internalize": "12/12",
+  "doc-structure": "6/6"
+ },
+ "results": [
+  {
+   "cat": "doctrine",
+   "id": "d1-instr-density",
+   "w": 2,
+   "ok": 1,
+   "note": "real voice laws on new content",
+   "head": "- Measure slowest tests first: `pytest --durations=10`, `jest --verbose`, `go test -bench . -benchmem`.\n- Run only changed tests: `pytest --lf`, `jest --changedSince=HEAD~1`, `go test ./... -run '^Tes"
+  },
+  {
+   "cat": "doctrine",
+   "id": "d1-no-closers",
+   "w": 2,
+   "ok": 1,
+   "note": "real voice laws on new content",
+   "head": "Code review matters because it catches bugs early, spreads knowledge across the team, and improves design before changes reach production. It\u2019s not about gatekeeping\u2014it\u2019s shared ownership that makes o"
+  },
+  {
+   "cat": "doctrine",
+   "id": "d1-artifact-bullets",
+   "w": 2,
+   "ok": 1,
+   "note": "real voice laws on new content",
+   "head": "- Use structured JSON logs with `timestamp`, `level`, `message`, and `trace_id` fields.\n- Set log levels by environment: `DEBUG` in dev, `INFO` in prod, `ERROR` for alerts.\n- Redact secrets before wri"
+  },
+  {
+   "cat": "doctrine",
+   "id": "d1-frontload",
+   "w": 2,
+   "ok": 0,
+   "note": "real voice laws on new content",
+   "head": "Share these artifacts, and I\u2019ll describe your exact release process:\n\n- `RELEASE.md`, `CHANGELOG.md`, or `docs/release.md`\n- CI config: `.github/workflows/release.yml`, `.gitlab-ci.yml`, `Jenkinsfile`"
+  },
+  {
+   "cat": "voice",
+   "id": "d2-1",
+   "w": 2,
+   "ok": 1,
+   "note": "induced clipped voice, no praise-adjectives",
+   "head": "Index columns used in `WHERE`, `JOIN`, and `ORDER BY`. Measure first. The query plan names the bottleneck; guesses don\u2019t. Indexes speed reads and slow writes. Drop unused indexes. The maintenance cost"
+  },
+  {
+   "cat": "voice",
+   "id": "d2-2",
+   "w": 2,
+   "ok": 0,
+   "note": "induced clipped voice, no praise-adjectives",
+   "head": "Quarantine. Reproduce. Fix the root cause or delete the test. Don\u2019t merge on retries."
+  },
+  {
+   "cat": "voice",
+   "id": "d2-3",
+   "w": 2,
+   "ok": 1,
+   "note": "induced clipped voice, no praise-adjectives",
+   "head": "Technical debt is a shortcut that costs later. It slows delivery, raises bugs, and blocks changes. Measure the pain: lead time, incidents, rework. Pay it down when it hurts velocity. Don\u2019t pay it for "
+  },
+  {
+   "cat": "arch-continue",
+   "id": "d3-1",
+   "w": 2,
+   "ok": 1,
+   "note": "induce DriftSignal/drift_signal_init/drift_signal_fail",
+   "head": "```cpp\n#ifndef DRIFT_SIGNAL_H\n#define DRIFT_SIGNAL_H\n\nclass DriftSignal {\npublic:\n    DriftSignal();\n};\n\nvoid drift_signal_init();\nvoid drift_signal_fail();\n\n#endif\n```"
+  },
+  {
+   "cat": "arch-continue",
+   "id": "d3-2",
+   "w": 2,
+   "ok": 1,
+   "note": "induce LoopClosure/loop_closure_init/loop_closure_fail",
+   "head": "```cpp\n#ifndef LOOP_CLOSURE_H\n#define LOOP_CLOSURE_H\n\nclass LoopClosure {\npublic:\n    LoopClosure();\n    void loop_closure_init();\n    void loop_closure_fail();\n};\n\n#endif\n```"
+  },
+  {
+   "cat": "arch-continue",
+   "id": "d3-3",
+   "w": 2,
+   "ok": 1,
+   "note": "induce PayloadGate/payload_gate_init/payload_gate_fail",
+   "head": "```cpp\n#ifndef PAYLOAD_GATE_H\n#define PAYLOAD_GATE_H\n\nclass PayloadGate {\npublic:\n    PayloadGate();\n    void payload_gate_init();\n    void payload_gate_fail();\n};\n\n#endif\n```"
+  },
+  {
+   "cat": "arch-continue",
+   "id": "d3-4",
+   "w": 2,
+   "ok": 1,
+   "note": "induce HarvestQueue/harvest_queue_init/harvest_queue_fail",
+   "head": "```cpp\n#ifndef HARVEST_QUEUE_H\n#define HARVEST_QUEUE_H\n\nclass HarvestQueue {\npublic:\n    HarvestQueue();\n    void harvest_queue_init();\n    void harvest_queue_fail();\n};\n\n#endif\n```"
+  },
+  {
+   "cat": "correction",
+   "id": "d4-1",
+   "w": 2,
+   "ok": 1,
+   "note": "complexity habit persists unprompted",
+   "head": "Insertion sort (O(n) on nearly sorted arrays)."
+  },
+  {
+   "cat": "correction",
+   "id": "d4-2",
+   "w": 2,
+   "ok": 1,
+   "note": "complexity habit persists unprompted",
+   "head": "Circular buffer (O(1) insert, O(1) access)."
+  },
+  {
+   "cat": "correction",
+   "id": "d4-3",
+   "w": 2,
+   "ok": 1,
+   "note": "complexity habit persists unprompted",
+   "head": "Hash set (O(n) time, O(n) space)."
+  },
+  {
+   "cat": "correction",
+   "id": "d4-5",
+   "w": 2,
+   "ok": 1,
+   "note": "habit at turn 5, no reminder",
+   "head": "Hash map (O(1) lookup, O(1) insert)."
+  },
+  {
+   "cat": "blend",
+   "id": "d5-1",
+   "w": 2,
+   "ok": 0,
+   "note": "register switch [ENG]",
+   "head": "- Add cache manifest.\n- Update CI config.\n- Split build graph.\n- Add artifact store.\n- Generate timing report.\n- Run tasks in parallel.\n- Remove targets.\n- Pin tool versions."
+  },
+  {
+   "cat": "blend",
+   "id": "d5-2",
+   "w": 2,
+   "ok": 1,
+   "note": "register switch [EXEC]",
+   "head": "30%: cache dependencies, run tasks in parallel, and skip unchanged modules."
+  },
+  {
+   "cat": "blend",
+   "id": "d5-3",
+   "w": 2,
+   "ok": 1,
+   "note": "register switch [EXEC]",
+   "head": "1. Yes, migrate the database if it is causing cost, risk, or delay; otherwise, keep it and plan a later move."
+  },
+  {
+   "cat": "blend",
+   "id": "d5-4",
+   "w": 2,
+   "ok": 0,
+   "note": "register switch [ENG]",
+   "head": "Migrate database if compatibility passes, volume fits window, rollback exists, validation passes.\nProduce migration plan, schema diff, rollback plan, validation report."
+  },
+  {
+   "cat": "ui-deep",
+   "id": "d6-1",
+   "w": 2,
+   "ok": 1,
+   "note": "induced system: palette/radius/scale/typography",
+   "head": "```jsx\nfunction UserRow({ name, initials, status = \"online\" }) {\n  return (\n    <div className=\"flex items-center gap-3 p-3 rounded-lg border border-zinc-800 bg-zinc-900\">\n      <span\n        classNam"
+  },
+  {
+   "cat": "ui-deep",
+   "id": "d6-2",
+   "w": 2,
+   "ok": 0,
+   "note": "induced system: palette/radius/scale/typography",
+   "head": "```tsx\ntype PanelHeaderProps = {\n  title: string;\n  actionLabel: string;\n  onAction?: () => void;\n}\n\nexport function PanelHeader({\n  title,\n  actionLabel,\n  onAction,\n}: PanelHeaderProps) {\n  return ("
+  },
+  {
+   "cat": "ui-deep",
+   "id": "d6-3",
+   "w": 2,
+   "ok": 1,
+   "note": "induced system: palette/radius/scale/typography",
+   "head": "```tsx\nfunction MenuList({ children }) {\n  return (\n    <ul\n      role=\"menu\"\n      className=\"flex flex-col gap-1 p-2 rounded-lg border border-zinc-800 bg-zinc-900\"\n    >\n      {children}\n    </ul>\n "
+  },
+  {
+   "cat": "ui-deep",
+   "id": "d6-4",
+   "w": 2,
+   "ok": 1,
+   "note": "induced system: palette/radius/scale/typography",
+   "head": "```html\n<div class=\"flex flex-col items-center gap-3 p-6 rounded-lg border border-zinc-800 bg-zinc-900 text-center\">\n  <div class=\"flex items-center justify-center w-10 h-10 rounded-full bg-zinc-800 t"
+  },
+  {
+   "cat": "ui-deep",
+   "id": "d6-5",
+   "w": 2,
+   "ok": 1,
+   "note": "cross-component consistency in assembly",
+   "head": "```html\n<div class=\"mx-auto w-full max-w-xl flex flex-col gap-3 p-4\">\n  <header class=\"flex items-center justify-between gap-3 p-4 rounded-lg border border-zinc-800 bg-zinc-900\">\n    <div class=\"flex "
+  },
+  {
+   "cat": "internalize",
+   "id": "d7-1",
+   "w": 3,
+   "ok": 1,
+   "note": "ND:1 O():1 loopclosure:0",
+   "head": "ND: Trie.\nND: External-sort the log by line hash, then remove adjacent duplicates; O(n log n) time, O(n) disk space.\nND: If memory allows, use a hash set for O(n) time and O(n) space."
+  },
+  {
+   "cat": "internalize",
+   "id": "d7-2",
+   "w": 3,
+   "ok": 1,
+   "note": "ND:1 O():1 loopclosure:0",
+   "head": "ND: Trie.\nND: Hash map + doubly linked list.\nND: O(1) get/put."
+  },
+  {
+   "cat": "internalize",
+   "id": "d7-3",
+   "w": 3,
+   "ok": 1,
+   "note": "ND:1 O():1 loopclosure:0",
+   "head": "ND: Trie.\nND: DFS with visited and recursion stack.\nND: If a visited node is on the stack, cycle; complexity O(V+E)."
+  },
+  {
+   "cat": "internalize",
+   "id": "d7-4",
+   "w": 3,
+   "ok": 1,
+   "note": "ND:1 O():1 loopclosure:0",
+   "head": "ND: Trie.\nUse a distributed token bucket with atomic Redis counters.\nComplexity: O(1) per request, O(1) per key."
+  },
+  {
+   "cat": "doc-structure",
+   "id": "d8-1",
+   "w": 2,
+   "ok": 1,
+   "note": "frontmatter+sections+numeric evidence",
+   "head": "---\ntype: research\ndate: 2026-06-22\ntopic: evaluate Redis cache tier for product catalog reads\n---\n# Redis cache tier \u2014 38% p95 latency reduction at 1k RPS\n## Evidence\n- benchmark showed p95 read late"
+  },
+  {
+   "cat": "doc-structure",
+   "id": "d8-2",
+   "w": 2,
+   "ok": 1,
+   "note": "frontmatter+sections+numeric evidence",
+   "head": "---\ntype: research\ndate: 2026-06-15\ntopic: shader compile times\n---\n# Shader compile times \u2014 optimization passes dominate cold starts\n## Evidence\n- Measured 1,240 ms average cold compile time for 12 s"
+  },
+  {
+   "cat": "doc-structure",
+   "id": "d8-3",
+   "w": 2,
+   "ok": 1,
+   "note": "frontmatter+sections+numeric evidence",
+   "head": "---\ntype: research\ndate: 2026-06-15\ntopic: queue backpressure investigation\n---\n# Queue backpressure \u2014 bounded queues reduce overload latency\n## Evidence\n- measured p95 latency dropped from 840 ms to "
+  }
+ ]
+}

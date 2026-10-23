@@ -9236,3 +9236,73 @@ CCD_SPLIT (isolation leg lost to a script label bug — battery owed), CONV_COMP
 FIVE-BOOT pooled extension of the life-vs-ctl means rides future batteries (sub-4% law); the
 conc-vs-anchor gap (317 vs 323 class this window) gets the watermark-slot-cost + superchunk-
 granularity + learned-profile-refill tunables if the pooled read confirms it.
+
+## F-277 — 2026-10-23 ~17:00: dm_wait_combine ADOPTED after the full gate arc; the T37 wave's
+## record corrections; both/keep closed properly
+THE DM GATE ARC (the discipline law executed end-to-end): (1) SPEED — t32b five-boot extension
+(campaign/batteries/t32b-dm-fiveboot.sh, 5 rounds x ctl/dm/both, all prewarmed, labels baked in —
+no t36 label-bug repeat) pooled with t32's 3 rounds = 8 boots/arm across TWO windows: dm M1 222.4
+vs ctl 217.1 (+2.5%; windows agree at +2.9/+2.2; 6/8 rounds positive), pair +0.9, conc +1.3, M3b
+76.8 in-band — inside F-264's honest +1.5-3% price. (2) MMLU 2x 95.7/95.7 (floor 0.933; the three
+misses are the same questions both runs). (3) MIMIC — the honest part: dm's first read 56/66 (84.8)
+vs a same-window ctl counterfactual 60/66 (90.9) = a 4-item gap FOLLOWING THE ARM = gate FAIL as
+read (never blame drift). Paired 3v3 interleave (t32b-mimpair): dm 60/60/62 — dm >= ctl every
+paired round, 62 = the day's best read; with the counterfactual boot ctl is 60/60/60 today — the
+56 was a TAIL DRAW and F-264's bit-identity (51 cases / 11,636 fields) held. ADOPTED:
+export STRATA_DM=1 in the standing launcher (boot line "strata verify: STRATA_DM armed"; gate
+verify.cpp:492; OFF = unset). VERIFIED-ARMED lesson: the fiveboot grep 'strata dm' missed the real
+wording "STRATA_DM armed" — armed-line greps must come from the source's print, and custom-iq3_s.log
+APPENDS across boots (grep 'engine started' | tail -1 to find the live one; head hits stale boots).
+BOTH/KEEP CLOSED WITH A RECORD CORRECTION: the T32 "both pair +4.9% bar-cleared" did NOT survive
+8-boot pooling (pooled pair +1.5%, M1 -1.3%); keep solo -6.0% pooled re-falsified; conditional
+graphs (T37 C1) remain keep's only unlock. ctl-r1's mimic in the pair battery died mid-suite
+(leg-local, 5/6 legs produced json) — cosmetic, ctl stably 60 across its three other boots today.
+THE T37 WAVE (three researchers past T35, every load-bearing claim main-loop-verified at HEAD;
+dossiers campaign/research/T37-{kernel-math,scheduling-spec,pathways-memory}.md, INDEX rows added):
+RECORD CORRECTIONS — (a) F-249's "COHORTS=3 flat at 6" is VOID: the engine clamps STRATA_COHORTS>=2
+to the SAME two-cohort binding (generate.cpp:9344) and ver_c exists nowhere; a =3 boot is
+byte-identical to =2; the 3-cohort question is UNTESTED at any client count (9-wide 5+4 hits
+kVerifyMaxT=8 and rotates an idle slot every round — the real F-273 9c~6-parity mechanism; the
+3+3+3 ternary reactor is the structural fix, needs code). (b) mmvq IL tables DO cover the verify
+head at T=2..8 on the 5090 (kIlRows_120/kIlRows58_120, il_cc=1201, native_mmvq.cu:3041-3194) —
+T15A's "~73% of windows plain" is stale; only T=1 remains plain. (c) GDN layers = 36
+(geometry.hpp:25-26/67; T26-3's 24 wrong). (d) the draft head is 40,525 x 2560 Q4_0 = 55.7 MiB/step
+(the 162,100/425,196 figure was draft_vocab FILE BYTES). (e) standing depth is 6 and frac is 0.35
+(F-263's reverts re-confirmed against the live config — kill any "depth 7 / frac 0.55 adopted"
+restatements on sight).
+HEADLINE FINDINGS — hc line's cap = BYTES-IN-FLIGHT (~205 KB staged vs ~1.36 MB saturation
+requirement — predicts the measured 440-622 GB/s; TC-hc rung 0 = weight-cp.async + 4 accumulators
+NEVER MEASURED, rung 1 = m16n8k16 bf16 fixed-order cross-warp + 3-stage weight pipeline; band
++6-12% M1; fused_gr_bench >=1.3x remains the LAW before any battery). MSInfer gate-prescale has NO
+bit-preserving form (reassociation IS the identity; PS-form bits ~2.8e-7 = the GDN_CHUNKED class)
+-> the F-276 composed-boot canary move 90->75-81% is quantitatively inconsistent with the identity
+and points to a CONFOUND: one isolated env boot + KL pair is the falsifier. basalt's two-stage head
+is a 2-BIT PROXY scored on the int8 tensor pipe on THEIR verify path, and our sampler consumes
+FULL-VOCAB logits — parity-harness-first (-0.2..-0.25 ms/window, +4-5% M1 band). mid_chain
+UNCONDITIONALLY UNBLOCKED: GGUF v3 headers parsed directly — attn_gate = 10 Q4_K + 14 Q6_K + 4 Q5_K
++ 8 IQ4_XS, ALL inside the donor's type_ok; the parse reproduced F-251's counts; generic triple on
+every GDN layer, 553 donor lines, T<=4, +1.5-3% est; dec_gdn_rec (407 lines) the bitwise rung
+behind it. F-191's PDL no-op RESOLVED not contradicted: the arm covered 25-40 of ~2,050 window
+nodes = -0.01..-0.05 ms, inside its own floor (STRATA_DF_PDL_OFF per-pair kill-switch designed).
+CONV_COMPRESS dead PERMANENTLY with mechanism: SplitZip (arXiv 2605.01708) bounds lossless coding
+by float-exponent redundancy — int8 KV codes have no exponent field; our 1.01x IS the bound (kills
+F-276's "structure-aware codec owed" hope). COLD-START falsifier staged: STRATA_PIN_GUARD=2
+(expert_source.cpp:3512, in-tree) skips the wholesale page-cache drop in 2 MiB steps — ONE boot
+prices bounded-re-read + the hugepage middle form (#771 compaction-stall caveat; box defrag=
+madvise). DIET TRANCHE-1 = LFUSE/FUSE_WAIT/DF_PLE + UseNodePriority, all in-tree default-off
+(verify.cpp:97/:320) = -344 nodes ~ -0.17..-0.33 ms/window, four one-boot arms. CONDITIONAL-GRAPH
+KEEP-RULE implementer-ready (host-launched design over the draft loop — every CUDA-13 limit is a
+device-launch limit, none bind host-launched; Gate-0 = th=0 bit-identical boot). ADMISSION OVERLAP
+decomposed: C2a finish-A-under-B tail reorder (conc +8-14% arithmetic on the 26-29 ms round), C2b
+reader thread (+3-6%), C2c adapt-join deferral; zero-code pricing falsifier = one decode-share-0.9
+3v3. BATCH-LANE TRUTH: the cohort lane offers exactly ONE draft per slot (rows/slot fixed 2) — the
+loaded horizon is already minimal; spec-under-load resolves to solo-keeps-6 / loaded-stays-short
+(Red Hat conc-100 TTFT p95 -18.7%; our 9c acceptance 77.98% = highest measured). C5: WSTAT is BLIND
+to cohort windows (single window_ms.push_back at generate.cpp:12428) — one-line fix gates ALL
+overlap verdicts (T38 implementer item #1).
+T38 IMPLEMENTER IN FLIGHT (port-coordinated, no commits/batteries): GDN=36 settled; C5 -> V2
+STRATA_DF_PDL_OFF kill-switch + accuracy record -> V4 mid_chain + dec_gdn_rec on a shared bitwise
+parity rig -> C1 Gate-0 stretch; main loop batteries its arms on report. STANDING RECIPE NOW: the
+F-276 six + STRATA_DM (dm composes on the device-plan route). OWED: implementer batteries; PIN_GUARD
+boot; diet tranche-1 arms; decode-share-0.9 pricing 3v3; 9-wide telemetry leg (post-C5);
+prescale isolated boot + KL pair; CCD_SPLIT redo; re-quant USER GO.
