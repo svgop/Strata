@@ -9,6 +9,7 @@
 #include "strata/artifact/gguf_reader.hpp"
 
 #include "strata/core/pinned.hpp"
+#include "strata/platform/hugepage.hpp"
 #include "strata/platform/memory.hpp"
 #include "strata/kernels/elementwise.hpp"
 #include "strata/kernels/quantize_act.hpp"
@@ -3456,6 +3457,8 @@ bool FileExpertSource::pin_cache_complement(
     const uint8_t* host = nullptr;
     const uint8_t* device = nullptr;
     bool pinned_ok = false;
+    bool huge_ok = false;       ///< T35 C2: the arena is a 2 MiB-page mapping, page-locked with cudaHostRegister
+    strata::platform::HugeMapping huge_map;
     bool paced = false;         ///< #1250: the pages are taken in steps and page-locked afterwards
     uint64_t locked = 0;
     uint64_t partial_pin = 0;   ///< CS-T: a registered prefix of a locked arena
@@ -3463,7 +3466,12 @@ bool FileExpertSource::pin_cache_complement(
     std::string note;
     auto release = [&]() {
         if (arena == nullptr) return;
-        if (pinned_ok) (void) cudaFreeHost(arena);
+        if (huge_ok) {
+            if (locked > 0) strata::platform::unlock_resident((uint8_t*) arena + lock_off, locked);
+            if (partial_pin > 0) (void) cudaHostUnregister(arena);   // T35 C2: the 2 MiB-page mapping
+            strata::platform::huge_free(huge_map);
+            huge_ok = false;
+        } else if (pinned_ok) (void) cudaFreeHost(arena);
         else {
             if (partial_pin > 0) (void) cudaHostUnregister(arena);
             if (locked > 0) strata::platform::unlock_resident((uint8_t*) arena + lock_off, locked);
@@ -3525,6 +3533,15 @@ bool FileExpertSource::pin_cache_complement(
         }
 #endif
         if (pin && !paced) {
+            // T35 C2: the 2 MiB-page mapping is used on the PACED path below (the in-tree step-then-register path,
+            // whose one registration is already the cost this boot pays); the one-shot cudaHostAlloc path keeps the
+            // driver's allocation, because one cudaHostRegister of tens of GiB over an mmap was measured to stall
+            // the boot for minutes spinning at 100% CPU.  A one-line note, not a silent skip.
+            if (strata::platform::hugepage_arenas_enabled()) {
+                std::fprintf(stderr, "FileExpertSource: STRATA_HUGEPAGE_ARENAS=1: the complement keeps cudaHostAlloc "
+                                     "on the one-shot path (the paced path takes 2 MiB pages)\n");
+            }
+            if (arena == nullptr) {
             const cudaError_t allocated = cudaHostAlloc(&arena, (size_t) bytes,
                                                          cudaHostAllocMapped | cudaHostAllocPortable);
             if (allocated == cudaSuccess) {
@@ -3547,6 +3564,7 @@ bool FileExpertSource::pin_cache_complement(
                 (void) cudaGetLastError();
                 arena = nullptr;
             }
+            }
         }
         if (arena == nullptr) {
             if (!note.empty()) {
@@ -3557,9 +3575,19 @@ bool FileExpertSource::pin_cache_complement(
             errno = 0;
             if (paced) {   // page-aligned: the steps are registered on page boundaries
 #if !defined(_WIN32)
+                if (strata::platform::hugepage_arenas_enabled()) {
+                    strata::platform::HugeMapping hm = strata::platform::huge_alloc((size_t) bytes);
+                    if (hm.addr != nullptr) {
+                        arena = hm.addr;
+                        huge_map = hm;
+                        huge_ok = true;
+                    }
+                }
                 void* aligned = nullptr;
-                const uint64_t page = 4096;
-                if (posix_memalign(&aligned, (size_t) page, (size_t) ((bytes + page - 1) / page * page)) == 0) arena = aligned;
+                if (arena == nullptr) {
+                    const uint64_t page = 4096;
+                    if (posix_memalign(&aligned, (size_t) page, (size_t) ((bytes + page - 1) / page * page)) == 0) arena = aligned;
+                }
 #endif
             } else {
                 arena = std::malloc((size_t) bytes);
@@ -3689,6 +3717,7 @@ bool FileExpertSource::pin_cache_complement(
             }
         }
         host = (const uint8_t*) arena;
+        if (huge_ok) strata::platform::hugepage_report("the expert complement", arena, (size_t) bytes);
     }
 
     // Copied layer by layer on a few threads: the page faults of the mapped file are the cost, and they overlap.

@@ -10,6 +10,11 @@ import threading
 # vLLM's buckets for the request latencies (seconds)
 BUCKETS = (0.001, 0.005, 0.01, 0.02, 0.04, 0.06, 0.08, 0.1, 0.25, 0.5, 0.75, 1.0, 2.5, 5.0, 7.5, 10.0, 20.0, 40.0,
            80.0, 160.0, 640.0, 2560.0)
+# T35 A6: the per-token gap and the admission wait are sub-second (the mean-of-gaps histogram above cannot show a
+# single stall), so they get their own finer buckets.
+GAP_BUCKETS = (0.0005, 0.001, 0.002, 0.003, 0.004, 0.005, 0.006, 0.008, 0.010, 0.015, 0.020, 0.030, 0.050, 0.080,
+               0.120, 0.200, 0.350, 0.500, 1.0, 2.5, 5.0)
+ADMIT_BUCKETS = (0.0005, 0.001, 0.002, 0.005, 0.01, 0.02, 0.05, 0.1, 0.25, 0.5, 1.0, 2.0, 5.0, 10.0, 30.0, 60.0)
 CONTENT_TYPE = "text/plain; version=0.0.4; charset=utf-8"
 
 
@@ -20,15 +25,16 @@ def wants_prometheus(accept: str, query: str) -> bool:
 
 
 class Histogram:
-    def __init__(self):
-        self.counts = [0] * len(BUCKETS)
+    def __init__(self, buckets=BUCKETS):
+        self.buckets = tuple(buckets)
+        self.counts = [0] * len(self.buckets)
         self.sum = 0.0
         self.n = 0
 
     def observe(self, v: float, times: int = 1):
         if v is None or times <= 0:
             return
-        for i, b in enumerate(BUCKETS):
+        for i, b in enumerate(self.buckets):
             if v <= b:
                 self.counts[i] += times
         self.sum += v * times
@@ -36,11 +42,14 @@ class Histogram:
 
 
 class Latencies:
-    """Time to first token, the time between tokens and the whole request, per finished request."""
+    """Time to first token, the time between tokens and the whole request, per finished request.
+    T35 A6 adds the TRUE per-token gap (observed per token, one gap each - the histogram above observes the request's
+    MEAN gap, so a single stall is invisible) and the admission wait (arrival to control lines)."""
 
     def __init__(self):
         self.lock = threading.Lock()
         self.ttft, self.itl, self.e2e = Histogram(), Histogram(), Histogram()
+        self.gap, self.admit = Histogram(GAP_BUCKETS), Histogram(ADMIT_BUCKETS)
 
     def observe(self, ttft_s, output_tokens, decode_s, total_s):
         with self.lock:
@@ -50,10 +59,34 @@ class Latencies:
                 self.itl.observe(decode_s / (output_tokens - 1), output_tokens - 1)
             self.e2e.observe(total_s)
 
+    def observe_gap(self, gap_s: float):
+        with self.lock:
+            self.gap.observe(gap_s)
+
+    def observe_admit(self, wait_s: float):
+        with self.lock:
+            self.admit.observe(wait_s)
+
     def snapshot(self):
         with self.lock:
             return {k: (list(h.counts), h.sum, h.n) for k, h in
-                    (("ttft", self.ttft), ("itl", self.itl), ("e2e", self.e2e))}
+                    (("ttft", self.ttft), ("itl", self.itl), ("e2e", self.e2e), ("gap", self.gap),
+                     ("admit", self.admit))}
+
+
+def quantile(buckets, counts, n, q):
+    """The bucket-interpolated quantile, as probe-metrics computes it from a Prometheus scrape."""
+    if n <= 0:
+        return None
+    rank = q * n
+    prev_le, prev_c = 0.0, 0
+    for le, c in zip(buckets, counts):
+        if c >= rank:
+            if c == prev_c:
+                return le
+            return prev_le + (rank - prev_c) / (c - prev_c) * (le - prev_le)
+        prev_le, prev_c = le, c
+    return buckets[-1] if buckets else None
 
 
 def _num(v, default=0):
@@ -93,15 +126,25 @@ def render(m: dict, lat: dict) -> str:
     metric("vllm:spec_decode_num_accepted_tokens_total", "counter", "MTP draft tokens accepted.",
            _num(totals.get("drafts_accepted")))
     metric("vllm:num_preemptions_total", "counter", "Preempted requests (Strata does not preempt).", 0)
-    for name, key, help_ in (("vllm:time_to_first_token_seconds", "ttft", "Time to the first token."),
-                             ("vllm:inter_token_latency_seconds", "itl", "Time between two tokens."),
-                             ("vllm:e2e_request_latency_seconds", "e2e", "A request from start to end.")):
+    for name, key, help_, buckets in (
+            ("vllm:time_to_first_token_seconds", "ttft", "Time to the first token.", BUCKETS),
+            ("vllm:inter_token_latency_seconds", "itl",
+             "Time between two tokens, once per request MEAN gap (mean-of-gaps; see strata:token_gap_seconds).", BUCKETS),
+            ("vllm:e2e_request_latency_seconds", "e2e", "A request from start to end.", BUCKETS),
+            ("strata:token_gap_seconds", "gap",
+             "T35 A6: the TRUE per-token gap, one observation per emitted gap after the first.", GAP_BUCKETS),
+            ("strata:admission_wait_seconds", "admit",
+             "T35 A6: arrival to the control lines (the queue wait before a prompt is read).", ADMIT_BUCKETS)):
         counts, total, n = lat[key]
         out.append(f"# HELP {name} {help_}\n# TYPE {name} histogram")
-        for b, c in zip(BUCKETS, counts):
+        for b, c in zip(buckets, counts):
             out.append(f'{name}_bucket{{{lab},le="{b}"}} {c}')
         out.append(f'{name}_bucket{{{lab},le="+Inf"}} {n}')
         out.append(f"{name}_sum{{{lab}}} {round(total, 6)}\n{name}_count{{{lab}}} {n}")
+        for q in (0.5, 0.99):
+            v = quantile(buckets, counts, n, q)
+            if v is not None:
+                out.append(f"{name}_p{int(q * 100)}{{{lab}}} {round(v, 6)}")
     strata(m, out, lab)
     return "\n".join(out) + "\n"
 
@@ -158,3 +201,36 @@ def strata(m: dict, out: list, lab: str):
     metric("cpu", "gauge", "CPU busy, percent (hardware.cpu).", hw.get("cpu"))
     metric("ram_used_bytes", "gauge", "RAM in use (hardware.ram_used).", hw.get("ram_used"))
     metric("ram_total_bytes", "gauge", "RAM (hardware.ram_total).", hw.get("ram_total"))
+    # T35 A6: the window tail (the engine's WSTAT sample: honest per-window p50/p99/max, not an early/late mean) and
+    # the elastic lifecycle's counters and last event times (from the engine log's "strata elastic:" lines).
+    window = m.get("window") or {}
+    metric("window_ms_p50", "gauge", "The last idle flush's batch-window wall ms p50 (engine WSTAT).",
+           window.get("window_ms_p50"))
+    metric("window_ms_p99", "gauge", "The last idle flush's batch-window wall ms p99 (engine WSTAT).",
+           window.get("window_ms_p99"))
+    metric("window_ms_max", "gauge", "The last idle flush's batch-window wall ms max (engine WSTAT).",
+           window.get("window_ms_max"))
+    metric("window_sample_windows", "gauge", "Windows in the last WSTAT sample.", window.get("windows"))
+    incidents = m.get("incidents") or {}
+    for name, key, help_ in (
+            ("engine_restarts_total", "restarts", "Engine restarts by the server."),
+            ("engine_watchdog_trips_total", "watchdog_trips", "Engines ended by the silence/stall watchdog."),
+            ("bgen_refusals_total", "bgen_refusals", "BGEN admissions the engine refused (the slot was parked).")):
+        metric(name, "counter", help_, incidents.get(key, 0))
+    elastic = m.get("elastic") or {}
+    for name, key, kind, help_ in (
+            ("elastic_promotes_total", "promotes", "counter", "Elastic slot promotes (strata elastic: materialized)."),
+            ("elastic_demotes_total", "demotes", "counter", "Elastic slot demotes (strata elastic: demoted)."),
+            ("elastic_park_demotes_total", "park_demotes", "counter",
+             "T35 A1: demotes that parked the conversation in the cache."),
+            ("elastic_forget_demotes_total", "forget_demotes", "counter",
+             "T35 A1: demotes that forgot the slot's conversation (no settled/parkable state)."),
+            ("elastic_last_promote_ms", "last_promote_ms", "gauge", "The last promote's total ms."),
+            ("elastic_last_release_ms", "last_release_ms", "gauge",
+             "The last promote's cache-release walk ms (T35 A8's split)."),
+            ("elastic_last_map_ms", "last_map_ms", "gauge", "The last promote's map ms (T35 A8's split)."),
+            ("elastic_last_demote_ms", "last_demote_ms", "gauge", "The last demote's total ms."),
+            ("elastic_last_park_ms", "last_park_ms", "gauge", "T35 A1: the last demote's conversation-park ms."),
+            ("elastic_last_unmap_ms", "last_unmap_ms", "gauge", "The last demote's unmap ms."),
+            ("elastic_spare_chunks", "spare_chunks", "gauge", "Chunks in the spare pool after the last event.")):
+        metric(name, kind, help_, elastic.get(key))

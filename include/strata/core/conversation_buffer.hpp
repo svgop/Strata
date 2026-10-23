@@ -1,9 +1,12 @@
 #pragma once
 
+#include "strata/core/lossless.hpp"
 #include "strata/core/progress.hpp"
 
 #include <algorithm>
+#include <atomic>
 #include <cstddef>
+#include <cstdio>
 #include <cstdint>
 #include <cstring>
 #include <initializer_list>
@@ -44,6 +47,39 @@ public:
         for (const auto& segment : segments_) n += segment.capacity();
         return n;
     }
+    // T35 A5 (STRATA_CONV_COMPRESS=1): replace the payload with a lossless packed stream, for the parked-state tier
+    // only (a parked image is never read by compute before it is restored).  The logical size is unchanged, so every
+    // size check and every reader is unchanged; the first visit/read after this decompresses transparently.  The
+    // payload is round-tripped and compared before it is accepted, and a mismatch leaves the buffer untouched.
+    // False when already packed, empty, or not worth it (no gain / the round trip did not match).
+    bool pack() {
+        if (packed_ || size_ == 0) return false;
+        std::vector<uint8_t> flat(size_);
+        if (!read(flat.data(), 0, size_)) return false;
+        std::vector<uint8_t> packed;
+        if (!strata::core::lossless::pack(flat.data(), flat.size(), packed)) return false;
+        if (packed.size() >= flat.size()) return false;   // no gain: keep today's representation
+        std::vector<uint8_t> check;
+        const bool ok = strata::core::lossless::unpack(packed.data(), packed.size(), check) &&
+                        check.size() == flat.size() && std::memcmp(check.data(), flat.data(), flat.size()) == 0;
+        static std::atomic<uint64_t> verified{0}, rejected{0};
+        if (!ok) {
+            if (rejected.fetch_add(1, std::memory_order_relaxed) == 0)
+                std::fprintf(stderr, "strata: conversation cache: STRATA_CONV_COMPRESS: a round trip did NOT match; "
+                                     "the buffer stays uncompressed (a bad stream is never restored)\n");
+            return false;
+        }
+        const uint64_t nth = verified.fetch_add(1, std::memory_order_relaxed);
+        if (nth == 0)
+            std::fprintf(stderr, "strata: conversation cache: STRATA_CONV_COMPRESS: first packed buffer %zu -> %zu "
+                                 "bytes (%.2fx), round trip bit-exact\n", flat.size(), packed.size(),
+                         (double) flat.size() / (double) std::max<size_t>(packed.size(), 1));
+        segments_.clear();
+        segments_.push_back(std::move(packed));
+        packed_ = true;
+        return true;
+    }
+    bool packed() const { return packed_; }
     // Includes the old directory while reserve allocates its replacement.
     // Saturation makes an overflowing estimate fail admission before resize.
     size_t allocation_peak(size_t n) const {
@@ -62,6 +98,11 @@ public:
         return total;
     }
     void resize(size_t n, uint8_t value = 0) {
+        if (packed_ && !ensure_unpacked()) {   // a packed buffer is never grown: unpack first (corruption: empty)
+            segments_.clear();
+            size_ = 0;
+            return;
+        }
         if (n > size_) {
             const size_t held = size_;
             const bool growing = held != 0;
@@ -109,6 +150,7 @@ public:
     }
     bool operator==(const ConversationBuffer& other) const {
         if (size_ != other.size_) return false;
+        if (!ensure_unpacked() || !other.ensure_unpacked()) return false;
         size_t a = 0, b = 0, x = 0, y = 0;
         while (a < segments_.size() && b < other.segments_.size()) {
             const auto& left = segments_[a];
@@ -141,7 +183,25 @@ private:
         n += extra;
         return true;
     }
+    // T35 A5: a packed payload is decompressed on first use and stays uncompressed for the readers that follow (the
+    // restore paths).  False (and the bytes are never handed out) when the stream does not decode.
+    bool ensure_unpacked() const {
+        if (!packed_) return true;
+        std::vector<uint8_t> flat;
+        if (segments_.size() != 1 ||
+            !strata::core::lossless::unpack(segments_.front().data(), segments_.front().size(), flat) ||
+            flat.size() != size_) {
+            std::fprintf(stderr, "strata: conversation cache: a packed buffer did not unpack (%zu bytes expected)\n",
+                         size_);
+            return false;
+        }
+        segments_.clear();
+        segments_.push_back(std::move(flat));
+        packed_ = false;
+        return true;
+    }
     template<class Self, class Fn> static bool visit_impl(Self& self, size_t offset, size_t count, Fn fn) {
+        if (!self.ensure_unpacked()) return false;
         if (offset > self.size_ || count > self.size_ - offset) return false;
         size_t begin = 0;
         for (auto& segment : self.segments_) {
@@ -156,8 +216,9 @@ private:
         }
         return count == 0;
     }
-    std::vector<Segment> segments_;
-    size_t size_ = 0;
+    mutable std::vector<Segment> segments_;
+    mutable bool packed_ = false;   // T35 A5: segments_ holds one packed stream instead of the payload
+    size_t size_ = 0;               // the logical payload size, packed or not
 };
 
 } // namespace strata::core

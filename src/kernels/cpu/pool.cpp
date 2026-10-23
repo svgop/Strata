@@ -464,6 +464,91 @@ static CpuTopology detect_cpu_topology_impl(bool skip_first, PoolAffinity affini
         return -1;
     };
 
+    // T35 C1 / F-201-zen5 #1 (STRATA_CCD_SPLIT=1, default off): the banked CCD split.  The host thread, the doorbell
+    // pollers and the other aux threads go on the V-CACHE CCD (its large L3 keeps the spin/park flags hot); the heavy
+    // GEMV pool workers go on the FAST CCD (they stream from DRAM and are cache-agnostic; the 5.7 GHz cores serve
+    // them better than the V-cache cores).  Read from /sys, not assumed: an L3 domain is the set of CPUs sharing
+    // cache/index3, and the V-cache domain is the one with the largest L3.  A topology with no two distinct domains
+    // (or without sysfs) keeps today's plan and says so.  Placement only: no output bit depends on where a thread runs.
+    if (!topo.is_hybrid) {
+        static const bool ccd_split = [] {
+            const char* v = std::getenv("STRATA_CCD_SPLIT");
+            return v != nullptr && v[0] != '\0' && v[0] != '0';
+        }();
+        if (ccd_split) {
+            auto l3_size = [](int cpu) -> long {   // "98304K" -> KiB
+                char path[96];
+                std::snprintf(path, sizeof path, "/sys/devices/system/cpu/cpu%d/cache/index3/size", cpu);
+                long kib = -1;
+                if (std::FILE* f = std::fopen(path, "r")) {
+                    char text[32] = {0};
+                    if (std::fgets(text, sizeof text, f) != nullptr && std::sscanf(text, "%ld", &kib) != 1) kib = -1;
+                    std::fclose(f);
+                }
+                return kib;
+            };
+            auto l3_domain = [](int cpu) -> long {   // an id equal for CPUs sharing an L3 (its first CPU)
+                char path[96];
+                std::snprintf(path, sizeof path, "/sys/devices/system/cpu/cpu%d/cache/index3/shared_cpu_list", cpu);
+                long id = -1;
+                if (std::FILE* f = std::fopen(path, "r")) {
+                    char text[128] = {0};
+                    if (std::fgets(text, sizeof text, f) != nullptr) {
+                        long lo = -1;
+                        if (std::sscanf(text, "%ld", &lo) == 1) id = lo;
+                    }
+                    std::fclose(f);
+                }
+                return id;
+            };
+            long vcache_kib = 0, fast_kib = 0;
+            long vdom = -1, fdom = -1;
+            std::vector<int> primaries;
+            for (const auto& cl : all_cpus) {
+                if (cl.is_sibling) continue;
+                primaries.push_back(cl.cpu);
+                const long kib = l3_size(cl.cpu), dom = l3_domain(cl.cpu);
+                if (kib > vcache_kib) { vcache_kib = kib; vdom = dom; }
+            }
+            for (const auto& cl : all_cpus) {
+                if (cl.is_sibling) continue;
+                const long dom = l3_domain(cl.cpu);
+                if (dom >= 0 && dom != vdom) {
+                    const long kib = l3_size(cl.cpu);
+                    if (kib > fast_kib) { fast_kib = kib; fdom = dom; }
+                }
+            }
+            if (vdom >= 0 && fdom >= 0 && vcache_kib > fast_kib) {
+                std::vector<int> fast, vcache;
+                for (int cpu : primaries) {
+                    const long dom = l3_domain(cpu);
+                    if (dom == fdom) fast.push_back(cpu);
+                    else if (dom == vdom) vcache.push_back(cpu);
+                }
+                std::sort(fast.begin(), fast.end());
+                std::sort(vcache.begin(), vcache.end());
+                if (fast.size() >= 2 && !vcache.empty()) {
+                    topo.worker_cores = fast;
+                    if (skip_first) {
+                        topo.host_core = vcache.front();
+                        topo.host_sibling = sibling_of(topo.host_core);
+                    }
+                    std::string wc;
+                    for (size_t i = 0; i < fast.size(); ++i) wc += (i ? "," : "") + std::to_string(fast[i]);
+                    std::fprintf(stderr, "strata cpu pool: STRATA_CCD_SPLIT=1: pool workers %zu on the fast CCD (CPUs "
+                                         "%s, %ld KiB L3); the host on the V-cache CCD (CPU %d, %ld KiB L3)\n",
+                                 fast.size(), wc.c_str(), fast_kib, topo.host_core, vcache_kib);
+                    return topo;
+                }
+                std::fprintf(stderr, "strata cpu pool: STRATA_CCD_SPLIT is on, but this topology has no two distinct "
+                                     "L3 domains with physical cores (V-cache %ld KiB, fast %ld KiB): today's plan\n",
+                             vcache_kib, fast_kib);
+            } else {
+                std::fprintf(stderr, "strata cpu pool: STRATA_CCD_SPLIT is on, but no distinct V-cache/fast L3 domains "
+                                     "were readable from /sys: today's plan\n");
+            }
+        }
+    }
     if (affinity == PoolAffinity::All || !topo.is_hybrid) {
         if (topo.is_hybrid)   // #642: the P-cores first (see the Windows branch)
             std::stable_sort(all_cpus.begin(), all_cpus.end(),

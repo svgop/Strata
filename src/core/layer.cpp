@@ -1,5 +1,6 @@
 
 // src/core/layer.cpp - the GDN layer, composed.  See the header for the operation order and its traps.
+#include "strata/platform/hugepage.hpp"
 #include "strata/core/layer.hpp"
 #include "strata/core/pin_budget.hpp"
 #include "strata/core/native_dense.hpp"
@@ -592,6 +593,29 @@ uint8_t* kv_host_alloc(uint64_t bytes) {
 #ifdef _WIN32
     return host_alloc(bytes);
 #else
+    // T35 C2 (STRATA_HUGEPAGE_ARENAS=1): the KV host shadow on 2 MiB pages first - mmap + MADV_HUGEPAGE before the
+    // register pins the pages.  A refusal falls through to the usual paths below, and the report line measures what
+    // the pages really are (smaps), so "accepted" is never assumed.
+    if (strata::platform::hugepage_arenas_enabled()) {
+        strata::platform::HugeMapping hm = strata::platform::huge_alloc((size_t) bytes);
+        if (hm.addr != nullptr &&
+            cudaHostRegister(hm.addr, hm.bytes, cudaHostRegisterPortable | cudaHostRegisterMapped) == cudaSuccess) {
+            strata::platform::hugepage_report("the KV host shadow", hm.addr, hm.bytes);
+            static bool said = false;
+            if (!said) {
+                said = true;
+                std::fprintf(stderr, "strata: KV streaming: the host copy is on 2 MiB pages "
+                                     "(STRATA_HUGEPAGE_ARENAS=1)\n");
+            }
+            return (uint8_t*) hm.addr;
+        }
+        if (hm.addr != nullptr) {
+            (void) cudaGetLastError();
+            strata::platform::huge_free(hm);
+        }
+        std::fprintf(stderr, "strata: KV streaming: STRATA_HUGEPAGE_ARENAS=1: the hugepage mapping was refused; the "
+                             "usual path\n");
+    }
     static const bool register_first = [] {
         const char* e = std::getenv("STRATA_KV_HOST_REGISTER");
         if (e != nullptr && (e[0] == '0' || e[0] == '1')) return e[0] == '1';

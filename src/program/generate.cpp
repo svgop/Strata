@@ -5394,7 +5394,10 @@ int main(int argc, char** argv) {
         bool on = false;
         int s_min = 2;                        ///< STRATA_ELASTIC_S_MIN: the slots that stay mapped at boot
         double demote_s = 10.0;               ///< STRATA_ELASTIC_DEMOTE_S: idle hysteresis before an arena unmaps
-        int64_t chunks_per = 0;               ///< one arena's granules
+        bool watermark = false;               ///< T35 A2 STRATA_ELASTIC_WATERMARK=1: the spare keeps one arena
+        bool timed_scan = false;              ///< T35 A3 STRATA_ELASTIC_TIMED_SCAN=1: demote in true idle
+        bool park = false;                    ///< T35 A1 STRATA_ELASTIC_PARK=1: the demote parks the conversation
+        int64_t chunks_per = 0;               ///< one arena's chunks (the unit STRATA_VMM_CHUNK_MIB sets)
         std::vector<std::unique_ptr<strata::core::VmmRange>> arena;   ///< [0, --batch): stable VA per slot
         std::vector<bool> live;               ///< mapped + zeroed (a registered slot may be either)
         std::vector<strata::core::VmmChunk> spare;   ///< physical chunks out of a demoted slot, not yet eaten
@@ -5403,6 +5406,8 @@ int main(int argc, char** argv) {
         std::mutex mu;                        ///< the background promote vs the main loop's demote
         uint64_t pin_bytes = 0;               ///< qsa_state_init's host pins, created once per slot at boot
         int64_t maps = 0, unmaps = 0;
+        int64_t parks = 0, park_skips = 0;    ///< T35 A1: demotes that parked / did not (and why)
+        int64_t parked_tokens = 0;            ///< T35 A1: tokens parked across demotes
         ~ElasticSessions() {
             if (stream != nullptr) cudaStreamDestroy(stream);   // after the verifiers: graphs die first (scope order)
         }
@@ -5427,6 +5432,13 @@ int main(int argc, char** argv) {
                 es.s_min = std::atoi(v);
             if (const char* v = std::getenv("STRATA_ELASTIC_DEMOTE_S"); v != nullptr && std::atof(v) > 0)
                 es.demote_s = std::atof(v);
+            // T35 A1/A2/A3: each behavior-changing refinement is its own gate (all default off = today's mode).
+            if (const char* v = std::getenv("STRATA_ELASTIC_WATERMARK"); v != nullptr && v[0] != '\0' && v[0] != '0')
+                es.watermark = true;
+            if (const char* v = std::getenv("STRATA_ELASTIC_TIMED_SCAN"); v != nullptr && v[0] != '\0' && v[0] != '0')
+                es.timed_scan = true;
+            if (const char* v = std::getenv("STRATA_ELASTIC_PARK"); v != nullptr && v[0] != '\0' && v[0] != '0')
+                es.park = true;
             es.s_min = std::min(es.s_min, o.batch);
             // the cache must be one VMM range for a promote to release chunks out of it (set_vmm's mode,
             // the elastic K/V's own: fully mapped at open, so this changes no address and no output bit)
@@ -6090,14 +6102,25 @@ int main(int argc, char** argv) {
     if (es.on && (int) es.arena.size() > es.s_min) {
         const uint64_t G = strata::core::vmm_granularity();
         const auto t0 = Clock::now();
-        int64_t freed_chunks = 0;
-        for (int b = es.s_min; b < (int) es.arena.size(); ++b)
+        int64_t freed_chunks = 0, kept_chunks = 0;
+        // T35 A2 (STRATA_ELASTIC_WATERMARK=1): one demoted arena's chunks stay in the spare pool instead of going to
+        // the driver, so the FIRST promote - and every later one - finds the spare warm and takes the backgrounded
+        // map path.  The cost is exactly that arena out of the cache's auto sizing; the invariant afterwards is
+        // "the spare always holds one promote's worth" (es_demote eats only the excess).
+        for (int b = es.s_min; b < (int) es.arena.size(); ++b) {
+            const bool keep = es.watermark && b == es.s_min;
             for (int64_t c = 0; c < es.arena[(size_t) b]->chunks(); ++c)
                 if (const strata::core::VmmChunk h = es.arena[(size_t) b]->unmap(c)) {
-                    strata::core::vmm_chunk_free(h);
-                    ++freed_chunks;
+                    if (keep) {
+                        es.spare.push_back(h);
+                        ++kept_chunks;
+                    } else {
+                        strata::core::vmm_chunk_free(h);
+                        ++freed_chunks;
+                    }
                     es.live[(size_t) b] = false;
                 }
+        }
         size_t fb = 0, tb = 0;
         cudaMemGetInfo(&fb, &tb);
         std::fprintf(stderr, "strata generate: STRATA_ELASTIC_SESSIONS on: %zu slot arenas of %.2f GiB reserved, "
@@ -6108,6 +6131,12 @@ int main(int argc, char** argv) {
                      std::chrono::duration<double, std::milli>(Clock::now() - t0).count(),
                      (double) fb / 1073741824.0, es.arena.size(),
                      es.arena.empty() ? 0.0 : (double) es.pin_bytes / es.arena.size() / 1073741824.0);
+        std::fprintf(stderr, "strata generate: STRATA_ELASTIC_SESSIONS: chunk unit %.1f MiB (STRATA_VMM_CHUNK_MIB; "
+                             "%lld driver calls per arena moved), watermark %s (%lld chunks, %.2f GiB kept in the "
+                             "spare), timed scan %s, park-on-demote %s\n",
+                     (double) G / 1048576.0, (long long) es.chunks_per,
+                     es.watermark ? "on" : "off", (long long) kept_chunks, (double) (kept_chunks * G) / 1073741824.0,
+                     es.timed_scan ? "on" : "off", es.park ? "on" : "off");
         std::fprintf(stderr, "strata generate: STRATA_ELASTIC_SESSIONS: slot VA table:");
         for (size_t b = 0; b < es.arena.size(); ++b)
             std::fprintf(stderr, " %zu=%p%s", b, (void*) es.arena[b]->base(), b + 1 == es.arena.size() ? "" : ",");
@@ -9715,6 +9744,8 @@ int main(int argc, char** argv) {
                         return false;
                     image.stage_images.push_back(std::move(part));
                 }
+                strata::core::conversation_cache_compress(image);   // T35 A5: no-op unless STRATA_CONV_COMPRESS=1
+                const size_t snapshot_bytes = image.bytes();
                 const auto mem_after = strata::core::sample_host_memory();
                 if (!strata::core::conversation_memory_admit(
                         mem_after ? std::optional<uint64_t>(mem_after->available) : std::nullopt, 0, floor)) {
@@ -9722,7 +9753,6 @@ int main(int argc, char** argv) {
                                  (long long) o.conversation_cache_min_free_mib, ram_note(mem_after).c_str());
                     return true;
                 }
-                const size_t snapshot_bytes = image.bytes();
                 const bool stored = conversations.put(std::move(image), held);
                 std::fprintf(stderr, "strata serve: conversation cache: %s %zu tokens in %.1f ms; parked=%zu bytes=%zu evictions=%zu snapshot_bytes=%zu reused_kv_bytes=%zu\n",
                              stored ? "parked" : "skipped", live.size(),
@@ -11138,6 +11168,24 @@ int main(int argc, char** argv) {
             in_lines.pop_front();
             return true;
         };
+        // T35 A3 (STRATA_ELASTIC_TIMED_SCAN=1): the same wait with a deadline.  Returns true with a line, false with
+        // `timed_out` false at EOF, false with `timed_out` true when the deadline passed and no line arrived.
+        auto next_line_until = [&](std::string& out, Clock::time_point until, bool& timed_out) -> bool {
+            std::unique_lock<std::mutex> lk(in_mu);
+            if (!in_cv.wait_until(lk, until, [&] { return !in_lines.empty() || in_eof; })) {
+                timed_out = true;
+                return false;
+            }
+            timed_out = false;
+            if (in_lines.empty()) return false;   // EOF
+            out = std::move(in_lines.front());
+            in_lines.pop_front();
+            return true;
+        };
+        auto in_queue_empty = [&]() -> bool {
+            std::lock_guard<std::mutex> lk(in_mu);
+            return in_lines.empty();
+        };
         sp.should_stop = [&] { return stop_req.load(); };
         // 149-prefetch STRATA_RAM_ADAPT2: the prompt's routing seeds the RAM policy with a limited weight
         // (STRATA_RAM_ADAPT_PROMPT_W, default 0.25: an expert every prompt token routes to counts like ~5 decode routings),
@@ -11507,15 +11555,22 @@ int main(int argc, char** argv) {
         // already lands the adaptive tier (the kvg_ensure `quiesce` rules).  A demote runs only from the idle
         // scan below, when no slot is active.  Both sides take es.mu; the graph execs of a demoted slot are kept
         // (their addresses are stable), they are simply never staged while the slot is inactive.
-        auto es_promote = [&](int b, bool allow_release) -> bool {
+        auto es_promote = [&](int b, bool allow_release, bool background = false) -> bool {
             if (!es.on || b < 0 || b >= (int) es.arena.size() || bslot_ss.empty() || b >= (int) bslot_ss[0].size())
                 return true;   // not this substrate's slot (a fallback cudaMalloc one): nothing to do
             std::lock_guard<std::mutex> lk(es.mu);
             if (es.live[(size_t) b]) return true;
             const auto t0 = Clock::now();
-            if ((int64_t) es.spare.size() < es.chunks_per) {
+            // T35 A8 (the T35 dossier's R8): the source is decided BEFORE the release walk.  The old code sampled
+            // `had` after the walk had filled the spare, so every promote claimed "the spare pool" while 59/59 had
+            // started from an empty one, and the printed map time conflated the release walk with the map.
+            const int64_t had = (int64_t) es.spare.size();
+            double release_ms = 0.0;
+            if (had < es.chunks_per) {
                 if (!allow_release || !kvg.cache_side) return false;
+                const auto tr = Clock::now();
                 if (!kvg_release_until(es.chunks_per, adapt_quiesce, es.spare)) return false;   // the cache at its floor
+                release_ms = std::chrono::duration<double, std::milli>(Clock::now() - tr).count();
             }
             auto take = [&]() -> strata::core::VmmChunk {
                 if (es.spare.empty()) return 0;
@@ -11524,14 +11579,14 @@ int main(int argc, char** argv) {
                 return h;
             };
             strata::core::VmmRange& r = *es.arena[(size_t) b];
-            const int64_t had = (int64_t) es.spare.size();
+            const auto tm = Clock::now();
             if (!r.map_range(0, r.chunks(), take)) {   // put back what a partial map took: the slot stays free
                 for (int64_t c = 0; c < r.chunks(); ++c)
                     if (const strata::core::VmmChunk h = r.unmap(c)) es.spare.push_back(h);
                 (void) cudaGetLastError();
                 return false;
             }
-            const double map_ms = std::chrono::duration<double, std::milli>(Clock::now() - t0).count();
+            const double map_ms = std::chrono::duration<double, std::milli>(Clock::now() - tm).count();
             if (es.stream == nullptr) cudaStreamCreateWithFlags(&es.stream, cudaStreamNonBlocking);
             const auto t1 = Clock::now();
             strata::core::session_zero(*bslot_ss[0][(size_t) b], g, nullptr, es.stream);   // side stream, never the decode stream
@@ -11540,13 +11595,73 @@ int main(int argc, char** argv) {
             es.idle_since[(size_t) b] = {};
             ++es.maps;
             const uint64_t G = strata::core::vmm_granularity();
-            std::fprintf(stderr, "strata elastic: slot %d materialized in %.1f ms (map %.1f from %s, zero %.1f; "
-                                 "%lld chunks of %.2f GiB; %lld chunks left in the spare pool)\n", b,
-                         std::chrono::duration<double, std::milli>(Clock::now() - t0).count(), map_ms,
+            std::fprintf(stderr, "strata elastic: slot %d materialized in %.1f ms (%s: release %.1f + map %.1f from "
+                                 "%s, zero %.1f; %lld chunks of %.2f GiB; %lld chunks left in the spare pool)\n", b,
+                         std::chrono::duration<double, std::milli>(Clock::now() - t0).count(),
+                         background ? "background" : "at the admission", release_ms, map_ms,
                          had >= es.chunks_per ? "the spare pool" : "the expert cache's tail",
                          std::chrono::duration<double, std::milli>(Clock::now() - t1).count(),
                          (long long) es.chunks_per, (double) (es.chunks_per * G) / 1073741824.0,
                          (long long) es.spare.size());
+            return true;
+        };
+        // T35 A1 (STRATA_ELASTIC_PARK=1): a demote PARKS the slot's conversation into the existing ConversationCache
+        // instead of dropping it.  A returning chat then matches the parked image (conversations.best) and restores
+        // it (~60 ms class) rather than re-reading its history (1,361 ms measured for 5,865 tokens).  The image is
+        // captured from the SLOT's sessions - exactly the bytes copy_from_slot moves - and a restore takes the same
+        // path every parked conversation takes (into the main sessions, then copy_to_slot into the slot).
+        // The forget-vs-park boundary: only a SETTLED conversation is parked (`cached`: its sessions still hold
+        // `ids`), never one with pictures (a slot keeps no image keys), never one tainted by non-finite logits, never
+        // an empty or below-minimum one - those are dropped exactly as before.
+        auto park_slot_conversation = [&](int b, const char*& why) -> bool {
+            why = nullptr;
+            BSlot& sl = bs[(size_t) b];
+            if (!es.park) { why = "park gate off"; return false; }
+            if (bslot_ss.size() != 1) { why = "a layer split"; return false; }
+            if (!conversations.enabled()) { why = "no conversation cache"; return false; }
+            if (!sl.cached) { why = "the slot holds no settled conversation"; return false; }
+            if (sl.img) { why = "the conversation has pictures"; return false; }
+            if (sl.tainted) { why = "tainted by non-finite logits"; return false; }
+            if (sl.ids.empty()) { why = "an empty conversation"; return false; }
+            if (!conversations.wants((int64_t) sl.ids.size())) { why = "below the conversation-cache minimum"; return false; }
+            const strata::core::QsaState* draft =
+                (use_mtp && batch_mtp && !slot_mtp.empty() && b < (int) slot_mtp.size())
+                    ? &slot_mtp[(size_t) b]->kv_state() : nullptr;
+            const strata::core::ConversationView view{sl.ids, {}, sl.checks, sl.cvec};
+            std::string err;
+            size_t estimate = 0;
+            if (!strata::core::conversation_snapshot_bytes(view, *bslot_ss[0][(size_t) b], g, draft, estimate, err)) {
+                why = "the snapshot does not fit the session layout"; return false;
+            }
+            if (cudaDeviceSynchronize() != cudaSuccess) {
+                (void) cudaGetLastError();
+                why = "a device sync failed"; return false;
+            }
+            if (!conversations.make_room(estimate, 0)) { why = "no room in the conversation cache"; return false; }
+            const auto t0 = Clock::now();
+            try {
+                strata::core::SavedConversation image;
+                size_t reused = 0;
+                if (!strata::core::conversation_snapshot_save(image, view, *bslot_ss[0][(size_t) b], g, draft, err, {},
+                                                              &reused)) {
+                    why = err.c_str(); return false;
+                }
+                strata::core::conversation_cache_compress(image);   // T35 A5: no-op unless STRATA_CONV_COMPRESS=1
+                const size_t snapshot_bytes = image.bytes();
+                if (!conversations.put(std::move(image), 0)) {
+                    why = "the conversation cache refused the image"; return false;
+                }
+                ++es.parks;
+                es.parked_tokens += (int64_t) sl.ids.size();
+                // The same "conversation cache:" line the request-end park prints, so ConvCacheLog/the Monitor see it.
+                std::fprintf(stderr, "strata serve: conversation cache: parked %zu tokens in %.1f ms; parked=%zu "
+                                     "bytes=%zu evictions=%zu snapshot_bytes=%zu reused_kv_bytes=%zu (elastic slot %d)\n",
+                             sl.ids.size(), std::chrono::duration<double, std::milli>(Clock::now() - t0).count(),
+                             conversations.size(), conversations.bytes(), conversations.evictions(), snapshot_bytes,
+                             reused, b);
+            } catch (const std::bad_alloc&) {
+                why = "host allocation failed"; return false;
+            }
             return true;
         };
         auto es_demote = [&](int b) -> bool {
@@ -11556,18 +11671,44 @@ int main(int argc, char** argv) {
             const auto t0 = Clock::now();
             adapt_quiesce();   // kvg_ensure's rule: nothing running on the device AND the tier's swaps landed -
                                // a swap still writing a slot whose chunk unmaps here would fault it
+            // T35 A1: park BEFORE the chunks unmap - the image is read out of the slot's device buffers.  The park and
+            // the unmap are timed apart: the park is the price A1 pays at idle, the unmap is what A4 shrank.
+            const char* park_why = nullptr;
+            const auto tp = Clock::now();
+            const bool parked = park_slot_conversation(b, park_why);
+            const double park_ms = std::chrono::duration<double, std::milli>(Clock::now() - tp).count();
+            if (!parked) ++es.park_skips;
+            const auto tu = Clock::now();
             for (int64_t c = 0; c < es.arena[(size_t) b]->chunks(); ++c)
                 if (const strata::core::VmmChunk h = es.arena[(size_t) b]->unmap(c)) es.spare.push_back(h);
             es.live[(size_t) b] = false;
-            bs[(size_t) b] = BSlot{};   // its conversation cache left with its memory (a returning chat re-reads)
-            const double unmap_ms = std::chrono::duration<double, std::milli>(Clock::now() - t0).count();
+            bs[(size_t) b] = BSlot{};   // forgotten; with A1 the conversation lives on in the cache
+            const double unmap_ms = std::chrono::duration<double, std::milli>(Clock::now() - tu).count();
             int64_t back = 0;
-            const bool ate = kvg.cache_side && kvg_cache_eat_spare(es.spare, &back);
+            bool ate = false;
+            // T35 A2: the spare keeps one arena.  Only the excess over the watermark is given back to the cache, so
+            // the common single-slot cycle is unmap-only (the profile refill and the remap stop happening).
+            if (kvg.cache_side) {
+                if (es.watermark) {
+                    if ((int64_t) es.spare.size() > es.chunks_per) {
+                        std::vector<strata::core::VmmChunk> excess;
+                        while ((int64_t) es.spare.size() > es.chunks_per) {
+                            excess.push_back(es.spare.back());
+                            es.spare.pop_back();
+                        }
+                        ate = kvg_cache_eat_spare(excess, &back);
+                    }
+                } else {
+                    ate = kvg_cache_eat_spare(es.spare, &back);
+                }
+            }
             ++es.unmaps;
-            std::fprintf(stderr, "strata elastic: slot %d demoted in %.1f ms (unmap %.1f, %lld chunks to the spare "
-                                 "pool; %s; %lld chunks spare)\n", b,
-                         std::chrono::duration<double, std::milli>(Clock::now() - t0).count(), unmap_ms,
-                         (long long) es.chunks_per,
+            const std::string fate = parked ? "the conversation parked in the cache"
+                                            : std::string("the conversation forgotten: ") + (park_why ? park_why : "?");
+            std::fprintf(stderr, "strata elastic: slot %d demoted in %.1f ms (park %.1f, unmap %.1f, %lld chunks to "
+                                 "the spare pool; %s; %s; %lld chunks spare)\n", b,
+                         std::chrono::duration<double, std::milli>(Clock::now() - t0).count(), park_ms, unmap_ms,
+                         (long long) es.chunks_per, fate.c_str(),
                          ate && back > 0 ? "the cache ate them back and refilled from the profile"
                                          : "kept in the spare pool for the next promote",
                          (long long) es.spare.size());
@@ -11604,6 +11745,28 @@ int main(int argc, char** argv) {
         } es_bg;
         // timing of the batch windows since the slots were last all idle (one stderr line then)
         double bt_run = 0, bt_commit = 0, bt_emit = 0;
+        // T35 A6: the per-window wall times of the batch lane since the last idle flush, and their histogram line
+        // (STRATA_SERVE_TELEMETRY=1; off by default, so nothing is collected and no line is printed).
+        const bool window_stats_on = [] {
+            const char* v = std::getenv("STRATA_SERVE_TELEMETRY");
+            return v != nullptr && v[0] != '\0' && v[0] != '0';
+        }();
+        std::vector<float> window_ms;
+        auto window_percentile = [](std::vector<float>& v, double q) -> double {
+            if (v.empty()) return 0.0;
+            const size_t k = std::min(v.size() - 1, (size_t) (q * (double) (v.size() - 1) + 0.5));
+            std::nth_element(v.begin(), v.begin() + (std::ptrdiff_t) k, v.end());
+            return (double) v[k];
+        };
+        auto report_window_stats = [&](int64_t rows) {
+            if (!window_stats_on || window_ms.empty()) return;
+            double p50 = window_percentile(window_ms, 0.50), p99 = window_percentile(window_ms, 0.99);
+            double mx = 0.0;
+            for (const float m : window_ms) mx = std::max<double>(mx, m);
+            std::printf("WSTAT %lld %lld %.3f %.3f %.3f\n", (long long) window_ms.size(), (long long) rows, p50, p99, mx);
+            std::fflush(stdout);
+            window_ms.clear();
+        };
         double bt_wait0 = 0, bt_pool0 = 0;
         int64_t bt_miss0 = 0, bt_hits0 = 0, bt_pcie0 = 0;
         int64_t bt_windows = 0, bt_rows = 0, bt_tokens = 0, bt_accepted = 0;   // bt_accepted: --batch-mtp proposals taken
@@ -12259,6 +12422,10 @@ int main(int argc, char** argv) {
             }
             std::fflush(stdout);
             bt_emit += msd(w2, Clock::now());
+            // T35 A6 (STRATA_SERVE_TELEMETRY=1): keep each window's wall time (w0 to now) for the p50/p99 sample the
+            // idle flush reports - the TREND line only ever showed early/late means, and the ITL p99 the server banks
+            // is a per-request MEAN of gaps, so the true window tail had no instrument.
+            if (window_stats_on) window_ms.push_back((float) msd(w0, Clock::now()));
             if (adapt_run.th.joinable()) {
                 const Clock::time_point wa = Clock::now();
                 adapt_run.th.join();
@@ -12273,6 +12440,7 @@ int main(int argc, char** argv) {
             }
             strata::core::progress().busy.store(was_busy);
             report_batch_window(S, A, !batch_on(), w0);
+            if (!batch_on()) report_window_stats(bt_rows);
             if (!batch_on() && bt_windows > 0) {
                 const double w = (double) bt_windows, wall = msd(bt_start, Clock::now());
                 const double L = (double) g.n_layers;
@@ -12357,6 +12525,39 @@ int main(int argc, char** argv) {
         std::vector<int> stage_group((size_t) n_pipe, -1);
         int64_t pipe_tick = 0, rr = 0;
         auto pipe_inflight = [&] { for (const PGroup& x : pg) if (x.inflight) return true; return false; };
+        // T35 A3 (STRATA_ELASTIC_TIMED_SCAN=1): the earliest instant a live, idle, demotable slot passes
+        // STRATA_ELASTIC_DEMOTE_S.  The scan has just run, so every such slot carries idle_since; a zero time_point
+        // means "no deadline" (wait indefinitely).  A slot's deadline is reset by the scan the moment it becomes
+        // active, and a demoted slot stops being live.
+        auto es_next_deadline = [&]() -> Clock::time_point {
+            Clock::time_point best{};
+            if (!es.on || !es.timed_scan) return best;
+            const auto hysteresis =
+                std::chrono::duration_cast<Clock::duration>(std::chrono::duration<double>(es.demote_s));
+            for (int b = es.s_min; b < (int) es.arena.size(); ++b) {
+                if (!es.live[(size_t) b] || bs[(size_t) b].active || bs[(size_t) b].partial) continue;
+                const Clock::time_point since = es.idle_since[(size_t) b];
+                if (since.time_since_epoch().count() == 0) continue;
+                const Clock::time_point at = since + hysteresis;
+                if (best.time_since_epoch().count() == 0 || at < best) best = at;
+            }
+            return best;
+        };
+        // The idle wait: with A3 the scan runs in TRUE idle and the wait sleeps exactly until the next demote is due
+        // (a line arriving sooner still wakes it; EOF ends the loop).  Without A3 it is today's blocking wait, and
+        // the scan stays line-arrival-driven.
+        auto wait_for_line = [&](std::string& out) -> bool {
+            if (!(es.on && es.timed_scan)) return next_line(out);
+            for (;;) {
+                if (in_queue_empty() && !batch_on() && !pipe_inflight()) es_idle_scan();
+                const Clock::time_point deadline = es_next_deadline();
+                if (deadline.time_since_epoch().count() == 0) return next_line(out);
+                bool timed_out = false;
+                if (next_line_until(out, deadline, timed_out)) return true;
+                if (!timed_out) return false;   // EOF
+                // a demote is due: go around; the scan at the top runs it in true idle
+            }
+        };
         auto group_active = [&](int gi) {
             for (int t = 0; t < GS; ++t) if (bs[(size_t) (gi * GS + t)].active) return true;
             return false;
@@ -12556,13 +12757,14 @@ int main(int argc, char** argv) {
                         std::fflush(stderr);
                     }
                 }
-            } else if (!next_line(line)) {
+            } else if (!wait_for_line(line)) {
                 break;
             }
-            // T33 elastic sessions: nothing decodes and a line arrived - the idle demote scan runs here (never
-            // inside a window; the hysteresis is es.demote_s, and the check itself is line-arrival driven, so a
-            // fully idle engine demotes lazily at its next request)
-            if (es.on && !batch_on() && !pipe_inflight()) es_idle_scan();
+            // T33 elastic sessions: without A3, nothing decodes and a line arrived - the idle demote scan runs here
+            // (never inside a window; line-arrival driven, so a fully idle engine demotes lazily at its next request).
+            // T35 A3: with the timed scan armed, DEMOTION BELONGS TO TRUE IDLE ONLY - the wait above runs it before
+            // this line ever arrived, so it is not re-run at the arrival (that is exactly the 128-310 ms bill).
+            if (es.on && !es.timed_scan && !batch_on() && !pipe_inflight()) es_idle_scan();
             // --batch: BSTOP <slot> ends that slot at its next batch window; BGEN <slot> <max_new> ... reads the
             // request's prompt and first token as a GEN 1, then continues it in that slot
             if (line.rfind("BSTOP ", 0) == 0) {
@@ -12615,7 +12817,7 @@ int main(int argc, char** argv) {
                     (int64_t) es.spare.size() >= es.chunks_per) {
                     es_bg.slot = (int) b;
                     const int eb = (int) b;
-                    es_bg.th = std::thread([&, eb] { (void) es_promote(eb, /*allow_release=*/false); });
+                    es_bg.th = std::thread([&, eb] { (void) es_promote(eb, /*allow_release=*/false, /*background=*/true); });
                 }
                 line = std::string(bimg ? "GENI 1" : "GEN 1") + e2;
             }

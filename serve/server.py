@@ -738,10 +738,22 @@ def narrate_start(log_path: str, offset: int, args: list, done: threading.Event,
 class ConvCacheLog:
     """#596: the engine's conversation cache as its log tells it (the engine writes "strata serve: conversation
     cache: parked N tokens ...; parked=P bytes=B evictions=E" and "restored N tokens ...; parked=P bytes=B" to stderr,
-    which is the log): read on from where it was last read, from the start of the engine's current run."""
+    which is the log): read on from where it was last read, from the start of the engine's current run.  T35 A6/A8
+    reads the same way: the elastic lifecycle's counters and event times come from its "strata elastic:" lines (the
+    promote line now splits release vs map, so the fields are honest)."""
     EVENT = re.compile(r"conversation cache: (parked|skipped|restored) (\d+) tokens.*?parked=(\d+) bytes=(\d+)"
                        r"(?: evictions=(\d+))?")
     DROPPED = re.compile(r"conversation cache: dropped \d+ superseded .*?parked=(\d+)")
+    # T35 A8: "slot B materialized in T ms (at the admission|background: release R + map M from SRC, zero Z; C chunks
+    # of G GiB; K chunks left in the spare pool)"
+    EL_PROMOTE = re.compile(r"strata elastic: slot (\d+) materialized in ([0-9.]+) ms \((?:at the admission|background): "
+                            r"release ([0-9.]+) \+ map ([0-9.]+) from ([^,;]+), zero ([0-9.]+); (\d+) chunks .*?"
+                            r"(\d+) chunks left in the spare pool\)")
+    # T35 A1/A2: "slot B demoted in T ms (unmap U, C chunks to the spare pool; the conversation parked in the cache|
+    # the conversation forgotten: WHY; the cache ate...|kept...; K chunks spare)"
+    EL_DEMOTE = re.compile(r"strata elastic: slot (\d+) demoted in ([0-9.]+) ms \(park ([0-9.]+), unmap ([0-9.]+), "
+                           r"(\d+) chunks to the spare pool; (the conversation parked in the cache|the conversation "
+                           r"forgotten: [^;]*); ([^;]*); (\d+) chunks spare\)")
     READ_MAX = 1 << 20                                  # at most the last MiB of new lines per read
 
     def __init__(self):
@@ -750,7 +762,11 @@ class ConvCacheLog:
 
     def reset(self):
         self.state = {"parked": 0, "bytes": 0, "evictions": 0, "parks": 0, "restores": 0, "last_event": None,
-                      "last_tokens": None, "last_at": None}
+                      "last_tokens": None, "last_at": None,
+                      # T35 A6/A8 elastic lifecycle telemetry
+                      "promotes": 0, "demotes": 0, "park_demotes": 0, "forget_demotes": 0,
+                      "last_promote_ms": None, "last_release_ms": None, "last_map_ms": None,
+                      "last_demote_ms": None, "last_park_ms": None, "last_unmap_ms": None, "spare_chunks": None}
 
     def poll(self, path, start) -> dict:
         """The state after the log's new lines; `start` is where the engine's current run began in it."""
@@ -774,6 +790,29 @@ class ConvCacheLog:
         self.pos += end
         now = time.time()
         for line in data[:end].decode("utf-8", "replace").splitlines():
+            if "elastic:" in line:
+                st = self.state
+                m = self.EL_PROMOTE.search(line)
+                if m:
+                    st["promotes"] += 1
+                    st["last_promote_ms"] = float(m.group(2))
+                    st["last_release_ms"] = float(m.group(3))
+                    st["last_map_ms"] = float(m.group(4))
+                    st["spare_chunks"] = int(m.group(8))
+                    continue
+                m = self.EL_DEMOTE.search(line)
+                if m:
+                    st["demotes"] += 1
+                    st["last_demote_ms"] = float(m.group(2))
+                    st["last_park_ms"] = float(m.group(3))
+                    st["last_unmap_ms"] = float(m.group(4))
+                    if m.group(6).startswith("the conversation parked"):
+                        st["park_demotes"] += 1
+                    else:
+                        st["forget_demotes"] += 1
+                    st["spare_chunks"] = int(m.group(8))
+                    continue
+                continue
             if "conversation cache:" not in line:
                 continue
             m = self.EVENT.search(line)
@@ -916,6 +955,20 @@ def parse_batch_window_sample(line: str) -> dict | None:
             "elapsed_ms": elapsed_ms}
 
 
+def parse_window_sample(line: str) -> dict | None:
+    """T35 A6: read an opt-in engine WSTAT sample - one idle flush's batch-window wall ms p50/p99/max."""
+    if len(line) > 96:
+        return None
+    match = re.fullmatch(r"WSTAT ([0-9]{1,9}) ([0-9]{1,12}) ([0-9.]+) ([0-9.]+) ([0-9.]+)\r?\n?", line)
+    if match is None:
+        return None
+    windows, rows, p50, p99, mx = match.groups()
+    if float(p99) < float(p50) or float(mx) < float(p99) or float(mx) > 86_400_000.0:
+        return None                                    # a malformed or nonsense sample is dropped, not rendered
+    return {"windows": int(windows), "rows": int(rows), "window_ms_p50": float(p50), "window_ms_p99": float(p99),
+            "window_ms_max": float(mx)}
+
+
 def parse_stage_in_flight_sample(line: str) -> dict | None:
     """Read bounded PSTAT host scheduling spans; these are not GPU utilization."""
     if len(line) > 256 or re.fullmatch(
@@ -939,6 +992,7 @@ class StrataEngine:
     engine's default, which is greedy; `temperature=0` means the same thing, so it is not forwarded.
     """
     silence_s = ENGINE_SILENCE_S         # #481: main() sets the config's engine_silence_s (survives restart())
+    latency_sink = None                  # T35 A6: Service.latencies (the token-gap/admission-wait histograms)
     silent_note = None                   # #481: why the server ended a silent engine (death_note says it)
     gpu_busy = None                      # #1317: () -> bool, "the GPU is working" (the telemetry's reading); a GPU at work is not frozen
     last_err = None                      # #997: an ERR that was its last stdout line (death_note says it)
@@ -978,6 +1032,9 @@ class StrataEngine:
         self.terminal_stages: list[dict] = []  # final layer ranges from this engine start's bounded stderr log
         self.terminal_batch_sample: dict | None = None
         self.terminal_stage_sample: dict | None = None
+        self.terminal_window_sample: dict | None = None   # T35 A6: the last WSTAT sample (window p50/p99/max)
+        if not hasattr(self, "incidents"):                # T35 A6: incident counters survive restart()'s __init__
+            self.incidents = collections.Counter()
         self.prefill_tok_s_mean = None
         self.progress = None             # (read, total) prompt tokens while a prompt is read, from PP lines
         self.progress_ms = 0             # PP's own milliseconds since the prompt started (its third field)
@@ -1178,6 +1235,11 @@ class StrataEngine:
                 if sample is not None and self.proc is proc:
                     self.terminal_stage_sample = {**sample, "observed_monotonic": time.monotonic()}
                 continue
+            if line.startswith("WSTAT"):
+                sample = parse_window_sample(line)
+                if sample is not None and self.proc is proc:
+                    self.terminal_window_sample = {**sample, "observed_monotonic": time.monotonic()}
+                continue
             if line.startswith(("BT ", "BDONE ")) and slot_q:   # --batch: a batch slot's own lines
                 try:
                     slot_q[int(line.split()[1])].put(line)
@@ -1270,6 +1332,7 @@ class StrataEngine:
         exits before READY - a dead engine's VRAM can take a while to come back, notably on ROCm - is retried
         (PR #637)."""
         info = dict(self.info)
+        self.incidents["restarts"] += 1
         self.starting = True                     # prepare() answers 503 "starting" meanwhile (#344)
         try:
             self.close()
@@ -1448,6 +1511,7 @@ class StrataEngine:
         quiet for half a second: between two PP lines of a read whose chunks take longer than that."""
         stopped = False
         beat = time.monotonic()
+        last_tok = None                                  # T35 A6: the previous token's arrival, for the true gap
         while True:
             try:
                 # A client can leave before the first PP/token.  Poll its Event as often as _take_control does;
@@ -1469,6 +1533,10 @@ class StrataEngine:
             if not line.startswith(("PP ", "INFO")):
                 btrace("ctl<", self._ctl_mode, line.strip()[:60])
             if line.startswith("T "):
+                now = time.monotonic()                   # T35 A6: the TRUE per-token gap, one observation per gap
+                if last_tok is not None and self.latency_sink is not None:
+                    self.latency_sink.observe_gap(now - last_tok)
+                last_tok = now
                 on_token(int(line[2:]))
                 if not stopped and (cancel.is_set() or (stop_when is not None and stop_when())):
                     self._send("STOP")
@@ -1603,6 +1671,7 @@ class StrataEngine:
     def _park_slot(self, slot: int) -> None:
         """#1994: the engine refused a BGEN for `slot`.  Keep it busy here for SLOT_PARK_S (no request owns it), then
         give it back: the engine's view has caught up, or the next refusal parks it again."""
+        self.incidents["bgen_refusals"] += 1
         with self.slot_cv:
             self.slot_claims.discard(slot)
             self.slot_busy[slot] = True
@@ -1714,6 +1783,9 @@ class StrataEngine:
             self.ctl_served = my_ticket + 1
             self.ctl_epoch += 1
             self.slot_cv.notify_all()
+        # T35 A6: the admission wait - arrival to holding the control lines (the queueing the TTFT tail pays).
+        if self.latency_sink is not None:
+            self.latency_sink.observe_admit(time.monotonic() - entry[1])
         return True
 
     def _admit_next(self):
@@ -1988,6 +2060,7 @@ class StrataEngine:
                 live.update(state="decoding", first_token=time.time(), generated=len(out))
                 gen0 = len(out) - 1                         # the admission's own token: the slot feeds it first
                 going_solo = False
+                last_tok_b = time.monotonic()               # T35 A6: the previous slot token's arrival (true gap)
                 while True:
                     try:
                         line = self.slot_q[slot].get(timeout=10.0)
@@ -2002,6 +2075,10 @@ class StrataEngine:
                         raise EngineDied(f"the engine stopped unexpectedly (exit code {self.exit_code()})")
                     if line.startswith("BT "):
                         t = int(line.split()[2])
+                        now_tok = time.monotonic()           # T35 A6: the TRUE per-token gap of this slot
+                        if self.latency_sink is not None:
+                            self.latency_sink.observe_gap(now_tok - last_tok_b)
+                        last_tok_b = now_tok
                         out.append(t)
                         live["generated"] = len(out)
                         if cancel.is_set():
@@ -2327,6 +2404,7 @@ class StrataEngine:
     def _silent(self, what: str) -> EngineSilent:
         """#481: end an engine that lost step with the server (its main thread waits for a command the server never
         sends), so the next request starts it again: killed now, its GPU and RAM go back with the process."""
+        self.incidents["watchdog_trips"] += 1
         self.silent_note = ("The engine and the server lost step (issue #481; a very slow PC can raise "
                             "\"engine_silence_s\" in the config, 0 = wait forever). If it happens again, please add "
                             "the end of the engine log to github.com/Niko1221/Strata/issues/481.")
@@ -3553,6 +3631,8 @@ class Service:
         self.scrape_bucket = (0, 0.0, 0, 0.0)
         from serve.prometheus import Latencies
         self.latencies = Latencies()                     # GET /metrics in Prometheus text: the latency histograms
+        if hasattr(self.engine, "latency_sink"):        # T35 A6: the engine's line reader observes into them
+            self.engine.latency_sink = self.latencies
         self.last_request_at = None                      # when a request last started or finished
         self.started_at = time.time()
         self.instance_id = uuid.uuid4().hex
@@ -4274,8 +4354,14 @@ class Service:
                   **dict(getattr(self.engine, "info", {}) or {})}
         tel = self.telemetry.snapshot() if getattr(self, "telemetry", None) else {"now": {}, "history": {}, "static": {}}
         parked = self.conv_log.poll(getattr(self.engine, "log_path", None), getattr(self.engine, "log_start", None))
+        # T35 A6: the elastic lifecycle's counters split out of the cache view (the window sample comes from WSTAT).
+        elastic = {k: parked.pop(k) for k in ("promotes", "demotes", "park_demotes", "forget_demotes", "last_promote_ms",
+                                              "last_release_ms", "last_map_ms", "last_demote_ms", "last_park_ms", "last_unmap_ms",
+                                              "spare_chunks") if k in parked}
         return {"engine": engine, "live": live, "requests": hist[::-1][:None if all_requests else 12],
                 "conversation_cache": conversation_cache_view(engine, hist, totals, parked),
+                "window": getattr(self.engine, "terminal_window_sample", None), "elastic": elastic,
+                "incidents": dict(getattr(self.engine, "incidents", {}) or {}),
                 "requests_kept": len(hist), "totals": totals, "hardware": tel["now"],
                 "hardware_static":
                 tel["static"], "history": tel["history"], "time": now}

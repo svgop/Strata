@@ -282,7 +282,13 @@ __device__ __forceinline__ void gdn_q8_1_store(GdnQ81* __restrict__ xq, size_t i
     if (idx % 32 == 0) xq[idx / 32].ds = q8_1_ds(d, sum);   // #606: clamped (the QFUSE path bypassed the finite helper)
 }
 
-template <bool ALL_OUT, bool Q>
+// T35 B4 (STRATA_GDN_PRESCALE=1, default off): MSInfer's gate-prescale identity, o = q.(gS) + delta*(q.k) with
+// S' = gS + k delta^T (arXiv 2607.16831).  Algebraically exact, NOT bitwise: the state is read prescaled by the gate
+// and the output's correction is a per-head scalar, so the sum order differs from the baseline's o = q.(gS + k delta)
+// by one rounding.  The kernel keeps the state in registers, so the paper's saving (one fewer state read per token)
+// is structurally absent here; what changes is the dependency chain (the output dot no longer waits on the update)
+// at the cost of one extra FMA per element on the output rows.  Gated and canaried (M3b) - do not tune on a shift.
+template <bool ALL_OUT, bool Q, bool PS = false>
 __global__ void __launch_bounds__(S * RG) gdn_step_norm_multi_kernel(float* __restrict__ state,
                                                                      const float* __restrict__ hbuf, int C,
                                                                      const float* __restrict__ gate,
@@ -338,28 +344,64 @@ __global__ void __launch_bounds__(S * RG) gdn_step_norm_multi_kernel(float* __re
             else if (rg == 1 && need_next) sq[nxt][col] = ht_next[qh * S + col];
         }
         const float g = __expf(gate[(size_t) t * h_v + head]);
-        float kv = 0.0f;
-#pragma unroll
-        for (int r = 0; r < RPG; ++r) kv = fmaf(s[r], sk[cur][rg * RPG + r], kv);
-        red_kv[rg][col] = kv;
-        __syncthreads();
-        const float kv_col = red_kv[0][col] + red_kv[1][col] + red_kv[2][col] + red_kv[3][col];
-        const float delta = (ht[2 * qk + head * S + col] - g * kv_col) * beta[(size_t) t * h_v + head];
-        if (!need_out) {
-#pragma unroll
-            for (int r = 0; r < RPG; ++r) s[r] = fmaf(g, s[r], sk[cur][rg * RPG + r] * delta);
-            if (snap) {   // F-216: verify mode only — commit launches pass snap == nullptr
-                float* sp = snap + (size_t) t * snap_tok_stride + ((size_t) (rg * RPG) * h_v + head) * S + col;
-#pragma unroll
-                for (int r = 0; r < RPG; ++r) sp[r * row_stride] = s[r];
-            }
-            continue;
-        }
         float o = 0.0f;
+        float delta;
+        if constexpr (PS) {
+            // T35 B4: prescale the state by the gate ONCE, dot the output against gS, and add the per-head scalar
+            // (q.k) * delta.  Same algebra as the baseline (o = q.(gS + k delta)), one rounding different.
+            float x[RPG];
+            __shared__ float red_qk[RG][S];
+            float kv = 0.0f, kq = 0.0f;
 #pragma unroll
-        for (int r = 0; r < RPG; ++r) {
-            s[r] = fmaf(g, s[r], sk[cur][rg * RPG + r] * delta);
-            o = fmaf(s[r], sq[cur][rg * RPG + r], o);
+            for (int r = 0; r < RPG; ++r) {
+                x[r] = g * s[r];
+                kv = fmaf(x[r], sk[cur][rg * RPG + r], kv);
+                if (need_out) kq = fmaf(sq[cur][rg * RPG + r], sk[cur][rg * RPG + r], kq);
+            }
+            red_kv[rg][col] = kv;
+            if (need_out) red_qk[rg][col] = kq;
+            __syncthreads();
+            const float kv_col = red_kv[0][col] + red_kv[1][col] + red_kv[2][col] + red_kv[3][col];
+            delta = (ht[2 * qk + head * S + col] - kv_col) * beta[(size_t) t * h_v + head];
+            if (need_out) {
+                const float kq_col = red_qk[0][col] + red_qk[1][col] + red_qk[2][col] + red_qk[3][col];
+#pragma unroll
+                for (int r = 0; r < RPG; ++r) o = fmaf(x[r], sq[cur][rg * RPG + r], o);
+                o = fmaf(delta, kq_col, o);                  // the (q.k)*delta correction
+            }
+#pragma unroll
+            for (int r = 0; r < RPG; ++r) s[r] = fmaf(sk[cur][rg * RPG + r], delta, x[r]);
+            if (!need_out) {
+                if (snap) {   // F-216: verify mode only — commit launches pass snap == nullptr
+                    float* sp = snap + (size_t) t * snap_tok_stride + ((size_t) (rg * RPG) * h_v + head) * S + col;
+#pragma unroll
+                    for (int r = 0; r < RPG; ++r) sp[r * row_stride] = s[r];
+                }
+                continue;
+            }
+        } else {
+            float kv = 0.0f;
+#pragma unroll
+            for (int r = 0; r < RPG; ++r) kv = fmaf(s[r], sk[cur][rg * RPG + r], kv);
+            red_kv[rg][col] = kv;
+            __syncthreads();
+            const float kv_col = red_kv[0][col] + red_kv[1][col] + red_kv[2][col] + red_kv[3][col];
+            delta = (ht[2 * qk + head * S + col] - g * kv_col) * beta[(size_t) t * h_v + head];
+            if (!need_out) {
+#pragma unroll
+                for (int r = 0; r < RPG; ++r) s[r] = fmaf(g, s[r], sk[cur][rg * RPG + r] * delta);
+                if (snap) {   // F-216: verify mode only — commit launches pass snap == nullptr
+                    float* sp = snap + (size_t) t * snap_tok_stride + ((size_t) (rg * RPG) * h_v + head) * S + col;
+#pragma unroll
+                    for (int r = 0; r < RPG; ++r) sp[r * row_stride] = s[r];
+                }
+                continue;
+            }
+#pragma unroll
+            for (int r = 0; r < RPG; ++r) {
+                s[r] = fmaf(g, s[r], sk[cur][rg * RPG + r] * delta);
+                o = fmaf(s[r], sq[cur][rg * RPG + r], o);
+            }
         }
         if (snap) {
             float* sp = snap + (size_t) t * snap_tok_stride + ((size_t) (rg * RPG) * h_v + head) * S + col;
@@ -1171,6 +1213,31 @@ void gdn_step_norm_multi(float* state, const float* h, int conv_channels, const 
     }
     const dim3 g1((unsigned) h_v), b1(S, RG);
     const bool all_out = n_keep == nullptr && t_out_begin <= 0;
+    // T35 B4: STRATA_GDN_PRESCALE=1 (default off) selects the gate-prescale identity.  It changes the float order
+    // (algebraic, not bitwise), so the M3b acceptance canary is the contract; said once, at the first launch.
+    static const bool prescale = [] {
+        const char* v = std::getenv("STRATA_GDN_PRESCALE");
+        const bool on = v != nullptr && v[0] == '1';
+        if (on) std::fprintf(stderr, "strata verify: STRATA_GDN_PRESCALE=1: the GDN decode recurrence uses MSInfer's "
+                                     "gate-prescale identity (o = g*(S.q) + (q.k)*delta; algebraic, not bitwise)\n");
+        return on;
+    }();
+    if (prescale) {
+        if (xq && t_out_begin < n_tok) {
+            if (all_out) gdn_step_norm_multi_kernel<true, true, true><<<g1, b1, 0, (cudaStream_t) stream>>>(
+                state, h, conv_channels, gate, beta, z, gamma, eps, y, h_k, h_v, n_tok, nullptr, 0, xq, snap, snap_tok_stride);
+            else gdn_step_norm_multi_kernel<false, true, true><<<g1, b1, 0, (cudaStream_t) stream>>>(
+                state, h, conv_channels, gate, beta, z, gamma, eps, y, h_k, h_v, n_tok, n_keep, t_out_begin, xq, snap, snap_tok_stride);
+        } else if (all_out) {
+            gdn_step_norm_multi_kernel<true, false, true><<<g1, b1, 0, (cudaStream_t) stream>>>(
+                state, h, conv_channels, gate, beta, z, gamma, eps, y, h_k, h_v, n_tok, nullptr, 0, nullptr, snap, snap_tok_stride);
+        } else {
+            gdn_step_norm_multi_kernel<false, false, true><<<g1, b1, 0, (cudaStream_t) stream>>>(
+                state, h, conv_channels, gate, beta, z, gamma, eps, y, h_k, h_v, n_tok, n_keep, t_out_begin, nullptr, snap, snap_tok_stride);
+        }
+        check("gdn_step_norm_multi (prescale)");
+        return;
+    }
     if (xq && t_out_begin < n_tok) {
         if (all_out) gdn_step_norm_multi_kernel<true, true><<<g1, b1, 0, (cudaStream_t) stream>>>(
             state, h, conv_channels, gate, beta, z, gamma, eps, y, h_k, h_v, n_tok, nullptr, 0, xq, snap, snap_tok_stride);

@@ -3,6 +3,12 @@
 // unmapped in chunks of the device's granularity (2 MiB).  The K/V pools grow with the context by taking chunks the
 // expert cache gives up, and neither moves: every captured graph and stored pointer stays valid.  The driver calls
 // are reached through the runtime's entry-point query, so nothing links the driver library.  Not under HIP.
+//
+// T35 A4: the chunk unit is STRATA_VMM_CHUNK_MIB (a multiple of the minimum granularity, default: the minimum
+// itself, so unset is byte-for-byte today's 2 MiB behavior).  A coarser unit divides every lifecycle's driver-call
+// count (a slot arena at 32 MiB is 24 cuMemMap calls instead of 373); every citizen (the expert cache's range, the
+// K/V pools, the slot arenas) takes the same unit, so the spare pools stay homogeneous and any chunk can be mapped
+// into any range.
 
 #include <cstdint>
 #include <vector>
@@ -14,8 +20,11 @@ using VmmChunk = unsigned long long;
 
 /// The current device supports it and the entry points resolved.
 bool vmm_available();
-/// The chunk size (0 when not available).
+/// The chunk size every range is reserved/mapped/released in: the device's minimum granularity, or the multiple of
+/// it STRATA_VMM_CHUNK_MIB asked for (rounded up, clamped).  0 when not available.
 uint64_t vmm_granularity();
+/// The device's minimum granularity itself (2 MiB on GB202), whatever STRATA_VMM_CHUNK_MIB says.  0 when unknown.
+uint64_t vmm_min_granularity();
 /// A new physical chunk on the current device (0: out of memory), and its release.
 VmmChunk vmm_chunk_new();
 void vmm_chunk_free(VmmChunk h);
@@ -48,6 +57,7 @@ private:
     /// chunk counts as mapped without access.
     bool commit_run(int64_t lo, int64_t hi);
     unsigned long long base_ = 0;
+    uint64_t chunk_ = 0;        ///< the unit this range was reserved in (vmm_granularity() at reserve time)
     std::vector<VmmChunk> h_;   // per chunk: its physical chunk, 0 = unmapped
 };
 

@@ -8,6 +8,7 @@
 #include <array>
 #include <cstddef>
 #include <cstdint>
+#include <cstdlib>
 #include <deque>
 #include <utility>
 #include <vector>
@@ -182,6 +183,31 @@ struct SavedConversation {
         return n;
     }
 };
+
+/// T35 A5 (STRATA_CONV_COMPRESS=1): lossless-pack the K/V buffers of a conversation image that is being PARKED.
+/// A parked image is never read by compute before it is restored, and the restore decompresses to the exact bytes
+/// (a round-trip + hash check inside ConversationBuffer::pack), so no acceptance surface is touched.  A no-op with
+/// the gate off - the standing path is byte for byte today's.  Returns how many buffers were packed.
+inline size_t conversation_cache_compress(SavedConversation& image) {
+    static const bool on = [] {
+        const char* v = std::getenv("STRATA_CONV_COMPRESS");
+        return v != nullptr && v[0] != '\0' && v[0] != '0';
+    }();
+    if (!on) return 0;
+    size_t packed = 0;
+    auto pack_kv = [&](std::vector<ConversationKv>& kvs) {
+        for (ConversationKv& kv : kvs) {
+            packed += kv.k.pack() ? 1 : 0;
+            packed += kv.v.pack() ? 1 : 0;
+            packed += kv.k_scale.pack() ? 1 : 0;
+            packed += kv.v_scale.pack() ? 1 : 0;
+            packed += kv.pooled.pack() ? 1 : 0;
+        }
+    };
+    pack_kv(image.kv);
+    for (SavedConversation& stage : image.stage_images) pack_kv(stage.kv);
+    return packed;
+}
 
 template<class Token>
 int64_t conversation_prefix(const ConversationCheckpoint& c, const std::vector<Token>& prompt,
