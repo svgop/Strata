@@ -5378,6 +5378,61 @@ int main(int argc, char** argv) {
         o.batch = asked;
         return n;
     };
+    // ---- T33 ELASTIC SESSIONS (STRATA_ELASTIC_SESSIONS=1, default off): the --batch slots join the VmmChunk
+    // triad the elastic K/V and the expert cache already share (vmm.hpp).  Each slot's session arena becomes a
+    // VmmRange reserved once at boot; every slot is CONSTRUCTED exactly as today (mapped, session_init, the
+    // drafters and the verifier's slot table bind its stable addresses), then the arenas past S_min give their
+    // physical chunks back to the driver and the expert cache's auto sizing grows into the freed VRAM - so the
+    // slot count a static boot pays for up front is instead cache while nobody uses it.  A session start maps
+    // chunks out of the spare pool (a demote's give-back) or, when the pool is empty, releases them from the
+    // cache's tail slots first (the kvg_ensure eviction walk); a session end unmaps them to the pool and the
+    // kvg_trim refill eats them back.  The addresses never move, so every captured batch graph and every
+    // drafter binding stays valid across promote/demote cycles - a slot's graph execs are kept instantiated and
+    // simply never launch while their arena is unmapped (a slot only enters a window once bs[b].active, which
+    // the admission sets after the promote).  Unset: today's eager cudaMalloc path, byte for byte.
+    struct ElasticSessions {
+        bool on = false;
+        int s_min = 2;                        ///< STRATA_ELASTIC_S_MIN: the slots that stay mapped at boot
+        double demote_s = 10.0;               ///< STRATA_ELASTIC_DEMOTE_S: idle hysteresis before an arena unmaps
+        int64_t chunks_per = 0;               ///< one arena's granules
+        std::vector<std::unique_ptr<strata::core::VmmRange>> arena;   ///< [0, --batch): stable VA per slot
+        std::vector<bool> live;               ///< mapped + zeroed (a registered slot may be either)
+        std::vector<strata::core::VmmChunk> spare;   ///< physical chunks out of a demoted slot, not yet eaten
+        std::vector<Clock::time_point> idle_since;   ///< when the idle scan first saw slot b demotable
+        cudaStream_t stream = nullptr;        ///< the materialization side stream - never the decode stream
+        std::mutex mu;                        ///< the background promote vs the main loop's demote
+        uint64_t pin_bytes = 0;               ///< qsa_state_init's host pins, created once per slot at boot
+        int64_t maps = 0, unmaps = 0;
+        ~ElasticSessions() {
+            if (stream != nullptr) cudaStreamDestroy(stream);   // after the verifiers: graphs die first (scope order)
+        }
+    } es;
+    {
+        const char* ev = std::getenv("STRATA_ELASTIC_SESSIONS");
+        const bool asked = ev != nullptr && ev[0] != '\0' && ev[0] != '0';
+        const char* why = !asked ? "not asked for"
+                        : o.batch < 2 ? "it needs --batch 2 or more"
+                        : !stages.empty() || multi_gpu ? "it needs one GPU (no layer split)"
+                        : o.vram_elastic ? "not with --vram-elastic (its own segmented cache)"
+                        : o.peer_device >= 0 ? "not with --peer-device"
+                        : remote_caches ? "not with the helper caches"
+                        : o.expert_profile.empty() ? "it needs --expert-profile (the cache refill's source)"
+                        : !strata::core::vmm_available() ? "this GPU or driver offers no virtual memory management"
+                        : nullptr;
+        if (asked && why != nullptr) {
+            std::fprintf(stderr, "strata generate: STRATA_ELASTIC_SESSIONS is off (%s)\n", why);
+        } else if (asked) {
+            es.on = true;
+            if (const char* v = std::getenv("STRATA_ELASTIC_S_MIN"); v != nullptr && std::atoi(v) >= 0)
+                es.s_min = std::atoi(v);
+            if (const char* v = std::getenv("STRATA_ELASTIC_DEMOTE_S"); v != nullptr && std::atof(v) > 0)
+                es.demote_s = std::atof(v);
+            es.s_min = std::min(es.s_min, o.batch);
+            // the cache must be one VMM range for a promote to release chunks out of it (set_vmm's mode,
+            // the elastic K/V's own: fully mapped at open, so this changes no address and no output bit)
+            strata::core::ExpertCache::set_vmm(true);
+        }
+    }
     std::vector<std::vector<std::unique_ptr<strata::core::SessionState>>> bslot_ss;
     if (o.batch != 0) {
         const int cap = strata::kernels::kVerifyMaxT;
@@ -5438,9 +5493,28 @@ int main(int argc, char** argv) {
             for (int b = 0; b < fit; ++b) {
                 auto u = std::make_unique<strata::core::SessionState>();
                 void* buf = nullptr;
-                if (cudaMalloc(&buf, bytes) != cudaSuccess || strata::core::session_init(g, o.max_context, K, buf, *u, lo, hi) == 0) {
+                // T33: with the elastic substrate every slot is carved inside its own reserved VMM range,
+                // temporarily mapped for the construction (session_init uploads the rope tables and the page
+                // tables); the arenas past S_min are unmapped below, before the expert cache is sized.
+                if (es.on && k == 0) {
+                    if ((int) es.arena.size() <= b) {
+                        auto r = std::make_unique<strata::core::VmmRange>();
+                        if (r->reserve(bytes) && r->map_range(0, r->chunks(), [] { return (strata::core::VmmChunk) 0; })) {
+                            es.chunks_per = r->chunks();
+                            es.arena.push_back(std::move(r));
+                        } else {
+                            es.on = false;   // the reservation failed: today's eager path for this and every slot below
+                            std::fprintf(stderr, "strata generate: STRATA_ELASTIC_SESSIONS is off (an arena could not "
+                                                 "be reserved: %s)\n", cudaGetErrorString(cudaGetLastError()));
+                        }
+                    }
+                    if ((int) es.arena.size() > b) buf = es.arena[(size_t) b]->base();
+                }
+                const uint64_t pins0 = strata::core::qsa_kv_host_bytes();
+                if ((buf == nullptr && cudaMalloc(&buf, bytes) != cudaSuccess) ||
+                    strata::core::session_init(g, o.max_context, K, buf, *u, lo, hi) == 0) {
                     cudaGetLastError();
-                    if (buf != nullptr) cudaFree(buf);
+                    if (buf != nullptr && (int) es.arena.size() <= b) cudaFree(buf);
                     size_t fb = 0, tb = 0;
                     cudaMemGetInfo(&fb, &tb);
                     std::fprintf(stderr, "strata generate: WARNING: --batch %d: slot %d's session does not fit on CUDA%d "
@@ -5449,6 +5523,7 @@ int main(int argc, char** argv) {
                     fit = b;
                     break;
                 }
+                es.pin_bytes += strata::core::qsa_kv_host_bytes() - pins0;
                 strata::core::session_zero(*u, g, nullptr, nullptr);
                 bslot_ss[k].push_back(std::move(u));
             }
@@ -5459,6 +5534,10 @@ int main(int argc, char** argv) {
                          (int) bslot_ss[k].size(), dev, (double) bytes / 1073741824.0, (double) fb / 1073741824.0);
         }
         for (auto& v : bslot_ss) if ((int) v.size() > fit) v.resize((size_t) fit);   // the same count on every stage
+        if (es.on && fit < 2) {   // --batch turned off below: nothing is elastic any more
+            es.arena.clear();   // ~VmmRange unmaps and frees what it holds
+            es.on = false;
+        }
         if (fit < 2) {
             std::fprintf(stderr, "strata generate: WARNING: --batch is off: not two slot sessions fit (a smaller "
                                  "--max-context or KV streaming, --kv-resident, makes them smaller)\n");
@@ -5475,6 +5554,12 @@ int main(int argc, char** argv) {
             o.batch = fit;
             resolve_groups_auto();   // (the slots that fit may not be the ones asked for)
             if (o.batch_groups > 1 && o.batch % o.batch_groups != 0) o.batch_groups = 1;
+            if (es.on) {   // the arenas exist for the slots that were carved; the window cap may still cut the count
+                if ((int) es.arena.size() > o.batch) es.arena.resize((size_t) o.batch);
+                es.live.assign(es.arena.size(), true);
+                es.idle_since.assign(es.arena.size(), {});
+                es.s_min = std::min(es.s_min, o.batch);
+            }
             // the sessions' VRAM is the expert cache's: say what it costs (docs/BATCHING.md has the measured trade)
             std::fprintf(stderr, "strata generate: --batch %d: the slot sessions take %.2f GiB of VRAM on CUDA0 that the "
                                  "expert cache would otherwise hold\n", o.batch,
@@ -5992,6 +6077,42 @@ int main(int argc, char** argv) {
                                                                                    ht.worker_cores.begin() + (long) nw)).c_str());
     }
     if (o.no_ple_prefetch) strata::kernels::ple_prefetch_enable(false);
+    // ---- T33 elastic sessions: the boot's own demote.  Everything that binds a slot's addresses is built by
+    // now (session_init, the drafters' borrowed rope tables, the verifier's slot table); the arenas past S_min
+    // give their physical chunks back to the DRIVER here - before the expert cache's auto sizing reads the
+    // free figure, so the cache grows into exactly the VRAM a static --batch boot would have paid the slots.
+    // A later promote takes chunks back out of the cache (the kvg_ensure eviction walk); a demote returns them
+    // to the spare pool where the kvg_trim refill eats them.  The slot's host pins (qsa_state_init's pinned
+    // staging and KV shadows) were created once, at boot, and are NOT unpinned on demote: their
+    // device-mapped pointers are baked into the slot's captured batch graphs, so an unpin would invalidate
+    // them - and the sessions are never re-initialized, so there is no re-pin path to leak either (the pins
+    // are bounded by --batch x the per-session shadow, the static boot's own host cost).
+    if (es.on && (int) es.arena.size() > es.s_min) {
+        const uint64_t G = strata::core::vmm_granularity();
+        const auto t0 = Clock::now();
+        int64_t freed_chunks = 0;
+        for (int b = es.s_min; b < (int) es.arena.size(); ++b)
+            for (int64_t c = 0; c < es.arena[(size_t) b]->chunks(); ++c)
+                if (const strata::core::VmmChunk h = es.arena[(size_t) b]->unmap(c)) {
+                    strata::core::vmm_chunk_free(h);
+                    ++freed_chunks;
+                    es.live[(size_t) b] = false;
+                }
+        size_t fb = 0, tb = 0;
+        cudaMemGetInfo(&fb, &tb);
+        std::fprintf(stderr, "strata generate: STRATA_ELASTIC_SESSIONS on: %zu slot arenas of %.2f GiB reserved, "
+                             "%d mapped at boot, %d registered-but-unmapped; %.2f GiB freed for the expert cache in "
+                             "%.0f ms (%.2f GiB free now; %zu host pins per slot set, %.2f GiB total)\n",
+                     es.arena.size(), (double) (es.chunks_per * G) / 1073741824.0, es.s_min,
+                     (int) es.arena.size() - es.s_min, (double) (freed_chunks * G) / 1073741824.0,
+                     std::chrono::duration<double, std::milli>(Clock::now() - t0).count(),
+                     (double) fb / 1073741824.0, es.arena.size(),
+                     es.arena.empty() ? 0.0 : (double) es.pin_bytes / es.arena.size() / 1073741824.0);
+        std::fprintf(stderr, "strata generate: STRATA_ELASTIC_SESSIONS: slot VA table:");
+        for (size_t b = 0; b < es.arena.size(); ++b)
+            std::fprintf(stderr, " %zu=%p%s", b, (void*) es.arena[b]->base(), b + 1 == es.arena.size() ? "" : ",");
+        std::fprintf(stderr, "\n");
+    }
     // ---- R4's slot storage.  Allocated AFTER the weights and the session, so `cudaMemGetInfo` inside `open`
     // sees the memory this process actually has left rather than the card's idle figure - and refuses with both
     // numbers if the slots do not fit, instead of handing back a cache smaller than it was asked for.
@@ -7807,6 +7928,7 @@ int main(int argc, char** argv) {
     // fit, the cache simply holds fewer experts while a long one is live.
     struct KvGrow {
         bool on = false;
+        bool cache_side = false;         ///< T33: the cache-side machinery runs for the elastic sessions too
         int64_t top = 0, lo = 0;          // slots [lo, top) hold no expert; their whole chunks may be with the K/V
         int64_t floor = 128;              // the cache keeps at least these slots
         int64_t step = 8192;              // the K/V grows in whole steps of cells
@@ -7817,12 +7939,16 @@ int main(int argc, char** argv) {
     auto kvg_start = [&](int64_t top) {
         kvg.on = strata::core::qsa_kv_elastic() && xcache.vmm_range() != nullptr && d_res != nullptr &&
                  !host_res.empty() && srcp != nullptr && top > kvg.floor;
-        if (!kvg.on) return;
+        // T33 elastic sessions: no K/V grows, but the cache-side release/refill runs for slot promotes
+        kvg.cache_side = es.on && xcache.vmm_range() != nullptr && d_res != nullptr && !host_res.empty() &&
+                         srcp != nullptr && top > 0;
+        if (!kvg.on && !kvg.cache_side) return;
         kvg.top = kvg.lo = top;
         kvg.cells = strata::core::qsa_kv_elastic_cells();
         if (const char* v = std::getenv("STRATA_KV_GROW_STEP"); v != nullptr && std::atoll(v) > 0) kvg.step = std::atoll(v);
         // tests: the cache keeps this many slots (its size: the K/V grows into new VRAM only)
         if (const char* v = std::getenv("STRATA_KV_GROW_FLOOR"); v != nullptr && std::atoll(v) > 0) kvg.floor = std::atoll(v);
+        if (kvg.on)
         std::fprintf(stderr, "strata generate: elastic K/V: %lld of %lld cells in VRAM (%.2f of %.2f GiB); the expert "
                              "cache (%lld slots) gives the K/V room below slot %lld as the context grows\n",
                      (long long) kvg.cells, (long long) o.max_context,
@@ -7832,12 +7958,13 @@ int main(int argc, char** argv) {
     };
     // Room for `cells` cells (rounded up to a step).  `quiesce` must leave nothing running on the device and land
     // the adaptive tier's swaps (a swap in flight could still be writing a slot given up here).
-    auto kvg_ensure = [&](int64_t cells, const std::function<void()>& quiesce) -> bool {
-        if (!kvg.on || cells <= kvg.cells) return true;
-        const int64_t target = std::min<int64_t>(o.max_context, (cells + kvg.step - 1) / kvg.step * kvg.step);
-        const int64_t need = strata::core::qsa_kv_elastic_need(target);
-        if (need == 0) { kvg.cells = strata::core::qsa_kv_elastic_cells(); return true; }
-        quiesce();
+    // T33: the cache-side half (evict the tail slots' experts, unmap their chunks into `pool`) is its own lambda
+    // so the elastic sessions can take chunks out of the cache for a slot promote with the same machinery; the
+    // K/V path below drives it with the K/V's need, in the same order as before, so that path is unchanged.
+    auto kvg_release_until = [&](int64_t need, const std::function<void()>& quiesce,
+                                 std::vector<strata::core::VmmChunk>& pool, int64_t* gave_out = nullptr,
+                                 int64_t* moved_out = nullptr) -> bool {
+        quiesce();   // before any eviction work, as kvg_ensure always ran it: nothing on the device, the tier landed
         strata::core::VmmRange& r = *xcache.vmm_range();
         const uint64_t G = strata::core::vmm_granularity();
         std::vector<int32_t> owner;   // slot -> residency index
@@ -7860,7 +7987,7 @@ int main(int argc, char** argv) {
             for (int64_t c = c0; c < c1; ++c) k += r.mapped(c) ? 1 : 0;
             return k;
         };
-        while ((int64_t) kvg.spare.size() + freeable() < need && kvg.lo > kvg.floor) {
+        while ((int64_t) pool.size() + freeable() < need && kvg.lo > kvg.floor) {
             if (owner.empty()) {
                 owner.assign((size_t) xcache.slots(), -1);
                 for (size_t i = 0; i < host_res.size(); ++i)
@@ -7906,13 +8033,24 @@ int main(int argc, char** argv) {
             const int64_t c1 = (int64_t) (xcache.slot_offset(kvg.top) / G);
             for (int64_t c = c0; c < c1; ++c)
                 if (r.mapped(c))
-                    if (const strata::core::VmmChunk h = r.unmap(c)) kvg.spare.push_back(h);
+                    if (const strata::core::VmmChunk h = r.unmap(c)) pool.push_back(h);
         }
         if (gave > 0 &&
             cudaMemcpy(d_res, host_res.data(), host_res.size() * sizeof(int32_t), cudaMemcpyHostToDevice) != cudaSuccess) {
             std::fprintf(stderr, "strata: the residency table upload failed: %s\n", cudaGetErrorString(cudaGetLastError()));
             return false;
         }
+        if (gave_out != nullptr) *gave_out = gave;
+        if (moved_out != nullptr) *moved_out = moved;
+        return true;
+    };
+    auto kvg_ensure = [&](int64_t cells, const std::function<void()>& quiesce) -> bool {
+        if (!kvg.on || cells <= kvg.cells) return true;
+        const int64_t target = std::min<int64_t>(o.max_context, (cells + kvg.step - 1) / kvg.step * kvg.step);
+        const int64_t need = strata::core::qsa_kv_elastic_need(target);
+        if (need == 0) { kvg.cells = strata::core::qsa_kv_elastic_cells(); return true; }
+        int64_t gave = 0, moved = 0;
+        if (!kvg_release_until(need, quiesce, kvg.spare, &gave, &moved)) return false;
         int64_t fresh = 0;
         const bool ok = strata::core::qsa_kv_elastic_grow(target, [&]() -> strata::core::VmmChunk {
             if (kvg.spare.empty()) { ++fresh; return 0; }   // the cache is at its floor: new memory
@@ -7936,27 +8074,27 @@ int main(int argc, char** argv) {
     };
     // A request that needs far fewer cells than the K/V holds gives the rest back: the slots refill with the
     // profile's hottest experts the GPU does not hold.  Run on a quiet device (as kvg_ensure's `quiesce`).
-    auto kvg_trim = [&](int64_t cells, int64_t hold) -> bool {   // `hold`: the cells a parked conversation could need
-        if (!kvg.on) return true;
-        // #1128: a parked conversation comes back through kvg_ensure's grow, so a K/V that fell to a short request's
-        // size is grown again (its experts shuffled again) after every short request in between: the K/V keeps the
-        // longest parked conversation's cells while it is parked
-        const int64_t want = std::max<int64_t>(cells, hold);
-        const int64_t target = std::max<int64_t>(kvg.step, (want + kvg.step - 1) / kvg.step * kvg.step);
-        if (kvg.cells < target + 2 * kvg.step || kvg.lo >= kvg.top) return true;
-        strata::core::qsa_kv_elastic_shrink(target, [&](strata::core::VmmChunk h) { kvg.spare.push_back(h); });
-        kvg.cells = strata::core::qsa_kv_elastic_cells();
+    // T33: the cache-side half (remap the pool's chunks into the cache's range, refill from the profile) is its
+    // own lambda so a session demote's give-back can feed the same refill; the K/V path below is unchanged.
+    auto kvg_cache_eat_spare = [&](std::vector<strata::core::VmmChunk>& pool, int64_t* back_out = nullptr) -> bool {
+        if (pool.empty() || kvg.lo >= kvg.top) {
+            if (!pool.empty()) {   // nothing to remap into: the chunks go back to the driver, not the cache
+                for (const strata::core::VmmChunk h : pool) strata::core::vmm_chunk_free(h);
+                pool.clear();
+            }
+            return true;
+        }
         strata::core::VmmRange& r = *xcache.vmm_range();
         const uint64_t G = strata::core::vmm_granularity();
         const int64_t c1 = (int64_t) (xcache.slot_offset(kvg.top) / G);
         {   // one run from the lowest unmapped chunk, as long as the chunks handed back last (one access call)
             const int64_t c0 = (int64_t) (xcache.slot_offset(kvg.lo) / G);
-            int64_t cend = c0, need = (int64_t) kvg.spare.size();
+            int64_t cend = c0, need = (int64_t) pool.size();
             while (cend < c1 && need > 0) need -= r.mapped(cend++) ? 0 : 1;
             if (!r.map_range(c0, cend, [&]() -> strata::core::VmmChunk {
-                    if (kvg.spare.empty()) return 0;
-                    const strata::core::VmmChunk h = kvg.spare.back();
-                    kvg.spare.pop_back();
+                    if (pool.empty()) return 0;
+                    const strata::core::VmmChunk h = pool.back();
+                    pool.pop_back();
                     return h;
                 }))
                 std::fprintf(stderr, "strata: the expert cache could not take its VRAM back from the K/V\n");
@@ -7997,11 +8135,26 @@ int main(int argc, char** argv) {
         kvg.refilled += (int64_t) filled.size();
         // res_put waits for its copy: the next reader can be a verify window (a non-blocking stream) right away
         if (res_put(d_res) != cudaSuccess) return false;
-        for (const strata::core::VmmChunk h : kvg.spare) strata::core::vmm_chunk_free(h);   // new ones, if any
-        kvg.spare.clear();
+        for (const strata::core::VmmChunk h : pool) strata::core::vmm_chunk_free(h);   // new ones, if any
+        pool.clear();
+        if (back_out != nullptr) *back_out = kvg.lo - lo0;
+        return true;
+    };
+    auto kvg_trim = [&](int64_t cells, int64_t hold) -> bool {   // `hold`: the cells a parked conversation could need
+        if (!kvg.on) return true;
+        // #1128: a parked conversation comes back through kvg_ensure's grow, so a K/V that fell to a short request's
+        // size is grown again (its experts shuffled again) after every short request in between: the K/V keeps the
+        // longest parked conversation's cells while it is parked
+        const int64_t want = std::max<int64_t>(cells, hold);
+        const int64_t target = std::max<int64_t>(kvg.step, (want + kvg.step - 1) / kvg.step * kvg.step);
+        if (kvg.cells < target + 2 * kvg.step || kvg.lo >= kvg.top) return true;
+        strata::core::qsa_kv_elastic_shrink(target, [&](strata::core::VmmChunk h) { kvg.spare.push_back(h); });
+        kvg.cells = strata::core::qsa_kv_elastic_cells();
+        int64_t back = 0;
+        if (!kvg_cache_eat_spare(kvg.spare, &back)) return false;
         ++kvg.trims;
         std::fprintf(stderr, "strata: K/V trimmed to %lld cells; %lld slots back to the expert cache, refilled from "
-                             "the profile\n", (long long) kvg.cells, (long long) (kvg.lo - lo0));
+                             "the profile\n", (long long) kvg.cells, (long long) back);
         return true;
     };
     // ---- the resident RAM mode (--resident-experts / --resident-cpu-experts): the experts the GPU cache does not
@@ -11346,6 +11499,109 @@ int main(int argc, char** argv) {
             ConvCheckpoint::PromptPlan partial_plan;   ///< --prefill-pipe: the segment it stopped in, read on in its chunks
         };
         std::vector<BSlot> bs((size_t) std::max(o.batch, 0));
+        // ---- T33 elastic sessions: the runtime lifecycle.  A promote may run on a background thread when the
+        // spare pool already holds a demoted slot's chunks (mapping memory nothing references cannot disturb a
+        // running window); when the pool is empty the chunks must first come out of the expert cache, which
+        // evicts experts - that half runs on the request thread at the admission's own quiesce point, where the
+        // device is quiet because this thread is the only one that launches batch windows and the admission
+        // already lands the adaptive tier (the kvg_ensure `quiesce` rules).  A demote runs only from the idle
+        // scan below, when no slot is active.  Both sides take es.mu; the graph execs of a demoted slot are kept
+        // (their addresses are stable), they are simply never staged while the slot is inactive.
+        auto es_promote = [&](int b, bool allow_release) -> bool {
+            if (!es.on || b < 0 || b >= (int) es.arena.size() || bslot_ss.empty() || b >= (int) bslot_ss[0].size())
+                return true;   // not this substrate's slot (a fallback cudaMalloc one): nothing to do
+            std::lock_guard<std::mutex> lk(es.mu);
+            if (es.live[(size_t) b]) return true;
+            const auto t0 = Clock::now();
+            if ((int64_t) es.spare.size() < es.chunks_per) {
+                if (!allow_release || !kvg.cache_side) return false;
+                if (!kvg_release_until(es.chunks_per, adapt_quiesce, es.spare)) return false;   // the cache at its floor
+            }
+            auto take = [&]() -> strata::core::VmmChunk {
+                if (es.spare.empty()) return 0;
+                const strata::core::VmmChunk h = es.spare.back();
+                es.spare.pop_back();
+                return h;
+            };
+            strata::core::VmmRange& r = *es.arena[(size_t) b];
+            const int64_t had = (int64_t) es.spare.size();
+            if (!r.map_range(0, r.chunks(), take)) {   // put back what a partial map took: the slot stays free
+                for (int64_t c = 0; c < r.chunks(); ++c)
+                    if (const strata::core::VmmChunk h = r.unmap(c)) es.spare.push_back(h);
+                (void) cudaGetLastError();
+                return false;
+            }
+            const double map_ms = std::chrono::duration<double, std::milli>(Clock::now() - t0).count();
+            if (es.stream == nullptr) cudaStreamCreateWithFlags(&es.stream, cudaStreamNonBlocking);
+            const auto t1 = Clock::now();
+            strata::core::session_zero(*bslot_ss[0][(size_t) b], g, nullptr, es.stream);   // side stream, never the decode stream
+            cudaStreamSynchronize(es.stream);
+            es.live[(size_t) b] = true;
+            es.idle_since[(size_t) b] = {};
+            ++es.maps;
+            const uint64_t G = strata::core::vmm_granularity();
+            std::fprintf(stderr, "strata elastic: slot %d materialized in %.1f ms (map %.1f from %s, zero %.1f; "
+                                 "%lld chunks of %.2f GiB; %lld chunks left in the spare pool)\n", b,
+                         std::chrono::duration<double, std::milli>(Clock::now() - t0).count(), map_ms,
+                         had >= es.chunks_per ? "the spare pool" : "the expert cache's tail",
+                         std::chrono::duration<double, std::milli>(Clock::now() - t1).count(),
+                         (long long) es.chunks_per, (double) (es.chunks_per * G) / 1073741824.0,
+                         (long long) es.spare.size());
+            return true;
+        };
+        auto es_demote = [&](int b) -> bool {
+            if (!es.on || b < es.s_min || b >= (int) es.arena.size() || !es.live[(size_t) b]) return false;
+            if (bs[(size_t) b].active || bs[(size_t) b].partial) return false;   // never mid-conversation, never a parked read
+            std::lock_guard<std::mutex> lk(es.mu);
+            const auto t0 = Clock::now();
+            adapt_quiesce();   // kvg_ensure's rule: nothing running on the device AND the tier's swaps landed -
+                               // a swap still writing a slot whose chunk unmaps here would fault it
+            for (int64_t c = 0; c < es.arena[(size_t) b]->chunks(); ++c)
+                if (const strata::core::VmmChunk h = es.arena[(size_t) b]->unmap(c)) es.spare.push_back(h);
+            es.live[(size_t) b] = false;
+            bs[(size_t) b] = BSlot{};   // its conversation cache left with its memory (a returning chat re-reads)
+            const double unmap_ms = std::chrono::duration<double, std::milli>(Clock::now() - t0).count();
+            int64_t back = 0;
+            const bool ate = kvg.cache_side && kvg_cache_eat_spare(es.spare, &back);
+            ++es.unmaps;
+            std::fprintf(stderr, "strata elastic: slot %d demoted in %.1f ms (unmap %.1f, %lld chunks to the spare "
+                                 "pool; %s; %lld chunks spare)\n", b,
+                         std::chrono::duration<double, std::milli>(Clock::now() - t0).count(), unmap_ms,
+                         (long long) es.chunks_per,
+                         ate && back > 0 ? "the cache ate them back and refilled from the profile"
+                                         : "kept in the spare pool for the next promote",
+                         (long long) es.spare.size());
+            return true;
+        };
+        // the idle scan: called from the main loop when nothing decodes.  A slot must have been idle (not active,
+        // not a parked read) for STRATA_ELASTIC_DEMOTE_S before its arena goes - the check itself only runs when
+        // a line arrives, so an idle engine demotes lazily at the next request (the F-271 rule: never inside a
+        // window).  Slots below S_min never demote; their arenas are the always-warm floor.
+        auto es_idle_scan = [&]() {
+            if (!es.on) return;
+            const Clock::time_point now = Clock::now();
+            for (int b = es.s_min; b < (int) es.arena.size(); ++b) {
+                if (!es.live[(size_t) b]) continue;
+                if (bs[(size_t) b].active || bs[(size_t) b].partial) {
+                    es.idle_since[(size_t) b] = {};
+                    continue;
+                }
+                if (!es.idle_since[(size_t) b].time_since_epoch().count()) es.idle_since[(size_t) b] = now;
+                if (std::chrono::duration<double>(now - es.idle_since[(size_t) b]).count() >= es.demote_s)
+                    es_demote(b);
+            }
+        };
+        // the BGEN receipt's background promote, joined at the admission (and by the destructor on every other
+        // exit path, so a joinable thread never dies with the scope)
+        struct EsBg {
+            std::thread th;
+            int slot = -1;
+            ~EsBg() { join(); }
+            void join() {
+                if (th.joinable()) th.join();
+                slot = -1;
+            }
+        } es_bg;
         // timing of the batch windows since the slots were last all idle (one stderr line then)
         double bt_run = 0, bt_commit = 0, bt_emit = 0;
         double bt_wait0 = 0, bt_pool0 = 0;
@@ -12303,6 +12559,10 @@ int main(int argc, char** argv) {
             } else if (!next_line(line)) {
                 break;
             }
+            // T33 elastic sessions: nothing decodes and a line arrived - the idle demote scan runs here (never
+            // inside a window; the hysteresis is es.demote_s, and the check itself is line-arrival driven, so a
+            // fully idle engine demotes lazily at its next request)
+            if (es.on && !batch_on() && !pipe_inflight()) es_idle_scan();
             // --batch: BSTOP <slot> ends that slot at its next batch window; BGEN <slot> <max_new> ... reads the
             // request's prompt and first token as a GEN 1, then continues it in that slot
             if (line.rfind("BSTOP ", 0) == 0) {
@@ -12345,6 +12605,18 @@ int main(int argc, char** argv) {
                 admit_slot = (int) b;
                 admit_max_new = mn;
                 adm_drain_ms = line_drain_ms;
+                // T33: the arrival is served by the existing capacity at once (the GEN 1 below runs on the main
+                // sessions); if its slot's arena is unmapped and the spare pool already holds a demote's chunks,
+                // the map + zero start NOW on a thread of their own, beside the decode windows (mapping memory
+                // nothing references cannot disturb them) - the admission joins it before the slot's copy.  An
+                // empty pool needs the cache's eviction first, and that half stays on the request thread, where
+                // the admission's own quiesce point is.
+                if (es.on && b < (long) es.arena.size() && !es.live[(size_t) b] && !es_bg.th.joinable() &&
+                    (int64_t) es.spare.size() >= es.chunks_per) {
+                    es_bg.slot = (int) b;
+                    const int eb = (int) b;
+                    es_bg.th = std::thread([&, eb] { (void) es_promote(eb, /*allow_release=*/false); });
+                }
                 line = std::string(bimg ? "GENI 1" : "GEN 1") + e2;
             }
             // #477: every --expert-profile-save-every minutes, before the next request (at QUIT: after the loop)
@@ -13827,7 +14099,10 @@ int main(int argc, char** argv) {
                 // where the rest is read the same way after it (more than a chunk and more than a short read left),
                 // text only, and into a slot that is not decoding.
                 auto give_way = [&](int ys, int64_t q, std::string& err) -> bool {
+                    // T33: a parked part-read lands in the slot's sessions, so only a live (mapped) arena can
+                    // take it; an elastic slot past S_min says no here and is materialized by its own BGEN instead
                     const bool can = ys < (int) bs.size() && !bs[(size_t) ys].active &&
+                                     (!es.on || ys >= (int) es.arena.size() || es.live[(size_t) ys]) &&
                                      (admit_slot < 0 || ys == admit_slot) && req_imgs.empty() && o.prompt_cache > 0 &&
                                      b0 - q > std::max<int64_t>(C_read, o.short_read);
                     std::string ye;
@@ -14559,7 +14834,15 @@ int main(int argc, char** argv) {
             // and a window row computes what it would in any other window, so every emitted token is the serial loop's
             // (with STRATA_IQ_MT_MIN=1 bit for bit; sampled requests with the same Philox draw per position).
             bool pl_ran = false;
-            const bool pl_want = pipe && pl_pw >= 2 && pl_snap_ok;
+            // T33's routing companion: the gate counts the sessions ACTIVE now, not the CONFIGURED parallel
+            // count.  Semantic: below 4 active batch slots the pipelined (pl_) lane stays the preferred fast
+            // lane whatever --batch N says - a solo or small-group request must not lose the lane because the
+            // config plans for many; at 4 or more active slots the serial lane takes over, because the
+            // pipeline windows and the sessions contend for the same VRAM there.  (With --batch configured the
+            // pipeline is not constructed at boot - "not with --batch slots" - so on today's single-GPU recipe
+            // this term is inert; it binds where the lane and slots coexist, the elastic-session splits.)
+            const int pl_active = (int) std::count_if(bs.begin(), bs.end(), [](const BSlot& sl) { return sl.active; });
+            const bool pl_want = pipe && pl_pw >= 2 && pl_snap_ok && pl_active < 4;
             const char* pl_serial = !pl_want ? nullptr
                                   : hist_n > 0 ? "repetition penalties (penalty_last_n)"
                                   : mtp.coupled() ? "coupled draft sampling" : nullptr;
@@ -15778,6 +16061,14 @@ int main(int argc, char** argv) {
                 bool cont = !cancelled && produced_n == 1 && admit_max_new > 1 && std::strcmp(finish, "length") == 0 &&
                             (int64_t) live.size() == p;
                 const auto tc0 = Clock::now();
+                if (cont && es.on) {   // T33: the admission is the promote's quiesce point - this thread is the
+                    es_bg.join();      // only window launcher, and the tier landed before the request began
+                    if (!es_promote(admit_slot, /*allow_release=*/true)) {
+                        std::fprintf(stderr, "strata serve: batch admission: slot %d's session could not be "
+                                             "materialized (the expert cache is at its floor)\n", admit_slot);
+                        cont = false;   // BADM 0: the server parks the slot and tries another
+                    }
+                }
                 if (cont && !copy_to_slot(admit_slot, live, err)) {
                     std::fprintf(stderr, "strata serve: batch admission failed: %s\n", err.c_str());
                     bs[(size_t) admit_slot].cached = false;   // its sessions may be half written
