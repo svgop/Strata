@@ -9187,3 +9187,33 @@ every future battery (per the prewarm2 precedent). A third golden hash appeared 
 mimic formality on the next adoption batch (elastic + dm together - both are
 bit/timing-class-neutral, the F-239 anomaly note stands); re-quant stacks (+792 slots on a pool
 that now demonstrably pays in conc).
+
+## F-275 — 2026-10-23: THE T35 WAVE — four dossiers, the NEXT-TIER ROADMAP (value-ranked, not
+## cost-ranked — user directive)
+All four verified against the tree/logs by the main loop before banking (T35-elastic-refinement,
+T35-serving-latency, T35-memory-hierarchy, T35-core-compute; commits 6775df30..c1ebee20). The
+consolidated board lives in SVG-CUSTOM-TODO.md's T35 section. THE HEADLINES:
+TIER A - THE LIFECYCLE OVERHAUL (one composed project, the elastic tranche 2): park-KV-on-demote
+(returning chats 1,361 ms -> ~60 ms; the ConversationCache infra already exists unused on that
+path) + the spare watermark (59/59 promotes run synchronous today with the spare empty - one
+invariant flips the class; demotes 28-40 -> 6-10 ms) + timed-wait idle scan (kills the 128-310 ms
+bill on the first post-idle arrival) + VMM superchunks 32-64 MiB (373 ops -> ~12-24; 40-60 ms
+driver time -> 2-4 ms; the code already permits any multiple of the minimum) + parked-state
+compression (restore-only tier - byte-exact, F-230 cannot reach; halves the 32-58 ms admission
+copy) + per-token/per-window telemetry (the banked ITL p99 is a mean-of-gaps artifact; the engine
+times every window and discards it - this is the instrument for every future verdict).
+TIER B - THE CEILING-BREAKERS: TC-hc mma (FA-5090 proves plain mma.sync reaches 94.4% of the
+fp32-acc SOL on our silicon; band +7-14% M1; kernel-level falsifier >=1.3x) + verify-head two-rung
+(mmvq_il at T=1 + the basalt two-stage head, +3-7% M1) + the conditional-graph keep rule
+(Nightjar formalized F-270's law as gamma*(B); our exec_[T] family zeroes their dominant cost term)
++ the MSInfer gate-prescale identity (halves the GDN decode recurrence inner loop, verify_kernels
+.cu:286).
+TIER C - PLACEMENT: the F-201 CCD split (finally execute it: 7 pool workers straddle the V-cache
+L3 with the doorbell threads; 16 SMT idle) + hugepage the pinned arenas (IOTLB tax class) +
+STRATA_L2_SETASIDE_MIB=72 (60 of ~72 cap today; boot line prints the accepted carve).
+RECORD CORRECTIONS: F-271's reserve auto-raise attribution (not in the tree; conclusion stands),
+F-272's host-pin bound (1.55 GiB FLAT), T33 H3's VMM cost table (29-51 us measured on GSP - op
+COUNT is the lever). EXTERNAL VALIDATION: TreeWY/SpecLA/ReplaySSM each built the alternative to
+our chain design and lost on chains - our dead laws are the field's consensus; F-252
+double-confirmed; no banked law fell. STANDING OWED: dm/both five-boot + gates; phase-2
+diet/PDL; re-quant USER GO (the routing-KL objective question feeds it).
