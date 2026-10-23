@@ -1,0 +1,40 @@
+{
+  "schema": "strata-pdl-accuracy-v1",
+  "created": "2026-10-23",
+  "by": "T38 implementer (V2, T37-pathways-memory.md section 3)",
+  "purpose": "The on-disk accuracy record for programmatic dependent launch, in the shape of TRT-LLM's PDL protocol (PDL default-on there since PR #9695 with a per-kernel WAR-disable list and an accuracy record after real NaN regressions). Every STRATA_DF_PDL-armed boot appends one entry: which families were armed, which were WAR-off, the boot's golden hash and M3b, and the verdict. An armed boot without an entry here is not a banked result.",
+  "family_vocabulary": [
+    "quantize_q8_1",
+    "mmvq",
+    "bf16_mmvf",
+    "dense_tc",
+    "dense_tc_pair",
+    "dense_tc_one",
+    "dense_tc_tile",
+    "dense_tc_l2",
+    "stamp"
+  ],
+  "war_default": ["quantize_q8_1"],
+  "war_default_reason": "The quant-class q8 store (native_quantize_q8_1_kernel, the x_q8_1 every following projection reads) is the pair class TRT-LLM disabled after actual NaN regressions; the CUDA PDL guide's own visibility warning (a secondary kernel must cudaGridDependencySynchronize before reading the primary's data) is the mechanism. Armed only by explicitly removing it: STRATA_DF_PDL_OFF=-quantize_q8_1, and then it pays the nsys overlap probe plus a golden-hash/M3b entry before it stays armed. Note (T38 anchor correction): the gu_swiglu q8 stores the T37 dossier also names (native_swiglu_quantize_q8_1_kernel, s2_expert_grouped's swiglu_quantize_q8_0_scaled_kernel) are NOT launch_pdl sites at HEAD - plain launches - so they cannot be armed and need no WAR entry; if they are ever routed through launch_pdl, add a 'swiglu_quantize' family here and to the built-in list first.",
+  "env": {
+    "STRATA_DF_PDL": "unset/0 = PDL entirely off (the standing recipe; nothing changes). 1 = arm; 2 = single-predecessor programmatic edges only. The kill switch exists only in the armed state.",
+    "STRATA_DF_PDL_OFF": "comma-separated family names consulted per launch (launch_pdl -> pdl_family_off). Grammar: name adds; -name removes (including a built-in default); all = every family off; none = clear the set (defaults included); an unknown name is reported once and ignored. The boot prints one 'strata pdl: armed (STRATA_DF_PDL=N); K of 9 families WAR-off: ...' line per device, with (defaults) or (STRATA_DF_PDL_OFF applied)."
+  },
+  "rollback": {
+    "global": "unset STRATA_DF_PDL (or export STRATA_DF_PDL=0) - one launcher line",
+    "surgical": "export STRATA_DF_PDL_OFF=<family>[,<family>...] - per family/per pair",
+    "code": "engine/strata.pre-t38 (the pre-T38 binary)"
+  },
+  "append_protocol": "Append one entry per armed boot: {date, arm, mode (STRATA_DF_PDL value), war_off (from the 'strata pdl:' boot line), golden_hash (campaign/probe-metrics.py), m3b (probe-lane/mimic read), verdict}. No armed boot becomes an adoption without its entry; a pair armed by -quantize_q8_1 also needs its nsys overlap probe recorded.",
+  "entries": [
+    {
+      "date": "2026-10-23",
+      "arm": "standing (PDL unarmed)",
+      "mode": null,
+      "war_off": ["quantize_q8_1"],
+      "golden_hash": null,
+      "m3b": null,
+      "verdict": "baseline: PDL off; F-191's no-op verdict stands as a correct measurement of a too-partial chain (T26-3/T37 re-price), not as a falsification of the full chain. No armed entry booked yet - the first STRATA_DF_PDL=1 arm belongs to the main loop's battery."
+    }
+  ]
+}

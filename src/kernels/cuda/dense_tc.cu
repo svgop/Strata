@@ -1039,7 +1039,7 @@ void launch_s(const void* w, const void* x, float* y, int n_in, int n_out, int n
     if (occ < 1) occ = 1;
     const int ntiles = (n_out + 16 * MT - 1) / (16 * MT);
     const int grid = ntiles < occ * sm_count() ? ntiles : occ * sm_count();
-    launch_pdl(dense_tc_kernel<TYPE, S, MT, KS>, dim3((unsigned) grid), dim3(MT * KS * 128), smem, s,
+    launch_pdl("dense_tc", dense_tc_kernel<TYPE, S, MT, KS>, dim3((unsigned) grid), dim3(MT * KS * 128), smem, s,
                (const uint8_t*) w, (const uint8_t*) x, y, n_in, n_out, ncols);
 }
 
@@ -1059,7 +1059,7 @@ void launch_tile(const void* w, const void* x, float* y, int n_in, int n_out, in
     if (occ < 1) occ = 1;
     const int ntiles = (n_out + 15) / 16;
     const int grid = ntiles < occ * sm_count() ? ntiles : occ * sm_count();
-    launch_pdl(dense_tc_tile_kernel<TYPE>, dim3((unsigned) grid), dim3(256), (size_t) smem, s, (const uint8_t*) w,
+    launch_pdl("dense_tc_tile", dense_tc_tile_kernel<TYPE>, dim3((unsigned) grid), dim3(256), (size_t) smem, s, (const uint8_t*) w,
                (const uint8_t*) x, y, n_in, n_out, ncols, rs);
 }
 
@@ -1078,7 +1078,7 @@ void launch_one(const void* w, const void* x, float* y, int n_in, int n_out, int
         opt_in_check(cudaFuncSetAttribute(dense_tc_one_kernel<TYPE, NW>, cudaFuncAttributeMaxDynamicSharedMemorySize, 99 * 1024), "dense_tc_one");
         attr[dev].store(true, std::memory_order_release);
     }
-    launch_pdl(dense_tc_one_kernel<TYPE, NW>, dim3((unsigned) ((n_out + 15) / 16)), dim3(NW * 32),
+    launch_pdl("dense_tc_one", dense_tc_one_kernel<TYPE, NW>, dim3((unsigned) ((n_out + 15) / 16)), dim3(NW * 32),
                (size_t) one_smem_bytes<TYPE, NW>(n_in), s, (const uint8_t*) w, (const uint8_t*) x, y, n_in, n_out,
                ncols);
 }
@@ -1198,7 +1198,7 @@ void dense_tc_pair(int t0, const void* w0, float* y0, int n_out0, int t1, const 
     const int ntiles = (n_out0 + 15) / 16 + (n_out1 + 15) / 16;
     const int grid = ntiles < occ * sm_count() ? ntiles : occ * sm_count();
     const PairMat m0{(const uint8_t*) w0, y0, t0, n_out0}, m1{(const uint8_t*) w1, y1, t1, n_out1};
-    launch_pdl(kern, dim3((unsigned) grid), dim3(256), (size_t) smem, (cudaStream_t) stream, m0, m1,
+    launch_pdl("dense_tc_pair", kern, dim3((unsigned) grid), dim3(256), (size_t) smem, (cudaStream_t) stream, m0, m1,
                (const uint8_t*) x_q8_1, n_in, ncols);
     const cudaError_t e = cudaGetLastError();
     if (e != cudaSuccess) {
@@ -1209,7 +1209,7 @@ void dense_tc_pair(int t0, const void* w0, float* y0, int n_out0, int t1, const 
 
 void dense_tc_l2_prefetch(const void* w, size_t bytes, void* stream) {
     if (((uintptr_t) w & 15) != 0 || bytes < 16) return;
-    launch_pdl(dense_tc_l2_kernel, dim3(16), dim3(32), 0, (cudaStream_t) stream, (const uint8_t*) w, bytes);
+    launch_pdl("dense_tc_l2", dense_tc_l2_kernel, dim3(16), dim3(32), 0, (cudaStream_t) stream, (const uint8_t*) w, bytes);
 }
 
 int dense_tc_pair_mask() { return g_pair; }

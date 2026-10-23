@@ -12077,6 +12077,13 @@ int main(int argc, char** argv) {
                               : "a cohort window failed");
                     return false;
                 }
+                // T38 C5: the cohort lane feeds the WSTAT sample too.  The standing path's single push site (the
+                // single-window tail below) left the F-276 window p50/p99 instrument cohort-blind: at HEAD a
+                // 15,307-cohort-round boot printed zero WSTAT lines.  One sample per cohort round, the "windows
+                // done" span named just above - the same phase the standing sample covers (stage through the
+                // windows; the tails below are the TREND line's commit/emit terms).  A failed round returns above,
+                // so only completed windows enter the histogram.
+                if (window_stats_on) window_ms.push_back((float) msd2(w0c, w1c));
                 struct AdaptRunC {
                     std::thread th;
                     bool ok = true;
@@ -12211,6 +12218,11 @@ int main(int argc, char** argv) {
                     bt_adapt_wait += msd2(wa2, Clock::now());
                 }
                 strata::core::progress().busy.store(was_busy);
+                // T38 C5: the standing path's idle flush (below) is only reached by standing windows, so a drain
+                // whose last windows were cohort rounds never printed the sample at all (the mimic boot that proved
+                // the blind spot: 15,307 cohort rounds, zero WSTAT lines).  Same all-idle condition as the standing
+                // site; report_window_stats clears window_ms, so the next flush does not re-print these samples.
+                if (!batch_on()) report_window_stats(bt_rows);
                 return true;
             }
             cohort_prev_round = false;

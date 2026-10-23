@@ -1,0 +1,77 @@
+T38 TIEBREAK start Fri Oct 23 04:58:42 PM SAST 2026
+=== BOOT t38-tiebreak (T38 binary, standing launcher) health=1 16:59:08 ===
+strata verify: STRATA_DM armed (dm_wait_combine: the CPU-rows wait, the pool rows' read and the combine in one launch on the device-plan route)
+[16:59:08] prewarm2: complement pin confirmed in /home/svg/LLM/strata-custom-2/custom-iq3_s.log
+[16:59:13] prewarm2: page cache re-warmed in 5s
+200
+200
+200
+200
+200
+200
+200
+200
+200
+[16:59:22] prewarm2: replay done (2 short + 1 mid prefill + 6-way burst) in 14s total
+=== PROBE t38-tiebreak | 2026-10-23 16:59:22 | log=/home/svg/LLM/strata-custom-2/custom-iq3_s.log
+    warmup: 8 tok in 0.29s
+    A.short[1]: 220 tok in 1.51s = 145.3 t/s
+    A.short[2]: 220 tok in 1.00s = 220.7 t/s
+    A.short[3]: 220 tok in 0.94s = 233.0 t/s
+    A.short[4]: 220 tok in 1.05s = 209.7 t/s
+    A.short[5]: 220 tok in 0.99s = 221.3 t/s
+    A.short[6]: 220 tok in 0.96s = 228.2 t/s
+    fresh-long-prompt: 80 tok out in 1.69s
+    B.short[1]: 220 tok in 1.05s = 209.0 t/s
+    B.short[2]: 220 tok in 1.03s = 214.1 t/s
+    B.short[3]: 220 tok in 1.25s = 176.0 t/s
+    B.short[4]: 220 tok in 0.94s = 234.0 t/s
+    B.short[5]: 220 tok in 0.92s = 239.4 t/s
+    B.short[6]: 220 tok in 0.90s = 245.6 t/s
+SHORT-CLASS A/B   : before long prompt 209.7 t/s -> after 219.7 t/s (5%)
+M1 single-stream : 222.1 t/s (2000 tok in 9.00s)
+M2 pair          : 198.1 t/s aggregate (1800 tok in 9.09s)
+M2 6-conc        : 292.6 t/s aggregate (3600 tok in 12.30s)
+--- engine accounting, in order (ms/window is the degradation signal) ---
+    [ 1] prompt   55 gen     8 ->    21.0 ms/window | accept  85.7% (6/7) | hit 97.3%
+    [ 2] prompt   81 gen   220 ->    13.0 ms/window | accept  64.9% (126/194) | hit 96.0%
+    [ 3] prompt   81 gen   220 ->    10.7 ms/window | accept  79.3% (134/169) | hit 98.7%
+    [ 4] prompt   81 gen   220 ->    10.3 ms/window | accept  82.3% (135/164) | hit 98.8%
+    [ 5] prompt   81 gen   220 ->    10.4 ms/window | accept  76.8% (126/164) | hit 98.5%
+    [ 6] prompt   81 gen   220 ->    10.2 ms/window | accept  77.2% (129/167) | hit 99.1%
+    [ 7] prompt   81 gen   220 ->    10.8 ms/window | accept  81.1% (137/169) | hit 98.8%
+    [ 8] prompt 5865 gen    80 ->    13.6 ms/window | accept  73.8% (48/65) | hit 96.8%
+    [ 9] prompt   81 gen   220 ->    11.1 ms/window | accept  75.7% (134/177) | hit 98.1%
+    [10] prompt   81 gen   220 ->    10.1 ms/window | accept  71.4% (125/175) | hit 99.1%
+    [11] prompt   81 gen   220 ->    10.0 ms/window | accept  72.3% (128/177) | hit 99.4%
+    [12] prompt   81 gen   220 ->    10.8 ms/window | accept  76.4% (139/182) | hit 99.0%
+    [13] prompt   81 gen   220 ->    10.2 ms/window | accept  80.1% (137/171) | hit 99.1%
+    [14] prompt   81 gen   220 ->    10.9 ms/window | accept  83.2% (144/173) | hit 99.1%
+    [15] prompt  100 gen  1493 ->    11.7 ms/window | accept  77.0% (995/1293) | hit 98.2%
+    [16] prompt 1606 gen   494 ->    14.5 ms/window | accept  73.2% (346/473) | hit 97.2%
+    [17] prompt   84 gen     1 ->    13.0 ms/window | accept   0.0% (0/0) | hit 83.7%
+    [18] prompt   85 gen     1 ->    11.0 ms/window | accept   0.0% (0/0) | hit 86.5%
+    [19] prompt   84 gen     1 ->    11.0 ms/window | accept   0.0% (0/0) | hit 83.7%
+    [20] prompt  618 gen     1 ->    12.0 ms/window | accept   0.0% (0/0) | hit 91.1%
+    [21] prompt  618 gen     1 ->    10.0 ms/window | accept   0.0% (0/0) | hit 94.5%
+    [22] prompt   84 gen     1 ->    13.0 ms/window | accept   0.0% (0/0) | hit 86.3%
+    [23] prompt   85 gen     1 ->    10.0 ms/window | accept   0.0% (0/0) | hit 89.4%
+    [24] prompt   84 gen     1 ->    15.0 ms/window | accept   0.0% (0/0) | hit 86.3%
+    [25] prompt   84 gen     1 ->     8.0 ms/window | accept   0.0% (0/0) | hit 98.1%
+    [26] prompt   84 gen     1 ->     9.0 ms/window | accept   0.0% (0/0) | hit 98.1%
+    [27] prompt   84 gen     1 ->     8.0 ms/window | accept   0.0% (0/0) | hit 97.3%
+    [28] prompt   84 gen     1 ->    12.0 ms/window | accept   0.0% (0/0) | hit 95.6%
+    [29] prompt  318 gen     1 ->     8.0 ms/window | accept   0.0% (0/0) | hit 99.0%
+    [30] prompt  318 gen     1 ->     9.0 ms/window | accept   0.0% (0/0) | hit 99.0%
+    [31] prompt  318 gen     1 ->     9.0 ms/window | accept   0.0% (0/0) | hit 98.8%
+    [32] prompt  318 gen     1 ->    11.0 ms/window | accept   0.0% (0/0) | hit 99.2%
+    [33] prompt  318 gen     1 ->     8.0 ms/window | accept   0.0% (0/0) | hit 99.2%
+    [34] prompt  318 gen     1 ->     9.0 ms/window | accept   0.0% (0/0) | hit 99.4%
+TREND ms/window: early 11.9 -> late 10.2 (stable)
+M3b rate         : 76.3% mean over 15 requests (diagnostic)
+M3d per-position : not printed (arm STRATA_SPEC_DEPTH=1 to publish accepted/tested by depth)
+=== PROBE END t38-tiebreak
+[metrics t38-tiebreak] TTFT p50/p99 364ms/2260ms  ITL p99 20ms  accept 76.5%  clock 2962.0MHz 42.0C 98.19W  golden dbb294a93550f4fc  DRIFT a974bc5a6f6c8ec6 -> dbb294a93550f4fc
+SERVER LEFT RUNNING (user monitor tab live) 17:00:09
+T38 TIEBREAK end Fri Oct 23 05:00:09 PM SAST 2026
+done

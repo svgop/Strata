@@ -9306,3 +9306,48 @@ parity rig -> C1 Gate-0 stretch; main loop batteries its arms on report. STANDIN
 F-276 six + STRATA_DM (dm composes on the device-plan route). OWED: implementer batteries; PIN_GUARD
 boot; diet tranche-1 arms; decode-share-0.9 pricing 3v3; 9-wide telemetry leg (post-C5);
 prescale isolated boot + KL pair; CCD_SPLIT redo; re-quant USER GO.
+
+## F-278 — 2026-10-23 ~17:15: T38 LANDED (C5 + V2) AND DEPLOY-VERIFIED BY A FOUR-LEG
+## INTERLEAVE; mid_chain stopped honestly at the parity gate
+THE IMPLEMENTER'S VERDICTS (every claim main-loop-verified at HEAD before commit):
+(1) GDN = 36 LAYERS SETTLED (geometry.hpp:25-26/67; graph.hpp:45; independent GGUF re-parse:
+attn_qkv 22 Q6_K + 10 Q5_K + 2 Q4_K + 2 IQ4_XS = 36 — T26-1 right, T26-3's 24 wrong; V4
+arithmetic scales x1.5 on 36). (2) C5 LANDED + BOOT-VERIFIED, and the dossier's one-line
+prescription was INCOMPLETE: the standing path's WSTAT flush never fires for a cohort-drained
+boot (HEAD evidence: a 15,307-cohort-round boot printed ZERO WSTAT lines) — the fix needs the
+cohort push (generate.cpp:12085, after the failure check) AND the cohort-side idle flush
+(:12223). First live cohort-lane histogram: 363 windows, p50 23.8 / p99 30.7 / max 42.6 ms —
+the C2a/C3 overlap program now has its instrument. (3) V2 LANDED: STRATA_DF_PDL_OFF grammar
+(add/-remove/all/none, warn-once unknowns), all 19 launch_pdl families COMPILE-ENFORCED named,
+WAR default = quantize_q8_1 (TRT-LLM discipline), pdl_parity green on every arm, on-disk
+accuracy record campaign/pdl-accuracy.json; STRATA_DF_PDL unset = byte-identical behavior.
+Correction banked: gu_swiglu q8 stores are NOT launch_pdl sites at HEAD. (4) MID_CHAIN
+STOPPED AT THE PARITY GATE — the bitwise-first rule working as designed: the donor's pair is
+NOT bitwise vs our standing pair on the pack's 17 real type-triples x T=1..4 (68 cases x 3
+iterations: 0 bitwise, ~19% of output bytes differ at deterministic rel ~1.0-1.3e-7 = fp32
+summation-order class), AND the donor's own header claim "same operations (and bits) as
+dense_tc_pair" is FALSE at fb0944c7 on our shapes; the harness is proven (our dense_tc port
+is bitwise vs native_mmvq on 23 kernel + 12 pair cases), so this is a real divergence surface.
+dec_gdn_rec not attempted (gated on mid_chain green). Any future adoption = an explicit
+F-230-class M3b/KL-gated decision, never a near-miss. Reopen: build/mid_chain_parity after a
+donor revision or a port that adopts dense_tc_pair's term order. (5) C1 GATE-0: gap analysis
+only (three concrete design gaps: the coupled-twin graphs round_exec_c_/step_exec_c_ the
+dossier never addressed; the PLE-prefetch/wait_step interleave + g_dt timing decomposition;
+the record_step/record_round split our mtp.cpp lacks). No guessed code.
+THE DEPLOY VERIFICATION ARC (a four-leg interleave on the BINARY variable, the F-203 law;
+user called the decisive leg): A1 new/busy 205.6/205.7/295.8 -> B1 rollback/busy
+207.6/215.3/314.2 -> A2 new/QUIET 222.1/198.1/292.6 -> B2 rollback/QUIET
+195.8/193.2/299.5. VERDICT: NO BINARY EFFECT on any lane (pair means 201.9 vs 204.3, conc
+294.2 vs 306.9, solo favors the new binary 213.9 vs 201.7 — all inside single-boot noise);
+B1's 215.3/314.2 was the outlier. TWO LESSONS: (a) the user's own device activity taxes the
+CONC/PAIR lanes via host-core preemption (the eunomia 15.3ms class, live-confirmed: quiet-box
+solo jumped +16 to the day's best 222.1 while busy-window legs sat 205-208) — adoption
+batteries stay quiet-box policy; (b) pair/conc single boots swing +-5-8% on this box
+independent of binary (the F-263 five-boot pooled law remains the only judge for conc-class
+questions). Rollback: engine/strata.pre-t38 (one cp); C5 revert = two hunks in generate.cpp;
+V2 revert = pdl.hpp + verify_kernels.cu + the 19 family names.
+OWED (main loop, next quiet window): V2 re-price arm STRATA_DF_PDL=1 (+nsys per-pair probe,
+pdl-accuracy.json entries, then 3v3 only if overlap shows — F-191's null is EXPLAINED as
+partial-chain-inside-noise, no longer citable as falsification); PIN_GUARD=2 cold-start boot;
+diet tranche-1 four one-boot arms; decode-share-0.9 pricing 3v3; prescale isolated boot + KL
+pair; CCD_SPLIT redo; TC-hc rung-0 microbench; 9-wide telemetry leg (C5 now live).

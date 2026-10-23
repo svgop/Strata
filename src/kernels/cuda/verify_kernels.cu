@@ -18,6 +18,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <mutex>
+#include <string>
 #include <utility>
 #include <vector>
 
@@ -1938,7 +1939,7 @@ __global__ void noop_kernel() {}
 }  // namespace
 void gpu_noop(void* stream) { noop_kernel<<<1, 32, 0, (cudaStream_t) stream>>>(); }
 void gpu_stamp(unsigned long long* buf, int i, void* stream) {
-    if (pdl_scope()) launch_pdl(gpu_stamp_kernel<true>, dim3(1), dim3(1), 0, (cudaStream_t) stream, buf, i);
+    if (pdl_scope()) launch_pdl("stamp", gpu_stamp_kernel<true>, dim3(1), dim3(1), 0, (cudaStream_t) stream, buf, i);
     else gpu_stamp_kernel<false><<<1, 1, 0, (cudaStream_t) stream>>>(buf, i);
 }
 
@@ -1973,6 +1974,102 @@ bool& pdl_scope() {
     return on;
 }
 
+#if !defined(__HIPCC__)
+namespace {
+// T38 V2: the kernel families a launch_pdl call site can name (the STRATA_DF_PDL_OFF vocabulary; keep in step
+// with the launch sites).  A name outside this list in STRATA_DF_PDL_OFF is reported once and ignored: a typo
+// must not silently look like a kill switch that took effect.
+constexpr const char* kPdlFamilies[] = {
+    "quantize_q8_1", "mmvq", "bf16_mmvf", "dense_tc", "dense_tc_pair", "dense_tc_one", "dense_tc_tile",
+    "dense_tc_l2", "stamp",
+};
+bool pdl_family_known(const std::string& n) {
+    for (const char* f : kPdlFamilies)
+        if (n == f) return true;
+    return false;
+}
+struct PdlOffSet {
+    bool all = false;                  // STRATA_DF_PDL_OFF=all (or "none" cleared then something re-added)
+    std::vector<std::string> names;    // resolved OFF names, defaults included (the boot line prints these)
+    bool has(const char* family) const {
+        for (const std::string& n : names)
+            if (n == family) return true;
+        return false;
+    }
+};
+const PdlOffSet& pdl_off_set() {
+    // Parsed once.  Grammar: comma-separated family names; "all" = every family; "none" = clear the set (the
+    // built-in WAR defaults included); "-name" = remove `name`; anything else adds.  Unset env keeps the
+    // built-in WAR list.  The defaults copy TRT-LLM's discipline for the quant-class kernels: their q8 stores
+    // were switched to ordinary launches there after real NaN regressions, and the CUDA PDL guide's own
+    // visibility warning (a secondary kernel must cudaGridDependencySynchronize before reading the primary's
+    // data) is the mechanism.  Our armed quant kernel (native_quantize_q8_1_kernel, launched from
+    // native_quantize_q8_1) publishes the x_q8_1 every following projection reads, so it stays WAR-off unless
+    // an arm removes it explicitly (-quantize_q8_1) and pays the accuracy record and its nsys probe.
+    static const PdlOffSet off = [] {
+        PdlOffSet o;
+        o.names.push_back("quantize_q8_1");
+        const char* v = std::getenv("STRATA_DF_PDL_OFF");
+        if (v == nullptr) return o;
+        std::string s(v);
+        size_t pos = 0;
+        while (pos <= s.size()) {
+            const size_t comma = s.find(',', pos);
+            std::string tok = s.substr(pos, comma == std::string::npos ? std::string::npos : comma - pos);
+            pos = comma == std::string::npos ? s.size() + 1 : comma + 1;
+            while (!tok.empty() && (tok.front() == ' ' || tok.front() == '\t')) tok.erase(tok.begin());
+            while (!tok.empty() && (tok.back() == ' ' || tok.back() == '\t')) tok.pop_back();
+            if (tok.empty()) continue;
+            if (tok == "all") { o.all = true; continue; }
+            if (tok == "none") { o.names.clear(); continue; }
+            const bool remove = tok[0] == '-';
+            if (remove) tok.erase(tok.begin());
+            if (!pdl_family_known(tok)) {
+                std::fprintf(stderr, "strata pdl: STRATA_DF_PDL_OFF names unknown family \"%s\" (ignored; known:",
+                             tok.c_str());
+                for (const char* f : kPdlFamilies) std::fprintf(stderr, " %s", f);
+                std::fprintf(stderr, ")\n");
+                continue;
+            }
+            if (remove) {
+                o.names.erase(std::remove(o.names.begin(), o.names.end(), tok), o.names.end());
+            } else if (!o.has(tok.c_str())) {
+                o.names.push_back(tok);
+            }
+        }
+        return o;
+    }();
+    return off;
+}
+}  // namespace
+
+// T38 V2: per-family kill switch (pdl.hpp): false = may arm, true = ordinary launch.  See pdl_off_set above for
+// the env grammar and the WAR defaults.  Called from launch_pdl before pdl_launch_ok, so an OFF family never
+// gets the attribute on any path.
+bool pdl_family_off(const char* family) {
+    if (family == nullptr) return true;   // a nameless launch never arms (every site must say its family)
+    const PdlOffSet& o = pdl_off_set();
+    if (o.all) return true;
+    return o.has(family);
+}
+
+// one line per device, when PDL is armed: the record data every armed battery boot carries (families OFF; the
+// accuracy protocol in campaign/pdl-accuracy.json appends per-boot hash + M3b beside this line)
+void pdl_boot_line(int mode) {
+    const PdlOffSet& o = pdl_off_set();
+    std::fprintf(stderr, "strata pdl: armed (STRATA_DF_PDL=%d); ", mode);
+    if (o.all) {
+        std::fprintf(stderr, "every family WAR-off (all)");
+    } else {
+        std::fprintf(stderr, "%zu of %zu families WAR-off:", o.names.size(),
+                     sizeof(kPdlFamilies) / sizeof(kPdlFamilies[0]));
+        if (o.names.empty()) std::fprintf(stderr, " none");
+        for (const std::string& n : o.names) std::fprintf(stderr, " %s", n.c_str());
+    }
+    std::fprintf(stderr, "%s\n", std::getenv("STRATA_DF_PDL_OFF") ? " (STRATA_DF_PDL_OFF applied)" : " (defaults)");
+}
+#endif  // !__HIPCC__
+
 bool pdl_supported() {
 #if defined(__HIPCC__) || !defined(CUDART_VERSION) || CUDART_VERSION < 12030
     return false;   // HIP; or a CUDA runtime without the capture-dependency query pdl_launch_ok needs
@@ -1984,7 +2081,8 @@ bool pdl_supported() {
     if (cudaGetDevice(&dev) != cudaSuccess || dev < 0 || dev >= 64) { cudaGetLastError(); return false; }
     int s = state[dev].load(std::memory_order_relaxed);
     if (s == 0) {
-        static const bool env_on = [] { const char* v = std::getenv("STRATA_DF_PDL"); return v != nullptr && std::atoi(v) != 0; }();   // opt-in until the A/B says otherwise
+        static const int mode = [] { const char* v = std::getenv("STRATA_DF_PDL"); return v ? std::atoi(v) : 1; }();   // opt-in until the A/B says otherwise
+        const bool env_on = mode != 0;
         int major = 0;
         cudaFuncAttributes fa{};
         const bool on = env_on && cudaDeviceGetAttribute(&major, cudaDevAttrComputeCapabilityMajor, dev) == cudaSuccess &&
@@ -1994,6 +2092,7 @@ bool pdl_supported() {
         cudaGetLastError();
         s = on ? 1 : 2;
         state[dev].store(s, std::memory_order_relaxed);
+        if (on) pdl_boot_line(mode);   // T38 V2: the armed families/WAR list, once per device
     }
     return s == 1;
 #endif

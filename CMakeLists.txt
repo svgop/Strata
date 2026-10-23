@@ -487,6 +487,19 @@ if(STRATA_ENABLE_CUDA OR STRATA_ENABLE_HIP)
     target_link_libraries(dm_plan_parity PRIVATE strata_kernels CUDA::cudart)
     add_test(NAME dm_plan_parity COMMAND dm_plan_parity)
     set_tests_properties(dm_plan_parity PROPERTIES SKIP_RETURN_CODE 77 TIMEOUT 300)
+    # T38 V4 (the mid_chain port's bitwise-first gate): the donor's persistent mid_chain projection pair,
+    # standalone from the vendored jesdga95/basalt fb0944c7 tree (third_party/basalt-fb0944c7), against our
+    # standing spine's projections (native_quantize_q8_1 + native_mmvq), bitwise per byte over the pack's 17
+    # real (attn_qkv, attn_gate, ssm_out) type triples x T = 1..4; GPU, synthetic weights, no model.
+    # NOT registered as a ctest: its verdict is a DIAGNOSTIC (the T38 run found the donor NOT bitwise and
+    # stopped the port - see the file header), so it must be run explicitly, not assert a red build:
+    #     build/mid_chain_parity [--case q,z,o] [--iters N]
+    add_executable(mid_chain_parity src/kernels/mid_chain_parity.cpp
+                   third_party/basalt-fb0944c7/src/kernels/cuda/hc_fused.cu
+                   third_party/basalt-fb0944c7/src/kernels/cuda/mid_chain.cu)
+    target_include_directories(mid_chain_parity PRIVATE ${CMAKE_CUDA_TOOLKIT_INCLUDE_DIRECTORIES}
+                               third_party/basalt-fb0944c7/include third_party/basalt-fb0944c7/src/kernels/cuda)
+    target_link_libraries(mid_chain_parity PRIVATE strata_kernels CUDA::cudart)
     add_executable(qsa_topk_active_parity src/kernels/qsa_topk_active_parity.cpp)
     target_include_directories(qsa_topk_active_parity PRIVATE ${CMAKE_CUDA_TOOLKIT_INCLUDE_DIRECTORIES})
     target_link_libraries(qsa_topk_active_parity PRIVATE strata_kernels CUDA::cudart)

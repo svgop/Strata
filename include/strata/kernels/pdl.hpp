@@ -57,6 +57,13 @@ inline constexpr bool kPdlPrefetch = true;    // CUDA: the weights a kernel can 
 #endif
 /// `kernel` may be launched with the PDL attribute into `stream` now (see the header comment).
 bool pdl_launch_ok(const void* kernel, cudaStream_t stream);
+
+/// T38 V2 (STRATA_DF_PDL_OFF=<family,...>): whether `family` is opted OUT of PDL.  The kill switch runs beside
+/// `pdl_launch_ok` (no launch attribute is added for a family that is off), so an off family keeps its ordinary
+/// launch exactly as with PDL unset.  A built-in WAR list (the quant-class kernels TRT-LLM disabled after real
+/// NaN regressions) applies by default; see the implementation for the env grammar.  Not declared on HIP (there
+/// the launch is ordinary everywhere, so no switch is needed).
+bool pdl_family_off(const char* family);
 #endif
 
 __device__ __forceinline__ void pdl_wait() {
@@ -71,13 +78,16 @@ __device__ __forceinline__ void pdl_trigger() {
 #endif
 }
 
-/// `kernel<<<grid, block, smem, stream>>>(args...)`, with the PDL attribute when `pdl_launch_ok` says so.  A launch
-/// error stays the thread's last error for the caller's own check (cudaGetLastError) to report.
+/// `kernel<<<grid, block, smem, stream>>>(args...)`, with the PDL attribute when `pdl_launch_ok` says so and
+/// `family` is not in the STRATA_DF_PDL_OFF set (T38 V2).  Every call site names its kernel family so the kill
+/// switch is per family (or per pair, where a pair family has its own name); a family name that is not in the
+/// known list is reported once and treated as ON.  A launch error stays the thread's last error for the caller's
+/// own check (cudaGetLastError) to report.
 template <typename... KArgs, typename... Args>
-inline void launch_pdl(void (*kernel)(KArgs...), dim3 grid, dim3 block, size_t smem, cudaStream_t stream,
-                       Args&&... args) {
+inline void launch_pdl(const char* family, void (*kernel)(KArgs...), dim3 grid, dim3 block, size_t smem,
+                       cudaStream_t stream, Args&&... args) {
 #if !defined(__HIPCC__)
-    if (pdl_scope() && pdl_launch_ok((const void*) kernel, stream)) {
+    if (pdl_scope() && !pdl_family_off(family) && pdl_launch_ok((const void*) kernel, stream)) {
         cudaLaunchConfig_t cfg = {};
         cfg.gridDim = grid;
         cfg.blockDim = block;
@@ -91,6 +101,8 @@ inline void launch_pdl(void (*kernel)(KArgs...), dim3 grid, dim3 block, size_t s
         (void) cudaLaunchKernelEx(&cfg, kernel, std::forward<Args>(args)...);
         return;
     }
+#else
+    (void) family;   // HIP: no PDL, every launch is ordinary (pdl_scope() is never set there)
 #endif
     kernel<<<grid, block, smem, stream>>>(std::forward<Args>(args)...);
 }

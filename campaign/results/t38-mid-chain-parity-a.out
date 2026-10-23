@@ -1,0 +1,206 @@
+types 14/14/14 x7 T=1: qkv     7662/    40960 bytes differ  z     4587/    24576 bytes differ  | donor qkv vs ref: max|d| 4.883e-04 rel 1.178e-07 rms 1.109e-07; z: max|d| 4.883e-04 rel 1.151e-07 rms 1.093e-07  [last of 3 iters, 0 matched; untouched-0xAA qkv 0 z 0]
+    first qkv diff at byte 0 (element 0 of 10240): see above
+    first z   diff at byte 0 (element 0 of 6144)
+types 14/14/14 x7 T=2: qkv    15404/    81920 bytes differ  z     9168/    49152 bytes differ  | donor qkv vs ref: max|d| 4.883e-04 rel 1.162e-07 rms 1.111e-07; z: max|d| 6.104e-04 rel 1.310e-07 rms 1.106e-07  [last of 3 iters, 0 matched; untouched-0xAA qkv 0 z 0]
+    first qkv diff at byte 0 (element 0 of 20480): see above
+    first z   diff at byte 0 (element 0 of 12288)
+types 14/14/14 x7 T=3: qkv    23046/   122880 bytes differ  z    13713/    73728 bytes differ  | donor qkv vs ref: max|d| 4.883e-04 rel 1.162e-07 rms 1.117e-07; z: max|d| 6.104e-04 rel 1.310e-07 rms 1.105e-07  [last of 3 iters, 0 matched; untouched-0xAA qkv 0 z 0]
+    first qkv diff at byte 0 (element 0 of 30720): see above
+    first z   diff at byte 0 (element 0 of 18432)
+types 14/14/14 x7 T=4: qkv    30842/   163840 bytes differ  z    26866/    98304 bytes differ  | donor qkv vs ref: max|d| 4.883e-04 rel 1.162e-07 rms 1.114e-07; z: max|d| 4.149e+03 rel 8.906e-01 rms 3.490e-01  [last of 3 iters, 0 matched; untouched-0xAA qkv 0 z 2628]
+    first qkv diff at byte 0 (element 0 of 40960): see above
+    first z   diff at byte 0 (element 0 of 24576)
+types 14/12/14 x6 T=1: qkv     7820/    40960 bytes differ  z     4606/    24576 bytes differ  | donor qkv vs ref: max|d| 4.883e-04 rel 1.088e-07 rms 1.133e-07; z: max|d| 1.221e-04 rel 1.256e-07 rms 1.131e-07  [last of 3 iters, 0 matched; untouched-0xAA qkv 0 z 0]
+    first qkv diff at byte 0 (element 0 of 10240): see above
+    first z   diff at byte 0 (element 0 of 6144)
+types 14/12/14 x6 T=2: qkv    15510/    81920 bytes differ  z     9415/    49152 bytes differ  | donor qkv vs ref: max|d| 4.883e-04 rel 1.088e-07 rms 1.117e-07; z: max|d| 1.221e-04 rel 1.188e-07 rms 1.188e-07  [last of 3 iters, 0 matched; untouched-0xAA qkv 0 z 0]
+    first qkv diff at byte 0 (element 0 of 20480): see above
+    first z   diff at byte 0 (element 0 of 12288)
+types 14/12/14 x6 T=3: qkv    23150/   122880 bytes differ  z    13990/    73728 bytes differ  | donor qkv vs ref: max|d| 4.883e-04 rel 9.762e-08 rms 1.119e-07; z: max|d| 1.221e-04 rel 1.047e-07 rms 1.152e-07  [last of 3 iters, 0 matched; untouched-0xAA qkv 0 z 0]
+    first qkv diff at byte 0 (element 0 of 30720): see above
+    first z   diff at byte 0 (element 0 of 18432)
+types 14/12/14 x6 T=4: qkv    30854/   163840 bytes differ  z    18710/    98304 bytes differ  | donor qkv vs ref: max|d| 6.104e-04 rel 1.100e-07 rms 1.114e-07; z: max|d| 1.526e-04 rel 1.308e-07 rms 1.161e-07  [last of 3 iters, 0 matched; untouched-0xAA qkv 0 z 0]
+    first qkv diff at byte 0 (element 0 of 40960): see above
+    first z   diff at byte 0 (element 0 of 24576)
+types 13/14/14 x3 T=1: qkv     7806/    40960 bytes differ  z     4605/    24576 bytes differ  | donor qkv vs ref: max|d| 2.441e-04 rel 1.171e-07 rms 1.144e-07; z: max|d| 4.883e-04 rel 1.228e-07 rms 1.099e-07  [last of 3 iters, 0 matched; untouched-0xAA qkv 0 z 0]
+    first qkv diff at byte 0 (element 0 of 10240): see above
+    first z   diff at byte 0 (element 0 of 6144)
+types 13/14/14 x3 T=2: qkv    15714/    81920 bytes differ  z     9271/    49152 bytes differ  | donor qkv vs ref: max|d| 3.662e-04 rel 1.757e-07 rms 1.196e-07; z: max|d| 4.883e-04 rel 1.228e-07 rms 1.118e-07  [last of 3 iters, 0 matched; untouched-0xAA qkv 0 z 0]
+    first qkv diff at byte 0 (element 0 of 20480): see above
+    first z   diff at byte 0 (element 0 of 12288)
+types 13/14/14 x3 T=3: qkv    23458/   122880 bytes differ  z    13930/    73728 bytes differ  | donor qkv vs ref: max|d| 3.662e-04 rel 1.757e-07 rms 1.171e-07; z: max|d| 4.883e-04 rel 1.228e-07 rms 1.121e-07  [last of 3 iters, 0 matched; untouched-0xAA qkv 0 z 0]
+    first qkv diff at byte 0 (element 0 of 30720): see above
+    first z   diff at byte 0 (element 0 of 18432)
+types 13/14/14 x3 T=4: qkv    31220/   163840 bytes differ  z    18505/    98304 bytes differ  | donor qkv vs ref: max|d| 3.662e-04 rel 1.757e-07 rms 1.177e-07; z: max|d| 4.883e-04 rel 1.228e-07 rms 1.119e-07  [last of 3 iters, 0 matched; untouched-0xAA qkv 0 z 0]
+    first qkv diff at byte 0 (element 0 of 40960): see above
+    first z   diff at byte 0 (element 0 of 24576)
+types 14/23/14 x3 T=1: qkv     7675/    40960 bytes differ  z     4369/    24576 bytes differ  | donor qkv vs ref: max|d| 4.883e-04 rel 1.289e-07 rms 1.100e-07; z: max|d| 4.883e-04 rel 1.247e-07 rms 1.009e-07  [last of 3 iters, 0 matched; untouched-0xAA qkv 0 z 0]
+    first qkv diff at byte 0 (element 0 of 10240): see above
+    first z   diff at byte 12 (element 3 of 6144)
+types 14/23/14 x3 T=2: qkv    15400/    81920 bytes differ  z     8803/    49152 bytes differ  | donor qkv vs ref: max|d| 7.324e-04 rel 1.745e-07 rms 1.115e-07; z: max|d| 4.883e-04 rel 1.247e-07 rms 1.016e-07  [last of 3 iters, 0 matched; untouched-0xAA qkv 0 z 0]
+    first qkv diff at byte 0 (element 0 of 20480): see above
+    first z   diff at byte 12 (element 3 of 12288)
+types 14/23/14 x3 T=3: qkv    23143/   122880 bytes differ  z    13281/    73728 bytes differ  | donor qkv vs ref: max|d| 7.324e-04 rel 1.745e-07 rms 1.120e-07; z: max|d| 7.324e-04 rel 1.870e-07 rms 1.018e-07  [last of 3 iters, 0 matched; untouched-0xAA qkv 0 z 0]
+    first qkv diff at byte 0 (element 0 of 30720): see above
+    first z   diff at byte 12 (element 3 of 18432)
+types 14/23/14 x3 T=4: qkv    30852/   163840 bytes differ  z    17701/    98304 bytes differ  | donor qkv vs ref: max|d| 7.324e-04 rel 1.518e-07 rms 1.118e-07; z: max|d| 7.324e-04 rel 1.806e-07 rms 1.016e-07  [last of 3 iters, 0 matched; untouched-0xAA qkv 0 z 0]
+    first qkv diff at byte 0 (element 0 of 40960): see above
+    first z   diff at byte 12 (element 3 of 24576)
+types 13/23/14 x3 T=1: qkv     7708/    40960 bytes differ  z     4445/    24576 bytes differ  | donor qkv vs ref: max|d| 3.052e-04 rel 1.169e-07 rms 1.153e-07; z: max|d| 4.883e-04 rel 1.356e-07 rms 1.024e-07  [last of 3 iters, 0 matched; untouched-0xAA qkv 0 z 0]
+    first qkv diff at byte 0 (element 0 of 10240): see above
+    first z   diff at byte 0 (element 0 of 6144)
+types 13/23/14 x3 T=2: qkv    15657/    81920 bytes differ  z     8857/    49152 bytes differ  | donor qkv vs ref: max|d| 3.052e-04 rel 1.169e-07 rms 1.185e-07; z: max|d| 4.883e-04 rel 1.356e-07 rms 1.009e-07  [last of 3 iters, 0 matched; untouched-0xAA qkv 0 z 0]
+    first qkv diff at byte 0 (element 0 of 20480): see above
+    first z   diff at byte 0 (element 0 of 12288)
+types 13/23/14 x3 T=3: qkv    23443/   122880 bytes differ  z    13368/    73728 bytes differ  | donor qkv vs ref: max|d| 3.052e-04 rel 1.169e-07 rms 1.159e-07; z: max|d| 4.883e-04 rel 1.307e-07 rms 1.011e-07  [last of 3 iters, 0 matched; untouched-0xAA qkv 0 z 0]
+    first qkv diff at byte 0 (element 0 of 30720): see above
+    first z   diff at byte 0 (element 0 of 18432)
+types 13/23/14 x3 T=4: qkv    31269/   163840 bytes differ  z    17864/    98304 bytes differ  | donor qkv vs ref: max|d| 3.662e-04 rel 1.403e-07 rms 1.171e-07; z: max|d| 4.883e-04 rel 1.307e-07 rms 1.022e-07  [last of 3 iters, 0 matched; untouched-0xAA qkv 0 z 0]
+    first qkv diff at byte 0 (element 0 of 40960): see above
+    first z   diff at byte 0 (element 0 of 24576)
+types 12/12/14 x2 T=1: qkv     7749/    40960 bytes differ  z     4668/    24576 bytes differ  | donor qkv vs ref: max|d| 1.221e-04 rel 1.150e-07 rms 1.137e-07; z: max|d| 1.221e-04 rel 1.240e-07 rms 1.149e-07  [last of 3 iters, 0 matched; untouched-0xAA qkv 0 z 0]
+    first qkv diff at byte 0 (element 0 of 10240): see above
+    first z   diff at byte 0 (element 0 of 6144)
+types 12/12/14 x2 T=2: qkv    15661/    81920 bytes differ  z     9423/    49152 bytes differ  | donor qkv vs ref: max|d| 1.526e-04 rel 1.438e-07 rms 1.181e-07; z: max|d| 1.221e-04 rel 1.240e-07 rms 1.191e-07  [last of 3 iters, 0 matched; untouched-0xAA qkv 0 z 0]
+    first qkv diff at byte 0 (element 0 of 20480): see above
+    first z   diff at byte 0 (element 0 of 12288)
+types 12/12/14 x2 T=3: qkv    23439/   122880 bytes differ  z    14120/    73728 bytes differ  | donor qkv vs ref: max|d| 1.526e-04 rel 1.438e-07 rms 1.166e-07; z: max|d| 1.221e-04 rel 1.240e-07 rms 1.176e-07  [last of 3 iters, 0 matched; untouched-0xAA qkv 0 z 0]
+    first qkv diff at byte 0 (element 0 of 30720): see above
+    first z   diff at byte 0 (element 0 of 18432)
+types 12/12/14 x2 T=4: qkv    31319/   163840 bytes differ  z    18767/    98304 bytes differ  | donor qkv vs ref: max|d| 1.831e-04 rel 1.726e-07 rms 1.175e-07; z: max|d| 1.526e-04 rel 1.550e-07 rms 1.181e-07  [last of 3 iters, 0 matched; untouched-0xAA qkv 0 z 0]
+    first qkv diff at byte 0 (element 0 of 40960): see above
+    first z   diff at byte 0 (element 0 of 24576)
+types 23/14/14 x2 T=1: qkv     7459/    40960 bytes differ  z     4595/    24576 bytes differ  | donor qkv vs ref: max|d| 4.883e-04 rel 1.286e-07 rms 1.016e-07; z: max|d| 4.883e-04 rel 1.376e-07 rms 1.112e-07  [last of 3 iters, 0 matched; untouched-0xAA qkv 0 z 0]
+    first qkv diff at byte 0 (element 0 of 10240): see above
+    first z   diff at byte 4 (element 1 of 6144)
+types 23/14/14 x2 T=2: qkv    14844/    81920 bytes differ  z     9195/    49152 bytes differ  | donor qkv vs ref: max|d| 4.883e-04 rel 1.101e-07 rms 1.011e-07; z: max|d| 7.324e-04 rel 2.000e-07 rms 1.109e-07  [last of 3 iters, 0 matched; untouched-0xAA qkv 0 z 0]
+    first qkv diff at byte 0 (element 0 of 20480): see above
+    first z   diff at byte 4 (element 1 of 12288)
+types 23/14/14 x2 T=3: qkv    22202/   122880 bytes differ  z    13862/    73728 bytes differ  | donor qkv vs ref: max|d| 4.883e-04 rel 1.101e-07 rms 1.004e-07; z: max|d| 7.324e-04 rel 1.740e-07 rms 1.117e-07  [last of 3 iters, 0 matched; untouched-0xAA qkv 0 z 0]
+    first qkv diff at byte 0 (element 0 of 30720): see above
+    first z   diff at byte 4 (element 1 of 18432)
+types 23/14/14 x2 T=4: qkv    29533/   163840 bytes differ  z    18516/    98304 bytes differ  | donor qkv vs ref: max|d| 4.883e-04 rel 1.101e-07 rms 1.001e-07; z: max|d| 7.324e-04 rel 1.688e-07 rms 1.114e-07  [last of 3 iters, 0 matched; untouched-0xAA qkv 0 z 0]
+    first qkv diff at byte 0 (element 0 of 40960): see above
+    first z   diff at byte 4 (element 1 of 24576)
+types 14/12/12 x1 T=1: qkv     7755/    40960 bytes differ  z     4649/    24576 bytes differ  | donor qkv vs ref: max|d| 4.883e-04 rel 1.148e-07 rms 1.110e-07; z: max|d| 1.221e-04 rel 1.198e-07 rms 1.143e-07  [last of 3 iters, 0 matched; untouched-0xAA qkv 0 z 0]
+    first qkv diff at byte 0 (element 0 of 10240): see above
+    first z   diff at byte 0 (element 0 of 6144)
+types 14/12/12 x1 T=2: qkv    15615/    81920 bytes differ  z     9425/    49152 bytes differ  | donor qkv vs ref: max|d| 5.493e-04 rel 1.261e-07 rms 1.116e-07; z: max|d| 1.221e-04 rel 1.128e-07 rms 1.182e-07  [last of 3 iters, 0 matched; untouched-0xAA qkv 0 z 0]
+    first qkv diff at byte 0 (element 0 of 20480): see above
+    first z   diff at byte 0 (element 0 of 12288)
+types 14/12/12 x1 T=3: qkv    23289/   122880 bytes differ  z    14094/    73728 bytes differ  | donor qkv vs ref: max|d| 5.493e-04 rel 1.261e-07 rms 1.119e-07; z: max|d| 2.441e-04 rel 1.997e-07 rms 1.171e-07  [last of 3 iters, 0 matched; untouched-0xAA qkv 0 z 0]
+    first qkv diff at byte 0 (element 0 of 30720): see above
+    first z   diff at byte 0 (element 0 of 18432)
+types 14/12/12 x1 T=4: qkv    31015/   163840 bytes differ  z    18842/    98304 bytes differ  | donor qkv vs ref: max|d| 5.493e-04 rel 1.021e-07 rms 1.116e-07; z: max|d| 2.441e-04 rel 1.997e-07 rms 1.182e-07  [last of 3 iters, 0 matched; untouched-0xAA qkv 0 z 0]
+    first qkv diff at byte 0 (element 0 of 40960): see above
+    first z   diff at byte 0 (element 0 of 24576)
+types 14/23/12 x1 T=1: qkv     7754/    40960 bytes differ  z     4464/    24576 bytes differ  | donor qkv vs ref: max|d| 4.883e-04 rel 1.141e-07 rms 1.113e-07; z: max|d| 4.883e-04 rel 1.524e-07 rms 1.016e-07  [last of 3 iters, 0 matched; untouched-0xAA qkv 0 z 0]
+    first qkv diff at byte 4 (element 1 of 10240): see above
+    first z   diff at byte 4 (element 1 of 6144)
+types 14/23/12 x1 T=2: qkv    15393/    81920 bytes differ  z     8892/    49152 bytes differ  | donor qkv vs ref: max|d| 4.883e-04 rel 1.029e-07 rms 1.114e-07; z: max|d| 4.883e-04 rel 1.117e-07 rms 1.013e-07  [last of 3 iters, 0 matched; untouched-0xAA qkv 0 z 0]
+    first qkv diff at byte 4 (element 1 of 20480): see above
+    first z   diff at byte 4 (element 1 of 12288)
+types 14/23/12 x1 T=3: qkv    23145/   122880 bytes differ  z    13351/    73728 bytes differ  | donor qkv vs ref: max|d| 4.883e-04 rel 1.022e-07 rms 1.117e-07; z: max|d| 4.883e-04 rel 1.117e-07 rms 1.019e-07  [last of 3 iters, 0 matched; untouched-0xAA qkv 0 z 0]
+    first qkv diff at byte 4 (element 1 of 30720): see above
+    first z   diff at byte 4 (element 1 of 18432)
+types 14/23/12 x1 T=4: qkv    30781/   163840 bytes differ  z    17759/    98304 bytes differ  | donor qkv vs ref: max|d| 7.324e-04 rel 1.533e-07 rms 1.116e-07; z: max|d| 4.883e-04 rel 1.117e-07 rms 1.008e-07  [last of 3 iters, 0 matched; untouched-0xAA qkv 0 z 0]
+    first qkv diff at byte 4 (element 1 of 40960): see above
+    first z   diff at byte 4 (element 1 of 24576)
+types 14/13/12 x1 T=1: qkv     7699/    40960 bytes differ  z     4617/    24576 bytes differ  | donor qkv vs ref: max|d| 4.883e-04 rel 1.149e-07 rms 1.101e-07; z: max|d| 3.662e-04 rel 1.746e-07 rms 1.153e-07  [last of 3 iters, 0 matched; untouched-0xAA qkv 0 z 0]
+    first qkv diff at byte 4 (element 1 of 10240): see above
+    first z   diff at byte 4 (element 1 of 6144)
+types 14/13/12 x1 T=2: qkv    15415/    81920 bytes differ  z     9427/    49152 bytes differ  | donor qkv vs ref: max|d| 4.883e-04 rel 1.149e-07 rms 1.108e-07; z: max|d| 3.662e-04 rel 1.746e-07 rms 1.205e-07  [last of 3 iters, 0 matched; untouched-0xAA qkv 0 z 0]
+    first qkv diff at byte 4 (element 1 of 20480): see above
+    first z   diff at byte 4 (element 1 of 12288)
+types 14/13/12 x1 T=3: qkv    23181/   122880 bytes differ  z    14046/    73728 bytes differ  | donor qkv vs ref: max|d| 4.883e-04 rel 1.149e-07 rms 1.112e-07; z: max|d| 3.662e-04 rel 1.746e-07 rms 1.185e-07  [last of 3 iters, 0 matched; untouched-0xAA qkv 0 z 0]
+    first qkv diff at byte 4 (element 1 of 30720): see above
+    first z   diff at byte 4 (element 1 of 18432)
+types 14/13/12 x1 T=4: qkv    31009/   163840 bytes differ  z    18876/    98304 bytes differ  | donor qkv vs ref: max|d| 7.324e-04 rel 1.723e-07 rms 1.117e-07; z: max|d| 3.662e-04 rel 1.746e-07 rms 1.196e-07  [last of 3 iters, 0 matched; untouched-0xAA qkv 0 z 0]
+    first qkv diff at byte 4 (element 1 of 40960): see above
+    first z   diff at byte 4 (element 1 of 24576)
+types 14/23/13 x1 T=1: qkv     7770/    40960 bytes differ  z     4744/    24576 bytes differ  | donor qkv vs ref: max|d| 4.883e-04 rel 1.304e-07 rms 1.102e-07; z: max|d| 2.548e+03 rel 7.507e-01 rms 1.334e-01  [last of 3 iters, 0 matched; untouched-0xAA qkv 0 z 100]
+    first qkv diff at byte 0 (element 0 of 10240): see above
+    first z   diff at byte 4 (element 1 of 6144)
+types 14/23/13 x1 T=2: qkv    15533/    81920 bytes differ  z     8903/    49152 bytes differ  | donor qkv vs ref: max|d| 4.883e-04 rel 1.110e-07 rms 1.118e-07; z: max|d| 4.883e-04 rel 1.215e-07 rms 9.982e-08  [last of 3 iters, 0 matched; untouched-0xAA qkv 0 z 0]
+    first qkv diff at byte 0 (element 0 of 20480): see above
+    first z   diff at byte 4 (element 1 of 12288)
+types 14/23/13 x1 T=3: qkv    23271/   122880 bytes differ  z    13341/    73728 bytes differ  | donor qkv vs ref: max|d| 4.883e-04 rel 1.110e-07 rms 1.125e-07; z: max|d| 4.883e-04 rel 1.215e-07 rms 1.013e-07  [last of 3 iters, 0 matched; untouched-0xAA qkv 0 z 0]
+    first qkv diff at byte 0 (element 0 of 30720): see above
+    first z   diff at byte 4 (element 1 of 18432)
+types 14/23/13 x1 T=4: qkv    31007/   163840 bytes differ  z    17737/    98304 bytes differ  | donor qkv vs ref: max|d| 4.883e-04 rel 1.110e-07 rms 1.122e-07; z: max|d| 4.883e-04 rel 1.146e-07 rms 1.010e-07  [last of 3 iters, 0 matched; untouched-0xAA qkv 0 z 0]
+    first qkv diff at byte 0 (element 0 of 40960): see above
+    first z   diff at byte 4 (element 1 of 24576)
+types 14/14/13 x1 T=1: qkv     7732/    40960 bytes differ  z     4591/    24576 bytes differ  | donor qkv vs ref: max|d| 4.883e-04 rel 1.313e-07 rms 1.129e-07; z: max|d| 4.883e-04 rel 1.310e-07 rms 1.115e-07  [last of 3 iters, 0 matched; untouched-0xAA qkv 0 z 0]
+    first qkv diff at byte 0 (element 0 of 10240): see above
+    first z   diff at byte 0 (element 0 of 6144)
+types 14/14/13 x1 T=2: qkv    15493/    81920 bytes differ  z     9193/    49152 bytes differ  | donor qkv vs ref: max|d| 6.104e-04 rel 1.388e-07 rms 1.123e-07; z: max|d| 4.883e-04 rel 1.259e-07 rms 1.114e-07  [last of 3 iters, 0 matched; untouched-0xAA qkv 0 z 0]
+    first qkv diff at byte 0 (element 0 of 20480): see above
+    first z   diff at byte 0 (element 0 of 12288)
+types 14/14/13 x1 T=3: qkv    23209/   122880 bytes differ  z    13787/    73728 bytes differ  | donor qkv vs ref: max|d| 6.104e-04 rel 1.311e-07 rms 1.121e-07; z: max|d| 4.883e-04 rel 1.202e-07 rms 1.110e-07  [last of 3 iters, 0 matched; untouched-0xAA qkv 0 z 0]
+    first qkv diff at byte 0 (element 0 of 30720): see above
+    first z   diff at byte 0 (element 0 of 18432)
+types 14/14/13 x1 T=4: qkv    30939/   163840 bytes differ  z    18398/    98304 bytes differ  | donor qkv vs ref: max|d| 6.104e-04 rel 1.311e-07 rms 1.126e-07; z: max|d| 4.883e-04 rel 1.202e-07 rms 1.112e-07  [last of 3 iters, 0 matched; untouched-0xAA qkv 0 z 0]
+    first qkv diff at byte 0 (element 0 of 40960): see above
+    first z   diff at byte 0 (element 0 of 24576)
+types 13/14/13 x1 T=1: qkv     7873/    40960 bytes differ  z     4631/    24576 bytes differ  | donor qkv vs ref: max|d| 2.441e-04 rel 1.282e-07 rms 1.163e-07; z: max|d| 4.883e-04 rel 1.435e-07 rms 1.106e-07  [last of 3 iters, 0 matched; untouched-0xAA qkv 0 z 0]
+    first qkv diff at byte 0 (element 0 of 10240): see above
+    first z   diff at byte 0 (element 0 of 6144)
+types 13/14/13 x1 T=2: qkv    15858/    81920 bytes differ  z     9319/    49152 bytes differ  | donor qkv vs ref: max|d| 2.441e-04 rel 1.131e-07 rms 1.208e-07; z: max|d| 7.324e-04 rel 1.802e-07 rms 1.114e-07  [last of 3 iters, 0 matched; untouched-0xAA qkv 0 z 0]
+    first qkv diff at byte 0 (element 0 of 20480): see above
+    first z   diff at byte 0 (element 0 of 12288)
+types 13/14/13 x1 T=3: qkv    23543/   122880 bytes differ  z    13909/    73728 bytes differ  | donor qkv vs ref: max|d| 2.441e-04 rel 1.131e-07 rms 1.177e-07; z: max|d| 7.324e-04 rel 1.802e-07 rms 1.109e-07  [last of 3 iters, 0 matched; untouched-0xAA qkv 0 z 0]
+    first qkv diff at byte 0 (element 0 of 30720): see above
+    first z   diff at byte 0 (element 0 of 18432)
+types 13/14/13 x1 T=4: qkv    31439/   163840 bytes differ  z    18585/    98304 bytes differ  | donor qkv vs ref: max|d| 3.052e-04 rel 1.413e-07 rms 1.183e-07; z: max|d| 7.324e-04 rel 1.726e-07 rms 1.115e-07  [last of 3 iters, 0 matched; untouched-0xAA qkv 0 z 0]
+    first qkv diff at byte 0 (element 0 of 40960): see above
+    first z   diff at byte 0 (element 0 of 24576)
+types 14/13/14 x1 T=1: qkv     7719/    40960 bytes differ  z     4662/    24576 bytes differ  | donor qkv vs ref: max|d| 4.883e-04 rel 1.197e-07 rms 1.103e-07; z: max|d| 2.441e-04 rel 1.049e-07 rms 1.143e-07  [last of 3 iters, 0 matched; untouched-0xAA qkv 0 z 0]
+    first qkv diff at byte 0 (element 0 of 10240): see above
+    first z   diff at byte 24 (element 6 of 6144)
+types 14/13/14 x1 T=2: qkv    15432/    81920 bytes differ  z     9408/    49152 bytes differ  | donor qkv vs ref: max|d| 7.324e-04 rel 1.727e-07 rms 1.111e-07; z: max|d| 2.441e-04 rel 1.049e-07 rms 1.186e-07  [last of 3 iters, 0 matched; untouched-0xAA qkv 0 z 0]
+    first qkv diff at byte 0 (element 0 of 20480): see above
+    first z   diff at byte 24 (element 6 of 12288)
+types 14/13/14 x1 T=3: qkv    23046/   122880 bytes differ  z    14054/    73728 bytes differ  | donor qkv vs ref: max|d| 7.324e-04 rel 1.727e-07 rms 1.113e-07; z: max|d| 2.441e-04 rel 1.049e-07 rms 1.170e-07  [last of 3 iters, 0 matched; untouched-0xAA qkv 0 z 0]
+    first qkv diff at byte 0 (element 0 of 30720): see above
+    first z   diff at byte 24 (element 6 of 18432)
+types 14/13/14 x1 T=4: qkv    30769/   163840 bytes differ  z    18753/    98304 bytes differ  | donor qkv vs ref: max|d| 7.324e-04 rel 1.337e-07 rms 1.117e-07; z: max|d| 3.052e-04 rel 1.311e-07 rms 1.175e-07  [last of 3 iters, 0 matched; untouched-0xAA qkv 0 z 0]
+    first qkv diff at byte 0 (element 0 of 40960): see above
+    first z   diff at byte 24 (element 6 of 24576)
+types 13/13/14 x1 T=1: qkv     7704/    40960 bytes differ  z     4663/    24576 bytes differ  | donor qkv vs ref: max|d| 2.441e-04 rel 1.296e-07 rms 1.151e-07; z: max|d| 2.441e-04 rel 1.044e-07 rms 1.158e-07  [last of 3 iters, 0 matched; untouched-0xAA qkv 0 z 0]
+    first qkv diff at byte 0 (element 0 of 10240): see above
+    first z   diff at byte 0 (element 0 of 6144)
+types 13/13/14 x1 T=2: qkv    15665/    81920 bytes differ  z     9362/    49152 bytes differ  | donor qkv vs ref: max|d| 2.441e-04 rel 1.284e-07 rms 1.196e-07; z: max|d| 2.441e-04 rel 1.044e-07 rms 1.199e-07  [last of 3 iters, 0 matched; untouched-0xAA qkv 0 z 0]
+    first qkv diff at byte 0 (element 0 of 20480): see above
+    first z   diff at byte 0 (element 0 of 12288)
+types 13/13/14 x1 T=3: qkv    23442/   122880 bytes differ  z    14001/    73728 bytes differ  | donor qkv vs ref: max|d| 2.441e-04 rel 1.150e-07 rms 1.180e-07; z: max|d| 3.052e-04 rel 1.306e-07 rms 1.171e-07  [last of 3 iters, 0 matched; untouched-0xAA qkv 0 z 0]
+    first qkv diff at byte 0 (element 0 of 30720): see above
+    first z   diff at byte 0 (element 0 of 18432)
+types 13/13/14 x1 T=4: qkv    31293/   163840 bytes differ  z    18688/    98304 bytes differ  | donor qkv vs ref: max|d| 2.441e-04 rel 1.150e-07 rms 1.185e-07; z: max|d| 3.052e-04 rel 1.306e-07 rms 1.182e-07  [last of 3 iters, 0 matched; untouched-0xAA qkv 0 z 0]
+    first qkv diff at byte 0 (element 0 of 40960): see above
+    first z   diff at byte 0 (element 0 of 24576)
+types 13/12/14 x1 T=1: qkv     7830/    40960 bytes differ  z     4641/    24576 bytes differ  | donor qkv vs ref: max|d| 2.441e-04 rel 1.077e-07 rms 1.157e-07; z: max|d| 1.221e-04 rel 1.243e-07 rms 1.141e-07  [last of 3 iters, 0 matched; untouched-0xAA qkv 0 z 0]
+    first qkv diff at byte 0 (element 0 of 10240): see above
+    first z   diff at byte 4 (element 1 of 6144)
+types 13/12/14 x1 T=2: qkv    15828/    81920 bytes differ  z     9440/    49152 bytes differ  | donor qkv vs ref: max|d| 2.594e-04 rel 1.144e-07 rms 1.202e-07; z: max|d| 1.221e-04 rel 1.243e-07 rms 1.188e-07  [last of 3 iters, 0 matched; untouched-0xAA qkv 0 z 0]
+    first qkv diff at byte 0 (element 0 of 20480): see above
+    first z   diff at byte 4 (element 1 of 12288)
+types 13/12/14 x1 T=3: qkv    23516/   122880 bytes differ  z    14087/    73728 bytes differ  | donor qkv vs ref: max|d| 3.662e-04 rel 1.615e-07 rms 1.178e-07; z: max|d| 1.221e-04 rel 1.226e-07 rms 1.169e-07  [last of 3 iters, 0 matched; untouched-0xAA qkv 0 z 0]
+    first qkv diff at byte 0 (element 0 of 30720): see above
+    first z   diff at byte 4 (element 1 of 18432)
+types 13/12/14 x1 T=4: qkv    31433/   163840 bytes differ  z    18831/    98304 bytes differ  | donor qkv vs ref: max|d| 3.662e-04 rel 1.615e-07 rms 1.190e-07; z: max|d| 1.221e-04 rel 1.043e-07 rms 1.184e-07  [last of 3 iters, 0 matched; untouched-0xAA qkv 0 z 0]
+    first qkv diff at byte 0 (element 0 of 40960): see above
+    first z   diff at byte 4 (element 1 of 24576)
+types 13/13/13 x1 T=1: qkv     7766/    40960 bytes differ  z     4589/    24576 bytes differ  | donor qkv vs ref: max|d| 3.052e-04 rel 1.469e-07 rms 1.144e-07; z: max|d| 2.441e-04 rel 1.276e-07 rms 1.141e-07  [last of 3 iters, 0 matched; untouched-0xAA qkv 0 z 0]
+    first qkv diff at byte 4 (element 1 of 10240): see above
+    first z   diff at byte 4 (element 1 of 6144)
+types 13/13/13 x1 T=2: qkv    15662/    81920 bytes differ  z     9358/    49152 bytes differ  | donor qkv vs ref: max|d| 3.052e-04 rel 1.469e-07 rms 1.178e-07; z: max|d| 2.441e-04 rel 1.276e-07 rms 1.194e-07  [last of 3 iters, 0 matched; untouched-0xAA qkv 0 z 0]
+    first qkv diff at byte 4 (element 1 of 20480): see above
+    first z   diff at byte 4 (element 1 of 12288)
+types 13/13/13 x1 T=3: qkv    23308/   122880 bytes differ  z    14012/    73728 bytes differ  | donor qkv vs ref: max|d| 3.052e-04 rel 1.367e-07 rms 1.157e-07; z: max|d| 2.441e-04 rel 1.276e-07 rms 1.176e-07  [last of 3 iters, 0 matched; untouched-0xAA qkv 0 z 0]
+    first qkv diff at byte 4 (element 1 of 30720): see above
+    first z   diff at byte 4 (element 1 of 18432)
+types 13/13/13 x1 T=4: qkv    31180/   163840 bytes differ  z    18705/    98304 bytes differ  | donor qkv vs ref: max|d| 3.052e-04 rel 1.367e-07 rms 1.171e-07; z: max|d| 2.441e-04 rel 1.224e-07 rms 1.189e-07  [last of 3 iters, 0 matched; untouched-0xAA qkv 0 z 0]
+    first qkv diff at byte 4 (element 1 of 40960): see above
+    first z   diff at byte 4 (element 1 of 24576)
+mid_chain_parity phase A: 68 cases, 68 diverging, 2109184/11141120 bytes differ (bitwise NO); PHASE B (rec trio + out) stays gated on this verdict
+FAIL
