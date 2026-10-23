@@ -9449,3 +9449,53 @@ full file:line specs; subagent route to be re-tried then.
 RECORDS: solo 222.4 (dm pool, now + SPEC_PROB expected ~230+), pair 209.9, conc 319.6 vs
 323.0 - the conc record is the standing target; the ternary reactor (band 355-390) is the
 queued kill-shot.
+
+## F-283 — 2026-10-24 ~00:35: THE USER'S PROTOCOL TEMPLATE ADOPTED VERBATIM (four-tier
+effort-graded reasoning protocol replaces the F-279 terse-dialect set). The user hand-wrote
+chat_template (4).jinja — a full rebuild, not a tweak: low|medium|high(default)|max tiers
+(xhigh renamed away; 'max' = interpret/anchor/solve/premortem/steelman/re-derive/calibrate),
+a thinking register with a worked example (n²+n+41) and relation symbols (→ ∴ ≠ ✓ ✗ ?),
+per-tier method + research blocks, retrieval_available AUTO-DETECTION from tool names
+(web/search/fetch/... keywords; no-tool branch forbids fabricated citations instead),
+evidence/disposition/self-awareness/integrity rules, "Instructions that follow in this
+system prompt override this protocol on style and format", and preserve_thinking default
+FALSE (prior-turn reasoning dropped from history; standing kept it).
+
+TESTS (campaign/tpl-user-render-battery.py + batteries/tpl-user-gates.sh +
+batteries/tpl-user-mimpair.sh, logs campaign/results/tpl-*):
+- Offline parity (production ChatTemplate env): ZERO engine errors; every must-raise case
+  (invalid effort / system-mid / empty) raises on both; tools round-trip, vision,
+  developer-merge all render; caps probes pass. Diffs: supports_preserve_reasoning flips
+  True→False (discovery-only, no consumer); effort 'none' raises on BOTH templates
+  (pre-existing edge, parity not regression). Absolute prompt overhead (real pack
+  tokenizer): +435 tok/conversation at default effort (579 vs 144), +147 thinking-off,
+  +270 net multi-turn x4 — the protocol prefix is SHARED, so the prompt cache amortizes it
+  to ~0 after each conversation's first request (~65 ms extra prefill once).
+- Think-probe: mean completion 616 tok vs 608 standing (parity; old-template baseline was
+  634); reasoning chars 2.1-2.6k inside the same budget = the register's symbols buy
+  density; answers 841 ch mean (band).
+- MMLU: 94.3 / 95.7 (floor 0.933) — PASSED, mean 95.0.
+- Mimic paired interleave A/B/A/B across boots (user/standing/user/standing):
+  87.9 / 87.9 / 87.9 / 90.9 — parity within noise (−1.5 pts mean = 1 item of 66; blend
+  swings 4-8 on identical templates, user mean 5 vs standing 7 on n=2 each). All four legs
+  in the banked 58-62 band. No style-defer regression: the override clause + natural-prose
+  final-answer rule hold the band.
+
+ADOPTION WIRING: serve/chat_template.jinja = the user's file verbatim (md5 461afc276cf9);
+server.py EFFORT_TEXT rewritten to the per-tier METHOD sentences (verbatim from the
+template's methods dict; #458 trailing turns stay consistent — dormant, effort_position not
+set); #728 HIGH_EFFORT/LOW_EFFORT re-anchored to " (effort: high)" / " (effort: low)" —
+the protocol header's in-context token span (leading space REQUIRED: the pack tokenizer
+merges ' ('; verified [318,6243,366,25,1496,8] hit=True; dormant, reasoning_loop_recovery
+off); chat_golden.json regenerated (rendered only; hf nulled — no transformers in .venv,
+cross-reference pending); tools.test_strata_tokenizer 18/18 OK; server rebooted, sanity
+high/low/none all clean, LEFT UP on the adopted state.
+
+WHAT IT BUYS: the terse-dialect gains (F-279: −35% thinking tokens on the puzzle class)
+now ride on a graded-protocol frame — effort scales METHOD (search breadth, verification,
+self-critique) instead of verbosity; retrieval rules activate only when web tools exist;
+honesty/anti-confabulation rules ship in the protocol itself. Token cost ~zero marginal
+(cached prefix). The 'max' tier is NEW surface (previously unreachable depth-7-class
+rigor on demand). NEXT RIDERS: five-boot pooled re-bank of the full recipe unchanged
+(template swap is orthogonal to speed arms); hf cross-reference when a transformers env
+is handy; watch blend-category on the next mimic (the only lane that leaned standing).

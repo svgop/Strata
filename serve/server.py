@@ -179,27 +179,23 @@ def write_temporary(path: Path, parts: list) -> None:
     with os.fdopen(os.open(path, flags, 0o600), "wb") as f:
         for part in parts:
             f.write(Path(part).read_bytes())
-# #458: the trailing effort turn ("effort_position": "end"); each text mirrors the template's own sentence
-# (chat_template.jinja) verbatim - the terse-dialect effort set (F-279); medium now has a template branch too
+# #458: the trailing effort turn ("effort_position": "end"); each text carries the template's own method for
+# that tier (chat_template.jinja's methods dict, F-283) verbatim - the effort-graded protocol template
 EFFORT_TURN = "<|im_start|>system\n{}<|im_end|>\n"
-EFFORT_TEXT = {"low": "Reasoning effort is set to low. Think in minimal working notes: telegraphic lines, one fact or "
-                      "step per line, no filler, no restating the prompt. Identify the request, recall or derive the "
-                      "answer, sanity-check once, then conclude. Never pad the thinking. After </think>, write the "
-                      "final answer in clear, natural prose, honoring any style the request itself asks for; "
-                      "the compact style applies to thinking only.",
-               "medium": "Reasoning effort is set to medium. Think in compact working notes: dense clauses, one step "
-                         "or fact per line, symbols and short labels over prose, no filler, no restating the prompt. "
-                         "Decompose the task, work each part, verify the crux, then conclude. Never pad the thinking. "
-                         "After </think>, write the final answer in clear, natural prose, honoring any style the "
-                         "request itself asks for; the compact style applies to thinking only.",
-               # the template's own xhigh sentence (chat_template.jinja), which #728's recovery swaps for the low one
-               "xhigh": "Reasoning effort is set to xhigh. Think in compact working notes: dense clauses, one step or "
-                        "fact per line, symbols and short labels over prose, no filler, no restating the prompt. Work "
-                        "the problem in full: enumerate the angles that matter, validate key assumptions, weigh "
-                        "plausible alternatives, check edge cases and counterexamples, and re-verify the load-bearing "
-                        "step before concluding. Depth comes from coverage and rigor, not word count. Never pad the "
-                        "thinking. After </think>, write the final answer in clear, natural prose, honoring any style "
-                        "the request itself asks for; the compact style applies to thinking only."}
+EFFORT_TEXT = {
+    "low": "Reasoning effort for this reply: low. Method (low): single path. Simplest sound derivation, one "
+           "verification pass. Escalate only on a detected error.",
+    "medium": "Reasoning effort for this reply: medium. Method (medium): decompose. At genuine forks, compare "
+              "candidates on stated criteria, choose, record why. Verify the critical path and its edge cases. "
+              "Before committing, critique the draft once as a skeptical reviewer would.",
+    "high": "Reasoning effort for this reply: high. Method (high): decompose fully. For hard subproblems, develop "
+            "competing approaches; discard losers with a stated reason. Seek disconfirmation: counterexamples, "
+            "boundaries, units, unstated constraints. Re-derive the decisive step by an independent route; reconcile "
+            "any mismatch. Review the result adversarially before committing.",
+    "max": "Reasoning effort for this reply: max. Method (max): full rigor, for problems where error is costly; "
+           "interpret, anchor, solve with competing approaches, premortem, steelman, re-derive every load-bearing "
+           "step by a different route, calibrate.",
+}
 VISION_START = "<|vision_start|>"
 # #606: a reply that repeats one token this many times in a row is ended there ("length"): a model in a loop, or a
 # broken state that answers one token forever (an issue saw 36,689 tokens of "!"). The config's "repeat_stop_tokens"
@@ -214,9 +210,10 @@ REASONING_CLOSE = "\n</think>\n\n"
 REASONING_WRAP_UP = "\n\nI have thought about this long enough; time to give my answer.\n</think>\n\n"
 # #728: opt-in handling of reasoning that repeats whole passages (which the single-token guard above cannot see).
 # "reasoning_loop_recovery": "stop" ends the reply there; "recover" (or true) goes on from the same output with the
-# low-effort instruction in place of the xhigh one.  Both off by default.
-HIGH_EFFORT = EFFORT_TEXT["xhigh"]
-LOW_EFFORT = EFFORT_TEXT["low"]
+# effort header of the protocol's first system message flipped to low.  Both off by default.  The leading space is
+# part of the span: the tokenizer merges it into ' (' (verified against the pack vocabulary; F-283).
+HIGH_EFFORT = " (effort: high)"
+LOW_EFFORT = " (effort: low)"
 LOOP_CHECK_EVERY = 512           # output tokens between two looks at the reasoning (at a clean parser boundary)
 LOOP_COVERAGE = 0.25             # the share of the last 2,000 words inside 12-word passages seen three times
 LOOP_HISTORY_WORDS = 30000       # how far back the passages are counted (bounds the cost of a look)
@@ -252,9 +249,9 @@ def reasoning_repeat_coverage(text):
 
 
 def focused_recovery_prompt(tok, ids, generated):
-    """The prompt's ids with the xhigh effort sentence of the first system message replaced by the low one, then
+    """The prompt's ids with the effort header of the protocol's first system message flipped to low, then
     every token generated so far.  A splice of token ids: the prompt is never decoded and encoded again, so a literal
-    `</think>` or vision marker in it (#537, #554) stays what it was.  None when the sentence is not there as whole
+    `</think>` or vision marker in it (#537, #554) stays what it was.  None when the header is not there as whole
     tokens in the first system message (a user's text never counts).  No answer or end-of-thinking is inserted."""
     end = tok.encode(IM_END, parse_special=True)
     if len(end) != 1 or end[0] not in ids:

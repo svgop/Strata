@@ -1,0 +1,257 @@
+TPL-USER GATES leg1 start Fri Oct 23 11:47:38 PM SAST 2026
+swapped in user template: 461afc276cf9
+=== BOOT user-template health=1 23:48:04 ===
+[23:48:04] prewarm2: complement pin confirmed in /home/svg/LLM/strata-custom-2/custom-iq3_s.log
+[23:48:09] prewarm2: page cache re-warmed in 5s
+200
+200
+200
+200
+200
+200
+200
+200
+200
+[23:48:19] prewarm2: replay done (2 short + 1 mid prefill + 6-way burst) in 15s total
+--- exact prompt overhead (1-token request, usage.prompt_tokens):
+prompt_tokens: 55
+--- think-probe (user template) x2:
+[1.1]    2.0s  completion=237  reasoning_chars=329  content_chars=271
+      head: The key step is finding the time until the trains meet:  \[ \text{closing speed} = 60 + 90 = 150 \text{ km/h} \]  \[ \text{time} = \frac{420}{150} = 2.8 \text{ 
+[1.2]    1.4s  completion=248  reasoning_chars=446  content_chars=228
+      head: The key step is to find the time until the trains meet:  \[ t=\frac{420}{60+90}=\frac{420}{150}=2.8\text{ h} \]  The bird flies continuously at 120 km/h during 
+[2.1]    5.7s  completion=875  reasoning_chars=2149  content_chars=1281
+      head: `dict.fromkeys(xs)` works for deduplication only when the elements are **hashable**. If `xs` contains an unhashable object such as a `list`, `dict`, `set`, or a
+[2.2]    4.9s  completion=817  reasoning_chars=2252  content_chars=912
+      head: `dict.fromkeys(xs)` works only when the elements of `xs` are hashable, because it uses them as dictionary keys.  For unhashable items such as lists, dicts, or s
+[3.1]    5.3s  completion=900  reasoning_chars=2285  content_chars=1481
+      head: **Real decision variables**  1. **Time until deadline**      - You have about **6 hours** before the writing must be submitted.  2. **Total travel time**      -
+[3.2]    4.1s  completion=900  reasoning_chars=2268  content_chars=1591
+      head: ## Real decision variables  1. **Hard deadline:** 6 hours from now.   2. **Total travel time:**      - Flight: 3 hours flying + 2 hours airport time = **5 hours
+[4.1]    1.5s  completion=203  reasoning_chars=498  content_chars=329
+      head: Turn on the first switch for a few minutes, then turn it off. Turn on the second switch and go upstairs once.  - If the bulb is **on**, it’s controlled by the *
+[4.2]    1.0s  completion=220  reasoning_chars=641  content_chars=313
+      head: Turn on the first switch and leave it on for a few minutes. Then turn it off, turn on the second switch, and go upstairs once.  - If the bulb is **on**, the sec
+[5.1]    2.9s  completion=488  reasoning_chars=1211  content_chars=361
+      head: Assumptions: - 2 million people → ~800k households - ~5% of households own a piano → ~40k household pianos - Add schools, churches, hotels, venues → ~50k total 
+[5.2]    3.5s  completion=703  reasoning_chars=1645  content_chars=433
+      head: Assumptions:  - 2 million people → ~800,000 households at 2.5 people/household. - ~5% of households have a piano needing regular tuning → ~40,000 pianos. - Aver
+[6.1]    5.6s  completion=900  reasoning_chars=2645  content_chars=1416
+      head: Cache invalidation is called “hard” because it’s not really about deleting a key from Redis. It’s about keeping a bunch of copied, derived, and possibly stale v
+[6.2]    4.6s  completion=900  reasoning_chars=2578  content_chars=1480
+      head: Cache invalidation is called “hard” because the hard part is not usually “delete a key.” The hard part is making sure that **every cache everywhere eventually a
+
+=== TEMPLATE-PROBE user-template: n=12  mean completion=616 tok  mean wall=3.5s  mean content=841 chars ===
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+[PASS] math               pred=A gold=A
+[PASS] math               pred=H gold=H
+[PASS] math               pred=E gold=E
+[PASS] math               pred=I gold=I
+[PASS] math               pred=B gold=B
+[PASS] health             pred=J gold=J
+[PASS] health             pred=G gold=G
+[PASS] health             pred=F gold=F
+[PASS] health             pred=F gold=F
+[PASS] health             pred=D gold=D
+[PASS] physics            pred=E gold=E
+[PASS] physics            pred=A gold=A
+[PASS] physics            pred=H gold=H
+[PASS] physics            pred=E gold=E
+[PASS] physics            pred=A gold=A
+[PASS] business           pred=F gold=F
+[PASS] business           pred=D gold=D
+[PASS] business           pred=A gold=A
+[FAIL] business           pred=F gold=G
+[PASS] business           pred=H gold=H
+[PASS] biology            pred=B gold=B
+[PASS] biology            pred=D gold=D
+[PASS] biology            pred=D gold=D
+[PASS] biology            pred=A gold=A
+[PASS] biology            pred=H gold=H
+[PASS] chemistry          pred=B gold=B
+[PASS] chemistry          pred=J gold=J
+[PASS] chemistry          pred=E gold=E
+[PASS] chemistry          pred=A gold=A
+[PASS] chemistry          pred=J gold=J
+[PASS] computer science   pred=B gold=B
+[PASS] computer science   pred=I gold=I
+[PASS] computer science   pred=C gold=C
+[PASS] computer science   pred=I gold=I
+[PASS] computer science   pred=A gold=A
+[PASS] economics          pred=F gold=F
+[PASS] economics          pred=H gold=H
+[PASS] economics          pred=C gold=C
+[PASS] economics          pred=G gold=G
+[PASS] economics          pred=F gold=F
+[PASS] engineering        pred=C gold=C
+[PASS] engineering        pred=A gold=A
+[PASS] engineering        pred=C gold=C
+[PASS] engineering        pred=I gold=I
+[PASS] engineering        pred=A gold=A
+[PASS] philosophy         pred=B gold=B
+[PASS] philosophy         pred=J gold=J
+[PASS] philosophy         pred=B gold=B
+[PASS] philosophy         pred=I gold=I
+[PASS] philosophy         pred=D gold=D
+[PASS] other              pred=E gold=E
+[PASS] other              pred=B gold=B
+[PASS] other              pred=B gold=B
+[PASS] other              pred=J gold=J
+[PASS] other              pred=J gold=J
+[PASS] history            pred=A gold=A
+[PASS] history            pred=C gold=C
+[PASS] history            pred=E gold=E
+[FAIL] history            pred=J gold=E
+[PASS] history            pred=G gold=G
+[PASS] psychology         pred=H gold=H
+[PASS] psychology         pred=H gold=H
+[PASS] psychology         pred=A gold=A
+[PASS] psychology         pred=J gold=J
+[FAIL] psychology         pred=F gold=E
+[PASS] law                pred=I gold=I
+[FAIL] law                pred=J gold=I
+[PASS] law                pred=J gold=J
+[PASS] law                pred=G gold=G
+[PASS] law                pred=F gold=F
+
+=== MMLU-Pro (70 Qs) [floor 0.933, tpl-user-mmlu-a]: 66/70 = 94.3%  (1-sigma = 2.77 pts) ===
+  biology            5/5
+  business           4/5
+  chemistry          5/5
+  computer science   5/5
+  economics          5/5
+  engineering        5/5
+  health             5/5
+  history            4/5
+  law                4/5
+  math               5/5
+  other              5/5
+  philosophy         5/5
+  physics            5/5
+  psychology         4/5
+WROTE /home/svg/LLM/strata-custom-2/campaign/results/mmlu-tpl-user-mmlu-a.json
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+[PASS] math               pred=A gold=A
+[PASS] math               pred=H gold=H
+[PASS] math               pred=E gold=E
+[PASS] math               pred=I gold=I
+[PASS] math               pred=B gold=B
+[PASS] health             pred=J gold=J
+[PASS] health             pred=G gold=G
+[PASS] health             pred=F gold=F
+[PASS] health             pred=F gold=F
+[PASS] health             pred=D gold=D
+[PASS] physics            pred=E gold=E
+[PASS] physics            pred=A gold=A
+[PASS] physics            pred=H gold=H
+[PASS] physics            pred=E gold=E
+[PASS] physics            pred=A gold=A
+[PASS] business           pred=F gold=F
+[PASS] business           pred=D gold=D
+[PASS] business           pred=A gold=A
+[FAIL] business           pred=F gold=G
+[PASS] business           pred=H gold=H
+[PASS] biology            pred=B gold=B
+[PASS] biology            pred=D gold=D
+[PASS] biology            pred=D gold=D
+[PASS] biology            pred=A gold=A
+[PASS] biology            pred=H gold=H
+[PASS] chemistry          pred=B gold=B
+[PASS] chemistry          pred=J gold=J
+[PASS] chemistry          pred=E gold=E
+[PASS] chemistry          pred=A gold=A
+[PASS] chemistry          pred=J gold=J
+[PASS] computer science   pred=B gold=B
+[PASS] computer science   pred=I gold=I
+[PASS] computer science   pred=C gold=C
+[PASS] computer science   pred=I gold=I
+[PASS] computer science   pred=A gold=A
+[PASS] economics          pred=F gold=F
+[PASS] economics          pred=H gold=H
+[PASS] economics          pred=C gold=C
+[PASS] economics          pred=G gold=G
+[PASS] economics          pred=F gold=F
+[PASS] engineering        pred=C gold=C
+[PASS] engineering        pred=A gold=A
+[PASS] engineering        pred=C gold=C
+[PASS] engineering        pred=I gold=I
+[PASS] engineering        pred=A gold=A
+[PASS] philosophy         pred=B gold=B
+[PASS] philosophy         pred=J gold=J
+[PASS] philosophy         pred=B gold=B
+[PASS] philosophy         pred=I gold=I
+[PASS] philosophy         pred=D gold=D
+[PASS] other              pred=E gold=E
+[PASS] other              pred=B gold=B
+[PASS] other              pred=B gold=B
+[PASS] other              pred=J gold=J
+[PASS] other              pred=J gold=J
+[PASS] history            pred=A gold=A
+[PASS] history            pred=C gold=C
+[PASS] history            pred=E gold=E
+[FAIL] history            pred=J gold=E
+[PASS] history            pred=G gold=G
+[PASS] psychology         pred=H gold=H
+[PASS] psychology         pred=H gold=H
+[PASS] psychology         pred=A gold=A
+[PASS] psychology         pred=J gold=J
+[FAIL] psychology         pred=F gold=E
+[PASS] law                pred=I gold=I
+[PASS] law                pred=I gold=I
+[PASS] law                pred=J gold=J
+[PASS] law                pred=G gold=G
+[PASS] law                pred=F gold=F
+
+=== MMLU-Pro (70 Qs) [floor 0.933, tpl-user-mmlu-b]: 67/70 = 95.7%  (1-sigma = 2.42 pts) ===
+  biology            5/5
+  business           4/5
+  chemistry          5/5
+  computer science   5/5
+  economics          5/5
+  engineering        5/5
+  health             5/5
+  history            4/5
+  law                5/5
+  math               5/5
+  other              5/5
+  philosophy         5/5
+  physics            5/5
+  psychology         4/5
+WROTE /home/svg/LLM/strata-custom-2/campaign/results/mmlu-tpl-user-mmlu-b.json
+[ 1] doctrine     d1-instr-density PASS (w2)
+[ 2] doctrine     d1-no-closers PASS (w2)
+[ 3] doctrine     d1-artifact-bullets PASS (w2)
+[ 4] doctrine     d1-frontload FAIL (w2)
+[ 5] voice        d2-1       PASS (w2)
+[ 6] voice        d2-2       PASS (w2)
+[ 7] voice        d2-3       PASS (w2)
+[ 8] arch-continue d3-1       PASS (w2)
+[ 9] arch-continue d3-2       PASS (w2)
+[10] arch-continue d3-3       PASS (w2)
+[11] arch-continue d3-4       PASS (w2)
+[12] correction   d4-1       PASS (w2)
+[13] correction   d4-2       PASS (w2)
+[14] correction   d4-3       PASS (w2)
+[15] correction   d4-5       PASS (w2)
+[16] blend        d5-1       FAIL (w2)
+[17] blend        d5-2       PASS (w2)
+[18] blend        d5-3       PASS (w2)
+[19] blend        d5-4       FAIL (w2)
+[20] ui-deep      d6-1       PASS (w2)
+[21] ui-deep      d6-2       FAIL (w2)
+[22] ui-deep      d6-3       PASS (w2)
+[23] ui-deep      d6-4       PASS (w2)
+[24] ui-deep      d6-5       PASS (w2)
+[25] internalize  d7-1       PASS (w3)
+[26] internalize  d7-2       PASS (w3)
+[27] internalize  d7-3       PASS (w3)
+[28] internalize  d7-4       PASS (w3)
+[29] doc-structure d8-1       PASS (w2)
+[30] doc-structure d8-2       PASS (w2)
+[31] doc-structure d8-3       PASS (w2)
+
+MIMICBENCH2 [tpl-user-mimic-a]: 58/66 = 87.9%
+by category: {'doctrine': '6/8', 'voice': '6/6', 'arch-continue': '8/8', 'correction': '8/8', 'blend': '4/8', 'ui-deep': '8/10', 'internalize': '12/12', 'doc-structure': '6/6'}
+saved: /home/svg/LLM/strata-custom-2/campaign/results/mimicbench2-tpl-user-mimic-a.json
+TPL-USER GATES leg1 end Sat Oct 24 12:00:53 AM SAST 2026
+done

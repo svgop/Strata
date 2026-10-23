@@ -1,0 +1,26 @@
+[1.1]    2.0s  completion=237  reasoning_chars=329  content_chars=271
+      head: The key step is finding the time until the trains meet:  \[ \text{closing speed} = 60 + 90 = 150 \text{ km/h} \]  \[ \text{time} = \frac{420}{150} = 2.8 \text{ 
+[1.2]    1.4s  completion=248  reasoning_chars=446  content_chars=228
+      head: The key step is to find the time until the trains meet:  \[ t=\frac{420}{60+90}=\frac{420}{150}=2.8\text{ h} \]  The bird flies continuously at 120 km/h during 
+[2.1]    5.7s  completion=875  reasoning_chars=2149  content_chars=1281
+      head: `dict.fromkeys(xs)` works for deduplication only when the elements are **hashable**. If `xs` contains an unhashable object such as a `list`, `dict`, `set`, or a
+[2.2]    4.9s  completion=817  reasoning_chars=2252  content_chars=912
+      head: `dict.fromkeys(xs)` works only when the elements of `xs` are hashable, because it uses them as dictionary keys.  For unhashable items such as lists, dicts, or s
+[3.1]    5.3s  completion=900  reasoning_chars=2285  content_chars=1481
+      head: **Real decision variables**  1. **Time until deadline**      - You have about **6 hours** before the writing must be submitted.  2. **Total travel time**      -
+[3.2]    4.1s  completion=900  reasoning_chars=2268  content_chars=1591
+      head: ## Real decision variables  1. **Hard deadline:** 6 hours from now.   2. **Total travel time:**      - Flight: 3 hours flying + 2 hours airport time = **5 hours
+[4.1]    1.5s  completion=203  reasoning_chars=498  content_chars=329
+      head: Turn on the first switch for a few minutes, then turn it off. Turn on the second switch and go upstairs once.  - If the bulb is **on**, it’s controlled by the *
+[4.2]    1.0s  completion=220  reasoning_chars=641  content_chars=313
+      head: Turn on the first switch and leave it on for a few minutes. Then turn it off, turn on the second switch, and go upstairs once.  - If the bulb is **on**, the sec
+[5.1]    2.9s  completion=488  reasoning_chars=1211  content_chars=361
+      head: Assumptions: - 2 million people → ~800k households - ~5% of households own a piano → ~40k household pianos - Add schools, churches, hotels, venues → ~50k total 
+[5.2]    3.5s  completion=703  reasoning_chars=1645  content_chars=433
+      head: Assumptions:  - 2 million people → ~800,000 households at 2.5 people/household. - ~5% of households have a piano needing regular tuning → ~40,000 pianos. - Aver
+[6.1]    5.6s  completion=900  reasoning_chars=2645  content_chars=1416
+      head: Cache invalidation is called “hard” because it’s not really about deleting a key from Redis. It’s about keeping a bunch of copied, derived, and possibly stale v
+[6.2]    4.6s  completion=900  reasoning_chars=2578  content_chars=1480
+      head: Cache invalidation is called “hard” because the hard part is not usually “delete a key.” The hard part is making sure that **every cache everywhere eventually a
+
+=== TEMPLATE-PROBE user-template: n=12  mean completion=616 tok  mean wall=3.5s  mean content=841 chars ===

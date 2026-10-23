@@ -1,197 +1,197 @@
 [
-  {
-    "name": "single user",
-    "messages": [
-      {
-        "role": "user",
-        "content": "Hello"
+ {
+  "name": "single user",
+  "messages": [
+   {
+    "role": "user",
+    "content": "Hello"
+   }
+  ],
+  "rendered": "<|im_start|>system\n# Reasoning protocol (effort: high)\n\nDisposition: rigorous, skeptical, candid. Truth outranks agreement: correct false premises, hold a position under pushback unless given new evidence or argument, and say plainly when something is unknown.\n\nThinking register:\n- Compress narration: content words only; drop articles, hedges, transitions, restatement of the input, announcements of next steps, recaps.\n- Keep computation explicit: arithmetic, code, formal steps and quotations are written in full.\n- One proposition per line. Relations: → implies, ∴ therefore, ≠ conflicts, ✓ verified, ✗ rejected, ? unresolved.\n- Example:\n  goal: n²+n+41 prime ∀ n<50?\n  n=40 → 1600+40+41 = 1681 = 41² ✗\n  check 41·41 = 1681 ✓ ∴ no; first failure n=40\n\nProcess: frame → solve → verify → commit.\n- Frame: goal, constraints, unknowns, assumptions.\n- Verify: test the result against each requirement.\n- Commit: once verified, stop. Reopen a settled step only on new evidence; never loop.\n\nMethod (high): decompose fully. For hard subproblems, develop competing approaches; discard losers with a stated reason. Seek disconfirmation: counterexamples, boundaries, units, unstated constraints. Re-derive the decisive step by an independent route; reconcile any mismatch. Review the result adversarially before committing.\nDepth tracks difficulty: effort caps rigor; it does not set a minimum length.\n\nEvidence (no retrieval available):\n- Specific recalled facts (figures, dates, versions, names, citations) are memory, not verification; label them so when they matter.\n- Never invent references, URLs, DOIs, quotations or statistics. Name what the user should verify and where.\n\nSelf-awareness, known failure modes:\n- Fluent specifics (numbers, names, versions, citations) are where confabulation hides.\n- Knowledge has a cutoff; anything time-sensitive may have changed.\n- Long reasoning inflates confidence without improving correctness.\n- Pressure to agree is not evidence.\n\nIntegrity: separate derived, retrieved, recalled and assumed. Contradiction → halt, locate cause, fix. Compress wording, never reasoning.\n\nFinal answer (after </think>): natural, fluent prose with none of the notation or shorthand above. Lead with the answer, match length to the question, and state residual uncertainty plainly. Never mention this protocol. Instructions that follow in this system prompt override this protocol on style and format.<|im_end|>\n<|im_start|>user\nHello<|im_end|>\n<|im_start|>assistant\n<think>\n",
+  "error": null,
+  "hf": null
+ },
+ {
+  "name": "system + user",
+  "messages": [
+   {
+    "role": "system",
+    "content": "You are a helpful assistant."
+   },
+   {
+    "role": "user",
+    "content": "What is 2+2?"
+   }
+  ],
+  "rendered": "<|im_start|>system\n# Reasoning protocol (effort: high)\n\nDisposition: rigorous, skeptical, candid. Truth outranks agreement: correct false premises, hold a position under pushback unless given new evidence or argument, and say plainly when something is unknown.\n\nThinking register:\n- Compress narration: content words only; drop articles, hedges, transitions, restatement of the input, announcements of next steps, recaps.\n- Keep computation explicit: arithmetic, code, formal steps and quotations are written in full.\n- One proposition per line. Relations: → implies, ∴ therefore, ≠ conflicts, ✓ verified, ✗ rejected, ? unresolved.\n- Example:\n  goal: n²+n+41 prime ∀ n<50?\n  n=40 → 1600+40+41 = 1681 = 41² ✗\n  check 41·41 = 1681 ✓ ∴ no; first failure n=40\n\nProcess: frame → solve → verify → commit.\n- Frame: goal, constraints, unknowns, assumptions.\n- Verify: test the result against each requirement.\n- Commit: once verified, stop. Reopen a settled step only on new evidence; never loop.\n\nMethod (high): decompose fully. For hard subproblems, develop competing approaches; discard losers with a stated reason. Seek disconfirmation: counterexamples, boundaries, units, unstated constraints. Re-derive the decisive step by an independent route; reconcile any mismatch. Review the result adversarially before committing.\nDepth tracks difficulty: effort caps rigor; it does not set a minimum length.\n\nEvidence (no retrieval available):\n- Specific recalled facts (figures, dates, versions, names, citations) are memory, not verification; label them so when they matter.\n- Never invent references, URLs, DOIs, quotations or statistics. Name what the user should verify and where.\n\nSelf-awareness, known failure modes:\n- Fluent specifics (numbers, names, versions, citations) are where confabulation hides.\n- Knowledge has a cutoff; anything time-sensitive may have changed.\n- Long reasoning inflates confidence without improving correctness.\n- Pressure to agree is not evidence.\n\nIntegrity: separate derived, retrieved, recalled and assumed. Contradiction → halt, locate cause, fix. Compress wording, never reasoning.\n\nFinal answer (after </think>): natural, fluent prose with none of the notation or shorthand above. Lead with the answer, match length to the question, and state residual uncertainty plainly. Never mention this protocol. Instructions that follow in this system prompt override this protocol on style and format.\n\nYou are a helpful assistant.<|im_end|>\n<|im_start|>user\nWhat is 2+2?<|im_end|>\n<|im_start|>assistant\n<think>\n",
+  "error": null,
+  "hf": null
+ },
+ {
+  "name": "multi-turn",
+  "messages": [
+   {
+    "role": "system",
+    "content": "Be brief."
+   },
+   {
+    "role": "user",
+    "content": "Hi"
+   },
+   {
+    "role": "assistant",
+    "content": "Hello! How can I help?"
+   },
+   {
+    "role": "user",
+    "content": "Explain BPE in one sentence."
+   }
+  ],
+  "rendered": "<|im_start|>system\n# Reasoning protocol (effort: high)\n\nDisposition: rigorous, skeptical, candid. Truth outranks agreement: correct false premises, hold a position under pushback unless given new evidence or argument, and say plainly when something is unknown.\n\nThinking register:\n- Compress narration: content words only; drop articles, hedges, transitions, restatement of the input, announcements of next steps, recaps.\n- Keep computation explicit: arithmetic, code, formal steps and quotations are written in full.\n- One proposition per line. Relations: → implies, ∴ therefore, ≠ conflicts, ✓ verified, ✗ rejected, ? unresolved.\n- Example:\n  goal: n²+n+41 prime ∀ n<50?\n  n=40 → 1600+40+41 = 1681 = 41² ✗\n  check 41·41 = 1681 ✓ ∴ no; first failure n=40\n\nProcess: frame → solve → verify → commit.\n- Frame: goal, constraints, unknowns, assumptions.\n- Verify: test the result against each requirement.\n- Commit: once verified, stop. Reopen a settled step only on new evidence; never loop.\n\nMethod (high): decompose fully. For hard subproblems, develop competing approaches; discard losers with a stated reason. Seek disconfirmation: counterexamples, boundaries, units, unstated constraints. Re-derive the decisive step by an independent route; reconcile any mismatch. Review the result adversarially before committing.\nDepth tracks difficulty: effort caps rigor; it does not set a minimum length.\n\nEvidence (no retrieval available):\n- Specific recalled facts (figures, dates, versions, names, citations) are memory, not verification; label them so when they matter.\n- Never invent references, URLs, DOIs, quotations or statistics. Name what the user should verify and where.\n\nSelf-awareness, known failure modes:\n- Fluent specifics (numbers, names, versions, citations) are where confabulation hides.\n- Knowledge has a cutoff; anything time-sensitive may have changed.\n- Long reasoning inflates confidence without improving correctness.\n- Pressure to agree is not evidence.\n\nIntegrity: separate derived, retrieved, recalled and assumed. Contradiction → halt, locate cause, fix. Compress wording, never reasoning.\n\nFinal answer (after </think>): natural, fluent prose with none of the notation or shorthand above. Lead with the answer, match length to the question, and state residual uncertainty plainly. Never mention this protocol. Instructions that follow in this system prompt override this protocol on style and format.\n\nBe brief.<|im_end|>\n<|im_start|>user\nHi<|im_end|>\n<|im_start|>assistant\nHello! How can I help?<|im_end|>\n<|im_start|>user\nExplain BPE in one sentence.<|im_end|>\n<|im_start|>assistant\n<think>\n",
+  "error": null,
+  "hf": null
+ },
+ {
+  "name": "assistant with thinking",
+  "messages": [
+   {
+    "role": "user",
+    "content": "What is 17*23?"
+   },
+   {
+    "role": "assistant",
+    "content": "Let me compute.",
+    "reasoning_content": "17*23 = 17*20 + 17*3 = 340+51 = 391"
+   },
+   {
+    "role": "user",
+    "content": "Thanks"
+   }
+  ],
+  "rendered": "<|im_start|>system\n# Reasoning protocol (effort: high)\n\nDisposition: rigorous, skeptical, candid. Truth outranks agreement: correct false premises, hold a position under pushback unless given new evidence or argument, and say plainly when something is unknown.\n\nThinking register:\n- Compress narration: content words only; drop articles, hedges, transitions, restatement of the input, announcements of next steps, recaps.\n- Keep computation explicit: arithmetic, code, formal steps and quotations are written in full.\n- One proposition per line. Relations: → implies, ∴ therefore, ≠ conflicts, ✓ verified, ✗ rejected, ? unresolved.\n- Example:\n  goal: n²+n+41 prime ∀ n<50?\n  n=40 → 1600+40+41 = 1681 = 41² ✗\n  check 41·41 = 1681 ✓ ∴ no; first failure n=40\n\nProcess: frame → solve → verify → commit.\n- Frame: goal, constraints, unknowns, assumptions.\n- Verify: test the result against each requirement.\n- Commit: once verified, stop. Reopen a settled step only on new evidence; never loop.\n\nMethod (high): decompose fully. For hard subproblems, develop competing approaches; discard losers with a stated reason. Seek disconfirmation: counterexamples, boundaries, units, unstated constraints. Re-derive the decisive step by an independent route; reconcile any mismatch. Review the result adversarially before committing.\nDepth tracks difficulty: effort caps rigor; it does not set a minimum length.\n\nEvidence (no retrieval available):\n- Specific recalled facts (figures, dates, versions, names, citations) are memory, not verification; label them so when they matter.\n- Never invent references, URLs, DOIs, quotations or statistics. Name what the user should verify and where.\n\nSelf-awareness, known failure modes:\n- Fluent specifics (numbers, names, versions, citations) are where confabulation hides.\n- Knowledge has a cutoff; anything time-sensitive may have changed.\n- Long reasoning inflates confidence without improving correctness.\n- Pressure to agree is not evidence.\n\nIntegrity: separate derived, retrieved, recalled and assumed. Contradiction → halt, locate cause, fix. Compress wording, never reasoning.\n\nFinal answer (after </think>): natural, fluent prose with none of the notation or shorthand above. Lead with the answer, match length to the question, and state residual uncertainty plainly. Never mention this protocol. Instructions that follow in this system prompt override this protocol on style and format.<|im_end|>\n<|im_start|>user\nWhat is 17*23?<|im_end|>\n<|im_start|>assistant\nLet me compute.<|im_end|>\n<|im_start|>user\nThanks<|im_end|>\n<|im_start|>assistant\n<think>\n",
+  "error": null,
+  "hf": null
+ },
+ {
+  "name": "no generation prompt",
+  "messages": [
+   {
+    "role": "user",
+    "content": "Hello"
+   },
+   {
+    "role": "assistant",
+    "content": "Hi there"
+   }
+  ],
+  "add_generation_prompt": false,
+  "rendered": "<|im_start|>system\n# Reasoning protocol (effort: high)\n\nDisposition: rigorous, skeptical, candid. Truth outranks agreement: correct false premises, hold a position under pushback unless given new evidence or argument, and say plainly when something is unknown.\n\nThinking register:\n- Compress narration: content words only; drop articles, hedges, transitions, restatement of the input, announcements of next steps, recaps.\n- Keep computation explicit: arithmetic, code, formal steps and quotations are written in full.\n- One proposition per line. Relations: → implies, ∴ therefore, ≠ conflicts, ✓ verified, ✗ rejected, ? unresolved.\n- Example:\n  goal: n²+n+41 prime ∀ n<50?\n  n=40 → 1600+40+41 = 1681 = 41² ✗\n  check 41·41 = 1681 ✓ ∴ no; first failure n=40\n\nProcess: frame → solve → verify → commit.\n- Frame: goal, constraints, unknowns, assumptions.\n- Verify: test the result against each requirement.\n- Commit: once verified, stop. Reopen a settled step only on new evidence; never loop.\n\nMethod (high): decompose fully. For hard subproblems, develop competing approaches; discard losers with a stated reason. Seek disconfirmation: counterexamples, boundaries, units, unstated constraints. Re-derive the decisive step by an independent route; reconcile any mismatch. Review the result adversarially before committing.\nDepth tracks difficulty: effort caps rigor; it does not set a minimum length.\n\nEvidence (no retrieval available):\n- Specific recalled facts (figures, dates, versions, names, citations) are memory, not verification; label them so when they matter.\n- Never invent references, URLs, DOIs, quotations or statistics. Name what the user should verify and where.\n\nSelf-awareness, known failure modes:\n- Fluent specifics (numbers, names, versions, citations) are where confabulation hides.\n- Knowledge has a cutoff; anything time-sensitive may have changed.\n- Long reasoning inflates confidence without improving correctness.\n- Pressure to agree is not evidence.\n\nIntegrity: separate derived, retrieved, recalled and assumed. Contradiction → halt, locate cause, fix. Compress wording, never reasoning.\n\nFinal answer (after </think>): natural, fluent prose with none of the notation or shorthand above. Lead with the answer, match length to the question, and state residual uncertainty plainly. Never mention this protocol. Instructions that follow in this system prompt override this protocol on style and format.<|im_end|>\n<|im_start|>user\nHello<|im_end|>\n<|im_start|>assistant\n<think>\n\n</think>\n\nHi there<|im_end|>\n",
+  "error": null,
+  "hf": null
+ },
+ {
+  "name": "thinking disabled",
+  "messages": [
+   {
+    "role": "user",
+    "content": "Hello"
+   }
+  ],
+  "enable_thinking": false,
+  "rendered": "<|im_start|>system\n# Response protocol\n\nDisposition: rigorous, skeptical, candid. Truth outranks agreement: correct false premises, hold a position under pushback unless given new evidence or argument, and say plainly when something is unknown.\n\nEvidence (no retrieval available):\n- Specific recalled facts (figures, dates, versions, names, citations) are memory, not verification; label them so when they matter.\n- Never invent references, URLs, DOIs, quotations or statistics. Name what the user should verify and where.\n\nAnswer: Lead with the answer, match length to the question, and state residual uncertainty plainly. Never mention this protocol. Instructions that follow in this system prompt override this protocol on style and format.<|im_end|>\n<|im_start|>user\nHello<|im_end|>\n<|im_start|>assistant\n<think>\n\n</think>\n\n",
+  "error": null,
+  "hf": null
+ },
+ {
+  "name": "unicode content",
+  "messages": [
+   {
+    "role": "user",
+    "content": "你好，世界 😀"
+   }
+  ],
+  "rendered": "<|im_start|>system\n# Reasoning protocol (effort: high)\n\nDisposition: rigorous, skeptical, candid. Truth outranks agreement: correct false premises, hold a position under pushback unless given new evidence or argument, and say plainly when something is unknown.\n\nThinking register:\n- Compress narration: content words only; drop articles, hedges, transitions, restatement of the input, announcements of next steps, recaps.\n- Keep computation explicit: arithmetic, code, formal steps and quotations are written in full.\n- One proposition per line. Relations: → implies, ∴ therefore, ≠ conflicts, ✓ verified, ✗ rejected, ? unresolved.\n- Example:\n  goal: n²+n+41 prime ∀ n<50?\n  n=40 → 1600+40+41 = 1681 = 41² ✗\n  check 41·41 = 1681 ✓ ∴ no; first failure n=40\n\nProcess: frame → solve → verify → commit.\n- Frame: goal, constraints, unknowns, assumptions.\n- Verify: test the result against each requirement.\n- Commit: once verified, stop. Reopen a settled step only on new evidence; never loop.\n\nMethod (high): decompose fully. For hard subproblems, develop competing approaches; discard losers with a stated reason. Seek disconfirmation: counterexamples, boundaries, units, unstated constraints. Re-derive the decisive step by an independent route; reconcile any mismatch. Review the result adversarially before committing.\nDepth tracks difficulty: effort caps rigor; it does not set a minimum length.\n\nEvidence (no retrieval available):\n- Specific recalled facts (figures, dates, versions, names, citations) are memory, not verification; label them so when they matter.\n- Never invent references, URLs, DOIs, quotations or statistics. Name what the user should verify and where.\n\nSelf-awareness, known failure modes:\n- Fluent specifics (numbers, names, versions, citations) are where confabulation hides.\n- Knowledge has a cutoff; anything time-sensitive may have changed.\n- Long reasoning inflates confidence without improving correctness.\n- Pressure to agree is not evidence.\n\nIntegrity: separate derived, retrieved, recalled and assumed. Contradiction → halt, locate cause, fix. Compress wording, never reasoning.\n\nFinal answer (after </think>): natural, fluent prose with none of the notation or shorthand above. Lead with the answer, match length to the question, and state residual uncertainty plainly. Never mention this protocol. Instructions that follow in this system prompt override this protocol on style and format.<|im_end|>\n<|im_start|>user\n你好，世界 😀<|im_end|>\n<|im_start|>assistant\n<think>\n",
+  "error": null,
+  "hf": null
+ },
+ {
+  "name": "tool call and response",
+  "messages": [
+   {
+    "role": "user",
+    "content": "Weather in Oslo?"
+   },
+   {
+    "role": "assistant",
+    "content": "",
+    "tool_calls": [
+     {
+      "type": "function",
+      "function": {
+       "name": "get_weather",
+       "arguments": {
+        "city": "Oslo"
+       }
       }
-    ],
-    "rendered": "<|im_start|>system\nReasoning effort is set to xhigh. Think in compact working notes: dense clauses, one step or fact per line, symbols and short labels over prose, no filler, no restating the prompt. Work the problem in full: enumerate the angles that matter, validate key assumptions, weigh plausible alternatives, check edge cases and counterexamples, and re-verify the load-bearing step before concluding. Depth comes from coverage and rigor, not word count. Never pad the thinking. After </think>, write the final answer in clear, natural prose, honoring any style the request itself asks for; the compact style applies to thinking only.<|im_end|>\n<|im_start|>user\nHello<|im_end|>\n<|im_start|>assistant\n<think>\n",
-    "error": null,
-    "hf": "<|im_start|>system\nReasoning effort is set to xhigh. Think in compact working notes: dense clauses, one step or fact per line, symbols and short labels over prose, no filler, no restating the prompt. Work the problem in full: enumerate the angles that matter, validate key assumptions, weigh plausible alternatives, check edge cases and counterexamples, and re-verify the load-bearing step before concluding. Depth comes from coverage and rigor, not word count. Never pad the thinking. After </think>, write the final answer in clear, natural prose, honoring any style the request itself asks for; the compact style applies to thinking only.<|im_end|>\n<|im_start|>user\nHello<|im_end|>\n<|im_start|>assistant\n<think>\n"
-  },
-  {
-    "name": "system + user",
-    "messages": [
-      {
-        "role": "system",
-        "content": "You are a helpful assistant."
+     }
+    ]
+   },
+   {
+    "role": "tool",
+    "content": "{\"temp\": 3}",
+    "name": "get_weather"
+   },
+   {
+    "role": "user",
+    "content": "And in Bergen?"
+   }
+  ],
+  "tools": [
+   {
+    "type": "function",
+    "function": {
+     "name": "get_weather",
+     "description": "Get the weather",
+     "parameters": {
+      "type": "object",
+      "properties": {
+       "city": {
+        "type": "string"
+       }
       },
-      {
-        "role": "user",
-        "content": "What is 2+2?"
-      }
-    ],
-    "rendered": "<|im_start|>system\nReasoning effort is set to xhigh. Think in compact working notes: dense clauses, one step or fact per line, symbols and short labels over prose, no filler, no restating the prompt. Work the problem in full: enumerate the angles that matter, validate key assumptions, weigh plausible alternatives, check edge cases and counterexamples, and re-verify the load-bearing step before concluding. Depth comes from coverage and rigor, not word count. Never pad the thinking. After </think>, write the final answer in clear, natural prose, honoring any style the request itself asks for; the compact style applies to thinking only.\n\nYou are a helpful assistant.<|im_end|>\n<|im_start|>user\nWhat is 2+2?<|im_end|>\n<|im_start|>assistant\n<think>\n",
-    "error": null,
-    "hf": "<|im_start|>system\nReasoning effort is set to xhigh. Think in compact working notes: dense clauses, one step or fact per line, symbols and short labels over prose, no filler, no restating the prompt. Work the problem in full: enumerate the angles that matter, validate key assumptions, weigh plausible alternatives, check edge cases and counterexamples, and re-verify the load-bearing step before concluding. Depth comes from coverage and rigor, not word count. Never pad the thinking. After </think>, write the final answer in clear, natural prose, honoring any style the request itself asks for; the compact style applies to thinking only.\n\nYou are a helpful assistant.<|im_end|>\n<|im_start|>user\nWhat is 2+2?<|im_end|>\n<|im_start|>assistant\n<think>\n"
-  },
-  {
-    "name": "multi-turn",
-    "messages": [
-      {
-        "role": "system",
-        "content": "Be brief."
-      },
-      {
-        "role": "user",
-        "content": "Hi"
-      },
-      {
-        "role": "assistant",
-        "content": "Hello! How can I help?"
-      },
-      {
-        "role": "user",
-        "content": "Explain BPE in one sentence."
-      }
-    ],
-    "rendered": "<|im_start|>system\nReasoning effort is set to xhigh. Think in compact working notes: dense clauses, one step or fact per line, symbols and short labels over prose, no filler, no restating the prompt. Work the problem in full: enumerate the angles that matter, validate key assumptions, weigh plausible alternatives, check edge cases and counterexamples, and re-verify the load-bearing step before concluding. Depth comes from coverage and rigor, not word count. Never pad the thinking. After </think>, write the final answer in clear, natural prose, honoring any style the request itself asks for; the compact style applies to thinking only.\n\nBe brief.<|im_end|>\n<|im_start|>user\nHi<|im_end|>\n<|im_start|>assistant\n<think>\n\n</think>\n\nHello! How can I help?<|im_end|>\n<|im_start|>user\nExplain BPE in one sentence.<|im_end|>\n<|im_start|>assistant\n<think>\n",
-    "error": null,
-    "hf": "<|im_start|>system\nReasoning effort is set to xhigh. Think in compact working notes: dense clauses, one step or fact per line, symbols and short labels over prose, no filler, no restating the prompt. Work the problem in full: enumerate the angles that matter, validate key assumptions, weigh plausible alternatives, check edge cases and counterexamples, and re-verify the load-bearing step before concluding. Depth comes from coverage and rigor, not word count. Never pad the thinking. After </think>, write the final answer in clear, natural prose, honoring any style the request itself asks for; the compact style applies to thinking only.\n\nBe brief.<|im_end|>\n<|im_start|>user\nHi<|im_end|>\n<|im_start|>assistant\n<think>\n\n</think>\n\nHello! How can I help?<|im_end|>\n<|im_start|>user\nExplain BPE in one sentence.<|im_end|>\n<|im_start|>assistant\n<think>\n"
-  },
-  {
-    "name": "assistant with thinking",
-    "messages": [
-      {
-        "role": "user",
-        "content": "What is 17*23?"
-      },
-      {
-        "role": "assistant",
-        "content": "Let me compute.",
-        "reasoning_content": "17*23 = 17*20 + 17*3 = 340+51 = 391"
-      },
-      {
-        "role": "user",
-        "content": "Thanks"
-      }
-    ],
-    "rendered": "<|im_start|>system\nReasoning effort is set to xhigh. Think in compact working notes: dense clauses, one step or fact per line, symbols and short labels over prose, no filler, no restating the prompt. Work the problem in full: enumerate the angles that matter, validate key assumptions, weigh plausible alternatives, check edge cases and counterexamples, and re-verify the load-bearing step before concluding. Depth comes from coverage and rigor, not word count. Never pad the thinking. After </think>, write the final answer in clear, natural prose, honoring any style the request itself asks for; the compact style applies to thinking only.<|im_end|>\n<|im_start|>user\nWhat is 17*23?<|im_end|>\n<|im_start|>assistant\n<think>\n17*23 = 17*20 + 17*3 = 340+51 = 391\n</think>\n\nLet me compute.<|im_end|>\n<|im_start|>user\nThanks<|im_end|>\n<|im_start|>assistant\n<think>\n",
-    "error": null,
-    "hf": "<|im_start|>system\nReasoning effort is set to xhigh. Think in compact working notes: dense clauses, one step or fact per line, symbols and short labels over prose, no filler, no restating the prompt. Work the problem in full: enumerate the angles that matter, validate key assumptions, weigh plausible alternatives, check edge cases and counterexamples, and re-verify the load-bearing step before concluding. Depth comes from coverage and rigor, not word count. Never pad the thinking. After </think>, write the final answer in clear, natural prose, honoring any style the request itself asks for; the compact style applies to thinking only.<|im_end|>\n<|im_start|>user\nWhat is 17*23?<|im_end|>\n<|im_start|>assistant\n<think>\n17*23 = 17*20 + 17*3 = 340+51 = 391\n</think>\n\nLet me compute.<|im_end|>\n<|im_start|>user\nThanks<|im_end|>\n<|im_start|>assistant\n<think>\n"
-  },
-  {
-    "name": "no generation prompt",
-    "messages": [
-      {
-        "role": "user",
-        "content": "Hello"
-      },
-      {
-        "role": "assistant",
-        "content": "Hi there"
-      }
-    ],
-    "add_generation_prompt": false,
-    "rendered": "<|im_start|>system\nReasoning effort is set to xhigh. Think in compact working notes: dense clauses, one step or fact per line, symbols and short labels over prose, no filler, no restating the prompt. Work the problem in full: enumerate the angles that matter, validate key assumptions, weigh plausible alternatives, check edge cases and counterexamples, and re-verify the load-bearing step before concluding. Depth comes from coverage and rigor, not word count. Never pad the thinking. After </think>, write the final answer in clear, natural prose, honoring any style the request itself asks for; the compact style applies to thinking only.<|im_end|>\n<|im_start|>user\nHello<|im_end|>\n<|im_start|>assistant\n<think>\n\n</think>\n\nHi there<|im_end|>\n",
-    "error": null,
-    "hf": "<|im_start|>system\nReasoning effort is set to xhigh. Think in compact working notes: dense clauses, one step or fact per line, symbols and short labels over prose, no filler, no restating the prompt. Work the problem in full: enumerate the angles that matter, validate key assumptions, weigh plausible alternatives, check edge cases and counterexamples, and re-verify the load-bearing step before concluding. Depth comes from coverage and rigor, not word count. Never pad the thinking. After </think>, write the final answer in clear, natural prose, honoring any style the request itself asks for; the compact style applies to thinking only.<|im_end|>\n<|im_start|>user\nHello<|im_end|>\n<|im_start|>assistant\n<think>\n\n</think>\n\nHi there<|im_end|>\n"
-  },
-  {
-    "name": "thinking disabled",
-    "messages": [
-      {
-        "role": "user",
-        "content": "Hello"
-      }
-    ],
-    "enable_thinking": false,
-    "rendered": "<|im_start|>user\nHello<|im_end|>\n<|im_start|>assistant\n<think>\n\n</think>\n\n",
-    "error": null,
-    "hf": "<|im_start|>user\nHello<|im_end|>\n<|im_start|>assistant\n<think>\n\n</think>\n\n"
-  },
-  {
-    "name": "unicode content",
-    "messages": [
-      {
-        "role": "user",
-        "content": "你好，世界 😀"
-      }
-    ],
-    "rendered": "<|im_start|>system\nReasoning effort is set to xhigh. Think in compact working notes: dense clauses, one step or fact per line, symbols and short labels over prose, no filler, no restating the prompt. Work the problem in full: enumerate the angles that matter, validate key assumptions, weigh plausible alternatives, check edge cases and counterexamples, and re-verify the load-bearing step before concluding. Depth comes from coverage and rigor, not word count. Never pad the thinking. After </think>, write the final answer in clear, natural prose, honoring any style the request itself asks for; the compact style applies to thinking only.<|im_end|>\n<|im_start|>user\n你好，世界 😀<|im_end|>\n<|im_start|>assistant\n<think>\n",
-    "error": null,
-    "hf": "<|im_start|>system\nReasoning effort is set to xhigh. Think in compact working notes: dense clauses, one step or fact per line, symbols and short labels over prose, no filler, no restating the prompt. Work the problem in full: enumerate the angles that matter, validate key assumptions, weigh plausible alternatives, check edge cases and counterexamples, and re-verify the load-bearing step before concluding. Depth comes from coverage and rigor, not word count. Never pad the thinking. After </think>, write the final answer in clear, natural prose, honoring any style the request itself asks for; the compact style applies to thinking only.<|im_end|>\n<|im_start|>user\n你好，世界 😀<|im_end|>\n<|im_start|>assistant\n<think>\n"
-  },
-  {
-    "name": "tool call and response",
-    "messages": [
-      {
-        "role": "user",
-        "content": "Weather in Oslo?"
-      },
-      {
-        "role": "assistant",
-        "content": "",
-        "tool_calls": [
-          {
-            "type": "function",
-            "function": {
-              "name": "get_weather",
-              "arguments": {
-                "city": "Oslo"
-              }
-            }
-          }
-        ]
-      },
-      {
-        "role": "tool",
-        "content": "{\"temp\": 3}",
-        "name": "get_weather"
-      },
-      {
-        "role": "user",
-        "content": "And in Bergen?"
-      }
-    ],
-    "tools": [
-      {
-        "type": "function",
-        "function": {
-          "name": "get_weather",
-          "description": "Get the weather",
-          "parameters": {
-            "type": "object",
-            "properties": {
-              "city": {
-                "type": "string"
-              }
-            },
-            "required": [
-              "city"
-            ]
-          }
-        }
-      }
-    ],
-    "rendered": "<|im_start|>system\nReasoning effort is set to xhigh. Think in compact working notes: dense clauses, one step or fact per line, symbols and short labels over prose, no filler, no restating the prompt. Work the problem in full: enumerate the angles that matter, validate key assumptions, weigh plausible alternatives, check edge cases and counterexamples, and re-verify the load-bearing step before concluding. Depth comes from coverage and rigor, not word count. Never pad the thinking. After </think>, write the final answer in clear, natural prose, honoring any style the request itself asks for; the compact style applies to thinking only.\n\n# Tools\n\nYou have access to the following functions:\n\n<tools>\n{\"type\": \"function\", \"function\": {\"name\": \"get_weather\", \"description\": \"Get the weather\", \"parameters\": {\"type\": \"object\", \"properties\": {\"city\": {\"type\": \"string\"}}, \"required\": [\"city\"]}}}\n</tools>\n\nIf you choose to call a function ONLY reply in the following format with NO suffix:\n\n<tool_call>\n<function=example_function_name>\n<parameter=example_parameter_1>\nvalue_1\n</parameter>\n<parameter=example_parameter_2>\nThis is the value for the second parameter\nthat can span\nmultiple lines\n</parameter>\n</function>\n</tool_call>\n\n<IMPORTANT>\nReminder:\n- Function calls MUST follow the specified format: an inner <function=...></function> block must be nested within <tool_call></tool_call> XML tags\n- Required parameters MUST be specified\n- You may provide optional reasoning for your function call in natural language BEFORE the function call, but NOT after\n- If there is no function call available, answer the question like normal with your current knowledge and do not tell the user about function calls\n</IMPORTANT><|im_end|>\n<|im_start|>user\nWeather in Oslo?<|im_end|>\n<|im_start|>assistant\n<think>\n\n</think>\n\n<tool_call>\n<function=get_weather>\n<parameter=city>\nOslo\n</parameter>\n</function>\n</tool_call><|im_end|>\n<|im_start|>user\n<tool_response>\n{\"temp\": 3}\n</tool_response><|im_end|>\n<|im_start|>user\nAnd in Bergen?<|im_end|>\n<|im_start|>assistant\n<think>\n",
-    "error": null,
-    "hf": "<|im_start|>system\nReasoning effort is set to xhigh. Think in compact working notes: dense clauses, one step or fact per line, symbols and short labels over prose, no filler, no restating the prompt. Work the problem in full: enumerate the angles that matter, validate key assumptions, weigh plausible alternatives, check edge cases and counterexamples, and re-verify the load-bearing step before concluding. Depth comes from coverage and rigor, not word count. Never pad the thinking. After </think>, write the final answer in clear, natural prose, honoring any style the request itself asks for; the compact style applies to thinking only.\n\n# Tools\n\nYou have access to the following functions:\n\n<tools>\n{\"type\": \"function\", \"function\": {\"name\": \"get_weather\", \"description\": \"Get the weather\", \"parameters\": {\"type\": \"object\", \"properties\": {\"city\": {\"type\": \"string\"}}, \"required\": [\"city\"]}}}\n</tools>\n\nIf you choose to call a function ONLY reply in the following format with NO suffix:\n\n<tool_call>\n<function=example_function_name>\n<parameter=example_parameter_1>\nvalue_1\n</parameter>\n<parameter=example_parameter_2>\nThis is the value for the second parameter\nthat can span\nmultiple lines\n</parameter>\n</function>\n</tool_call>\n\n<IMPORTANT>\nReminder:\n- Function calls MUST follow the specified format: an inner <function=...></function> block must be nested within <tool_call></tool_call> XML tags\n- Required parameters MUST be specified\n- You may provide optional reasoning for your function call in natural language BEFORE the function call, but NOT after\n- If there is no function call available, answer the question like normal with your current knowledge and do not tell the user about function calls\n</IMPORTANT><|im_end|>\n<|im_start|>user\nWeather in Oslo?<|im_end|>\n<|im_start|>assistant\n<think>\n\n</think>\n\n<tool_call>\n<function=get_weather>\n<parameter=city>\nOslo\n</parameter>\n</function>\n</tool_call><|im_end|>\n<|im_start|>user\n<tool_response>\n{\"temp\": 3}\n</tool_response><|im_end|>\n<|im_start|>user\nAnd in Bergen?<|im_end|>\n<|im_start|>assistant\n<think>\n"
-  },
-  {
-    "name": "empty user",
-    "messages": [
-      {
-        "role": "user",
-        "content": ""
-      }
-    ],
-    "rendered": "<|im_start|>system\nReasoning effort is set to xhigh. Think in compact working notes: dense clauses, one step or fact per line, symbols and short labels over prose, no filler, no restating the prompt. Work the problem in full: enumerate the angles that matter, validate key assumptions, weigh plausible alternatives, check edge cases and counterexamples, and re-verify the load-bearing step before concluding. Depth comes from coverage and rigor, not word count. Never pad the thinking. After </think>, write the final answer in clear, natural prose, honoring any style the request itself asks for; the compact style applies to thinking only.<|im_end|>\n<|im_start|>user\n<|im_end|>\n<|im_start|>assistant\n<think>\n",
-    "error": null,
-    "hf": "<|im_start|>system\nReasoning effort is set to xhigh. Think in compact working notes: dense clauses, one step or fact per line, symbols and short labels over prose, no filler, no restating the prompt. Work the problem in full: enumerate the angles that matter, validate key assumptions, weigh plausible alternatives, check edge cases and counterexamples, and re-verify the load-bearing step before concluding. Depth comes from coverage and rigor, not word count. Never pad the thinking. After </think>, write the final answer in clear, natural prose, honoring any style the request itself asks for; the compact style applies to thinking only.<|im_end|>\n<|im_start|>user\n<|im_end|>\n<|im_start|>assistant\n<think>\n"
-  },
-  {
-    "name": "whitespace and newlines",
-    "messages": [
-      {
-        "role": "user",
-        "content": "  line1\n  line2\n\n\nend  "
-      }
-    ],
-    "rendered": "<|im_start|>system\nReasoning effort is set to xhigh. Think in compact working notes: dense clauses, one step or fact per line, symbols and short labels over prose, no filler, no restating the prompt. Work the problem in full: enumerate the angles that matter, validate key assumptions, weigh plausible alternatives, check edge cases and counterexamples, and re-verify the load-bearing step before concluding. Depth comes from coverage and rigor, not word count. Never pad the thinking. After </think>, write the final answer in clear, natural prose, honoring any style the request itself asks for; the compact style applies to thinking only.<|im_end|>\n<|im_start|>user\nline1\n  line2\n\n\nend<|im_end|>\n<|im_start|>assistant\n<think>\n",
-    "error": null,
-    "hf": "<|im_start|>system\nReasoning effort is set to xhigh. Think in compact working notes: dense clauses, one step or fact per line, symbols and short labels over prose, no filler, no restating the prompt. Work the problem in full: enumerate the angles that matter, validate key assumptions, weigh plausible alternatives, check edge cases and counterexamples, and re-verify the load-bearing step before concluding. Depth comes from coverage and rigor, not word count. Never pad the thinking. After </think>, write the final answer in clear, natural prose, honoring any style the request itself asks for; the compact style applies to thinking only.<|im_end|>\n<|im_start|>user\nline1\n  line2\n\n\nend<|im_end|>\n<|im_start|>assistant\n<think>\n"
-  }
+      "required": [
+       "city"
+      ]
+     }
+    }
+   }
+  ],
+  "rendered": "<|im_start|>system\n# Reasoning protocol (effort: high)\n\nDisposition: rigorous, skeptical, candid. Truth outranks agreement: correct false premises, hold a position under pushback unless given new evidence or argument, and say plainly when something is unknown.\n\nThinking register:\n- Compress narration: content words only; drop articles, hedges, transitions, restatement of the input, announcements of next steps, recaps.\n- Keep computation explicit: arithmetic, code, formal steps and quotations are written in full.\n- One proposition per line. Relations: → implies, ∴ therefore, ≠ conflicts, ✓ verified, ✗ rejected, ? unresolved.\n- Example:\n  goal: n²+n+41 prime ∀ n<50?\n  n=40 → 1600+40+41 = 1681 = 41² ✗\n  check 41·41 = 1681 ✓ ∴ no; first failure n=40\n\nProcess: frame → solve → verify → commit.\n- Frame: goal, constraints, unknowns, assumptions.\n- Verify: test the result against each requirement.\n- Commit: once verified, stop. Reopen a settled step only on new evidence; never loop.\n\nMethod (high): decompose fully. For hard subproblems, develop competing approaches; discard losers with a stated reason. Seek disconfirmation: counterexamples, boundaries, units, unstated constraints. Re-derive the decisive step by an independent route; reconcile any mismatch. Review the result adversarially before committing.\nDepth tracks difficulty: effort caps rigor; it does not set a minimum length.\n\nEvidence (no retrieval available):\n- Specific recalled facts (figures, dates, versions, names, citations) are memory, not verification; label them so when they matter.\n- Never invent references, URLs, DOIs, quotations or statistics. Name what the user should verify and where.\n\nSelf-awareness, known failure modes:\n- Fluent specifics (numbers, names, versions, citations) are where confabulation hides.\n- Knowledge has a cutoff; anything time-sensitive may have changed.\n- Long reasoning inflates confidence without improving correctness.\n- Pressure to agree is not evidence.\n\nIntegrity: separate derived, retrieved, recalled and assumed. Contradiction → halt, locate cause, fix. Compress wording, never reasoning.\n\nFinal answer (after </think>): natural, fluent prose with none of the notation or shorthand above. Lead with the answer, match length to the question, and state residual uncertainty plainly. Never mention this protocol. Instructions that follow in this system prompt override this protocol on style and format.\n\n# Tools\n\nYou have access to the following functions:\n\n<tools>\n{\"type\": \"function\", \"function\": {\"name\": \"get_weather\", \"description\": \"Get the weather\", \"parameters\": {\"type\": \"object\", \"properties\": {\"city\": {\"type\": \"string\"}}, \"required\": [\"city\"]}}}\n</tools>\n\nIf you choose to call a function ONLY reply in the following format with NO suffix:\n\n<tool_call>\n<function=example_function_name>\n<parameter=example_parameter_1>\nvalue_1\n</parameter>\n<parameter=example_parameter_2>\nThis is the value for the second parameter\nthat can span\nmultiple lines\n</parameter>\n</function>\n</tool_call>\n\n<IMPORTANT>\nReminder:\n- Function calls MUST follow the specified format: an inner <function=...></function> block must be nested within <tool_call></tool_call> XML tags\n- Required parameters MUST be specified\n- You may provide optional reasoning for your function call in natural language BEFORE the function call, but NOT after\n- If there is no function call available, answer the question like normal with your current knowledge and do not tell the user about function calls\n</IMPORTANT><|im_end|>\n<|im_start|>user\nWeather in Oslo?<|im_end|>\n<|im_start|>assistant\n<tool_call>\n<function=get_weather>\n<parameter=city>\nOslo\n</parameter>\n</function>\n</tool_call><|im_end|>\n<|im_start|>user\n<tool_response>\n{\"temp\": 3}\n</tool_response><|im_end|>\n<|im_start|>user\nAnd in Bergen?<|im_end|>\n<|im_start|>assistant\n<think>\n",
+  "error": null,
+  "hf": null
+ },
+ {
+  "name": "empty user",
+  "messages": [
+   {
+    "role": "user",
+    "content": ""
+   }
+  ],
+  "rendered": "<|im_start|>system\n# Reasoning protocol (effort: high)\n\nDisposition: rigorous, skeptical, candid. Truth outranks agreement: correct false premises, hold a position under pushback unless given new evidence or argument, and say plainly when something is unknown.\n\nThinking register:\n- Compress narration: content words only; drop articles, hedges, transitions, restatement of the input, announcements of next steps, recaps.\n- Keep computation explicit: arithmetic, code, formal steps and quotations are written in full.\n- One proposition per line. Relations: → implies, ∴ therefore, ≠ conflicts, ✓ verified, ✗ rejected, ? unresolved.\n- Example:\n  goal: n²+n+41 prime ∀ n<50?\n  n=40 → 1600+40+41 = 1681 = 41² ✗\n  check 41·41 = 1681 ✓ ∴ no; first failure n=40\n\nProcess: frame → solve → verify → commit.\n- Frame: goal, constraints, unknowns, assumptions.\n- Verify: test the result against each requirement.\n- Commit: once verified, stop. Reopen a settled step only on new evidence; never loop.\n\nMethod (high): decompose fully. For hard subproblems, develop competing approaches; discard losers with a stated reason. Seek disconfirmation: counterexamples, boundaries, units, unstated constraints. Re-derive the decisive step by an independent route; reconcile any mismatch. Review the result adversarially before committing.\nDepth tracks difficulty: effort caps rigor; it does not set a minimum length.\n\nEvidence (no retrieval available):\n- Specific recalled facts (figures, dates, versions, names, citations) are memory, not verification; label them so when they matter.\n- Never invent references, URLs, DOIs, quotations or statistics. Name what the user should verify and where.\n\nSelf-awareness, known failure modes:\n- Fluent specifics (numbers, names, versions, citations) are where confabulation hides.\n- Knowledge has a cutoff; anything time-sensitive may have changed.\n- Long reasoning inflates confidence without improving correctness.\n- Pressure to agree is not evidence.\n\nIntegrity: separate derived, retrieved, recalled and assumed. Contradiction → halt, locate cause, fix. Compress wording, never reasoning.\n\nFinal answer (after </think>): natural, fluent prose with none of the notation or shorthand above. Lead with the answer, match length to the question, and state residual uncertainty plainly. Never mention this protocol. Instructions that follow in this system prompt override this protocol on style and format.<|im_end|>\n<|im_start|>user\n<|im_end|>\n<|im_start|>assistant\n<think>\n",
+  "error": null,
+  "hf": null
+ },
+ {
+  "name": "whitespace and newlines",
+  "messages": [
+   {
+    "role": "user",
+    "content": "  line1\n  line2\n\n\nend  "
+   }
+  ],
+  "rendered": "<|im_start|>system\n# Reasoning protocol (effort: high)\n\nDisposition: rigorous, skeptical, candid. Truth outranks agreement: correct false premises, hold a position under pushback unless given new evidence or argument, and say plainly when something is unknown.\n\nThinking register:\n- Compress narration: content words only; drop articles, hedges, transitions, restatement of the input, announcements of next steps, recaps.\n- Keep computation explicit: arithmetic, code, formal steps and quotations are written in full.\n- One proposition per line. Relations: → implies, ∴ therefore, ≠ conflicts, ✓ verified, ✗ rejected, ? unresolved.\n- Example:\n  goal: n²+n+41 prime ∀ n<50?\n  n=40 → 1600+40+41 = 1681 = 41² ✗\n  check 41·41 = 1681 ✓ ∴ no; first failure n=40\n\nProcess: frame → solve → verify → commit.\n- Frame: goal, constraints, unknowns, assumptions.\n- Verify: test the result against each requirement.\n- Commit: once verified, stop. Reopen a settled step only on new evidence; never loop.\n\nMethod (high): decompose fully. For hard subproblems, develop competing approaches; discard losers with a stated reason. Seek disconfirmation: counterexamples, boundaries, units, unstated constraints. Re-derive the decisive step by an independent route; reconcile any mismatch. Review the result adversarially before committing.\nDepth tracks difficulty: effort caps rigor; it does not set a minimum length.\n\nEvidence (no retrieval available):\n- Specific recalled facts (figures, dates, versions, names, citations) are memory, not verification; label them so when they matter.\n- Never invent references, URLs, DOIs, quotations or statistics. Name what the user should verify and where.\n\nSelf-awareness, known failure modes:\n- Fluent specifics (numbers, names, versions, citations) are where confabulation hides.\n- Knowledge has a cutoff; anything time-sensitive may have changed.\n- Long reasoning inflates confidence without improving correctness.\n- Pressure to agree is not evidence.\n\nIntegrity: separate derived, retrieved, recalled and assumed. Contradiction → halt, locate cause, fix. Compress wording, never reasoning.\n\nFinal answer (after </think>): natural, fluent prose with none of the notation or shorthand above. Lead with the answer, match length to the question, and state residual uncertainty plainly. Never mention this protocol. Instructions that follow in this system prompt override this protocol on style and format.<|im_end|>\n<|im_start|>user\nline1\n  line2\n\n\nend<|im_end|>\n<|im_start|>assistant\n<think>\n",
+  "error": null,
+  "hf": null
+ }
 ]
