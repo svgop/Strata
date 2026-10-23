@@ -7,6 +7,28 @@
 
 <p align="center"><b>English</b> · <a href="README.zh-CN.md">简体中文</a> · <a href="README.ja.md">日本語</a> · <a href="README.de.md">Deutsch</a> · <a href="README.fr.md">Français</a> · <a href="README.es.md">Español</a> · <a href="README.pt-BR.md">Português</a></p>
 
+## The svg custom line — core differentiators of this fork
+
+This fork carries a performance-engineering campaign (F-01..F-273 in `SVG-CUSTOM.md`; the curated
+list in **`SVG-CUSTOM-FEATURES.md`**) that holds **+17.8–33.4% engine-only over stock at identical
+quant bytes** with quality floors (MMLU-Pro 95.0 mean, mimic 87.9) never traded. Headlines:
+
+- **MAGMA memory architecture** — the pinned resident complement: the whole expert mass the GPU
+  cannot hold stays page-locked and device-mapped in host RAM; the file tier never reads at serving
+  time. Plus a 48 GiB conversation cache for prefix-resume.
+- **Elastic VMM sessions** — session slots, KV, and the expert cache share one virtual-memory spare
+  pool: slots map in ~15 ms when conversations arrive and demote back to cache when they leave.
+  Nine concurrent clients at six-client throughput, zero single-stream tax.
+- **Doorbell graph duality** — captured windows ship in two families (all-resident vs
+  experts-out-of-VRAM), so live cache resize never recaptures a graph.
+- **COHORTS two-verifier reactor** — cohort B's CPU-pool work runs under cohort A's GPU windows:
+  +24.8% concurrent throughput.
+- **Coupled MTP exact-match speculation** with device-side typical rescue, a suffix drafter with
+  economics arbitration, and a trace-calibrated draft keep rule (74–87% acceptance held throughout).
+- **Proof-carrying performance methodology** — ABAB interleaved batteries, quiet-window five-boot
+  means, parity-first ports, and a no-terminal-trade-offs scoping law (AGENTS.md).
+
+
 <h3 align="center">Run a state-of-the-art model on your own gaming PC</h3>
 
 <p align="center">Support for NVIDIA, AMD, Intel · Windows, Linux, Mac · free and open source</p>

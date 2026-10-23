@@ -8,6 +8,8 @@ commits: [68123ce, 0e097be]
 owner: Savage (svg)
 port: 8081 (stock install remains at E:\LLM\Engine\strata, port 8080)
 campaign-record: E:\LLM\Engine\llama-custom\.docs\CAMPAIGN-LOG.md (Passes 173-181)
+core-features: SVG-CUSTOM-FEATURES.md (curated differentiators; README carries the headline list)
+status-note: elastic sessions ADOPTED F-273 - standing recipe now includes STRATA_ELASTIC_SESSIONS=1
 ---
 
 # SVG-CUSTOM — the flight log
