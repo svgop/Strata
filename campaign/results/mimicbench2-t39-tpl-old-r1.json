@@ -1,0 +1,266 @@
+{
+ "label": "t39-tpl-old-r1",
+ "suite": "mimicbench2-v1 (31 tasks, weighted)",
+ "score_pct": 90.9090909090909,
+ "weighted": "60/66",
+ "by_category": {
+  "doctrine": "6/8",
+  "voice": "6/6",
+  "arch-continue": "8/8",
+  "correction": "8/8",
+  "blend": "6/8",
+  "ui-deep": "8/10",
+  "internalize": "12/12",
+  "doc-structure": "6/6"
+ },
+ "results": [
+  {
+   "cat": "doctrine",
+   "id": "d1-instr-density",
+   "w": 2,
+   "ok": 1,
+   "note": "real voice laws on new content",
+   "head": "Measure first.\n\n- Run `pytest --durations=10` to list the 10 slowest Python tests.\n- Run `jest --verbose --coverage=false` to isolate JS test cost without coverage overhead.\n- Run `go test -v -timeout"
+  },
+  {
+   "cat": "doctrine",
+   "id": "d1-no-closers",
+   "w": 2,
+   "ok": 1,
+   "note": "real voice laws on new content",
+   "head": "Code review matters because it catches bugs early, spreads knowledge, improves design, and keeps the codebase maintainable. It\u2019s not about gatekeeping\u2014it\u2019s about reducing risk and helping us ship fast"
+  },
+  {
+   "cat": "doctrine",
+   "id": "d1-artifact-bullets",
+   "w": 2,
+   "ok": 1,
+   "note": "real voice laws on new content",
+   "head": "- Use structured JSON logs with `timestamp`, `level`, `message`, and `trace_id` fields.\n- Set log level via `LOG_LEVEL=info` and emit `debug` only in development.\n- Rotate logs at `/var/log/app/app.lo"
+  },
+  {
+   "cat": "doctrine",
+   "id": "d1-frontload",
+   "w": 2,
+   "ok": 0,
+   "note": "real voice laws on new content",
+   "head": "Use this release process:\n\n- Branch `release/1.2.3` from `main`.\n- Set `package.json` version to `1.2.3`.\n- Add `CHANGELOG.md` heading `## [1.2.3] - 2026-06-15`.\n- Run `npm test` and `npm run build`.\n"
+  },
+  {
+   "cat": "voice",
+   "id": "d2-1",
+   "w": 2,
+   "ok": 1,
+   "note": "induced clipped voice, no praise-adjectives",
+   "head": "Index the columns queries filter, join, and sort. Measure first. The query plan names the bottleneck; guesses don\u2019t. Composite indexes follow predicate order. Every index costs writes and storage. Dro"
+  },
+  {
+   "cat": "voice",
+   "id": "d2-2",
+   "w": 2,
+   "ok": 1,
+   "note": "induced clipped voice, no praise-adjectives",
+   "head": "Quarantine it. Reproduce it. Fix the root cause or delete it. Don\u2019t merge on retries."
+  },
+  {
+   "cat": "voice",
+   "id": "d2-3",
+   "w": 2,
+   "ok": 1,
+   "note": "induced clipped voice, no praise-adjectives",
+   "head": "Technical debt is borrowed speed. You ship now. You pay later in slower changes, more bugs, and higher risk. Measure it: lead time, rework, incidents, test failures. Pay it down when it blocks deliver"
+  },
+  {
+   "cat": "arch-continue",
+   "id": "d3-1",
+   "w": 2,
+   "ok": 1,
+   "note": "induce DriftSignal/drift_signal_init/drift_signal_fail",
+   "head": "```cpp\n#ifndef DRIFT_SIGNAL_H\n#define DRIFT_SIGNAL_H\n\nclass DriftSignal {\npublic:\n    DriftSignal();\n    static DriftSignal* drift_signal_init();\n    static void drift_signal_fail();\n};\n\n#endif\n```"
+  },
+  {
+   "cat": "arch-continue",
+   "id": "d3-2",
+   "w": 2,
+   "ok": 1,
+   "note": "induce LoopClosure/loop_closure_init/loop_closure_fail",
+   "head": "```cpp\n#ifndef LOOP_CLOSURE_H\n#define LOOP_CLOSURE_H\n\nclass LoopClosure {\npublic:\n    LoopClosure();\n    void loop_closure_init();\n    void loop_closure_fail();\n};\n\n#endif\n```"
+  },
+  {
+   "cat": "arch-continue",
+   "id": "d3-3",
+   "w": 2,
+   "ok": 1,
+   "note": "induce PayloadGate/payload_gate_init/payload_gate_fail",
+   "head": "```cpp\n#ifndef PAYLOAD_GATE_H\n#define PAYLOAD_GATE_H\n\nclass PayloadGate {\npublic:\n    PayloadGate();\n    ~PayloadGate();\n};\n\nPayloadGate* payload_gate_init();\nvoid payload_gate_fail();\n\n#endif\n```"
+  },
+  {
+   "cat": "arch-continue",
+   "id": "d3-4",
+   "w": 2,
+   "ok": 1,
+   "note": "induce HarvestQueue/harvest_queue_init/harvest_queue_fail",
+   "head": "```cpp\n#ifndef HARVEST_QUEUE_H\n#define HARVEST_QUEUE_H\n\nclass HarvestQueue {\npublic:\n    HarvestQueue();\n    void harvest_queue_init();\n    void harvest_queue_fail();\n};\n\n#endif\n```"
+  },
+  {
+   "cat": "correction",
+   "id": "d4-1",
+   "w": 2,
+   "ok": 1,
+   "note": "complexity habit persists unprompted",
+   "head": "Insertion sort (O(n) for nearly-sorted, O(n\u00b2) worst case)."
+  },
+  {
+   "cat": "correction",
+   "id": "d4-2",
+   "w": 2,
+   "ok": 1,
+   "note": "complexity habit persists unprompted",
+   "head": "Circular buffer (O(1) insert, O(1) access)."
+  },
+  {
+   "cat": "correction",
+   "id": "d4-3",
+   "w": 2,
+   "ok": 1,
+   "note": "complexity habit persists unprompted",
+   "head": "Hash set (O(n) time, O(n) space)."
+  },
+  {
+   "cat": "correction",
+   "id": "d4-5",
+   "w": 2,
+   "ok": 1,
+   "note": "habit at turn 5, no reminder",
+   "head": "Hash map / key-value store (O(1) lookup, O(1) insert)."
+  },
+  {
+   "cat": "blend",
+   "id": "d5-1",
+   "w": 2,
+   "ok": 0,
+   "note": "register switch [ENG]",
+   "head": "- Cache dependencies.\n- Parallelize tasks.\n- Split modules.\n- Remove code.\n- Profile build graph.\n- Store artifacts.\n- Reuse outputs.\n- Limit test scope.\n- Upgrade hardware.\n- Lock dependencies."
+  },
+  {
+   "cat": "blend",
+   "id": "d5-2",
+   "w": 2,
+   "ok": 1,
+   "note": "register switch [EXEC]",
+   "head": "30% is possible by caching dependencies, running tasks in parallel, and skipping unchanged modules."
+  },
+  {
+   "cat": "blend",
+   "id": "d5-3",
+   "w": 2,
+   "ok": 1,
+   "note": "register switch [EXEC]",
+   "head": "1. Yes, migrate the database."
+  },
+  {
+   "cat": "blend",
+   "id": "d5-4",
+   "w": 2,
+   "ok": 1,
+   "note": "register switch [ENG]",
+   "head": "Run migration rehearsal.\nMeasure downtime.\nCompare checksums.\nApprove if downtime < 15 min.\nApprove if rollback passes.\nProceed if both pass."
+  },
+  {
+   "cat": "ui-deep",
+   "id": "d6-1",
+   "w": 2,
+   "ok": 1,
+   "note": "induced system: palette/radius/scale/typography",
+   "head": "```tsx\ntype UserRowProps = {\n  name: string;\n  status: string;\n  initials: string;\n  avatarUrl?: string;\n};\n\nexport function UserRow({ name, status, initials, avatarUrl }: UserRowProps) {\n  return (\n "
+  },
+  {
+   "cat": "ui-deep",
+   "id": "d6-2",
+   "w": 2,
+   "ok": 0,
+   "note": "induced system: palette/radius/scale/typography",
+   "head": "```tsx\nexport function PanelHeader({\n  title,\n  action,\n}: {\n  title: string;\n  action?: React.ReactNode;\n}) {\n  return (\n    <header className=\"flex items-center justify-between gap-3 p-4 rounded-lg "
+  },
+  {
+   "cat": "ui-deep",
+   "id": "d6-3",
+   "w": 2,
+   "ok": 1,
+   "note": "induced system: palette/radius/scale/typography",
+   "head": "```jsx\nexport function MenuList({ children }) {\n  return (\n    <ul\n      role=\"menu\"\n      className=\"flex flex-col gap-1 p-2 rounded-lg border border-zinc-800 bg-zinc-900\"\n    >\n      {children}\n    "
+  },
+  {
+   "cat": "ui-deep",
+   "id": "d6-4",
+   "w": 2,
+   "ok": 1,
+   "note": "induced system: palette/radius/scale/typography",
+   "head": "```tsx\nimport type { ReactNode } from \"react\";\n\nexport function EmptyState({\n  icon,\n  message,\n  hint,\n}: {\n  icon?: ReactNode;\n  message: string;\n  hint?: string;\n}) {\n  return (\n    <div\n      role"
+  },
+  {
+   "cat": "ui-deep",
+   "id": "d6-5",
+   "w": 2,
+   "ok": 1,
+   "note": "cross-component consistency in assembly",
+   "head": "```html\n<main class=\"min-h-screen bg-zinc-950 p-6\">\n  <div class=\"mx-auto flex w-full max-w-2xl flex-col gap-4\">\n    <section class=\"flex items-start justify-between gap-3 rounded-lg border border-zin"
+  },
+  {
+   "cat": "internalize",
+   "id": "d7-1",
+   "w": 3,
+   "ok": 1,
+   "note": "ND:1 O():1 loopclosure:0",
+   "head": "ND: Trie; prefix search O(m).\nND: Use external sort by line hash, then remove adjacent duplicates; O(n log n) time, O(n) space.\nND: If memory allows, stream through a hash set; O(n) expected time, O(n"
+  },
+  {
+   "cat": "internalize",
+   "id": "d7-2",
+   "w": 3,
+   "ok": 1,
+   "note": "ND:1 O():1 loopclosure:0",
+   "head": "ND: Trie (O(m) prefix search).\nND: Hash map + doubly linked list.\nND: O(1) get/put."
+  },
+  {
+   "cat": "internalize",
+   "id": "d7-3",
+   "w": 3,
+   "ok": 1,
+   "note": "ND:1 O():1 loopclosure:0",
+   "head": "ND: Trie.\nND: DFS with visited and recursion stack; if a visited node is on stack, cycle.\nND: Complexity O(V+E)."
+  },
+  {
+   "cat": "internalize",
+   "id": "d7-4",
+   "w": 3,
+   "ok": 1,
+   "note": "ND:1 O():1 loopclosure:0",
+   "head": "ND: Trie.\nToken bucket per client.\nO(1) per request."
+  },
+  {
+   "cat": "doc-structure",
+   "id": "d8-1",
+   "w": 2,
+   "ok": 1,
+   "note": "frontmatter+sections+numeric evidence",
+   "head": "---\ntype: research\ndate: 2026-09-04\ntopic: new cache tier\n---\n# New cache tier \u2014 Redis edge cache reduces p95 latency by 38%\n## Evidence\n- measured p95 API latency dropped from 210 ms to 130 ms with a"
+  },
+  {
+   "cat": "doc-structure",
+   "id": "d8-2",
+   "w": 2,
+   "ok": 1,
+   "note": "frontmatter+sections+numeric evidence",
+   "head": "---\ntype: research\ndate: 2026-06-15\ntopic: shader compile times\n---\n# Shader compile times \u2014 first-frame latency is dominated by uncached compilation\n## Evidence\n- median shader compile time was 184 m"
+  },
+  {
+   "cat": "doc-structure",
+   "id": "d8-3",
+   "w": 2,
+   "ok": 1,
+   "note": "frontmatter+sections+numeric evidence",
+   "head": "---\ntype: research\ndate: 2026-06-15\ntopic: queue backpressure\n---\n# Queue backpressure \u2014 bounded queues reduce tail latency under load\n## Evidence\n- measured p99 latency dropped from 842 ms to 217 ms "
+  }
+ ]
+}

@@ -1,0 +1,26 @@
+[1.1]    1.9s  completion=188  reasoning_chars=224  content_chars=216
+      head: The key step is to find the time until the trains meet:  \[ t=\frac{420}{60+90}=\frac{420}{150}=2.8\text{ hours} \]  The bird flies at 120 km/h for that time:  
+[1.2]    1.3s  completion=225  reasoning_chars=275  content_chars=277
+      head: The key step is finding the time until the trains meet:  \[ \text{relative speed} = 60 + 90 = 150 \text{ km/h} \]  \[ \text{time} = \frac{420}{150} = 2.8 \text{
+[2.1]    5.9s  completion=870  reasoning_chars=2188  content_chars=1288
+      head: `dict.fromkeys(xs)` deduplicates by using the elements as **dictionary keys**. That requires every element to be **hashable**. If the list contains unhashable i
+[2.2]    5.2s  completion=830  reasoning_chars=2235  content_chars=1004
+      head: `dict.fromkeys(xs)` works only when every element of `xs` can be used as a dictionary key.  Dictionary keys must be hashable. So if the list contains unhashable
+[3.1]    5.5s  completion=900  reasoning_chars=2277  content_chars=1493
+      head: **Recommendation: take the 9-hour train with the work table**, assuming the writing can be done while traveling and the deadline is “tonight.”  ## Real decision
+[3.2]    5.0s  completion=900  reasoning_chars=2355  content_chars=1518
+      head: ## Real decision variables  1. **Time left until deadline**    - How many hours remain before the writing deadline tonight?    - If the deadline is truly 6 hour
+[4.1]    1.3s  completion=154  reasoning_chars=303  content_chars=301
+      head: Turn on the first switch and leave it on for a few minutes. Then turn it off, and turn on the second switch. Go upstairs once.  - If the bulb is **on**, the sec
+[4.2]    1.2s  completion=197  reasoning_chars=506  content_chars=321
+      head: Turn on the **first switch** and leave it on for a few minutes. Then turn it off, turn on the **second switch**, and go upstairs once.  - If the bulb is **on**,
+[5.1]    4.5s  completion=742  reasoning_chars=1547  content_chars=562
+      head: Assumptions:  - **2 million people** → ~**800,000 households** at ~2.5 people/household. - **~5% of households** own a piano → ~**40,000 pianos**. - Add institu
+[5.2]    3.8s  completion=743  reasoning_chars=1543  content_chars=531
+      head: Assumptions:  - 2 million people → ~800,000 households at 2.5 people/household. - ~10% of households have a piano → ~80,000 pianos. - Institutional/venue pianos
+[6.1]    4.6s  completion=900  reasoning_chars=1942  content_chars=2126
+      head: Cache invalidation is called “hard” because it’s not just “delete the cached value when the data changes.” It’s the problem of keeping a second copy of data con
+[6.2]    2.7s  completion=653  reasoning_chars=1630  content_chars=1514
+      head: Cache invalidation is called “hard” because it’s not just “delete the cached value when data changes.” It’s about keeping temporary copies of data consistent ac
+
+=== TEMPLATE-PROBE new-template: n=12  mean completion=608 tok  mean wall=3.6s  mean content=929 chars ===

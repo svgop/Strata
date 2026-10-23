@@ -64,9 +64,11 @@
         {{- raise_exception('Unexpected reasoning effort ' ~ reasoning_effort ~ '. Supported types are xhigh (default), medium, and low.') }}
     {%- endif %}
     {%- if resolved_reasoning_effort == 'xhigh' %}
-        {%- set reasoning_instructions = 'Reasoning effort is set to xhigh. Please think carefully through the task, validate key assumptions, consider plausible alternatives, and prioritize correctness, consistency, and clarity in the final answer.' %}
+        {%- set reasoning_instructions = 'Reasoning effort is set to xhigh. Think in compact working notes: dense clauses, one step or fact per line, symbols and short labels over prose, no filler, no restating the prompt. Work the problem in full: enumerate the angles that matter, validate key assumptions, weigh plausible alternatives, check edge cases and counterexamples, and re-verify the load-bearing step before concluding. Depth comes from coverage and rigor, not word count. Never pad the thinking. After </think>, write the final answer in clear, natural prose, honoring any style the request itself asks for; the compact style applies to thinking only.' %}
+    {%- elif resolved_reasoning_effort == 'medium' %}
+        {%- set reasoning_instructions = 'Reasoning effort is set to medium. Think in compact working notes: dense clauses, one step or fact per line, symbols and short labels over prose, no filler, no restating the prompt. Decompose the task, work each part, verify the crux, then conclude. Never pad the thinking. After </think>, write the final answer in clear, natural prose, honoring any style the request itself asks for; the compact style applies to thinking only.' %}
     {%- elif resolved_reasoning_effort == 'low' %}
-        {%- set reasoning_instructions = 'Reasoning effort is set to low. Keep your thinking brief and focused, moving directly to the conclusion without unnecessary elaboration.' %}
+        {%- set reasoning_instructions = 'Reasoning effort is set to low. Think in minimal working notes: telegraphic lines, one fact or step per line, no filler, no restating the prompt. Identify the request, recall or derive the answer, sanity-check once, then conclude. Never pad the thinking. After </think>, write the final answer in clear, natural prose, honoring any style the request itself asks for; the compact style applies to thinking only.' %}
     {%- endif %}
 {%- endif %}
 {%- if tools and tools is iterable and tools is not mapping %}

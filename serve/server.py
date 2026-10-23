@@ -179,17 +179,27 @@ def write_temporary(path: Path, parts: list) -> None:
     with os.fdopen(os.open(path, flags, 0o600), "wb") as f:
         for part in parts:
             f.write(Path(part).read_bytes())
-# #458: the trailing effort turn ("effort_position": "end"); low is the template's own sentence, medium (which the
-# template says nothing for: no xhigh sentence is medium there) says it, since the xhigh one stays at the top
+# #458: the trailing effort turn ("effort_position": "end"); each text mirrors the template's own sentence
+# (chat_template.jinja) verbatim - the terse-dialect effort set (F-279); medium now has a template branch too
 EFFORT_TURN = "<|im_start|>system\n{}<|im_end|>\n"
-EFFORT_TEXT = {"low": "Reasoning effort is set to low. Keep your thinking brief and focused, moving directly to the "
-                      "conclusion without unnecessary elaboration.",
-               "medium": "Reasoning effort is set to medium. Think as much as the task needs, without unnecessary "
-                         "elaboration.",
+EFFORT_TEXT = {"low": "Reasoning effort is set to low. Think in minimal working notes: telegraphic lines, one fact or "
+                      "step per line, no filler, no restating the prompt. Identify the request, recall or derive the "
+                      "answer, sanity-check once, then conclude. Never pad the thinking. After </think>, write the "
+                      "final answer in clear, natural prose, honoring any style the request itself asks for; "
+                      "the compact style applies to thinking only.",
+               "medium": "Reasoning effort is set to medium. Think in compact working notes: dense clauses, one step "
+                         "or fact per line, symbols and short labels over prose, no filler, no restating the prompt. "
+                         "Decompose the task, work each part, verify the crux, then conclude. Never pad the thinking. "
+                         "After </think>, write the final answer in clear, natural prose, honoring any style the "
+                         "request itself asks for; the compact style applies to thinking only.",
                # the template's own xhigh sentence (chat_template.jinja), which #728's recovery swaps for the low one
-               "xhigh": "Reasoning effort is set to xhigh. Please think carefully through the task, validate key "
-                        "assumptions, consider plausible alternatives, and prioritize correctness, consistency, and "
-                        "clarity in the final answer."}
+               "xhigh": "Reasoning effort is set to xhigh. Think in compact working notes: dense clauses, one step or "
+                        "fact per line, symbols and short labels over prose, no filler, no restating the prompt. Work "
+                        "the problem in full: enumerate the angles that matter, validate key assumptions, weigh "
+                        "plausible alternatives, check edge cases and counterexamples, and re-verify the load-bearing "
+                        "step before concluding. Depth comes from coverage and rigor, not word count. Never pad the "
+                        "thinking. After </think>, write the final answer in clear, natural prose, honoring any style "
+                        "the request itself asks for; the compact style applies to thinking only."}
 VISION_START = "<|vision_start|>"
 # #606: a reply that repeats one token this many times in a row is ended there ("length"): a model in a loop, or a
 # broken state that answers one token forever (an issue saw 36,689 tokens of "!"). The config's "repeat_stop_tokens"

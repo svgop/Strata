@@ -29,6 +29,7 @@ export STRATA_ELASTIC_TIMED_SCAN=1  # F-276 ADOPTED: demotes in true idle - the 
 export STRATA_VMM_CHUNK_MIB=32      # F-276 ADOPTED: superchunks - 24 driver ops/arena vs 373 (29-51us/op GSP-measured)
 export STRATA_SERVE_TELEMETRY=1     # F-276 ADOPTED: window p50/p99 + true per-token gaps + admission waits in /metrics  # F-273 ADOPTED (T33/T34): slot arenas VMM-elastic - S_min=2 mapped, promote ~12-17ms, demote feeds the cache; conc +4.0% 3/3 rounds, M1 no-regression, 9-wide with zero solo tax. OFF: unset
 export STRATA_DM=1                  # F-277 ADOPTED (10-23): dm_wait_combine - the CPU-rows wait + pool rows' read + combine in ONE launch (verify.cpp:492 gate; boot line "STRATA_DM armed"). Pooled 8-boot (t32+t32b, two windows): M1 +2.5% (222.4 vs 217.1), pair +0.9, conc +1.3, M3b in-band; MMLU 95.7 x2; mimic PAIRED 3v3 dm 60/60/62 vs ctl 60/60 (the first 56-read was a tail draw - F-264 bit-identity held). OFF: unset
+export STRATA_DF_PDL=0              # F-279 PIN: the T38 V2 code DEFAULTS STRATA_DF_PDL to 1 when unset (verify_kernels.cu:2084) - every boot since T38 silently ran PDL-armed (measured NEUTRAL by the T38 A-B-A-B deploy interleave, surface ~13 of ~1,860 nodes). Pinned 0 = the documented F-191/F-278 posture + pdl-accuracy.json protocol restored. Re-price arm is =1 (never =0)
 
 export STRATA_PREDICT_CREDIT=1.0    # prediction credit (proven at 103k: 128 t/s / 97.6%)
 export STRATA_PREDICT_BUDGET=2

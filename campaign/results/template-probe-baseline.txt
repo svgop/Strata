@@ -1,0 +1,26 @@
+[1.1]    2.1s  completion=265  reasoning_chars=497  content_chars=200
+      head: The trains meet after:  \[ \text{time}=\frac{420}{60+90}=\frac{420}{150}=2.8\text{ hours} \]  The bird flies at 120 km/h for that entire time:  \[ 120 \times 2.
+[1.2]    1.5s  completion=337  reasoning_chars=650  content_chars=334
+      head: The key step is to find the **time until the trains meet**, not the bird’s individual trips.  The trains approach each other at:  \[ 60 + 90 = 150 \text{ km/h} 
+[2.1]    4.8s  completion=787  reasoning_chars=2294  content_chars=830
+      head: `dict.fromkeys(xs)` works by using the elements of `xs` as dictionary keys. Dictionary keys must be hashable, so this fails when `xs` contains unhashable items 
+[2.2]    4.1s  completion=896  reasoning_chars=2171  content_chars=1235
+      head: `dict.fromkeys(xs)` uses the items of `xs` as dictionary keys. Dictionary keys must be hashable, so this fails for unhashable items such as lists, dicts, sets, 
+[3.1]    4.8s  completion=900  reasoning_chars=2354  content_chars=1535
+      head: ## Real decision variables  1. **Deadline clock**      - What time is the deadline?      - What time would you arrive by each option?      - Do you need to be p
+[3.2]    3.9s  completion=900  reasoning_chars=2305  content_chars=1537
+      head: ## Real decision variables  1. **Total door-to-door travel time**    - Flight: **3 hours flight + 2 hours airport = 5 hours**    - Train: **9 hours**  2. **Avai
+[4.1]    1.6s  completion=264  reasoning_chars=793  content_chars=269
+      head: Use the bulb’s heat:  1. Turn on Switch 1 and leave it on for a minute. 2. Turn Switch 1 off, then turn on Switch 2. 3. Go upstairs once.  - If the bulb is on, 
+[4.2]    1.2s  completion=266  reasoning_chars=803  content_chars=269
+      head: Turn on **switch 1** and leave it on for a few minutes. Then turn it off and turn on **switch 2**. Go upstairs once.  - If the bulb is **on**, it’s **switch 2**
+[5.1]    3.6s  completion=705  reasoning_chars=1679  content_chars=412
+      head: **Estimate: ~10–30 piano tuners**  **Assumptions** - 2 million people → ~800,000 households. - ~1–2% of households have a piano → ~8,000–16,000 pianos. - Add sc
+[5.2]    2.1s  completion=489  reasoning_chars=1037  content_chars=352
+      head: Assumptions: - 2 million people → ~800,000 households. - ~10% of households have a piano → ~80,000. - Add ~20,000 institutional/venue pianos → ~100,000 total. -
+[6.1]    4.7s  completion=900  reasoning_chars=2505  content_chars=1541
+      head: A strong junior engineer could retell it like this:  > “Cache invalidation is considered hard because you’re not just deleting one piece of data. You’re trying 
+[6.2]    4.1s  completion=900  reasoning_chars=2651  content_chars=1533
+      head: Cache invalidation is called “hard” because deleting a cache entry is easy — knowing **when, where, and what to delete** is hard.  A strong junior engineer coul
+
+=== TEMPLATE-PROBE baseline-old-template: n=12  mean completion=634 tok  mean wall=3.2s  mean content=837 chars ===

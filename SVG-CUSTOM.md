@@ -9351,3 +9351,63 @@ pdl-accuracy.json entries, then 3v3 only if overlap shows — F-191's null is EX
 partial-chain-inside-noise, no longer citable as falsification); PIN_GUARD=2 cold-start boot;
 diet tranche-1 four one-boot arms; decode-share-0.9 pricing 3v3; prescale isolated boot + KL
 pair; CCD_SPLIT redo; TC-hc rung-0 microbench; 9-wide telemetry leg (C5 now live).
+
+## F-279 — 2026-10-23 ~18:05: THE TERSE-DIALECT EFFORT SET ADOPTED (user directive); the T39
+## wave consolidated; E1 cache-slots fix + the PDL default-on correction pinned
+THE TEMPLATE (user: "low/medium/high more effortful, thinking terse and concentrated, final
+answers normal"): all three effort tiers rewritten in serve/chat_template.jinja + mirrored
+EXACTLY (AST-verified, char-for-char) into server.py EFFORT_TEXT — xhigh = full rigor
+(enumerate angles, validate assumptions, weigh alternatives, check edge cases and
+counterexamples, re-verify the load-bearing step), medium = decompose/work/verify-crux (had
+NO directive at all before — a real gap), low = identify/derive/sanity-check; each carries
+the terse-dialect contract for THINKING ONLY (compact working notes, dense clauses, one step
+or fact per line, symbols and short labels over prose, no filler, no restating the prompt,
+never pad) + the final-answer guard "clear, natural prose, HONORING ANY STYLE THE REQUEST
+ITSELF ASKS FOR" (the style-defer clause — added after the first gate read mimic 56/66 and
+the mechanism was identified: the plain "natural prose" clause fights style-mimicry tasks).
+Coupling handled: #728 recovery token-swaps HIGH_EFFORT->LOW_EFFORT (mirror keeps it sound),
+goldens regenerated (18 embeds), 18/18 tokenizer tests green.
+GATE ARC: baseline (old template, live server) = mean 634 completion tok / 3.2s wall, 2 of 6
+prompts burning the entire 900-token budget on thinking; NEW = 608 tok mean (-4%; -35% on
+the puzzle class: 264->154), content chars UP 837->929 (budget-truncated answers freed);
+MMLU 94.3 + 94.3 (floor 93.3 PASS, 1-sigma of the 95.0 anchor); first mimic read 56/66 (the
+known low mode — appeared twice on the OLD template too) -> style-defer fix -> PAIRED
+INTERLEAVE (t39-tpl-mimpair, git-checkout old vs fixed-new, ABAB x2): old 60/58 vs new
+60/62 — new >= old EVERY paired round. ADOPTED (3 files; rollback = git checkout).
+THE T39 WAVE (three verified dossiers, INDEX rows; the user's "push past the record" +
+"elastic delays/back-and-forth" + "dead flags" directives): [R2 elastic] the VMM layer is
+HEALTHY (promote p50 2.3ms, demotes in true idle) — the waste is ABOVE it: E1 the 4-SLOT
+conversation-cache default (615 MB used of 48 GiB, evicting 10x/boot) = FIXED TODAY
+(--conversation-cache-slots 24 in the config, exact-class, verification = eviction counter
+on next boots); E2 the 42.7ms main-path park D2H rides the REQUEST THREAD before the prompt
+read (generate.cpp:9602/13565; background it = -40ms TTFT on switching turns); E3 the
+two-hop restore (11+12-33ms; straight-into-slot = -25-45ms per return); 9-wide rotation
+LOG-MEASURED ((8,8) rounds + 60-64 idle-A rounds/boot) — T37 C3 ternary prices +12.5%
+in-window tokens, 9-conc band 355-390 vs record 323.0, ver_c ~127-250 MiB. [R1 anatomy]
+standing window row-flat 12.9-14.9ms (graph replay IS the critical path); THE COHORT ROUND'S
+2x (p50 24.3, n=17,234) = two ~6-row batch graphs (~2,660 nodes post-dm) replaying SERIALLY
+on one stream — C2a-lite (finish B under A's tail) = +5-8% conc, THE >4% band this wave,
+gated on C5b (the two WSTAT histograms measure different phases; cohort push misses the
+~1.4-2ms commit/emit tail); audit: 33 arms + 28 args = 0 DEAD, 31 KEEP (TYPICAL_ACCEPT
+re-proven live: 2,646/5,186 first-rejections rescued), 2 SUSPECT (POOL_SPIN_US,
+PREDICT_CREDIT/BUDGET) for one pooled drop-test each; VERIFY_PROFILE no longer measures the
+standing composition (it disables dm + FUSE_HITS) — re-baseline uses STRATA_VERIFY_NODES=2;
+the "spec-8 buffer class" is LOAD-BEARING (batch 2-rows/slot cap) — F-270's VRAM ledger
+attribution corrected. [R3 prefill/acceptance] no >=4% in-tree prefill lever unpriced
+(quantize-dedup SHIPPED c675f5b7 — T15 stale; K=640 fp16 target never executes — family
+closed); the acceptance battery (tau {0.15/0.25/0.30} + SPEC_PROB, MMLU-gated) is the cheap
+value and DECAYS at a successful retrain — measure now; STRATA_SPEC_RATIO's "preserves the
+distribution EXACTLY" claim FALSE (over-emits (1-p)*min(q,p) per rescued site); the 9-conc
+77.98% acceptance = denominator artifact until the batch lane gets its trace twin (one
+fprintf).
+THE PDL CORRECTION (R1, main-loop-verified): the T38 V2 code DEFAULTS STRATA_DF_PDL to 1
+when unset (verify_kernels.cu:2084, "opt-in until the A/B says otherwise") — every boot
+since T38 silently ran PDL-armed; F-278's "unset = byte-identical" and pdl-accuracy.json's
+env line were WRONG (the implementer's report mis-stated the default). Measured NEUTRAL
+(the T38 A-B-A-B deploy interleave was effectively PDL-on vs PDL-off, indistinguishable;
+armed surface ~13 of ~1,860 nodes). FIXED: export STRATA_DF_PDL=0 pinned in the launcher
+(documented posture restored, protocol violation closed; the re-price arm is =1, not =0).
+NEXT: T40 implementer on C5b + C2a-lite + E2/E3 (park/restore pathway) + E5 ternary design
++ E6 + the batch trace twin; main-loop boots: A1 diagnostics (VERIFY_NODES=2), E1 eviction
+verification, tau+SPEC_PROB battery, the 2 drop-tests; five-boot pooled vs the records
+215.2/206.4/323.0 (dm pool already 222.4/209.9/319.6 — conc is the battle).
