@@ -116,3 +116,44 @@ and pre-budgeted), conditional nodes (not needed with sentinel padding).
 (API floor ~1.5 µs/node vs framework ceremony); PCIe 5 H2D time of the conversation hot-swap
 payload (the new dominant promotion term); whether cudaGraphExecUpdate clones across identical
 slots (no prior art — if yes, per-slot capture disappears entirely even for the initial set).
+
+---
+
+## v3 — implementation substrate (2026-10-23; from T33-ourtree-verification.md, main-loop takeover)
+
+Three amendments that SIMPLIFY v2 by riding machinery the tree already owns:
+
+1. **Sessions join the existing VmmChunk triad — no cudaMemPool introduction.** KV and the expert
+   cache already do live VMM re-partitioning through one spare-chunk pool (`kvg_trim` /
+   `qsa_kv_elastic_shrink` at generate.cpp:7947 unmapping KV chunks into `kvg.spare`, remapping them
+   into the cache's `xcache.vmm_range()`; the boot's own "gave back 300 tokens in 35.7 ms" is this
+   machinery). Sessions become the third citizen: slot arenas are VmmRanges reserved at boot
+   (VA-only), granules mapped from the spare on promote (~25-30 ms per 0.78 GiB at 2 MB), unmapped
+   to the spare on demote where the cache refill eats them. One mechanism, one spare pool, no
+   second allocator philosophy in the tree.
+2. **The slot-map indirection table is STRUCK — the decoupling already exists.** v2 imports
+   llama.cpp #28248's device map-table to protect captures from cache shrink; our cache already
+   lives in a STABLE-VA VMM range and the doorbell graph duality (verify.cpp:2504-2511,
+   `exec_[T]` zero-doorbell vs `exec_nr_[T]` doorbell — "a prompt loan, a shrink or a swap")
+   already survives residency changes by swapping graph families, never recapturing. Less new
+   surface, zero hot-path indirection.
+3. **Slot-graph persistence is natural, not engineered.** Verifiers bind ONE session arena at
+   construction (`ss_ = &ss`, verify.cpp:776; the g_live registry + release_gpu_fn own teardown),
+   graphs bake the arena's addresses, and `session_init` carves fixed offsets from the base — so a
+   stable-VA slot keeps every sub-pointer AND every graph valid across conversations and
+   promote/demote cycles, exactly as v2 requires. Consequence: slot-affine verifier+drafter pairs
+   constructed once per slot at boot (drafters already bind per slot, generate.cpp:9137).
+   TEARDOWN ORDER is the one live risk (graphs before pool release; the ggml #16548 class).
+
+Lifecycle accounting carried from the tree read: session anatomy = `session_bytes()` pure
+arithmetic (session.cpp:61); the per-layer HOST-PINNED KV shadows inside `qsa_state_init` are the
+host half of demotion — demote must unpin or 184 GB RAM leaks slowly across conversations
+(instrument pins/unpins per slot from day one).
+
+Promotion budget with the substrate settled: map granules (~25-30 ms) + the measured tail-flip
+migration (34-59 ms) ≈ 60-90 ms off the decode path — comfortably inside the ≤2 s ramp contract;
+the v2 "1-2 s capture" term is gone entirely (captures are per-slot, once, at first traffic).
+
+Verification addendum: before implementation, the capture-family audit (all four capture sites —
+verify.cpp:2522/2657/3554/3597 — bake only slot-affine + lane state, nothing outside their slot);
+every test boot obeys the F-271 single-engine law.
