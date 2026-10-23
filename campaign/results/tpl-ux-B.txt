@@ -1,0 +1,11 @@
+[1.1]  13.7s  completion= 2500  reason= 8127ch  content= 2372ch
+[1.2]  12.7s  completion= 2500  reason= 7976ch  content= 2572ch
+[2.1]   5.0s  completion=  984  reason=  473ch  content= 2985ch
+[2.2]   4.8s  completion=  974  reason=  524ch  content= 2825ch
+[3.1]   1.7s  completion=  165  reason=  194ch  content=  590ch
+[3.2]   1.0s  completion=  166  reason=  149ch  content=  637ch
+[4.1]   5.3s  completion=  985  reason= 1323ch  content= 3143ch
+[4.2]  11.8s  completion= 2500  reason= 2887ch  content= 7656ch
+[5.1]   6.2s  completion= 1203  reason=  765ch  content= 3549ch
+[5.2]   6.9s  completion= 1454  reason=  961ch  content= 3945ch
+=== UX-PROBE tpl-ux-B-standing: n=10  mean wall=6.9s  mean completion=1343 tok  mean content=3027 ch  mean reason=2338 ch ===

@@ -9499,3 +9499,19 @@ honesty/anti-confabulation rules ship in the protocol itself. Token cost ~zero m
 rigor on demand). NEXT RIDERS: five-boot pooled re-bank of the full recipe unchanged
 (template swap is orthogonal to speed arms); hf cross-reference when a transformers env
 is handy; watch blend-category on the next mimic (the only lane that leaned standing).
+
+### F-283a — 2026-10-24 ~01:35: THE "FEELS SLOWER" A/B (user asked; tpl-speed-ab.sh +
+tpl-ux-probe.py — 5 daily-driver prompts x2 per leg, A=live-warm/B=old-fresh/C=new-fresh).
+ENGINE: unchanged — real-request decode 200.6 tok/s (in-band vs 184-230 across old-template
+usage boots); no engine code touched by a template swap. UX TOKEN ECONOMY: the protocol
+COSTS ~+13% tokens per open-ended answer (A 1535 / C 1511 vs B 1343 completion tok,
+consistent across boot positions; reasoning chars +30% at 2980-3052 vs 2338; FINAL ANSWERS
+THE SAME SIZE at ~3027-3141 ch) = ~+0.7s wall per typical answer (~+11%). Mechanism: the
+high tier's method (compete approaches/disconfirm/re-derive/adversarial review) gives the
+model real work to do on open-ended asks — the puzzle-class think-probe (616 vs 608) was
+blind to it (short-hop puzzles leave the method nothing to chew). This is rigor bought at
++0.7s, not an engine regression. CONFERENCE NOTE: tonight's 6-reboot gates churn made the
+evening feel cold-path slow too (2.5k vs 6-7k prefill until warm). Lane spot-check on leg C
+(193.4/187.5/296.9) ran AFTER 10 UX requests (unusual context — first thing after prewarm
+is the banked pattern); single boot, low edge of swing, no verdict — the owed five-boot
+pooled re-bank of the F-282 recipe remains the instrument for engine-speed certification.
