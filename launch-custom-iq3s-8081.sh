@@ -22,6 +22,7 @@ export STRATA_KV_PREFETCH=1         # +5.3%/4.1% prefill at 32K/64K
 export STRATA_ADAPT_LAG=2           # kills the lag-1 event sync stall in the adapt tier
 export STRATA_DMA_BATCH=1           # 84.9% fewer DMA submit cycles
 export STRATA_VERIFY_DEVICE_PLAN=1  # device-side routing plan when all experts resident
+export STRATA_ELASTIC_SESSIONS=1  # F-273 ADOPTED (T33/T34): slot arenas VMM-elastic - S_min=2 mapped, promote ~12-17ms, demote feeds the cache; conc +4.0% 3/3 rounds, M1 no-regression, 9-wide with zero solo tax. OFF: unset
 
 export STRATA_PREDICT_CREDIT=1.0    # prediction credit (proven at 103k: 128 t/s / 97.6%)
 export STRATA_PREDICT_BUDGET=2

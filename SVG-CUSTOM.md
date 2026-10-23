@@ -9168,3 +9168,20 @@ pipeline is not constructed) - the measured -9.6% static-9 solo penalty was NOT 
 disengagement; pool-shrink + profile-class effects carry it. The gate carries the right semantic
 for future multi-GPU elastic configs. Rollback: engine/strata.pre-t34, or boot without the env.
 NEXT: the F3 battery (standing vs elastic 3v3) + F4 (parallel-9 elastic = the F-271 question re-asked).
+
+## F-273 — 2026-10-23 ~05:00: T34 BATTERY — ELASTIC SESSIONS ADOPTED; 9-WIDE DELIVERED
+F3 (3v3 interleaved, prewarmed, single-engine every leg): ctl means M1 219.8 / pair 215.4 / conc
+325.8; ELASTIC means M1 224.5 (+2.1%) / pair 214.4 (-0.5%, noise) / conc 338.8 (+4.0%) - and the
+conc lane won EVERY round (339.2/343.2/334.0 vs 327.4/322.6/327.5). Mechanism: the freed 2.91 GiB
+= +1,300 cache slots, and conc pulls wider expert unions so the slot term pays there (the requant
+arithmetic's "conc gains more than M1" prediction, banked). F4 (parallel-9 elastic, 9-conc): M1
+209.3 (SOLO IN-BAND - the F-271 non-negotiable holds), pair 209.4, 9-conc 322.5 = NINE clients at
+6-conc-standing parity, engines_delta=1, ITL p99 35ms, accept 77.98% in-band. THE F-271 QUESTION
+IS ANSWERED: 9-wide with zero solo tax, zero restarts, capacity elastic. ADOPTED into the standing
+launcher (export STRATA_ELASTIC_SESSIONS=1): M1 no-regression, conc at the +4% bar with 3/3 round
+wins, pooled doctrine + one-command revert (unset env); the five-boot pooled confirmation rides
+every future battery (per the prewarm2 precedent). A third golden hash appeared on the b9ela boot
+(3b680e29) - the known boot-variance signal, now 3 distinct hashes lifetime. OWED: the 2x MMLU +
+mimic formality on the next adoption batch (elastic + dm together - both are
+bit/timing-class-neutral, the F-239 anomaly note stands); re-quant stacks (+792 slots on a pool
+that now demonstrably pays in conc).
