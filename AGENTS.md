@@ -291,3 +291,18 @@ port, merge:
 8. **The Launch Law:** never run `setup.py`/`setup.sh` on this lane (it rewrites config args);
    start via the launchers. Engine rebuilds deploy by `cp build/strata engine/strata` with a
    rollback copy kept alongside.
+9. **PATHWAY MINDFULNESS (user doctrine, 2026-10-23 — an ultimatum, not a suggestion).** Every
+   mechanism is studied as a PATHWAY before it is extended, and re-studied periodically while it
+   stands: where does its time live, measured (boot lines, instruments, per-window accounting —
+   sub-millisecond terms compound per window and per token), what does each stage WAIT on, and is
+   the STRUCTURE the most intelligent form? The order of preference is fixed: REMOVE a stage,
+   FOLD two into one, MOVE work under an existing wait, THEN (last) add a mechanism. "It works"
+   is the floor, not the bar — the bar is the shortest intelligent path, which usually means less
+   code, fewer handoffs, fewer copies, and no wait that survives without a payer. Applies doubly
+   to every request-critical path (admission → materialize → first token → steady windows) and to
+   the RELATIONSHIPS between structures: who waits on whom, which copy exists only because of an
+   old shape, which boundary could dissolve. Precedents: prewarm2 (the boot pin defeated the warm
+   cache — the fix moved the work AFTER the pin, not more work); the dm fold (three stages became
+   one kernel; the wait became the staging); elastic sessions (allocation became VA bookkeeping).
+   When proposing ANY change, name the pathway it shortens and the measured term it removes.
+
