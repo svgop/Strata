@@ -10454,3 +10454,19 @@ run the exact affine dot with these file-signed operands (the −4·s correction
 file's own d signs) — mechanically one command; expected to close at the fp32 noise
 floor and PASS G0.  THE FIXTURE RULE BANKED: never re-quantize a tensor whose
 on-device image is dumped — decode the dump's own convention instead.
+
+## F-319 — 10-25 ~02:45: **G0 PARITY GATE: PASSED** — the P2 module reproduces the
+## engine's drafter to the fp32 noise floor.  The retrain's prerequisite is MET.
+
+**T1 (the mixer on the dumped R_)**: std 4.87e-7, max_rel 1.96e-6, cos 0.99999994 ✓
+**T2 (the head, the exact affine on the dumped operands)**: std 4.63e-7, **max_rel
+2.73e-6 (gate ≤5e-5)**, cos 0.99999994, argmax 6970=6970 EXACT ✓
+**THE COMPLETE SOLUTION CHAIN** (for the trainer's forward-mode design): weights = the
+engine's rt rows (dqhead-proven bit-exact); the Q4 head = per-block SIGNED d read
+from the bytes (ggml's max/−8 walk — never a uniform-sign re-quant), split-halves
+nibbles (byte j: slot j | slot j+16); the activation = raw-fp32-scale q8_1 quantize
+(fp16-stored d/s); the dot = Σ d_w·(nib·q)·d_x with the −8·Σx-class affine
+correction (c=2, empirically bit-tight); bf16-class weights consume UNQUANTIZED fp32
+activations.  **EXEC-C TRAINING IS UNBLOCKED**: the trainer's G0-exact forward now has
+its complete recipe; the two-mode design (exact-quantizer eval / no-rounding train)
+per exec-B §5.4 governs the gradients.  THE GOAL'S BIGGEST REMAINING LEVER IS LIVE.
