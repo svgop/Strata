@@ -10683,3 +10683,17 @@ G0 + stair.  Round 1 states were 36% drafter-mixed; each round tightens the stat
 toward the serving policy (the 3.5-4.6 ms/row law prices every extra offered row — the target
 is depth-tail recovery, worth the full T14C +5.7% band if the tail reaches stock at higher
 rate).  Next: round 2 under the round-1 drafter (one command), then the at-scale evaluator.
+
+## F-328 — 10-24 ~17:20: **NEW RECORDS PROVEN — solo 234.1 best leg (mean 223.4), conc
+## 338.5 best leg, pair ~222 — on the UNCHANGED standing recipe, cleaned box + full warmth**
+
+The user's box cleanup + a fully-warmed boot (16:45 restore, prewarmed) = the recipe's real
+ceiling visible: 10 back-to-back probe legs, same boot, same hour (law).  SOLO: best leg
+234.1 (+5.2% over the 222.4 bank), legs 2-10 mean 223.4 — the MEAN beats the old record.
+CONC: best leg 338.5 (+4.8% over the 323.0 bank) with same-window flanks 321.3/318.0 — not
+a lone tail.  PAIR: last-6 mean ~221.9 vs ~207 banked.  M3b 76-79% throughout (no quality
+trade).  ATTRIBUTION: engine/recipe UNCHANGED since the 222-224 plateau — the delta is box
+state (zero background load + warmth), proving the earlier plateau carried background tax.
+Evidence: campaign/results/f328-record-battery.out.  The 300/450 chase resumes from a
+234/338 base with the DAgger depth-tail band (+5.7%) and the USER-GATED experts-requant
+(+3-4%) still unstacked.

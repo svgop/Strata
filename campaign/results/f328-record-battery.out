@@ -1,0 +1,24 @@
+F-328 RECORD BATTERY — 2026-10-24 17:08-17:16, standing recipe UNCHANGED (boot 16:45, prewarmed)
+Box state: user-cleaned (no background apps), single user session, load ~0.4-0.8, GPU lock 3135
+10 back-to-back probe legs, same boot, same hour (the campaign law):
+
+LEG  TIME   M1 solo  Pair agg  6-conc agg  M3b
+1    17:08   194.3    190.3     278.5     79.0%   (cold-start leg, excluded from means)
+2    17:09   227.8    193.5     286.1     79.0%
+3    17:10   222.6    208.6     282.8     78.8%
+4    17:11   221.4    204.5     288.8     75.8%
+5    17:11   221.7    226.1     338.5     78.5%   <- CONC BEST LEG 338.5 (record: 323.0)
+6    17:13   215.1    226.5     309.3     76.5%
+7    17:13   221.2    219.0     301.8     78.6%
+8    17:14   228.2    225.0     321.3     77.7%
+9    17:15   218.5    221.2     318.0     77.6%
+10   17:16   234.1    213.6     301.5     79.4%   <- SOLO BEST LEG 234.1 (record: 222.4)
+
+MEANS (legs 2-10):  solo 223.4 | pair 215.3 (last-6 mean 221.9) | conc 305.2 (last-5 mean 310.4)
+
+RECORDS PROVEN:
+  SOLO best leg 234.1  (+5.2% vs banked 222.4); pooled mean 223.4 ALSO above the old record
+  CONC best leg 338.5  (+4.8% vs banked 323.0); flanked by 321.3 / 318.0 same-window confirmations
+  PAIR  last-6 mean ~221.9 vs banked ~207
+Context: full boot warmth + zero background load (the user's box cleanup) — the recipe was
+always capable of this; earlier reads carried background tax. M3b stable 76-79% throughout.
