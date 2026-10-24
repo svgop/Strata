@@ -10523,3 +10523,22 @@ deep (pos≥16384) 262 = 66.7% — the first-cycle corpus is deep-heavy by desig
 F-235 deficit lives there).  The trainer scaffold extended (params view, the
 stock-baseline evaluator frame, shard loading — syntax-validated); the torch module
 chain port is the remaining piece before the first gradient step.  Server restored.
+
+## F-323 — 10-25 ~06:00: **THE FIRST GRADIENT STEPS ARE REAL** — the torch module
+## ported (parity cos 1.00000000 / max_abs 1.3e-5 vs the G0 chain), the K-loss wired
+## on harvest anchors, and **51 steps lift depth-1 acceptance 0.4388 → 0.5276
+## (+8.9 pt on 196 held anchors)** over the stock baseline.
+
+**THE MODULE (tools/mtp_module.py)**: B1/B2/the HC read as trainable torch ops over
+the rt dense Parameters (experts+head frozen, F-114); the two-mode design's TRAIN
+mode (no-rounding — the quantizers pass-through; the G0-exact eval mode remains
+p2_forward's).  Parity vs the G0-proven numpy chain: cos 1.00000000, max_abs 1.34e-5
+(fp32 matmul-order class).  **THE TRAINING**: CE on mixed→W_head sub-vocab logits vs
+the true next token (the engine's own dumped Q4 head bytes, F-318's signed-d
+split-halves decode — frozen); first step loss 0.169 on real anchors (1/4 masked =
+off-sub-vocab, the exec-C expectation); AdamW 1e-4.  **THE READ**: stock 0.4388 →
+1-step 0.4330 (noise) → **51 steps 0.5276 (+8.9 pt)** — the first real acceptance
+gain from trained weights, on the first-cycle corpus (200,281 records; the depth-1
+proxy — the K=6 recursion + the attention KV chain are the remaining wiring for the
+full FastMTP loss).  The retrain's mechanism is CONFIRMED LIVE: trainable weights +
+real teacher data + measurable acceptance movement.
