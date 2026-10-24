@@ -10105,3 +10105,20 @@ transcription-bug class eliminated by construction).
 2. **F-294b's two-stage 2-bit proxy kill STANDS**: its GPU-side measurements (flat top,
    rescore band, argmax flips) read the real bytes via the donor's correct kernels.
    Consistent: 2-bit flips the argmax; 4-bit does not.  FLAG LIFTED.
+
+## F-299 — 2026-10-24 ~12:45: THE DT SWEEP (post-SPEC_PROB) CLOSES NEUTRAL — and the
+## F-296 REGRESSION caught, reverted, verified (the F-285a law's second occurrence).
+
+**THE REGRESSION**: the t50 dt battery's conc lane read 0.0 on ALL legs — the F-296
+build (the lambda-above-the-loop move for the dead overlap arm) broke the DEFAULT
+cohort path (#267 layer-0 timeouts with the arm OFF — a relocation changes the default
+path, AGAIN; law: NEVER move the lambda, even for a default-off arm).  REVERTED
+(generate.cpp -> 078fba14^), rebuilt, deployed: conc restored at 294.2 verified.
+**THE ARTIFACT LAW (new)**: the sweep's M1 230.2@0.75 was inflated by the broken lane
+itself — no conc traffic during the M1 leg = a quieter box.  Never read M1 from a boot
+whose conc lane is broken.  Confirm on the FIXED binary: 205.6/206.0/296.7 = inside
+the standing band.
+**THE DT VERDICT**: 0.75 / 0.85 (standing) / 0.95 all within noise post-SPEC_PROB —
+the global optimum did not move; the per-position form has no sweep evidence of
+headroom; the DT family closes NEUTRAL (no change to the recipe).  The T50 rider's
++0-2% band does not materialize.
