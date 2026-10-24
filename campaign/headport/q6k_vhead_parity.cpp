@@ -107,14 +107,22 @@ int main(int argc, char** argv) {
     const size_t wbytes = (size_t) rows * kBpr * kBlk;
     std::mt19937 rng(11);
     std::vector<uint8_t> hw(wbytes);
+    const char* real_w = argc > 3 ? argv[3] : nullptr;   // F-294b v1: the REAL head tensor
+    std::normal_distribution<float> nd(0.f, 1.f);
+    if (real_w) {
+        FILE* rf = std::fopen(real_w, "rb");
+        if (!rf || std::fread(hw.data(), 1, wbytes, rf) != wbytes) { std::fprintf(stderr, "read fail: %s\n", real_w); std::exit(2); }
+        std::fclose(rf);
+        std::fprintf(stderr, "real weights: %s (%zu bytes)\n", real_w, wbytes);
+    } else {
     for (size_t i = 0; i < wbytes; i += 4) {
         const uint32_t r = rng();
         std::memcpy(&hw[i], &r, 4);
     }
-    std::normal_distribution<float> nd(0.f, 1.f);
     for (size_t b = 0; b < (size_t) rows * kBpr; ++b) {
         const __half d = __float2half(std::fabs(nd(rng)) * 0.01f);
         std::memcpy(&hw[b * kBlk + 208], &d, 2);
+    }
     }
     void *w = nullptr, *xq = nullptr, *proxy = nullptr, *scratch = nullptr;
     float *x = nullptr, *y0 = nullptr, *y1 = nullptr;
@@ -131,7 +139,7 @@ int main(int argc, char** argv) {
     ck(cudaStreamCreate(&s), "stream");
     k::native_quantize_q8_1(x, xq, kNin, MT, s);
     // scale the block scales so a column's logits spread like a head's (sd 4)
-    {
+    if (!real_w) {
         k::q6k_head_mmvq(w, xq, y0, kNin, rows, 1, s);
         std::vector<float> l0((size_t) rows);
         ck(cudaMemcpy(l0.data(), y0, l0.size() * 4, cudaMemcpyDeviceToHost), "l0");

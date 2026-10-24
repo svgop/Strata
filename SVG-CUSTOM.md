@@ -9967,3 +9967,23 @@ exact-materialize arm (STRATA_HEAD_PROXY) through the F-230 ladder + the full-vo
 sampler reconciliation (the T37 §3.2 constraint stands) + before/after single+conc
 proof.  The harness for v1: read the real head tensor from the GGUF (class verify
 first) + an activation-dump boot.
+
+## F-294b — 2026-10-24 ~09:10: THE TWO-STAGE HEAD DEAD ON THE REAL TENSOR (the v1 gate's
+## verdict; no battery spent, exactly as the gate prescribed).
+
+**THE RUN (vhead_v1, REAL output.weight [2560×248320] Q6_K extracted verbatim from the
+GGUF — 521,472,000 bytes exact; copy-fit still 0/7,754,240 levels differ)**: the real
+head's logit top is FAR FLATTER than random — the VDELTA rescore band explodes from 558
+exact-rows/column (random) to 65,536→8,192/column as ncols grows (up to ~26% of the
+vocab), collapsing the speed from 2.33-2.49× to **1.33-1.42×**, and the argmax STILL
+differs 1-5 times per run (vs the 1e-4/row-class gate = orders of magnitude over).
+The frontier is bad on BOTH axes: wider VDELTA eats the win, tighter adds misses.
+
+**VERDICT: DEAD for the exact-match contract** (the T37 §3.2 pre-declared kill: 'the
+arm can never ship on speed alone; law 10, the canary is the contract').  The head
+line's honest residual: the 2.4× was a random-weight artifact — real structured heads
+are exactly the adversarial case for a 2-bit proxy.  Artifacts kept: campaign/headport/
+(v0/v1 harnesses + the extracted tensor); the +4-6% solo band leaves the composition —
+recalculated central ≈ 283-291 (base 217.3 × retrain-or-keep 1.06-1.09 × requant-GO
+1.04-1.07 × micro 1.01-1.02) — 300 now needs retrain AND requant AND the micro bundle,
+or new levers.  PIVOT: CCD class split (the queue's next live item).
