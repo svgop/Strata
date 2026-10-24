@@ -10236,3 +10236,16 @@ fp16-d rounding path or the row-gather order).  THE PATH TO G0: read make_q4_hea
 exact quantizer and match it (one function; the argmatch already proves the class).
 **THE PROVENANCE LAW VALIDATED AGAIN**: bf16-weight dots run unquantized-activation;
 q8_1 boundaries live ONLY on the q8_0/q4_0-weight projections.
+
+## F-306 — 10-24 ~17:10: THE T2 RESIDUAL ISOLATED TO THE HEAD BYTES — the quantizer
+## fix (fp32-scale codes, fp16-stored d = ggml's exact make_q4_head form) did NOT move
+## it (std 1.715e-1 unchanged); the PLAIN fp32 dot shows the SAME residual (1.717e-1)
+## — the activation quantizer is exonerated, the argmax (4087) and top-5 match in every
+## variant, cos 0.9985.  CONCLUSION: my W matrix differs slightly from the engine's
+## dhead_ bytes — the candidates: the engine-side Q6_K dequant at load vs gguf-py's
+## reference (both "reference class" but unverified against each other on these rows),
+## or a gather-order subtlety.  THE CLOSING MOVE (small, precise): extend the TAP with
+## a 3-line dhead_ dump (cudaMemcpy of the n_dvocab_ x out_row buffer beside the
+## existing three at mtp.cpp:1234-1238), re-boot the tap lane, BYTE-DIFF against the
+## fixture — the diff itself will name the divergence in minutes.  G0 STATUS: T1
+## PASSED (the hard math, at precedent); T2 = one byte-diff away.
