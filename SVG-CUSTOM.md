@@ -10200,3 +10200,20 @@ head_logits, mtp.cpp:1234-1248) — the adjudication is END-TO-END through the c
 one window, diagnostic boots.  REMAINING to G0: B5 (router + the Q2_0 blob reader +
 shared expert; the y-combine and the R_ write) + B6 (the final read + the 40,525-row
 Q4_0 head from the fixture) + the TAP boot diffing R_ first (the earliest gate point).
+
+## F-304 — 2026-10-24 ~15:45: B5/B6 LANDED — THE FULL P2 FORWARD CHAIN IMPLEMENTED
+## (B1→B6 end-to-end, all stages smoke-green on real weights).
+
+**B5**: the router (all-512 softmax, stable top-10, the 2^-14-floor renorm — weights sum
+1.0 verified); the Q2_0 blob reader (the four-plane layout of mtp_rt.py:49-64: interleaved
+gate/up codes, down codes, the two fp16 scale planes; 2-bit LSB-first decode — first
+attempt's strided indexing fixed to the sequential nibble order); the silu(gate)·up →
+q8-requant → down expert path; the shared expert with the BOTH-BF16 scalar gate; the
+y-combine.  **B6**: the final HC read on the hyper_connection_mixer weights → sample
+[2560].  Smoke: blob-0 rms 0.033, y rms 4.5, sample rms 1.95, all finite.  **REMAINING
+TO G0 (named precisely)**: (a) the head fixture — the 40,525-row Q4_0 head from the
+main GGUF at the dvocab ids (the F-298b numpy machinery applies verbatim: reference
+dequant + ggml Q4_0 requant); (b) the TAP boot's INPUT side — the TAP dumps
+R_/sample_/head_logits (outputs) but the module needs the same window's inputs (token,
+Rin, the layer's KV cells); the R17 protocol's known-prompt design or an input-side tap
+addition decides; (c) the diff vs the ~2e-6 noise floor → G0.

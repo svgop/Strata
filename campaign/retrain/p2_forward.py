@@ -232,3 +232,101 @@ if __name__ == "__main__":
     R_after = out["R_after"]
     print(f"R_after    shape {R_after.shape} rms {np.sqrt((R_after*R_after).mean()):.4f}")
     print("stage-wise smoke OK (self-consistency; TAP adjudication pending)")
+
+
+# ---- B5: the router + Q2_0 expert blobs + shared expert + y-combine ----------------
+
+Q2_TBL = None  # ggml Q2_0 classic: value = d * code, code in {0,1,2,3} (d = amax/3)
+
+
+def deq_q2_0_block(codes16: np.ndarray, d: np.float16) -> np.ndarray:
+    """One block: 16 code bytes -> 64 weights, 2-bit LSB-first, scaled by fp16 d."""
+    # 16 bytes x 4 nibble-pairs = 64 2-bit codes, LSB-first, sequential
+    c = np.frombuffer(codes16.tobytes(), dtype=np.uint8)
+    codes = np.empty(64, dtype=np.uint8)
+    codes[0::4] = c & 3
+    codes[1::4] = (c >> 2) & 3
+    codes[2::4] = (c >> 4) & 3
+    codes[3::4] = (c >> 6) & 3
+    return codes.astype(np.float32) * np.float32(d)
+
+
+class BlobReader:
+    """experts.bin: 512 blobs of 1,382,400 B (the four-plane layout of mtp_rt.py:49-64)."""
+
+    NBLK_GU = 40      # blocks per gate/up row (2560/64)
+    NBLK_D = 10       # blocks per down row (640/64)
+    O_GU_CODES = 0
+    O_D_CODES = 2 * 640 * 640            # 819,200
+    O_GU_SCALES = O_D_CODES + 2560 * 160  # down codes: 2560 rows x 160 B
+    O_D_SCALES = O_GU_SCALES + 2 * 640 * 80
+
+    def __init__(self, path: Path = RT / "experts.bin"):
+        self.data = np.fromfile(path, dtype=np.uint8)
+        self.BLOB = 3 * (2560 * 640 * 18 // 64)
+
+    def expert(self, e: int):
+        """-> (gate_up [1280, 2560] INTERLEAVED rows, down [2560, 640]) dequantized f32."""
+        b = self.data[e * self.BLOB:(e + 1) * self.BLOB]
+        gu = np.empty((2 * 640, 2560), dtype=np.float32)
+        gu_codes = b[self.O_GU_CODES:self.O_D_CODES].reshape(2 * 640, 40, 16)
+        gu_scales = b[self.O_GU_SCALES:self.O_D_SCALES].reshape(2 * 640, 40, 2).copy().view(np.float16)
+        for r in range(2 * 640):
+            for blk in range(40):
+                gu[r, blk * 64:(blk + 1) * 64] = deq_q2_0_block(gu_codes[r, blk], gu_scales[r, blk])
+        dn = np.empty((2560, 640), dtype=np.float32)
+        dn_codes = b[self.O_D_CODES:self.O_GU_SCALES].reshape(2560, 10, 16)
+        dn_scales = b[self.O_D_SCALES:].reshape(2560, 10, 2).copy().view(np.float16)
+        for r in range(2560):
+            for blk in range(10):
+                dn[r, blk * 64:(blk + 1) * 64] = deq_q2_0_block(dn_codes[r, blk], dn_scales[r, blk])
+        return gu, dn
+
+
+def router_top10(mixed_mlp: np.ndarray, gate_w: np.ndarray):
+    """bf16 weights x fp32 act; softmax all-512; stable top-10; renorm with the 2^-14 floor."""
+    w32 = gate_w.astype(np.float32)
+    logits = (w32 @ mixed_mlp.astype(np.float32)).astype(np.float32)
+    z = logits - logits.max()
+    p = np.exp(z); p /= p.sum()
+    ids = np.argsort(-p, kind="stable")[:10]          # descending, ties by ascending index
+    w = p[ids]
+    s = np.float32(max(float(w.sum()), 2.0 ** -14))
+    return ids, (w / s).astype(np.float32)
+
+
+def mlp_block(mixed_mlp: np.ndarray, T: dict, blobs: BlobReader, ids, w):
+    """Router-selected Q2_0 experts + the bf16-gated shared expert -> y [2560]."""
+    x = mixed_mlp.astype(np.float32)
+    parts = []
+    for k, e in enumerate(ids):
+        gu, dn = blobs.expert(int(e))
+        gate = gu[0::2]                                # de-interleave: even rows = gate
+        up = gu[1::2]
+        h = silu(gate @ x) * (up @ x)                  # [640]
+        hq, _ = q8_1_quant(h)                          # h re-quantized at the expert boundary
+        h_re = None
+        # exact form: the dot runs on the quantized h
+        h_re = q8_1_dot(h[None, :], dn).reshape(-1)    # down [2560,640] @ h -> [2560]
+        parts.append(w[k] * h_re)
+    # shared expert
+    g_s = T["mlp.shared_expert.gate_proj.weight"]; u_s = T["mlp.shared_expert.up_proj.weight"]
+    d_s = T["mlp.shared_expert.down_proj.weight"]
+    h_s = silu(q8_1_dot(x[None, :], g_s).reshape(-1)) * q8_1_dot(x[None, :], u_s).reshape(-1)
+    shared_h = q8_1_dot(h_s[None, :], d_s).reshape(-1)
+    xb = x.astype(np.float16).astype(np.float32)       # BOTH operands bf16 (the contract)
+    gb = T["mlp.shared_expert_gate.weight"].astype(np.float16).astype(np.float32).reshape(-1)
+    g_scalar = float(sigmoid_f32(np.float32(np.dot(xb, gb))))
+    shared = (shared_h * g_scalar).astype(np.float32)
+    y = np.sum(parts, axis=0) + shared
+    return y.astype(np.float32)
+
+
+# ---- B6: the final read + the 40,525-row Q4_0 head --------------------------------
+
+def final_sample(R_: np.ndarray, T: dict) -> np.ndarray:
+    a3 = hc_read(R_, None, T["hyper_connection_mixer.hc_norm.weight"],
+                 T["hyper_connection_mixer.input_mix_weight_down.weight"],
+                 T["hyper_connection_mixer.input_mix_weight_up.weight"],
+                 w_inject=None)
+    return a3["mixed"], a3
