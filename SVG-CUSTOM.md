@@ -10390,3 +10390,15 @@ d*(sumi*ds.x − 4*ds.y).  G0: T1 PASSED; T2 = the load_int_b2 byte order.
 ## (likely the same SmallTraits but a TRANSPOSED/planar weight arrangement, explaining
 ## the "decodes to no model row" dump) → transcribe → T2 at the floor.  All else stands
 ## proven (T1, weights, ds, affine algebra, argmax).
+
+## F-315 — 10-24 ~00:20: THE WAVE KERNEL READ — SAME TRAITS, SAME FORM.  The wave
+## kernel (native_mmvq_wave_kernel, :1827) uses the IDENTICAL SmallTraits<Q40Block,4>
+## load/apply (d*(sumi*ds.x − 4*ds.y), same block layout); it differs only in the
+## 64-lane butterfly reduction — accumulation order, ~1e-6 class.  So the head's dot
+## form IS the transcribed one on EVERY dispatch path, and the ~1% deviation against
+## tap logits SURVIVES every correct-form attempt.  THE HONOMICIDE DIAGNOSTIC (next,
+## one boot): dump xq_ (the quantized head input, 2880 B) and dhead_'s first row of
+## OUTPUT from inside the head call — a two-line tap — and diff against my modeled
+## q8_1 block and dot.  Either my xq_ model differs (the only unverified operand) or
+## the tap sample_ point drifts (the earlier hypothesis, now primary again).  All
+## kernel forms now exhausted-and-proven; the operand is the question.
