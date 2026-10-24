@@ -9865,3 +9865,27 @@ true-cold but four flats price it low).  The bitwise restructures stay in-tree (
 risk).  The composition's solo-300 headroom moves to its OTHER levers: two-stage head,
 keep-rule refit on the banked 1,615-window trace, retrain, requant (USER GO), and the
 n-gram draft candidate.
+
+## F-291 — 2026-10-24 ~06:50: THE CONTEXT-N-GRAM DRAFT CANDIDATE DEAD AT THE FALSIFIER
+## (zero engine work spent — the falsifier-first law's cleanest kill yet).
+
+**THE PROBE (campaign/t48-ngram-probe.py + t48-ngram-analyze.py)**: 3 copy-heavy prompts
+(repeat-verbatim / code-reprint / list-restate) vs 3 literary controls on the live
+champion; per request the engine's own MTP acceptance (the suffix-drafts log line) AND
+the prompt-lookup ceiling (the fraction of response tokens an n=4..8 matcher over the
+preceding context would have predicted exactly, pack-tokenized):
+
+| prompt | MTP accept | PLD ceiling | headroom |
+|---|---|---|---|
+| copy/repeat-para | 88.7% | 78.7% | 0 |
+| copy/code-reprint | 89.4% | 54.8% | 0 |
+| copy/list-restate | 81.4% | 64.1% | 0 |
+| control/story | 93.5% | 0.0% | 0 |
+| control/essay | 75.8% | 0.9% | 0 |
+| control/analogy | 73.3% | 0.0% | 0 |
+
+**VERDICT: DEAD.** The coupled MTP drafter BEATS the n-gram oracle on every copy-heavy
+prompt — it learned copying; the T47 dossier's "+5-25% on copy-heavy" band applies to
+stacks whose drafters did not. The splice is never implemented; negative banked with
+numbers. (Also banked: acceptance classes read 73-94% live — the drafter's real per-task
+spread, useful priors for the keep-rule refit.)

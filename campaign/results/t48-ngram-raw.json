@@ -1,0 +1,56 @@
+[
+ {
+  "kind": "copy",
+  "name": "repeat-para",
+  "prompt": "Here is a paragraph I need preserved exactly in your reply. Copy it back VERBATIM first, word for word, then add one sentence of comment.\n\nThe quaternary cache governor retires superchunks only when the admission watermark concedes, a policy that trades residency for predictability and makes the demote path idempotent under contention. Every eviction carries a generation stamp so replay cannot resurrect a stale mapping.\n\nYour verbatim copy:",
+  "wall": 2.0642623901367188,
+  "content": "The quaternary cache governor retires superchunks only when the admission watermark concedes, a policy that trades residency for predictability and makes the demote path idempotent under contention. Every eviction carries a generation stamp so replay cannot resurrect a stale mapping.\nThis sentence preserves the original terminology and structure.",
+  "completion_tokens": 312,
+  "engine_accept": "strata serve: suffix drafts: 27 windows, 133 of 150 drafts accepted"
+ },
+ {
+  "kind": "copy",
+  "name": "code-reprint",
+  "prompt": "Reproduce this function exactly as written (same formatting), only renaming `xs` to `items`, then state what it does in one sentence:\n\ndef dedupe(xs):\n    seen = set()\n    out = []\n    for x in xs:\n        if x not in seen:\n            seen.add(x)\n            out.append(x)\n    return out",
+  "wall": 2.0727200508117676,
+  "content": "def dedupe(items):\n    seen = set()\n    out = []\n    for x in items:\n        if x not in seen:\n            seen.add(x)\n            out.append(x)\n    return out\n\nIt removes duplicate items from a sequence while preserving the order of first occurrence.",
+  "completion_tokens": 331,
+  "engine_accept": "strata serve: suffix drafts: 22 windows, 101 of 113 drafts accepted"
+ },
+ {
+  "kind": "copy",
+  "name": "list-restate",
+  "prompt": "Restate this exact list with the same numbering and wording, then add a fourth item in the same style:\n1. Prefill plateaus at the chunk boundary\n2. Decode rides the coupled drafter\n3. The verify window caps at eight rows",
+  "wall": 1.7885222434997559,
+  "content": "1. Prefill plateaus at the chunk boundary\n2. Decode rides the coupled drafter\n3. The verify window caps at eight rows\n4. The state flushes at the token boundary",
+  "completion_tokens": 290,
+  "engine_accept": "strata serve: suffix drafts: 19 windows, 70 of 86 drafts accepted"
+ },
+ {
+  "kind": "control",
+  "name": "story",
+  "prompt": "Write a short original story (4-5 sentences) about a lighthouse keeper who discovers the light has been guiding something unexpected.",
+  "wall": 2.4919049739837646,
+  "content": "Maren noticed the beam never swept the sea, but always stopped at a dark patch of sky.  \nWhen she climbed the gallery one stormy night, she saw tiny lanterns rising from the waves\u2014sea creatures with glass eyes, following the light home.  \nThey were not ships, but drowned memories, each one carrying a voice that had been lost at sea.  \nInstead of warning them away, she turned the lighthouse toward the horizon and let the beam guide them into the clouds.  \nBy morning, the rocks were empty, and the only sound was a soft humming fading from the sky.",
+  "completion_tokens": 370,
+  "engine_accept": "strata serve: suffix drafts: 16 windows, 72 of 77 drafts accepted"
+ },
+ {
+  "kind": "control",
+  "name": "essay",
+  "prompt": "Argue in 3-4 sentences whether cache invalidation deserves its reputation as one of the two hard problems, taking a clear position.",
+  "wall": 2.199885129928589,
+  "content": "Cache invalidation deserves its reputation, not because deleting a key is hard, but because it is really a distributed consistency problem. Correct invalidation must account for races, partial failures, replication lag, and stale reads, where one missed update can silently corrupt behavior. It can be made manageable with clear ownership, versioning, TTLs, and disciplined invalidation patterns, but the hard part is proving the whole system remains correct under those rules. So the reputation is fair: it hides a correctness problem behind a deceptively simple operation.",
+  "completion_tokens": 383,
+  "engine_accept": "strata serve: suffix drafts: 12 windows, 47 of 62 drafts accepted"
+ },
+ {
+  "kind": "control",
+  "name": "analogy",
+  "prompt": "Explain speculative decoding using an original analogy a chef would appreciate. 3-4 sentences.",
+  "wall": 1.1399357318878174,
+  "content": "A chef would think of speculative decoding as a sous-chef quickly plating guesses for the next dish, while the head chef checks all the guesses at once and keeps only the correct ones. This lets the kitchen serve meals faster, because the head chef doesn\u2019t need to taste every step from scratch. If the sous-chef\u2019s guess is wrong, the head chef corrects it and continues from there.",
+  "completion_tokens": 171,
+  "engine_accept": "strata serve: suffix drafts: 3 windows, 11 of 15 drafts accepted"
+ }
+]
