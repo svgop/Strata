@@ -10030,3 +10030,36 @@ pool partitions) is a redesign, priced for a future wave with the mechanism name
 (Harness note: a pkill -f pattern matched my own wrapper mid-restore — the kill-by-PID
 discipline, already in memory, bit once more; the failing arm's boot was caught and
 replaced with the standing champion, env verified clean.)
+
+## F-297 — 2026-10-24 ~10:55: T50 NEW-LEVER WAVE INTEGRATED (verified) — the research
+## program's honest close: nothing cheap remains; the path is retrain + requant + riders.
+
+**VERIFIED**: the dossier's two load-bearing claims check against primary records — the
+T26-5 alpha requant really leaves `token_embd/output/head =COPY` (draft_vocab
+conservatism, never measured), and the global DRAFT_TEMP=0.85 sweep (0.45-0.90, F-201)
+predates SPEC_PROB by 8 days.  The premise correction stands: the solo window is 83-88%
+in-graph GPU walk (T13A/T39 anatomy) — there is NO graph-relaunch program to run; the
+35-50% figures were the conc round wall.
+
+**THE VERDICT (all four tasking areas)**: dprob-shaped depth CLOSED by three
+independent instruments (F-228 stair −1.75%, F-292 data-empty, T26-2 DSpark/varlen);
+trees stay dead (p 0.77-0.89, row-flat graphs); row-batched MoE across a solo window
+structurally impossible (the serial chain needs the row's own hidden state for routing);
+the 2026 MoE×spec literature bends the target or targets tiers we don't run.  The L2-pin
+formally de-priced by arithmetic (630 MB vs the 60 MiB carve — F-289's kill confirmed).
+
+**TWO NEW RIDERS (the wave's only positives, both cheap)**:
+(a) OUTPUT-WEIGHT REQUANT RIDER — the 521.5 MB Q6_K head (0.45-0.78 ms/window) to
+Q4-class ≈ +1-2% M1; OFFLINE-falsifiable on the F-294b headport harness with the
+already-extracted real tensor (quality read before any engine work);
+(b) PER-POSITION DRAFT-TEMPERATURE SCHEDULE — global 0.85 swept pre-SPEC_PROB; the
+93.6%/53.1% shallow/deep acceptance split (F-235) makes a per-step schedule untried,
++0-2%, ONE battery, must precede retrain (which subsumes it).
+
+**THE FINAL COMPOSITION (every alternative priced dead with mechanisms)**:
+B=217.3 × retrain (1.06-1.09) × requant-GO (1.04-1.07) × head rider (1.01-1.027) ×
+PDL chain+diet+micro (1.02-1.04) × DT schedule (1.00-1.02) = **central ≈ 264-271,
+upper ≈ 284-296**.  300 closes ONLY if the T26-3 PDL stretch (−1.5 ms) lands AND
+retrain+requant hit upper bands simultaneously.  The gap's real home: RETRAIN v2
+quality + the REQUANT GO decision + the two riders.  The research program is closed
+until retrain changes the drafter.
