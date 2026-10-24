@@ -106,11 +106,14 @@ def hc_read(R: np.ndarray, rs_w: np.ndarray, w_norm: np.ndarray, w_down: np.ndar
     lo = silu(q8_1_dot(xcat, w_down).reshape(-1) / 4.0)                   # [320], the /HC contract
     inj = q8_1_dot(xcat, w_inject).reshape(-1).astype(np.float32) if w_inject is not None else None  # [4]
     up = q8_1_dot(lo[None, :], w_up).reshape(-1)                           # [10240]
-    mixed = np.empty(N * HC, dtype=np.float32)
+    # B4-wire resolution (mtp.cpp:958 + :424: fa[t].mixed = mixed_ + t*N, mixed_ = T*N):
+    # the DRAFTER's mixed is [2560] per token = the per-dimension mean over streams
+    # (the spec's 10240-concatenated form was the TRUNK's fused_gr semantics).
+    mixed = np.zeros(N, dtype=np.float32)
     for c in range(HC):
         sl = slice(c * N, (c + 1) * N)
-        mixed[sl] = Rp[c] * wn[sl] * rs[c] * sigmoid_f32(up[sl])
-    mixed /= 4.0                                                            # the final /4 mean
+        mixed += Rp[c] * wn[sl] * rs[c] * sigmoid_f32(up[sl])
+    mixed /= np.float32(HC)                                                  # the final /4 mean
     return {"rs": rs, "xn": xn, "lo": lo, "inj": inj, "mixed": mixed, "Rp": Rp}
 
 

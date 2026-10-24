@@ -10183,3 +10183,20 @@ for the wire between the attn read's outputs and the qkv calls at :967-970).
 B5's router/blob/shared-expert and B6's head follow once B4's wire is pinned.
 **The critical path is genuinely moving: loader + forward core live, the adjudication
 boot is the next session's opening move with the fixture script scoped by TAP's env.**
+
+## F-303 — 2026-10-24 ~15:10: THE B4 WIRE RESOLVED FROM SOURCE — mixed is the
+## per-dimension STREAM MEAN [2560], not a 10240 concatenation; the forward core
+## runs end-to-end through the attention fold.
+
+**THE RESOLUTION (static, no boot needed)**: mtp.cpp:958 `fa[t].mixed = mixed_ + t*N`
+with :424 `mixed_ = b.take<float>(T * N)` — the drafter's HC-read mixed output is
+[2560] per token: `mixed[d] = sum_c(R'[c][d] * w_norm[c*N+d] * rs[c] *
+sigmoid(up[c*N+d])) / 4`.  The exec-B spec's B3 formula (mixed[i] over 10240) carried
+the TRUNK's fused_gr semantics into the drafter context — SPEC CORRECTED in-tree.
+**THE FORWARD NOW RUNS END-TO-END** through B1->B2->read1->attention->fold->read2 on
+real rt weights with sane stats (mixed rms 1.63, bo 2.20, mixed_mlp 0.94, R_after
+2.38; all finite).  Also read from source: the TAP dumps THREE tensors (R_/sample_/
+head_logits, mtp.cpp:1234-1248) — the adjudication is END-TO-END through the chain,
+one window, diagnostic boots.  REMAINING to G0: B5 (router + the Q2_0 blob reader +
+shared expert; the y-combine and the R_ write) + B6 (the final read + the 40,525-row
+Q4_0 head from the fixture) + the TAP boot diffing R_ first (the earliest gate point).
