@@ -10417,3 +10417,24 @@ shape-constant: (N/32)*36 = 2880 B, no n_dvocab dependency).  Then the boot → 
 files → THE DIFF: my modeled q8_1 block (d=fp16(amax/127), q=round(x/d), s=fp16(Σx))
 vs the dumped xq_ — the operand divergence names itself, T2 closes at the floor.
 Server restored and verified serving (env-off = inert).
+
+## F-317 — 10-25 ~01:30: THE OPERAND DIFF LANDS — the q8_1 model now BIT-EXACT after
+## one named fix; the dhead_ bytes remain the single undecoded piece; the packed-copy
+## precedent named as the cause.
+
+**THE xq_ TAP (F-316's hoist fix verified)**: all five files dump on one boot.  THE
+DIFF: d and s match the engine 80/80 bit-exact; the q codes differ on exactly
+12/2560 — ALL at half-rounding boundaries — because the engine quantizes with the RAW
+fp32 scale (amax/127 pre-fp16; q8_1_quant:18-27) while my model used the fp16-rounded
+d.  FIX APPLIED (quantize raw, store fp16): the module's activation quantizer is now
+operand-exact.  **THE REMAINING WALL**: even with BOTH operands dumped from the
+engine (xq_ + dhead_ bytes), every decode convention (sequential nibbles,
+split-halves, both affine classes) reads cos 0.05-0.09 — the dhead_ buffer content is
+NOT the bytes the wave kernel consumes.  THE PRECEDENT THAT NAMES THE CAUSE:
+q8_sm60_owned — "packed copies made here (the head)" — the Q8 path builds a PACKED
+COPY for the head; the Q4 wave path plausibly has the same (a transform inside
+STRATA_WAVE_MMVQ's launch chain for large n_out).  THE LAST READ: the Q4-analog pack
+in the wave launch chain (native_mmvq.cu :2200-2400 region, the q8 pack's
+neighborhood).  **G0 STATE: T1 PASSED; the activation operand BIT-EXACT; weights
+rows BIT-EXACT (dqhead); the arithmetic form proven on all paths — the one unknown is
+the Q4 head's packed-copy layout.**  Server restored env-off, serving verified.

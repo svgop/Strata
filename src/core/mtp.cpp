@@ -313,6 +313,7 @@ bool MtpDrafter::load(const std::string& rt_dir, const ModelGeometry& g, Session
         cudaMallocHost(&g_tap_S, (size_t) g.n_embd * sizeof(float));
         g_tap_nv = 248320;   // the full vocab (the logits dump carries the drafter's width at capture)
         cudaMallocHost(&g_tap_L, (size_t) g_tap_nv * sizeof(float));
+        cudaMallocHost(&g_tap_X, (size_t) (g.n_embd / 32) * 36);   // F-316: the quantized head input (shape-constant)
         std::fprintf(stderr, "mtp tap: pinned buffers allocated at load\n");
     }
     if (max_t < 1 || max_t > strata::kernels::kVerifyMaxT) { err = "mtp: max_t out of range"; return false; }
@@ -1259,8 +1260,7 @@ bool MtpDrafter::record_rest(int step_row, cudaStream_t cs, std::string& err) {
         if (tap_prefix != nullptr && g_tap_R != nullptr) {
             // F-91: issued on cs during capture -> graph NODES firing on every replay.
             // The logits width is THIS boot's actual width (sub-vocab or full).
-            if (g_tap_X == nullptr) cudaMallocHost(&g_tap_X, (size_t) (N / 32) * 36);   // F-316
-            cudaMemcpyAsync(g_tap_X, xq_, (size_t) (N / 32) * 36, cudaMemcpyDeviceToHost, cs);
+            cudaMemcpyAsync(g_tap_X, xq_, (size_t) (N / 32) * 36, cudaMemcpyDeviceToHost, cs);   // F-316
             cudaMemcpyAsync(g_tap_R, R_, HC * N * sizeof(float), cudaMemcpyDeviceToHost, cs);
             cudaMemcpyAsync(g_tap_S, sample_, N * sizeof(float), cudaMemcpyDeviceToHost, cs);
             cudaMemcpyAsync(g_tap_L, head_logits_, nv * sizeof(float), cudaMemcpyDeviceToHost, cs);
