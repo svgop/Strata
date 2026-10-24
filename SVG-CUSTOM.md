@@ -10345,3 +10345,21 @@ quantizers proven, argmax proven — a single transcription from the gate.**
 ## module and the gate.  The ~1% plain-dot residual may itself be the final answer
 ## if the dispatcher shows a fused/wave variant with different accumulation — the
 ## read decides.
+
+## F-312 — 10-24 ~22:40: THE ds SEMANTICS NAILED (q8_1_finite.hpp read: d=amax/127,
+## s=RAW Σx, both fp16-clamped) — and the raw-sum affine form STILL mismatches (cos
+## −0.006, std 4.0); the T2 question now points at the DISPATCHER or the tap point.
+
+**THE READ (complete)**: q8_1_ds(d, sum) = (fp16(amax/127), fp16(Σx_raw)) — my earlier
+d·Σx/2 model was wrong; corrected and re-run.  **THE RESULT**: the −4·s affine with the
+correct s makes things WORSE (cos −0.006) — the small-traits form CANNOT be the head's
+dot.  **THE DECISIVE OBSERVATION**: even the EXACT weights (tap_dqhead, bit-proven)
+dotted plainly against tap_sample give only cos 0.9965 — the engine's logits deviate
+~1% from W@S on EVERY variant.  Two live hypotheses remain: (a) the head's true kernel
+is a different dispatch variant (the IL class — T15A documented mmvq IL covering the
+verify head; its form is the native_mmvq_il_kernel at :1669+); (b) the tap's sample_
+capture point differs slightly from the head's actual input (a transform between).
+NEXT SESSION (one boot + one read): read the IL kernel's Q4 form AND add one tap line
+dumping the head's INPUT ROW as the kernel sees it (or dump from inside the head call)
+— either closes T2 or proves (b).  T1 PASSED; every weight input PROVEN; the campaign
+stands one dispatch-read from G0.
