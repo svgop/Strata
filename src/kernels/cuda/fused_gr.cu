@@ -858,7 +858,7 @@ __global__ void __launch_bounds__(THREADS) gr_up_v3_kernel(GrMulti m, const floa
 //    weights are loaded while the current one is used.  A tile is 160 = 5 x 32 chunks of 8, so a lane still
 //    accumulates its chunks lane + 32 q in ascending order, as in the plain read with either tile.  Before sm_80
 //    (and on HIP) the staging is a plain copy: the same bits, only not asynchronous.
-constexpr int kHcPlain = 1, kHcSplit = 2, kHcStaged = 3;
+constexpr int kHcPlain = 1, kHcSplit = 2, kHcStaged = 3, kHcStaged2 = 4;   // F-287 rung 0: weight cp.async ring + 4 acc chains
 constexpr int H_TILE = 1280;                          // staged tile: half a stream = 160 chunks of 8, 5 per lane
 constexpr int HQ = H_TILE / 8 / 32;
 constexpr int N_HTILES = D / H_TILE;                  // 8
@@ -985,6 +985,11 @@ __device__ __forceinline__ void cp_async_wait1() {
     asm volatile("cp.async.wait_group 1;\n" ::: "memory");
 #endif
 }
+__device__ __forceinline__ void cp_async_wait2() {
+#if defined(STRATA_GR_CP_ASYNC)
+    asm volatile("cp.async.wait_group 2;\n" ::: "memory");
+#endif
+}
 __device__ __forceinline__ void cp_async_wait0() {
 #if defined(STRATA_GR_CP_ASYNC)
     asm volatile("cp.async.wait_group 0;\n" ::: "memory");
@@ -1093,6 +1098,93 @@ __global__ void __launch_bounds__(THREADS) gr_down_staged_kernel(GrMulti m) {
     }
 }
 
+// F-287 rung 0 (kHcStaged2, STRATA_HC_SPLIT=4): the staged down read with the WEIGHTS
+// staged by cp.async into a 3-slot ring (each warp stages its own row's 160 uint4 per tile,
+// every thread exactly the 5 it consumes - no cross-thread weight dependency) and the
+// per-token accumulator split into 4 independent chains combined in fixed order at the
+// end.  Kills the two measured deficits of the staged default (outstanding bytes vs the
+// BW requirement, the single 320-FMA chain) at the same 41-block grid and row mapping.
+// Bits: the chunk adds reassociate (GDN_CHUNKED class, ~2.8e-7 RMS) - F-230-gated, OFF by default.
+template <int MAX_T = kFusedGrMaxT, bool EXACT_T = false>
+__global__ void __launch_bounds__(THREADS) gr_down_staged2_kernel(GrMulti m) {
+    extern __shared__ __align__(16) float4 hbuf[];      // 2 act buffers x [T][2][160] float4, then the weight ring
+    const int t = threadIdx.x, lane = t & 31, warp = t >> 5;
+    const int T = EXACT_T ? MAX_T : m.T;
+    const int k0 = EXACT_T ? (int) blockIdx.y * MAX_T : 0;
+    const bool inject_block = blockIdx.x == DOWN_BLOCKS;
+    const int row = inject_block ? warp : blockIdx.x * WARPS + warp;
+    const bool active = !(inject_block && (m.a[0].w_inject == nullptr || warp >= HC));
+    const uint16_t* wrow = (inject_block ? m.a[0].w_inject : m.a[0].w_down) + (size_t) (active ? row : 0) * D;
+    const uint4* w4 = reinterpret_cast<const uint4*>(wrow);
+    const size_t buf_f4 = (size_t) T * (H_TILE / 4);    // float4 per ACT buffer (the second follows)
+    uint4* wsm = reinterpret_cast<uint4*>(hbuf + 2 * buf_f4);   // [3][WARPS][H_TILE/8] ring
+    constexpr int WT = H_TILE / 8;                      // uint4 of one row's tile (160)
+    const int wbase = warp * WT;
+    float acc[MAX_T][4];
+#pragma unroll
+    for (int k = 0; k < MAX_T; ++k) acc[k][0] = acc[k][1] = acc[k][2] = acc[k][3] = 0.0f;
+    auto stage_wts = [&](int h, int slot) {
+        if (!active) return;
+#pragma unroll
+        for (int q = 0; q < HQ; ++q)
+            cp_async16(&wsm[(size_t) slot * (WARPS * WT) + wbase + lane + 32 * q],
+                       w4 + (size_t) h * WT + lane + 32 * q);
+    };
+    stage_htile(m, T, 0, hbuf, t, k0);
+    stage_wts(0, 0);
+    cp_async_commit();
+    stage_htile(m, T, 1, hbuf + buf_f4, t, k0);
+    stage_wts(1, 1);
+    cp_async_commit();
+    stage_wts(2, 2);
+    cp_async_commit();
+#pragma unroll 1
+    for (int h = 0; h < N_HTILES; ++h) {
+        // weights(h) lives in group h; acts(h) in group h (h<2) or the refill group of h-2.
+        // 3 + h groups are committed here; the waits keep the needed group complete.
+        if (h < 2) cp_async_wait2();
+        else cp_async_wait1();
+        __syncthreads();                                // the ACT buffer is block-shared
+        const float4* cur = hbuf + (h & 1) * buf_f4;
+        const uint4* wr = wsm + (size_t) (h % 3) * (WARPS * WT) + wbase;
+        if (active) {
+#pragma unroll
+            for (int q = 0; q < HQ; ++q) {
+                const int j = lane + 32 * q;
+                const Bf16x8 wvq = unpack8(wr[q]);
+#pragma unroll
+                for (int k = 0; k < MAX_T; ++k) {
+                    if (EXACT_T || k < T) {
+                        const float4* pk = cur + (size_t) k * (H_TILE / 4);
+                        acc[k][q & 3] += dot8u(wvq, pk[j], pk[H_TILE / 8 + j]);
+                    }
+                }
+            }
+        }
+        __syncthreads();                                // every warp is done with act buffer h & 1
+        if (h + 2 < N_HTILES) stage_htile(m, T, h + 2, hbuf + (h & 1) * buf_f4, t, k0);
+        if (h + 3 < N_HTILES) stage_wts(h + 3, h % 3);   // refill the ring slot just consumed
+        cp_async_commit();                              // possibly empty: keeps the group count uniform
+    }
+    if (!active) return;
+    float s_tmp[MAX_T];   // every lane holds every warp sum after the xor reduction
+#pragma unroll
+    for (int k = 0; k < MAX_T; ++k) {
+        const float part = ((acc[k][0] + acc[k][1]) + acc[k][2]) + acc[k][3];
+        s_tmp[k] = warp_sum((EXACT_T || k < T) ? part : 0.0f);
+    }
+#pragma unroll
+    for (int k = 0; k < MAX_T; ++k) {
+        if ((!EXACT_T && k >= T) || lane != k) continue;
+        if (inject_block) {
+            m.a[k0 + k].inject_out[row] = s_tmp[k];
+        } else {
+            const float x = s_tmp[k] / (float) HC;
+            m.a[k0 + k].lo[row] = x / (1.0f + __expf(-x));
+        }
+    }
+}
+
 // the current device is Volta (sm_70): the fast norm/up is its default
 bool cur_dev_volta() {
 #if defined(__HIPCC__)
@@ -1182,6 +1274,21 @@ int down_chunk(bool staged, int* tile_out) {
         set_staged_attr(gr_down_staged_kernel<6, true>, 6);
         set_staged_attr(gr_down_staged_kernel<4, false>, 4);
         set_staged_attr(gr_down_staged_kernel<kFusedGrMaxT, false>, kFusedGrMaxT);
+        // F-287 rung 0: the weight ring adds 61,440 B on top of the staged tile budget
+        auto set_staged2_attr = [&](auto kernel, int tokens) {
+            const int ws2 = (int) ((size_t) tokens * 2 * H_TILE * sizeof(float) + (size_t) 3 * WARPS * (H_TILE / 8) * sizeof(uint4));
+            if (optin > 0 && ws2 > 48 * 1024)
+                cudaFuncSetAttribute(kernel, cudaFuncAttributeMaxDynamicSharedMemorySize, ws2);
+            cudaFuncSetAttribute(kernel, cudaFuncAttributePreferredSharedMemoryCarveout, 100);
+        };
+        set_staged2_attr(gr_down_staged2_kernel<1, true>, 1);
+        set_staged2_attr(gr_down_staged2_kernel<2, true>, 2);
+        set_staged2_attr(gr_down_staged2_kernel<3, true>, 3);
+        set_staged2_attr(gr_down_staged2_kernel<4, true>, 4);
+        set_staged2_attr(gr_down_staged2_kernel<5, true>, 5);
+        set_staged2_attr(gr_down_staged2_kernel<6, true>, 6);
+        set_staged2_attr(gr_down_staged2_kernel<4, false>, 4);
+        set_staged2_attr(gr_down_staged2_kernel<kFusedGrMaxT, false>, kFusedGrMaxT);
         cudaGetLastError();      // drop any error the attempt left behind
         // The opt-in is a promise a pre-Volta card does not keep: an sm_60 answers 65536 and accepts the
         // cudaFuncSetAttribute for 61440 B, then fails the LAUNCH with "invalid argument".  What such a card
@@ -1210,6 +1317,7 @@ int down_chunk(bool staged, int* tile_out) {
 // many tokens as fit the card, the up projection; the profile's stamps after the norm and after the down projection.
 // kHcPlain is the default read exactly as before (never main's opt-in STRATA_GR_V3 path, which fused_gr_read_multi
 // takes first).
+template <int MAX_T, bool EXACT_T> __global__ void __launch_bounds__(THREADS) gr_down_staged2_kernel(GrMulti m);   // F-287: below
 #if STRATA_GR_FAST_BUILD
 __global__ void __launch_bounds__(THREADS) gr_norm_fast_kernel(GrMulti m);   // below, with the AMD fast path
 __global__ void __launch_bounds__(THREADS) gr_up_fast_kernel(GrMulti m);
@@ -1374,7 +1482,8 @@ void launch_multi(const GrMulti& m, int variant, cudaStream_t st, unsigned long 
             c.T = ct;
             for (int k = 0; k < ct; ++k) c.a[k] = m.a[c0 + k];
         }
-        const size_t smem = (size_t) ct * per_tok;
+        const size_t wts_ring = (size_t) 3 * WARPS * (H_TILE / 8) * sizeof(uint4);   // F-287: staged2's weight ring
+        const size_t smem = (size_t) ct * per_tok + (variant == kHcStaged2 ? wts_ring : 0);
         // #443, STRATA_GR_DOWN_MAX4: launches of up to 4 tokens hold 4 tokens' sums per thread instead of
         // kFusedGrMaxT - the same tile, block size, accumulation order and plain/split/staged path, so the same bits
         // (decided once per device: this runs per layer when decode is not captured)
@@ -1383,6 +1492,17 @@ void launch_multi(const GrMulti& m, int variant, cudaStream_t st, unsigned long 
         if (wide) {   // F-217 A3: 1 warp per row (324 blocks), xn from global — bitwise identical, grid un-capped
             if (max4) gr_down_multi_wide_kernel<2560, 4><<<LR + HC, 32, 0, st>>>(c);
             else gr_down_multi_wide_kernel<2560><<<LR + HC, 32, 0, st>>>(c);
+        } else if (variant == kHcStaged2) {
+            // F-287 rung 0: the weight-ring staged read (STRATA_HC_SPLIT=4) - the staged ladder's
+            // exact-T instantiations 1..6, then max4/generic.
+            if (exact_t && ct == 1) gr_down_staged2_kernel<1, true><<<DOWN_BLOCKS + 1, THREADS, smem, st>>>(c);
+            else if (exact_t && ct == 2) gr_down_staged2_kernel<2, true><<<DOWN_BLOCKS + 1, THREADS, smem, st>>>(c);
+            else if (exact_t && ct == 3) gr_down_staged2_kernel<3, true><<<DOWN_BLOCKS + 1, THREADS, smem, st>>>(c);
+            else if (exact_t && ct == 4) gr_down_staged2_kernel<4, true><<<DOWN_BLOCKS + 1, THREADS, smem, st>>>(c);
+            else if (exact_t && ct == 5) gr_down_staged2_kernel<5, true><<<DOWN_BLOCKS + 1, THREADS, smem, st>>>(c);
+            else if (exact_t && ct == 6) gr_down_staged2_kernel<6, true><<<DOWN_BLOCKS + 1, THREADS, smem, st>>>(c);
+            else if (max4) gr_down_staged2_kernel<4><<<DOWN_BLOCKS + 1, THREADS, smem, st>>>(c);
+            else gr_down_staged2_kernel<><<<DOWN_BLOCKS + 1, THREADS, smem, st>>>(c);
         } else if (staged) {
             // #783 PR-g (stuchapin909): a launch of exactly ct <= 6 tokens is its own instantiation, the loop bounds
             // are compile-time (the same sums in the same order); STRATA_NO_MULTI_GR=1 keeps the generic kernels
@@ -1480,6 +1600,7 @@ int env_variant() {
     if (e == nullptr || e[0] == '\0') return kHcStaged;
     if (e[0] == '0') return kHcPlain;
     if (e[0] == '1') return kHcSplit;
+    if (std::atoi(e) >= 4) return kHcStaged2;           // F-287 rung 0 (bits-class gated; default OFF)
     return kHcStaged;
 }
 

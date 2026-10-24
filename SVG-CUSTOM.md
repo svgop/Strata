@@ -9727,3 +9727,36 @@ CCD-split) banks it.
 warm windows vs 25.4-28.3ms tonight, all boots, recipe-exonerated — the tax lives in the
 host feed, and the monitor dashboard's own charting is a named contributor (its burn
 scales with live traffic — watching a record costs the record).
+
+## F-287 — 2026-10-24 ~04:40: THE GOAL OPENS (300 solo / 450 conc) — rung 0 built, and the
+## DOWN line falsified AT THE WALL; the UP line is the real kernel target.
+
+**RUNG 0 (kHcStaged2=4, STRATA_HC_SPLIT=4, patch_f287_staged2.py + inline fixes)**: the
+staged down read with a 3-slot WEIGHT cp.async ring (per-thread self-consumption — no
+cross-warp weight dependency, one __syncthreads dropped) + 4 independent fp32 accumulator
+chains combined in fixed order.  Builds clean; wired into the full launch ladder (exact-T
+1..6 + max4/generic) with its smem opt-in (61,440 B ring on top of the staged tile).
+**BENCH VERDICT: FLAT** — down 4.1/4.7/5.6/6.8/8.1/9.8/10.6/10.6 µs vs staged baseline
+4.0/4.6/5.5/6.8/8.1/9.8/10.6/10.6 (T=1..8, cold 4-set mode, paired same-minute runs).
+THE FALSIFICATION (valuable): at T=1 the staged down reads 6.55 MB in 4.0 µs = **1.64 TB/s
+= ~96% of the DRAM wall** — the isolated kernel is AT THE FLOOR; the T37 outstanding-bytes
+deficit (0.44-0.62 TB/s) is an ENGINE-CONTEXT number (L2/DRAM contention with the expert
+stream), not an isolated-kernel property.  No down-side restructure (rung 0 OR mma rung 1)
+can beat the wall — rung 1's down half is DE-PRICED unless the engine context is the target.
+At T>=4 down is latency/occupancy-bound (0.62 TB/s at T=8) — grid-starved by the load-bearing
+41-block shape (the F-15C -6.99% family); staged2's per-thread staging REMOVES the reason
+that family died (staging-threads coupling), so a wide-grid staged2b stays priced for T>=4.
+
+**THE REAL TARGET FOUND BY THE SAME PAIR: the UP line.**  At the T=3-5 that dominates real
+windows, up = 10.4-13.4 µs vs down's 5.5-8.1 — 60-70% of the hc read line; at T=8: 18.1 µs
+= 0.36 TB/s (vs down's 0.62).  gr_up_multi's anatomy: per-row-element weights prefetched
+but the per-token warp_sum shuffle tree SERIALIZED against the dots (dot k -> 5 shfl ->
+dot k+1); the batched form (all T dots as independent register chains, then one vector
+butterfly) is the rung-0b move.  CAVEAT banked: the ENGINE runs gr_up_q32 (QFUSE, default
+on when q8_mixed is set) — the BENCH does not cover q32 (bench leaves q8_mixed null) — the
+up-line rung needs a q32 bench instantiation FIRST or it prices the wrong kernel.
+
+**Also tonight**: 12-wide ternary SHELVED (aggregate flat vs 9-wide — 281.1 ~ 279.3, three
+more slots divide the same window throughput; solo crushed to 153.5 by 9 GiB arena
+residency) — conc is WINDOW-THROUGHPUT-bound, which makes the kernel line (down+up+verify)
+the shared path to BOTH targets.  T47 research wave (solo-300 + conc-450) running.
