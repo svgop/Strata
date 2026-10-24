@@ -9947,3 +9947,23 @@ rows=248,320 / n_in=2560 / Q6_K 210-B blocks = OUR head's class (T37's 521.5 MB 
    → 3v3 → 2× MMLU if KL > 1e-5 → before/after single+conc proof); miss rate worse →
    DEAD, the full-vocab sampler constraint makes approximation unshippable on speed
    alone (T37 §3.2's three-option analysis stands).
+
+## F-294a — 2026-10-24 ~08:40: HEAD PORT v0 GREEN — the two-stage head measures
+## **2.33-2.49x** at the full shape, cold, parity-perfect.
+
+**THE PORT**: basalt's q6k_vhead_parity + head_proxy.cuh + q6k_head/native_mmvq/iq_kernels
+vendored to campaign/headport/ (include closure closed; nvcc -arch=sm_120, zero errors).
+**v0 RUN (rows=248,320, the head's shape, random Q6_K rows scaled to a logit spread)**:
+copy-fit parity 0/7,754,240 levels differ; near-top rows EXACT (the bits of q6k_head);
+approx rows match the CPU score (max dev 3.8e-06); argmax differs 0 at ncols 1..8;
+cold bench q6k_head 356-400 µs vs **vhead 143-166 µs = 2.33-2.49x**.  Exact rows per
+column ~558-703 (the VDELTA rescore band behaves).  THE MACHINERY IS PROVEN on our
+card/build; at the T37 head-line anatomy (0.45-0.5 ms/window) the cut ≈ 0.2-0.25
+ms/window = the +4-6% M1 band intact.
+
+**THE REMAINING GATE (v1)**: random-weight heads are the EASY case — the miss rate on
+the REAL head tensor + real activations is the honest gate (~1e-4/row-class), then the
+exact-materialize arm (STRATA_HEAD_PROXY) through the F-230 ladder + the full-vocab
+sampler reconciliation (the T37 §3.2 constraint stands) + before/after single+conc
+proof.  The harness for v1: read the real head tensor from the GGUF (class verify
+first) + an activation-dump boot.
