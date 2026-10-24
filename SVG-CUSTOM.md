@@ -10739,3 +10739,33 @@ campaign/upstream/ (784 KB: evidence, configs, the window harness) stays as the 
 upstream-check home.  NEW LAW in AGENTS.md: references library stays pristine; upstream
 checkouts/builds/test binaries live at ~/LLM/strata (the stock tree, currently 0.1.46);
 derived test artifacts deleted at closeout.
+
+## F-330 — 10-24 ~21:00: **UPSTREAM v0.2.4.2 STUDY (~/LLM/strata now the pinned stock tree) —
+## adoption menu priced; ONE clear port (SPEC_COST chain rule), one instrument, everything
+## else already-owned or other-platform**
+
+**THE STUDY** (post-F-329 verdict, deeper read of the tree): the +5% stock-MTP M1 (149→156)
+is upstream RE-DERIVING fusions we already bank — their hot lane now runs fused_gr_read_multi
+(one launch, bitwise same, the lineage our F-series built) plus a gr_read 6→3-kernel fold
+(aec327ee, Oct 21) that only improves the per-row/HIP path OUR hot lane bypasses.  That is
+why stock gained 5% yet still trails custom by 43-55%: they are climbing the ladder we own.
+
+**ADOPTION MENU:**
+1. **PORT — the cost-aware MTP chain rule (STRATA_SPEC_COST)**: 5f49ec45 +
+   include/strata/spec/draft_policy.hpp (101 lines, self-contained) + a step-by-step
+   keep_draft hook in MtpDrafter.  This is OUR T14C crossing rule (ΔC/Δoffered > c_row·C₀/W₀)
+   as a RUNTIME learner: E_j/cost(j+2) per width, measured per-width round costs bucketed by
+   context length (<6K/<24K/longer), acceptance calibrated per draft probability, robust
+   cost-EMA (a first capture can't price a width out).  F-228 killed STATIC gate tuning;
+   this is the dynamic version — trims weak deep chains, exploits non-convex row costs,
+   composes with COHORTS.  Realistic +1-3% M1/throughput; ~half-day port into our mtp.cpp.
+2. **PORT — STRATA_ROUTE_STATS + per-width GPU stage profile** (d276adf2): bench-only
+   instrument, cheap; feeds the TC-hc tranche's cost anatomy (row costs per width/context).
+3. **SKIP — gr fold (aec327ee)**: hot path already fused multi-row in custom; residual
+   per-row gr_read = 1-2 calls/window ≈ negligible.
+4. **SKIP — spec_start fix** (single-token prompts never speculated pre-0.2.2): edge case,
+   worth a one-line audit of our spec-pos convention someday.
+5. **SKIP — dflash2 kernels / dsv41 / Gyro / sm_86**: other models/platforms (F-329 closed).
+
+NEXT: the SPEC_COST port (header + hook + STRATA_SPEC_COST arm, default off) with the
+3x-probe before/after per the law; ROUTE_STATS alongside it (same rebuild).
