@@ -10146,3 +10146,19 @@ expert bytes, +1.90% direct M1 modeled, +792 slots) NOW CARRYING the F-298b head
 (Q6_K→Q4_0: 0/6 top-1 flips, KL 2.1e-3, −31% head bytes ≈ +1-2% M1) — combined band
 +3-4% M1 + VRAM headroom, quality-gated (MMLU floor + mimic band + the F-230 yardstick
 on the first boot).
+
+## F-301 — 2026-10-24 ~13:50: P2 OPENS — the parity venv + the rt loader LANDED (the
+## retrain critical path's first milestone, done clean).
+
+**THE VENV** (~/venvs/mtp-parity; torch 2.14.1+cpu + numpy 2.5.4): CPU torch is the
+right-sized choice for PARITY (math on one token; the exec-C trainer venv gets cu130
+per the infra spec's P0 — the repo .venv untouched).  **THE LOADER**
+(campaign/retrain/p2_rt_loader.py): the rt dialect's three kinds read natively — q8_0
+as tools/mtp_rt.py's packer inverted (ggml reference rounding), bf16 by bit-view (the
+one bug: astype-vs-view byte-doubling, caught by the shape assert), f32 with the Gemma
++1 kept folded (law 2).  **THE SMOKE (F-298's lesson, institutionalized)**: 29/29
+tensors load with sane stats — weights rms 0.003-0.2, the +1-folded norms in the
+1.0-5.0 band, zero impossible magnitudes.  NEXT: the forward per exec-B §2.3+
+(fc_embedding → per-stream RMS (law 3) → attention: q/k norms, rope 1e7, GQA 24/2 →
+the three hyper-connection mixers → shared expert + router + routed-blob reader →
+fc_hidden → the 40,525-id sub-vocab head), then the STRATA_MTP_TAP adjudication boot.
