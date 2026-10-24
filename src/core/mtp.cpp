@@ -72,7 +72,9 @@ namespace strata::core {
 static float* g_tap_R = nullptr;
 static float* g_tap_S = nullptr;
 static float* g_tap_L = nullptr;
+static uint8_t* g_tap_H = nullptr;   // F-307: the engine's actual Q4_0 dhead_ bytes (the G0 byte-diff)
 static int64_t g_tap_nv = 0;
+static size_t g_tap_H_bytes = 0;   // F-307
 
 void mtp_tap_dump_once() {
     static int dumped = 0;
@@ -86,6 +88,7 @@ void mtp_tap_dump_once() {
     wr("_R.f32", g_tap_R, (size_t) 4 * 2560 * sizeof(float));
     wr("_sample.f32", g_tap_S, (size_t) 2560 * sizeof(float));
     wr("_logits.f32", g_tap_L, (size_t) g_tap_nv * sizeof(float));   // the last replay's width may be narrower; the tail is stale
+    if (g_tap_H != nullptr) wr("_head.q4", g_tap_H, g_tap_H_bytes);   // F-307
     std::fprintf(stderr, "mtp tap: dumped R/sample/logits to %s_*.f32 (alloc nv=%lld)\n", prefix, (long long) g_tap_nv);
 }
 namespace {
@@ -261,6 +264,10 @@ bool MtpDrafter::make_q4_head(std::string& err) {
     // the Q4_0 rows replace the subset in place (they are smaller)
     if (cudaMemcpy(dhead_, dst.data(), dst.size(), cudaMemcpyHostToDevice) != cudaSuccess) { err = "mtp: writing the draft head"; return false; }
     dhead_type_ = GGML_Q4_0;
+    if (g_tap_H == nullptr && std::getenv("STRATA_MTP_TAP") != nullptr) {   // F-307: the G0 byte-diff buffer
+        g_tap_H_bytes = dst.size();
+        cudaMallocHost(&g_tap_H, g_tap_H_bytes);
+    }
     std::fprintf(stderr, "strata mtp: --mtp-q4: draft head over %lld tokens as Q4_0 (%.1f MiB read per step, was %.1f)\n",
                  (long long) n_dvocab_, (double) dst.size() / 1048576.0, (double) src.size() / 1048576.0);
     return true;
@@ -1241,6 +1248,8 @@ bool MtpDrafter::record_rest(int step_row, cudaStream_t cs, std::string& err) {
             cudaMemcpyAsync(g_tap_R, R_, HC * N * sizeof(float), cudaMemcpyDeviceToHost, cs);
             cudaMemcpyAsync(g_tap_S, sample_, N * sizeof(float), cudaMemcpyDeviceToHost, cs);
             cudaMemcpyAsync(g_tap_L, head_logits_, nv * sizeof(float), cudaMemcpyDeviceToHost, cs);
+            if (g_tap_H != nullptr && dhead_type_ == GGML_Q4_0)   // F-307: only once the head IS Q4
+                cudaMemcpyAsync(g_tap_H, dhead_, g_tap_H_bytes, cudaMemcpyDeviceToHost, cs);
         }
         if (coupled_rec_) {
             // coupled draft sampling: the target's chain and Philox draw for the row that will verify this draft

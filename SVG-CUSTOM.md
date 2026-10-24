@@ -10249,3 +10249,24 @@ q8_1 boundaries live ONLY on the q8_0/q4_0-weight projections.
 ## existing three at mtp.cpp:1234-1238), re-boot the tap lane, BYTE-DIFF against the
 ## fixture — the diff itself will name the divergence in minutes.  G0 STATUS: T1
 ## PASSED (the hard math, at precedent); T2 = one byte-diff away.
+
+## F-307 — 10-24 ~18:20: THE HEAD-BYTES TAP EXTENSION LANDED (F-91-lawful: alloc inside
+## make_q4_head, copy type-gated in the capture, dump beside the three) — and the T2
+## byte puzzle ISOLATED to the engine's on-device Q4 layout.
+
+**THE INSTRUMENTATION (committed, permanent value)**: tap_head.q4 (58,356,000 B = the
+engine's actual dhead_ Q4_0 bytes) dumps beside R/sample/logits on every tap boot.
+**THE FINDINGS**: (1) the engine's d = amax/8 POSITIVE (modern ggml convention; the
+F-298b packer's old negative-d noted, its quality verdict unaffected — self-consistent
+both directions); (2) row-0's d and FIRST code match my vanilla fixture exactly, the
+rest don't; (3) NO vanilla-family packing variant (hi/lo nibbles, byte-reverse, d-last)
+decodes the dump against the tap logits (best cos 0.083) — the engine's on-device Q4_0
+head is NOT host-row-major vanilla; it is the MMVQ kernel's consumption layout (or the
+codes encode the engine's GSQ-dequant weights in that layout).  **THE DEFINITIVE
+DECODER IS IN THE ENGINE**: native_mmvq's Q4_0 weight-read branch names the exact
+byte→value map — the next session reads it (one kernel function) and the fixture
+rebuilds from the dump bytes directly.  **G0 STATUS UNCHANGED IN ITS LOAD-BEARING
+PARTS**: T1 PASSED at precedent (the hard math); T2's residual is now FULLY cornered —
+not the quantizer, not the activation path, not the gather: the memory layout, with
+both the bytes and the decoder named.  (The cos-0.9985/argmax-exact original fixture
+remains the best numerical approximation and the fallback if the layout read stalls.)
