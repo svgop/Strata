@@ -10270,3 +10270,22 @@ PARTS**: T1 PASSED at precedent (the hard math); T2's residual is now FULLY corn
 not the quantizer, not the activation path, not the gather: the memory layout, with
 both the bytes and the decoder named.  (The cos-0.9985/argmax-exact original fixture
 remains the best numerical approximation and the fallback if the layout read stalls.)
+
+## F-308 — 10-24 ~19:05: THE T2 PUZZLE SOLVED IN STRUCTURE — two engine facts found;
+## the closing step is one repack-read or one more tap line.
+
+**FACT 1 (the dot semantics)**: native_mmvq's Q4_0 dot is d*(Σ(c·q) − 4·ds.y) — the
+AFFINE-CORRECTED integer form consuming the Q8_1 block's SUM field (native_mmvq.cu:713-
+725).  Neither of my dot variants modeled the −4·s term: the parity module's q8_1 dot
+MUST be upgraded to the exact block form (codes ×, then the affine correction) — a
+required fix for G0 regardless of the weights.
+**FACT 2 (the weight provenance)**: the engine calls native_q6_k_unpack(dhead_) at load
+(mtp.cpp:187) — the head's Q6_K is REPACKED to the engine's native layout BEFORE
+make_q4_head quantizes it; the dumped Q4 codes encode the REPACKED-dequant weights
+(row-0 analysis: same d, first code matches, rest differ structurally — consistent
+with a repacked source, not a packing error).  The vanilla gguf-py fixture stays the
+best approximation (cos 0.9985, argmax exact).
+**THE CLOSING STEPS (either closes G0)**: (a) read native_q6_k_unpack's layout and
+replicate it in the fixture path; or (b) one more tap line dumping the dequanted
+pre-Q4 head rows (the simplest: dump the `row` f32 vector inside make_q4_head — 40525
+× 2560 × 4 = 415 MB, or just row 0 + a hash of the rest for verification).
