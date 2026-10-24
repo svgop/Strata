@@ -9816,3 +9816,28 @@ cheap (init-time code), and it attacks the exact measured gap.  Falsifier: one b
 with the policy set vs unset on the cold-sets mode (the cold sets rotate ACTIVATIONS;
 the WEIGHTS stay resident — add a weight-rotating cold mode or price it engine-side with
 the in-kernel stamps).  THEN the engine A/B per the user's before/after law.
+
+## F-289 — 2026-10-24 ~05:50: THE COLD-SET METHODOLOGY CORRECTION (the 4-set L2 artifact)
+## — and staged2 falsified AT TRUE ENGINE CONDITIONS.
+
+**THE ARTIFACT**: the bench's COLD mode rotates `cold_sets` weight copies — at the
+default 4 sets (52 MB) the whole working set LIVES IN L2 on this card (the curve
+saturates at 24 sets = 314 MB): every "cold" number banked through F-287/F-288 was
+L2-RESIDENT.  THE ENGINE-CONDITION NUMBERS (48 sets = 629 MB, one per real layer):
+down 8.1/11.7 µs, up 13.8/19.5 µs at T=4/8 — 13-21% SLOWER than the 4-set numbers
+(down T=4: 6.8→8.1; up: 12.3→13.8).  At true cold the lines run 0.81 / 0.47 TB/s —
+NOT bandwidth-bound (1.7 available): L2-MISS-LATENCY bound at their grid occupancies.
+
+**staged2 RE-TESTED AT 48 SETS** (the weight cp.async ring never had a fair test at
+4-set/L2-resident): STILL FLAT — down/up stamps byte-identical to staged at every T.
+The one-tile __ldg prefetch + the activation ring already cover the latency at this
+occupancy; the ring adds nothing.  FALSIFIED CLEAN.
+
+**WHAT REMAINS ON THE HC LINE** (both rungs now correctly priced at true conditions):
+(a) the down line's binder = the 41-block GRID occupancy (F-217 family) — staged2's
+per-thread staging removes the coupling that killed the F-15C wide family, so a
+4-warp/82-block staged2 is the un-run form; (b) the UP line (the bigger, softer line:
+13.8-19.5 µs true-cold) still has UNPREFETCHED per-warp-row loads — an up weight-ring
+(batched r-ahead cp.async) is its un-run form, same design as staged2's ring.
+NOTE for engine A/Bs: the engine's in-window stamps (VERIFY_PROFILE-class) remain the
+arbiter — the bench cannot see the concurrent expert stream's DRAM/L2 competition.
