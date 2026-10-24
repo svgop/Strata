@@ -2,3 +2,4 @@ corpus: 652445 records, 642114 seam-respecting anchors
 resumed cycle-last.pt at step 30 (best 0.6957, 2 evals)
 stock eval: 0.397 0.370 0.355 0.364 0.396 0.374 mean 0.3760
 chunk: 157318 anchors / 9833 steps (cap 9833, budget 40 min)
+  eval @2500: loss 2.3475 | 0.719 0.721 0.728 0.740 0.693 0.746 | mean 0.7246 (+34.9pt vs stock)
