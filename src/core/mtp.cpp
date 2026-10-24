@@ -73,6 +73,8 @@ static float* g_tap_R = nullptr;
 static float* g_tap_S = nullptr;
 static float* g_tap_L = nullptr;
 static uint8_t* g_tap_H = nullptr;   // F-307: the engine's actual Q4_0 dhead_ bytes (the G0 byte-diff)
+static uint8_t* g_tap_X = nullptr;   // F-316: the quantized head input (the G0 operand diff)
+uint8_t* mtp_tap_xq() { return g_tap_X; }
 static int64_t g_tap_nv = 0;
 static size_t g_tap_H_bytes = 0;   // F-307
 
@@ -89,6 +91,8 @@ void mtp_tap_dump_once() {
     wr("_sample.f32", g_tap_S, (size_t) 2560 * sizeof(float));
     wr("_logits.f32", g_tap_L, (size_t) g_tap_nv * sizeof(float));   // the last replay's width may be narrower; the tail is stale
     if (g_tap_H != nullptr) wr("_head.q4", g_tap_H, g_tap_H_bytes);   // F-307
+    extern uint8_t* mtp_tap_xq();   // F-316: the quantized head input
+    if (const uint8_t* xq = mtp_tap_xq()) wr("_xq.q81", xq, (size_t) (2560 / 32) * 36);
     std::fprintf(stderr, "mtp tap: dumped R/sample/logits to %s_*.f32 (alloc nv=%lld)\n", prefix, (long long) g_tap_nv);
 }
 namespace {
@@ -1255,6 +1259,8 @@ bool MtpDrafter::record_rest(int step_row, cudaStream_t cs, std::string& err) {
         if (tap_prefix != nullptr && g_tap_R != nullptr) {
             // F-91: issued on cs during capture -> graph NODES firing on every replay.
             // The logits width is THIS boot's actual width (sub-vocab or full).
+            if (g_tap_X == nullptr) cudaMallocHost(&g_tap_X, (size_t) (N / 32) * 36);   // F-316
+            cudaMemcpyAsync(g_tap_X, xq_, (size_t) (N / 32) * 36, cudaMemcpyDeviceToHost, cs);
             cudaMemcpyAsync(g_tap_R, R_, HC * N * sizeof(float), cudaMemcpyDeviceToHost, cs);
             cudaMemcpyAsync(g_tap_S, sample_, N * sizeof(float), cudaMemcpyDeviceToHost, cs);
             cudaMemcpyAsync(g_tap_L, head_logits_, nv * sizeof(float), cudaMemcpyDeviceToHost, cs);

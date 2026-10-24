@@ -10402,3 +10402,18 @@ d*(sumi*ds.x − 4*ds.y).  G0: T1 PASSED; T2 = the load_int_b2 byte order.
 ## q8_1 block and dot.  Either my xq_ model differs (the only unverified operand) or
 ## the tap sample_ point drifts (the earlier hypothesis, now primary again).  All
 ## kernel forms now exhausted-and-proven; the operand is the question.
+
+## F-316 — 10-25 ~00:50: THE xq_ TAP BUILT, DEPLOYED, AND ITS FIRST BOOT FALSIFIED THE
+## LAZY ALLOC — the F-91 law's cleanest demonstration (capture broke: "operation failed
+## during capture"; the standing server restored, env-off = the tap code inert = safe).
+
+**THE TAP (in-tree)**: g_tap_X dumps xq_ (the quantized head input, 80 Q8_1 blocks =
+2880 B) beside the other three at the request tail; the accessor + the dump line wired.
+**THE BOOT**: the dqhead dump fired at load (the env reached the engine ✓) but the
+first window failed capture — the lazy `cudaMallocHost(&g_tap_X, ...)` sits INSIDE the
+captured tap block = allocation-during-capture, exactly F-91's law.  **THE FIX (one
+line, named)**: hoist the alloc to the load-time block beside R/S/L (the size is
+shape-constant: (N/32)*36 = 2880 B, no n_dvocab dependency).  Then the boot → the five
+files → THE DIFF: my modeled q8_1 block (d=fp16(amax/127), q=round(x/d), s=fp16(Σx))
+vs the dumped xq_ — the operand divergence names itself, T2 closes at the floor.
+Server restored and verified serving (env-off = inert).
