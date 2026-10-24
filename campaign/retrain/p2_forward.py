@@ -103,9 +103,11 @@ def hc_read(R: np.ndarray, rs_w: np.ndarray, w_norm: np.ndarray, w_down: np.ndar
         wn = w_norm.reshape(-1)
         xn[c] = (Rp[c] * rs[c]).astype(np.float32) * wn[c * N:(c + 1) * N]
     xcat = xn.reshape(1, -1)                                              # the full [10240] vector
-    lo = silu(q8_1_dot(xcat, w_down).reshape(-1) / 4.0)                   # [320], the /HC contract
-    inj = q8_1_dot(xcat, w_inject).reshape(-1).astype(np.float32) if w_inject is not None else None  # [4]
-    up = q8_1_dot(lo[None, :], w_up).reshape(-1)                           # [10240]
+    # the mixer weights are BF16: the engine consumes them with UNQUANTIZED fp32
+    # activations (the bf16_gemv class, like the router) - no q8_1 boundary here
+    lo = silu((xcat @ w_down.astype(np.float32).T).reshape(-1) / 4.0)     # [320], the /HC contract
+    inj = (xcat @ w_inject.astype(np.float32).T).reshape(-1).astype(np.float32) if w_inject is not None else None
+    up = (lo[None, :] @ w_up.astype(np.float32).T).reshape(-1)            # [10240]
     # B4-wire resolution (mtp.cpp:958 + :424: fa[t].mixed = mixed_ + t*N, mixed_ = T*N):
     # the DRAFTER's mixed is [2560] per token = the per-dimension mean over streams
     # (the spec's 10240-concatenated form was the TRUNK's fused_gr semantics).

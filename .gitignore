@@ -96,3 +96,4 @@ node_modules/
 /apps/host/docs/evidence/
 /apps/host/docs/checkpoints/
 campaign/headport/head_q6k.bin
+campaign/retrain/head_q4_fixture.npy

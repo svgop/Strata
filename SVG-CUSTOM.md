@@ -10217,3 +10217,22 @@ dequant + ggml Q4_0 requant); (b) the TAP boot's INPUT side — the TAP dumps
 R_/sample_/head_logits (outputs) but the module needs the same window's inputs (token,
 Rin, the layer's KV cells); the R17 protocol's known-prompt design or an input-side tap
 addition decides; (c) the diff vs the ~2e-6 noise floor → G0.
+
+## F-305 — 2026-10-24 ~16:30: THE G0 GATE RUNS — **T1 PASSES AT PRECEDENT LEVEL**;
+## T2 close (argmax + top-5 EXACT MATCH, cos 0.9985) with one residual to close.
+
+**THE TAP BOOT** (the standing lane + STRATA_MTP_TAP only; production paused, restored
+after): all three dumps landed at the spec's exact sizes.  **T1 (the mixer read on the
+dumped R_)**: first read std 2.75e-2 / cos 0.99997 = the R17 WEIGHT-PROVENANCE
+signature — and the law held: the HC mixers are BF16 weights consumed with
+UNQUANTIZED fp32 activations (the bf16_gemv class, like the router); my q8_1 boundary
+on them was the bug.  **After the class fix: std 4.87e-7, max_abs 3.8e-6, max_rel
+(|S|>0.1) 1.96e-6, cos 0.99999994** — the R17 precedent neighborhood (its
+"0.000000/1.000000" printed at 6 decimals).  **T2 (the head)**: argmax 4087 = 4087
+EXACT, top-5 sets match, cos 0.9985 — but std 1.7e-1 vs the 5e-5 gate: the Q4_0 head
+bytes are CLOSE but not byte-identical to make_q4_head's (the candidate: my fixture's
+Q4_0 rounding or d-scale convention vs mtp.cpp:246-269's exact form — likely the
+fp16-d rounding path or the row-gather order).  THE PATH TO G0: read make_q4_head's
+exact quantizer and match it (one function; the argmatch already proves the class).
+**THE PROVENANCE LAW VALIDATED AGAIN**: bf16-weight dots run unquantized-activation;
+q8_1 boundaries live ONLY on the q8_0/q4_0-weight projections.
