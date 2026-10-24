@@ -9626,3 +9626,19 @@ ITEM: bisect the rebuild hang (fresh build dir as step 1 — rule out object sta
 then compare nvcc/flags via ninja -t commands; the T40 instruments' C5b relocation is the
 prime suspect for a codepath that only a differently-optimized build exposes). Until the
 hazard is fixed: DO NOT deploy any rebuild over engine/strata without a conc-leg proof.
+
+## F-285 — 2026-10-24 ~02:30: CODE-STUDY PASS ON THE 260/400 TARGETS (findings-only).
+Fresh-anchor read of the solo window loop / PLE solo path / HC machinery / draft internals.
+THE FIND: STRATA_HC_PERSIST=1 — a persistent whole-read HC kernel exists, compiles on CUDA
+(fused_gr.cu:34 !__HIPCC__ branch; the journal's "(HIP)" label understates it), is wired
+FIRST-IN at gr_read_group (verify.cpp:1426, covers both per-layer reads), launches as a
+plain <<<>>> with a software grid barrier + spin timeout (graph-capturable shape), and
+self-checks against the default read at boot with graceful fallback. NEVER MEASURED on
+this box. Value hypothesis +2-8% M1 (HC reads 3 launches -> 1 each, ~288 -> ~96
+launches/forward + the norm/down/up chain fused in-kernel = the external doc's §6.N lever,
+already written in-tree). RE-SEQUENCES the HC lane: boot persist BEFORE writing T15 grid
+code (same surface; if persist wins, T15's read-side fixes target a dead path). Riders:
+pin the solo PLE pageable staging (sub-0.2%), spec-depth re-check post-SPEC_PROB (depth 7
+died F-263 pre-SPEC_PROB; economics changed), diet-tranche remainder (-200 nodes,
++0.7-1.2%). Dead ends confirmed: adapt std::thread (every-4th amortized), GDN split
+(journal), c2a re-read (needs the A1 boot; no existing cohort WSTAT logs).

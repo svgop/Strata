@@ -115,3 +115,49 @@ Standing riders unchanged: E2/E3 park pathway, E7 idle scan, A1 diagnostics, dro
 (RESCOPED: PREDICT_*/POOL_SPIN_US are now TUNE-tests, not removal tests — they run the doc's
 "predictive streaming" tier), SPEC_PROB pooled rider, five-boot re-bank of the full current
 recipe (dm+template+slots+PDL-pin+SPEC_PROB) to certify the new standing baseline.
+
+## 6. Code-study addendum (2026-10-24, post-user-targets 260/400 — the fresh-anchor pass)
+
+Studied with the T42 maps in hand: the solo window loop, the PLE solo path, the HC read
+machinery, the draft internals, the adapt tier. One PROMISING MOVE found, plus riders:
+
+**THE FIND — STRATA_HC_PERSIST=1 (one boot, zero code, never measured on this box).**
+A persistent whole-read HC kernel EXISTS and is wired first-in at the read site:
+- fused_gr.cu:34 `#if defined(STRATA_HIP_GFX906) || !defined(__HIPCC__)` — it compiles on
+  CUDA builds; the journal's "opt-in (HIP)" label (SVG-CUSTOM.md:773) understates it.
+- verify.cpp:1426: `if (fused_gr_read_persist(fa, n, cs)) return false;` tried BEFORE
+  fused_gr_read_multi inside gr_read_group — BOTH per-layer reads (attention-side grp 0,
+  MoE-side grp 1 at :2004) route through it; comment: "q8_mixed is never set there".
+- The launch is a PLAIN `<<<NB, THREADS, 0, s>>>` (fused_gr.cu:2989-2994) with a software
+  grid barrier + spin timeout (kTicksRun 200M ticks) — graph-capturable by shape; the
+  window-tail reads (:2389/:2407/:2422) stay on the default path (bounded residue).
+- Boot-time SELF-CHECK: init runs it against the default read and prints "checked against
+  the default read, max relative difference %.2g"; failure modes are graceful ("is off
+  here" prints + default path). Warp-32 check passes on sm_120; 80-block co-residency on
+  170 SMs is comfortable.
+- VALUE HYPOTHESIS: each HC read is 3 launches today (norm+down+up; ~288-291/forward per
+  T42-r2) — persist makes it ONE kernel per read (~96/forward) AND the norm+down+up chain
+  runs inside a single kernel (the doc's §6.N "fusion" lever, already written). The window
+  path is graph-replay-bound (T39: GPU-reach 8.9-9.9 of 12.9-14.9 ms) and the staged-gr
+  path measured 6.5x off roofline (T15) — so both launch-gap and compute-shape can pay.
+  Band: +2-8% M1 (honest, unmeasured); uncertainty = the spin-barrier protocol under
+  graph replay + cohort contention — judge solo-first, then a conc leg for the barrier
+  under two in-flight windows.
+- RE-SEQUENCES THE PLAN: this is the cheapest test of the whole HC lane. Boot it BEFORE
+  writing T15's grid-fix code — if persist wins, T15's read-side fixes target a path that
+  no longer runs (the 82-block staged-down piece may still apply elsewhere).
+
+**Riders found (cheap, small):**
+- Solo PLE staging is a PAGEABLE host buffer + one 10 KiB cudaMemcpyAsync per window
+  (layer.cpp:1611-1620, ple_finish_token) — pinning it is free but sub-0.2%; verify
+  windows already use mapped pinned (R3).
+- Spec DEPTH re-check post-SPEC_PROB: depth 7 died at F-263 BEFORE SPEC_PROB existed;
+  acceptance economics changed (74.9% at depth 6 with probabilistic acceptance) — one-boot
+  rider on the next battery, not a project.
+- Diet-tranche remainder stands (FUSE_WAIT + DF_PLE + UseNodePriority, default-off,
+  -200 nodes ~ +0.7-1.2% M1, T39-priced; LFUSE excluded — dead).
+
+**Dead ends confirmed this pass:** per-window adapt std::thread (amortized: adapt_every=4,
+~0.05%); solo PLE collect blocking (overlapped at sample time by design); GDN row-split
+(journal-dead T1a); c2a re-adjudication (no cohort WSTAT in any existing log — needs the
+queued A1 diagnostic boot, STRATA_VERIFY_NODES=2).
