@@ -9572,3 +9572,57 @@ mma tranche / verify-width / stream-level overlap / requant (USER GO). RESCOPE: 
 PREDICT_CREDIT/BUDGET + POOL_SPIN_US drop-tests become TUNE-tests — they run the predictive
 tier the doc independently ranks #1-4. Records context: solo/pair past on pooled means
 (222.4/209.9 + SPEC_PROB rider), conc 319.6 vs 323.0 = the target lane.
+
+## F-284/F-285 — 2026-10-24 ~02:20: THE TERNARY REACTOR IMPLEMENTED AND PARKED; THE b9
+LANE AND THE REBUILD PIPELINE BOTH FOUND BROKEN (a discovery night, not a record night).
+
+**T42 RE-BANK (t42-rebank.sh, 5 prewarmed boots)**: pool M1 198.4 / pair 189.8 / conc
+283.6 — a systematically COOL window (−10% vs the dm pool 222.4/209.9/319.6 on ALL lanes,
+GPU locked 2940 MHz / 95% util / 362 W throughout, expert cache 97-98%, acceptance in-band,
+ITL p99 36-37 vs dm-era 20). PREFILL PLATEAU HOLDS: client walls 15.7k tok in 2.5s (6.3k),
+63k in 9.3s (6.8k) — the 6-7k plateau to 120k is intact (t42-prefill-ladder.py; its
+log-parse half crashed — parse bug only, client walls banked). Golden hash drifted
+a974bc→dbb294 = the F-283 template (expected, the alarm's first true positive).
+
+**T42B COUNTERFACTUALS (ABAB×2, 6 legs)**: ctl 199.6/191.8/278.5 vs SPEC_PROB=0
+197.3/192.0/268.1 (conc −10.4 without it!) vs old-template 186.6/183.6/271.3 (−6.5 M1).
+NEITHER recovers the pool band → THE WINDOW IS THE STORY, the standing recipe is the BEST
+configuration measured tonight; SPEC_PROB and the F-283 template both RETAINED with
+same-window evidence. Records STAND as banked (215.2/206.4/323.0 anchor; dm pool
+222.4/209.9/319.6); the honest re-bank moves to the next clean window (morning; the
+F-224 self-workload law applies — this session ran 25+ boots and heavy analysis all night).
+
+**F-284 TERNARY (STRATA_COHORTS=3, T37-C3 spec)**: fully implemented (patch script
+campaign/patch_f284_ternary.py — ver_c verifier [2b/3,b) cloned from the ver_b binding,
+ternary collect/stage/go/poll + third finish tail, C5b tail weight 1/3, engagement
+n_active > 2b/3, batch>=9 gated; stage-order bug found and fixed: C's lazy graph capture
+MUST happen before any go — capturing under A/B flight hung layer 0). Binary preserved at
+engine/strata.f284-ternary-parked. PARKED — never ran one round, blocked twice over:
+(1) THE LAUNCHER HARD-EXPORTED STRATA_COHORTS=2, silently overriding every env=3 boot
+(fixed: now "${STRATA_COHORTS:-2}" like SPEC_PROB — the F-284 launcher lesson: EVERY
+hard-exported arm is an env-override landmine for future battery legs);
+(2) THE b9 LANE IS BROKEN ON THE CURRENT LINE: batch 9 + COHORTS=2 (the config-only
+control) hangs after the FIRST cohort round completes — "#267 verify timed out at layer 0"
+in the admission ramp as slots 5-8 materialize ("release 1.3 + map from the EXPERT CACHE'S
+TAIL — 0 chunks left in the spare pool"; at batch 6 all slots fit the spare pool, at 9 they
+steal from the cache = the elastic×cohorts×9-slot interaction). Reproduced on the
+PRE-TERNARY binary — NOT my patch. F-273's 322.5 could not be re-measured on this line;
+every 9-wide plan (the 355-390 ternary band) is queued behind this fix (T45: the
+admission-ramp expert-tail release path, verify.cpp's wait arms).
+
+**F-285 — THE REBUILD PIPELINE HAZARD (the night's most important find)**: every fresh
+rebuild of HEAD tonight — MY ternary source AND a pristine stash-rebuild of unpatched
+source — HANGS the batch-6 conc lane after the first cohort round ("windows done", then
+silence; M1/pair FINE at 204-212/182-192, conc 0 tok in ~111s), on clean TERM-only boots.
+The deployed T40-era binary (built 10-23 19:45, lost — overwritten during the ternary
+deploys) ran the same source's cohort path for HUNDREDS of rounds tonight (t42+t42b: 11
+conc legs, zero hangs); engine/strata.pre-t40 ALSO passes (conc 304.1 = the T41 band,
+M1 196.3 — dm-era source, no T40 instruments, SPEC_PROB's sampler tweak likely absent =
+the arm silently inert). ROOT CAUSE UNKNOWN — F-247 class (the 19:45 build environment
+vs tonight's differs in something unrecorded; PATH/nvcc/build-dir all check out).
+STANDING STATE: server UP on engine/strata.pre-t40 (working conc, in-band lanes); the
+source tree carries the parked ternary; engine/strata = pre-t40. NEXT SESSION'S FIRST
+ITEM: bisect the rebuild hang (fresh build dir as step 1 — rule out object staleness;
+then compare nvcc/flags via ninja -t commands; the T40 instruments' C5b relocation is the
+prime suspect for a codepath that only a differently-optimized build exposes). Until the
+hazard is fixed: DO NOT deploy any rebuild over engine/strata without a conc-leg proof.

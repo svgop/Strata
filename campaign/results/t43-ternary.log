@@ -1,0 +1,36 @@
+T43 TERNARY start Sat Oct 24 01:33:24 AM SAST 2026
+deployed build/strata (2026-10-24 01:33)
+=== SMOKE boot health=1 ===
+[01:33:48] prewarm2: complement pin confirmed in /home/svg/LLM/strata-custom-2/custom-iq3_s.log
+[01:33:53] prewarm2: page cache re-warmed in 5s
+200
+200
+200
+503
+503
+503
+503
+503
+503
+[01:35:52] prewarm2: replay done (2 short + 1 mid prefill + 6-way burst) in 124s total
+[ 0] FAIL ( 40.4s) want='42' got='ERROR HTTP Error 503: Service Unavailable'
+[ 1] FAIL ( 44.3s) want='Paris' got='ERROR HTTP Error 503: Service Unavailable'
+[ 2] FAIL ( 40.4s) want='81' got='ERROR HTTP Error 503: Service Unavailable'
+[ 3] FAIL ( 40.4s) want='366' got='ERROR HTTP Error 503: Service Unavailable'
+[ 4] FAIL ( 40.4s) want='30' got='ERROR HTTP Error 503: Service Unavailable'
+[ 5] FAIL ( 44.3s) want='Au' got='ERROR HTTP Error 503: Service Unavailable'
+[ 6] FAIL ( 44.3s) want='81' got='ERROR HTTP Error 503: Service Unavailable'
+[ 7] FAIL ( 44.3s) want='7' got='ERROR HTTP Error 503: Service Unavailable'
+[ 8] FAIL ( 44.2s) want='12' got='ERROR HTTP Error 503: Service Unavailable'
+[ 9] FAIL ( 44.3s) want='Jupiter' got='ERROR HTTP Error 503: Service Unavailable'
+[10] FAIL ( 44.2s) want='63' got='ERROR HTTP Error 503: Service Unavailable'
+[11] FAIL ( 44.2s) want='pink' got='ERROR HTTP Error 503: Service Unavailable'
+SMOKE: 0/12 correct, mean wall 43.0s
+SMOKE FAIL
+--- boot lines:
+=== LEG t43-ctl9-r1 health=1 01:37:00 env='' ===
+[01:37:00] prewarm2: complement pin confirmed in /home/svg/LLM/strata-custom-2/custom-iq3_s.log
+[01:37:06] prewarm2: page cache re-warmed in 6s
+200
+200
+200
