@@ -10308,3 +10308,24 @@ inside make_q4_head (before ggml_quantize_chunk) — row 0 + a checksum of the r
 size; the fixture then takes THE ENGINE'S OWN dequanted rows and the T2 gate closes at
 the affine-corrected dot's noise floor.  **THE AFFINE DOT FIX remains required in
 parallel** (F-308's fact 1): p2_forward's q8_1 dot needs the −4·ds.y term.
+
+## F-310 — 10-24 ~21:00: THE WEIGHTS QUESTION CLOSED FOREVER — the dqhead dump proves
+## the engine's rows BIT-IDENTICAL to the fixture (0/103,744,000 differ); the T2
+## residual (~1%, cos 0.9965-0.9981, argmax EXACT in every variant) is the LARGE-kernel
+## dot form — one more read.
+
+**THE DUMP (STRATA_MTP_TAP -> tap_dqhead.f32, 415 MB, wired inside make_q4_head)**:
+the engine's own dequanted head rows == the gguf-py-gathered fixture BIT-EXACTLY.  The
+weights, the gather order, and both Q6_K decoders are RIGHT — every prior bytes-mystery
+was the transformed on-device image, now moot for parity (the fixture takes these rows).
+**THE ISOLATION MATRIX** (all plain fp32 dots on the dumped rows): DQ@S cos 0.99655;
+Q4-dequant@S 0.99802; DQ@q8_1(S) 0.99657; Q4@q8 0.99805 — argmax 3992 = EXACT in ALL.
+The residual ~1% is INVARIANT to both quantizations ⇒ it is the LARGE-path dot form:
+n_in=2560 exceeds the small-K threshold, so the head runs native_mmvq's LARGE kernel
+(native_mmvq.cu ~:782+), whose vec_dot form (llama.cpp's vec_dot_q4_0_q8_1 with the
+sumiqs bias) I have not transcribed — my affine attempts on the small form all read
+cos 0.02 (wrong pairing for the large path).  **ONE kernel read remains: the large
+path's Q4_0 traits vec_dot** (the same SmallTraits-style struct at :1033+ is the small
+one; the large kernel's Q4 branch is at the vec_dot section) → transcribe → T2 closes.
+**G0 stands at: T1 PASSED; T2 = the large-kernel dot form, weights proven, all
+quantizers proven, argmax proven — a single transcription from the gate.**

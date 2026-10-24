@@ -257,6 +257,16 @@ bool MtpDrafter::make_q4_head(std::string& err) {
     std::vector<uint8_t> src((size_t) n_dvocab_ * in_row), dst((size_t) n_dvocab_ * out_row);
     if (cudaMemcpy(src.data(), dhead_, src.size(), cudaMemcpyDeviceToHost) != cudaSuccess) { err = "mtp: reading the draft head"; return false; }
     std::vector<float> row((size_t) N);
+    if (const char* hd = std::getenv("STRATA_MTP_TAP"); hd != nullptr) {   // F-310: the engine's own dequanted rows
+        std::string hp = std::string(hd) + "_dqhead.f32";
+        if (FILE* hf = std::fopen(hp.c_str(), "wb")) {
+            for (int64_t r = 0; r < n_dvocab_; ++r)
+                { tt->to_float(src.data() + (size_t) r * in_row, row.data(), N); std::fwrite(row.data(), sizeof(float), N, hf); }
+            std::fclose(hf);
+            std::fprintf(stderr, "mtp tap: dequanted head rows -> %s (%.1f MiB)\n", hp.c_str(),
+                         (double) ((size_t) n_dvocab_ * N * 4) / 1048576.0);
+        }
+    }
     for (int64_t r = 0; r < n_dvocab_; ++r) {
         tt->to_float(src.data() + (size_t) r * in_row, row.data(), N);
         ggml_quantize_chunk(GGML_TYPE_Q4_0, row.data(), dst.data() + (size_t) r * out_row, 0, 1, N, nullptr);
