@@ -10363,3 +10363,19 @@ NEXT SESSION (one boot + one read): read the IL kernel's Q4 form AND add one tap
 dumping the head's INPUT ROW as the kernel sees it (or dump from inside the head call)
 — either closes T2 or proves (b).  T1 PASSED; every weight input PROVEN; the campaign
 stands one dispatch-read from G0.
+
+## F-313 — 10-24 ~23:30: THE AFFINE STRUCTURE CONFIRMED BY FIT (c = 1.91 ≈ the
+## theoretical 2 — the nibble algebra's needed offset), the last unknown named:
+## load_int_b2's byte order.
+
+**THE FIT**: solving for the engine's effective s coefficient from the tap gives
+c = 1.912 — the algebra with nibbles (code+8) requires c = 2 exactly, so the affine
+form and ds.y ≈ 2·Σx-class semantics are CONFIRMED.  The residual at the best fit
+(std 3.9) proves the remaining error is the NIBBLE PERMUTATION (which nibble multiplies
+which activation code — my byte-map gives noise-level sumi).  **THE LAST UNKNOWN:
+`load_int_b2`** — the inline int loader (2-byte-aligned load, likely a byte-pair
+semantics) whose exact byte order defines the map.  ONE function read remains, then
+the permutation is mechanical and T2 closes at the fp32 noise floor.
+**Dispatch chain now fully proven**: native_mmvq(2) → native_q4_0_mmvq →
+small_mmvq<Q40Block,4> → native_small_mmvq_kernel + small_q8_dot(:713) with
+d*(sumi*ds.x − 4*ds.y).  G0: T1 PASSED; T2 = the load_int_b2 byte order.
