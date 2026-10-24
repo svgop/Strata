@@ -1,0 +1,18 @@
+=== BOOT s2-dflash2 19:15:15 ===
+up after ~20s
+--- s2-dflash2 leg 1 19:15:35 ---
+M1 single-stream : 119.9 t/s (2000 tok in 16.68s)
+M2 pair          : 0.0 t/s aggregate (0 tok in 73.56s)
+M2 6-conc        : 0.0 t/s aggregate (0 tok in 90.80s)
+--- s2-dflash2 leg 2 19:19:01 ---
+M1 single-stream : 118.2 t/s (2000 tok in 16.92s)
+M2 pair          : 0.0 t/s aggregate (0 tok in 73.03s)
+M2 6-conc        : 0.0 t/s aggregate (0 tok in 88.02s)
+--- s2-dflash2 leg 3 19:22:40 ---
+M1 single-stream : 121.1 t/s (2000 tok in 16.52s)
+M2 pair          : 0.0 t/s aggregate (0 tok in 3.89s)
+M2 6-conc        : 0.0 t/s aggregate (0 tok in 90.27s)
+strata serve: prompt 84 tokens = 79 reused + 5 read in 30 ms (166.1 tok/s), 1 generated in 9 ms (107.6 tok/s), drafts accepted 0 of 0, 1 checkpoints
+strata serve: prompt 84 tokens = 79 reused + 5 read in 28 ms (180.0 tok/s), 1 generated in 8 ms (120.8 tok/s), drafts accepted 0 of 0, 1 checkpoints
+strata serve: prompt 84 tokens = 79 reused + 5 read in 27 ms (187.5 tok/s), 1 generated in 10 ms (95.6 tok/s), drafts accepted 0 of 0, 1 checkpoints
+=== BOOT s2-dflash2 19:48:23 ===

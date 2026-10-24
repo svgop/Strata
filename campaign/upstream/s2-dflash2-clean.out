@@ -1,0 +1,12 @@
+up after ~20s
+--- s2-dflash2 leg 1 19:48:43 ---
+M1 single-stream : 117.5 t/s (2000 tok in 17.03s)
+M2 pair          : 146.9 t/s aggregate (1800 tok in 12.25s)
+M2 6-conc        : 236.7 t/s aggregate (3600 tok in 15.21s)
+--- s2-dflash2 leg 2 19:49:53 ---
+M1 single-stream : 116.4 t/s (2000 tok in 17.18s)
+M2 pair          : 147.5 t/s aggregate (1800 tok in 12.21s)
+M2 6-conc        : 235.0 t/s aggregate (3600 tok in 15.32s)
+strata serve: prompt 318 tokens = 79 reused + 239 read in 229 ms (1042.2 tok/s), 1 generated in 8 ms (121.1 tok/s), drafts accepted 0 of 0, 1 checkpoints
+strata serve: prompt 318 tokens = 79 reused + 239 read in 228 ms (1049.6 tok/s), 1 generated in 8 ms (119.6 tok/s), drafts accepted 0 of 0, 1 checkpoints
+strata serve: prompt 318 tokens = 300 reused + 18 read in 153 ms (117.5 tok/s), 1 generated in 8 ms (121.8 tok/s), drafts accepted 0 of 0, 0 checkpoints

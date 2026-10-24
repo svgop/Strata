@@ -1,0 +1,36 @@
+=== BOOT s1-mtp 19:14:59 ===
+BOOT DIED — log:
+  strata generate: KV streaming: 32768 of 131072 cells per QSA layer in VRAM, the K/V in 1.55 GiB of pinned RAM
+  strata generate: PLE on, table 320001536 rows of /home/svg/LLM/data/models/Qwen3.8-Flash-Next-GSQ-RCO-IQ3_S-00002-of-00002.gguf
+  strata generate: --batch: 6 slot sessions on CUDA0 (0.73 GiB each); 21.79 GiB free
+  strata generate: --batch 6: the slot sessions take 4.37 GiB of VRAM on CUDA0 that the expert cache would otherwise hold
+  strata generate: mtp: cannot open /home/svg/LLM/data/mtp-en/mtp-q2_0.gguf/dense.txt (run tools/mtp_rt.py) (22314 MiB of 32179 MiB VRAM free on this GPU)
+--- s1-mtp leg 1 19:15:09 ---
+M1 single-stream : 0.0 t/s (0 tok in 0.00s)
+M2 pair          : 0.0 t/s aggregate (0 tok in 0.00s)
+M2 6-conc        : 0.0 t/s aggregate (0 tok in 0.00s)
+--- s1-mtp leg 2 19:15:11 ---
+M1 single-stream : 0.0 t/s (0 tok in 0.00s)
+M2 pair          : 0.0 t/s aggregate (0 tok in 0.00s)
+M2 6-conc        : 0.0 t/s aggregate (0 tok in 0.00s)
+--- s1-mtp leg 3 19:15:13 ---
+M1 single-stream : 0.0 t/s (0 tok in 0.00s)
+M2 pair          : 0.0 t/s aggregate (0 tok in 0.00s)
+M2 6-conc        : 0.0 t/s aggregate (0 tok in 0.00s)
+--- S1 leg 1 19:26:42 ---
+M1 single-stream : 0.0 t/s (0 tok in 66.56s)
+M2 pair          : 63.0 t/s aggregate (1800 tok in 28.55s)
+M2 6-conc        : 231.6 t/s aggregate (3600 tok in 15.55s)
+--- S1 leg 2 19:31:11 ---
+M1 single-stream : 0.0 t/s (0 tok in 60.19s)
+M2 pair          : 61.9 t/s aggregate (1800 tok in 29.10s)
+M2 6-conc        : 230.7 t/s aggregate (3600 tok in 15.60s)
+--- S1 leg 3 19:34:10 ---
+M1 single-stream : 0.0 t/s (0 tok in 45.63s)
+M2 pair          : 62.9 t/s aggregate (1800 tok in 28.63s)
+M2 6-conc        : 241.1 t/s aggregate (3600 tok in 14.93s)
+strata serve: prompt 318 tokens = 300 reused + 18 read in 127 ms (142.0 tok/s), 1 generated in 9 ms (114.4 tok/s), drafts accepted 0 of 0, 0 checkpoints
+strata serve: prompt 318 tokens = 300 reused + 18 read in 126 ms (143.0 tok/s), 1 generated in 12 ms (86.7 tok/s), drafts accepted 0 of 0, 0 checkpoints
+strata serve: prompt 318 tokens = 79 reused + 239 read in 230 ms (1040.2 tok/s), 1 generated in 7 ms (133.4 tok/s), drafts accepted 0 of 0, 1 checkpoints
+strata serve: prompt 318 tokens = 79 reused + 239 read in 227 ms (1052.6 tok/s), 1 generated in 7 ms (134.8 tok/s), drafts accepted 0 of 0, 1 checkpoints
+=== BOOT s1-mtp 19:45:54 ===

@@ -1,0 +1,12 @@
+stopping custom server (pid 2794081)
+=== BOOT s1-mtp 19:14:59 ===
+BOOT DIED — log:
+  strata generate: KV streaming: 32768 of 131072 cells per QSA layer in VRAM, the K/V in 1.55 GiB of pinned RAM
+  strata generate: PLE on, table 320001536 rows of /home/svg/LLM/data/models/Qwen3.8-Flash-Next-GSQ-RCO-IQ3_S-00002-of-00002.gguf
+  strata generate: --batch: 6 slot sessions on CUDA0 (0.73 GiB each); 21.79 GiB free
+  strata generate: --batch 6: the slot sessions take 4.37 GiB of VRAM on CUDA0 that the expert cache would otherwise hold
+  strata generate: mtp: cannot open /home/svg/LLM/data/mtp-en/mtp-q2_0.gguf/dense.txt (run tools/mtp_rt.py) (22314 MiB of 32179 MiB VRAM free on this GPU)
+=== BOOT s2-dflash2 19:15:15 ===
+up after ~20s
+WINDOW COMPLETE
+CUSTOM SERVER RESTORED

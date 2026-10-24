@@ -10697,3 +10697,36 @@ state (zero background load + warmth), proving the earlier plateau carried backg
 Evidence: campaign/results/f328-record-battery.out.  The 300/450 chase resumes from a
 234/338 base with the DAgger depth-tail band (+5.7%) and the USER-GATED experts-requant
 (+3-4%) still unstacked.
+
+## F-329 — 10-24 ~20:10: **UPSTREAM v0.2.4.2 CHECKED (six releases, 646 commits) — NO ADOPTION;
+## custom leads stock by +43/+55/+48%; DFlash2 lane CLOSED on-box (loses stock-MTP by 25% M1)**
+
+**THE WAVE**: v0.2.2..v0.2.4.2 fetched (references pin was v0.2.1.4).  Highlights: the DFlash2
+drafter fully integrated upstream (--draft dflash2 --draft-model PACK, --draft-conf/--draft-cap,
+CUDA/HIP/Metal, window caps by card), DeepSeek-V4.1 model class, Gyro trellis (3060-class),
+sm_86 spec-adapt, cost-aware MTP window (STRATA_SPEC_COST).  Perf headlines target OTHER
+platforms again (F-234 pattern); the ONE sm_120-relevant bit: stock MTP single-stream moved
+149 → ~156 (+5%) via their rt-dialect MTP path (upstream adopted our dense.txt/bin rt format
++ mtp_rt.py wholesale).
+
+**THE TEST (stock v0.2.4.2 built at references/Strata-v0242 worktree, sm_120, standing IQ3_S
+lane minus our four custom arms; 2 legs per boot, probe-lane):**
+  stock+MTP-rt:   M1 160.2/151.9  pair 141.0/144.8  conc 227.4/228.9
+  stock+DFlash2:  M1 117.5/116.4  pair 146.9/147.5  conc 236.7/235.0
+  CUSTOM (F-328, same day, same box): solo 234.1 best/223.4 mean, pair ~222, conc 338.5
+=> custom leads stock's best lane by +43% M1 / +55% pair / +48% conc.  NO MERGE.
+
+**DFlash2 LANE CLOSED (performance)**: within the SAME stock engine, DFlash2 loses M1 by 25%
+(117 vs 156); its pair/conc edges (+3/+4%) do not reach our custom's lanes at all.  The
+no-recursion block-diffusion idea is now answered empirically on-box: the drafter cost + verify
+shape cost more than its acceptance brings at this quant.  Upstream's own suggestion table
+("Auto = MTP until a card wins everywhere") agrees.  Assets kept: the packed drafter
+(Custom-data/dflash2/drafter.pack, sha-verified source weights), the worktree build, the
+campaign/upstream/ harness — reopen only if a future DFlash release claims Blackwell-class gains.
+
+**LAW RE-CONFIRMED (2nd occurrence)**: stock boots with this pack NEED --vram-reserve-mib
+(2000); without it the expert cache fills 19.54 GiB and the verify graph OOM-crash-loops
+(engine exits per request — the server masks it as 0.0 t/s lanes).  F-234's 200→768 note,
+now 2000 — always set it on stock boots.
+
+Evidence: campaign/upstream/{s1-mtp,s2-dflash2}*.out, window*.out, configs s1/s2.json.
