@@ -10063,3 +10063,24 @@ upper ≈ 284-296**.  300 closes ONLY if the T26-3 PDL stretch (−1.5 ms) lands
 retrain+requant hit upper bands simultaneously.  The gap's real home: RETRAIN v2
 quality + the REQUANT GO decision + the two riders.  The research program is closed
 until retrain changes the drafter.
+
+## F-298 — 2026-10-24 ~11:30: THE HEAD-REQUANT FALSIFIER RUNS AND CATCHES ITS OWN DATA —
+## INCONCLUSIVE, and the F-294b kill verdict is FLAGGED for re-examination.
+
+**THE PROBE (campaign/headport/head_requant_probe.cpp: full-vocab Q6_K→Q4_0 pack +
+top-1 flip / KL / max-delta, CPU-only, zero boots — the rider's designed falsifier)**:
+first runs read KL 678 / |dlogit| 118,877 / 4-of-4 top-1 flips — ABSURD numbers.  The
+row-norm sweep names it: the dequantized head reads p50 norm 1.49e9, amax ~1.35e8 ≈ 2^27
+— physically impossible (a real head is ~1-100 norm).  THE EXTRACTION OR THE DEQUANT
+CONVENTION IS WRONG: the model file is GSQ-RCO (a CUSTOM quant) — the head tensor may
+not be vanilla ggml Q6_K layout despite type_id=14, or the tensor-data offset basis is
+off.  **CONSEQUENCE: F-294b's "flat logit top → two-stage head DEAD" verdict rode the
+same extraction — it is PROVISIONAL until a verified reader (the engine's own head
+path as ground truth) re-reads the tensor.**  Both the head-proxy verdict and the
+requant rider return to UNPRICED.  The catch is the falsifier-first law working: a
+wrong-data kill would have been a silent false negative.
+
+**NEXT (precisely scoped)**: verify the head bytes via the engine's own reader (boot
+one debug line dumping the head's first-row dequantized values, or diff the extraction
+against the pack's tokenizer/head loader) → re-run F-294b's v1 + this probe on
+verified bytes → both verdicts re-bank.
