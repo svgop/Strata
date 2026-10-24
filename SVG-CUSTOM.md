@@ -9679,3 +9679,16 @@ The ternary patch script campaign/patch_f284_ternary.py targets the C2a-era roun
 — its poll-loop anchor needs re-writing against the 9e6c base when the b9 lane is fixed
 (T45); the parked binary engine/strata.f284-ternary-parked and the 3f068280 history
 carry the full implementation either way.
+
+## F-285b — 2026-10-24 ~03:10: THE RESTORED CHAMPION'S FIVE-BOOT BANK (t44-champ-bank.sh,
+## user asked for the full single+conc proof).  POOLED n=5: M1 200.3 (σ 7.9) / pair 182.2
+## (σ 3.8) / conc 278.3 (σ 12.3); accept 76.4-78.1 in-band.  COMPOSITION VERIFIED: the
+## champion reads the SAME band as the lost 19:45 binary's t42 pool (198.4/189.8/283.6,
+## same window class) — M1 +1.9 / pair −4.0 / conc −1.9, all inside boot noise → the
+## restore is behaviorally the same engine that set yesterday's numbers.  vs the dm pool
+## (222.4/209.9/319.6): −10.0/−13.2/−12.9% = THE WINDOW TAX, unchanged from every binary
+## tested tonight (the t42b counterfactuals already ruled out the recipe; clocks locked,
+## cache 97-98%, acceptance in-band).  In-battery trend: pair legs slid 186.5→176.5 over
+## the five boots = the box's 4th consecutive hour under batteries (the F-224 self-
+## workload law at session scale).  RECORDS STAND from their banked windows; the champion's
+## clean-window certification = the morning re-bank (first quiet window, fresh five boots).
