@@ -10289,3 +10289,22 @@ best approximation (cos 0.9985, argmax exact).
 replicate it in the fixture path; or (b) one more tap line dumping the dequanted
 pre-Q4 head rows (the simplest: dump the `row` f32 vector inside make_q4_head — 40525
 × 2560 × 4 = 415 MB, or just row 0 + a hash of the rest for verification).
+
+## F-309 — 10-24 ~20:00: THE HEAD-BYTES QUESTION NARROWED TO ITS FINAL FORM — the
+## decoders are PROVEN IDENTICAL; the dumped buffer is NOT a vanilla-Q4 image of any
+## model row; the definitive close = dump the dequanted rows inside make_q4_head.
+
+**THE PROOF CHAIN**: (1) the vendored ggml's dequantize_row_q6_K and gguf-py's decode
+agree BIT-EXACTLY on the real row-0 bytes (cos 1.000000, values equal) — the fixture's
+Q6_K source is right and there is NO GSQ-modified Q6_K reader; (2) the FULL-VOCAB SCAN
+(engine row 0's decoded vector vs all 248,320 model rows): best cos 0.078 — the dumped
+tap_head.q4 does not decode (vanilla, any packing) to ANY model row.  The d matched
+dv[0]'s amax/8 exactly (0.00308) while the codes match nothing — consistent with the
+buffer holding a TRANSFORMED image (an mmvq-data-path layout transform on dhead_
+between make_q4_head and the head call, or a partially-stale buffer), NOT with a
+different dequant.
+**THE DEFINITIVE CLOSE (option b, one tap line)**: dump the dequanted f32 `row` vector
+inside make_q4_head (before ggml_quantize_chunk) — row 0 + a checksum of the rest for
+size; the fixture then takes THE ENGINE'S OWN dequanted rows and the T2 gate closes at
+the affine-corrected dot's noise floor.  **THE AFFINE DOT FIX remains required in
+parallel** (F-308's fact 1): p2_forward's q8_1 dot needs the −4·ds.y term.
