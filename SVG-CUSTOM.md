@@ -10162,3 +10162,24 @@ tensors load with sane stats — weights rms 0.003-0.2, the +1-folded norms in t
 (fc_embedding → per-stream RMS (law 3) → attention: q/k norms, rope 1e7, GQA 24/2 →
 the three hyper-connection mixers → shared expert + router + routed-blob reader →
 fc_hidden → the 40,525-id sub-vocab head), then the STRATA_MTP_TAP adjudication boot.
+
+## F-302 — 2026-10-24 ~14:40: THE P2 FORWARD LANDED STAGE-WISE (B1-B3 RUNNING, B4's
+## input question NAMED) — the critical path advancing on real transcriptions.
+
+**LANDED (campaign/retrain/p2_forward.py)**: the G0-exact module per exec-B §2.2 —
+the q8_1 activation quantizer (clamp/roundf exact), the engine-dot form (integer codes
+x fp16-d weights, fp32 einsum accumulation), RMS-with-gamma-after, the HC read (B3) in
+its full exact form (the concatenated [10240] down projection with the /HC contract —
+my first per-stream-sum form was wrong, caught by shape asserts; the apply/bo_prev/
+inj_prev fold; the up/sigmoid/mixed formula with the final /4), B1 (embedding branch)
+and B2 (per-stream residual + fusion) — ALL RUNNING on the real rt weights with sane
+stage stats.  B4's attention is transcribed (partial rope inside 64 dims, per-head
+norms, int8 KV round-trip, GQA 12:1, the raw gate half) but surfaced a SPEC AMBIGUITY:
+q/k/v projections are [.., 2560] while the HC read's mixed is [10240] — WHICH 2560-
+reduction of mixed feeds attention (mean-over-streams? a different read output?) is
+exactly what the STRATA_MTP_TAP fixture adjudicates (the TAP dumps the engine's actual
+stage tensors; the module matches or the spec's mtp.cpp:952-965 citation gets re-read
+for the wire between the attn read's outputs and the qkv calls at :967-970).
+B5's router/blob/shared-expert and B6's head follow once B4's wire is pinned.
+**The critical path is genuinely moving: loader + forward core live, the adjudication
+boot is the next session's opening move with the fixture script scoped by TAP's env.**
