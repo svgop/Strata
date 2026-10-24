@@ -9889,3 +9889,22 @@ prompt — it learned copying; the T47 dossier's "+5-25% on copy-heavy" band app
 stacks whose drafters did not. The splice is never implemented; negative banked with
 numbers. (Also banked: acceptance classes read 73-94% live — the drafter's real per-task
 spread, useful priors for the keep-rule refit.)
+
+## F-292 — 2026-10-24 ~07:15: THE KEEP-RULE REFIT CLOSED AS DATA-EMPTY — the fresh
+## SPEC_PROB-recipe trace (3,265 solo windows + batch twins; t48-spec-trace.txt) proves
+## the rule family has no headroom; the +6-9% pool belongs to RETRAIN.
+
+**THE FRESH TRACE** (the old 1,615-window bank predates SPEC_PROB by two days — any refit
+on it priced dead math): decile curve UNCHANGED — 0.554/0.614/0.610/0.689/0.821 vs the old
+0.571/0.613/0.643/0.722/0.835 (slightly lower = the more varied UX-heavy load mix).  The
+curve is a property of the DRAFTER-MODEL PAIR, not of any acceptance rule: SPEC_PROB
+rewired the rescue (rescues in 3,201/3,265 windows now) without moving exact-match
+acceptance.  The acceptance DISTRIBUTION improved hugely vs the old bank (zero-accept
+windows 9.6% vs 29.5%; mean accepted 2.232 of 3.935 offered) — the recipe is healthier,
+but the threshold families (keep/cut falsified −6.0% pooled at F-277-era; τ 0.15
+falsified all-lane; τ tighter untested and the curve says no room) have NOTHING to fit:
+the sweep's kept-mean ≈ offered-mean held on the new data too.  **VERDICT: the refit
+lever is CLOSED as data-empty; the deficit pool's lever is RETRAIN v2 (the T14B
+pipeline — drafter quality shifts the curve itself).**  The trace boot's lanes read
+206.2/203.8/313.4 = the box is RECOVERING (best conc since the evening pools) — the
+fair-window re-bank becomes viable.
