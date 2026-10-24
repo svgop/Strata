@@ -10329,3 +10329,19 @@ path's Q4_0 traits vec_dot** (the same SmallTraits-style struct at :1033+ is the
 one; the large kernel's Q4 branch is at the vec_dot section) → transcribe → T2 closes.
 **G0 stands at: T1 PASSED; T2 = the large-kernel dot form, weights proven, all
 quantizers proven, argmax proven — a single transcription from the gate.**
+
+## F-311 — 10-24 ~21:50: THE LARGE-PATH TRANSCRIPTION ATTEMPTED (native_mmvq_multi +
+## SmallTraits<Q40Block> with the exact thread nibble map) — T2 STILL OPEN; the two
+## remaining suspects isolated: the Q81Block ds field's exact semantics (from
+## native_quantize_q8_1 — the s = d*Σx/2 assumption is unverified) and the dispatch
+## conditions (multi_exact/b6_rows state selecting a different kernel variant for the
+## head).  The exact-map affine form reads cos −0.009 (worse than the plain 0.998!) —
+## the affine's s term as I model it is wrong, and the PLAIN fp32 dot on the proven
+## rows remains the best form (cos 0.998, argmax exact).  NEXT (fresh context): (1)
+## read native_quantize_q8_1's ds packing (d, s) semantics; (2) read the native_mmvq
+## dispatcher's kernel-variant choice for the head shape (n_in=2560, ncol=1, Q4_0);
+## (3) transcribe THAT variant.  G0: T1 PASSED; T2's every input PROVEN (weights,
+## gather, decoders, argmax) — only the dot-form transcription stands between the
+## module and the gate.  The ~1% plain-dot residual may itself be the final answer
+## if the dispatcher shows a fused/wave variant with different accumulation — the
+## read decides.
