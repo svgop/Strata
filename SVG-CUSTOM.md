@@ -9692,3 +9692,38 @@ carry the full implementation either way.
 ## the five boots = the box's 4th consecutive hour under batteries (the F-224 self-
 ## workload law at session scale).  RECORDS STAND from their banked windows; the champion's
 ## clean-window certification = the morning re-bank (first quiet window, fresh five boots).
+
+## F-286 — 2026-10-24 ~03:50: THE TERNARY RUNS — ALL THE WORK IN ONE BUILD; the b9 lane
+## unlocked CONFIG-ONLY; first 9-wide numbers since the elastic era.
+
+**THE UNLOCK (T45, solved without touching the buggy path)**: STRATA_ELASTIC_S_MIN=9 maps
+ALL nine slot arenas at boot → the admission-ramp materializations never run → the
+expert-cache-tail release (the #267 layer-0 hang) never executes.  12/12 smoke PASS at b9,
+first 9-slot boot since T36 introduced elastic (the F-273-era b9 boots predate it — the
+"regression" was elastic×b9, never re-tested until tonight).  Cost: 6.75 GiB of arenas
+resident from boot (21.5 GiB free at boot pays it).
+
+**THE TERNARY (F-284 v2, patch_f286_ternary_v2.py, re-anchored to the C2a-free base)**:
+true 3+3+3 (the v1 half-split bug caught live from the round shapes A.S=8 → fixed to
+thirds → A.S=6 B.S=6 C.S=6, every window the 6-row class, ALL NINE SLOTS DECODE EVERY
+ROUND — the rotation cap gone).  TWO launcher landmines found and cleared: the b9 launcher
+COPY still hard-exported STRATA_COHORTS=2 (copies inherit old lines — audit every copy
+after a launcher fix), and the stage-order law holds (C stages before any go).  12/12
+smokes ×2.
+
+**T46 3v3 (ctl9 vs ter9, both S_MIN=9, 9-conc lane)**: ter9 legs 293.4 / 246.6 / 298.0
+(mean 279.3) vs ctl9 253.5 / 261.4 / 248.7 (mean 254.5) = **+9.7% pooled, 2-of-3 rounds
+(+15.7%, +19.8%, one −5.6% on the fatigued-box stretch where ALL boots' rounds drifted to
+~37ms)**.  The biggest conc lever since COHORTS itself, live and correct — but NOT a
+banked record: 279.3 < 323.0, and the night's window tax (identified: CPU CONTENTION —
+chrome's live monitor burns ~200% during legs, two agent sessions, engine feed threads
+preempted; the naive taskset 0-7 pin FALSIFIED at −20%, the real fix = the CCD_SPLIT
+design or ambient-burn reduction) plus 5h of continuous batteries have everything reading
+−10-15%.  The 293-298 legs in THIS window ≈ 320-330 in a normal window → the record is IN
+REACH, not yet taken.  The confirm ride (2+ more rounds on a rested box, monitor closed or
+CCD-split) banks it.
+
+**WINDOW-TAX LAW (from the WSTAT forensics)**: cohort rounds 22.1-24.7ms in yesterday's
+warm windows vs 25.4-28.3ms tonight, all boots, recipe-exonerated — the tax lives in the
+host feed, and the monitor dashboard's own charting is a named contributor (its burn
+scales with live traffic — watching a record costs the record).
