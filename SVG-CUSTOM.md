@@ -9923,3 +9923,27 @@ two-stage head (+4-6) → CCD isolation → requant (USER GO) → retrain v2 (ow
 pool); with the ternary's +9.7% riding the 9-wide conc lane.  The M1 σ 2.2 is the
 tightest five-boot spread ever banked — the recipe is STABLE (the night's stability
 goal delivered in the same breath).
+
+## F-294 — 2026-10-24 ~08:10: THE TWO-STAGE HEAD PORT SCOPED (the +4-6 solo lever; the
+## spec's own gate: miss-rate harness BEFORE any engine integration).
+
+**THE DONOR (located, read, shape-verified)**: basalt's q6k_vhead_parity.cpp (284 lines:
+self-contained — inline ggml Q6_K dequant, CPU LS-fit reference, GPU two-stage parity,
+cold microbench) + head_proxy.cuh (the 4-level 2-bit + fp16-scale proxy kernel, 243
+lines) + q6k_head_parity.cpp (the exact-layout bitwise harness, 359).  Default shape
+rows=248,320 / n_in=2560 / Q6_K 210-B blocks = OUR head's class (T37's 521.5 MB read).
+
+**THE PORT PLAN (zero ambiguity for the next session)**:
+1. Vendor the three files into campaign/headport/ with includes rewired (stage-2 exact
+   rescoring maps onto OUR native_mmvq — the donor's q6k_head_mmvq is its cousin).
+2. v0: run as-is (random rows scaled to a logit spread, random x) = the copy-fit and
+   machinery parity on OUR build.
+3. v1: replace random rows with the REAL head tensor read from the GGUF (verify the
+   tensor class FIRST — the spec asserts Q6_K 521.5 MB @ 248,320×2560; confirm from the
+   gguf metadata before wiring), random-x v1 then a real-activation dump boot
+   (STRATA-class dump of the head's input row) for the honest miss rate.
+4. GATE: proxy-top1 (and top-64-shortlist) miss rate ~1e-4/row-class → GO to the
+   exact-materialize arm (STRATA_HEAD_PROXY, env-gated, F-230 ladder: KL yardstick pair
+   → 3v3 → 2× MMLU if KL > 1e-5 → before/after single+conc proof); miss rate worse →
+   DEAD, the full-vocab sampler constraint makes approximation unshippable on speed
+   alone (T37 §3.2's three-option analysis stands).
