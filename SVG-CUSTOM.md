@@ -10542,3 +10542,29 @@ gain from trained weights, on the first-cycle corpus (200,281 records; the depth
 proxy — the K=6 recursion + the attention KV chain are the remaining wiring for the
 full FastMTP loss).  The retrain's mechanism is CONFIRMED LIVE: trainable weights +
 real teacher data + measurable acceptance movement.
+
+## F-324 — 10-25 ~07:00: **THE FIRST FULL K=6 CYCLE IS REAL** — GPU-exclusive, 200
+## steps in 11 seconds, the per-depth FastMTP loss on 650,782 harvested records:
+## **mean acceptance stock 0.4646 → trained 0.5605 (+9.6 pt); depth-1 +23.2 pt,
+## depth-2 +13.6, depth-3 +11.7** — the first full-recursion training result.
+
+**THE CORPUS SCALED**: 6 more streams (seed 777) → 10 total, 650,782 records
+(26.7 GB), the trainer indexing 1,269 windows (deep 74.5%).  **THE RUN**: the module
+on cuda (sm_120 native), batch 4 anchors × K=6 depths = 24 CE terms/step, AdamW 1e-4;
+200 steps in 11 s wall (GPU-exclusive — the server paused per the single-engine law;
+the CPU-mode timeout runs taught: training needs the GPU alone).  **THE PER-DEPTH
+READ (the exec-C §3 evaluator form)**:
+| depth | stock | trained | Δ |
+|---|---|---|---|
+| 1 | 36.8% | 60.0% | **+23.2 pt** |
+| 2 | 40.7% | 54.2% | +13.6 |
+| 3 | 41.7% | 53.3% | +11.7 |
+| 4 | 44.1% | 50.8% | +6.8 |
+| 5 | 56.9% | 64.4% | +7.5 |
+| 6 | 58.6% | 53.4% | −5.2 |
+| mean | 46.5% | 56.1% | **+9.6 pt** |
+Checkpoint saved (first_cycle_ckpt.pt).  NOTE (honest): depth-6 −5.2pt and the loss
+oscillation say the 200-step/8.2-anchor-visit run is under-converged and the depth-6
+term under-weighted — the full cycle (epochs over all 1,269 windows + the w_deep
+weighting + the attention KV chain in the recursion) is the remaining work; the
+mechanism's direction and magnitude are now DEMONSTRATED at full K.  Server restored.
