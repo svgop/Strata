@@ -77,6 +77,24 @@ REC = 40976
 K = 6
 
 
+def _verify_labels(shard: str, pos, tok):
+    """F-327 gate: a records shard's tok stream MUST equal its corpus ids at the same
+    positions. Phase-1 trained 4/10 shards on labels from a corpus that had been
+    regenerated AFTER the harvest (records 09:05 vs corpus 09:22) — 28% poisoned labels,
+    caught only at the DAgger merge. This check makes that class of bug unloadable."""
+    stem = shard.replace("records-", "").replace(".f32", "")
+    ids_file = ("/home/svg/LLM/Custom-data/harvest/corpus/harvest-probe.ids"
+                if stem == "probe" else
+                f"/home/svg/LLM/Custom-data/harvest/corpus/stream-{stem.split('-')[-1]}.ids"
+                if stem.startswith("dagger") else
+                f"/home/svg/LLM/Custom-data/harvest/corpus/{stem}.ids")
+    ids = np.array([int(x) for x in open(ids_file).read().strip().split(",")], dtype=np.int64)
+    assert len(tok) >= len(ids) - 1, f"{shard}: {len(tok)} records vs {len(ids)} corpus ids"
+    m = pos < len(ids)
+    bad = int((tok[m] != ids[pos[m]]).sum())
+    assert bad == 0, f"{shard}: {bad}/{m.sum()} labels DISAGREE with {ids_file} (poisoned shard — F-327 gate)"
+
+
 def load_corpus(dagger_glob: str = ""):
     """All records concatenated + the seam-respecting anchor list from windows.npy.
     windows.npy starts are PER-SHARD record indices (they reset at each shard boundary) —
@@ -94,6 +112,7 @@ def load_corpus(dagger_glob: str = ""):
         pos_l.append(arr[:, 0:8].copy().view(np.int64).reshape(n))
         tok_l.append(arr[:, 8:16].copy().view(np.int64).reshape(n))
         R_l.append(arr[:, 16:].copy().view(np.float32).reshape(n, 4, 2560))
+        _verify_labels(os.path.basename(f), pos_l[-1], tok_l[-1])
         offsets.append(offsets[-1] + n)
     pos = np.concatenate(pos_l); tok = np.concatenate(tok_l); R = np.concatenate(R_l)
     R_dag = None
@@ -337,6 +356,12 @@ def main() -> int:
           f"({(time.time() - t0) / 60:.1f} min); best mean {best_mean:.4f}", flush=True)
 
     if not a.no_export:
+        best = CKPT_DIR / "cycle-best.pt"
+        if best.exists():
+            pay_b = torch.load(best, map_location="cpu", weights_only=False)
+            if pay_b["best_mean"] > (hist[-1]["mean"] if hist else -1):
+                mod.load_state_dict(pay_b["model"])
+                print(f"exporting the BEST state (step {pay_b['step']}, mean {pay_b['best_mean']:.4f}) over the final", flush=True)
         n_t, n_b = export_dense(mod, rt, {"step": step, "best_mean": best_mean,
                                           "final_mean": float(rf.mean()), "stock_mean": stock_mean,
                                           "history_len": len(hist)})

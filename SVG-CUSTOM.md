@@ -10652,3 +10652,34 @@ outputs during training before any further engine battery is spent.
 
 Instruments banked: check_export_roundtrip.py + stair_probe.sh + --eval-only + --ckpt-dir
 in the trainer.  Server restored on stock after the GPU work (single-engine law held).
+
+## F-327 — 10-24 ~16:40: **THE PHASE-1 TRANSFER FAIL WAS PARTLY A LABEL-POISONING BUG —
+## found by the DAgger merge, fixed by quarantine + a standing gate; clean round-1 recovers
+## acceptance to stock-parity; the residual depth deficit is REAL exposure bias, now unconfounded**
+
+**THE BUG (found building the DAgger merge):** the corpus .ids were REGENERATED at 09:22 while
+records-stream-0..3 (harvested 09:05) kept labels from the pre-regen corpus — 4/10 shards
+(180k records, ~28% of phase-1 labels) were WRONG CONTENT (tok matched no offset of the current
+corpus; streams 4-9 + probe are 100% clean: tok==corpus[pos] exact).  The engine dump writes
+tok = o.tokens[pos] (generate.cpp:16795) — deterministic; the records simply outlived their
+corpus.  F-327 GATE ADDED (train_cycle._verify_labels): every shard's tok stream must equal its
+corpus ids at load — the bug class is now unloadable (it fired twice during bring-up: once on
+quarantine-shard naming, once on its own mapping typo — the gate works).
+
+**THE CLEAN ROUND-1 (ckpts-clean, fresh stock init, 752,552 records = stock streams 4-9 +
+probe + DAgger streams 0-3 re-harvested under gentle-rt2 [records-dagger-*, tok==corpus 100%],
+w_deep, lr 5e-5, 11,336 steps/25.8 min):** offline +33.9pt mean (0.6908 vs stock 0.3556) on
+VERIFIED labels; per-depth +29.0..+35.8.  **ENGINE STAIR: acceptance 0.606 (final state) /
+0.579 (best state) vs stock 0.597 — the catastrophic 0.46-0.49 collapse is GONE, rate is at
+stock parity**; depth-3 matches stock exactly (72 vs 73).  RESIDUAL: tokens/round 1.55-1.65 vs
+stock 2.30 — the deep tail (4:8-10, 5:0-4 vs stock 4:37 5:52) still breaks early = the REAL
+exposure-bias deficit, now measured clean of the label confound.  Also fixed: export ships the
+BEST state (final-vs-best checkpoint mismatch caught by the G0 gate); windows.npy rebuilt over
+the merged corpus (1,463 windows, 77.9% deep).
+
+**THE LOOP IS LIVE:** harvest_sweep takes a --mtp dir; DAgger round N = re-harvest streams
+under the round-(N-1) drafter → merge as records-dagger-* shards → train from the last ckpt →
+G0 + stair.  Round 1 states were 36% drafter-mixed; each round tightens the state distribution
+toward the serving policy (the 3.5-4.6 ms/row law prices every extra offered row — the target
+is depth-tail recovery, worth the full T14C +5.7% band if the tail reaches stock at higher
+rate).  Next: round 2 under the round-1 drafter (one command), then the at-scale evaluator.

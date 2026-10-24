@@ -1,0 +1,12 @@
+corpus: 752552 records, 740278 seam-respecting anchors
+stock eval: 0.350 0.414 0.388 0.328 0.325 0.328 mean 0.3556
+chunk: 181368 anchors / 11336 steps (cap 11336, budget 32 min)
+  eval @2500: loss 3.1576 | 0.683 0.606 0.650 0.648 0.686 0.658 | mean 0.6552 (+30.0pt vs stock)
+  eval @5000: loss 2.7543 | 0.633 0.704 0.701 0.712 0.690 0.687 | mean 0.6877 (+33.2pt vs stock)
+  eval @7500: loss 2.4910 | 0.749 0.658 0.711 0.709 0.672 0.657 | mean 0.6924 (+33.7pt vs stock)
+  eval @10000: loss 2.3640 | 0.719 0.729 0.784 0.745 0.692 0.719 | mean 0.7314 (+37.6pt vs stock)
+  eval @11336: loss 2.3663 | 0.687 0.695 0.704 0.682 0.709 0.680 | mean 0.6929 (+33.7pt vs stock)
+final eval (2x): 0.682 0.704 0.721 0.684 0.668 0.686 mean 0.6908
+deltas vs stock: +33.2pt +29.0pt +33.3pt +35.5pt +34.3pt +35.8pt
+chunk complete at step 11336 (25.8 min); best mean 0.7314
+exported 29 tensors (116.1 MB) -> /home/svg/LLM/Custom-data/mtp/export/dense_rt2.{bin,txt}
