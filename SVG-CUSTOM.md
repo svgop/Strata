@@ -10769,3 +10769,42 @@ why stock gained 5% yet still trails custom by 43-55%: they are climbing the lad
 
 NEXT: the SPEC_COST port (header + hook + STRATA_SPEC_COST arm, default off) with the
 3x-probe before/after per the law; ROUTE_STATS alongside it (same rebuild).
+
+## F-331 — 10-25 ~01:55: **THE INT8-MMA ATTENTION BUNDLE ADOPTED — pair +6.5% (bar cleared), conc
+## +3.9%, M1 in-noise, MMLU 2-gate clean; the int8-MMA kernel pair was sitting default-off, never priced**
+
+**THE ARMS (found by a full flag/env audit against the record: every other cheap knob is already adopted
+or falsified — L2-72 neutral F-200-era, spec 8 rejected −22%, lookup-chain killed by the +4.7ms/row CPU
+coefficient, PIN_BY_NEED ~0 (complement 100% pinned, F-195), adapt-async demoted (silent non-arm,
+F-195), EXPDEC conflicts with the adopted GU_SWIGLU at iq_kernels.cu:4874 — priced for a SOLO A/B):**
+- `STRATA_QSA_SPLIT_ATTN=1` — decode+drafter attention through the split int8-MMA kernel
+  (verify.cpp:1973 + mtp.cpp:1088; qsa_prompt_attn.cu:2271: cells split over up to 20 blocks, LSE merge;
+  fork Eddoursul fd23d91 idea; vendor class +2.8/3.5% on other cards). NEVER priced here — zero
+  SVG-CUSTOM mentions before this entry. Safe-fallback by construction (caller keeps qsa_decode_attn_batch).
+- `STRATA_PROMPT_ATTN_IMMA=1` — prefill attention both products on INT8 tensor cores
+  (qsa_prompt_attn.cu:1081 i8v3: 3 int8 MMAs ≈ 1 fp16 MMA where v2 spends 2; sm_120 rate 732 vs 233
+  measured in-file; 24-bit exact split FINER than v2's fp16 hi+lo). Also never priced here. NOTE: this
+  probe cannot price it (fresh-prompt prefixes conversation-cache after round 1 — all arms read
+  0.55-0.56s); the prefill lane (t42-prefill-ladder) owes it a real read. It rides on mechanism + gates.
+
+**THE PROTOCOL (3v3 same-hour, fresh-boot ABA after the boot-state confound showed):** ctl-A was the
+traffic-warm standing boot (M1 191.8/pair 191.1/conc 282.3/M3b 79.2 — arm read +2.6/+2.4/+3.4 vs it),
+but fresh-vs-warm is exactly the F-225 trap, so a fresh prewarmed arms-OFF control (ctlB) closed the
+window: **ctlB 198.6/183.7/281.0/77.5 vs ARM 196.7/195.6/292.0/76.2** →
+**pair +6.5% (CLEARS the +4 bar), 6-conc +3.9% (at the bar), M1 −1.0% (spreads overlap 190-210 = noise;
+single-stream protection HOLDS), M3b −1.3pp** (two controls read higher — a real small tax, inside the
+75.6-79.6 historical band). Boot-state lesson re-learned: ctlB M1 reads +3.5% over traffic-warm ctl-A
+while its pair reads −4% under it — lane-dependent boot state is why the interleave is law.
+Evidence: campaign/results/f331-{ctl,arm,ctlB}-{1,2,3}.txt.
+
+**GATES (token-stream-affecting: QSA_SPLIT changes decode attention numerics):** MMLU-Pro 70q
+floor-0.933 form: **92.86 then 94.29 (mean 93.57 ≥ 93.3 floor, tiebreaker-clean**; the 92.86 sub-floor
+read is inside σ 3.1pts and inside the standing recipe's own F-282 range 92.9-95.7).
+mmlu-f331-arm{,2}.json.
+
+**ADOPTED into standing** (launcher commit 347ba869 + overridable-form follow-up): both arms
+`${VAR:-1}`, one-line `=0` rollback each. RIDERS: (1) five-boot pooled confirmation + mimic watch on
+the next battery (F-282 pattern); (2) IMMA owes the prefill-lane read; (3) M3b −1.3pp watch; (4) if a
+solo-lane bisect is ever wanted, QSA_SPLIT alone is the measured contributor — IMMA is prefill-only.
+Calibrate re-verdict (user question): F-182/F-183 stand — its whole sweep space is now either
+adopted-elsewhere or falsified with mechanism; the saved 10-14 report remains stale and dangerous to apply.
