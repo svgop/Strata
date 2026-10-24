@@ -10084,3 +10084,24 @@ wrong-data kill would have been a silent false negative.
 one debug line dumping the head's first-row dequantized values, or diff the extraction
 against the pack's tokenizer/head loader) → re-run F-294b's v1 + this probe on
 verified bytes → both verdicts re-bank.
+
+## F-298b — 2026-10-24 ~11:55: THE HEAD FAMILY RESOLVED ON VERIFIED DATA — requant
+## GO-CANDIDATE; the proxy kill stands; the extraction was CLEAN all along.
+
+**THE BUG (found and named)**: my hand-transcribed C++ Q6_K dequant invented scale
+indices for the 3rd/4th 32-halves (the donor source had been read only through the
+second half; the garbage row-norms were transcription, not data).  **THE VERIFICATION**:
+llama.cpp's own reference dequantizer (vendored gguf-py) reads the GGUF tensor AND the
+extracted head_q6k.bin identically — norms 0.77-1.0, amax 0.41: vanilla Q6_K, offset 0,
+extraction byte-perfect.  The falsifier rebuilt in numpy ON the reference (the
+transcription-bug class eliminated by construction).
+
+**THE VERDICTS (both now on clean data)**:
+1. **HEAD REQUANT Q6_K→Q4_0 = GO-CANDIDATE**: top-1 flips 0/6, mean KL 2.1e-3, max
+   |dlogit| ~0.4 (sd-4 logits), −31% head bytes (521.5→357.6 MB) = the +1-2% M1 band.
+   Joins the requant USER-GO discussion with these numbers; on GO the integration rides
+   the T26-5 requant build (head in-tensor swap + mmvq Q4 path check) + MMLU/mimic gates
+   + before/after proof.
+2. **F-294b's two-stage 2-bit proxy kill STANDS**: its GPU-side measurements (flat top,
+   rescore band, argmax flips) read the real bytes via the donor's correct kernels.
+   Consistent: 2-bit flips the argmax; 4-bit does not.  FLAG LIFTED.
