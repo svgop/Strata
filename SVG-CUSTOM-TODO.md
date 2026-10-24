@@ -1865,3 +1865,15 @@ TIER C — PLACEMENT (dossier: T35-memory-hierarchy):
 STANDING OWED (pre-T35): dm/both five-boot pooled extension + MMLU/mimic gates; phase-2
 launch-map diet + PDL kill-switch (+ mid_chain/dec_gdn_rec); re-quant USER GO (T35's routing-KL
 objective question feeds it); T14B retrain → 262k.
+
+### Phase-2 alternative lane (10-24, DFlash2 quick test per user ask): weights PULLED
+- /home/svg/LLM/Custom-data/mtp/fixtures/dflash2/model.safetensors (1.206 GB, sha256 d6723f2a… verified vs LFS pointer)
+- Inventory: 81 tensors / 603.1M params bf16 — 5 sliding-attn layers (32q/8kv heads, q/k norm), two-tap convs
+  (attention_conv + mlp_conv per layer), MLP 7680, input fc [12800,2560] = the FIVE target taps
+  (layers 5/15/25/35/45, hc-mean) concatenated, candidate_selector = rank-256 predecessor/successor
+  codebooks [248320,256] (63.6M each — the head). NO embed/lm_head: pure feature-conditioned block generator.
+- NOT bootable in --mtp (different model class + block-diffusion verify + needs the 5-tap capture the
+  SGLang patch adds). Quick-test verdict: inspected + local; integration = tap patch (F-321 generalizes)
+  + drafter forward in mtp.cpp + block-verify path = a full T-lane, NOT a quick test.
+- Strategic: no recursion at all = sidesteps the exposure-bias failure phase-1 hit; 0.6B fwd ≈ 9.7 GFLOP
+  per draft round (trivial vs our window cost). Price as the bigger swing if recursive rollouts stall.
