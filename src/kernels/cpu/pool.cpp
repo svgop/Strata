@@ -137,6 +137,36 @@ static void fill_plan_fields(CpuTopology& topo, bool skip_first) {
 
 CpuTopology detect_cpu_topology(bool skip_first, PoolAffinity affinity) {
     CpuTopology topo = detect_cpu_topology_impl(skip_first, affinity);
+    // savage-custom F-295 (STRATA_POOL_CORES="lo-hi" / "a,b,c"): the CCD class split - the
+    // pool's feed workers (and the host thread) restricted to a reserved core set (a whole
+    // CCD on the 9950X3D), leaving the process tree's other threads and the desktop noise
+    // on the rest.  Unset/empty: byte-identical behavior.  The naive whole-process taskset
+    // was falsified at -20% (F-285b-era); this pins ONLY the measured contention victim.
+    if (const char* cs = std::getenv("STRATA_POOL_CORES"); cs != nullptr && cs[0] != '\0') {
+        char buf[128];
+        std::snprintf(buf, sizeof buf, "%s", cs);
+        std::vector<int> allow;
+        for (char* tok = std::strtok(buf, ","); tok != nullptr; tok = std::strtok(nullptr, ",")) {
+            if (const char* dash = std::strchr(tok, '-')) {
+                const int lo = std::atoi(tok), hi = std::atoi(dash + 1);
+                for (int c = lo; c <= hi && c >= 0; ++c) allow.push_back(c);
+            } else {
+                allow.push_back(std::atoi(tok));
+            }
+        }
+        std::vector<int> kept;
+        for (int c : topo.worker_cores)
+            if (std::find(allow.begin(), allow.end(), c) != allow.end()) kept.push_back(c);
+        if (!kept.empty()) {
+            std::fprintf(stderr, "strata cpu pool: STRATA_POOL_CORES restricts %zu -> %zu worker cores\n",
+                         topo.worker_cores.size(), kept.size());
+            topo.worker_cores = std::move(kept);
+            if (std::find(allow.begin(), allow.end(), topo.host_core) == allow.end() && !topo.worker_cores.empty())
+                topo.host_core = topo.worker_cores.back();
+        } else {
+            std::fprintf(stderr, "strata cpu pool: STRATA_POOL_CORES matched no cores; ignored\n");
+        }
+    }
     // --host-core last: the host takes the last core, the workers the others (the first included)
     if (skip_first && host_core_setting() == HostCore::Last && !topo.is_hybrid && topo.host_core >= 0 &&
         !topo.worker_cores.empty()) {

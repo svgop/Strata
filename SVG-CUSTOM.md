@@ -9987,3 +9987,24 @@ are exactly the adversarial case for a 2-bit proxy.  Artifacts kept: campaign/he
 recalculated central ≈ 283-291 (base 217.3 × retrain-or-keep 1.06-1.09 × requant-GO
 1.04-1.07 × micro 1.01-1.02) — 300 now needs retrain AND requant AND the micro bundle,
 or new levers.  PIVOT: CCD class split (the queue's next live item).
+
+## F-295 — 2026-10-24 ~09:55: THE CCD CLASS SPLIT FALSIFIED (0-for-2 family) — the pool
+## wants the WHOLE topology; the window tax's recovery lever is NOT thread placement.
+
+**THE ARM (STRATA_POOL_CORES="8-15,24-31" — the feed class restricted to all of CCD1,
+16 logical, in detect_cpu_topology; env-gated, default-off, deployed on the F-295
+build)**: 3v3 ABAB vs ctl.  POOLED: ctl 217.8/205.1/308.3 vs ccd **189.4/176.5/245.9 =
+−13.0/−13.9/−20.3%** — WORSE ON EVERY LANE, every round (M1 legs 198.4/185.6/184.1 vs
+ctl's 207.4-225.3).  THE MECHANISM, corrected: the CPU expert pool is not the
+contention VICTIM class — it is a THROUGHPUT engine whose workers scale across the full
+32-thread topology; restricting it to half the machine strangles the feed that every
+lane rides.  With the naive whole-tree pin already at −20%, the thread-PLACEMENT family
+is 0-for-2 and CLOSED.  The window tax's honest remaining levers: ambient-noise
+REDUCTION (the monitor tab's ~2 cores — the user's own call; SCHED_BATCH-ing the noise
+is unprivileged and untested) or nothing — the tax is the price of a busy desktop.
+
+**NET for the composition**: CCD isolation leaves the stack (it never was a member);
+the certified base 217.3/206.9/319.5 stands; the remaining IMPLEMENTED-path levers are
+retrain v2 (+6-9, owns the pool), requant (+4-7, USER GO), micro bundle, C2
+reader-thread (conc), and whatever the next research wave finds — 300 solo now requires
+nearly all of them landing.
