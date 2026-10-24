@@ -33,10 +33,10 @@ export STRATA_DF_PDL=0              # F-279 PIN: the T38 V2 code DEFAULTS STRATA
 export STRATA_SPEC_PROB="${STRATA_SPEC_PROB:-1}"  # F-282 ADOPTED (10-23 night): probabilistic draft acceptance (sampler.cu:891, the T17C-priced never-measured arm). T41 battery: M1 +5.8% (217.8 vs 205.8, 2/2 legs above EVERY ctl leg), conc +4.4%, M3b +2.0pp (mechanism-correlated); MMLU 4-run set 94.3/92.9/95.7/94.3 mean 94.3 (one sub-floor read, tiebreaker-clean); mimic 56-read = the night's 3-config bench low-mode (paired tests showed 60-62). OFF: STRATA_SPEC_PROB=0. Rider: five-boot pooled confirmation + mimic watch on the next battery
 
 # F-331 ARMS (10-25, both never priced on this lane; see SVG-CUSTOM F-331):
-export STRATA_QSA_SPLIT_ATTN=1    # decode+drafter attention through the split int8-MMA kernel (verify.cpp:1973 + mtp.cpp:1088;
+export STRATA_QSA_SPLIT_ATTN="${STRATA_QSA_SPLIT_ATTN:-1}"     # decode+drafter attention through the split int8-MMA kernel (verify.cpp:1973 + mtp.cpp:1088;
                                   # qsa_prompt_attn.cu:2271: each query's cells split over up to 20 blocks, LSE merge; int8-KV sm_80+;
                                   # fork Eddoursul fd23d91 idea; DETAILS vendor class +2.8/3.5% on other cards). =0 rolls back
-export STRATA_PROMPT_ATTN_IMMA=1  # prefill attention, both products on INT8 tensor cores (qsa_prompt_attn.cu:1081 i8v3:
+export STRATA_PROMPT_ATTN_IMMA="${STRATA_PROMPT_ATTN_IMMA:-1}" # prefill attention, both products on INT8 tensor cores (qsa_prompt_attn.cu:1081 i8v3:
                                   # 3 int8 MMAs ~= 1 fp16 MMA where v2 spends 2; sm_120 measured 732 vs 233 rate; 24-bit split
                                   # finer than v2's fp16 hi+lo - precision IMPROVES). Prefill lane. =0 rolls back
 
