@@ -1,11 +1,12 @@
 #!/bin/bash
 # tools/harvest_sweep.sh — the first-cycle harvest sweep: one CLI boot per stream,
 # --dump-final-r writes records-<shard>.f32 (the F-321 patch). Server must be down.
-# Usage: bash tools/harvest_sweep.sh <corpus-dir> <records-dir>
+# Usage: bash tools/harvest_sweep.sh <corpus-dir> <records-dir> [mtp-dir]  (default stock rt)
 set -u
 REPO=/home/svg/LLM/strata-custom-2
 CORPUS=${1:?corpus dir}
 OUT=${2:?records dir}
+MTP=${3:-/home/svg/LLM/data/mtp-en/rt}
 mkdir -p "$OUT"
 port_busy() { ss -ltn 2>/dev/null | grep -q ":8081 "; }
 if port_busy; then echo "ABORT: the 8081 server is up — stop it first (single-engine law)"; exit 1; fi
@@ -23,7 +24,7 @@ for f in "$CORPUS"/stream-*.ids; do
     --control-vector-scaled refusal-r.gguf:1.0 --control-vector-layer-range 4 24 \
     --cvec-mode project --cvec-dir per-layer --ple-io mmap --adapt-decay 0.85 \
     --expert-profile "$REPO/data/expert-profile.bin" --resident-experts \
-    --mtp /home/svg/LLM/data/mtp-en/rt --batch 6 \
+    --mtp "$MTP" --batch 6 \
     --tokens-file "$f" --max-new 1 \
     --dump-final-r "$OUT/records-$name.f32" > "$OUT/$name.out" 2>&1
   echo "  exit=$? size=$(stat -c %s "$OUT/records-$name.f32" 2>/dev/null)"

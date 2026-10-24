@@ -77,11 +77,14 @@ REC = 40976
 K = 6
 
 
-def load_corpus():
+def load_corpus(dagger_glob: str = ""):
     """All records concatenated + the seam-respecting anchor list from windows.npy.
     windows.npy starts are PER-SHARD record indices (they reset at each shard boundary) —
     each window is a 512-record tile of a seam-respecting run, so a global anchor a is
-    valid iff a..a+K all fall inside one tile: a in [tile_start, tile_start + W - K - 1]."""
+    valid iff a..a+K all fall inside one tile: a in [tile_start, tile_start + W - K - 1].
+    With dagger_glob: a second harvest of the SAME corpus (same pos/tok stream, states from
+    a trained drafter) is loaded and returned aligned (R_dag); pos/tok equality is asserted
+    so labels stay true-corpus (the DAgger contract)."""
     W = 512
     pos_l, tok_l, R_l, offsets = [], [], [], [0]
     for f in sorted(glob.glob(RECORDS_GLOB)):
@@ -93,6 +96,21 @@ def load_corpus():
         R_l.append(arr[:, 16:].copy().view(np.float32).reshape(n, 4, 2560))
         offsets.append(offsets[-1] + n)
     pos = np.concatenate(pos_l); tok = np.concatenate(tok_l); R = np.concatenate(R_l)
+    R_dag = None
+    if dagger_glob:
+        dag_pos, dag_R = [], []
+        for f in sorted(glob.glob(dagger_glob)):
+            raw = np.fromfile(f, dtype=np.uint8)
+            n = raw.size // REC
+            arr = raw.reshape(n, REC)
+            dag_pos.append(arr[:, 0:16].copy())                       # pos+tok, the alignment key
+            dag_R.append(arr[:, 16:].copy().view(np.float32).reshape(n, 4, 2560))
+        key = np.concatenate(dag_pos).view(np.int64).reshape(-1, 2)
+        R_dag = np.concatenate(dag_R)
+        m = min(len(R_dag), len(R))
+        assert len(R_dag) == len(R), f"DAgger corpus mismatch: {len(R_dag)} replay vs {len(R)} stock records"
+        assert (key[:, 0] == pos).all() and (key[:, 1] == tok).all(), "DAgger pos/tok stream differs from stock — different corpus?"
+        print(f"dagger replay: {len(R_dag)} records, pos/tok streams IDENTICAL to stock", flush=True)
     starts = list(map(int, np.load(WINDOWS_NPY)[:, 0]))
     anchors, shard, prev = [], 0, -1
     for st in starts:            # windows are in load order; a start reset marks the next shard
@@ -100,7 +118,7 @@ def load_corpus():
             shard += 1
         prev = st
         anchors.extend(range(offsets[shard] + st, offsets[shard] + st + W - K))
-    return pos, tok, R, np.asarray(anchors, dtype=np.int64)
+    return pos, tok, R, np.asarray(anchors, dtype=np.int64), R_dag
 
 
 def build_head():
@@ -166,6 +184,8 @@ def main() -> int:
     ap.add_argument("--eval-n", type=int, default=200, help="eval anchors per mid-run eval (final uses 2x)")
     ap.add_argument("--seed", type=int, default=1234)
     ap.add_argument("--eval-only", action="store_true", help="no training: at-scale accept over the FULL eval split on cycle-best.pt")
+    ap.add_argument("--dagger-glob", default="", help="DAgger state replay: a second records-*.f32 glob aligned index-wise with the stock corpus (same corpus, re-harvested under a trained drafter); its states join the train pool with true-corpus labels")
+    ap.add_argument("--init", default="", help="model-only init from a checkpoint path (applies only when no cycle-last.pt resume happens)")
     ap.add_argument("--ckpt-dir", default=str(globals()["CKPT_DIR"]), help="checkpoint dir (isolate experiments, e.g. ckpts-gentle)")
     ap.add_argument("--no-export", action="store_true")
     a = ap.parse_args()
@@ -174,7 +194,7 @@ def main() -> int:
     CKPT_DIR = Path(a.ckpt_dir)
     LEGACY_SEED = CKPT_DIR / "full_cycle_ckpt.pt"
     CKPT_DIR.mkdir(parents=True, exist_ok=True)
-    pos, tok, R, anchors = load_corpus()
+    pos, tok, R, anchors, R_dag = load_corpus(a.dagger_glob)
     print(f"corpus: {len(pos)} records, {len(anchors)} seam-respecting anchors", flush=True)
 
     rng = np.random.default_rng(a.seed)
@@ -198,6 +218,11 @@ def main() -> int:
         rng.bit_generator.state = pay["rng"]
         step0, hist, best_mean = pay["step"], pay["eval_history"], pay["best_mean"]
         print(f"resumed cycle-last.pt at step {step0} (best {best_mean:.4f}, {len(hist)} evals)", flush=True)
+    elif a.init:
+        pay_i = torch.load(a.init, map_location="cpu", weights_only=False)
+        sd_i = pay_i["model"] if isinstance(pay_i, dict) and "model" in pay_i else pay_i
+        mod.load_state_dict(sd_i)          # checkpoints store mod.state_dict() keys verbatim
+        print(f"init from {a.init} (model only, fresh optimizer)", flush=True)
     elif LEGACY_SEED.exists():
         mod.load_state_dict(torch.load(LEGACY_SEED, weights_only=True))
         print(f"legacy seed {LEGACY_SEED.name} loaded (model only, fresh optimizer)", flush=True)
@@ -208,10 +233,11 @@ def main() -> int:
 
     def batch_loss(batch):
         terms = []
-        for anc in batch:
+        for anc, src in batch:
+            Rs = R if src == 0 else R_dag
             wa = depth_weight(pos[anc])
             for d in range(1, K + 1):
-                mixed, _ = mod(torch.from_numpy(R[anc + d - 1].copy()).cuda())
+                mixed, _ = mod(torch.from_numpy(Rs[anc + d - 1].copy()).cuda())
                 ls = in_sub[tok[anc + d]]
                 if ls < 0:
                     continue
@@ -249,7 +275,14 @@ def main() -> int:
     stock_mean = float(r0.mean())
     print(f"stock eval: {' '.join(f'{x:.3f}' for x in r0)} mean {stock_mean:.4f}", flush=True)
 
-    chunk = rng.choice(train_pool, size=max(int(len(train_pool) * a.anchors_frac), a.bs), replace=False)
+    if R_dag is not None:
+        dag_train = train_pool[train_pool < len(R_dag)]      # alignment proven in load_corpus
+        examples = np.concatenate([np.stack([train_pool, np.zeros(len(train_pool), np.int64)], 1),
+                                   np.stack([dag_train, np.ones(len(dag_train), np.int64)], 1)])
+        print(f"DAgger pool: {len(dag_train)} replay examples join {len(train_pool)} stock", flush=True)
+    else:
+        examples = np.stack([train_pool, np.zeros(len(train_pool), np.int64)], 1)
+    chunk = rng.choice(examples, size=max(int(len(examples) * a.anchors_frac), a.bs), replace=False)
     chunk_steps = (len(chunk) + a.bs - 1) // a.bs
     total_steps = a.steps if a.steps > 0 else chunk_steps
     print(f"chunk: {len(chunk)} anchors / {chunk_steps} steps (cap {total_steps}, budget {a.minutes:.0f} min)", flush=True)
