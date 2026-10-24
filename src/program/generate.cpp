@@ -16690,6 +16690,10 @@ int main(int argc, char** argv) {
     bool kvg_started = false;   // the elastic K/V took this run's cells
     double prefill_batched_ms = 0;
     std::FILE* final_r = o.dump_final_r.empty() ? nullptr : std::fopen(o.dump_final_r.c_str(), "wb");
+    // T14B exec-A (F-321): the same flag drives the NATIVE-PACK harvest (the legacy
+    // per-token loop below is dead code for packs — generate.cpp:13892's early break).
+    std::FILE* harvest_f = o.dump_final_r.empty() ? nullptr : std::fopen(o.dump_final_r.c_str(), "wb");
+    int64_t harvest_records = 0;
     std::vector<float> final_r_host(final_r ? (size_t) (g.hc * g.n_embd) : 0);
     std::vector<std::pair<int32_t, int32_t>> lent;     // (residency index, slot) lent to the prompt path
     const int64_t n_batched = (o.prefill_until > 0 && o.prefill_until < n_prompt - 1) ? o.prefill_until : n_prompt - 1;
@@ -16774,6 +16778,26 @@ int main(int argc, char** argv) {
                 return 1;
             }
             prefill.on_chunk = [&](const float* R_rows, int64_t T, int64_t p0, std::string& e) -> bool {
+                // T14B exec-A (F-321): the harvest record write — the chunk's final-R rows ARE
+                // the teacher signal; {int64 pos, int64 tok, f32 R[4][2560]} = 40,976 B/record.
+                // R_rows is device memory with the stream already synced at the caller.
+                if (harvest_f != nullptr) {
+                    static std::vector<float> hr_host;
+                    hr_host.resize((size_t) T * g.hc * g.n_embd);
+                    if (cudaMemcpy(hr_host.data(), R_rows, hr_host.size() * sizeof(float),
+                                   cudaMemcpyDeviceToHost) != cudaSuccess) {
+                        e = "harvest: D2H of the chunk's final-R rows";
+                        return false;
+                    }
+                    for (int64_t t = 0; t < T; ++t) {
+                        const int64_t pos = p0 + t, tok = (int64_t) o.tokens[(size_t) pos];
+                        std::fwrite(&pos, sizeof(int64_t), 1, harvest_f);
+                        std::fwrite(&tok, sizeof(int64_t), 1, harvest_f);
+                        std::fwrite(hr_host.data() + (size_t) t * g.hc * g.n_embd, sizeof(float),
+                                    (size_t) g.hc * g.n_embd, harvest_f);
+                    }
+                    harvest_records += T;
+                }
                 // cell i pairs R_i with the token at i + 1 (every such token is in the prompt)
                 std::vector<int32_t> nxt((size_t) T);
                 for (int64_t t = 0; t < T; ++t) nxt[(size_t) t] = (int32_t) o.tokens[(size_t) (p0 + t + 1)];
@@ -16920,6 +16944,7 @@ int main(int argc, char** argv) {
                 return 1;
             }
         }
+        if (harvest_f != nullptr) { std::fclose(harvest_f); std::fprintf(stderr, "strata generate: harvest: %lld records (%lld positions)\n", (long long) harvest_records, (long long) harvest_records); }
         if (final_r != nullptr) {
             cudaMemcpy(final_r_host.data(), ss.R, final_r_host.size() * sizeof(float), cudaMemcpyDeviceToHost);
             const int64_t posrec[2] = {pos, tok};

@@ -10487,3 +10487,22 @@ offline acceptance evaluator vs the stock baseline → export (BF16 tensors →
 mtp_pack.py → mtp_rt.py → rt2/) → the T14C gate ladder.  The trainer's full loop
 assembles on the first real shards; every contract it consumes is the one the G0
 module already proved.
+
+## F-321 — 10-25 ~04:20: **THE HARVEST IS LIVE** — the exec-A dump patch landed, the
+## probe boot wrote 1,663 perfectly-formed records, and the trainer's indexer con-
+## sumed them (windows: 3) END TO END.
+
+**THE PATCH (generate.cpp)**: the CLI on_chunk chains the harvest write — per chunk,
+{int64 pos, int64 tok, f32 R[4][2560]} x T rows, D2H of the prefill's final-R (the
+~35-line exec-A form; the legacy per-token loop stays dead for packs as the spec
+found).  --dump-final-r now drives BOTH the legacy path and the native-pack harvest.
+**THE PROBE**: 1,664 tokens tokenized via the pack tokenizer (the raw-text file
+REJECTED — the tokens-file wants IDS; the probe harness recipe banked), one CLI boot,
+exit 0 — **68,143,088 B = 1,663 × 40,976 EXACT**, pos 0..1662 perfectly contiguous,
+sane R values; tools/mtp_train.py's dry-run indexes 3 windows from it.  **THE
+PIPELINE IS PROVEN END TO END**: corpus → tokenize → boot → records → windows →
+(the trainer loop, next).  THE CAMPAIGN REMAINING: the seeded corpus generator (the
+exec-A content mix: mimic-lane conversations + repo prose + ladders, deep ≥96k ~13%),
+the 180-stream boot sweep (~11M positions, 451 GB — CHECK DISK; bf16 halves it), the
+K=6 training loop on the first shards, the stock-baseline evaluator, export rt2.
+Server restored (the deploy carries the harvest patch, inert in serve mode).
