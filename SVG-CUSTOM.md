@@ -10122,3 +10122,27 @@ the standing band.
 the global optimum did not move; the per-position form has no sweep evidence of
 headroom; the DT family closes NEUTRAL (no change to the recipe).  The T50 rider's
 +0-2% band does not materialize.
+
+## F-300 — 2026-10-24 ~13:15: RETRAIN v2 (T14B) FORMALLY OPENED — the +6-9 acceptance
+## pool's campaign, with the cheap-lever phase closed behind it.
+
+**THE SPEC SUITE (verified execution-ready at read)**: T14A (method/recipe), the exec
+trio A(harvest)/B(parity)/C(trainer-export), T14C (acceptance math gates).  THE ORDER:
+A harvest → **B the P2 torch parity module (THE critical path)** → C train+export →
+T14C gates → engine A/B per the user's law.  P2 = one PyTorch module reproducing the
+engine's drafter forward (one MTP layer + mixer + sub-vocab head, 31 tensors from
+/home/svg/LLM/data/mtp-en/rt), adjudicated by the existing STRATA_MTP_TAP stage-diff
+harness.  THE THREE LAWS (paid for in the R17 arc): weights from the RT dir never the
+BF16 sidecar; the Gemma +1 already folded in f32 norm tensors (re-folding = F-109's
+0%-acceptance bug); --mtp-hnorm stream = per-stream grouped RMS.  Geometry pinned:
+N=2560/HC=4/NH=24/HD=256, rope 1e7, eps 1e-6, 512 experts top-10, K=6 supervised
+positions, draft_vocab 40,525 ids.  Known spec conflicts (the 10-18 audit): trainer
+lr, rt2-vs-rt-r18 label, G-ladder collisions — fix at implementation time.
+
+**THE FIRST IMPLEMENTATION STEP**: the P2 module skeleton per exec-B §2 (tensor table →
+loaders for q8_0/bf16/f32 rt kinds → the forward in torch → the TAP harness boot).
+**THE REQUANT GO** (presented to the user this entry): experts T26-5 requant (−8.26%
+expert bytes, +1.90% direct M1 modeled, +792 slots) NOW CARRYING the F-298b head rider
+(Q6_K→Q4_0: 0/6 top-1 flips, KL 2.1e-3, −31% head bytes ≈ +1-2% M1) — combined band
++3-4% M1 + VRAM headroom, quality-gated (MMLU floor + mimic band + the F-230 yardstick
+on the first boot).
