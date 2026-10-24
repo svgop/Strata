@@ -9841,3 +9841,27 @@ per-thread staging removes the coupling that killed the F-15C wide family, so a
 (batched r-ahead cp.async) is its un-run form, same design as staged2's ring.
 NOTE for engine A/Bs: the engine's in-window stamps (VERIFY_PROFILE-class) remain the
 arbiter — the bench cannot see the concurrent expert stream's DRAM/L2 competition.
+
+## F-290 — 2026-10-24 ~06:20: THE UP PREFETCH PIPELINE BUILT AND FALSIFIED — AND THE
+## ENGINE-CONTEXT MYSTERY DISSOLVED (the hc kernel micro-program CLOSES).
+
+**THE PIPELINE (bitwise)**: gr_up_q32's per-warp weight loads pipelined two rows ahead
+(register rotation; the same __ldg values issued earlier).  Built clean; **48-set bench:
+FLAT** — up 8.8/13.3/12.0/13.4/15.1/16.5/17.9/19.5 vs baseline
+8.8/13.4/12.1/13.6/15.2/16.8/18.1/19.8 (Δ ≤ 0.3 µs = noise).  THE FOURTH consecutive
+kernel falsification (staged2 ring 4-set, staged2 ring 48-set, batched butterfly,
+prefetch pipeline).
+
+**THE RECONCILIATION (the closure that matters)**: at 48-set true cold the bench reads
+down 5.6-11.8 / up 13.4-19.8 µs — the ENGINE's in-window hc line (the "0.44-0.62 TB/s
+engine-context loss" that redirected the program in F-287) is THE SAME NUMBERS.  The
+T37 anatomy's "engine loss" was an artifact of comparing engine-cold against 4-set
+L2-warm bench numbers.  There is no hidden engine-context loss: the hc lines run at
+DRAM-cold latency at their grid occupancies and do not respond to schedule, prefetch,
+or reassociation changes at this occupancy.  THE HC MICRO-PROGRAM IS CLOSED as a dead
+end at the instruction-stream level (the unrun forms remain: wide-grid occupancy for
+down — one cheap instantiation — and the mma rung, whose bytes model may revive at
+true-cold but four flats price it low).  The bitwise restructures stay in-tree (zero
+risk).  The composition's solo-300 headroom moves to its OTHER levers: two-stage head,
+keep-rule refit on the banked 1,615-window trace, retrain, requant (USER GO), and the
+n-gram draft candidate.

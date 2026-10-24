@@ -603,11 +603,32 @@ __global__ void __launch_bounds__(Q32_THREADS) gr_up_q32_kernel(GrMulti m) {
     const int d0 = blockIdx.x * Q32_COLS;
     for (int i = t; i < T * LR; i += Q32_THREADS) lo[i / LR][i % LR] = m.a[i / LR].lo[i % LR];
     __syncthreads();
-    for (int r = warp; r < HC * Q32_COLS; r += Q32_WARPS) {
+    // F-290: the warp's weight loads pipelined two rows ahead - the up line is L2-miss-
+    // latency bound at engine conditions (the 48-layer cold rotation); the same values,
+    // issued earlier: bitwise identical.
+    constexpr int HCQ = HC * Q32_COLS;
+    auto wrow4 = [&](int r) {
+        const int c = r / Q32_COLS, dd = r - c * Q32_COLS;
+        return reinterpret_cast<const uint4*>(m.a[0].w_up + (size_t) (c * N + d0 + dd) * LR);
+    };
+    uint4 va0 = make_uint4(0, 0, 0, 0), vb0 = va0, va1 = va0, vb1 = va0;
+    if (warp < HCQ) {
+        va0 = __ldg(wrow4(warp) + lane);
+        if (lane < LR / 8 - 32) vb0 = __ldg(wrow4(warp) + 32 + lane);
+    }
+    if (warp + Q32_WARPS < HCQ) {
+        va1 = __ldg(wrow4(warp + Q32_WARPS) + lane);
+        if (lane < LR / 8 - 32) vb1 = __ldg(wrow4(warp + Q32_WARPS) + 32 + lane);
+    }
+    for (int r = warp; r < HCQ; r += Q32_WARPS) {
         const int c = r / Q32_COLS, dd = r - c * Q32_COLS, i = c * N + d0 + dd;
-        const uint4* w4 = reinterpret_cast<const uint4*>(m.a[0].w_up + (size_t) i * LR);
-        const Bf16x8 wa = unpack8(__ldg(w4 + lane));
-        const Bf16x8 wb = unpack8(lane < LR / 8 - 32 ? __ldg(w4 + 32 + lane) : make_uint4(0, 0, 0, 0));
+        uint4 va2 = make_uint4(0, 0, 0, 0), vb2 = va2;
+        if (r + 2 * Q32_WARPS < HCQ) {
+            va2 = __ldg(wrow4(r + 2 * Q32_WARPS) + lane);
+            if (lane < LR / 8 - 32) vb2 = __ldg(wrow4(r + 2 * Q32_WARPS) + 32 + lane);
+        }
+        const Bf16x8 wa = unpack8(va0);
+        const Bf16x8 wb = unpack8(vb0);
         // the epilogue inputs of this lane's token, fetched while the dots run
         float rv = 0.0f, wn = 0.0f, rsc = 0.0f, bo = 0.0f, ip = 0.0f;
         bool apply = false;
@@ -645,6 +666,7 @@ __global__ void __launch_bounds__(Q32_THREADS) gr_up_q32_kernel(GrMulti m) {
             const float x = rv * wn * rsc;
             g[lane][c][dd] = x * sigmoidf_(mine);
         }
+        va0 = va1; vb0 = vb1; va1 = va2; vb1 = vb2;   // F-290: rotate the weight pipeline
     }
     __syncthreads();
     for (int i = t; i < T * Q32_COLS; i += Q32_THREADS) {
