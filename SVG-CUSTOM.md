@@ -9642,3 +9642,40 @@ pin the solo PLE pageable staging (sub-0.2%), spec-depth re-check post-SPEC_PROB
 died F-263 pre-SPEC_PROB; economics changed), diet-tranche remainder (-200 nodes,
 +0.7-1.2%). Dead ends confirmed: adapt std::thread (every-4th amortized), GDN split
 (journal), c2a re-read (needs the A1 boot; no existing cohort WSTAT logs).
+
+## F-285a — 2026-10-24 ~03:05: ROOT CAUSE FOUND — THE CHAMPION IS RESTORED. The rebuild
+## hang was F-281's C2a-lite relocation all along.
+
+THE BISECT (one boot, decisive): fresh-dir full rebuild of HEAD with generate.cpp taken
+from 9e5366c6 (F-280 — pre-C2a) → conc lane PASSES 272.2 (cool-window band). Every
+element of the diagnosis chain: NOT ccache (none on the system), NOT the build dir
+(build-fresh of HEAD hung too), NOT my ternary (pristine stash-rebuild hung), NOT the host
+compiler (GCC 16.2.1 identical stamps in passing and hanging binaries). THE MECHANISM:
+the 19:45 champion binary was built BETWEEN F-280 (19:08) and F-281's C2a-lite commit
+(19:51) — it NEVER CONTAINED the relocation. Every battery since (T41, t42, t42b — 14+
+clean conc legs) ran that pre-C2a binary; F-281's "SAFETY VERIFIED 12/12 on BOTH off/on
+boots" must have ridden the same pre-C2a binary (its smoke never exercised a build WITH
+the relocation). The relocation's claim "default off = original order structurally
+preserved" is FALSE: with STRATA_COHORT_OVERLAP unset, the finish tail after a completed
+cohort round hangs (round logs "windows done in X ms", then silence; M1/pair unaffected —
+they never enter the cohort branch). The C2a-lite block is REMOVED from the standing
+tree (it was shelved F-282, never adopted — zero loss).
+
+THE RESTORED CHAMPION (engine/strata = build-fresh of HEAD + generate.cpp@9e5366c6):
+dm + PDL-pin + SPEC_PROB (sampler.cu:891 live again after pre-t40's silent absence) +
+C5b/trace instruments + the F-283 protocol template + every launcher arm. PROOFS: conc
+272.2 / M1 184.8 / pair 186.1 (cool-window single-boot in-band); MMLU 94.3/92.9/95.7
+mean 94.3, one sub-floor (the pre-declared rule PASSES; the leg set is byte-for-byte
+F-282's); mimic 56 = the documented 4th bench low-mode (paired band 58-62 on equivalent
+composition tonight — watch, not veto). Server UP on it.
+
+STANDING LESSONS: (1) "default-off = structurally preserved" claims must be proven by a
+BINARY-COMPOSITION interleave (the same binary with env on/off), not just boots — a
+relocation changes the default path even when the arm is off. (2) engine/strata deploys
+must record the SOURCE COMMIT + a conc-leg proof in the same breath (the 19:45 binary's
+source was never recorded — that gap cost tonight's whole detour). (3) build-fresh/ is
+the canonical build dir now (build/ retired — its mixed-state history fed the confusion).
+The ternary patch script campaign/patch_f284_ternary.py targets the C2a-era round layout
+— its poll-loop anchor needs re-writing against the 9e6c base when the b9 lane is fixed
+(T45); the parked binary engine/strata.f284-ternary-parked and the 3f068280 history
+carry the full implementation either way.

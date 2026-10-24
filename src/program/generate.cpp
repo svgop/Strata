@@ -6866,8 +6866,6 @@ int main(int argc, char** argv) {
     int cohorts = 1;
     Drive coh_b_drive;
     bool coh_b_ready = false;
-    Drive coh_c_drive;                      // F-284: the third cohort's drive (lazily cloned like coh_b's)
-    bool coh_c_ready = false;
     // #731 (opt-in, STRATA_DISJOINT_ADAPT=1): the adaptive tiers leave an expert a helper GPU holds out of the primary's
     // promotion candidates (it would sit in both caches).  Asked live, from the helper's own cache (RemoteExperts::holds,
     // #854), so an expert the helper's tier swaps in or out later is followed - never a copy taken at load.
@@ -9102,7 +9100,6 @@ int main(int argc, char** argv) {
         // stage: window K+1 follows window K through them one card behind, and only the last stage waits for K's verdict
         const bool pipe = o.pipeline_windows > 0 && n_stages >= 2 && !split_same && (int) stages.size() == n_stages - 1;
         strata::core::Verifier ver_b;
-        strata::core::Verifier ver_c;   // F-284: the third batch-cohort verifier (STRATA_COHORTS=3, >=9 wide)
         SplitDrive split_drive_b;
         std::vector<cudaStream_t> pl_stream(pipe ? (size_t) n_stages : 0, nullptr);
         // stage st's verifier of one parity (0: the even windows, 1: the odd ones)
@@ -9363,30 +9360,6 @@ int main(int argc, char** argv) {
                     cohorts = 2;
                     std::fprintf(stderr, "strata serve: STRATA_COHORTS=2 on: slots [0,%d) on verifier A, [%d,%d) on B\n",
                                  o.batch / 2, o.batch / 2, o.batch);
-                    // F-284 (STRATA_COHORTS=3, o.batch >= 9): the third cohort lane.  3+3+3 keeps every
-                    // window 6 rows at 9-wide (5+4 hits w.S+2<=kVerifyMaxT at 4 slots and ROTATES the 5th
-                    // idle every round - the F-273 9c~6-parity cap, log-measured 60-64 (0,8) rounds/boot).
-                    if (std::atoi(v8c) >= 3 && o.batch >= 9) {
-                        ver_c.set_stage(0, -1, nullptr, nullptr);
-                        if (batch_mtp) ver_c.set_batch_graph_limit(64);
-                        ver_c.set_pcie_mode(o.pcie_mode == "dma" ? 0 : o.pcie_mode == "direct" ? 1 : 2);
-                        if (!ver_c.init(wt, g, ss, vh, native_head.loaded() ? &native_head : nullptr,
-                                        batch_mtp ? strata::kernels::kVerifyMaxT : std::max(o.spec, o.batch), cerr_)) {
-                            std::fprintf(stderr, "strata serve: STRATA_COHORTS=3 off: the third verifier: %s%s\n",
-                                         cerr_.c_str(), vram_free_note().c_str());
-                        } else {
-                            std::vector<strata::core::SessionState*> cptrs3;
-                            for (auto& u : bslot_ss[0]) cptrs3.push_back(u.get());
-                            if (!ver_c.init_slots(cptrs3, cerr_)) {
-                                std::fprintf(stderr, "strata serve: STRATA_COHORTS=3 off: %s\n", cerr_.c_str());
-                            } else {
-                                cohorts = 3;
-                                const int t1 = o.batch / 3, t2 = (2 * o.batch) / 3;
-                                std::fprintf(stderr, "strata serve: STRATA_COHORTS=3 on: slots [0,%d) A [%d,%d) B [%d,%d) C\n",
-                                             t1, t1, t2, t2, o.batch);
-                            }
-                        }
-                    }
                 }
             }
         }
@@ -12001,7 +11974,7 @@ int main(int argc, char** argv) {
             // (solo, pair) leave cohort B empty and the round degenerates to one window.  The code below
             // this branch is the untouched single-verifier path (cohorts == 1: byte for byte today's).
             static bool cohort_prev_round = false;   // F-233: the standing->cohort transition fence
-            if (cohorts >= 2 && n_active > o.batch / 2) {   // both cohorts must have work; pair scale and below takes the untouched path below
+            if (cohorts == 2 && n_active > o.batch / 2) {   // both cohorts must have work; pair scale and below takes the untouched path below
                 if (!cohort_prev_round) {
                     // the first cohort round after standing-path rounds: the last standing window's
                     // F-196 async commit may still be in flight while cohort B's stage CAPTURES its
@@ -12019,9 +11992,7 @@ int main(int argc, char** argv) {
                     int nrows[strata::kernels::kVerifyMaxT] = {};
                 };
                 const int split = o.batch / 2;
-                const int split2 = (2 * o.batch) / 3;   // F-284: the ternary's [2b/3, b) span start
-                const bool ternary = cohorts == 3 && n_active > split2;   // all three cohorts populated
-                static size_t next_a = 0, next_b = 0, next_c = 0;   // each cohort rotates within its own slot span
+                static size_t next_a = 0, next_b = 0;   // each cohort rotates within its own slot span
                 auto collect = [&](int lo, int hi, CohortWin& w, size_t& next_cur) {
                     const size_t span = (size_t) (hi - lo);
                     for (size_t offset = 0; offset < span && w.S + (mtp_use ? 2 : 1) <= strata::kernels::kVerifyMaxT; ++offset) {
@@ -12044,12 +12015,10 @@ int main(int argc, char** argv) {
                     }
                     if (mtp_use && w.A > 0) next_cur = ((size_t) (w.active[w.A - 1] - lo) + 1) % span;
                 };
-                CohortWin wa, wb, wc;
+                CohortWin wa, wb;
                 collect(0, split, wa, next_a);
-                if (ternary) collect(split, split2, wb, next_b);
-                else collect(split, o.batch, wb, next_b);
-                if (ternary) collect(split2, o.batch, wc, next_c);
-                if (wa.S + wb.S + wc.S == 0) return true;
+                collect(split, o.batch, wb, next_b);
+                if (wa.S + wb.S == 0) return true;
                 const bool was_busy = strata::core::progress().busy.load();
                 strata::core::progress().busy.store(true);
                 drive.d.layers = 0;
@@ -12062,13 +12031,6 @@ int main(int argc, char** argv) {
                     coh_b_drive.cpu_ms = 0;
                     coh_b_ready = true;
                 }
-                if (ternary && !coh_c_ready) {   // F-284: the third drive, cloned at the first ternary round
-                    coh_c_drive = drive;
-                    coh_c_drive.d.plan = ver_c.plan_sink();
-                    coh_c_drive.calls = 0;
-                    coh_c_drive.cpu_ms = 0;
-                    coh_c_ready = true;
-                }
                 if (bt_windows == 0) {
                     bt_start = Clock::now();
                     bt_wait0 = ver.ms_wait; bt_pool0 = ver.ms_pool;
@@ -12079,8 +12041,7 @@ int main(int argc, char** argv) {
                 auto msd2 = [](Clock::time_point a0, Clock::time_point b0) {
                     return std::chrono::duration<double, std::milli>(b0 - a0).count();
                 };
-                if (ternary) std::fprintf(stderr, "cohorts: round A.S=%d B.S=%d C.S=%d\n", wa.S, wb.S, wc.S);
-                else std::fprintf(stderr, "cohorts: round A.S=%d B.S=%d\n", wa.S, wb.S);
+                std::fprintf(stderr, "cohorts: round A.S=%d B.S=%d\n", wa.S, wb.S);
                 const Clock::time_point w0c = Clock::now();
                 // stage BOTH cohorts (a lazy capture happens while NO window is in flight - the standing
                 // flow's capture condition), then launch both: B's pool runs under A's GPU from here on
@@ -12092,12 +12053,6 @@ int main(int argc, char** argv) {
                     std::fprintf(stderr, "cohorts: B stage: %s\n", err.c_str()); std::printf("ERR cohort B stage: %s\n", err.c_str()); std::fflush(stdout);
                     return false;
                 }
-                if (ternary && wc.S > 0 && !ver_c.batch_stage_rows(wc.rows, wc.S, wc.tok, wc.pos, err)) {
-                    // F-284: C stages BEFORE any go - its first-round lazy graph capture must happen
-                    // while NO window is in flight (capturing under A/B's flight hung layer 0, #267)
-                    std::fprintf(stderr, "cohorts: C stage: %s\n", err.c_str()); std::printf("ERR cohort C stage: %s\n", err.c_str()); std::fflush(stdout);
-                    return false;
-                }
                 if (wa.S > 0 && !ver.batch_go(err, false)) {
                     std::fprintf(stderr, "cohorts: A launch: %s\n", err.c_str()); std::printf("ERR cohort A launch: %s\n", err.c_str()); std::fflush(stdout);
                     return false;
@@ -12106,10 +12061,42 @@ int main(int argc, char** argv) {
                     std::fprintf(stderr, "cohorts: B launch: %s\n", err.c_str()); std::printf("ERR cohort B launch: %s\n", err.c_str()); std::fflush(stdout);
                     return false;
                 }
-                if (ternary && wc.S > 0 && !ver_c.batch_go(err, false)) {
-                    std::fprintf(stderr, "cohorts: C launch: %s\n", err.c_str()); std::printf("ERR cohort C launch: %s\n", err.c_str()); std::fflush(stdout);
+                bool la = wa.S > 0, lb = wb.S > 0;
+                while (la || lb) {
+                    if (la) {
+                        const int r = ver.batch_poll(win_pool_fn, &drive, err);
+                        if (r < 0) { std::fprintf(stderr, "cohorts: A poll: %s\n", err.c_str()); std::printf("ERR cohort A: %s\n", err.c_str()); std::fflush(stdout); return false; }
+                        la = (r == 0);
+                    }
+                    if (lb) {
+                        const int r = ver_b.batch_poll(win_pool_fn, &coh_b_drive, err);
+                        if (r < 0) { std::fprintf(stderr, "cohorts: B poll: %s\n", err.c_str()); std::printf("ERR cohort B: %s\n", err.c_str()); std::fflush(stdout); return false; }
+                        lb = (r == 0);
+                    }
+                }
+                std::fprintf(stderr, "cohorts: windows done in %.1f ms\n", msd2(w0c, Clock::now()));
+                const Clock::time_point w1c = Clock::now();
+                if (drive.d.failed || coh_b_drive.d.failed) {
+                    std::printf("ERR %s\n", drive.d.failed && drive.d.fail ? drive.d.fail
+                              : coh_b_drive.d.failed && coh_b_drive.d.fail ? coh_b_drive.d.fail
+                              : "a cohort window failed");
                     return false;
                 }
+                // T38 C5: the cohort lane feeds the WSTAT sample too.  The standing path's single push site (the
+                // single-window tail below) left the F-276 window p50/p99 instrument cohort-blind: at HEAD a
+                // 15,307-cohort-round boot printed zero WSTAT lines.  One sample per cohort round, the "windows
+                // done" span named just above - the same phase the standing sample covers (stage through the
+                // windows; the tails below are the TREND line's commit/emit terms).  A failed round returns above,
+                // so only completed windows enter the histogram.
+                struct AdaptRunC {
+                    std::thread th;
+                    bool ok = true;
+                    ~AdaptRunC() { if (th.joinable()) th.join(); }
+                } adapt_run;
+                if (!drive.d.usage.empty() && !ajob && !in_prompt_read && (++ba_window % o.adapt_every) == 0 && pending.empty())
+                    adapt_run.th = std::thread([&] { adapt_run.ok = adapt(); });
+                // the per-cohort tail: the standing acceptance/commit/emit/draft code, verifier- and
+                // window-parameterized (see the single-verifier tail below for the comments it mirrors)
                 auto finish = [&](strata::core::Verifier& v, CohortWin& w) -> bool {
                     int32_t* outb = const_cast<int32_t*>(v.batch_out());
                     std::vector<int> keep(bs.size(), 0);
@@ -12231,90 +12218,16 @@ int main(int argc, char** argv) {
                     std::fflush(stdout);
                     return true;
                 };
-                // T39 C2a-lite (STRATA_COHORT_OVERLAP=1): finish each cohort's tail as soon as ITS
-                // window completes, under the other's still-in-flight window. The serialized A-then-B
-                // tails were the measured remainder of the 2x cohort round (T39-window-anatomy §A4);
-                // safe by the dossier's stream analysis: commit graphs are per-verifier
-                // (capture_commit_batch), drafts run on per-slot streams - no cross-verifier coupling.
-                // Default off = today's poll-both-then-finish-A-then-B order, byte-identical.
-                static const bool cohort_overlap = [] { const char* v = std::getenv("STRATA_COHORT_OVERLAP"); return v != nullptr && v[0] == '1'; }();
-                const bool lc_on = ternary && wc.S > 0;
-                bool la = wa.S > 0, lb = wb.S > 0, lc = lc_on, fa = !cohort_overlap || !la, fb = !cohort_overlap || !lb,
-                     fc = !cohort_overlap || !lc;
-                while (la || lb || lc || !fa || !fb || !fc) {
-                    if (la) {
-                        const int r = ver.batch_poll(win_pool_fn, &drive, err);
-                        if (r < 0) { std::fprintf(stderr, "cohorts: A poll: %s\n", err.c_str()); std::printf("ERR cohort A: %s\n", err.c_str()); std::fflush(stdout); return false; }
-                        if (r == 0) {
-                            la = false;
-                            if (cohort_overlap && drive.d.failed) {
-                                std::printf("ERR %s\n", drive.d.fail ? drive.d.fail : "a cohort window failed");
-                                return false;
-                            }
-                        }
-                    }
-                    if (!la && !fa) { fa = true; if (!finish(ver, wa)) return false; }
-                    if (lb) {
-                        const int r = ver_b.batch_poll(win_pool_fn, &coh_b_drive, err);
-                        if (r < 0) { std::fprintf(stderr, "cohorts: B poll: %s\n", err.c_str()); std::printf("ERR cohort B: %s\n", err.c_str()); std::fflush(stdout); return false; }
-                        if (r == 0) {
-                            lb = false;
-                            if (cohort_overlap && coh_b_drive.d.failed) {
-                                std::printf("ERR %s\n", coh_b_drive.d.fail ? coh_b_drive.d.fail : "a cohort window failed");
-                                return false;
-                            }
-                        }
-                    }
-                    if (!lb && !fb) { fb = true; if (!finish(ver_b, wb)) return false; }
-                    if (lc) {
-                        const int r = ver_c.batch_poll(win_pool_fn, &coh_c_drive, err);
-                        if (r < 0) { std::fprintf(stderr, "cohorts: C poll: %s\n", err.c_str()); std::printf("ERR cohort C: %s\n", err.c_str()); std::fflush(stdout); return false; }
-                        if (r == 0) {
-                            lc = false;
-                            if (cohort_overlap && coh_c_drive.d.failed) {
-                                std::printf("ERR %s\n", coh_c_drive.d.fail ? coh_c_drive.d.fail : "a cohort window failed");
-                                return false;
-                            }
-                        }
-                    }
-                    if (!lc && !fc) { fc = true; if (!finish(ver_c, wc)) return false; }
-                }
-                std::fprintf(stderr, "cohorts: windows done in %.1f ms\n", msd2(w0c, Clock::now()));
-                const Clock::time_point w1c = Clock::now();
-                if (drive.d.failed || coh_b_drive.d.failed || (coh_c_ready && coh_c_drive.d.failed)) {
-                    std::printf("ERR %s\n", drive.d.failed && drive.d.fail ? drive.d.fail
-                              : coh_b_drive.d.failed && coh_b_drive.d.fail ? coh_b_drive.d.fail
-                              : coh_c_ready && coh_c_drive.d.failed && coh_c_drive.d.fail ? coh_c_drive.d.fail
-                              : "a cohort window failed");
-                    return false;
-                }
-                // T38 C5: the cohort lane feeds the WSTAT sample too.  The standing path's single push site (the
-                // single-window tail below) left the F-276 window p50/p99 instrument cohort-blind: at HEAD a
-                // 15,307-cohort-round boot printed zero WSTAT lines.  One sample per cohort round, the "windows
-                // done" span named just above - the same phase the standing sample covers (stage through the
-                // windows; the tails below are the TREND line's commit/emit terms).  A failed round returns above,
-                // so only completed windows enter the histogram.
-                struct AdaptRunC {
-                    std::thread th;
-                    bool ok = true;
-                    ~AdaptRunC() { if (th.joinable()) th.join(); }
-                } adapt_run;
-                if (!drive.d.usage.empty() && !ajob && !in_prompt_read && (++ba_window % o.adapt_every) == 0 && pending.empty())
-                    adapt_run.th = std::thread([&] { adapt_run.ok = adapt(); });
-                // the per-cohort tail: the standing acceptance/commit/emit/draft code, verifier- and
-                // window-parameterized (see the single-verifier tail below for the comments it mirrors)
-                if (!cohort_overlap && wa.S > 0 && !finish(ver, wa)) return false;   // an empty cohort has no
-                if (!cohort_overlap && wb.S > 0 && !finish(ver_b, wb)) return false; // window to commit (would abort)
-                if (!cohort_overlap && ternary && wc.S > 0 && !finish(ver_c, wc)) return false; // (the third tail)
+                if (wa.S > 0 && !finish(ver, wa)) return false;   // an empty cohort has no window to
+                if (wb.S > 0 && !finish(ver_b, wb)) return false; // commit (commit_slots would abort)
                 const Clock::time_point w2c = Clock::now();
                 // T39 C5b: the cohort sample now covers the SAME phase as the standing push (window +
                 // commit + emit). The T38 C5 placement (stage-to-windows-done, w0c..w1c) understated the
                 // cohort round by the finish tails this span includes.
                 if (window_stats_on) window_ms.push_back((float) msd2(w0c, w2c));
                 bt_run += msd2(w0c, w1c);
-                const double tail_w = (ternary && wc.S > 0) ? (1.0 / 3.0) : 0.5;   // tails ran inside this span; split evenly
-                bt_commit += msd2(w1c, w2c) * tail_w;
-                bt_emit += msd2(w1c, w2c) * tail_w;
+                bt_commit += msd2(w1c, w2c) * 0.5;   // both tails ran inside this span; split evenly
+                bt_emit += msd2(w1c, w2c) * 0.5;
                 if (adapt_run.th.joinable()) {
                     const Clock::time_point wa2 = Clock::now();
                     adapt_run.th.join();

@@ -1,0 +1,266 @@
+{
+ "label": "f285-champ-mimic",
+ "suite": "mimicbench2-v1 (31 tasks, weighted)",
+ "score_pct": 84.84848484848484,
+ "weighted": "56/66",
+ "by_category": {
+  "doctrine": "6/8",
+  "voice": "6/6",
+  "arch-continue": "6/8",
+  "correction": "8/8",
+  "blend": "4/8",
+  "ui-deep": "8/10",
+  "internalize": "12/12",
+  "doc-structure": "6/6"
+ },
+ "results": [
+  {
+   "cat": "doctrine",
+   "id": "d1-instr-density",
+   "w": 2,
+   "ok": 1,
+   "note": "real voice laws on new content",
+   "head": "- Measure first with `pytest --durations=10`, `jest --verbose`, `go test -v ./...`, or `cargo test -- --nocapture`.\n- Parallelize Python tests with `pytest -n 4 --dist loadfile` using `pytest-xdist`.\n"
+  },
+  {
+   "cat": "doctrine",
+   "id": "d1-no-closers",
+   "w": 2,
+   "ok": 1,
+   "note": "real voice laws on new content",
+   "head": "Code review matters because it catches bugs early, spreads knowledge across the team, keeps standards consistent, and reduces risk before changes reach production."
+  },
+  {
+   "cat": "doctrine",
+   "id": "d1-artifact-bullets",
+   "w": 2,
+   "ok": 1,
+   "note": "real voice laws on new content",
+   "head": "- Use structured JSON logs with `timestamp`, `level`, `message`, and `trace_id` fields.\n- Set log level via `LOG_LEVEL=info` and emit `debug` only in development.\n- Rotate logs at `/var/log/app/app.lo"
+  },
+  {
+   "cat": "doctrine",
+   "id": "d1-frontload",
+   "w": 2,
+   "ok": 0,
+   "note": "real voice laws on new content",
+   "head": "Follow this release process:\n\n- Cut a release branch: `git checkout -b release/v1.2.3`\n- Update version: `npm version 1.2.3 --no-git-tag-version`\n- Update `CHANGELOG.md` with `## [1.2.3] - 2026-06-15`"
+  },
+  {
+   "cat": "voice",
+   "id": "d2-1",
+   "w": 2,
+   "ok": 1,
+   "note": "induced clipped voice, no praise-adjectives",
+   "head": "An index is a lookup structure. It speeds reads. It slows writes. It costs space. Measure first. The profiler names the bottleneck; guesses don\u2019t. Index columns used in WHERE, JOIN, ORDER BY. Composit"
+  },
+  {
+   "cat": "voice",
+   "id": "d2-2",
+   "w": 2,
+   "ok": 1,
+   "note": "induced clipped voice, no praise-adjectives",
+   "head": "Quarantine the flaky test. Reproduce it. Fix the root cause or delete it. Reruns hide the problem."
+  },
+  {
+   "cat": "voice",
+   "id": "d2-3",
+   "w": 2,
+   "ok": 1,
+   "note": "induced clipped voice, no praise-adjectives",
+   "head": "Technical debt is borrowed speed. It ships now, charges interest later.\n\nThe interest is slower changes, more bugs, and higher risk. The principal is cleanup: tests, refactors, clearer boundaries.\n\nMe"
+  },
+  {
+   "cat": "arch-continue",
+   "id": "d3-1",
+   "w": 2,
+   "ok": 1,
+   "note": "induce DriftSignal/drift_signal_init/drift_signal_fail",
+   "head": "```cpp\n#ifndef DRIFT_SIGNAL_H\n#define DRIFT_SIGNAL_H\n\nclass DriftSignal {\npublic:\n    DriftSignal();\n    ~DriftSignal();\n\n    void drift_signal_init();\n    void drift_signal_fail();\n};\n\n#endif\n```"
+  },
+  {
+   "cat": "arch-continue",
+   "id": "d3-2",
+   "w": 2,
+   "ok": 1,
+   "note": "induce LoopClosure/loop_closure_init/loop_closure_fail",
+   "head": "```cpp\n#ifndef LOOP_CLOSURE_H\n#define LOOP_CLOSURE_H\n\nclass LoopClosure {\npublic:\n    LoopClosure();\n    ~LoopClosure();\n\n    void loop_closure_init();\n    void loop_closure_fail();\n};\n\n#endif\n```"
+  },
+  {
+   "cat": "arch-continue",
+   "id": "d3-3",
+   "w": 2,
+   "ok": 1,
+   "note": "induce PayloadGate/payload_gate_init/payload_gate_fail",
+   "head": "```cpp\n#ifndef PAYLOAD_GATE_H\n#define PAYLOAD_GATE_H\n\nclass PayloadGate {\npublic:\n    PayloadGate();\n};\n\nPayloadGate payload_gate_init();\nvoid payload_gate_fail();\n\n#endif\n```"
+  },
+  {
+   "cat": "arch-continue",
+   "id": "d3-4",
+   "w": 2,
+   "ok": 0,
+   "note": "induce HarvestQueue/harvest_queue_init/harvest_queue_fail",
+   "head": "```cpp\n#ifndef HARVEST_QUEUE_H\n#define HARVEST_QUEUE_H\n\nclass HarvestQueue {\npublic:\n    HarvestQueue();\n    void harvest_queue_fail();\n};\n\n#endif\n```"
+  },
+  {
+   "cat": "correction",
+   "id": "d4-1",
+   "w": 2,
+   "ok": 1,
+   "note": "complexity habit persists unprompted",
+   "head": "Insertion sort \u2014 O(n) for nearly sorted arrays"
+  },
+  {
+   "cat": "correction",
+   "id": "d4-2",
+   "w": 2,
+   "ok": 1,
+   "note": "complexity habit persists unprompted",
+   "head": "Circular buffer (ring buffer) \u2014 O(1) insert, O(1) access by index"
+  },
+  {
+   "cat": "correction",
+   "id": "d4-3",
+   "w": 2,
+   "ok": 1,
+   "note": "complexity habit persists unprompted",
+   "head": "Hash set \u2014 O(n) time, O(n) space"
+  },
+  {
+   "cat": "correction",
+   "id": "d4-5",
+   "w": 2,
+   "ok": 1,
+   "note": "habit at turn 5, no reminder",
+   "head": "Hash map (dictionary) \u2014 O(1) lookup, O(1) insert"
+  },
+  {
+   "cat": "blend",
+   "id": "d5-1",
+   "w": 2,
+   "ok": 0,
+   "note": "register switch [ENG]",
+   "head": "- Profile build.\n- Cache dependencies.\n- Run tasks concurrently.\n- Compile files with changes only.\n- Split targets.\n- Store artifacts.\n- Measure timings."
+  },
+  {
+   "cat": "blend",
+   "id": "d5-2",
+   "w": 2,
+   "ok": 1,
+   "note": "register switch [EXEC]",
+   "head": "30%: cache dependencies, split builds, run tests in parallel, and skip unchanged modules."
+  },
+  {
+   "cat": "blend",
+   "id": "d5-3",
+   "w": 2,
+   "ok": 1,
+   "note": "register switch [EXEC]",
+   "head": "1. Yes, migrate the database if it is slow, risky, or costly to maintain."
+  },
+  {
+   "cat": "blend",
+   "id": "d5-4",
+   "w": 2,
+   "ok": 0,
+   "note": "register switch [ENG]",
+   "head": "Assess migration:\n- Inventory database.\n- Measure data volume.\n- Map dependencies.\n- Define downtime limit.\n- Compare database options.\n- Run compatibility tests.\n- Execute migration test.\n- Review re"
+  },
+  {
+   "cat": "ui-deep",
+   "id": "d6-1",
+   "w": 2,
+   "ok": 1,
+   "note": "induced system: palette/radius/scale/typography",
+   "head": "```tsx\nexport function UserRow({\n  name,\n  status,\n  initials,\n  avatarUrl,\n}: {\n  name: string;\n  status: string;\n  initials?: string;\n  avatarUrl?: string;\n}) {\n  return (\n    <div className=\"flex i"
+  },
+  {
+   "cat": "ui-deep",
+   "id": "d6-2",
+   "w": 2,
+   "ok": 0,
+   "note": "induced system: palette/radius/scale/typography",
+   "head": "```jsx\nexport function PanelHeader({ title, actionLabel = \"Action\", onAction }) {\n  return (\n    <header className=\"flex items-center justify-between gap-3 p-4 rounded-lg border border-zinc-800 bg-zin"
+  },
+  {
+   "cat": "ui-deep",
+   "id": "d6-3",
+   "w": 2,
+   "ok": 1,
+   "note": "induced system: palette/radius/scale/typography",
+   "head": "```jsx\nfunction MenuList({ children }) {\n  return (\n    <ul\n      role=\"menu\"\n      className=\"flex flex-col gap-1 p-2 rounded-lg border border-zinc-800 bg-zinc-900\"\n    >\n      {children}\n    </ul>\n "
+  },
+  {
+   "cat": "ui-deep",
+   "id": "d6-4",
+   "w": 2,
+   "ok": 1,
+   "note": "induced system: palette/radius/scale/typography",
+   "head": "```tsx\nimport type { ReactNode } from \"react\";\n\nexport function EmptyState({\n  icon,\n  message,\n  hint,\n}: {\n  icon: ReactNode;\n  message: string;\n  hint?: string;\n}) {\n  return (\n    <div className=\""
+  },
+  {
+   "cat": "ui-deep",
+   "id": "d6-5",
+   "w": 2,
+   "ok": 1,
+   "note": "cross-component consistency in assembly",
+   "head": "```html\n<div class=\"mx-auto w-full max-w-2xl flex flex-col gap-4 p-4\">\n  <header class=\"flex items-center justify-between gap-3 p-4 rounded-lg border border-zinc-800 bg-zinc-900\">\n    <div class=\"flex"
+  },
+  {
+   "cat": "internalize",
+   "id": "d7-1",
+   "w": 3,
+   "ok": 1,
+   "note": "ND:1 O():1 loopclosure:0",
+   "head": "ND: Trie (prefix search O(m)).\nND: External sort the log, then stream and keep first occurrence of each line.\nND: O(n log n) time, O(n) disk."
+  },
+  {
+   "cat": "internalize",
+   "id": "d7-2",
+   "w": 3,
+   "ok": 1,
+   "note": "ND:1 O():1 loopclosure:0",
+   "head": "ND: Trie (O(m) prefix search).\nND: Hash map + doubly linked list.\nND: O(1) get/put."
+  },
+  {
+   "cat": "internalize",
+   "id": "d7-3",
+   "w": 3,
+   "ok": 1,
+   "note": "ND:1 O():1 loopclosure:0",
+   "head": "ND: Trie (prefix search O(m)).\nUse DFS with a recursion stack; if a node is revisited while still on the stack, a cycle exists.\nComplexity: O(V+E)."
+  },
+  {
+   "cat": "internalize",
+   "id": "d7-4",
+   "w": 3,
+   "ok": 1,
+   "note": "ND:1 O():1 loopclosure:0",
+   "head": "ND: Trie.\nND: Token bucket per client; O(1) per request.\nND: Use Redis/atomic counters or sliding window counters; O(1) amortized."
+  },
+  {
+   "cat": "doc-structure",
+   "id": "d8-1",
+   "w": 2,
+   "ok": 1,
+   "note": "frontmatter+sections+numeric evidence",
+   "head": "---\ntype: research\ndate: 2026-06-15\ntopic: new cache tier investigation\n---\n# Redis cache tier \u2014 reduces p95 latency by 38%\n## Evidence\n- load test showed p95 latency dropped from 210 ms to 130 ms at "
+  },
+  {
+   "cat": "doc-structure",
+   "id": "d8-2",
+   "w": 2,
+   "ok": 1,
+   "note": "frontmatter+sections+numeric evidence",
+   "head": "---\ntype: research\ndate: 2026-06-15\ntopic: shader compile times\n---\n# Shader compile times \u2014 cold-start cost is dominated by variant generation\n## Evidence\n- 128 shader variants compiled in 4.8s, with"
+  },
+  {
+   "cat": "doc-structure",
+   "id": "d8-3",
+   "w": 2,
+   "ok": 1,
+   "note": "frontmatter+sections+numeric evidence",
+   "head": "---\ntype: research\ndate: 2026-06-22\ntopic: queue backpressure\n---\n# Queue backpressure \u2014 producer rate exceeded consumer capacity\n## Evidence\n- measured queue depth reached 1,240 messages while consum"
+  }
+ ]
+}
