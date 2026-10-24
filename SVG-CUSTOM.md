@@ -9908,3 +9908,18 @@ lever is CLOSED as data-empty; the deficit pool's lever is RETRAIN v2 (the T14B
 pipeline — drafter quality shifts the curve itself).**  The trace boot's lanes read
 206.2/203.8/313.4 = the box is RECOVERING (best conc since the evening pools) — the
 fair-window re-bank becomes viable.
+
+## F-293 — 2026-10-24 ~07:45: THE COMPOSITION'S BASE IS CERTIFIED — fair-window
+## five-boot pool on the standing champion: M1 217.3 (σ 2.2) / pair 206.9 (σ 5.5) /
+## conc 319.5 (σ 12.4).
+
+Legs: 218.6/202.0/322.1, 215.3/203.3/320.7, 220.4/215.9/338.2, 216.8/205.4/306.2,
+215.3/207.8/310.3.  vs the night's cool-window pool (200.3/182.2/278.3): +8.5/+13.6/
++14.8% = THE WINDOW TAX, quantified per lane (contention, F-285b/F-286's finding).
+vs the banked records (222.4/209.9/319.6): −2.3/−1.4/−0.03% — THE CHAMPION SITS AT THE
+RECORDS (inside boot noise; r3's 338.2 conc and 215.9 pair are single-boot record-class
+reads).  **BASE B = 217.3 / 206.9 / 319.5** — the 300/450 composition stacks from here:
+two-stage head (+4-6) → CCD isolation → requant (USER GO) → retrain v2 (owns the +6-9
+pool); with the ternary's +9.7% riding the 9-wide conc lane.  The M1 σ 2.2 is the
+tightest five-boot spread ever banked — the recipe is STABLE (the night's stability
+goal delivered in the same breath).
