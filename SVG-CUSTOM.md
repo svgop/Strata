@@ -10438,3 +10438,19 @@ in the wave launch chain (native_mmvq.cu :2200-2400 region, the q8 pack's
 neighborhood).  **G0 STATE: T1 PASSED; the activation operand BIT-EXACT; weights
 rows BIT-EXACT (dqhead); the arithmetic form proven on all paths — the one unknown is
 the Q4 head's packed-copy layout.**  Server restored env-off, serving verified.
+
+## F-318 — 10-25 ~02:30: **THE Q4 HEAD CONVENTION SOLVED** — the file's OWN per-block
+## signed d + split-halves nibbles decode the head: **cos 0.9998, argmax EXACT
+## (6970=6970) on both S variants** — T2's best read ever, one refinement from the gate.
+
+**THE DISCOVERY**: the dumped d values match fp16(amax/8) in MAGNITUDE but carry
+PER-BLOCK SIGN FLIPS (row0: d[1] −0.00635 vs +expect, d[0] matches — ggml's
+quantize_row_q4_0_ref computes d = max/(−8) with its own signed-max walk; the F-298b
+packer's uniform negative-d model was wrong, and so was uniform positive-d).  THE
+CONVENTION: read the d SIGN FROM THE FILE; codes split-halves (byte j: slot j | slot
+j+16<<4); w = d_file·(nib−8).  Reconstructed W @ S reads **cos 0.99981-0.99983,
+argmax exact** — the wall of F-307..F-317 falls.  **THE LAST REFINEMENT (to ≤5e-5)**:
+run the exact affine dot with these file-signed operands (the −4·s correction at the
+file's own d signs) — mechanically one command; expected to close at the fp32 noise
+floor and PASS G0.  THE FIXTURE RULE BANKED: never re-quantize a tensor whose
+on-device image is dumped — decode the dump's own convention instead.
