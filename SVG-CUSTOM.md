@@ -9760,3 +9760,31 @@ up-line rung needs a q32 bench instantiation FIRST or it prices the wrong kernel
 more slots divide the same window throughput; solo crushed to 153.5 by 9 GiB arena
 residency) — conc is WINDOW-THROUGHPUT-bound, which makes the kernel line (down+up+verify)
 the shared path to BOTH targets.  T47 research wave (solo-300 + conc-450) running.
+
+## F-287b — 2026-10-24 ~04:55: T47-solo-300 INTEGRATED (verified) — and a RECORD
+## CORRECTION on the parallel session's F-285 HC_PERSIST find.
+
+**CORRECTION (verified in code)**: 409ce8c8's "STRATA_HC_PERSIST found armed-ready on
+CUDA, +2-8% M1 hypothesis, re-sequences the HC lane" is INERT — the persistent HC read is
+HIP-gated (its barrier clock is s_memrealtime, fused_gr.cu:2860; the code's own comment
+at :2869 says gfx11/12 lack it; CUDA takes the stub).  The HC lane stays T37's ladder
+(down de-priced at the wall per F-287; UP line = the target).  The re-sequencing worry is
+moot.  (The verify-agent-claims law pays again: two dossiers, two corrections tonight.)
+
+**THE 300 FRAME (T47-solo-300, accepted)**: no single +35% lever exists anywhere (best
+published consumer-GPU MoE decode single-lever: SMOE 20.9%; the public 5090+MTP frontier
+for this model class runs 45-122 tok/s vs our 222.4 — we are 2-4x past the field already).
+300 = COMPOSITION: fair-window champion ~232 (SPEC_PROB postdates the record) × TC-hc/UP
+(+6-12) × two-stage head (+4-6) × retrain-or-keep-rule (+6-9, same deficit pool) ×
+experts-requant USER-GO (+4-7) × micro bundle (+1-2) = central 296-300, upper 315-327,
+with three named double-counting traps.  FIRST ACTION OWED: the fair-window five-boot
+re-bank (sets the ladder's base B; the box is 5h-battered — next rested window).
+
+**TWO NEVER-ATTEMPTED CANDIDATES ADDED to the queue** (both confirmed absent in-tree):
+(1) context-n-gram draft source (prompt-lookup class) spliced into the coupled MTP chain —
+lossless by construction, 0% on literary probes / +5-25% on copy-heavy real traffic;
+falsifier = a 30-line zero-boot hit-rate probe on banked traces.  (2) frequency-tiered
+expert requant (MxMoE/MoPEQ class, +1-3 beyond uniform) riding the pending T14B requant
+build.  NEGATIVES banked: Ozaki/split-fp16 compensation (all decode lines bytes-bound),
+tree speculation (SpecBranch joins the TreeWY verdicts), NVFP4 repack (byte-regressing),
+draft precision cuts, expert prefetch (hit ~99%).
