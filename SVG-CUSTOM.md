@@ -10506,3 +10506,20 @@ exec-A content mix: mimic-lane conversations + repo prose + ladders, deep ≥96k
 the 180-stream boot sweep (~11M positions, 451 GB — CHECK DISK; bf16 halves it), the
 K=6 training loop on the first shards, the stock-baseline evaluator, export rt2.
 Server restored (the deploy carries the harvest patch, inert in serve mode).
+
+## F-322 — 10-25 ~05:15: **THE FIRST REAL HARVEST IS IN** — 4 streams, 200,281 records
+## (8.2 GB), 393 training windows, deep coverage 66.7% at first-cycle scale.
+
+**THE GENERATOR (tools/harvest_corpus.py)**: the exec-A content mix at first-cycle
+scale — deep ladder streams (repo prose: AGENTS/SVG-CUSTOM/GOAL/docs/research,
+chunk-shuffled, seeded wraps; 60k tokens each) alternating with mimic-lane conversation
+streams (8 task-archetype multi-turn exchanges rendered through the chat template;
+40k each) — all pack-tokenized.  **THE SWEEP (tools/harvest_sweep.sh)**: one CLI boot
+per stream (resume-skip, single-engine guard); the --temp footgun found and dropped
+(CLI generate takes no --temp); 4/4 exit 0 in 100 s wall — records: stream-0
+60,074, stream-1 39,996, stream-2 60,175, stream-3 40,002 — byte-exact multiples of
+40,976 ✓.  **THE TRAINER CONSUMED THEM**: 393 windows indexed (W=512/K=6/seam-law),
+deep (pos≥16384) 262 = 66.7% — the first-cycle corpus is deep-heavy by design (the
+F-235 deficit lives there).  The trainer scaffold extended (params view, the
+stock-baseline evaluator frame, shard loading — syntax-validated); the torch module
+chain port is the remaining piece before the first gradient step.  Server restored.

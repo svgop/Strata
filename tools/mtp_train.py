@@ -99,10 +99,52 @@ def main():
         return 0
 
     import torch
+    import torch.nn.functional as F
     from p2_rt_loader import RtDense
-    from p2_forward import DraftLayer, BlobReader
-    print("trainer core ready (the training loop assembles on the first real shards; "
-          "the G0-exact forward = eval mode, the no-rounding path = train mode)")
+    from p2_forward import DraftLayer, BlobReader, silu, sigmoid_f32
+
+    # ---- the trainable parameter view: dense tensors as torch Parameters (experts/head frozen, F-114)
+    rt = RtDense()
+    params = {k: torch.nn.Parameter(torch.from_numpy(v.copy()), requires_grad=True)
+              for k, v in rt.tensors.items()}
+    dv = np.fromfile(REPO / "/home/svg/LLM/data/mtp-en/rt/draft_vocab.bin", dtype=np.int32)
+    in_sub = -np.ones(248320, dtype=np.int64); in_sub[dv] = np.arange(len(dv))
+    hidden = (2 * len(dv) + 255) & ~255
+
+    # ---- the acceptance evaluator (greedy per-chain-step match, position-bucketed) on torch windows
+    def eval_acceptance(wins_idx, shards, n=32):
+        # stock baseline = the current (untrained) params; returns match rates per depth 1..K
+        hits = np.zeros(K, dtype=np.int64); tries = np.zeros(K, dtype=np.int64)
+        rng = np.random.default_rng(99)
+        sel = rng.choice(len(wins_idx), size=min(n, len(wins_idx)), replace=False)
+        for wi in sel:
+            start, pmin, _ = wins_idx[wi]
+            for anchor in range(0, W - K, 64):
+                r0 = anchor
+                Rin = torch.from_numpy(shards[start + r0][2].copy()).float()
+                labels = shards[start + r0 + 1:start + r0 + 1 + K, 1]
+                # (the full recursion assembles on the G0 module's torch port; the first
+                # cycle prices depth-1: the mixer + head on the true Rin)
+                sample = Rin  # placeholder wiring: replaced by the module chain next
+                for d in range(1):
+                    sub = in_sub[labels[d]]
+                    if sub < 0: continue
+                    tries[d] += 1
+                    # argmax over the sub-vocab head on `sample` (head = the main model's, frozen)
+                    hits[d] += 0  # wired when the torch module chain lands
+        return hits, tries
+
+    # ---- assemble shards in memory (first-cycle scale fits)
+    shards = []
+    for shard, pos, tok, R, seams in load_shards(Path(a.harvest)):
+        shards.append((shard, pos, tok, R))
+    print(f"loaded {len(shards)} shards, {sum(len(s[1]) for s in shards)} records")
+    wins = index_windows(Path(a.harvest))
+    print(f"windows: {len(wins)} — the training loop + evaluator assemble on these; "
+          f"first cycle = {a.epochs} epochs, batch {a.batch}, lr {a.lr}")
+    # THE FIRST TRAINING CYCLE runs when the torch module chain (the G0 forward ported
+    # to trainable tensors) lands — the two-mode design per exec-C §2.2-§2.4; the
+    # evaluator's stock baseline is the params above, untrained.
     return 0
 
 
