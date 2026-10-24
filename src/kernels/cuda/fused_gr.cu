@@ -451,20 +451,27 @@ __global__ void __launch_bounds__(THREADS) gr_up_multi_kernel(GrMulti m) {
             if (apply) { bo = a.bo_prev[d0 + dd]; ip = a.inj_prev[c]; }
         }
         float mine = 0.0f;
+        float part[MAX_T];
 #pragma unroll
         for (int k = 0; k < MAX_T; ++k) {
             if (!EXACT_T && k >= T) break;
-            float acc;
+            // F-288 (folded): independent chains + batched butterfly below
             if constexpr (Q8) {
-                acc = dotw<true>(true, qa, lo[k] + lane * 8);
-                if (lane < LR / 8 - 32) acc += dotw<true>(true, qb, lo[k] + (32 + lane) * 8);
+                part[k] = dotw<true>(true, qa, lo[k] + lane * 8);
+                if (lane < LR / 8 - 32) part[k] += dotw<true>(true, qb, lo[k] + (32 + lane) * 8);
             } else {
-                acc = dot8u_ptr(wa, lo[k] + lane * 8);
-                if (lane < LR / 8 - 32) acc += dot8u_ptr(wb, lo[k] + (32 + lane) * 8);
+                part[k] = dot8u_ptr(wa, lo[k] + lane * 8);
+                if (lane < LR / 8 - 32) part[k] += dot8u_ptr(wb, lo[k] + (32 + lane) * 8);
             }
-            acc = warp_sum(acc);
-            if (lane == k) mine = acc;
         }
+#pragma unroll
+        for (int o = 16; o > 0; o >>= 1)
+#pragma unroll
+            for (int k = 0; k < MAX_T; ++k) {
+                if (!EXACT_T && k >= T) break;
+                part[k] += __shfl_xor_sync(0xffffffffu, part[k], o);
+            }
+        if (lane < MAX_T) mine = part[lane];
         if (lane < T) {
             if (apply) {
                 rv = fmaf(bo, 2.0f * sigmoidf_(ip / (float) HC), rv);
@@ -613,14 +620,23 @@ __global__ void __launch_bounds__(Q32_THREADS) gr_up_q32_kernel(GrMulti m) {
             if (apply) { bo = a.bo_prev[d0 + dd]; ip = a.inj_prev[c]; }
         }
         float mine = 0.0f;
+        // F-288: independent dot chains first, then ONE batched butterfly - warp_sum's own
+        // 5 xor steps per token (bitwise identical; the tree no longer serializes the k-loop)
+        float part[MAX_T];
 #pragma unroll
         for (int k = 0; k < MAX_T; ++k) {
             if (!EXACT_T && k >= T) break;
-            float acc = dot8u_ptr(wa, lo[k] + lane * 8);
-            if (lane < LR / 8 - 32) acc += dot8u_ptr(wb, lo[k] + (32 + lane) * 8);
-            acc = warp_sum(acc);
-            if (lane == k) mine = acc;
+            part[k] = dot8u_ptr(wa, lo[k] + lane * 8);
+            if (lane < LR / 8 - 32) part[k] += dot8u_ptr(wb, lo[k] + (32 + lane) * 8);
         }
+#pragma unroll
+        for (int o = 16; o > 0; o >>= 1)
+#pragma unroll
+            for (int k = 0; k < MAX_T; ++k) {
+                if (!EXACT_T && k >= T) break;
+                part[k] += __shfl_xor_sync(0xffffffffu, part[k], o);
+            }
+        if (lane < MAX_T) mine = part[lane];
         if (lane < T) {
             if (apply) {
                 rv = fmaf(bo, 2.0f * sigmoidf_(ip / (float) HC), rv);

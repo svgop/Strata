@@ -9788,3 +9788,31 @@ expert requant (MxMoE/MoPEQ class, +1-3 beyond uniform) riding the pending T14B 
 build.  NEGATIVES banked: Ozaki/split-fp16 compensation (all decode lines bytes-bound),
 tree speculation (SpecBranch joins the TreeWY verdicts), NVFP4 repack (byte-regressing),
 draft precision cuts, expert prefetch (hit ~99%).
+
+## F-288 — 2026-10-24 ~05:15: THE q32 BENCH GAP CLOSED; THE UP RESTRUCTURE BUILT AND
+## FALSIFIED FLAT — the kernel program REDIRECTS TO THE ENGINE MEMORY CONTEXT.
+
+**THE BENCH GAP CLOSED**: fused_gr_bench now covers the engine's real up path —
+STRATA_BENCH_Q32=1 sets per-token q8_mixed state (N/32 GrQ81 groups x 36 B) so
+fused_gr_read_multi dispatches gr_up_q32 (QFUSE, default-on in the engine).  q32 baseline:
+up 7.2/10.4/10.4/12.0/13.7/15.2/16.6/18.2 µs (T=1..8, cold) — within 0.2-0.3 µs of
+gr_up_multi everywhere (both kernels share the structure).
+
+**THE BATCHED RESTRUCTURE (F-288, both kernels, BITWISE-IDENTICAL by construction)**:
+every token's dots run as independent register chains FIRST, then ONE batched butterfly
+(warp_sum's own 5 xor steps per token — same addition sequence, only the schedule
+changes; no numerics gate owed).  Built clean; **BENCH: FLAT** — q32 after
+7.2/10.3/10.4/11.9/13.7/15.2/16.6/18.0 vs before (Δ ≤ 0.2 µs at every T; multi same).
+THE SERIALIZATION HYPOTHESIS IS DEAD: the shuffle tree's latency was not the binder.
+
+**THE STRATEGIC REDIRECT (two falsifications, one conclusion)**: F-287 (down at 96% of
+the DRAM wall isolated) + F-288 (up's schedule changes flat) = the hc kernels are NEAR
+THEIR ISOLATED ENVELOPE.  The engine-context loss (0.44-0.62 TB/s in-engine vs
+0.9-1.6 isolated) lives in MEMORY CONTEXT: the expert stream (GBs/window through L2)
+evicts the ~13 MB of hc weights (w_down + w_up) from L2 every window.  THE NEXT RUNG =
+**the persistent-L2 access-policy window** (cudaStreamSetAttribute +
+cudaAccessPolicyWindow, hitRatio-tuned) pinning w_down/w_up — never attempted in-tree,
+cheap (init-time code), and it attacks the exact measured gap.  Falsifier: one bench leg
+with the policy set vs unset on the cold-sets mode (the cold sets rotate ACTIVATIONS;
+the WEIGHTS stay resident — add a weight-rotating cold mode or price it engine-side with
+the in-kernel stamps).  THEN the engine A/B per the user's before/after law.

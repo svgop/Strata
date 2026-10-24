@@ -72,6 +72,11 @@ int main(int argc, char** argv) {
     for (auto& x : wi) x = bf16(0.02f * nd(rng));
     float *dR, *dbo, *dinj, *dwn, *dxn, *dlo, *drs, *dio, *dmix;
     uint16_t *dwd, *dwu, *dwi;
+    // F-288: the q32/QFUSE up path needs q8_mixed state (N/32 GrQ81 groups x 36 B per token)
+    static const bool bench_q32 = [] { const char* e = std::getenv("STRATA_BENCH_Q32"); return e && e[0] != '0'; }();
+    const size_t q8m_bytes = (size_t) TM * (N / 32) * 36;
+    uint8_t* d_q8m = nullptr;   // q8_mixed is uint8_t* (fused_gr.hpp:46)
+    if (bench_q32) cudaMalloc((void**) &d_q8m, q8m_bytes);
     cudaMalloc((void**) &dR, R.size() * 4);
     cudaMalloc((void**) &dbo, bo.size() * 4);
     cudaMalloc((void**) &dinj, inj.size() * 4);
@@ -106,6 +111,7 @@ int main(int argc, char** argv) {
                     a[t].w_norm = dwn; a[t].w_down = dwd; a[t].w_up = dwu; a[t].w_inject = inject ? dwi : nullptr;
                     a[t].lo = dlo + (size_t) t * LR; a[t].rs = drs + (size_t) t * HC;
                     a[t].inject_out = dio + (size_t) t * HC; a[t].mixed = dmix + (size_t) t * N;
+                    if (bench_q32) a[t].q8_mixed = d_q8m + (size_t) t * (N / 32) * 36;
                 }
                 std::vector<float> out[2];
                 for (int f = 0; f < 2; ++f) {
@@ -114,17 +120,19 @@ int main(int argc, char** argv) {
                     cudaMemset(drs, 0xff, (size_t) TM * HC * 4);
                     cudaMemset(dio, 0xff, (size_t) TM * HC * 4);
                     cudaMemset(dmix, 0xff, (size_t) TM * N * 4);
+                    if (bench_q32) cudaMemset(d_q8m, 0xff, q8m_bytes);
                     K::fused_gr_set_fast(f);
                     K::fused_gr_read_multi(a, T, dxn, s);
                     cudaStreamSynchronize(s);
                     auto& o = out[f];
-                    o.resize((size_t) TM * (D + LR + HC + HC + N));
+                    o.resize((size_t) TM * (D + LR + HC + HC + N) + (bench_q32 ? q8m_bytes / 4 : 0));
                     float* p = o.data();
                     cudaMemcpy(p, dR, (size_t) TM * D * 4, cudaMemcpyDeviceToHost); p += (size_t) TM * D;
                     cudaMemcpy(p, dlo, (size_t) TM * LR * 4, cudaMemcpyDeviceToHost); p += (size_t) TM * LR;
                     cudaMemcpy(p, drs, (size_t) TM * HC * 4, cudaMemcpyDeviceToHost); p += (size_t) TM * HC;
                     cudaMemcpy(p, dio, (size_t) TM * HC * 4, cudaMemcpyDeviceToHost); p += (size_t) TM * HC;
                     cudaMemcpy(p, dmix, (size_t) TM * N * 4, cudaMemcpyDeviceToHost);
+                    if (bench_q32) cudaMemcpy(p + (size_t) TM * N, d_q8m, q8m_bytes, cudaMemcpyDeviceToHost);
                 }
                 const bool same = std::memcmp(out[0].data(), out[1].data(), out[0].size() * 4) == 0;
                 double us[2] = {1e30, 1e30};
@@ -263,8 +271,8 @@ int main(int argc, char** argv) {
                 n_.push_back((double) (p[1] - p[0])); d_.push_back((double) (p[2] - p[1])); u_.push_back((double) (p[3] - p[2]));
             }
             auto med = [](std::vector<double>& v) { std::sort(v.begin(), v.end()); return v[v.size() / 2] / 1e3; };
-            std::printf("COLD(%d sets) fast %d T %d | read %6.1f us (events) | stamps median: norm %5.1f down %5.1f up %5.1f us (incl. a stamp kernel each)\n",
-                        cold_sets, f, T, 1e3 * ms / iters, med(n_), med(d_), med(u_));
+            std::printf("COLD(%d sets) fast %d T %d %s | read %6.1f us (events) | stamps median: norm %5.1f down %5.1f up %5.1f us (incl. a stamp kernel each)\n",
+                        cold_sets, f, T, bench_q32 ? "q32" : "  ", 1e3 * ms / iters, med(n_), med(d_), med(u_));
         }
     }
     std::printf("fused_gr_bench: %d differing\n", failures);
