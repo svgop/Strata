@@ -10008,3 +10008,25 @@ the certified base 217.3/206.9/319.5 stands; the remaining IMPLEMENTED-path leve
 retrain v2 (+6-9, owns the pool), requant (+4-7, USER GO), micro bundle, C2
 reader-thread (conc), and whatever the next research wave finds — 300 solo now requires
 nearly all of them landing.
+
+## F-296 — 2026-10-24 ~10:35: THE C2 OVERLAP FAMILY DEAD 0-FOR-2 — with the MECHANISM
+## named (the shared expert pool couples the verifiers' tails).
+
+**THE ARM (STRATA_COHORT_OVERLAP=1, in-tree default-off)**: finish-under-window in its
+SAFEST form — the finish lambda kept in-scope (moved above the poll loop as a pure
+reordering, body untouched), only CALL SITES moved into the poll loop (fa/fb/fc
+completion flags, inline failed-checks; default = byte-identical order; the F-281
+relocation NOT repeated).  Built clean; **SMOKE 0/12 at ter9**: the failing round was
+BINARY (A.S=8 B.S=4 — the ramp), "windows done 21.2 ms", then #267 layer-0 timeout —
+finish(ver, wa) ran under ver_b's in-flight window and the next window's wait never
+resolved.  THE MECHANISM (consistent with F-281/F-285a, now identified): the verifiers
+SHARE the expert pool and source (the ver_b init's own comment) — the tail's commit
+path touches pool state the other cohort's in-flight window is concurrently waiting
+on; overlapping the tails requires serializing the pool, which erases the overlap.
+**VERDICT: C2 tail-overlap CLOSED as structurally hazardous (0-for-2 across two
+independent forms); the +9-18% conc band leaves the composition — the ternary's live
++9.7% at 9-wide stands as the conc lane's win.**  The only remaining form (per-verifier
+pool partitions) is a redesign, priced for a future wave with the mechanism named.
+(Harness note: a pkill -f pattern matched my own wrapper mid-restore — the kill-by-PID
+discipline, already in memory, bit once more; the failing arm's boot was caught and
+replaced with the standing champion, env verified clean.)
