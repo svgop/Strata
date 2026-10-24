@@ -10470,3 +10470,20 @@ correction (c=2, empirically bit-tight); bf16-class weights consume UNQUANTIZED 
 activations.  **EXEC-C TRAINING IS UNBLOCKED**: the trainer's G0-exact forward now has
 its complete recipe; the two-mode design (exact-quantizer eval / no-rounding train)
 per exec-B §5.4 governs the gradients.  THE GOAL'S BIGGEST REMAINING LEVER IS LIVE.
+
+## F-320 — 10-25 ~03:30: EXEC-C OPENED — the training venv LIVE (torch 2.14.1+cu130,
+## CUDA on, **sm_120 (12,0) verified natively**), the trainer skeleton landed and
+## validated (tools/mtp_train.py: the exec-A 40,976-B record contract, the window
+## indexer W=512/K=6/seam-law with its windows.npy cache, the deep-window weighting,
+## the two-mode-forward assembly points; dry-run green on the empty harvest dir; the
+## G0 module imports clean in the TRAIN venv — 29 tensors).
+
+**THE PIPELINE'S REMAINING GPU WORKLOAD, IN ORDER (per exec-A, spec-pinned)**: the
+harvest = CLI-generate boots over a seeded corpus with --dump-final-r (one boot per
+stream; ~11M positions ≈ 451 GB f32, deep oversampled ~13%) → shards land in
+/home/svg/LLM/Custom-data/harvest/ → mtp_train.py's indexer picks them up → the loop
+(K=6 teacher-forced CE, β=0.8, sub-vocab masking, AdamW 1e-4 cosine, 3×16M) → the
+offline acceptance evaluator vs the stock baseline → export (BF16 tensors →
+mtp_pack.py → mtp_rt.py → rt2/) → the T14C gate ladder.  The trainer's full loop
+assembles on the first real shards; every contract it consumes is the one the G0
+module already proved.
