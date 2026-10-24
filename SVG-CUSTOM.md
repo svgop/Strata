@@ -10379,3 +10379,14 @@ the permutation is mechanical and T2 closes at the fp32 noise floor.
 **Dispatch chain now fully proven**: native_mmvq(2) → native_q4_0_mmvq →
 small_mmvq<Q40Block,4> → native_small_mmvq_kernel + small_q8_dot(:713) with
 d*(sumi*ds.x − 4*ds.y).  G0: T1 PASSED; T2 = the load_int_b2 byte order.
+
+## F-314 — 10-24 ~23:59: THE DISPATCH MACRO FOUND — small_mmvq's first line is
+## STRATA_WAVE_MMVQ(SmallTraits<Q40Block,4>): the head (n_out=40525) runs the WAVE
+## kernel (native_mmvq_wave_kernel, :1827+), NOT the plain small kernel — the wave
+## variant's weight layout/nibble convention is the true head dot form.  The dump-codes
+## + affine attempts (both corrections, c=4 and c=8 class) all read cos 0.04-0.09 = the
+## plain-small pairing is definitively not the head's.  NEXT (the G0 closer, one read):
+## the STRATA_WAVE_MMVQ macro + native_mmvq_wave_kernel's Q4 branch — its load/apply
+## (likely the same SmallTraits but a TRANSPOSED/planar weight arrangement, explaining
+## the "decodes to no model row" dump) → transcribe → T2 at the floor.  All else stands
+## proven (T1, weights, ds, affine algebra, argmax).
