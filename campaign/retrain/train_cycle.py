@@ -70,7 +70,7 @@ RECORDS_GLOB = "/home/svg/LLM/Custom-data/harvest/records/records-*.f32"
 WINDOWS_NPY = "/home/svg/LLM/Custom-data/harvest/records/windows.npy"
 HEAD_Q4 = "/home/svg/LLM/Custom-data/mtp/fixtures/tap_head.q4"
 DRAFT_VOCAB = "/home/svg/LLM/data/mtp-en/rt/draft_vocab.bin"
-CKPT_DIR = Path("/home/svg/LLM/Custom-data/mtp/ckpts")
+CKPT_DIR = Path("/home/svg/LLM/Custom-data/mtp/ckpts")   # module default; main() may rebind via --ckpt-dir
 EXPORT_DIR = Path("/home/svg/LLM/Custom-data/mtp/export")
 LEGACY_SEED = CKPT_DIR / "full_cycle_ckpt.pt"
 REC = 40976
@@ -166,7 +166,7 @@ def main() -> int:
     ap.add_argument("--eval-n", type=int, default=200, help="eval anchors per mid-run eval (final uses 2x)")
     ap.add_argument("--seed", type=int, default=1234)
     ap.add_argument("--eval-only", action="store_true", help="no training: at-scale accept over the FULL eval split on cycle-best.pt")
-    ap.add_argument("--ckpt-dir", default=str(CKPT_DIR), help="checkpoint dir (isolate experiments, e.g. ckpts-gentle)")
+    ap.add_argument("--ckpt-dir", default=str(globals()["CKPT_DIR"]), help="checkpoint dir (isolate experiments, e.g. ckpts-gentle)")
     ap.add_argument("--no-export", action="store_true")
     a = ap.parse_args()
 

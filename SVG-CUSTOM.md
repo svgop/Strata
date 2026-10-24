@@ -10618,3 +10618,37 @@ stray holders; single-engine law held throughout (8081 stays down while chunks r
 NEXT (in flight): chunk 2 under the system (resume from step 30) → at-scale
 per-depth evaluator → rt2 assemble (experts.bin + draft_vocab.bin byte-identical)
 → T14C gate ladder → engine A/B battery per the user's law → server restore.
+
+## F-326 — 10-25 ~15:00: **THE G0 GATE LADDER BIT TWICE — export ship-stopper caught,
+## then the TRANSFER FAIL diagnosed to a clean curve (exposure bias CONFIRMED)**
+
+**G0 EXPORT ROUNDTRIP GATE (campaign/retrain/check_export_roundtrip.py) — first catch:**
+the candidate export wrote f32 norms UNFOLDED (arr−1) — but the engine multiplies gamma
+AS-IS (native_qsa norm kernel: out = scale·x·gamma[col]) and dense.bin carries the FOLDED
+1+w value (mtp_rt.py packs data+1.0).  The un-fold would have shipped EVERY norm off by
+exactly 1.0.  Fixed (export stores the param's folded value as-is); re-export + reassemble
+→ G0 PASSED: 29/29, f32 bit-exact, worst bf16 4.6e-3, worst q8_0 3.7e-3.  LAW: the dense.bin
+f32 norm is the FOLDED value; never un-fold on export.  (Also banked: unused-by-forward
+params round-trip bf16 bit-exact — the module trains stage-1 only; self_attn/mlp stay stock.)
+
+**G0 M3d STAIR (campaign/retrain/stair_probe.sh, CLI boot per drafter, same stream/args):
+TRANSFER FAIL, replicated.**  stock rt: 0.597 accepted, 2.30 tok/round, depth tail alive
+(4:37 5:52).  rt2 (chunk-2, +33.1pt offline at-scale): 0.457 then 0.489 replicate, 1.41-1.44
+tok/round, depth COLLAPSE (3:19 4:0 5:0).  **The +33pt offline did NOT transfer.**
+
+**THE DIAGNOSTIC THAT MAPS THE CURVE (ckpts-gentle, --ckpt-dir isolation):** 1,000 steps
+lr 2e-5 from stock init (+26.5pt offline) → engine stair 0.604, 2.22 tok/round, depth tail
+INTACT (4:41 5:52) = NEUTRAL-to-stock.  So: mild drift transfers neutrally; heavy drift
+(10k steps, the +33pt regime) catastrophically breaks the RECURSION.  Mechanism = teacher-
+forced EXPOSURE BIAS, precisely the directive's named remaining wiring: the trainer fits
+the mixer on the STOCK drafter's harvest R-states; at runtime the trained mixer's own
+outputs build its next-depth states (and feed the stock stage-2+ weights), drifting off
+the training distribution, compounding with depth.  The offline metric measures one step
+off the stock trajectory — it CANNOT see this.  VERDICT: v1 teacher-forced retrain CLOSED
+(falsified at transfer, not at fit); phase 2 = recursive rollout training (self-trajectory
+states: scheduled sampling / DAgger over K-depth rollouts) and/or the full B-chain incl.
+the attention KV chain in the module per T14B-exec-C — the module must consume its own
+outputs during training before any further engine battery is spent.
+
+Instruments banked: check_export_roundtrip.py + stair_probe.sh + --eval-only + --ckpt-dir
+in the trainer.  Server restored on stock after the GPU work (single-engine law held).
