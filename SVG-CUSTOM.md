@@ -10568,3 +10568,53 @@ oscillation say the 200-step/8.2-anchor-visit run is under-converged and the dep
 term under-weighted — the full cycle (epochs over all 1,269 windows + the w_deep
 weighting + the attention KV chain in the recursion) is the remaining work; the
 mechanism's direction and magnitude are now DEMONSTRATED at full K.  Server restored.
+
+## F-325 — 10-25 ~13:10: **THE FULL CYCLE CONVERGES (+30.8pt) + THE CHECKPOINT SYSTEM
+## + THE WORKSPACE DOCTRINE** (user order: cleanup → checkpoint system → continue; OCD-level tidy)
+
+**THE 1/4-EPOCH CHUNK** (the /tmp-era run, superseded by the system below): BS=16,
+lr 5e-5, w_deep=2 @ pos≥16384, 1,148s GPU-exclusive — eval mean stock 0.4040 →
+0.7122 (**+30.8pt**), ALL six depths positive: +29.5/+28.5/+27.7/+30.2/+24.1/**+33.3**
+— depth-6's F-324 deficit (−5.2pt) was UNDER-CONVERGENCE, not mechanism; w_deep +
+10k steps made d6 the best depth.  Honest caveat: offline top-1 on held-out harvest
+anchors ≠ engine acceptance (typical-accept + SPEC_PROB arms change the mapping);
+the T14C gates + engine battery are the verdict, queued next.
+
+**THE EXPORT ROUND-TRIP BUG (caught before it shipped):** the /tmp script printed
+"exported 1 tensors" — its state_dict name round-trip (`replace('_','.')`) only
+inverts for names WITHOUT real underscores (`mlp.gate.weight` was the sole
+survivor); `hyper_connection_mixer.*`, `attn_hyper_connection.*` etc. silently
+dropped.  Fix: export iterates mod.t (the ORIGINAL-name map), kind per tensor from
+RtDense().manifest (q8_0 re-quant via the ggml reference packer / bf16 / f32 raw
+norms with the +1 un-folded, F-109), + a HARD assert count==29.  LAW: never
+reconstruct names by string round-trip — carry the map.
+
+**THE CHECKPOINT SYSTEM (campaign/retrain/train_cycle.py — the standing trainer,
+/tmp training scripts hereby BANNED):** atomic rolling cycle-last.pt (tmp+rename,
+every 500 steps + at every eval — a kill loses ≤ one interval), cycle-best.pt
+tracker, history.jsonl per-eval ledger, AUTO-RESUME (model+opt+sched+rng+step;
+legacy bare state_dict seeds model-only), wall-budget chunks (--minutes N),
+smokeable (--steps N).  Smoke PASSED end-to-end: 652,445 records / 642,114
+anchors, mid-evals, saves, 29-tensor export (116.1 MB, dense.txt dialect, atomically
+staged).  Two traps fixed en route: numpy Generator rng state = bit_generator.state
+(not get_state); mtp_rt import drags gguf→yaml (absent in the train venv) so the
+q8_0 packer is transcribed locally with provenance pinned.
+
+**THE F-325 RESTRUCTURE (AGENTS.md "Workspace organization law" section, BINDING):**
+Custom-data/{harvest/{records,corpus,logs}, mtp/{fixtures,ckpts,export}}; the G0
+taps moved out of /tmp (396MB one-shot dqhead dump deleted); b9/b12 one-shot
+launcher pairs → campaign/arms/; patch_f28{4,6,7}*.py deleted (applied in src —
+git history is the archive); headport binaries + retrain npy fixtures out of git
+(fixtures home = Custom-data/mtp/fixtures); stale engine log deleted.  Every
+artifact class now has a named home BEFORE the first file lands.
+
+**windows.npy NEAR-MISS:** its start column is PER-SHARD record indices (resets at
+shard boundaries — negative diffs prove it); a naive global-index read would have
+trained across stream seams.  The trainer maps each 512-tile through its shard
+offset (valid anchors = [st, st+506) per tile).  Also: the GPU "3GB something" the
+user spotted = this training run itself (2,196 MiB) + desktop bits — verified, no
+stray holders; single-engine law held throughout (8081 stays down while chunks run).
+
+NEXT (in flight): chunk 2 under the system (resume from step 30) → at-scale
+per-depth evaluator → rt2 assemble (experts.bin + draft_vocab.bin byte-identical)
+→ T14C gate ladder → engine A/B battery per the user's law → server restore.

@@ -247,6 +247,32 @@ control it: back it up and remove it (fresh profile) or pin one copy for both si
 standing recipe with hit rates still ~99% and normal ms/window accounting = check the adapt tier
 line before suspecting config or code.
 
+## Workspace organization law (svg's fork — F-325 restructure: BINDING for every session)
+
+No loose files, no ad-hoc scripts, no mystery artifacts. Everything has exactly one home:
+
+**`/home/svg/LLM/Custom-data/` is the data home** (never in git, never in /tmp, never at repo root):
+
+    harvest/records/   records-<shard>.f32 (engine dumps) + derived indexes (windows.npy — starts are PER-SHARD indices)
+    harvest/corpus/    token-id inputs (stream-N.ids, manifests) that generated the records
+    harvest/logs/      harvest boot logs (stream-N.out)
+    mtp/fixtures/      binary fixtures (taps, dumps, npy) — the ONE fixture home; gitignored everywhere else
+    mtp/ckpts/         ALL training state: cycle-last.pt (rolling), cycle-best.pt, history.jsonl
+    mtp/export/        trainer export output (dense_rt2.bin/.txt, staged atomically)
+
+**Training runs under the checkpoint system, never ad-hoc** (`campaign/retrain/train_cycle.py`):
+GPU-exclusive (8081 DOWN), launched as `~/venvs/mtp-train/bin/python campaign/retrain/train_cycle.py
+--minutes N`. The rolling checkpoint saves atomically (tmp + rename) every N steps and at every eval;
+a kill loses at most one interval, resume is automatic. NEVER hand-write a /tmp training script —
+extend the standing trainer. Evidence logs go to `campaign/results/fNNN-*.out`, committed.
+
+**Prohibitions:** durable scripts never live in `/tmp` (scratch only, cleared at consolidation);
+build artifacts (binaries, *.npy fixtures) never enter git (.gitignore patterns own them — git
+history is the archive); run-once harnesses for closed questions are deleted when the question
+closes; engine logs at repo root (custom-iq3_s.log) are ephemeral and may be deleted between boots.
+Every new artifact class gets a named directory or convention BEFORE the first file lands. Leave
+the tree more ordered than you found it.
+
 ## The performance campaign law (svg's fork — ENFORCED on every optimization; supersedes nothing above, adds to it)
 
 This repo is the Linux superiority campaign lane. Read `campaign/research/GOAL-LINUX-SUPERIORITY.md` (the

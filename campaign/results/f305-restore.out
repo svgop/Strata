@@ -1,0 +1,16 @@
+[strata] WARNING: This session has a real-time CPU limit (RLIMIT_RTTIME hard limit 200000; the desktop's audio system sets it to 0 when rtkit is not installed). Linux can then end a program with signal 9 for no visible reason. Install rtkit, or start Strata outside the desktop session's limits, for example: systemd-run --user --collect -p LimitRTTIME=infinity -- strata serve ...
+usage: server.py [-h] [--engine {mock,strata}] [--config CONFIG] [--host HOST]
+                 [--script-cycle] [--script-delay SCRIPT_DELAY]
+                 [--script SCRIPT] [--port PORT] [--ready-file READY_FILE]
+                 [--shutdown-timeout SHUTDOWN_TIMEOUT] [--parallel PARALLEL]
+                 [--batch-groups BATCH_GROUPS] [--max-queue MAX_QUEUE]
+                 [--queue-timeout QUEUE_TIMEOUT]
+                 [--batch-telemetry | --no-batch-telemetry] [--offline]
+                 [--gpu GPU] [--tokenizer TOKENIZER] [--open]
+                 [--fit-max-tokens] [--no-fit-max-tokens] [--api-key API_KEY]
+                 [--mcp-config MCP_CONFIG] [--lazy] [--api-monitor]
+                 [--idle-unload SECONDS]
+                 [--min-free-vram-mib MIN_FREE_VRAM_MIB]
+                 [--before-load BEFORE_LOAD] [--slot-save-path DIR]
+                 [--replicas N]
+server.py: error: port 8081 is already in use - is Strata (or another server) already running? Close it, or start this one with a different --port

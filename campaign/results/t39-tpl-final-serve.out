@@ -10,3 +10,6 @@ ready: http://127.0.0.1:8081/v1  (OpenAI: /v1/chat/completions, Anthropic: /v1/m
        open http://127.0.0.1:8081/ in a browser to chat; close this window to stop the model
        from other devices: http://192.168.0.22:8081/   (API: http://192.168.0.22:8081/v1)
        from other devices: http://192.168.0.182:8081/   (API: http://192.168.0.182:8081/v1)
+
+[strata] stopping (Ctrl+C again to end the engine at once) ...
+[strata] stopped

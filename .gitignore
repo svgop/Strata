@@ -95,5 +95,8 @@ node_modules/
 # screenshots and checkpoints from the Mac rebuild live outside git (StrataSplit\evidence-archive)
 /apps/host/docs/evidence/
 /apps/host/docs/checkpoints/
+# campaign fixtures and build artifacts stay out of git (Custom-data/mtp/fixtures is the fixture home)
 campaign/headport/head_q6k.bin
-campaign/retrain/head_q4_fixture.npy
+campaign/headport/vhead*
+campaign/headport/head_requant_probe
+campaign/retrain/*.npy

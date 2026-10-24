@@ -3,7 +3,7 @@
 parity module (campaign/retrain/p2_forward.py + p2_rt_loader.py, F-319).
 
 Per T14B-exec-C §2:
-  - Data: harvest records at /home/svg/LLM/Custom-data/harvest/ (records-<shard>.f32:
+  - Data: harvest records at /home/svg/LLM/Custom-data/harvest/records/ (records-<shard>.f32:
     {int64 pos, int64 tok, f32 R[4][2560]} = 40,976 B; seams-<shard>.json; the exec-A
     multi-boot harvest is the next GPU workload — this trainer runs the moment shards
     exist).
