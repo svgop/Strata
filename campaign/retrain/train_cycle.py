@@ -136,7 +136,10 @@ def export_dense(mod: MTPDraft, rt: RtDense, meta: dict):
         elif kind == "bf16":
             raw = ((arr.view(np.uint32) >> 16).astype(np.uint16)).tobytes()
         elif kind == "f32":
-            raw = (arr - 1.0).astype(np.float32).tobytes()   # un-fold Gemma +1 (F-109)
+            raw = arr.astype(np.float32).tobytes()   # as-is: the param HOLDS the FOLDED (1+w)
+            # value and the engine multiplies gamma directly (native_qsa norm kernel) — the
+            # dense.bin f32 norm is the FOLDED value (mtp_rt.py packs data+1.0; G0 caught a
+            # candidate un-fold at F-325: it would have shipped every norm off by exactly 1.0)
         else:
             raise ValueError(f"unknown rt kind {kind} for {name}")
         pad = (-off) % 256
@@ -162,10 +165,14 @@ def main() -> int:
     ap.add_argument("--eval-every", type=int, default=2500)
     ap.add_argument("--eval-n", type=int, default=200, help="eval anchors per mid-run eval (final uses 2x)")
     ap.add_argument("--seed", type=int, default=1234)
+    ap.add_argument("--eval-only", action="store_true", help="no training: at-scale accept over the FULL eval split on cycle-best.pt")
+    ap.add_argument("--ckpt-dir", default=str(CKPT_DIR), help="checkpoint dir (isolate experiments, e.g. ckpts-gentle)")
     ap.add_argument("--no-export", action="store_true")
     a = ap.parse_args()
 
     t0 = time.time()
+    CKPT_DIR = Path(a.ckpt_dir)
+    LEGACY_SEED = CKPT_DIR / "full_cycle_ckpt.pt"
     CKPT_DIR.mkdir(parents=True, exist_ok=True)
     pos, tok, R, anchors = load_corpus()
     print(f"corpus: {len(pos)} records, {len(anchors)} seam-respecting anchors", flush=True)
@@ -223,6 +230,20 @@ def main() -> int:
                     continue
                 tries[d - 1] += 1; hits[d - 1] += int(pred == int(ls))
         return hits / np.maximum(tries, 1)
+
+    if a.eval_only:
+        best = CKPT_DIR / "cycle-best.pt"
+        if best.exists():
+            mod.load_state_dict(torch.load(best, weights_only=False)["model"])
+            print("at-scale eval on cycle-best.pt", flush=True)
+        rb = accept(mod_stock, len(eval_set))
+        rt_ = accept(mod, len(eval_set))
+        print(f"stock  (full split): {' '.join(f'{x:.4f}' for x in rb)} mean {rb.mean():.4f}", flush=True)
+        print(f"trained(full split): {' '.join(f'{x:.4f}' for x in rt_)} mean {rt_.mean():.4f}", flush=True)
+        print("deltas: " + " ".join(f"{(b - c) * 100:+.1f}pt" for b, c in zip(rt_, rb)), flush=True)
+        deep = np.asarray([pos[x] >= 16384 for x in sorted(eval_set)])
+        print(f"eval split: {len(eval_set)} anchors ({int(deep.sum())} deep >=16384)", flush=True)
+        return 0
 
     r0 = accept(mod_stock, a.eval_n)
     stock_mean = float(r0.mean())

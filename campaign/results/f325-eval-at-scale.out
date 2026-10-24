@@ -1,0 +1,7 @@
+corpus: 652445 records, 642114 seam-respecting anchors
+resumed cycle-last.pt at step 9863 (best 0.7932, 6 evals)
+at-scale eval on cycle-best.pt
+stock  (full split): 0.4135 0.4150 0.4188 0.4185 0.4187 0.4229 mean 0.4179
+trained(full split): 0.7438 0.7470 0.7501 0.7521 0.7509 0.7563 mean 0.7500
+deltas: +33.0pt +33.2pt +33.1pt +33.4pt +33.2pt +33.3pt
+eval split: 12842 anchors (9492 deep >=16384)

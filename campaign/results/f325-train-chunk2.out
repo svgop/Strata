@@ -3,3 +3,10 @@ resumed cycle-last.pt at step 30 (best 0.6957, 2 evals)
 stock eval: 0.397 0.370 0.355 0.364 0.396 0.374 mean 0.3760
 chunk: 157318 anchors / 9833 steps (cap 9833, budget 40 min)
   eval @2500: loss 2.3475 | 0.719 0.721 0.728 0.740 0.693 0.746 | mean 0.7246 (+34.9pt vs stock)
+  eval @5000: loss 2.1580 | 0.711 0.729 0.704 0.729 0.719 0.719 | mean 0.7185 (+34.2pt vs stock)
+  eval @7500: loss 1.9599 | 0.816 0.755 0.790 0.788 0.817 0.793 | mean 0.7932 (+41.7pt vs stock)
+  eval @9863: loss 1.8518 | 0.756 0.826 0.770 0.763 0.823 0.772 | mean 0.7849 (+40.9pt vs stock)
+final eval (2x): 0.713 0.765 0.748 0.778 0.740 0.758 mean 0.7503
+deltas vs stock: +31.6pt +39.5pt +39.3pt +41.4pt +34.4pt +38.3pt
+chunk complete at step 9863 (20.9 min); best mean 0.7932
+exported 29 tensors (116.1 MB) -> /home/svg/LLM/Custom-data/mtp/export/dense_rt2.{bin,txt}
