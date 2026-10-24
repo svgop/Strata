@@ -266,6 +266,12 @@ GPU-exclusive (8081 DOWN), launched as `~/venvs/mtp-train/bin/python campaign/re
 a kill loses at most one interval, resume is automatic. NEVER hand-write a /tmp training script —
 extend the standing trainer. Evidence logs go to `campaign/results/fNNN-*.out`, committed.
 
+**Upstream checks (F-329 law):** the references library (`/home/svg/LLM/data/references/*`)
+stays PRISTINE — pinned clones, no worktrees, no builds inside it. Upstream checkouts,
+builds, and test binaries live at `~/LLM/strata` (the stock tree), and derived test artifacts
+(packs, worktree builds) are DELETED at closeout — evidence + configs go to
+`campaign/upstream/`, source fixtures to `Custom-data/mtp/fixtures/`.
+
 **Prohibitions:** durable scripts never live in `/tmp` (scratch only, cleared at consolidation);
 build artifacts (binaries, *.npy fixtures) never enter git (.gitignore patterns own them — git
 history is the archive); run-once harnesses for closed questions are deleted when the question

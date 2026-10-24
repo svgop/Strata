@@ -10730,3 +10730,12 @@ campaign/upstream/ harness — reopen only if a future DFlash release claims Bla
 now 2000 — always set it on stock boots.
 
 Evidence: campaign/upstream/{s1-mtp,s2-dflash2}*.out, window*.out, configs s1/s2.json.
+
+**F-329 addendum (10-24 ~20:30, user order): upstream-test cleanup done.** The v0.2.4.2
+worktree (1.0 GB incl. build) removed from the references clone (back to the pristine
+v0.2.1.4 pin, worktree list empty); the derived drafter.pack (726 MB) deleted — regen is
+one command from the sha-verified source kept at Custom-data/mtp/fixtures/dflash2/.
+campaign/upstream/ (784 KB: evidence, configs, the window harness) stays as the standing
+upstream-check home.  NEW LAW in AGENTS.md: references library stays pristine; upstream
+checkouts/builds/test binaries live at ~/LLM/strata (the stock tree, currently 0.1.46);
+derived test artifacts deleted at closeout.
