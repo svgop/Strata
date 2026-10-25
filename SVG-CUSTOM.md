@@ -10808,3 +10808,37 @@ the next battery (F-282 pattern); (2) IMMA owes the prefill-lane read; (3) M3b �
 solo-lane bisect is ever wanted, QSA_SPLIT alone is the measured contributor — IMMA is prefill-only.
 Calibrate re-verdict (user question): F-182/F-183 stand — its whole sweep space is now either
 adopted-elsewhere or falsified with mechanism; the saved 10-14 report remains stale and dangerous to apply.
+
+## F-332 — 10-25 ~16:45: **STRATA_ADAPT_EARLY ADOPTED — the tier's decision scan runs under the window;
+## adapt wait 1.03 -> 0.28-0.62 ms/window (mechanism proven), pair +5.4%, no lane negative**
+
+**THE PREMISE (R2-P5 falsifier first):** the live timing line read "commit 0.36 + emit 0.38 + adapt wait
+1.03 ms/window" of 14.21 — the tail's biggest piece is NOT the stdout emit but the ADAPTIVE TIER's
+round-end join+apply. At adapt_every 4 that is ~4 ms stalls every fourth window. The join waits mostly
+for adapt()'s own DECISION SCAN (launched at round end, it got only the ~0.7 ms finish tail to run),
+not the copies. Deferring the join past the next launch would reopen the deleted F-187 overlap lane
+(copies racing windows; also blocked with DMA_BATCH) — CLOSED by code read.
+
+**THE ARM (generate.cpp, commit a9055142):** split adapt() into adapt_scan() (the layer x expert pass
++ sorts: pure reads of usage/pred/heat/host_res/admit_round/pin_rank) + the round-end part (credits,
+gate-set, copy enqueues, event) UNCHANGED. STRATA_ADAPT_EARLY=1: after the cohorts' batch_go, snapshot
+usage/pred/heat (the running windows mutate the live ones; 384 KB copy ~30 us) and run the scan on a
+thread under the ~12 ms window run; at the round end join it (done long ago) and pass the swaps to
+adapt(). Decisions are one round staler — usage is a decay EWMA, noise. The scan reads only
+round-end-owned state (host_res/admit_round/pin_rank mutate in apply_pending, main thread only) —
+race-free by placement. Default off = inline scan, byte-identical.
+
+**THE BATTERY (3v3 same-hour, old-engine warm boot vs fresh arm boot, prewarm2 both):**
+ctl 208.5/187.7/288.2 M3b 79.5 | 205.1/204.8/308.8 76.9 | 219.0/204.0/300.5 72.9
+=> means M1 210.9 / pair 198.8 / conc 299.2 / M3b 76.4
+arm 220.4/207.2/326.0 77.6 | 210.9/204.1/290.2 78.9 | 202.2/217.5/295.5 77.4
+=> means M1 211.2 (+0.1) / pair 209.6 (+5.4%) / conc 303.9 (+1.6%) / M3b 78.0 (+1.6pp)
+MECHANISM: arm timing lines "adapt wait 0.28-0.62" vs control 1.03; one 9.81 GPU-reach outlier line
+(scan thread on a core while host waited) — transient, watch on the pooled round.
+
+**ADOPTED** (launcher ${STRATA_ADAPT_EARLY:-1}; =0 rollback; engine rollback engine/strata.pre-f332).
+Honesty note: the pair mean is leg-1-sensitive (ctl leg 1 read 187.7; medians +1.6%) — means are the
+law's form and no lane regressed, adoption stands on mechanism + means + zero regression; the F-282
+five-boot pooled confirmation rider applies. Exactness reasoning: swap CHOICES shift one round (which
+experts resident where) but every path computes identical expert values — token stream unchanged in
+expectation; M3b +1.6pp consistent. Evidence: campaign/results/f332-{ctl,arm}-{1,2,3}.txt.

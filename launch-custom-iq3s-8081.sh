@@ -32,6 +32,12 @@ export STRATA_DM=1                  # F-277 ADOPTED (10-23): dm_wait_combine - t
 export STRATA_DF_PDL=0              # F-279 PIN: the T38 V2 code DEFAULTS STRATA_DF_PDL to 1 when unset (verify_kernels.cu:2084) - every boot since T38 silently ran PDL-armed (measured NEUTRAL by the T38 A-B-A-B deploy interleave, surface ~13 of ~1,860 nodes). Pinned 0 = the documented F-191/F-278 posture + pdl-accuracy.json protocol restored. Re-price arm is =1 (never =0)
 export STRATA_SPEC_PROB="${STRATA_SPEC_PROB:-1}"  # F-282 ADOPTED (10-23 night): probabilistic draft acceptance (sampler.cu:891, the T17C-priced never-measured arm). T41 battery: M1 +5.8% (217.8 vs 205.8, 2/2 legs above EVERY ctl leg), conc +4.4%, M3b +2.0pp (mechanism-correlated); MMLU 4-run set 94.3/92.9/95.7/94.3 mean 94.3 (one sub-floor read, tiebreaker-clean); mimic 56-read = the night's 3-config bench low-mode (paired tests showed 60-62). OFF: STRATA_SPEC_PROB=0. Rider: five-boot pooled confirmation + mimic watch on the next battery
 
+export STRATA_ADAPT_EARLY="${STRATA_ADAPT_EARLY:-1}"  # F-332 ADOPTED (10-25): the adaptive tier's decision scan (adapt_scan, generate.cpp) runs on a
+                                  # thread UNDER the window run (snapshot of usage/pred/heat; decisions one round staler - EWMA noise); gate-set
+                                  # + copy enqueues unchanged at round end (F-187 overlap lane stays closed). 3v3 same-hour: pair +5.4% (209.6 vs
+                                  # 198.8), M1 +0.1 flat, conc +1.6 in-band, M3b +1.6pp; MECHANISM PROVEN: "adapt wait" 1.03 -> 0.28-0.62 ms/window.
+                                  # =0 rolls back (inline scan, byte-identical legacy path). Rider: five-boot pooled confirmation (pair leg-1
+                                  # sensitivity noted in F-332); engine rollback: engine/strata.pre-f332
 # F-331 ARMS (10-25, both never priced on this lane; see SVG-CUSTOM F-331):
 export STRATA_QSA_SPLIT_ATTN="${STRATA_QSA_SPLIT_ATTN:-1}"     # decode+drafter attention through the split int8-MMA kernel (verify.cpp:1973 + mtp.cpp:1088;
                                   # qsa_prompt_attn.cu:2271: each query's cells split over up to 20 blocks, LSE merge; int8-KV sm_80+;
