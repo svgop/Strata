@@ -10908,3 +10908,38 @@ the binding variance (this session's boots spanned M1 189.8-232.5 legs).
 directionally consistent on every pair; the five-boot control form still owed.
 
 Evidence: campaign/results/f334-clean-{1..10}.txt. Server left serving on this boot.
+
+## F-336 — 10-25 ~21:15: **THE F-332 POOLED CONFIRMATION (first interleaved-paired 5-boot form): pair
+## CONFIRMED at +2.1% (3/3 pairs, gate pass), M1 protected; NEW 6-conc tax −4.7% (3/3, gate pass) under
+## background load — banked with the aux-cpus no-op mechanism; scoping fix is one env**
+
+**THE FORM (play-mode, standing-arms row; the scout's interleaved-paired design):** 5 boots A-B-A-B-A
+(B1/3/5 = ADAPT_EARLY=0 ctl, B2/4 = arm), same hour, prewarm2 each, 3 legs/boot, user bg load live
+(the real condition), 1 Hz nvidia-smi telemetry alongside (killed at close; pkill-by-comm - the -f
+self-match footgun bit once, banked again: never pkill -f a pattern your own shell carries).
+
+Per-boot means: ctl 220.1/196.9/300.1 | arm 200.8/202.3/277.9 | ctl 216.2/201.5/304.1 |
+arm 217.1/206.6/295.0 | ctl 216.8/204.3/306.0 (M1/pair/conc).
+
+**ADJACENT PAIRED DELTAS (arm − ctl):**
+- pair: +2.7 / +2.5 / +1.1 => mean **+2.1%**, sd 0.9, gate 2sd/sqrt3 = 1.0 => **SIGNAL, 3/3 positive**
+- M1: −8.8 / +0.4 / +0.1 => mean −2.7%, sd 5.2, gate 6.0 => **inside noise (one low boot; B4 matched ctl
+  exactly twice) — single-stream protection HOLDS**
+- 6-conc: −7.4 / −3.0 / −3.6 => mean **−4.7%**, sd 2.4, gate 2.8 => **NEGATIVE SIGNAL, 3/3**
+
+**VERDICTS:**
+1. F-332's pair gain is REAL but SMALLER than the adoption claim: +2.1% pooled vs +5.4% claimed —
+   inside the MLPerf-style ±5pp adherence band => **CONFIRMED, magnitude revised**. The F-332 five-boot
+   pooled rider CLOSES.
+2. **NEW: a conc-side tax the cleaned-box battery did not show.** Under bg load, all three arm boots
+   read below their adjacent controls on 6-conc. MECHANISM (hypothesis, priced): the F-332 scan thread
+   runs exactly when the 6-conc windows need the CPU pool most (2.3-3.2 ms/window of CPU-expert work),
+   and the F-333 "pinning" is a NO-OP while STRATA_AUX_CPUS is unset (generate.cpp:1890's own comment).
+   CHEAPEST FALSIFIER (one boot): arm boot with STRATA_AUX_CPUS configured (scan + pool affinity split)
+   — if the conc delta collapses toward 0, the scoping fix is that env, per law 4b (scope, not revert).
+   NOT a revert: pair positive, M1 protected, tax small and load-dependent, =0 rollback one line away.
+3. Method note: the interleaved-paired form cost the same 5 boots as the old pooled form and produced a
+   GATE-PASSING verdict with 3 deltas — this is the law-v2 form working; adopt it (row: stable-baseline).
+
+Evidence: campaign/results/f336-{ctl,arm}-B{1..5}-*.txt. Server restored on the standing recipe (arm),
+prewarmed, healthy.
