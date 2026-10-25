@@ -132,3 +132,7 @@ Ratio = central expected gain / (agent sessions + 0.2 per measurement leg), risk
 | 18 | L6-P2 prefetch / P3 pool retirement (riders) | <1 AS each | +1-4% each, post-L6-P1 | endgame polish |
 
 Execution order = 0,1 first batch; 2,3,4,5 ride the same quiet windows; 6-10 as gates pass; 11+ the structural stack. Items 1-7 (~8-11 AS total) carry a realistic **+40-70% combined** — the goal's upper band — before any megakernel work.
+
+## V5.2 note — "why not a faster language than Python?" (priced, not adopted)
+
+serve/server.py (8.3k lines) is a request/API/tokenize/streaming front end over stdin/stdout; the C++/CUDA engine owns every per-window cost (decode, cohorts, tiers, graphs, pools). Measured Python-adjacent surface = boundary/emit tails 1.1-2.2 ms/window (engine printf + Python readline, shared with engine-side D2D/commit work) — already priced hideable by R2-P5 (+4-8%) and removable by L7's device-resident loop. Decode throughput is proven through the full Python stack (338.5 t/s @ 6-conc; engine's own window accounting matches the same period — no inter-layer tax visible). A Rust/C++ rewrite (~10-20 AS, API/MCP/streaming regression risk) buys low-single-digit % at best = does not make the pick order. Post-L7 revisit clause: when windows hit ~2.5 ms, move the emit protocol off stdout onto mapped-memory rings (engine-side work, still not a language swap); tokenize-in-engine only if TTFT profiling indicts strata_tokenizer on huge prompts (measure first: 88k-token prompt's prefill is 12.5 s engine-side — tokenization is noise next to it today).
