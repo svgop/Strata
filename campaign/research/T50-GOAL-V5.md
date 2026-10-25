@@ -57,3 +57,48 @@ Period today 21.5 ms (CPU-bound) x tau 4.8 = 223. After L1+L3: period -> GPU wal
 ## DOCTRINE NOTE (why this is not "playing safe")
 
 Every ladder item is a STRUCTURAL change with a shipped production precedent (SGLang slots, vLLM async, Blink device-side, TRT-LLM glue deletion, KVBuffer commits) — we are not inventing risk, we are ending our isolation from the 2026 frontier. The campaign law still binds each leg: cheapest falsifier first, interleave verdicts, MMLU/M3b gates on anything token-touching, one-line rollbacks, F-entry + commit + push. The difference is the bar we aim at: window-period halving, not +4% increments.
+
+---
+
+# V5.1 ADDENDUM (2026-10-25) — EFFORT RE-PRICED FOR AI EXECUTION
+
+The V5 effort column was human-hours. Executor is an AI agent with the campaign law as binding protocol. What changes: code reading, patching, ports, harnesses, and offline analysis are CHEAP (a "session" = one focused agent work block, ~30-90 min wall including compile). What does NOT shrink: (a) the measurement discipline itself — every adoption still owes a 3v3 interleave (6 boots x ~12 min = ~75 min wall, unattended), bit-check + MMLU gates (~15 min), (b) GPU serialization — one 5090, live server; training chunks, re-quant passes, and clean nsys captures need server-DOWN windows, (c) debug loops on risky kernels — cost scales with bench iterations, not lines written.
+
+Units: **AS** = agent session (~30-90 min, includes its own builds/tests). **Leg** = boot+prewarm+3 probes (~12 min wall). **EXW** = GPU-exclusive window (server down; user-coordinated).
+
+## The ladder, re-priced
+
+| Item | Human (V5) | AI-realistic | Wall-clock floor | EXW? |
+|---|---|---|---|---|
+| Offline falsifier batch (tau replay, entropy AUROC, expert histogram, draft-log analysis) | days | **<1 AS total** | ~30 min (logs already on disk) | no |
+| L2 tranche-1 gate flips + bit-check + node assert | days | **1 AS** | 1 leg (~12 min) | no |
+| nsys commit-region capture + analysis | hours | **<1 AS** | ~20 min | prefer 1 EXW |
+| L1a chunked-suffix commit (patch + parity + bench) | days | **1-2 AS** | 1-2 legs | no |
+| L1b graph-capture of verify+commit | 1 day | **1 AS** | 1 leg | no |
+| L1c per-slot states + pointer promotion (SGLang form) | M-H | **2-3 AS** (allocator + slot threading; the surface AI handles well) | 2 legs | no |
+| SPEC_COST port (F-330) | half-day | **1 AS** (header+hook, self-contained; parity harness included) | 1 leg | no |
+| L5a draft-throttle controller (server.py policy + T plumbing) | 1-2 days | **1 AS** | 2 legs | no |
+| L5c admission fencing (server.py policy only) | 0.5-1 day | **<1 AS** | 1 leg | no |
+| L5b cohort-3 / b9 lane fix | medium | **1-3 AS** (bug surface unknown = the variance) | 2 legs | no |
+| L4b entropy gate (engine) | 1 day | **1 AS** (after the offline AUROC) | 1 leg | no |
+| L4a drafter-v2 (per-depth conditioning) code side | 1-2 days | **1-2 AS** on the standing trainer | training chunks: 25-30 min each, checkpointed | YES |
+| L4c ReaDy committed-state drafter reads | M-H | **2-3 AS** | 1 leg | no |
+| L3 window-fused CPU tier (session.cpp rework + fences) | 1-2 wk | **3-5 AS** | 2-3 legs | no |
+| L2 tranche-2 kernels (quant-into-producer, router 4->2, hc 3->2) | days | **1-2 AS** | 1-2 legs | no |
+| L6 re-quant tooling (MxMoE-style allocator + IQ2 tail packer) | 1 wk | **2-3 AS** | compute pass ~1-2 h GPU + 2 gates | YES |
+| L7 device-launch loop (tail-launch/WHILE graph) | 1-2 wk | **2-3 AS** after the existing half-day falsifier | 1-2 legs | no |
+| L7 megakernel-lite, GDN layer class | 2-6 wk | **3-6 AS** (fusing pieces that exist bitwise-proven; bench loop per session) | parity + 2 legs | no |
+| L7 megakernel-lite, QSA layer class | (in above) | **4-8 AS** (split-cell attn + indexer fusion = the hard surface) | parity + 2 legs | no |
+| L5d green-context lane isolation | M-L | **1-2 AS** + power-wall smoke first | smoke ~10 min | no |
+
+## Re-ranked execution plan (falsifier-ordered, AI-priced)
+
+The V5 ordering survives (it was falsifier-gated, not effort-gated), but two promotions: **L1c (per-slot states) and L7 (megakernel-lite) move from "later campaigns" into the main plan** — their human-effort price was the only thing keeping them out.
+
+- **Phase 0 — no server impact, <1 AS:** the entire offline falsifier batch. Decides L4-trees, L4b, halves-or-not L6, re-prices L1.
+- **Phase 1 — next quiet boot window, ~3-4 AS total:** L2 tranche-1 (gate flips) + nsys commit capture + L1a+L1b (one build, separate env gates, armed one per leg per the one-variable law). SPEC_COST rides the same build behind its own gate.
+- **Phase 2 — ~2-3 AS:** L5a throttle + L5c fencing (server-side only, no engine build). L5b cohort-3 if the b9 fix reads clean.
+- **Phase 3 — EXW-coordinated with the user:** L4a training chunks (the DAgger loop is already live; 25-30 min chunks) and the L6 re-quant compute pass. These are the only items that NEED the server down for real stretches.
+- **Phase 4 — the structural stack, ~8-15 AS across sessions:** L1c per-slot states, L3 CPU tier, L2 tranche-2, L4b/c, L7 device-launch loop then GDN megakernel then QSA megakernel.
+
+**Bottom line:** the full V5 ladder is ~25-40 agent sessions of engineering plus its measurement legs — call it 2-4 calendar weeks of part-time agent work with the GPU mostly serving, instead of a multi-month human project. The binding constraints are (1) EXW windows for training/re-quant (user-coordinated), (2) interleave-battery wall-clock (~75 min per adoption verdict, unattended), (3) megakernel debug-loop variance — the only item whose session count I cannot bound tightly in advance, which is exactly why its half-day falsifier runs first.
