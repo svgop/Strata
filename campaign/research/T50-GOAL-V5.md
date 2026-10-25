@@ -136,3 +136,27 @@ Execution order = 0,1 first batch; 2,3,4,5 ride the same quiet windows; 6-10 as 
 ## V5.2 note — "why not a faster language than Python?" (priced, not adopted)
 
 serve/server.py (8.3k lines) is a request/API/tokenize/streaming front end over stdin/stdout; the C++/CUDA engine owns every per-window cost (decode, cohorts, tiers, graphs, pools). Measured Python-adjacent surface = boundary/emit tails 1.1-2.2 ms/window (engine printf + Python readline, shared with engine-side D2D/commit work) — already priced hideable by R2-P5 (+4-8%) and removable by L7's device-resident loop. Decode throughput is proven through the full Python stack (338.5 t/s @ 6-conc; engine's own window accounting matches the same period — no inter-layer tax visible). A Rust/C++ rewrite (~10-20 AS, API/MCP/streaming regression risk) buys low-single-digit % at best = does not make the pick order. Post-L7 revisit clause: when windows hit ~2.5 ms, move the emit protocol off stdout onto mapped-memory rings (engine-side work, still not a language swap); tokenize-in-engine only if TTFT profiling indicts strata_tokenizer on huge prompts (measure first: 88k-token prompt's prefill is 12.5 s engine-side — tokenization is noise next to it today).
+
+---
+
+# V5.3 ADDENDUM (2026-10-25 evening) — the measured reality + two new lanes + re-rank
+
+**Session data folded in:** F-331 (int8-MMA pair adopted, pair +6.5%), F-332 (adapt-early adopted, adapt wait 1.03→0.3-0.6 ms/window), F-333 (pin kept; EMIT_LATE_FLUSH honestly rejected inside band), F-334 (cleaned-box 10-leg bank: M1 219.2 mean/232.5 best, conc 305.9/327.2 — at the old record band with the new arms aboard), F-335 (bg-load stable baseline: 216.2/203.1/304.4/77.1 with user load ramping 0.95→6.0). Standing recipe = F-331+F-332+pin.
+
+**The binding constraint is now MEASUREMENT, not ideas:** identical recipe across boots spans M1 means 189.8–219.2 (~15%); R9's power arithmetic: at σw=5% a +3% arm needs 44 pairs — unmeasurable; with clock/power pinning (σw→3%) it needs 16 pairs at 80% power, one boot, interleaved ABBA with paired-by-adjacency CI. **The measurement law v2 (T51-r9-method.md) is therefore inserted at the TOP of the pick order** — it unblocks every rider and every future small arm.
+
+## Updated pick order (v5.3)
+
+| # | Item | Why here now |
+|---|---|---|
+| 0 | **Measurement law v2** — sudo pinning (persistenced, -pl 575, -lgc 2700, CPU perf governor + X3D-CCD pin), interleaved-paired protocol, per-leg telemetry + reject gates | gates everything; a calibration form + known-positive reproduction before it becomes law |
+| 0b | **Latency P-A** (short-read token budget + decode-first packing) | smallest effort in the whole plan; ITL p99 19.8→~12-14 ms |
+| 1 | L1 commit kill (unchanged — the biggest single lever) | falsifiers are half a day, no engine change |
+| 2 | L5a draft throttle (conc) + L5c admission fencing (stability) | server.py policy; the fencing is also latency P-C's first half |
+| 3 | L2-t1 gate flips; L6 re-quant (histogram-gated, user-gated quality) | one-afternoon + EXW compute |
+| 4 | **Latency P-B/P-D** (interleaved bounded prefill; per-cohort adaptive T) | the TTFT p99 <1.2s + ITL p99 <10ms path |
+| 5 | **Cold/warm P1** (page-cache pin, PSI-gated) + **P2** (warm-artifact persistence) | makes the 219-234 band durable; P2's falsifier first (boot-phase instrumentation) |
+| 6 | L3 CPU-tier fusion; L2-t2; SPEC_COST; cohort-3 | the structural stack |
+| 7 | Cold/warm P3 (cross-restart parking); L7 device-launch + megakernels | endgame items |
+
+New goal rows added to the mission: **TTFT p99 <1.2s, ITL p99 <10ms** (T51-r8), **restart-to-first-quality-token halved + warm band durable under pressure** (T51-r7). Throughput targets unchanged (chase resumes from 219/306 standing).
