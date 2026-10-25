@@ -10950,3 +10950,27 @@ prewarmed, healthy.
 (the F-333 pin's no-op explained at the mechanism level). The honest falsifier is a COMBO leg:
 --pool-workers 14 (free one physical core) + STRATA_AUX_CPUS=auto (scan+aux threads land there) vs
 standing, conc lanes. Queued as the standing-arms row's next leg.
+
+## F-337 — 10-25 ~23:20: **THE CONC-TAX FALSIFIER RAN: pool-14 + aux-cpus does NOT fix it — the
+## scan-thread core-contention mechanism is FALSIFIED; surviving hypothesis = the one-round-staler
+## residency tables widen the conc miss path; scoping patch queued (slot-count-gated adapt-early)**
+
+**THE LEG (adjacent pair, same hour, bg load live ~3.7):** ctl = standing (pool 15): M1 209.4 / pair
+206.7 / conc 295.6 / M3b 79.0. combo = --pool-workers 14 + STRATA_AUX_CPUS=auto (verified: health
+pool_workers 14, env on both boots; the scan+aux threads had their own physical core): M1 206.6 /
+pair 197.3 / conc 283.3 / M3b 77.8. DELTAS combo−ctl: conc **−4.2% (unchanged — the tax did not
+collapse)**, pair −4.6%, M1 −1.3 (noise). Pool-14 itself is also no win (consistent with the old
+pool-workers-8 null).
+
+**VERDICT:** the F-336 mechanism (scan thread stealing pool cores at 6-conc) is DEAD — a dedicated
+core changes nothing. SURVIVING HYPOTHESIS (mechanism re-read): adapt-early's decisions are ONE ROUND
+STALER; at 6-conc the expert working set is ~6x wider, so a staler residency table routes more
+per-window entries down the pool/PCIe miss path exactly where conc traffic lives. This also explains
+why the cleaned-box F-332 battery (no load, tighter working set) read conc in-band.
+**SCOPING PATCH (law 4b, queued as the row's next leg):** gate the early scan on active slot count —
+`adapt_early_env && ... && w_active_total < N` (N~3): solo/pair keeps the +2.1% pair win, 6-conc falls
+back to the inline scan (the F-336 conc tax gone by construction). ~2 lines + one battery.
+**BANKED ARTIFACTS:** campaign/arms/{f337-pool14-iq3_s-8081.json, launch-f337-pool14.sh} (the launcher
+clone carries the standing env; its `cd $(dirname $0)` must be made absolute when cloned out of root —
+footgun banked).
+Evidence: campaign/results/f337-{ctl,cmb}-{1,2,3}.txt. Standing recipe restored, prewarmed.
