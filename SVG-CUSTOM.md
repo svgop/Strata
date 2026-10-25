@@ -10842,3 +10842,41 @@ law's form and no lane regressed, adoption stands on mechanism + means + zero re
 five-boot pooled confirmation rider applies. Exactness reasoning: swap CHOICES shift one round (which
 experts resident where) but every path computes identical expert values — token stream unchanged in
 expectation; M3b +1.6pp consistent. Evidence: campaign/results/f332-{ctl,arm}-{1,2,3}.txt.
+
+## F-333 — 10-25 ~17:40: **THE BOUNDARY HYGIENE ROUND: scan-thread pinning KEPT (unconditional),
+## STRATA_EMIT_LATE_FLUSH NOT ADOPTED (inside band both directions); the ~10 ms GPU-reach lines
+## identified as the drain-time print artifact; three-boot drift map banked**
+
+**THE ARMS (the same-pattern study's quick items):** (1) the F-332 scan thread now pins via
+strata::aux_cpus::pin_current_thread() (house pattern, generate.cpp:1890 precedent) — unconditional
+hygiene, no env; (2) STRATA_EMIT_LATE_FLUSH=1 — the finish tail's 2-3 per-cohort fflush syscalls move
+to just after the next round's launches (BT lines buffered <2 ms; idle drain + exit still flush; default
+off = byte-identical). Engine commits: pinning + flush arm; rollback binary engine/strata.pre-f333.
+
+**THE THREE BOOT SETS (3 legs each, same hour):**
+ctl (F-332 standing, ~1 h warm):  M1 209.1 / pair 204.6 / conc 289.9 / M3b 77.5
+arm (fresh, flush on, pinned):    M1 204.1 / pair 191.5 / conc 280.4 / M3b 77.9
+ctlB (fresh, flush off, pinned):  M1 189.8 / pair 190.9 / conc 285.3 / M3b 78.3
+Naive ctl-vs-arm read a -2.4/-6.4/-3.3 REGRESSION; the immediate ctlB re-run (the law's
+when-in-doubt rule) reverses it: arm-vs-ctlB = M1 +7.5 / pair +0.3 / conc -1.7. Every lane INSIDE
+the band in both directions => the flush arm is UNPROVEN, not adopted (default stays off; do not add
+to the launcher). The spread IS the box: tonight's three boots span M1 189.8-209.1 with the arm boot
+the FASTEST fresh boot — F-214's boot-lottery lesson re-earned; single fresh-boot verdicts on this
+box are worth little, arms this small need the pooled form or nothing.
+
+**MECHANISM NOTES:** (a) the ~10 ms "GPU-reach wait" lines (9.81 on the F-332 boot, 10.06 here) appear
+at LANE DRAIN — the timing line prints when batch_on() goes false and the last rounds have no overlap
+left; they are a print-placement artifact, NOT contention — the pinning arm did not and was never going
+to remove them (kept anyway: zero-cost, correct-by-precedent). (b) adapt wait read 0.71-0.78 this
+session vs 0.28-0.62 on the F-332 battery — boot-dependent DMA residuals, watch on the next pooled
+round. (c) A blocking-pipe mechanism against late flush remains plausible (the write lands between
+launch and pool service) but tonight's data cannot confirm it; if ever re-priced, flush on a SIDE
+thread instead of moving the syscall.
+
+**F-332 POOLED-CONFIRMATION LEDGER (rider, updated):** F-332-armed boots now 2 (211.2/209.6/303.9 and
+209.1/204.6/289.9 mean-of-3 each); F-332-off controls 2 (198.6/183.7/281.0 pre-adoption, 189.8/190.9/
+285.3 tonight-with-pin) — pooled pair 207.1 vs 187.3 = +10.6%, but the boot spread (183.7-209.6) warns
+the pooled number carries drift; directionally consistent, rider stays open until the five-boot form.
+
+Evidence: campaign/results/f333-{ctl,arm,ctlB}-{1,2,3}.txt. Server restored on the standing recipe
+(ADAPT_EARLY=1, flush off) and healthy.
