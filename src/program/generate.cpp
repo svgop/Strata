@@ -10499,6 +10499,12 @@ int main(int argc, char** argv) {
         struct Swap { float gain; int32_t layer, in, out; };
         static const bool adapt_early_env = [] { const char* v = std::getenv("STRATA_ADAPT_EARLY");
                                                  return v != nullptr && v[0] != '\0' && v[0] != '0'; }();
+        // F-333 (STRATA_EMIT_LATE_FLUSH): the finish tail's per-cohort fflush (2-3 syscalls/round on the
+        // round-end critical path) moves to just after the NEXT round's launches - the round's BT lines sit
+        // in the stdio buffer for <2 ms while the next windows are already running.  The idle drain and the
+        // engine's exit still flush.  Default off = flush in finish(), byte-identical.
+        static const bool emit_late_flush = [] { const char* v = std::getenv("STRATA_EMIT_LATE_FLUSH");
+                                                 return v != nullptr && v[0] != '\0' && v[0] != '0'; }();
         static const float pred_w = [] { const char* v = std::getenv("STRATA_PREDICT_CREDIT");
                                          return v != nullptr ? std::max(0.0f, (float) std::atof(v)) : 0.0f; }();
         static const int credit_budget = [] { const char* v = std::getenv("STRATA_PREDICT_BUDGET");
@@ -12134,6 +12140,11 @@ int main(int argc, char** argv) {
                     std::fprintf(stderr, "cohorts: C launch: %s\n", err.c_str()); std::printf("ERR cohort C launch: %s\n", err.c_str()); std::fflush(stdout);
                     return false;
                 }
+                if (emit_late_flush) {   // F-333: the deferred round flush lands here - the windows are running
+                    std::fflush(stdout);
+                    static const bool said_flush = [] { std::fprintf(stderr, "strata serve: emit-late-flush armed (the round's BT lines flush after the next launch; STRATA_EMIT_LATE_FLUSH=0 off)\n"); return true; }();
+                    (void) said_flush;
+                }
                 // F-332 (STRATA_ADAPT_EARLY): decide this round's swaps under the window run.  The scan reads
                 // the completed rounds' snapshot (one round staler than a round-end decision; usage is a
                 // decay EWMA, the tier's choice barely moves), while the gate-set and the copy enqueues stay
@@ -12155,7 +12166,8 @@ int main(int argc, char** argv) {
                     const float* u0 = adapt_pre.snap_u.data();
                     const float* pc0 = adapt_pre.snap_pc.empty() ? nullptr : adapt_pre.snap_pc.data();
                     const double* h0 = adapt_pre.snap_heat.empty() ? nullptr : adapt_pre.snap_heat.data();
-                    adapt_pre.th = std::thread([&] { adapt_pre.swaps = adapt_scan(u0, pc0, h0); adapt_pre.done = true; });
+                    adapt_pre.th = std::thread([&] { strata::aux_cpus::pin_current_thread();   // F-333: never contend with the doorbell/service cores (a 9.8 ms GPU-reach outlier read on the unpinned F-332 boot)
+                                                     adapt_pre.swaps = adapt_scan(u0, pc0, h0); adapt_pre.done = true; });
                     static const bool said = [] { std::fprintf(stderr, "strata serve: adapt-early armed (the tier's decision scan runs under the window; STRATA_ADAPT_EARLY=0 off)\n"); return true; }();
                     (void) said;
                 }
@@ -12321,7 +12333,7 @@ int main(int argc, char** argv) {
                         bt_rows += keep[w.active[a]];
                         bt_accepted += keep[w.active[a]] - 1;
                     }
-                    std::fflush(stdout);
+                    if (!emit_late_flush) std::fflush(stdout);   // F-333: armed = the round's BT lines flush after the next launches
                     return true;
                 };
                 if (wa.S > 0 && !finish(ver, wa)) return false;   // an empty cohort has no window to
@@ -12582,6 +12594,7 @@ int main(int argc, char** argv) {
             report_batch_window(S, A, !batch_on(), w0);
             if (!batch_on()) report_window_stats(bt_rows);
             if (!batch_on() && bt_windows > 0) {
+                if (emit_late_flush) std::fflush(stdout);   // F-333: the lane drained - nothing left to defer behind
                 const double w = (double) bt_windows, wall = msd(bt_start, Clock::now());
                 const double L = (double) g.n_layers;
                 const double e_vram = (double) (drive.d.cache_hits - bt_hits0), e_pcie = (double) (drive.d.offload_entries - bt_off_ent0),
