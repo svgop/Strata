@@ -10943,3 +10943,10 @@ arm 217.1/206.6/295.0 | ctl 216.8/204.3/306.0 (M1/pair/conc).
 
 Evidence: campaign/results/f336-{ctl,arm}-B{1..5}-*.txt. Server restored on the standing recipe (arm),
 prewarmed, healthy.
+
+**F-336 addendum (falsifier correction):** the one-env falsifier is NOT one env on this box —
+--aux-cpus auto picks "a physical core with no worker; nothing is done when none is spare", and
+15 pool workers + 1 host fully subscribe the 9950X3D's 16 physical cores => auto is a NO-OP here
+(the F-333 pin's no-op explained at the mechanism level). The honest falsifier is a COMBO leg:
+--pool-workers 14 (free one physical core) + STRATA_AUX_CPUS=auto (scan+aux threads land there) vs
+standing, conc lanes. Queued as the standing-arms row's next leg.
