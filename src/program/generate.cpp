@@ -10487,25 +10487,32 @@ int main(int argc, char** argv) {
         std::function<void()> adapt_fence;
         int64_t adapt_nswaps = 0;   // the blocking tier's swaps chosen, cumulative (the decode timing line's swaps/window)
         // the VRAM tier follows the conversation (the same rule as the speculative loop below)
-        auto adapt = [&]() -> bool {
-            if (!pending.empty()) return true;   // the previous swaps are still in flight
-            if (remote_opt && !remote_opt->adapt(drive.d.usage, host_res, pending, o.adapt_swaps, *srcp)) return false;
-            ++adapt_rounds;   // B6: executed rounds only (the early return above freezes ages conservatively)
-            static const float pred_w = [] { const char* v = std::getenv("STRATA_PREDICT_CREDIT");
-                                             return v != nullptr ? std::max(0.0f, (float) std::atof(v)) : 0.0f; }();
-            if (pred_w > 0.0f && drive.d.lookahead != nullptr) drive.d.lookahead->take_credits(pred);
-            static const int credit_budget = [] { const char* v = std::getenv("STRATA_PREDICT_BUDGET");
-                                                  return v != nullptr ? std::atoi(v) : 2; }();
+        // F-332 (STRATA_ADAPT_EARLY): the tier's decision scan (the layer x expert pass + the sorts below) is
+        // the measured "adapt wait" tail's main body - launched at the round's end it gets only the ~0.7 ms
+        // finish tail to run before the join (the boot line's "adapt wait ~1.0 ms/window" at adapt_every 4 =
+        // ~4 ms stalls every fourth window).  The early arm snapshots the completed rounds' usage/pred/heat
+        // image (the running windows mutate the live ones) and runs the scan on a thread under the window,
+        // while the gate-set and the copy enqueues stay at the round's end exactly as before: no copy ever
+        // races a window (the F-187 overlap lane stays closed), and the scan reads only round-end-owned
+        // state (host_res/admit_round/pin_rank mutate in apply_pending, main thread only).  Default off =
+        // the scan runs inline inside adapt(), byte-identical to the standing behavior.
+        struct Swap { float gain; int32_t layer, in, out; };
+        static const bool adapt_early_env = [] { const char* v = std::getenv("STRATA_ADAPT_EARLY");
+                                                 return v != nullptr && v[0] != '\0' && v[0] != '0'; }();
+        static const float pred_w = [] { const char* v = std::getenv("STRATA_PREDICT_CREDIT");
+                                         return v != nullptr ? std::max(0.0f, (float) std::atof(v)) : 0.0f; }();
+        static const int credit_budget = [] { const char* v = std::getenv("STRATA_PREDICT_BUDGET");
+                                              return v != nullptr ? std::atoi(v) : 2; }();
+        auto adapt_scan = [&](const float* u_all, const float* pc_all, const double* heat_all) -> std::vector<Swap> {
             int credit_used = 0;   // F-16: credit-driven promotions this round (bounded, default 2)
-            struct Swap { float gain; int32_t layer, in, out; };
             std::vector<Swap> swaps;
             std::vector<std::pair<float, int32_t>> cand, vict;
             for (int64_t l = 0; l < g.n_layers; ++l) {
                 cand.clear();
                 vict.clear();
-                const float* u = drive.d.usage.data() + l * g.n_expert;
+                const float* u = u_all + l * g.n_expert;
                 const int32_t* r = host_res.data() + l * g.n_expert;
-                const float* pc = pred_w > 0.0f && pred.size() == drive.d.usage.size() ? pred.data() + l * g.n_expert : nullptr;
+                const float* pc = pc_all != nullptr ? pc_all + l * g.n_expert : nullptr;
                 for (int32_t e = 0; e < (int32_t) g.n_expert; ++e) {
                     if (r[e] < 0) {
                         const bool measured_ok = u[e] >= 2.0f;
@@ -10527,8 +10534,8 @@ int main(int argc, char** argv) {
                         }
                     }
 
-                    else if (dormant_rounds > 0 && !heat.empty() &&
-                             heat[(size_t) l * (size_t) g.n_expert + (size_t) e] == 0.0 &&
+                    else if (dormant_rounds > 0 && heat_all != nullptr &&
+                             heat_all[(size_t) l * (size_t) g.n_expert + (size_t) e] == 0.0 &&
                              (int32_t) adapt_rounds - admit_round[(size_t) l * (size_t) g.n_expert + (size_t) e] >= dormant_rounds)
                         ;   // F-22 dormancy: NEVER routed by this workload and resident long enough - evictable even
                             // when profile-pinned (the generic profile preloads experts OTHER workloads use:
@@ -10550,6 +10557,17 @@ int main(int argc, char** argv) {
             }
             std::sort(swaps.begin(), swaps.end(), [](const Swap& a, const Swap& b) { return a.gain > b.gain; });
             if ((int) swaps.size() > o.adapt_swaps) swaps.resize((size_t) o.adapt_swaps);
+            return swaps;
+        };
+        auto adapt = [&](std::vector<Swap>* pre) -> bool {
+            if (!pending.empty()) return true;   // the previous swaps are still in flight
+            if (remote_opt && !remote_opt->adapt(drive.d.usage, host_res, pending, o.adapt_swaps, *srcp)) return false;
+            ++adapt_rounds;   // B6: executed rounds only (the early return above freezes ages conservatively)
+            if (pred_w > 0.0f && drive.d.lookahead != nullptr) drive.d.lookahead->take_credits(pred);
+            std::vector<Swap> swaps = pre != nullptr ? std::move(*pre)
+                : adapt_scan(drive.d.usage.data(),
+                             pred_w > 0.0f && pred.size() == drive.d.usage.size() ? pred.data() : nullptr,
+                             heat.empty() ? nullptr : heat.data());
             if (aov) {   // 0.1.43: the copies go in layer order and each layer's landing is told to the verify window
                 std::stable_sort(swaps.begin(), swaps.end(), [](const Swap& a, const Swap& b) { return a.layer < b.layer; });
                 agate.landed.store(-1, std::memory_order_release);
@@ -12116,6 +12134,31 @@ int main(int argc, char** argv) {
                     std::fprintf(stderr, "cohorts: C launch: %s\n", err.c_str()); std::printf("ERR cohort C launch: %s\n", err.c_str()); std::fflush(stdout);
                     return false;
                 }
+                // F-332 (STRATA_ADAPT_EARLY): decide this round's swaps under the window run.  The scan reads
+                // the completed rounds' snapshot (one round staler than a round-end decision; usage is a
+                // decay EWMA, the tier's choice barely moves), while the gate-set and the copy enqueues stay
+                // at the round's end below - no copy races a window.  Joined before adapt() consumes it; the
+                // dtor joins on every early return.
+                struct AdaptPreC {
+                    std::thread th;
+                    std::vector<Swap> swaps;
+                    std::vector<float> snap_u, snap_pc;
+                    std::vector<double> snap_heat;
+                    bool done = false;
+                    ~AdaptPreC() { if (th.joinable()) th.join(); }
+                } adapt_pre;
+                if (adapt_early_env && !drive.d.usage.empty() && !ajob && !in_prompt_read &&
+                    pending.empty() && ((ba_window + 1) % o.adapt_every) == 0 && !peer.valid() && remote_opt == nullptr) {
+                    adapt_pre.snap_u = drive.d.usage;
+                    if (pred_w > 0.0f && pred.size() == drive.d.usage.size()) adapt_pre.snap_pc = pred;
+                    if (!heat.empty()) adapt_pre.snap_heat = heat;
+                    const float* u0 = adapt_pre.snap_u.data();
+                    const float* pc0 = adapt_pre.snap_pc.empty() ? nullptr : adapt_pre.snap_pc.data();
+                    const double* h0 = adapt_pre.snap_heat.empty() ? nullptr : adapt_pre.snap_heat.data();
+                    adapt_pre.th = std::thread([&] { adapt_pre.swaps = adapt_scan(u0, pc0, h0); adapt_pre.done = true; });
+                    static const bool said = [] { std::fprintf(stderr, "strata serve: adapt-early armed (the tier's decision scan runs under the window; STRATA_ADAPT_EARLY=0 off)\n"); return true; }();
+                    (void) said;
+                }
                 bool la = wa.S > 0, lb = wb.S > 0, lc = ternary && wc.S > 0;
                 while (la || lb || lc) {
                     if (la) {
@@ -12154,8 +12197,10 @@ int main(int argc, char** argv) {
                     bool ok = true;
                     ~AdaptRunC() { if (th.joinable()) th.join(); }
                 } adapt_run;
-                if (!drive.d.usage.empty() && !ajob && !in_prompt_read && (++ba_window % o.adapt_every) == 0 && pending.empty())
-                    adapt_run.th = std::thread([&] { adapt_run.ok = adapt(); });
+                if (!drive.d.usage.empty() && !ajob && !in_prompt_read && (++ba_window % o.adapt_every) == 0 && pending.empty()) {
+                    if (adapt_pre.th.joinable()) adapt_pre.th.join();   // F-332: the scan ran under the window
+                    adapt_run.th = std::thread([&] { adapt_run.ok = adapt(adapt_pre.done ? &adapt_pre.swaps : nullptr); });
+                }
                 // the per-cohort tail: the standing acceptance/commit/emit/draft code, verifier- and
                 // window-parameterized (see the single-verifier tail below for the comments it mirrors)
                 auto finish = [&](strata::core::Verifier& v, CohortWin& w) -> bool {
@@ -12383,7 +12428,7 @@ int main(int argc, char** argv) {
                 ~AdaptRun() { if (th.joinable()) th.join(); }   // an error return below still joins it
             } adapt_run;
             if (!drive.d.usage.empty() && !ajob && !in_prompt_read && (++ba_window % o.adapt_every) == 0 && pending.empty())
-                adapt_run.th = std::thread([&] { adapt_run.ok = adapt(); });
+                adapt_run.th = std::thread([&] { adapt_run.ok = adapt(nullptr); });   // F-332: the serial lane keeps the inline scan
             // Accept the proposal only when the target picked it and there is room to emit both tokens.
             std::vector<int> keep(bs.size(), 0);
             for (int a = 0; a < A; ++a) {
@@ -15360,7 +15405,7 @@ int main(int argc, char** argv) {
                     if (!drive.d.usage.empty() && o.adapt_every > 0 && (rounds % o.adapt_every) == 0 && pending.empty() &&
                         !exch_wait) {
                         pl_adapt_done = false;
-                        pl_adapt_thr = std::thread([&] { strata::aux_cpus::pin_current_thread(); pl_adapt_ok = adapt(); pl_adapt_done = true; });
+                        pl_adapt_thr = std::thread([&] { strata::aux_cpus::pin_current_thread(); pl_adapt_ok = adapt(nullptr); pl_adapt_done = true; });
                     }
                     return true;
                 };
@@ -16068,7 +16113,7 @@ int main(int argc, char** argv) {
                 bool adapt_ok = true;
                 // (--adapt-async 1: the asynchronous tier above instead, ticked before the window)
                 if (!drive.d.usage.empty() && !ajob && ((rounds + 1) % o.adapt_every) == 0)
-                    adapt_thr = std::thread([&] { strata::aux_cpus::pin_current_thread(); adapt_ok = adapt(); });
+                    adapt_thr = std::thread([&] { strata::aux_cpus::pin_current_thread(); adapt_ok = adapt(nullptr); });
                 if (!ver.commit(a + 1, err)) {
                     if (adapt_thr.joinable()) adapt_thr.join();
                     std::printf("ERR %s\n", err.c_str());
