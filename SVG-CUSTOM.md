@@ -10880,3 +10880,31 @@ the pooled number carries drift; directionally consistent, rider stays open unti
 
 Evidence: campaign/results/f333-{ctl,arm,ctlB}-{1,2,3}.txt. Server restored on the standing recipe
 (ADAPT_EARLY=1, flush off) and healthy.
+
+## F-334 — 10-25 ~18:15: **THE CLEANED-BOX 10-LEG BATTERY ON THE F-331+F-332 STANDING RECIPE — at the
+## F-328 record band (M1 best 232.5 vs 234.1 bank; conc best 327.2), day-best means on every lane;
+## the F-332 armed recipe shows no ceiling regression**
+
+**CONTEXT (user order: box cleared of background processes, restart + retest).** Boot: standing recipe
+(F-331 int8-MMA attention arms + F-332 ADAPT_EARLY + F-333 pinning; flush off), prewarm2, load 0.69,
+GPU idle pre-test. 10 back-to-back probe legs, same boot, same hour (the F-328 form).
+
+**MEANS (10 legs):** M1 219.2 / pair 208.9 / 6-conc 305.9 / M3b 77.8%.
+**BEST LEGS:** M1 232.5 (twice) + 232.4 / pair 218.4 / conc 327.2 / M3b 80.3.
+Warm trend: legs 1-5 M1 mean 214.5 -> legs 6-10 mean 223.9 (leg 5/6/8 all ~232.5); the plateau is the
+F-328 warm-protocol territory.
+
+**vs TODAY'S DIRTY BOOTS (F-333's three):** day-best on every lane — M1 219.2 vs 189.8-214.5 boot means;
+conc 305.9 vs 280.4-289.9. The background-process tax was real.
+
+**vs THE F-328 BANK (pre-F-331/F-332 recipe, also a cleaned+warm box):** statistically INSIDE the band,
+not above it — M1 mean 219.2 (legs 2-10: 220.7) vs 223.4; best 232.5 vs 234.1; conc best 327.2 vs 338.5;
+pair 208.9 vs ~222. The F-328 numbers remain the bank. Honest read: tonight's boot matched the record
+band WITH F-331+F-332 aboard (F-332's armed-cleaned confirmation: no ceiling regression; the F-331
+M1-neutral/pair-positive shape shows as pair 218.4 best vs solo 232.5 pattern). Boot lottery remains
+the binding variance (this session's boots spanned M1 189.8-232.5 legs).
+
+**F-332 POOLED LEDGER:** armed boots now 3 (means 211.2/209.1/219.2) vs control boots 2 (198.6/189.8) —
+directionally consistent on every pair; the five-boot control form still owed.
+
+Evidence: campaign/results/f334-clean-{1..10}.txt. Server left serving on this boot.
