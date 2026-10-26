@@ -11534,3 +11534,26 @@ least one lane better beyond noise; then the candidate becomes champion (old cha
 engine/strata.pre-<tag>) and the ladder repeats. Capability-reducing changes (KV window, context,
 precision) are shelf variants, never promotions.
 Battery evidence: campaign/results/f356-cur-*.txt + f357-cur-*.txt. Current binary serving.
+
+## F-358 — 10-27 ~00:55: **MIMIC-D SENSITIVITY ANSWERED BY ITS OWN A/A: the gate's noise floor is
+## ±12pts at 40 tasks (93.9 -> 81.8 on two same-boot greedy replays) — it CANNOT detect 2-4pt drift;
+## the F-341 "zero paired drift" result is de-rated to "within noise"; MMLU remains the real quality
+## evidence. MIMIC-D is non-viable as a gate until it is >=300 tasks AND logprobs-based**
+
+**THE A/A (standing boot, temp 0, back-to-back):** run1 62/66 = 93.9 (ui-deep 8/10); run2 54/66 =
+81.8 (doctrine 4/8, blend 4/8, ui-deep 6/10) — delta −12.1pt, three category flips. The compare's
+own verdict: FAIL (quality drift) ON AN IDENTICAL CONFIGURATION. Sources: (a) batch-composition
+nondeterminism (cohort/slot state changes numerics run to run — the known batch nondeterminism);
+(b) 40 tasks x brittle text checkers = ~±6pt binomial noise minimum, amplified by the long
+generations; (c) the earlier F-341 runs crossed boots, adding the boot lottery on top.
+
+**THE HONEST RE-DERIVATION:** (1) MIMIC-D v1 is NOT a usable quality gate — its noise exceeds the
+signal it was built to catch; (2) F-341's "F-331 arms show zero paired adherence drift (90.9->90.9)"
+must be read as consistent-with-noise, NOT as evidence of zero drift; (3) the real quality evidence
+for the adopted arms remains the MMLU-Pro gates (92.86/94.29, mean 93.57) — the only instrument
+whose noise floor (~3pt on 70q, and it PASSES/TIES the floor) is smaller than the claims made.
+**REQUIREMENTS TO MAKE MIMIC VIABLE (recorded, not started):** >=300 stratified tasks AND a
+logprobs-based comparison (top-k delta distributions, llama.cpp percentile-tail test) — the latter
+needs the server to expose logprobs (serve work). Until then: DO NOT cite mimic scores as quality
+evidence in any F-entry; MMLU gates stand alone.
+Evidence: mimicbench2-mimic-{aa1,aa2}.json; mimic-compare output above. Standing boot untouched.
