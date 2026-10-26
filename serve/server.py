@@ -322,6 +322,21 @@ try:
 except ValueError:
     ADMIT_SHORT_FIRST = 0
 ADMIT_MAX_WAIT_S = _timeout_env("STRATA_ADMIT_MAX_WAIT_S", 30.0) or 0.0
+# P-A "prefill cadence" (STRATA_PREFILL_CADENCE=1, default off): a decode window that also reads a prompt chunk
+# cannot replay the decode graph, so one 32k-token prompt read can add seconds to every decoding request's
+# inter-token time.  vLLM PR #44558 throttled prompt admissions out of most decode steps and measured P50 ITL
+# 274.9 -> 32.1 ms (-88%) with TTFT better and throughput flat; SGLang shipped the same shape as
+# prefill_decode_interval.  Here: at most one prompt read (a prefill turn, the GEN/BGEN sends of
+# generate_batched) is admitted per PREFILL_CADENCE_N decode rounds, and a read is admitted at once when no
+# slot decodes at all (the waiver: a lone request's TTFT is not worth protecting).  A round is one `BT` line
+# (a batch window that produced a token; _pump ticks it).  The prompt chunk size stays the engine's
+# (`--prefill` / prefill_auto_max, C++ side): PP_CHUNK_MAX above sizes the watchdog's patience only, it does
+# not slice prompts, so the server enforces the cadence and the engine keeps its own chunking.
+PREFILL_CADENCE = os.environ.get("STRATA_PREFILL_CADENCE") == "1"
+try:
+    PREFILL_CADENCE_N = max(1, int(os.environ.get("STRATA_PREFILL_CADENCE_N") or 2))
+except ValueError:
+    PREFILL_CADENCE_N = 2
 STALL_CPU_EPS_S = 0.5       # CPU seconds the engine may use in the whole stall window and still count as frozen
 STALL_IO_EPS_B = 1 << 20    # bytes read or written in that window
 
@@ -1209,6 +1224,12 @@ class StrataEngine:
             self.ctl_epoch = 0                          # how often the control lines were taken
             self.ctl = threading.Lock()                 # one admission or solo request on the control lines at a time
         self.gen = self.__dict__.get("gen", 0) + 1      # which engine process this is (a request notes its own)
+        # P-A prefill cadence state, per engine process (a restart's fresh process starts its rounds at 0).
+        # The pump thread writes cadence_round, request threads read it and write cadence_prefill_round while
+        # they hold the control lines; a torn or stale read only delays one admission by one 0.25 s poll, so
+        # plain attributes are enough - no lock on the tick (it runs once per token).
+        self.cadence_round = 0                          # decode rounds ticked since this process started
+        self.cadence_prefill_round = 0                  # the round the last prefill turn (prompt read) started
         self._ctl_erred = False                         # #1059: the control lines ended on an ERR
         self._yielded = None                            # (slot, tokens read): the last request on them gave way
         self.wlock = threading.Lock()                   # stdin writes from several request threads
@@ -1248,6 +1269,13 @@ class StrataEngine:
                     self.terminal_window_sample = {**sample, "observed_monotonic": time.monotonic()}
                 continue
             if line.startswith(("BT ", "BDONE ")) and slot_q:   # --batch: a batch slot's own lines
+                if PREFILL_CADENCE and line.startswith("BT "):
+                    # P-A: the cadence tick.  Every window the engine runs emits one BT per token-producing
+                    # slot, so with several slots decoding this counts tokens, not windows - the gate then
+                    # asks for more decode work between two prompt reads, which is the direction the throttle
+                    # wants (vLLM's cadence is per step; per BT line is the same bound at one slot and a
+                    # tighter one at many).  Unarmed, not even this counter moves.
+                    self.cadence_round += 1
                 try:
                     slot_q[int(line.split()[1])].put(line)
                     continue
@@ -1825,6 +1853,20 @@ class StrataEngine:
         with self.slot_cv:
             return any(e[0] * 2 <= plen for e in self.wait_lens)
 
+    def _cadence_open(self) -> bool:
+        """P-A prefill cadence (STRATA_PREFILL_CADENCE=1): True when the next prompt read - a GEN/BGEN send,
+        a prefill turn - may start now.  Two ways open: the waiver, no slot busy at all (the same `slot_busy`
+        the `alone` check reads; a lone request's read cannot slow anyone, so TTFT wins), or PREFILL_CADENCE_N
+        decode rounds have ticked since the last prefill turn started, so the windows in between decoded
+        without a prompt chunk in them and the next read lands on a fresh graph-floor batch.  Unarmed (or
+        called on an engine with no slots) this is always True: the caller's path stays as it was."""
+        if not PREFILL_CADENCE or not self.batch:
+            return True
+        with self.slot_cv:
+            if not any(self.slot_busy):
+                return True                      # the waiver: zero active decode slots
+        return self.cadence_round - self.cadence_prefill_round >= PREFILL_CADENCE_N
+
     def generate_batched(self, ids, max_new, sampling, cancel, embeddings=None):
         """--batch.  Alone (no slot busy, nobody waiting): the solo path (GEN, with drafts: the fastest stream)
         - and when another request arrives meanwhile, this one is STOPped and continues in a batch slot (BGEN with
@@ -1853,6 +1895,7 @@ class StrataEngine:
         phase = "none"            # solo -> (admit -> slot) ; "done" once the engine has finished with this request
         stop_sent = False
         yields, solo_again, refused = 0, 0, 0
+        cadence_wait_s = 0.0      # P-A: how long this request's admission sat on the cadence gate (a debug field)
         admit_wait, admit_since, admit_said = False, 0.0, False   # #1603: waiting for a slot, since when, said
         try:
             while True:   # a request in a slot that is left alone goes back to the solo path
@@ -1869,6 +1912,11 @@ class StrataEngine:
                     deadline = getattr(cancel, "_strata_queue_deadline", None)
                     if deadline is not None and time.monotonic() >= deadline:
                         raise QueueWaitExpired("the inference queue wait deadline expired; retry later")
+                    if PREFILL_CADENCE:
+                        # P-A: this read is a prefill turn even though the waiver admits it ungated (the
+                        # alone check above means nothing decodes yet) - a request arriving while it reads
+                        # spaces its own slot admission from this round, not from zero.
+                        self.cadence_prefill_round = self.cadence_round
                     self._send(f"{head} {','.join(str(int(t)) for t in prompt)}")
                     if deadline is not None:
                         cancel._strata_queue_deadline = None
@@ -1937,6 +1985,41 @@ class StrataEngine:
                             deadline = getattr(cancel, "_strata_queue_deadline", None)
                             if deadline is not None and time.monotonic() >= deadline:
                                 raise QueueWaitExpired("the inference queue wait deadline expired; retry later")
+                            # P-A prefill cadence (STRATA_PREFILL_CADENCE=1): the BGEN below starts this
+                            # slot's prompt read - a prefill turn.  While the gate is shut (another read took
+                            # the last PREFILL_CADENCE_N decode rounds and at least one slot still decodes)
+                            # the control lines are given back and the admission waits here: the same
+                            # give-up-the-lines dance the free-slot wait below does (a slot held by a read
+                            # that gave way needs the lines to go on, so waiting with them is a deadlock).
+                            # The wait wakes early when a slot frees (the waiver may then open the gate at
+                            # once) and at 0.25 s steps for the round ticks; each wake re-checks the gate,
+                            # the request's queue deadline and the engine's pulse, and the turn's usual 10 s
+                            # heartbeats go out.  Unarmed, _cadence_open says True and none of this runs.
+                            if not self._cadence_open():
+                                if holding:
+                                    self.ctl.release()
+                                    holding = False
+                                cadence_since = time.monotonic()
+                                cadence_beat = cadence_since
+                                while not self._cadence_open():
+                                    deadline = getattr(cancel, "_strata_queue_deadline", None)
+                                    if deadline is not None and time.monotonic() >= deadline:
+                                        raise QueueWaitExpired("the inference queue wait deadline expired; retry later")
+                                    if not self.alive() and not getattr(self, "starting", False):
+                                        raise EngineDied("the engine stopped while this request waited; it was not sent")
+                                    with self.slot_cv:
+                                        self.slot_cv.wait(timeout=0.25)
+                                    if cancel.is_set():
+                                        return
+                                    if time.monotonic() - cadence_beat >= 10.0:
+                                        cadence_beat = time.monotonic()
+                                        yield None
+                                cadence_wait_s += time.monotonic() - cadence_since
+                                ok = yield from self._take_control(cancel, len(prompt))
+                                if not ok:
+                                    return
+                                holding, born = True, self.gen          # (the engine it now has the control lines of)
+                                continue                                # from the top: deadline, gate again, then a slot
                             with self.slot_cv:
                                 slot = self.pick_slot(prompt)
                                 if slot is not None:
@@ -1992,11 +2075,17 @@ class StrataEngine:
                     live = {"slot": slot, "request_id": getattr(cancel, "_strata_request_id", None),
                             "state": "reading", "prompt_tokens": len(prompt), "prompt_read": 0, "generated": 0,
                             "started": time.time(), "first_token": None}
+                    if cadence_wait_s:                      # P-A: cheap per-request debug (extra key; the
+                        live["cadence_wait_s"] = round(cadence_wait_s, 3)   # slots view reads only its own)
                     deadline = getattr(cancel, "_strata_queue_deadline", None)
                     if deadline is not None and time.monotonic() >= deadline:
                         raise QueueWaitExpired("the inference queue wait deadline expired; retry later")
                     self.slot_live[slot] = live
                     self._last_done = None                  # (#879: this admission's DONE decides below)
+                    if PREFILL_CADENCE:
+                        # P-A: the gate has opened - this send is the prefill turn every later admission
+                        # measures its PREFILL_CADENCE_N decode rounds from.
+                        self.cadence_prefill_round = self.cadence_round
                     self._send(f"{head} {','.join(str(int(t)) for t in prompt)}")
                     if deadline is not None:
                         cancel._strata_queue_deadline = None
@@ -8217,6 +8306,10 @@ def main(argv=None, *, lifecycle_event=None, interrupt_exit_code: int = 0) -> in
               f"chat: {', '.join(hub.servers)}", flush=True)
         hub.start()
         atexit.register(hub.close)                      # the servers Strata started end with it
+    if PREFILL_CADENCE:
+        # P-A: one line, so a run's log says the latency-lane policy is on (the knob, the spacing, the waiver)
+        print(f"strata serve: prefill-cadence armed (1 chunk / {PREFILL_CADENCE_N} rounds, waiver on zero active "
+              f"decodes)", flush=True)
     httpd = serve(svc, host=a.host, port=a.port)
     bound_port = httpd.server_address[1]               # --port 0: report the port the OS actually assigned
     svc.start_idle_unload()

@@ -11243,3 +11243,44 @@ ever the thread parks matter again, and NEVER route doorbells through cudaLaunch
 (~50 µs/injection on an unpinnable driver thread, NVIDIA's own numbers).
 Evidence: campaign/l1-falsifier/{l1_commit_falsifier.cu,results.txt}; the three agent reports banked
 in this entry.
+
+## F-348 — 10-26 ~18:55: **THE SECOND HOUR PUSH: speculative publish FALSIFIED BY ROUTING DATA (Jaccard
+## 0.23, subset 0.3%); PROJECT MAYA IDENTIFIED AS A PUBLIC FORK OF THIS ENGINE (docs = proven tuning
+## for us); AVX-512 audit clean; P-A prefill cadence IMPLEMENTED + smoke-clean**
+
+**1. SPECULATIVE PUBLISH — FALSIFIED (free, before any builder hours).** --dump-routing capture
+(33.5 MB, one M1 leg, 381,120 records): adjacent-token same-layer routing Jaccard mean 0.232 /
+median 0.176; A-subset-of-B 0.3%; full equality 0.3%; per-layer range 0.04-0.45. Previous-window
+routing does NOT predict the next window's miss rows. The design dies; the 1.2 ms/group pool time
+stands as REAL WORK that must be made cheaper or hidden by structure, not predicted away.
+Evidence: /tmp/f348-routing.bin (ephemeral), analysis inline.
+
+**2. PROJECT MAYA = mw00/project-maya — A PUBLIC FORK OF THE SAME ENGINE FAMILY** (README states
+"engine rewritten from Strata (MIT); quantization and CPU kernels from ggml/llama.cpp"; carries
+include/strata/ + STRATA_* aliases). Its docs are therefore PROVEN TUNING FOR OUR ENGINE:
+- CPU_MT (each weight row decoded once for up to 8 tokens, ~2x from 8 tokens/expert) — OUR DISPATCH
+  ALREADY DOES THIS (distinct/first_of tables, multi-token job arrays, expert_source.cpp:4532+).
+- CPU_SPLIT (token share cut into ~48 pieces so a stalled thread cannot hold the token) — the
+  anti-straggler lever, matches our 88-vs-150 us spread; NOT in our dispatch — transferable.
+- Thread-count calibration (one Maya config went 15 -> 41 tok/s by using FEWER threads) — our pool
+  is 15/15; a 12/10 retest is cheap and Maya says SMT siblings fight memory-bound matvecs.
+- PCIE_SHARE/CPU_CAL cost model (measure CPU-vs-PCIe per expert at boot, re-plan on >15% drift).
+- MAY_GLM_PROMOTE/PROMOTE_MIN aged-route gating (anti-churn tiering).
+- Maya's own "not useful -> useful" history: prefetch cost more than it saved until tuned (+4.7%
+  later on agent conversations) — the same trajectory our falsifications follow.
+
+**3. AVX-512 AUDIT — CLEAN.** engine/strata carries 22,257 zmm instructions; CMakeLists sets
+-mavx512{f,bw,vl,dq,vnni,vbmi} on the CPU expert TU with a runtime cpu_avx512_ok pick. No silent
+AVX2 fallback (the ik_llama.cpp trap does not apply).
+
+**4. P-A PREFILL CADENCE — IMPLEMENTED (builder) + SMOKE-CLEAN.** serve/server.py: 93 lines, env
+STRATA_PREFILL_CADENCE=1 (N=2 default), tick = BT lines, waiver on zero busy slots, control-line
+release while gated (BYIELD-safe). Armed smoke: M1 204.1 / pair 191.4 / conc 295.0 means, fresh
+prompt fine, no collapse. The arm line's exact text not found in the engine log (server-side) —
+VERIFY next session; the decisive test needs concurrent LARGE-prompt + decode traffic (the standard
+probe under-stresses it) — N=2 cadence only pays on that pattern.
+Design note: campaign/pat-cadence-design.md.
+
+**STATE:** standing recipe restored (cadence off, standard config), prewarmed, healthy. Record: this
+entry + the three agent reports folded in. L5a patch plan and L1 fused-checkpoint target remain the
+next implementation engagements.
