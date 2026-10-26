@@ -42,22 +42,26 @@ import json, os, re, sys, time, urllib.request
 
 PORT = sys.argv[1] if len(sys.argv) > 1 else "8099"
 LABEL = sys.argv[2] if len(sys.argv) > 2 else "run"
+TEMP = float(sys.argv[3]) if len(sys.argv) > 3 else 0.1   # MIMIC-D gate runs 0.0 (greedy)
 API = f"http://127.0.0.1:{PORT}/v1/chat/completions"
 HERE = os.path.dirname(os.path.abspath(__file__))
 OUT = f"/home/svg/LLM/strata-custom-2/campaign/results/mimicbench2-{LABEL}.json"
+NOTE_OUT = [""]   # the last chat() output, stashed for record()
 
 def chat(messages, mt=2500):
     body = json.dumps({"messages": messages, "max_tokens": mt,
-                       "temperature": 0.1}).encode()
+                       "temperature": TEMP}).encode()
     r = json.loads(urllib.request.urlopen(urllib.request.Request(
         API, body, {"Content-Type": "application/json", "Authorization": "Bearer 3f0940df8efb9c363e4189956ae907d3e4acac221aab39f44804fe0b0df1b8"}), timeout=1800).read())
-    return (r["choices"][0]["message"].get("content") or "").strip()
+    o = (r["choices"][0]["message"].get("content") or "").strip()
+    NOTE_OUT[0] = o   # MIMIC-D: the record() that follows always describes this output
+    return o
 
 R, SCORE, MAX = [], 0, 0
 def record(cat, tid, w, ok, head, note=""):
     global SCORE, MAX
-    SCORE += w * int(ok); MAX += w
-    R.append(dict(cat=cat, id=tid, w=w, ok=int(ok), note=note, head=head[:200]))
+    SCORE += w * int(bool(ok)); MAX += w   # bool(None)=False: a checker returning None is a FAIL, not a crash
+    R.append(dict(cat=cat, id=tid, w=w, ok=int(bool(ok)), note=note, head=head[:200], out=NOTE_OUT[0]))
     print(f"[{len(R):>2}] {cat:<12} {tid:<10} {'PASS' if ok else 'FAIL'} (w{w})", flush=True)
 
 # =============================================================================

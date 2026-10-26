@@ -11039,3 +11039,28 @@ conc CI but the sign-split already separates it from the ungated 3/3-negative).
 Standing recipe (F-331 + gated F-332 + pin) serves; final battery boot IS standing. Next per pick
 order: latency P-A (decode-first budget), L1 falsifiers.
 Evidence: campaign/results/f340-{anchor,g-*}-*.txt.
+
+## F-341 — 10-26 ~15:10: **MIMIC-D v1 BUILT AND RUN (play mode, standing-arms rider): the F-331 arms
+## show ZERO paired adherence drift (90.9 -> 90.9, per-category identical); gate SENSITIVITY NOT proven
+## — the positive control PASSED when it must fail (TRT-LLM trap: thresholds before a noise floor)**
+
+**THE INSTRUMENT (campaign/mimicbench2.py hardened + campaign/mimic-compare.py):** full outputs now
+saved per task (out field), temperature parameterizable (gate runs temp 0 greedy), checkers hardened
+(None = FAIL, not crash — one lambda returns None on greedy outputs). Compare v2: index-paired,
+adherence paired delta (primary), per-category drops, prefix-match informational.
+
+**THE RUNS (3 boots, temp 0, 31 index-paired tasks of 40 — multi-turn ids collapse in pairing, fix owed):**
+- baseline (arms OFF): 60/66 = 90.9 (doctrine 6/8, ui-deep 6/10 the only drops)
+- arm (standing: int8-MMA + gated adapt-early): 60/66 = 90.9, per-category IDENTICAL
+- positive control (ROUTE_PRIOR=2.0, the documented KL-0.0126 output-changer): 62/66 = 93.9 (ui-deep
+  8/10!) — the gate said PASS when the design demands FAIL.
+- text-level note: exact greedy match across ANY numeric change = 0-6.5% (2500-token cascade) —
+  full-text equality is useless as a statistic here; adherence paired delta is the carrier.
+
+**VERDICTS:** (1) the F-331 arms carry zero measured adherence drift paired — a real quality point,
+kept; (2) the gate's SENSITIVITY IS UNPROVEN: mimic adherence at 31-40 tasks does not register
+ROUTE_PRIOR-class routing drift (its damage lives in the routing distribution, not task pass/fail),
+and run-to-run noise at temp 0 is UNMEASURED (batch-composition nondeterminism). The MIMIC-D item
+stays OPEN: next steps = A/A noise floor (same boot twice, 2 runs), a stronger control
+(ROUTE_PRIOR=8 or HC_REQ8 class), and the logprobs path (server does not expose them today — the
+real fix per the scout design; serve work, small).

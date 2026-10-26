@@ -1,0 +1,297 @@
+{
+ "label": "mimic-base",
+ "suite": "mimicbench2-v1 (31 tasks, weighted)",
+ "score_pct": 90.9090909090909,
+ "weighted": "60/66",
+ "by_category": {
+  "doctrine": "6/8",
+  "voice": "6/6",
+  "arch-continue": "8/8",
+  "correction": "8/8",
+  "blend": "8/8",
+  "ui-deep": "6/10",
+  "internalize": "12/12",
+  "doc-structure": "6/6"
+ },
+ "results": [
+  {
+   "cat": "doctrine",
+   "id": "d1-instr-density",
+   "w": 2,
+   "ok": 1,
+   "note": "real voice laws on new content",
+   "head": "- Measure first: run `pytest --durations=10` or `jest --runTestsByPath tests/slow.test.js` to identify the slowest files.\n- Parallelize tests: run `pytest -n auto`, `jest --maxWorkers=50%`, `go test -",
+   "out": "- Measure first: run `pytest --durations=10` or `jest --runTestsByPath tests/slow.test.js` to identify the slowest files.\n- Parallelize tests: run `pytest -n auto`, `jest --maxWorkers=50%`, `go test -parallel 8`, or `mvn -T 1C test`.\n- Split slow tests: mark them with `@pytest.mark.slow` and run `pytest -m \"not slow\"` locally.\n- Use faster test runners: run `pytest -q --tb=no --no-header` locally and reserve verbose output for CI.\n- Cache dependencies: run `pip install -r requirements.txt --cache-dir .cache/pip` or `npm ci --cache .npm-cache`.\n- Replace real databases: set `DATABASE_URL=sqlite:///:memory:` or use `pytest-postgresql` with `--postgresql-template1`.\n- Mock network calls: patch `requests.get` with `unittest.mock.patch(\"requests.get\")` or use `responses.add(responses.GET, \"https://api.example.com\", json={})`.\n- Mock external services: use `fakeredis.FakeStrictRedis()` instead of Redis, `mongomock.MongoClient()` instead of MongoDB, or `moto.mock_s3()` instead of AWS S3.\n- Reduce fixture cost: use `@pytest.fixture(scope=\"session\")` for immutable data and `scope=\"module\"` for shared read-only state.\n- Avoid repeated setup: create one `pytest.fixture(scope=\"session\")` for app config instead of rebuilding it in every test.\n- Use factories: generate test data with `factory_boy` instead of copying large JSON fixtures.\n- Delete redundant tests: run `grep -R \"def test_\" tests/ | wc -l` and remove duplicate assertions.\n- Merge tiny tests: combine related assertions into one test function such as `test_user_signup_and_login()`.\n- Use `--lf`: run `pytest --lf` to rerun only failed tests during debugging.\n- Use `--sw`: run `pytest --sw` to execute slowest tests first and fail fast.\n- Use `--collect-only`: run `pytest --collect-only -q` to find import-time slowdowns.\n- Use `--import-mode=importlib`: run `pytest --import-mode=importlib` to reduce path-scanning overhead.\n- Disable coverage locally: run `pytest --no-cov` and enable `pytest --cov=app --cov-report=xml` only in CI.\n- Use ephemeral temp dirs: set `pytest --basetemp=/tmp/pytest` to avoid slow cleanup paths.\n- Use in-memory storage: set `CACHE_BACKEND=memory` or `SESSION_ENGINE=django.contrib.sessions.backends.cache`.\n- Use smaller test data: replace `tests/fixtures/large_dataset.json` with `tests/fixtures/small"
+  },
+  {
+   "cat": "doctrine",
+   "id": "d1-no-closers",
+   "w": 2,
+   "ok": 1,
+   "note": "real voice laws on new content",
+   "head": "Review code before merge.\n\n- Catches defects: `git diff origin/main...HEAD`\n- Enforces standards: `npm test`, `eslint .`\n- Shares ownership: `CODEOWNERS`\n- Preserves decisions: PR comments",
+   "out": "Review code before merge.\n\n- Catches defects: `git diff origin/main...HEAD`\n- Enforces standards: `npm test`, `eslint .`\n- Shares ownership: `CODEOWNERS`\n- Preserves decisions: PR comments"
+  },
+  {
+   "cat": "doctrine",
+   "id": "d1-artifact-bullets",
+   "w": 2,
+   "ok": 1,
+   "note": "real voice laws on new content",
+   "head": "- Use structured JSON logs with fields `timestamp`, `level`, `message`, and `trace_id` in `app.log`.\n- Set log level via `LOG_LEVEL=INFO` and emit `ERROR` only for actionable failures.\n- Rotate logs w",
+   "out": "- Use structured JSON logs with fields `timestamp`, `level`, `message`, and `trace_id` in `app.log`.\n- Set log level via `LOG_LEVEL=INFO` and emit `ERROR` only for actionable failures.\n- Rotate logs with `/etc/logrotate.d/app` using `daily`, `rotate 7`, and `compress`."
+  },
+  {
+   "cat": "doctrine",
+   "id": "d1-frontload",
+   "w": 2,
+   "ok": 0,
+   "note": "real voice laws on new content",
+   "head": "Share your release docs or use this default release process.\n\n- Confirm inputs: `CHANGELOG.md`, `package.json`, `git log --oneline v1.2.0..HEAD`.\n- Create branch: `git switch -c release/2026-06-15 mai",
+   "out": "Share your release docs or use this default release process.\n\n- Confirm inputs: `CHANGELOG.md`, `package.json`, `git log --oneline v1.2.0..HEAD`.\n- Create branch: `git switch -c release/2026-06-15 main`.\n- Bump version: `npm version patch --no-git-tag-version`.\n- Update changelog: `git-chglog -o CHANGELOG.md`.\n- Run CI: `gh workflow run release.yml -f version=1.3.0`.\n- Smoke test staging: `curl -fsS https://staging.example.com/healthz`.\n- Deploy production: `kubectl rollout status deployment/app -n prod`.\n- Tag release: `git tag v1.3.0 && git push origin v1.3.0`.\n- Publish notes: `gh release create v1.3.0 --generate-notes`.\n- Roll back if needed: `kubectl rollout undo deployment/app -n prod`.\n\nSend `release.yml`, `Makefile`, `package.json`, or `docs/release.md` for your exact process."
+  },
+  {
+   "cat": "voice",
+   "id": "d2-1",
+   "w": 2,
+   "ok": 1,
+   "note": "induced clipped voice, no praise-adjectives",
+   "head": "Index columns used in `WHERE`, `JOIN`, and `ORDER BY`. Measure query plans. Guesses don\u2019t.\n\nKeep indexes narrow. Composite order matters. Put selective columns first.\n\nUse covering indexes when they r",
+   "out": "Index columns used in `WHERE`, `JOIN`, and `ORDER BY`. Measure query plans. Guesses don\u2019t.\n\nKeep indexes narrow. Composite order matters. Put selective columns first.\n\nUse covering indexes when they remove table lookups. Ship the win.\n\nDrop unused indexes. They slow writes and cost space. The maintenance cost is real."
+  },
+  {
+   "cat": "voice",
+   "id": "d2-2",
+   "w": 2,
+   "ok": 1,
+   "note": "induced clipped voice, no praise-adjectives",
+   "head": "Quarantine flaky E2E tests. Reproduce them. Fix the root cause. Delete them if they cannot be made reliable.",
+   "out": "Quarantine flaky E2E tests. Reproduce them. Fix the root cause. Delete them if they cannot be made reliable."
+  },
+  {
+   "cat": "voice",
+   "id": "d2-3",
+   "w": 2,
+   "ok": 1,
+   "note": "induced clipped voice, no praise-adjectives",
+   "head": "Technical debt is a tradeoff. You ship now. You pay later.\n\nThe cost is slower changes, more bugs, and higher maintenance. Some debt buys time. Some debt compounds.\n\nTreat it like money: know the inte",
+   "out": "Technical debt is a tradeoff. You ship now. You pay later.\n\nThe cost is slower changes, more bugs, and higher maintenance. Some debt buys time. Some debt compounds.\n\nTreat it like money: know the interest, know the principal, decide when to pay. If it blocks the roadmap, fix it. If nobody uses it, cut it."
+  },
+  {
+   "cat": "arch-continue",
+   "id": "d3-1",
+   "w": 2,
+   "ok": 1,
+   "note": "induce DriftSignal/drift_signal_init/drift_signal_fail",
+   "head": "```cpp\n#ifndef DRIFT_SIGNAL_H\n#define DRIFT_SIGNAL_H\n\nclass DriftSignal {\npublic:\n    DriftSignal();\n    void drift_signal_init();\n    void drift_signal_fail();\n};\n\n#endif\n```",
+   "out": "```cpp\n#ifndef DRIFT_SIGNAL_H\n#define DRIFT_SIGNAL_H\n\nclass DriftSignal {\npublic:\n    DriftSignal();\n    void drift_signal_init();\n    void drift_signal_fail();\n};\n\n#endif\n```"
+  },
+  {
+   "cat": "arch-continue",
+   "id": "d3-2",
+   "w": 2,
+   "ok": 1,
+   "note": "induce LoopClosure/loop_closure_init/loop_closure_fail",
+   "head": "```cpp\n#ifndef LOOP_CLOSURE_H\n#define LOOP_CLOSURE_H\n\nclass LoopClosure {\npublic:\n    LoopClosure();\n    ~LoopClosure();\n\n    static void loop_closure_init();\n    static void loop_closure_fail();\n};\n\n",
+   "out": "```cpp\n#ifndef LOOP_CLOSURE_H\n#define LOOP_CLOSURE_H\n\nclass LoopClosure {\npublic:\n    LoopClosure();\n    ~LoopClosure();\n\n    static void loop_closure_init();\n    static void loop_closure_fail();\n};\n\n#endif\n```"
+  },
+  {
+   "cat": "arch-continue",
+   "id": "d3-3",
+   "w": 2,
+   "ok": 1,
+   "note": "induce PayloadGate/payload_gate_init/payload_gate_fail",
+   "head": "```cpp\n#ifndef PAYLOAD_GATE_H\n#define PAYLOAD_GATE_H\n\nclass PayloadGate {\npublic:\n    PayloadGate();\n    void payload_gate_fail();\n};\n\nvoid payload_gate_init();\n\n#endif\n```",
+   "out": "```cpp\n#ifndef PAYLOAD_GATE_H\n#define PAYLOAD_GATE_H\n\nclass PayloadGate {\npublic:\n    PayloadGate();\n    void payload_gate_fail();\n};\n\nvoid payload_gate_init();\n\n#endif\n```"
+  },
+  {
+   "cat": "arch-continue",
+   "id": "d3-4",
+   "w": 2,
+   "ok": 1,
+   "note": "induce HarvestQueue/harvest_queue_init/harvest_queue_fail",
+   "head": "```cpp\n#ifndef HARVEST_QUEUE_H\n#define HARVEST_QUEUE_H\n\nclass HarvestQueue {\npublic:\n    HarvestQueue();\n    void harvest_queue_init();\n    void harvest_queue_fail();\n};\n\n#endif\n```",
+   "out": "```cpp\n#ifndef HARVEST_QUEUE_H\n#define HARVEST_QUEUE_H\n\nclass HarvestQueue {\npublic:\n    HarvestQueue();\n    void harvest_queue_init();\n    void harvest_queue_fail();\n};\n\n#endif\n```"
+  },
+  {
+   "cat": "correction",
+   "id": "d4-1",
+   "w": 2,
+   "ok": 1,
+   "note": "complexity habit persists unprompted",
+   "head": "Insertion sort (O(n) for nearly-sorted arrays, O(n\u00b2) worst-case).",
+   "out": "Insertion sort (O(n) for nearly-sorted arrays, O(n\u00b2) worst-case)."
+  },
+  {
+   "cat": "correction",
+   "id": "d4-2",
+   "w": 2,
+   "ok": 1,
+   "note": "complexity habit persists unprompted",
+   "head": "Circular buffer (O(1) insert, O(1) access by index).",
+   "out": "Circular buffer (O(1) insert, O(1) access by index)."
+  },
+  {
+   "cat": "correction",
+   "id": "d4-3",
+   "w": 2,
+   "ok": 1,
+   "note": "complexity habit persists unprompted",
+   "head": "Hash set (O(n) time, O(n) space).",
+   "out": "Hash set (O(n) time, O(n) space)."
+  },
+  {
+   "cat": "correction",
+   "id": "d4-5",
+   "w": 2,
+   "ok": 1,
+   "note": "habit at turn 5, no reminder",
+   "head": "Hash map (O(1) lookup, O(1) insert).",
+   "out": "Hash map (O(1) lookup, O(1) insert)."
+  },
+  {
+   "cat": "blend",
+   "id": "d5-1",
+   "w": 2,
+   "ok": 1,
+   "note": "register switch [ENG]",
+   "head": "Cache dependencies. Split modules. Run jobs concurrently. Store artifacts. Measure timings. Pin versions. Remove code.",
+   "out": "Cache dependencies. Split modules. Run jobs concurrently. Store artifacts. Measure timings. Pin versions. Remove code."
+  },
+  {
+   "cat": "blend",
+   "id": "d5-2",
+   "w": 2,
+   "ok": 1,
+   "note": "register switch [EXEC]",
+   "head": "30%: cache dependencies, run tasks in parallel, and skip modules with no changes.",
+   "out": "30%: cache dependencies, run tasks in parallel, and skip modules with no changes."
+  },
+  {
+   "cat": "blend",
+   "id": "d5-3",
+   "w": 2,
+   "ok": 1,
+   "note": "register switch [EXEC]",
+   "head": "1. Yes, migrate the database if it is slow, risky, or costly to maintain.",
+   "out": "1. Yes, migrate the database if it is slow, risky, or costly to maintain."
+  },
+  {
+   "cat": "blend",
+   "id": "d5-4",
+   "w": 2,
+   "ok": 1,
+   "note": "register switch [ENG]",
+   "head": "Assess migration.\nInventory schema.\nMeasure downtime.\nTest rollback.\nApprove if risk below threshold.",
+   "out": "Assess migration.\nInventory schema.\nMeasure downtime.\nTest rollback.\nApprove if risk below threshold."
+  },
+  {
+   "cat": "ui-deep",
+   "id": "d6-1",
+   "w": 2,
+   "ok": 1,
+   "note": "induced system: palette/radius/scale/typography",
+   "head": "```html\n<div class=\"flex items-center gap-3 p-3 rounded-lg border border-zinc-800 bg-zinc-900\">\n  <span class=\"flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-zinc-800 text-xs font-m",
+   "out": "```html\n<div class=\"flex items-center gap-3 p-3 rounded-lg border border-zinc-800 bg-zinc-900\">\n  <span class=\"flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-zinc-800 text-xs font-medium text-zinc-300\">\n    JD\n  </span>\n\n  <div class=\"min-w-0 flex-1\">\n    <p class=\"truncate text-sm font-medium text-zinc-100\">Jane Doe</p>\n  </div>\n\n  <span class=\"inline-flex items-center px-2 py-0.5 rounded-full bg-zinc-800 text-xs text-zinc-300\">\n    online\n  </span>\n</div>\n```"
+  },
+  {
+   "cat": "ui-deep",
+   "id": "d6-2",
+   "w": 2,
+   "ok": 0,
+   "note": "induced system: palette/radius/scale/typography",
+   "head": "```tsx\nimport type { ReactNode } from \"react\";\n\ntype PanelHeaderProps = {\n  title: string;\n  actionLabel?: string;\n  onAction?: () => void;\n  actionIcon?: ReactNode;\n  className?: string;\n};\n\nexport f",
+   "out": "```tsx\nimport type { ReactNode } from \"react\";\n\ntype PanelHeaderProps = {\n  title: string;\n  actionLabel?: string;\n  onAction?: () => void;\n  actionIcon?: ReactNode;\n  className?: string;\n};\n\nexport function PanelHeader({\n  title,\n  actionLabel = \"Action\",\n  onAction,\n  actionIcon,\n  className = \"\",\n}: PanelHeaderProps) {\n  return (\n    <header\n      className={`flex items-center justify-between gap-3 p-3 rounded-lg border border-zinc-800 bg-zinc-900 ${className}`}\n    >\n      <h2 className=\"text-sm font-semibold text-zinc-100 truncate\">\n        {title}\n      </h2>\n\n      <button\n        type=\"button\"\n        onClick={onAction}\n        className=\"inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-md border border-zinc-800 bg-zinc-800 text-xs font-medium text-zinc-300 hover:bg-zinc-700 hover:text-zinc-100 transition-colors\"\n      >\n        {actionIcon && <span className=\"text-zinc-400\">{actionIcon}</span>}\n        {actionLabel}\n      </button>\n    </header>\n  );\n}\n```\n\nUsage:\n\n```tsx\n<PanelHeader\n  title=\"Activity\"\n  actionLabel=\"Refresh\"\n  onAction={() => {}}\n/>\n```"
+  },
+  {
+   "cat": "ui-deep",
+   "id": "d6-3",
+   "w": 2,
+   "ok": 0,
+   "note": "induced system: palette/radius/scale/typography",
+   "head": "```html\n<ul class=\"flex flex-col gap-1 p-1 rounded-lg border border-zinc-800 bg-zinc-900\">\n  <li>\n    <button class=\"w-full flex items-center gap-2 px-3 py-2 rounded-md text-sm text-zinc-100 bg-zinc-8",
+   "out": "```html\n<ul class=\"flex flex-col gap-1 p-1 rounded-lg border border-zinc-800 bg-zinc-900\">\n  <li>\n    <button class=\"w-full flex items-center gap-2 px-3 py-2 rounded-md text-sm text-zinc-100 bg-zinc-800\">\n      Dashboard\n    </button>\n  </li>\n  <li>\n    <button class=\"w-full flex items-center gap-2 px-3 py-2 rounded-md text-sm text-zinc-200 hover:bg-zinc-800 hover:text-zinc-100\">\n      Activity\n    </button>\n  </li>\n  <li>\n    <button class=\"w-full flex items-center gap-2 px-3 py-2 rounded-md text-sm text-zinc-200 hover:bg-zinc-800 hover:text-zinc-100\">\n      Settings\n    </button>\n  </li>\n</ul>\n```"
+  },
+  {
+   "cat": "ui-deep",
+   "id": "d6-4",
+   "w": 2,
+   "ok": 1,
+   "note": "induced system: palette/radius/scale/typography",
+   "head": "```html\n<EmptyState>\n  <div class=\"flex flex-col items-center gap-2 p-6 rounded-lg border border-zinc-800 bg-zinc-900 text-center\">\n    <svg\n      class=\"h-5 w-5 text-zinc-500\"\n      viewBox=\"0 0 24 2",
+   "out": "```html\n<EmptyState>\n  <div class=\"flex flex-col items-center gap-2 p-6 rounded-lg border border-zinc-800 bg-zinc-900 text-center\">\n    <svg\n      class=\"h-5 w-5 text-zinc-500\"\n      viewBox=\"0 0 24 24\"\n      fill=\"none\"\n      stroke=\"currentColor\"\n      stroke-width=\"1.5\"\n      aria-hidden=\"true\"\n    >\n      <path\n        stroke-linecap=\"round\"\n        stroke-linejoin=\"round\"\n        d=\"M2.25 12.75V12a2.25 2.25 0 0 1 2.25-2.25h15A2.25 2.25 0 0 1 21.75 12v.75m-8.69-6.44-2.12-2.12a1.5 1.5 0 0 0-1.061-.44H9.18a1.5 1.5 0 0 0-1.06.44l-2.12 2.12m0 0V18a2.25 2.25 0 0 0 2.25 2.25h15A2.25 2.25 0 0 0 21.75 18v-5.25m-8.69-6.44 2.12 2.12a1.5 1.5 0 0 1 .439 1.061V18a2.25 2.25 0 0 1-2.25 2.25h-15A2.25 2.25 0 0 1 2.25 18v-5.25a1.5 1.5 0 0 1 .439-1.061l2.12-2.12\"\n      />\n    </svg>\n\n    <p class=\"text-sm text-zinc-200\">No results found</p>\n    <p class=\"text-xs text-zinc-400\">Try adjusting your filters or search terms.</p>\n  </div>\n</EmptyState>\n```"
+  },
+  {
+   "cat": "ui-deep",
+   "id": "d6-5",
+   "w": 2,
+   "ok": 1,
+   "note": "cross-component consistency in assembly",
+   "head": "<section class=\"mx-auto w-full max-w-xl p-4 bg-zinc-950\">\n  <div class=\"flex flex-col gap-4\">\n    <header class=\"flex items-center justify-between gap-3 p-4 rounded-lg border border-zinc-800 bg-zinc-9",
+   "out": "<section class=\"mx-auto w-full max-w-xl p-4 bg-zinc-950\">\n  <div class=\"flex flex-col gap-4\">\n    <header class=\"flex items-center justify-between gap-3 p-4 rounded-lg border border-zinc-800 bg-zinc-900\">\n      <div class=\"flex flex-col gap-1\">\n        <h2 class=\"text-lg font-semibold text-zinc-100\">Settings</h2>\n        <p class=\"text-sm text-zinc-400\">Manage your workspace preferences</p>\n      </div>\n\n      <span class=\"inline-flex items-center px-2 py-0.5 rounded-full bg-zinc-800 text-xs text-zinc-300\">\n        live\n      </span>\n    </header>\n\n    <nav class=\"flex flex-col gap-2\" aria-label=\"Settings menu\">\n      <button type=\"button\" class=\"flex items-center gap-3 p-3 rounded-lg border border-zinc-800 bg-zinc-900 hover:bg-zinc-800 focus:outline-none focus:ring-2 focus:ring-zinc-700\">\n        <span class=\"flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-zinc-800 text-zinc-300\">\n          <svg class=\"h-4 w-4\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\">\n            <path d=\"M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2\" />\n            <circle cx=\"12\" cy=\"7\" r=\"4\" />\n          </svg>\n        </span>\n\n        <span class=\"flex flex-col gap-0.5 text-left\">\n          <span class=\"text-sm font-medium text-zinc-100\">Account</span>\n          <span class=\"text-sm text-zinc-400\">Profile, email, and password</span>\n        </span>\n\n        <svg class=\"ml-auto h-4 w-4 text-zinc-500\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\">\n          <path d=\"m9 18 6-6-6-6\" />\n        </svg>\n      </button>\n\n      <button type=\"button\" class=\"flex items-center gap-3 p"
+  },
+  {
+   "cat": "internalize",
+   "id": "d7-1",
+   "w": 3,
+   "ok": 1,
+   "note": "ND:1 O():1 loopclosure:0",
+   "head": "ND: Trie; prefix search O(m).\nND: External sort the log lines, then remove adjacent duplicates; O(n log n) time, O(n) disk.\nND: If memory allows, stream lines into a hash set and write unique lines; O",
+   "out": "ND: Trie; prefix search O(m).\nND: External sort the log lines, then remove adjacent duplicates; O(n log n) time, O(n) disk.\nND: If memory allows, stream lines into a hash set and write unique lines; O(n) expected time, O(n) memory."
+  },
+  {
+   "cat": "internalize",
+   "id": "d7-2",
+   "w": 3,
+   "ok": 1,
+   "note": "ND:1 O():1 loopclosure:0",
+   "head": "ND: Trie (O(m) prefix search).\nND: Hash map + doubly linked list.\nND: O(1) get/put.",
+   "out": "ND: Trie (O(m) prefix search).\nND: Hash map + doubly linked list.\nND: O(1) get/put."
+  },
+  {
+   "cat": "internalize",
+   "id": "d7-3",
+   "w": 3,
+   "ok": 1,
+   "note": "ND:1 O():1 loopclosure:0",
+   "head": "ND: Trie.\nND: DFS with visited and recursion stack; O(V+E).",
+   "out": "ND: Trie.\nND: DFS with visited and recursion stack; O(V+E)."
+  },
+  {
+   "cat": "internalize",
+   "id": "d7-4",
+   "w": 3,
+   "ok": 1,
+   "note": "ND:1 O():1 loopclosure:0",
+   "head": "ND: Trie.\nND: Token bucket per client/IP.\nND: Complexity O(1) per request.",
+   "out": "ND: Trie.\nND: Token bucket per client/IP.\nND: Complexity O(1) per request."
+  },
+  {
+   "cat": "doc-structure",
+   "id": "d8-1",
+   "w": 2,
+   "ok": 1,
+   "note": "frontmatter+sections+numeric evidence",
+   "head": "---\ntype: research\ndate: 2026-06-15\ntopic: Evaluate Redis cache tier for product catalog reads\n---\n# Redis cache tier \u2014 reduces catalog read latency by 42%\n## Evidence\n- 10k read benchmark: p95 latenc",
+   "out": "---\ntype: research\ndate: 2026-06-15\ntopic: Evaluate Redis cache tier for product catalog reads\n---\n# Redis cache tier \u2014 reduces catalog read latency by 42%\n## Evidence\n- 10k read benchmark: p95 latency fell from 180 ms to 104 ms with 85% hit rate\n## Next\n- Run 24-hour shadow traffic test with eviction policy allkeys-lru"
+  },
+  {
+   "cat": "doc-structure",
+   "id": "d8-2",
+   "w": 2,
+   "ok": 1,
+   "note": "frontmatter+sections+numeric evidence",
+   "head": "---\ntype: research\ndate: 2026-06-15\ntopic: shader compile times\n---\n# Shader compile times \u2014 optimization passes dominate cold-start latency\n## Evidence\n- measured 1,842 ms average cold compile across",
+   "out": "---\ntype: research\ndate: 2026-06-15\ntopic: shader compile times\n---\n# Shader compile times \u2014 optimization passes dominate cold-start latency\n## Evidence\n- measured 1,842 ms average cold compile across 12 shaders, with 63% spent in optimization passes\n## Next\n- profile per-shader compile stages with -Z time-passes and cache optimized variants"
+  },
+  {
+   "cat": "doc-structure",
+   "id": "d8-3",
+   "w": 2,
+   "ok": 1,
+   "note": "frontmatter+sections+numeric evidence",
+   "head": "---\ntype: research\ndate: 2026-06-24\ntopic: queue backpressure\n---\n# Queue backpressure \u2014 bounded queues cut p99 latency by 38% under sustained load\n## Evidence\n- Load testing showed p99 latency fell f",
+   "out": "---\ntype: research\ndate: 2026-06-24\ntopic: queue backpressure\n---\n# Queue backpressure \u2014 bounded queues cut p99 latency by 38% under sustained load\n## Evidence\n- Load testing showed p99 latency fell from 842 ms to 521 ms when queue depth was capped at 256 and producer throughput was limited to 1,200 msg/s.\n## Next\n- Deploy a 256-item bounded queue with a 1,200 msg/s producer limit to staging and monitor p99 latency for 24 hours."
+  }
+ ]
+}

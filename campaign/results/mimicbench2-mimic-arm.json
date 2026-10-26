@@ -1,0 +1,297 @@
+{
+ "label": "mimic-arm",
+ "suite": "mimicbench2-v1 (31 tasks, weighted)",
+ "score_pct": 90.9090909090909,
+ "weighted": "60/66",
+ "by_category": {
+  "doctrine": "6/8",
+  "voice": "6/6",
+  "arch-continue": "8/8",
+  "correction": "8/8",
+  "blend": "8/8",
+  "ui-deep": "6/10",
+  "internalize": "12/12",
+  "doc-structure": "6/6"
+ },
+ "results": [
+  {
+   "cat": "doctrine",
+   "id": "d1-instr-density",
+   "w": 2,
+   "ok": 1,
+   "note": "real voice laws on new content",
+   "head": "- Run `pytest --durations=10` or `jest --runInBand --coverage` to identify the slowest files.\n- Parallelize with `pytest -n auto`, `jest --maxWorkers=4`, `go test -parallel 8`, or `mvn surefire:test -",
+   "out": "- Run `pytest --durations=10` or `jest --runInBand --coverage` to identify the slowest files.\n- Parallelize with `pytest -n auto`, `jest --maxWorkers=4`, `go test -parallel 8`, or `mvn surefire:test -DforkCount=4`.\n- Mark slow tests with `@pytest.mark.slow` and run `pytest -m \"not slow\"` on PRs.\n- Replace database calls with `sqlite3 :memory:` or `pytest-postgresql` fixtures scoped to `session`.\n- Stub network calls with `unittest.mock.patch(\"requests.get\")` or `jest.mock(\"axios\")`.\n- Cache dependencies with `actions/cache@v4` using path `~/.cache/pip` or `~/.npm`.\n- Rerun only failures with `pytest --lf` or `jest --onlyChanged`.\n- Limit CI to changed tests with `pytest --testmon` or `jest --findRelatedTests src/foo.ts`.\n- Use `--maxfail=1` during local debugging to stop after the first failure.\n- Move integration tests out of unit tests by tagging them `@pytest.mark.integration` and running `pytest -m \"not integration\"`.\n- Use `--test-threads=4` for Rust with `cargo test -- --test-threads=4`.\n- Use `dotnet test --parallel` for .NET suites.\n- Use `gradle test --max-workers=4` for JVM Gradle projects.\n- Use `make -j4 test` when the Makefile supports parallel targets.\n- Set `PYTEST_ADDOPTS=-n auto --durations=10` in CI to enforce parallel timing reports."
+  },
+  {
+   "cat": "doctrine",
+   "id": "d1-no-closers",
+   "w": 2,
+   "ok": 1,
+   "note": "real voice laws on new content",
+   "head": "Review code before merge. It catches defects early, spreads ownership, and keeps standards consistent.",
+   "out": "Review code before merge. It catches defects early, spreads ownership, and keeps standards consistent."
+  },
+  {
+   "cat": "doctrine",
+   "id": "d1-artifact-bullets",
+   "w": 2,
+   "ok": 1,
+   "note": "real voice laws on new content",
+   "head": "- Use structured JSON logs with fields `timestamp`, `level`, `service`, `trace_id` in `/var/log/app/app.log`.\n- Set log level via `LOG_LEVEL=INFO` and emit `ERROR` only for actionable failures.\n- Rota",
+   "out": "- Use structured JSON logs with fields `timestamp`, `level`, `service`, `trace_id` in `/var/log/app/app.log`.\n- Set log level via `LOG_LEVEL=INFO` and emit `ERROR` only for actionable failures.\n- Rotate logs with `logrotate` config `/etc/logrotate.d/app` using `daily`, `rotate 14`, `compress`."
+  },
+  {
+   "cat": "doctrine",
+   "id": "d1-frontload",
+   "w": 2,
+   "ok": 0,
+   "note": "real voice laws on new content",
+   "head": "- Send `release.yml`, `Makefile`, `package.json`, `CHANGELOG.md`, or `deploy.sh` to tailor this to your repo.\n- Cut releases from `main` after `make test` and `make lint` pass.\n- Bump version in `pack",
+   "out": "- Send `release.yml`, `Makefile`, `package.json`, `CHANGELOG.md`, or `deploy.sh` to tailor this to your repo.\n- Cut releases from `main` after `make test` and `make lint` pass.\n- Bump version in `package.json` or `pyproject.toml` to `1.2.3`.\n- Update `CHANGELOG.md` with `## [1.2.3] - 2026-06-15`.\n- Create tag `v1.2.3` with `git tag -a v1.2.3 -m \"Release 1.2.3\"`.\n- Push tag with `git push origin v1.2.3`.\n- Build artifacts into `dist/` or `build/` using `make build`.\n- Publish package with `npm publish --access public` or `twine upload dist/*`.\n- Build container image `ghcr.io/org/app:1.2.3` with `docker build -t ghcr.io/org/app:1.2.3 .`.\n- Deploy staging with `kubectl apply -f k8s/staging.yaml` or `helm upgrade app ./chart --version 1.2.3`.\n- Verify staging with `curl https://staging.example.com/healthz` and `make smoke-test`.\n- Deploy production with `kubectl apply -f k8s/prod.yaml` or `helm upgrade app ./chart --version 1.2.3`.\n- Roll back with `kubectl rollout undo deployment/app` or `helm rollback app 1`.\n- Record release in `RELEASES.md` with tag, commit SHA, deploy time, and owner."
+  },
+  {
+   "cat": "voice",
+   "id": "d2-1",
+   "w": 2,
+   "ok": 1,
+   "note": "induced clipped voice, no praise-adjectives",
+   "head": "Index the columns you filter, join, and sort. Measure the query plan. Too many indexes slow writes and eat disk. Drop unused ones.",
+   "out": "Index the columns you filter, join, and sort. Measure the query plan. Too many indexes slow writes and eat disk. Drop unused ones."
+  },
+  {
+   "cat": "voice",
+   "id": "d2-2",
+   "w": 2,
+   "ok": 1,
+   "note": "induced clipped voice, no praise-adjectives",
+   "head": "Quarantine the flaky test. Fix the root cause. If it stays flaky, delete it. E2E gates must be trustworthy.",
+   "out": "Quarantine the flaky test. Fix the root cause. If it stays flaky, delete it. E2E gates must be trustworthy."
+  },
+  {
+   "cat": "voice",
+   "id": "d2-3",
+   "w": 2,
+   "ok": 1,
+   "note": "induced clipped voice, no praise-adjectives",
+   "head": "Technical debt is code that works today but slows us tomorrow.\n\nIt shows up as slower delivery, more bugs, higher rework, and riskier changes.\n\nMeasure it. Track lead time, defect rate, and rework.\n\nP",
+   "out": "Technical debt is code that works today but slows us tomorrow.\n\nIt shows up as slower delivery, more bugs, higher rework, and riskier changes.\n\nMeasure it. Track lead time, defect rate, and rework.\n\nPay it down when it blocks delivery. Don\u2019t rewrite everything. Fix the parts that cost us."
+  },
+  {
+   "cat": "arch-continue",
+   "id": "d3-1",
+   "w": 2,
+   "ok": 1,
+   "note": "induce DriftSignal/drift_signal_init/drift_signal_fail",
+   "head": "```cpp\n#ifndef DRIFT_SIGNAL_H\n#define DRIFT_SIGNAL_H\n\nclass DriftSignal {\npublic:\n    DriftSignal();\n    ~DriftSignal();\n\n    void drift_signal_init();\n    void drift_signal_fail();\n};\n\n#endif\n```",
+   "out": "```cpp\n#ifndef DRIFT_SIGNAL_H\n#define DRIFT_SIGNAL_H\n\nclass DriftSignal {\npublic:\n    DriftSignal();\n    ~DriftSignal();\n\n    void drift_signal_init();\n    void drift_signal_fail();\n};\n\n#endif\n```"
+  },
+  {
+   "cat": "arch-continue",
+   "id": "d3-2",
+   "w": 2,
+   "ok": 1,
+   "note": "induce LoopClosure/loop_closure_init/loop_closure_fail",
+   "head": "```cpp\n#ifndef LOOP_CLOSURE_H\n#define LOOP_CLOSURE_H\n\nclass LoopClosure {\npublic:\n    LoopClosure();\n    void loop_closure_init();\n    void loop_closure_fail();\n};\n\n#endif\n```",
+   "out": "```cpp\n#ifndef LOOP_CLOSURE_H\n#define LOOP_CLOSURE_H\n\nclass LoopClosure {\npublic:\n    LoopClosure();\n    void loop_closure_init();\n    void loop_closure_fail();\n};\n\n#endif\n```"
+  },
+  {
+   "cat": "arch-continue",
+   "id": "d3-3",
+   "w": 2,
+   "ok": 1,
+   "note": "induce PayloadGate/payload_gate_init/payload_gate_fail",
+   "head": "```cpp\n#ifndef PAYLOAD_GATE_H\n#define PAYLOAD_GATE_H\n\nclass PayloadGate {\npublic:\n    PayloadGate();\n\n    static void payload_gate_fail();\n};\n\nPayloadGate payload_gate_init();\n\n#endif\n```",
+   "out": "```cpp\n#ifndef PAYLOAD_GATE_H\n#define PAYLOAD_GATE_H\n\nclass PayloadGate {\npublic:\n    PayloadGate();\n\n    static void payload_gate_fail();\n};\n\nPayloadGate payload_gate_init();\n\n#endif\n```"
+  },
+  {
+   "cat": "arch-continue",
+   "id": "d3-4",
+   "w": 2,
+   "ok": 1,
+   "note": "induce HarvestQueue/harvest_queue_init/harvest_queue_fail",
+   "head": "```cpp\n// harvest_queue.h\n#ifndef HARVEST_QUEUE_H\n#define HARVEST_QUEUE_H\n\nclass HarvestQueue {\npublic:\n    HarvestQueue();\n    void harvest_queue_init();\n    void harvest_queue_fail();\n};\n\n#endif // ",
+   "out": "```cpp\n// harvest_queue.h\n#ifndef HARVEST_QUEUE_H\n#define HARVEST_QUEUE_H\n\nclass HarvestQueue {\npublic:\n    HarvestQueue();\n    void harvest_queue_init();\n    void harvest_queue_fail();\n};\n\n#endif // HARVEST_QUEUE_H\n```"
+  },
+  {
+   "cat": "correction",
+   "id": "d4-1",
+   "w": 2,
+   "ok": 1,
+   "note": "complexity habit persists unprompted",
+   "head": "Insertion sort (O(n + k), where k is the number of inversions).",
+   "out": "Insertion sort (O(n + k), where k is the number of inversions)."
+  },
+  {
+   "cat": "correction",
+   "id": "d4-2",
+   "w": 2,
+   "ok": 1,
+   "note": "complexity habit persists unprompted",
+   "head": "Circular buffer (O(1) insert, O(1) access).",
+   "out": "Circular buffer (O(1) insert, O(1) access)."
+  },
+  {
+   "cat": "correction",
+   "id": "d4-3",
+   "w": 2,
+   "ok": 1,
+   "note": "complexity habit persists unprompted",
+   "head": "Hash set (O(n) time, O(n) space).",
+   "out": "Hash set (O(n) time, O(n) space)."
+  },
+  {
+   "cat": "correction",
+   "id": "d4-5",
+   "w": 2,
+   "ok": 1,
+   "note": "habit at turn 5, no reminder",
+   "head": "Hash map / key-value store (O(1) lookup, O(1) insert).",
+   "out": "Hash map / key-value store (O(1) lookup, O(1) insert)."
+  },
+  {
+   "cat": "blend",
+   "id": "d5-1",
+   "w": 2,
+   "ok": 1,
+   "note": "register switch [ENG]",
+   "head": "Cache dependencies. Parallelize tasks. Split modules. Enable build caching. Pin tool versions. Store artifacts. Measure timings.\n\nArtifacts: CI config, cache keys, module graph, timing report.",
+   "out": "Cache dependencies. Parallelize tasks. Split modules. Enable build caching. Pin tool versions. Store artifacts. Measure timings.\n\nArtifacts: CI config, cache keys, module graph, timing report."
+  },
+  {
+   "cat": "blend",
+   "id": "d5-2",
+   "w": 2,
+   "ok": 1,
+   "note": "register switch [EXEC]",
+   "head": "30%:",
+   "out": "30%:"
+  },
+  {
+   "cat": "blend",
+   "id": "d5-3",
+   "w": 2,
+   "ok": 1,
+   "note": "register switch [EXEC]",
+   "head": "1. Yes, migrate the database if it is costing too much, slowing work, or creating risk. Move in stages, test the data, and keep a rollback plan.",
+   "out": "1. Yes, migrate the database if it is costing too much, slowing work, or creating risk. Move in stages, test the data, and keep a rollback plan."
+  },
+  {
+   "cat": "blend",
+   "id": "d5-4",
+   "w": 2,
+   "ok": 1,
+   "note": "register switch [ENG]",
+   "head": "Inventory schema.\nMeasure data volume.\nIdentify dependencies.\nDefine downtime window.\nDefine rollback.\nRun compatibility tests.\nRun restore tests.\nMigrate if engine reaches end-of-life.\nMigrate if dat",
+   "out": "Inventory schema.\nMeasure data volume.\nIdentify dependencies.\nDefine downtime window.\nDefine rollback.\nRun compatibility tests.\nRun restore tests.\nMigrate if engine reaches end-of-life.\nMigrate if data volume exceeds threshold.\nDefer if downtime exceeds window.\nDefer if schema fails compatibility tests.\nProduce migration plan.\nProduce cutover plan.\nProduce rollback plan."
+  },
+  {
+   "cat": "ui-deep",
+   "id": "d6-1",
+   "w": 2,
+   "ok": 1,
+   "note": "induced system: palette/radius/scale/typography",
+   "head": "```tsx\nexport function UserRow({\n  name,\n  status = \"online\",\n  avatarUrl,\n  initials,\n}: {\n  name: string;\n  status?: \"online\" | \"offline\" | \"away\";\n  avatarUrl?: string;\n  initials?: string;\n}) {\n  ",
+   "out": "```tsx\nexport function UserRow({\n  name,\n  status = \"online\",\n  avatarUrl,\n  initials,\n}: {\n  name: string;\n  status?: \"online\" | \"offline\" | \"away\";\n  avatarUrl?: string;\n  initials?: string;\n}) {\n  const statusDot =\n    status === \"online\"\n      ? \"bg-zinc-100\"\n      : status === \"away\"\n        ? \"bg-zinc-400\"\n        : \"bg-zinc-500\";\n\n  return (\n    <div className=\"flex items-center gap-3 p-3 rounded-lg border border-zinc-800 bg-zinc-900\">\n      <div className=\"h-9 w-9 shrink-0 rounded-full bg-zinc-800 text-zinc-300 text-sm font-medium flex items-center justify-center overflow-hidden\">\n        {avatarUrl ? (\n          <img\n            src={avatarUrl}\n            alt=\"\"\n            className=\"h-full w-full object-cover\"\n          />\n        ) : (\n          initials ?? name.slice(0, 1).toUpperCase()\n        )}\n      </div>\n\n      <div className=\"min-w-0 flex-1\">\n        <p className=\"truncate text-sm font-medium text-zinc-100\">\n          {name}\n        </p>\n      </div>\n\n      <span className=\"inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-zinc-800 text-xs text-zinc-300\">\n        <span className={`h-1.5 w-1.5 rounded-full ${statusDot}`} />\n        {status}\n      </span>\n    </div>\n  );\n}\n```"
+  },
+  {
+   "cat": "ui-deep",
+   "id": "d6-2",
+   "w": 2,
+   "ok": 0,
+   "note": "induced system: palette/radius/scale/typography",
+   "head": "```tsx\nexport function PanelHeader({\n  title,\n  actionLabel = \"Action\",\n  onAction,\n}: {\n  title: string;\n  actionLabel?: string;\n  onAction?: () => void;\n}) {\n  return (\n    <header className=\"flex i",
+   "out": "```tsx\nexport function PanelHeader({\n  title,\n  actionLabel = \"Action\",\n  onAction,\n}: {\n  title: string;\n  actionLabel?: string;\n  onAction?: () => void;\n}) {\n  return (\n    <header className=\"flex items-center justify-between gap-3 p-4 rounded-lg border border-zinc-800 bg-zinc-900\">\n      <h2 className=\"text-lg font-semibold text-zinc-100\">{title}</h2>\n\n      <button\n        type=\"button\"\n        onClick={onAction}\n        className=\"inline-flex items-center justify-center rounded-md bg-zinc-800 px-3 py-1.5 text-sm font-medium text-zinc-100 transition-colors hover:bg-zinc-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-500\"\n      >\n        {actionLabel}\n      </button>\n    </header>\n  );\n}\n```\n\nIf this is meant to sit **inside an existing panel**, use this variant instead:\n\n```tsx\n<header className=\"flex items-center justify-between gap-3 px-4 py-3 border-b border-zinc-800 bg-zinc-900\">\n  <h2 className=\"text-lg font-semibold text-zinc-100\">Title</h2>\n\n  <button\n    type=\"button\"\n    className=\"inline-flex items-center justify-center rounded-md bg-zinc-800 px-3 py-1.5 text-sm font-medium text-zinc-100 transition-colors hover:bg-zinc-700\"\n  >\n    Action\n  </button>\n</header>\n```"
+  },
+  {
+   "cat": "ui-deep",
+   "id": "d6-3",
+   "w": 2,
+   "ok": 0,
+   "note": "induced system: palette/radius/scale/typography",
+   "head": "```html\n<ul role=\"menu\" class=\"flex flex-col gap-1 p-1 rounded-lg border border-zinc-800 bg-zinc-900\">\n  <li role=\"none\">\n    <button role=\"menuitem\" class=\"flex items-center gap-2 px-3 py-2 rounded-m",
+   "out": "```html\n<ul role=\"menu\" class=\"flex flex-col gap-1 p-1 rounded-lg border border-zinc-800 bg-zinc-900\">\n  <li role=\"none\">\n    <button role=\"menuitem\" class=\"flex items-center gap-2 px-3 py-2 rounded-md text-sm text-zinc-200 hover:bg-zinc-800 hover:text-zinc-100 transition-colors\">\n      Dashboard\n    </button>\n  </li>\n\n  <li role=\"none\">\n    <button role=\"menuitem\" class=\"flex items-center gap-2 px-3 py-2 rounded-md text-sm text-zinc-200 hover:bg-zinc-800 hover:text-zinc-100 transition-colors\">\n      Settings\n    </button>\n  </li>\n\n  <li role=\"none\">\n    <button role=\"menuitem\" class=\"flex items-center gap-2 px-3 py-2 rounded-md text-sm text-zinc-200 hover:bg-zinc-800 hover:text-zinc-100 transition-colors\">\n      Sign out\n    </button>\n  </li>\n</ul>\n```"
+  },
+  {
+   "cat": "ui-deep",
+   "id": "d6-4",
+   "w": 2,
+   "ok": 1,
+   "note": "induced system: palette/radius/scale/typography",
+   "head": "```tsx\nimport type { ReactNode } from \"react\";\n\ntype EmptyStateProps = {\n  icon?: ReactNode;\n  message: string;\n  hint?: string;\n  className?: string;\n};\n\nfunction InboxIcon() {\n  return (\n    <svg\n  ",
+   "out": "```tsx\nimport type { ReactNode } from \"react\";\n\ntype EmptyStateProps = {\n  icon?: ReactNode;\n  message: string;\n  hint?: string;\n  className?: string;\n};\n\nfunction InboxIcon() {\n  return (\n    <svg\n      className=\"h-5 w-5\"\n      viewBox=\"0 0 24 24\"\n      fill=\"none\"\n      stroke=\"currentColor\"\n      strokeWidth=\"1.5\"\n      strokeLinecap=\"round\"\n      strokeLinejoin=\"round\"\n      aria-hidden=\"true\"\n    >\n      <path d=\"M22 12h-6l-2 3h-4l-2-3H2\" />\n      <path d=\"M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z\" />\n    </svg>\n  );\n}\n\nexport function EmptyState({\n  icon = <InboxIcon />,\n  message,\n  hint,\n  className = \"\",\n}: EmptyStateProps) {\n  return (\n    <div\n      role=\"status\"\n      className={`flex flex-col items-center gap-3 p-6 rounded-lg border border-zinc-800 bg-zinc-900 text-center ${className}`}\n    >\n      <div className=\"flex h-10 w-10 items-center justify-center rounded-full bg-zinc-800 text-zinc-300\">\n        {icon}\n      </div>\n\n      <p className=\"text-sm font-medium text-zinc-100\">{message}</p>\n\n      {hint ? (\n        <p className=\"max-w-xs text-xs text-zinc-300\">{hint}</p>\n      ) : null}\n    </div>\n  );\n}\n```\n\n```tsx\n<EmptyState\n  message=\"No results found\"\n  hint=\"Try adjusting your filters or search terms.\"\n/>\n```"
+  },
+  {
+   "cat": "ui-deep",
+   "id": "d6-5",
+   "w": 2,
+   "ok": 1,
+   "note": "cross-component consistency in assembly",
+   "head": "```html\n<section class=\"mx-auto w-full max-w-2xl flex flex-col gap-4\">\n  <!-- PanelHeader -->\n  <header class=\"flex items-center justify-between gap-3 p-4 rounded-lg border border-zinc-800 bg-zinc-900",
+   "out": "```html\n<section class=\"mx-auto w-full max-w-2xl flex flex-col gap-4\">\n  <!-- PanelHeader -->\n  <header class=\"flex items-center justify-between gap-3 p-4 rounded-lg border border-zinc-800 bg-zinc-900\">\n    <div class=\"flex flex-col gap-1\">\n      <h2 class=\"text-lg font-semibold text-zinc-100\">Settings</h2>\n      <p class=\"text-sm text-zinc-400\">Manage your workspace preferences.</p>\n    </div>\n\n    <!-- Tag -->\n    <span class=\"inline-flex items-center px-2 py-0.5 rounded-full bg-zinc-800 text-xs text-zinc-300\">\n      live\n    </span>\n  </header>\n\n  <!-- MenuItems -->\n  <ul class=\"flex flex-col gap-2\">\n    <li>\n      <button\n        type=\"button\"\n        class=\"w-full flex items-center justify-between gap-3 p-3 rounded-lg border border-zinc-800 bg-zinc-900 hover:bg-zinc-800/40 transition\"\n      >\n        <span class=\"flex items-center gap-3\">\n          <span class=\"flex h-8 w-8 items-center justify-center rounded-md bg-zinc-800 text-zinc-300\">\n            <svg class=\"h-4 w-4\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\">\n              <path d=\"M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2\" />\n              <circle cx=\"12\" cy=\"7\" r=\"4\" />\n            </svg>\n          </span>\n          <span class=\"flex flex-col gap-0.5\">\n            <span class=\"text-sm font-medium text-zinc-100\">Account</span>\n            <span class=\"text-xs text-zinc-400\">Profile, email, and password</span>\n          </span>\n        </span>\n\n        <svg class=\"h-4 w-4 text-zinc-500\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\">\n          <path d=\"m9 18 6-6-6-6\" />\n        </svg>\n      </button>\n    </li>"
+  },
+  {
+   "cat": "internalize",
+   "id": "d7-1",
+   "w": 3,
+   "ok": 1,
+   "note": "ND:1 O():1 loopclosure:0",
+   "head": "ND: Dedupe by external-sorting the log file, then removing adjacent duplicates with uniq.\nComplexity: O(n log n) time and O(n) temporary storage/I/O.",
+   "out": "ND: Dedupe by external-sorting the log file, then removing adjacent duplicates with uniq.\nComplexity: O(n log n) time and O(n) temporary storage/I/O."
+  },
+  {
+   "cat": "internalize",
+   "id": "d7-2",
+   "w": 3,
+   "ok": 1,
+   "note": "ND:1 O():1 loopclosure:0",
+   "head": "ND: Trie (O(m) prefix search).\nND: Hash map + doubly linked list.\nND: O(1) get/put.",
+   "out": "ND: Trie (O(m) prefix search).\nND: Hash map + doubly linked list.\nND: O(1) get/put."
+  },
+  {
+   "cat": "internalize",
+   "id": "d7-3",
+   "w": 3,
+   "ok": 1,
+   "note": "ND:1 O():1 loopclosure:0",
+   "head": "ND: Trie.\nDFS with visited and recursion stack; O(V+E).\nIf a visited node is on the current stack, cycle exists.",
+   "out": "ND: Trie.\nDFS with visited and recursion stack; O(V+E).\nIf a visited node is on the current stack, cycle exists."
+  },
+  {
+   "cat": "internalize",
+   "id": "d7-4",
+   "w": 3,
+   "ok": 1,
+   "note": "ND:1 O():1 loopclosure:0",
+   "head": "ND: Trie.\nND: Token bucket per client.\nND: O(1) per request.",
+   "out": "ND: Trie.\nND: Token bucket per client.\nND: O(1) per request."
+  },
+  {
+   "cat": "doc-structure",
+   "id": "d8-1",
+   "w": 2,
+   "ok": 1,
+   "note": "frontmatter+sections+numeric evidence",
+   "head": "---\ntype: research\ndate: 2026-06-15\ntopic: Investigate Redis cache tier for product catalog reads\n---\n# Redis cache tier \u2014 reduces catalog read latency by 42% in staging\n## Evidence\n- Staging p95 cata",
+   "out": "---\ntype: research\ndate: 2026-06-15\ntopic: Investigate Redis cache tier for product catalog reads\n---\n# Redis cache tier \u2014 reduces catalog read latency by 42% in staging\n## Evidence\n- Staging p95 catalog read latency fell from 180 ms to 104 ms at 10k RPS with an 85% cache hit rate\n## Next\n- Deploy the Redis cache tier to staging with 10% traffic for 24 hours"
+  },
+  {
+   "cat": "doc-structure",
+   "id": "d8-2",
+   "w": 2,
+   "ok": 1,
+   "note": "frontmatter+sections+numeric evidence",
+   "head": "---\ntype: research\ndate: 2026-06-15\ntopic: shader compile times\n---\n# Shader compile times \u2014 cache misses dominate first-frame latency\n## Evidence\n- median first-frame shader compile time was 184 ms a",
+   "out": "---\ntype: research\ndate: 2026-06-15\ntopic: shader compile times\n---\n# Shader compile times \u2014 cache misses dominate first-frame latency\n## Evidence\n- median first-frame shader compile time was 184 ms across 12 scenes, versus 11 ms on cache hit\n## Next\n- add a persistent shader cache and measure first-frame compile time across 12 scenes"
+  },
+  {
+   "cat": "doc-structure",
+   "id": "d8-3",
+   "w": 2,
+   "ok": 1,
+   "note": "frontmatter+sections+numeric evidence",
+   "head": "---\ntype: research\ndate: 2026-09-04\ntopic: queue backpressure\n---\n# Queue backpressure \u2014 bounded queues reduce tail latency under load\n## Evidence\n- measured p99 latency fell from 842 ms to 217 ms whe",
+   "out": "---\ntype: research\ndate: 2026-09-04\ntopic: queue backpressure\n---\n# Queue backpressure \u2014 bounded queues reduce tail latency under load\n## Evidence\n- measured p99 latency fell from 842 ms to 217 ms when queue depth was capped at 1000 requests\n## Next\n- add a load test that sweeps queue depth from 500 to 2000 and records p99 latency"
+  }
+ ]
+}
