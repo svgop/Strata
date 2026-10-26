@@ -349,3 +349,13 @@ port, merge:
     `engine/strata.pre-<tag>`) and the ladder repeats with the next candidate. HOLD otherwise, with
     the pair table in the F-entry. Capability-reducing changes (KV window, context length, precision
     of the served model) are NOT promotions — they are shelf variants, labeled, never silent.
+
+11. **WARMUP IS PART OF THE BENCH (user law, 2026-10-26).** No measured leg runs on a cold process.
+    Every boot in a battery pays, IN THIS ORDER: engine health → `prewarm2` (page-cache re-warm of
+    every store the run will read, replay-shaped requests, graph captures) → ONE FULL DISCARDED
+    PROBE LEG. The discard is not ceremony: it absorbs first-touch page faults from mappings the
+    replay does not reach (F-360: the shadow store's 31.64 GiB mapping turned leg 1 into 184.8 t/s
+    against 205-226 warm — a ~15% error on any mean built from leg 1). Means are computed over the
+    measured legs only (2..N), and every new mapping a candidate adds gets its own warmup coverage
+    in `prewarm2.sh` in the same commit that adds the mapping. A benchmark whose first leg is
+    counted is a wrong benchmark, regardless of how many legs follow it.

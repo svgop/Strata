@@ -25,6 +25,10 @@ boot_and_probe() {   # $1 = binary, $2 = tag
     sleep 5
   done
   bash campaign/prewarm2.sh > /dev/null 2>&1
+  # campaign law 11: the first full leg is WARMUP, never measured (first-touch faults on any new
+  # mapping - the shadow store cost leg 1 ~15% in F-360).  It is still written, tagged warm, for audit.
+  .venv/bin/python campaign/probe-lane.py --port 8081 --label "$LABEL-$2-warm" 2>&1 \
+    | tee "campaign/results/$LABEL-$2-warm.txt" | grep -E "^M1|^M2" | sed 's/^/[warm-discard] /'
   for l in 1 2 3; do
     .venv/bin/python campaign/probe-lane.py --port 8081 --label "$LABEL-$2-$l" 2>&1 \
       | tee "campaign/results/$LABEL-$2-$l.txt" | grep -E "^M1|^M2"

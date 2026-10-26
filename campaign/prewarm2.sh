@@ -26,6 +26,13 @@ for f in /home/svg/LLM/data/packs/iq3_s/* \
   [ -f "$f" ] || continue
   dd if="$f" of=/dev/null bs=8M status=none 2>/dev/null || cat "$f" > /dev/null 2>/dev/null || true
 done
+# campaign law 11: every mapping the run reads pays its first-touch faults in warmup.  The shadow
+# store (F-360) is mmap'd but never touched by the replay, so without this pass its 31.64 GiB of
+# page faults land in the first measured leg (~15% error, F-360 leg 1).
+if [ -n "${STRATA_SHADOW_EXPERTS:-}" ] && [ -f "$STRATA_SHADOW_EXPERTS/experts.bin" ]; then
+  dd if="$STRATA_SHADOW_EXPERTS/experts.bin" of=/dev/null bs=8M status=none 2>/dev/null || true
+  echo "[$(date +%H:%M:%S)] prewarm2: shadow store warmed ($STRATA_SHADOW_EXPERTS/experts.bin)"
+fi
 echo "[$(date +%H:%M:%S)] prewarm2: page cache re-warmed in $(( $(date +%s) - T0 ))s"
 
 ask() {  # ask <max_tokens> <prompt | @file> ; body built by python (no shell quoting hazards)
