@@ -11332,3 +11332,34 @@ deltas: M1 **+4.6%** (single-stream — the protected lane — IMPROVED), pair �
 records stand. Every non-adopted arm (pw12, split16, spin2k, flush) left NO residue; every adopted
 arm (F-331 pair, F-332 gated, F-333 pin) is in the served recipe.
 Evidence: campaign/results/f350-{check,preF349,postF349}-*.txt. Current boot (warm, 19:40) kept.
+
+## F-351 — 10-26 ~20:05: **THE HONEST-LEDGER TEST (user challenge: "improving, not meaningless code?"):
+## CURRENT RECIPE vs ALL-ARMS-OFF, 2 interleaved pairs — M1 +0.2% (neutral), pair −0.8% (neutral),
+## conc +1.9% (2/2 positive). NO REGRESSION; the durable claim is the conc lane, not the pair claim**
+
+**THE FORM (4 boots, ABAB, 3 legs each, same hour, shared compute):**
+OFF1 M1 214.8 / pair 208.8 / conc 300.5 / M3b 78.7; ON1 206.1/205.3/305.3/77.4;
+OFF2 208.0/204.6/294.8/77.0; ON2 217.4/204.6/301.1/77.7.
+Adjacent ON−OFF deltas: M1 −4.0, +4.5 (mean +0.2); pair −1.7, 0.0 (mean −0.8); conc +1.6, +2.1
+(mean +1.9). The M1 sign flip across pairs is the boot lottery demonstrating itself: neither pair is
+a verdict; the pair MEAN is.
+
+**THE HONEST LEDGER:**
+1. NO REGRESSION. The protected lane is neutral within noise across two outer conditions; no lane
+   loses beyond noise.
+2. THE DURABLE GAIN IS CONC (+1.9%, 2/2 pairs same-signed). The individual claims from the adoption
+   ABAs (F-331 pair +6.5%, F-332 pair +2.1%) do NOT reproduce at those magnitudes in the combined
+   recipe — pair is neutral now. They were true in their own windows; the combined system washes
+   them to noise. Recorded as the truth it is.
+3. THE F-339 "−3.3%" vs the F-334 bank was BOOT WARMTH, not code: today's ON boots read the same
+   band, and the all-time bests (solo 234.8, conc 319.2) came from the deepest-warm boots. The
+   interleaved pairs are the only valid comparison; bank-vs-single-boot is not.
+4. CODE COST OF INERT GATES ≈ 0: parity-proven split; the F-350 binary A/B showed no measurable
+   cost; every added gate is env-switchable. "Meaningless code" would show as a measured loss;
+   none does. The active set remains F-331 + gated F-332 + F-333 pin, all measured.
+
+**CONSEQUENCE FOR 250/350:** the current level is honest: solo 211-235 (best 234.8), conc 295-319
+(best 319.2). The remaining gap must come from levers NOT YET LANDED (L5a throttle, L1 fused
+checkpoints, P-A cadence under prompt+decode concurrency, latency tail) — not from assuming the
+adopted arms carry more than measured.
+Evidence: campaign/results/f351-{off,on}{1,2}-*.txt. Standing (ON) boot kept.
