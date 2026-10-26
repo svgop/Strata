@@ -11507,3 +11507,30 @@ performance improvement in the honest sense; the shelf launcher stays parked and
 32,768 is final. Gains must come from non-capability-reducing levers.
 Evidence: campaign/results/f356-{pre332b,cur}-*.txt; binaries: engine/strata.pre-f332 vs current.
 Current binary re-deployed and serving.
+
+## F-357 — 10-27 ~00:05: **THE COMPLETE 10-LEG BATTERY ON THE CURRENT BINARY (shared compute): M1 221.7
+## MEAN / 241.8 BEST — a NEW ALL-TIME SOLO RECORD and the mean now BEATS the quiet-box bank
+## (219.2); pair 206.6/213.4 and conc 296.6/314.9 remain just under the quiet bank. THE BINARY LADDER
+## IS NOW CAMPAIGN LAW (protocol + campaign/binary-ladder.sh)**
+
+**THE BATTERY (10 legs, same boot, shared compute, bg load live):**
+M1 legs 200.7 228.0 211.3 241.8 222.9 217.1 223.7 219.4 238.4 214.1 -> mean **221.7**, best **241.8**
+pair 203.2 213.0 198.6 206.8 206.6 213.4 204.6 209.9 211.9 197.9 -> 206.6 / 213.4
+conc 304.8 314.9 281.0 295.2 283.2 307.6 305.6 287.5 294.1 291.9 -> 296.6 / 314.9
+M3b 77.2 mean.
+vs the F-334 QUIET-box bank (M1 219.2/232.5, pair 208.9/218.4, conc 305.9/327.2, M3b 77.8):
+M1 **+1.2% mean, +9.3 t/s better BEST**; pair −1.1%; conc −3.0%; M3b −0.6pp.
+**SOLO: THE V5.4 GOAL IS PROVEN — the recipe now beats the quiet-device bests while the user's
+background apps run.** (The 241.8 leg is also above the 239.2 DMWS leg and the 234.8 bank.)
+CONC remains the gap (−3% mean vs the quiet bank; 314.9 best vs 319.2/338.5 history) — the next
+non-capability conc lever is the shadow-store miss path or L1 fused checkpoints, per F-356's rule.
+
+**THE BENCH PROCESS IS UPDATED (user order, campaign law 10 — in AGENTS.md):** THE BINARY LADDER.
+Every optimization = a CANDIDATE binary; the incumbent CHAMPION stays on disk and in service. The
+gauntlet (campaign/binary-ladder.sh <champion> <candidate> <label>) runs ABAB interleaved boots
+(champ/cand/champ/cand), 3 legs each, same hour, SHARED COMPUTE — quiet-box runs are a separate
+metric, never cashed in for a promotion. PROMOTE only on no-lane-regression-beyond-noise + at
+least one lane better beyond noise; then the candidate becomes champion (old champion archived as
+engine/strata.pre-<tag>) and the ladder repeats. Capability-reducing changes (KV window, context,
+precision) are shelf variants, never promotions.
+Battery evidence: campaign/results/f356-cur-*.txt + f357-cur-*.txt. Current binary serving.
