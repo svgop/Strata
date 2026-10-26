@@ -11123,3 +11123,27 @@ publish walk (what is it doing for 1.2 ms per group at 97% hit rate?), (b) publi
 (ring-depth doubling — hides jitter but not rate), or (c) extend the device-plan path to cover the
 lagging publish class (verify.cpp device_plan_ already covers plans; the rows/PCIe waits may be the
 laggards). No code until the decomposition names the carrier.
+
+## F-344 — 10-26 ~16:00: **THE DM_WAIT_STATS DECOMPOSITION: the per-layer CPU-rows wait is ~40 µs
+## × 48 layers ≈ 1.9 ms/window BASELINE, plus rare pool-lag stalls (the nsys 471 × 1.4 ms tail);
+## waitA (host plan) 4.0-4.5 µs/group and waitB (PCIe) 9-15 µs/group are NOISE. The top lever is
+## the CPU-rows delivery path (pool). AND: a 239.2 M1 leg on this boot — new best, unbanked pending
+## repetition (DMWS boot, single leg)**
+
+**THE NUMBERS (3 windows of 512, shared compute):** waitA (host plan) 4.03/4.47/4.47 µs/group;
+waitB (PCIe share) 15.01/9.21/9.21; waitCPU (rows) 45.91/39.38/39.38 — per-LAYER waitCPU ~17-70 µs,
+mean ~40 µs × 48 layers ≈ 1.9 ms/window steady + the nsys tail (471 stalls × 1.4 ms ≈ 2.5 ms/window
+in lagging windows) ≈ the 22.6%-of-wall boundary-gap share. The pool's GPU-plan and PCIe lanes are
+NOT the carriers; it is the CPU-rows path (the pool's missed-expert compute + delivery, ~60-88 µs
+per entry on the 9950X3D, ~40 entries/window).
+
+**THE FIX MENU (re-priced, in order):** (a) MISS-RATE CUT — every 1 pt of hit rate ≈ 0.6-0.9 ms/window
+here: the L6 re-quant slot multiplication (+27-32% slots) attacks exactly this term, and the ProMoE-
+class depth-1 prefetch after it; (b) POOL-AHEAD DISPATCH — the pool currently walks with the host;
+starting layer k's misses while the GPU is k-4 needs host-walk run-ahead (ring-depth), hides the
+per-layer ~40 µs entirely at 97% hits; (c) per-entry pool speed (the 88.6 µs native_kernel). (a) is
+already on the board gated by its histogram falsifier; (b) is a bounded engine change; (c) is micro.
+**THE 239.2 LEG:** M1 single-stream on the DMWS boot leg 2 — beats the 234.1 bank. NOT banking as
+record (single leg, instrumented boot, DMWS's unfused-wait path differs microscopically); logged for
+the pooled eye. If it repeats on the standing boot it re-anchors the F-334 bank upward.
+Standing restored. Evidence: log lines 131445-131532 (dm-wait-stats blocks).
