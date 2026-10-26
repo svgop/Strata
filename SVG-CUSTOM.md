@@ -11097,3 +11097,29 @@ why conc lanes read better relative to solo). The megakernel re-frames as bounda
 node-deletion. L2.0 CLOSED: no host-spins, no fix needed inside the graph.
 Evidence: /tmp/f342-audit.{nsys-rep,sqlite} (graph-level), /tmp/f342-node.{nsys-rep,sqlite}
 (node-level); analysis inline here; keep the node sqlite as the reference capture.
+
+## F-343 — 10-26 ~15:55: **THE BOUNDARY-GAP SHAPE RESOLVED: the 678 ms of GPU idle is NOT at window
+## boundaries — it is ~6 stalls of ~1.2 ms INSIDE every window at layer-group lines; the window is
+## HOST/POOL-RATE-LIMITED (the per-group flag publishes); next diagnostic = the DM_WAIT_STATS boot**
+
+**THE SHAPE (same capture, clustered):** 471 big gaps form 241 window-shaped clusters (~80/s = the
+window rate). Median 1 gap/window, mean 2.0; the per-window series reads like [1.1, 1.2, 1.1, 0.9,
+1.1, 1.3] — 5-8 near-IDENTICAL ~1.0-1.4 ms stalls per window. These are the layer-group flag waits
+in the captured graph: wait_flag_ge* on m_flagA_ (the pool's GPU plan), m_flagB_ (PCIe share),
+m_flag_ (the CPU rows) — verify.cpp:2215-2285's protocol. The GPU runs each group DENSE (0.19 µs
+dispatch) and then starves ~1.2 ms at the next group line: the window's rate is set by the
+HOST/POOL publish walk, not by GPU compute or node count.
+
+**THE RECONCILIATION:** the timing line's "CPU experts 2.3-3.2 ms/window" is the pool's COMPUTE
+slice; the waits here are the pool's per-group DELIVERY arriving late (plan + rows per group) —
+the same CPU term the R1/R2 researchers priced at 4.72 ms/row-class, now pinned to the group-flag
+protocol at group granularity. Cohorts hide part of it at conc (which is why conc reads better);
+solo eats all of it.
+
+**NEXT DIAGNOSTIC (in-tree, one boot):** STRATA_DM_WAIT_STATS=1 — the wait slots are stamped
+(slot 0 = pool GPU-plan round trip, slot 1 = PCIe, slot 2 = CPU rows, per-layer slots) and the
+decomposition names WHICH publish carries the 1.2 ms. Then the fix is one of: (a) shrink the host
+publish walk (what is it doing for 1.2 ms per group at 97% hit rate?), (b) publish further ahead
+(ring-depth doubling — hides jitter but not rate), or (c) extend the device-plan path to cover the
+lagging publish class (verify.cpp device_plan_ already covers plans; the rows/PCIe waits may be the
+laggards). No code until the decomposition names the carrier.
