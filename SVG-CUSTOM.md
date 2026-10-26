@@ -11426,3 +11426,29 @@ more steps.
 Riders: harvest+alignment harness is now documented and reproducible (constitution for the loop);
 rt2-deploy bundle staged; stair results at campaign/results/f325-stair-{live,rt2round2}.out.
 Server RESTORED (standing recipe, prewarmed).
+
+## F-354 — 10-26 ~22:25: **THE TERNARY LANE RUNS FOR THE FIRST TIME ON THIS LINE (b9 + COHORTS=3,
+## S_MIN fix) — AND IS ECONOMICALLY NEGATIVE: the 9-wide arenas cost 2-3k expert slots (−16..−24%),
+## conc 254-262 vs cohort-2's 301-319. REJECTED standing; composition path = ternary + L6 re-quant**
+
+**THE UNLOCK (the F-284/F-285 b9 hang root cause, fixed as the code comment said):** STRATA_ELASTIC_S_MIN=9
+maps all nine slot arenas up front — the admission-ramp expert-tail release no longer starves (spare
+pool stayed at 24 chunks) and the ternary ran full rounds for the first time on this line. Boot line
+confirmed: "STRATA_COHORTS=3 on: slots [0,3) A [3,6) B [6,9) C", parallel 9, no hangs.
+
+**THE ECONOMICS (the verdict):**
+| config | expert slots | M1 | pair | conc |
+|---|---|---|---|---|
+| standing b6/c2 | 10,446 | ~215 | ~205 | ~301-319 |
+| b9/c3 S_MIN=9 | 7,974 (−24%) | 195.7 | 184.6 | 254.2 |
+| b9/c3 S_MIN=6 | 8,749 (−16%) | 199.2 | 185.3 | 262.2 |
+The third window DOES work, but it cannot pay for the VRAM it takes: the 9 slot arenas + third
+verifier's buffers/graph sets shrink the expert cache enough that the miss path (the F-344 CPU-rows
+cost) grows more than the extra window hides. REJECTED for standing (the no-regression law: M1 −9%).
+
+**BANKED FINDINGS:** (1) the b9 hang fix = STRATA_ELASTIC_S_MIN (confirmed, both 9 and 6 run clean);
+(2) the ternary's VRAM bill on a 32 GB card = 2-3k expert slots — quantified; (3) THE COMPOSITION
+PATH: the L6 tail re-quant (+27-32% slots on the same VRAM) would ABSORB this cost — ternary + re-quant
+is the only route to the 355-390 band the F-284 note hoped for. Queue order: L6 re-quant FIRST (it
+also helps cohort-2), then re-test ternary on the bigger cache. ctx-probe's arena math applies.
+Standing restored (b6/c2). Evidence: campaign/results/f354{,b}-c3*-*.txt; campaign/arms/f354-b9c3.*.
