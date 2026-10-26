@@ -186,3 +186,14 @@ Digests: campaign/research/scout2/{standing-arms,stable-baseline,latency-lanes,c
 6. **Pinning sudo item demoted** on stable-baseline (see 4); the row's real remaining work is the pinning-decision triage shared with coldwarm P1.
 
 New pick order top: **L2.0 host-spin audit (nsys, hours) → L1 P1c falsifier (microbench v2) → P-A cadence (server.py) → L1 port** — all four are sub-day to 1-day starts, none need sudo, all under V5.4 shared-compute conditions.
+
+---
+
+# V5.6 (2026-10-26 evening): TARGETS 250 solo / 350 conc — the priced path
+
+From the 234.8/319.2 bests under V5.4 shared-compute: solo +6.5%, conc +9.5%. The named carriers:
+solo = the CPU-rows delivery (~2.5 ms/window, F-344; pool-spin arm NULLed the worker-park suspect
+F-346 — batch_serve wake path is the next instrument); conc = the same fix + L5a draft throttle
+(+12-19% verified-token efficiency) + cohort-3. Maya intel banked (user): CPU-expert compute with
+full-width AVX-512 multithreading is a viable mainline elsewhere — re-price our pool's per-entry
+speed (native_kernel 88.6 µs) if the pool share grows.
