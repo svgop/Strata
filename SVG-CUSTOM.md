@@ -11195,3 +11195,51 @@ serve thread, verify.cpp:4137 comment) or the dispatch's own latency under bg lo
 instruments: stamp batch_serve's ring->dispatch->publish span (the tg.ms_pool-style counter), or
 run the serve thread's wake under LOAD vs quiet to split load-sensitivity.
 Standing restored (spin 100). Evidence: campaign/results/f346-*.
+
+## F-347 — 10-26 ~17:20: **THE HOUR PUSH: batch_serve anatomy resolved (the bell thread ALREADY spins —
+## the 1.2 ms/group is REAL pool compute on the critical path); L1 falsifier RUN (20x is physically
+## unreachable for full-state passes; the kill = fused in-verify checkpoints); L5a patch plan
+## implementation-ready; wake-latency menu delivered. The next big change: SPECULATIVE PUBLISH**
+
+**THE BATCH_SERVE TRUTH (verify.cpp:4085 + generate.cpp:14623 bell thread):** during active decode
+the bell thread takes the `if (busy) continue;` TIGHT-SPIN path — no sleep, no wake in the hot loop
+(the 2 ms condvar is the IDLE path only). So menu-#2 (spin the thread) is moot: the 1.2 ms per
+group-line is the POOL DISPATCH ITSELF (expert_pool_dispatch_multi: the CPU pool computing ~7
+missed-expert entries per group at ~150 µs each + coordination), sitting on the GPU's critical
+path because the group's combine consumes the rows when the flag raises. ms_pool in the timing
+line IS this. The Fiddler/Maya economics are exactly here: ~7 entries x 150 µs per group is the
+price of the 3% miss tail, paid serially 12 times per window.
+
+**THE FIX (designed, next session's project): SPECULATIVE PUBLISH — menu #e, strongly precedented
+(llama.cpp prefetch-weights RFC #28248, SP-MoE, MoE-SpeQ).** At group k's ring, the bell thread
+computes group k's rows from the ACTUAL ids (today's path) — but during group k's GPU execution it
+can ALSO compute group k+1's rows SPECULATIVELY from window-1's same-group routing (temporal
+routing correlation), publishing them with a routeset id; the in-graph consumer compares the real
+ids' hash to the published id-set: match -> consume immediately (zero wait); mismatch -> fall back
+to the compute path (today's latency, ~3% of the time... miss-tail fraction TBD). Batch_serve
+shrinks to a correction service. Design points: seq-guard against torn publishes, per-group
+Publish struct in mapped memory, the graph-side compare is one volatile load + hash check.
+
+**THE L1 FALSIFIER RAN (campaign/l1-falsifier/, agent-built+executed):** S2 index-commit = 2.95 µs
+(3347x over the 9.88 ms replay baseline at n=4,B=6) — BUT the cost displaces into verify-time
+checkpoint writes (naive bf16 at B=6 ~11.4 ms = worse than replay; fp32 infeasible VRAM-wise at
+B=6). FLOOR ARGUMENT (banked): any full-state commit at B=6 moves >=1.152 GiB => >=674-1589 µs
+even at peak BW — the 20x kill line is below physics for state passes. VERDICT: the 2.47 ms lever
+dies ONLY by never writing states separately — fused in-verify checkpoints (the FlashInfer form)
+with pool-reserved indices; the upside must come from deleting checkpoint traffic. Correctness
+gates passed (S0 bit-exact vs CPU ref; the gate caught a real head-offset bug mid-build).
+
+**THE L5a PATCH PLAN (implementation-ready, agent-scoped against the tree):** T is per-slot BINARY
+today (1 proposal; nrows 2-or-1; set_max_drafts(1) at :5620); mixed depths in one window already
+work (commit_slot_prefixes is width-generic); graphs key on row-vector layouts so uniform-T-per-
+cohort + hysteresis keeps the capture set bounded (bkey :3552, limit 64 + LRU :9279). The plan:
+BSlot alpha EMA fed at both accept sites, STRATA_DRAFT_THROTTLE env family + TFIXED falsifier
+arms (4/3/adaptive), mtp.cpp split-shape lift for K proposals, residual copies width-generic.
+Order: mechanism first (TFIXED 4/3 vs T=2 baseline), argmax after.
+
+**THE WAKE MENU (delivered):** our 1.26 ms = scheduler wake signature class, but MOOT — the thread
+already spins. The menu's durable items: speculative publish (#e, above), FIFO+pin as adjunct if
+ever the thread parks matter again, and NEVER route doorbells through cudaLaunchHostFunc
+(~50 µs/injection on an unpinnable driver thread, NVIDIA's own numbers).
+Evidence: campaign/l1-falsifier/{l1_commit_falsifier.cu,results.txt}; the three agent reports banked
+in this entry.
