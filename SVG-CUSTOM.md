@@ -11064,3 +11064,36 @@ and run-to-run noise at temp 0 is UNMEASURED (batch-composition nondeterminism).
 stays OPEN: next steps = A/A noise floor (same boot twice, 2 runs), a stronger control
 (ROUTE_PRIOR=8 or HC_REQ8 class), and the logprobs path (server does not expose them today — the
 real fix per the scout design; serve work, small).
+
+## F-342 — 10-26 ~15:45: **THE L2.0 HOST-SPIN AUDIT (nsys node-level): the "9.5 µs/node spacing" is
+## FALSIFIED — the graph is DENSE at 0.19 µs/node; the real bleed is 22.6% of wall in BOUNDARY GAPS
+## before copy_i32_from_mapped (the follow-up graph's first node, waiting 1-5 ms on HOST launches);
+## node-deletion lane CLOSED (~1-2%), the ladder's top structural item becomes the BOUNDARY PIPELINE**
+
+**THE CAPTURE:** server under nsys (trace=cuda, --cuda-graph-trace=node), prewarm2, one M1 leg
+during collection (219.1 t/s graph-level pass; 199.2 node-level — tracing tax ~9%, structure valid),
+3 s decode slice, 374,056 node records, 424 MB sqlite.
+
+**FINDINGS:**
+1. **In-graph spacing is HEALTHY: 223,732 dispatch gaps, median 0.19 µs, p99 0.54 µs — better than
+   the published 1.3 µs healthy-graph reference.** The 9.5 µs/node model was engine-internal
+   accounting (window wall ÷ nodes), not GPU truth. ALL of L2's node-deletion tranches (F-204's
+   −900..−1,000 nodes) re-price at their dispatch-gap value: 40.8 ms/3 s = **1.4% of wall**. Lane
+   CLOSED as a perf lever (the fusions remain worth taking only when they simplify code).
+2. **The real bleed: 471 big gaps (0.5-10 ms) totaling 678.6 ms = 22.6% of wall, median 1.26 ms,
+   top ~5 ms — EVERY top-15 gap sits before copy_i32_from_mapped_kernel**, the mapped-memory
+   doorbell/commit-word copy that heads the follow-up graphs. This is the window-BOUNDARY class:
+   graph ends → host runs commit/emit/sampler-feed → launches the next graph → GPU idles. The
+   graph-level pass agrees (3.9 graph launches/window, 27 µs median graph-to-graph idle on the
+   dense path, memcpys = 2.08 MB expert DMAs on the copy engines — concurrent, healthy).
+3. Eager sampler chain (sampler_split_part 733×, 68.8 µs each) and native_kernel (722×, 88.6 µs)
+   are real work, dense around their launches — not waste.
+
+**THE RE-RANK:** the ladder's top structural lever is now **the BOUNDARY PIPELINE (R2-P5's
+one-step-delayed boundary, promoted)**: launch window n+1's graph BEFORE the host processes window
+n's tails; the GPU's next window then covers the host's commit/emit work. Prize band: the gaps are
+22.6% of wall at solo; halving them ≈ +13% t/s; cohorts already hide part of this at conc (which is
+why conc lanes read better relative to solo). The megakernel re-frames as boundary-elimination, not
+node-deletion. L2.0 CLOSED: no host-spins, no fix needed inside the graph.
+Evidence: /tmp/f342-audit.{nsys-rep,sqlite} (graph-level), /tmp/f342-node.{nsys-rep,sqlite}
+(node-level); analysis inline here; keep the node sqlite as the reference capture.
