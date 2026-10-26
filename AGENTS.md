@@ -338,3 +338,14 @@ port, merge:
    one kernel; the wait became the staging); elastic sessions (allocation became VA bookkeeping).
    When proposing ANY change, name the pathway it shortens and the measured term it removes.
 
+
+10. **THE BINARY LADDER (user law, 2026-10-26).** Every optimization produces a CANDIDATE binary;
+    the incumbent CHAMPION stays on disk and in service. A candidate is compared to the champion by
+    the gauntlet (`campaign/binary-ladder.sh <champion> <candidate> <label>`): ABAB interleaved boots
+    (champ/cand/champ/cand), 3 probe legs each, same hour, SHARED COMPUTE — never a quiet-box run
+    (the quiet box is its own metric, banked separately and never cashed in for a promotion).
+    PROMOTE only when the candidate is not worse beyond noise on ANY lane and better beyond noise on
+    at least one; then the candidate becomes the champion (the old champion archived as
+    `engine/strata.pre-<tag>`) and the ladder repeats with the next candidate. HOLD otherwise, with
+    the pair table in the F-entry. Capability-reducing changes (KV window, context length, precision
+    of the served model) are NOT promotions — they are shelf variants, labeled, never silent.
