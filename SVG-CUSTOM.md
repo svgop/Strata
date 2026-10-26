@@ -11308,3 +11308,27 @@ now; thread-count = null here; PCIE_SHARE cost model = open; PROMOTE_MIN anti-ch
 (our STRATA_ADAPT_MIN_AGE/DORMANT/PINCAP likely covers). The remaining Maya items go to the queue
 with the pricing note: they gate on pool share, which is 3% at current hits.
 Standing restored (split inert). Evidence: campaign/results/f349-*; notes campaign/pool-split-notes.md.
+
+## F-350 — 10-26 ~19:45: **REGRESSION CHECK (user order): NO REGRESSION — current binary vs pre-F-349
+## adjacent boots: M1 +4.6% (the protected lane IMPROVED), pair −3.9% and conc −2.2% inside noise;
+## current means sit at the anchor band; M3b up (+1.7pp vs anchor)**
+
+**RECIPE VERIFIED ON THE PROCESS:** QSA_SPLIT_ATTN=1, PROMPT_ATTN_IMMA=1, ADAPT_EARLY=1, POOL_SPIN=100,
+POOL_SPLIT unset (inert gate), pool 15, binary md5 = build/strata (split build). Slots 10,446 (fit-scan
+under current VRAM; benign).
+
+**STATE BATTERY (5 legs, current boot):** M1 217.2 / pair 202.2 / conc 292.4 / M3b 78.0 means.
+vs the F-340 anchor (222.4 / 207.6 / 297.8 / 76.3): M1 −2.3, pair −2.6, conc −1.5, M3b +1.7pp —
+all inside the ±8-15% boot lottery; M3b (the canary) UP.
+
+**THE BINARY A/B (the actual regression question, adjacent boots, same hour):**
+pre-F-349 binary:  M1 211.1 / pair 208.0 / conc 306.9 / M3b 77.4
+current (split):   M1 220.8 / pair 199.8 / conc 300.1 / M3b 78.0
+deltas: M1 **+4.6%** (single-stream — the protected lane — IMPROVED), pair −3.9 (noise), conc −2.2
+(noise), M3b +0.6pp. The inert split gate costs nothing measurable; no regression from the deploy.
+
+**LEDGER STANDING:** all-time bests remain M1 234.8 (F-345 standing) / 239.2 (F-344 leg); conc 319.2
+(F-340 anchor). The last hour's bands (211-221 M1) are the same-generation level; the anchor and
+records stand. Every non-adopted arm (pw12, split16, spin2k, flush) left NO residue; every adopted
+arm (F-331 pair, F-332 gated, F-333 pin) is in the served recipe.
+Evidence: campaign/results/f350-{check,preF349,postF349}-*.txt. Current boot (warm, 19:40) kept.
