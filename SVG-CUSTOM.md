@@ -11147,3 +11147,27 @@ already on the board gated by its histogram falsifier; (b) is a bounded engine c
 record (single leg, instrumented boot, DMWS's unfused-wait path differs microscopically); logged for
 the pooled eye. If it repeats on the standing boot it re-anchors the F-334 bank upward.
 Standing restored. Evidence: log lines 131445-131532 (dm-wait-stats blocks).
+
+## F-345 — 10-26 ~16:25: **NEW ALL-TIME M1 RECORD ON STANDING: 234.8 (beats the 234.1 bank), pair
+## 221.2 in the same leg; the 239.2 DMWS level REPEATS on the standing recipe. Plus two parked probes:
+## the profile-binary parse (packed format, side-quest parked) and the shrink-A/B (flag semantics)**
+
+**THE RECORD (f345-m1rep legs on standing, shared compute, load ~1.5):** M1 215.5 / **234.8** / 225.1;
+pair 200.2 / **221.2** / 215.1; conc 283.2 / 306.2 / 313.4; M3b 76.6-77.5. The 234.8 + the 239.2 (F-344,
+DMWS boot) put the current boot generation ABOVE the F-334 bank (232.5/234.1): the standing recipe's
+warm level is now 225-239. BANK RE-ANCHORED: solo best 234.8 (standing), pair best 221.2. The V5.4
+goal "beat the quiet best under load" is MET on solo (234.8 + 239.2 vs 232.5-234.1 quiet).
+
+**PARKED PROBE 1 — learned-profile parse:** data/expert-profile-learned.bin = "SRP" v1 header (48
+layers x 512) + 196,608 bytes of PACKED non-int32/non-f32 data (values to 33.5M — likely packed
+bit-fields). Side-quest parked; the histogram falsifier goes through the engine instead.
+
+**PARKED PROBE 2 — shrink A/B:** `--expert-cache 9000` does NOT stick (the profile/fit paths
+overwrite it — 10,564 slots read back); the RELIABLE shrink knob is `--vram-reserve-mib` (2000->
+4500 => 9,234 slots, -13%). One probe leg on the shrink boot read M1 202.9 with probe-traffic hit
+94-99% — NOT a valid slope price: probe traffic's expert working set is far narrower than real
+traffic; the hit-rate slope must be priced on real-traffic hit rates over a day (log compare),
+queued. F-183's vram-800 datum remains the best slope point (more slots: conc +4.9%, M1 -6.9%).
+
+**STATE:** standing recipe serving (f345 artifacts: campaign/arms/f345-*.json + launchers — the
+launcher-clone absolute-cd fix applied). Evidence: campaign/results/f345-*.txt.
