@@ -978,9 +978,10 @@ void usage() {
                  "  --batch N / --slots N  --serve (opt-in): up to N requests decode together in batch slots (2..8\n"
                  "                       normally; --batch-mtp waves more through eight-row windows),\n"
                  "                       each slot with its own session (VRAM like the main one); docs/BATCHING.md\n"
-                 "  --batch-mtp          --batch (opt-in, needs --mtp and --spec): each slot also verifies one MTP proposal per\n"
+                 "  --batch-mtp          --batch (opt-in, needs --mtp and --spec): each slot also verifies MTP proposals per\n"
                  "                       window (STRATA_BATCH_MTP=1 does the same); works on one GPU and on a layer split (the\n"
-                 "                       slot drafters sit on the last stage's GPU; not with --batch-groups); needs VRAM per slot\n"
+                 "                       slot drafters sit on the last stage's GPU; not with --batch-groups); needs VRAM per slot;\n"
+                 "                       STRATA_BATCH_DRAFT_DEPTH=D (1..3, default 1) raises the proposals per slot per window\n"
                  "  --batch-groups G     --batch with a layer split: the slots in G groups pipelined through the GPUs\n"
                  "  --pipeline-windows N --serve with a layer split on two GPUs (on by default for 2+ stages on AMD gfx12;\n"
                  "                       STRATA_PIPELINE_AUTO=0 or N=0 turns it off): one conversation's verify windows\n"
@@ -5361,6 +5362,17 @@ int main(int argc, char** argv) {
             batch_mtp = false;
         }
     }
+    // savage-custom (batch draft depth): the slot drafters' speculative depth D — the proposals each slot
+    // verifies per window, so a slot owns 1 + (up to D) rows.  1 (the default) is byte-identical to the
+    // pinned one-proposal shape.  The cap keeps a full-width slot inside the drafter's T range
+    // (1 + D <= o.spec = the slot drafter's max_t) and the falsifier-first test band (D <= 3).
+    int batch_draft_depth = 1;
+    if (const char* v = std::getenv("STRATA_BATCH_DRAFT_DEPTH"); v != nullptr && v[0] != '\0')
+        batch_draft_depth = std::atoi(v);
+    {
+        const int cap = std::max(std::min(o.spec - 1, 3), 1);
+        batch_draft_depth = std::min(std::max(batch_draft_depth, 1), cap);
+    }
     // The most slots, up to n, whose windows hold at most kVerifyMaxT rows each: n itself up to that, more only as
     // pipelined groups on a layer split - the groups as resolved below (a number given, auto, or the default's one
     // group for --adapt-async 1), dividing the slots, each at most kVerifyMaxT, all at most one group's worth per
@@ -5617,7 +5629,7 @@ int main(int argc, char** argv) {
                                  vram_free_note().c_str());
                     return 1;
                 }
-                d->set_max_drafts(1);   // the first candidate verifies one proposal per slot
+                d->set_max_drafts(batch_draft_depth);   // D proposals per slot per window (1 = byte-identical: one)
                 d->set_ple_session(bslot_ss[0][(size_t) b].get());
                 slot_mtp.push_back(std::move(d));
             }
@@ -5628,6 +5640,11 @@ int main(int argc, char** argv) {
                                      "state and buffers each, sharing the solo drafter's weights); %.2f GiB free there\n",
                              (int) slot_mtp.size(), mtp.device(), (double) slot_mtp.front()->vram_bytes() / 1048576.0,
                              (double) fb / 1073741824.0);
+                if (batch_draft_depth != 1)
+                    std::fprintf(stderr, "strata generate: --batch-mtp: batch draft depth D=%d "
+                                         "(STRATA_BATCH_DRAFT_DEPTH): each slot verifies up to %d proposals, "
+                                         "1 + min(actual, D) rows per slot\n",
+                                 batch_draft_depth, batch_draft_depth);
             }
         }
     }
@@ -11583,6 +11600,7 @@ int main(int argc, char** argv) {
             int32_t x = 0;                 ///< the token the next window feeds (not yet in the slot's state)
             std::array<int32_t, strata::kernels::kVerifyMaxT> draft{}; ///< the slot's next MTP proposal
             std::array<float, strata::kernels::kVerifyMaxT> dprob{};  ///< savage-custom F-30: the proposal's drafter probs (the batch ratio arm's p-side)
+            int n_draft = 0;               ///< proposals the last draft round actually returned (<= the depth): the window admits 1 + min(n_draft, D) rows
             bool draft_ready = false;
             int64_t p = 0;                 ///< its position
             int64_t produced = 0, max_new = 0;
@@ -12060,18 +12078,27 @@ int main(int argc, char** argv) {
                     for (size_t offset = 0; offset < span && w.S + (mtp_use ? 2 : 1) <= strata::kernels::kVerifyMaxT; ++offset) {
                         const int b = lo + (int) ((next_cur + offset) % span);
                         if (!bs[(size_t) b].active) continue;
+                        // the slot's rows: its base token plus the proposals its drafter actually returned,
+                        // up to the depth.  The for-condition above is today's conservative admission (a
+                        // 2-row slot always fits past it); at D > 1 a deeper slot that would overflow
+                        // kVerifyMaxT runs TRUNCATED (its extra proposals sit this window out) - the window
+                        // stays exactly as wide as today's rule admits, never past the cap.
+                        int rows_b = mtp_use && bs[(size_t) b].draft_ready
+                                         ? 1 + std::min(bs[(size_t) b].n_draft, batch_draft_depth) : 1;
+                        if (batch_draft_depth > 1 && w.S + rows_b > strata::kernels::kVerifyMaxT)
+                            rows_b = strata::kernels::kVerifyMaxT - w.S;
                         w.first[w.A] = w.S;
                         w.active[w.A] = b;
-                        w.nrows[w.A] = mtp_use && bs[(size_t) b].draft_ready ? 2 : 1;
+                        w.nrows[w.A] = rows_b;
                         ++w.A;
                         w.rows[w.S] = b;
                         w.tok[w.S] = bs[(size_t) b].x;
                         w.pos[w.S] = bs[(size_t) b].p;
                         ++w.S;
-                        if (w.nrows[w.A - 1] == 2) {
+                        for (int j = 1; j < rows_b; ++j) {
                             w.rows[w.S] = b;
-                            w.tok[w.S] = bs[(size_t) b].draft[0];
-                            w.pos[w.S] = bs[(size_t) b].p + 1;
+                            w.tok[w.S] = bs[(size_t) b].draft[j - 1];
+                            w.pos[w.S] = bs[(size_t) b].p + j;
                             ++w.S;
                         }
                     }
@@ -12233,13 +12260,16 @@ int main(int argc, char** argv) {
                         const BSlot& sl = bs[(size_t) b];
                         const bool eos = std::find(o.eos_ids.begin(), o.eos_ids.end(), (int64_t) outb[i]) != o.eos_ids.end();
                         keep[b] = 1;
-                        if (w.nrows[a] == 2 && !eos && !sl.stop &&
-                            sl.produced + 2 <= sl.max_new && sl.p + 3 <= o.max_context) {
+                        if (w.nrows[a] >= 2 && !eos && !sl.stop &&
+                            sl.produced + w.nrows[a] <= sl.max_new && sl.p + w.nrows[a] + 1 <= o.max_context) {
                             ++bt_slot_drafts;
-                            if (outb[i] == w.tok[i + 1]) {
-                                keep[b] = 2;
-                                ++bt_slot_accepts;
-                            } else if (batch_rescue_on() && v.sampling_temperature() > 0.0f && typical_threshold() > 0.0f) {
+                            // the chain compare: row j accepts the proposal at tok[i + j] iff every pick
+                            // before it matched (the target verifies in order, so the first mismatch ends
+                            // the slot's chain).  The rescue stays depth-1: it only ever re-rolls the
+                            // FIRST proposal (dprob[0] is the only confidence the slot holds for it).
+                            int acc = 1;
+                            while (acc < w.nrows[a] && outb[i + acc - 1] == w.tok[i + acc]) ++acc;
+                            if (acc == 1 && batch_rescue_on() && v.sampling_temperature() > 0.0f && typical_threshold() > 0.0f) {
                                 static const bool ratio_mode = [] { const char* v2 = std::getenv("STRATA_SPEC_RATIO");
                                                                     return v2 != nullptr && std::atoi(v2) != 0; }();
                                 const float btemp = v.sampling_temperature();
@@ -12248,11 +12278,12 @@ int main(int argc, char** argv) {
                                     : typical_accept(v, i, w.tok[i + 1], btemp);
                                 if (ok) {
                                     outb[i] = w.tok[i + 1];
-                                    keep[b] = 2;
+                                    acc = 2;
                                     rescued[b] = 1;
-                                    ++bt_slot_accepts;
                                 }
                             }
+                            keep[b] = acc;
+                            if (acc >= 2) ++bt_slot_accepts;
                         }
                     }
                     if (bt_trace_f) {
@@ -12309,25 +12340,28 @@ int main(int argc, char** argv) {
                         if (mtp_use && sl.active) {
                             const strata::core::OnDevice on_slot_mtp(slot_mtp[(size_t) b]->device());
                             const size_t stride = (size_t) g.hc * (size_t) g.n_embd;
-                            if (w.nrows[t] == 2) {
+                            if (w.nrows[t] >= 2) {
                                 if (cudaMemcpyAsync(slot_mtp_rows[(size_t) b].get(),
                                                     v.final_R_all() + (size_t) w.first[t] * stride,
-                                                    2 * stride * sizeof(float), cudaMemcpyDeviceToDevice,
+                                                    (size_t) w.nrows[t] * stride * sizeof(float), cudaMemcpyDeviceToDevice,
                                                     slot_mtp[(size_t) b]->stream()) != cudaSuccess ||
-                                    !slot_mtp[(size_t) b]->draft_launch(2, outb + w.first[t], w.pos[w.first[t]], keep[b] - 1,
-                                                                       sl.draft.data(), err, sl.dprob.data(), (float) o.spec_min_p)) {
+                                    !slot_mtp[(size_t) b]->draft_launch(w.nrows[t], outb + w.first[t], w.pos[w.first[t]], keep[b] - 1,
+                                                                       sl.draft.data(), err, sl.dprob.data(), (float) o.spec_min_p,
+                                                                       &sl.n_draft)) {
                                     std::printf("ERR batch MTP slot %d: %s\n", b, err.c_str());
                                     return false;
                                 }
                                 launched[n_launched++] = b;
                             } else if (!slot_mtp[(size_t) b]->draft_first(1, v.final_R_all() + (size_t) w.first[t] * stride,
-                                                                          outb[w.first[t]], w.pos[w.first[t]], sl.draft.data(), err)) {
+                                                                          outb[w.first[t]], w.pos[w.first[t]], sl.draft.data(),
+                                                                          err, nullptr, 0.0f, &sl.n_draft)) {
                                 std::printf("ERR batch MTP slot %d: %s\n", b, err.c_str());
                                 return false;
                             }
                             sl.draft_ready = true;
                         } else if (sl.active) {
                             sl.draft_ready = false;
+                            sl.n_draft = 0;
                         }
                     }
                     for (int i = 0; i < n_launched; ++i) {
@@ -12375,25 +12409,31 @@ int main(int argc, char** argv) {
                 return true;
             }
             cohort_prev_round = false;
-            // Each MTP slot uses two rows; rotate slots when more than four are active.
+            // Each MTP slot uses 1 + (up to D) rows; rotate slots when more than four are active.
             int A = 0;
             for (size_t offset = 0; offset < bs.size() && S + (mtp_use ? 2 : 1) <= strata::kernels::kVerifyMaxT; ++offset) {
                 const int b = (int) ((next_slot + offset) % bs.size());
                 if (bs[(size_t) b].active) {
+                    // a stale draft (a slot that ran draftless windows) takes one row this window;
+                    // the draft_first refresh below makes the next one full width again.  The for-condition
+                    // is today's conservative admission; at D > 1 a deeper slot that would overflow
+                    // kVerifyMaxT runs truncated (its extra proposals sit this window out).
+                    int rows_b = mtp_use && bs[(size_t) b].draft_ready
+                                     ? 1 + std::min(bs[(size_t) b].n_draft, batch_draft_depth) : 1;
+                    if (batch_draft_depth > 1 && S + rows_b > strata::kernels::kVerifyMaxT)
+                        rows_b = strata::kernels::kVerifyMaxT - S;
                     first[A] = S;
                     active[A] = b;
-                    // a stale draft (a slot that ran draftless windows) takes one row this window;
-                    // the draft_first refresh below makes the next one full width again
-                    nrows[A] = mtp_use && bs[(size_t) b].draft_ready ? 2 : 1;
+                    nrows[A] = rows_b;
                     ++A;
                     rows[S] = b;
                     tok[S] = bs[(size_t) b].x;
                     pos[S] = bs[(size_t) b].p;
                     ++S;
-                    if (nrows[A - 1] == 2) {
+                    for (int j = 1; j < rows_b; ++j) {
                         rows[S] = b;
-                        tok[S] = bs[(size_t) b].draft[0];
-                        pos[S] = bs[(size_t) b].p + 1;
+                        tok[S] = bs[(size_t) b].draft[j - 1];
+                        pos[S] = bs[(size_t) b].p + j;
                         ++S;
                     }
                 }
@@ -12457,13 +12497,16 @@ int main(int argc, char** argv) {
                 const BSlot& sl = bs[(size_t) b];
                 const bool eos = std::find(o.eos_ids.begin(), o.eos_ids.end(), (int64_t) outb[i]) != o.eos_ids.end();
                 keep[b] = 1;
-                if (nrows[a] == 2 && !eos && !sl.stop &&
-                    sl.produced + 2 <= sl.max_new && sl.p + 3 <= o.max_context) {
+                if (nrows[a] >= 2 && !eos && !sl.stop &&
+                    sl.produced + nrows[a] <= sl.max_new && sl.p + nrows[a] + 1 <= o.max_context) {
                     ++bt_slot_drafts;   // savage-custom F-31: slot-draft acceptance telemetry
-                    if (outb[i] == tok[i + 1]) {
-                        keep[b] = 2;
-                        ++bt_slot_accepts;
-                    } else if (batch_rescue_on() && ver.sampling_temperature() > 0.0f && typical_threshold() > 0.0f) {
+                    // the chain compare: row j accepts the proposal at tok[i + j] iff every pick before
+                    // it matched (the first mismatch ends the slot's chain).  The rescue stays depth-1:
+                    // it only ever re-rolls the FIRST proposal (dprob[0] is the only confidence the slot
+                    // holds for it).
+                    int acc = 1;
+                    while (acc < nrows[a] && outb[i + acc - 1] == tok[i + acc]) ++acc;
+                    if (acc == 1 && batch_rescue_on() && ver.sampling_temperature() > 0.0f && typical_threshold() > 0.0f) {
                         // savage-custom F-28 (X-2 + the RC1 law): the rescue ported to the batch accept
                         // site - the same typicality/ratio test as the serial path (STRATA_SPEC_RATIO
                         // selects the exact form). On accept we commit the DRAFT and emit it (outb[i]
@@ -12486,10 +12529,11 @@ int main(int argc, char** argv) {
                             : typical_accept(ver, i, tok[i + 1], btemp);
                         if (ok) {
                             outb[i] = tok[i + 1];
-                            keep[b] = 2;
-                            ++bt_slot_accepts;   // rescued counts as accepted in the telemetry
+                            acc = 2;
                         }
                     }
+                    keep[b] = acc;
+                    if (acc >= 2) ++bt_slot_accepts;   // rescued counts as accepted in the telemetry
                 }
             }
             if (!(mtp_use ? ver.commit_slot_prefixes(keep.data(), err) : ver.commit_slots(err))) {
@@ -12551,19 +12595,21 @@ int main(int argc, char** argv) {
                     // queued on the drafter's own stream after the window's host sync, so the draft graph reads it.
                     const strata::core::OnDevice on_slot_mtp(slot_mtp[(size_t) b]->device());
                     const size_t stride = (size_t) g.hc * (size_t) g.n_embd;
-                    if (nrows[t] == 2) {
+                    if (nrows[t] >= 2) {
                         if (cudaMemcpyAsync(slot_mtp_rows[(size_t) b].get(),
                                             ver.final_R_all() + (size_t) first[t] * stride,
-                                            2 * stride * sizeof(float), cudaMemcpyDeviceToDevice,
+                                            (size_t) nrows[t] * stride * sizeof(float), cudaMemcpyDeviceToDevice,
                                             slot_mtp[(size_t) b]->stream()) != cudaSuccess ||
-                            !slot_mtp[(size_t) b]->draft_launch(2, outb + first[t], pos[first[t]], keep[b] - 1,
-                                                               sl.draft.data(), err, sl.dprob.data(), (float) o.spec_min_p)) {
+                            !slot_mtp[(size_t) b]->draft_launch(nrows[t], outb + first[t], pos[first[t]], keep[b] - 1,
+                                                               sl.draft.data(), err, sl.dprob.data(), (float) o.spec_min_p,
+                                                               &sl.n_draft)) {
                             std::printf("ERR batch MTP slot %d: %s\n", b, err.c_str());
                             return false;
                         }
                         launched[n_launched++] = b;
                     } else if (!slot_mtp[(size_t) b]->draft_first(1, ver.final_R_all() + (size_t) first[t] * stride,
-                                                                  outb[first[t]], pos[first[t]], sl.draft.data(), err)) {
+                                                                  outb[first[t]], pos[first[t]], sl.draft.data(),
+                                                                  err, nullptr, 0.0f, &sl.n_draft)) {
                         // F-231: a stale-draft slot that ran a draftless window - the admission-shaped
                         // refresh from its committed row, so the NEXT window is full width again
                         std::printf("ERR batch MTP slot %d: %s\n", b, err.c_str());
@@ -12572,6 +12618,7 @@ int main(int argc, char** argv) {
                     sl.draft_ready = true;
                 } else if (sl.active) {
                     sl.draft_ready = false;   // F-231: a draft not refreshed this window is stale by position
+                    sl.n_draft = 0;
                 }
             }
             for (int i = 0; i < n_launched; ++i) {   // the waits, in launch order — the graphs ran overlapped
@@ -12644,7 +12691,7 @@ int main(int argc, char** argv) {
                     const std::string pr = (k == 0 ? ver : stages[k - 1]->ver).profile_report();
                     if (!pr.empty()) std::fprintf(stderr, "strata batch GPU stages, stage %zu (ms/window):%s\n", k + 1, pr.c_str());
                 }
-                if (batch_mtp)   // each slot-window offers one proposal and yields 1 + (accepted) tokens
+                if (batch_mtp)   // each slot-window offers up to D proposals and yields 1 + (accepted) tokens
                     std::fprintf(stderr, "strata batch: MTP proposals accepted %lld of %lld (%.1f%%)\n",
                                  (long long) bt_accepted, (long long) (bt_rows - bt_accepted),
                                  100.0 * (double) bt_accepted / (double) std::max<int64_t>(bt_rows - bt_accepted, 1));
@@ -16461,7 +16508,8 @@ int main(int argc, char** argv) {
                         // set_slot_sampling line above; this is the drafter-side twin.
                         slot_mtp[(size_t) admit_slot]->set_draft_sampling(req_sp);
                         if (!slot_mtp[(size_t) admit_slot]->draft_first(1, ver.final_R_all(), sl.x,
-                                                                        sl.p - 1, sl.draft.data(), err)) {
+                                                                        sl.p - 1, sl.draft.data(), err,
+                                                                        nullptr, 0.0f, &sl.n_draft)) {
                             std::fprintf(stderr, "strata batch: MTP admission for slot %d failed: %s\n",
                                          admit_slot, err.c_str());
                             return 1;

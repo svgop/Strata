@@ -1850,10 +1850,12 @@ bool MtpDrafter::draft_launch(int T, const int32_t* tokens, int64_t p, int a, in
     if (T < 1 || T > max_t_ || a < 0 || a >= T) { err = "mtp: draft arguments out of range"; return false; }
     if (chain_live_ || draft_pending_) { err = "mtp: a draft is still in flight"; return false; }
     const int max_steps = (int) std::min<int64_t>(std::min(max_t_ - 1, max_drafts_), st_.max_cells - (p + a));
-    if (max_steps != 1 || min_p <= 0.0f) { err = "mtp: draft_launch covers the one-proposal sampled shape only"; return false; }
+    if (max_steps < 1 || min_p <= 0.0f) { err = "mtp: draft_launch covers the sampled shape only (min_p > 0, a draft cell must exist)"; return false; }
     if (!mtp_catchup_all()) T = a + 1;
     const bool cp = coupled_active_;
     if (!capture_round(T, cp, err)) return false;
+    for (int j = 1; j < max_steps; ++j)
+        if (!capture_step(j, cp, err)) return false;   // lazy, per step, as draft() runs them
     const Clock::time_point t0 = Clock::now();
     const int64_t NH = g_->n_head;
     auto put = [&](int row, int64_t cell) {
@@ -1868,7 +1870,9 @@ bool MtpDrafter::draft_launch(int T, const int32_t* tokens, int64_t p, int a, in
         put(t, p + t);
     }
     put(2 * max_t_ - 1, coupled_draft_cell(p, a, 0));
-    ((volatile int32_t*) h_out_)[0] = -1;
+    for (int j = 1; j < max_steps; ++j)
+        put(max_t_ + j - 1, coupled_draft_cell(p, a, j));   // each step's K/V cell, as draft() stages them
+    for (int j = 0; j < max_steps; ++j) ((volatile int32_t*) h_out_)[j] = -1;
     h_row_[0] = a;
     h_row_[1] = 0;
     if (h_force_ != nullptr) for (int j = 0; j < 16; ++j) h_force_[j] = -1;
@@ -1882,6 +1886,20 @@ bool MtpDrafter::draft_launch(int T, const int32_t* tokens, int64_t p, int a, in
     }
     if (g_dt.on) { g_dt.launch_ms += std::chrono::duration<double, std::milli>(Clock::now() - tl).count();
                    cudaEventRecord(g_dt.ea[0], cs_); }
+    // STRATA_DRAFT_UNGATED (T13A #3) is the standing rule here: every step graph enqueues back-to-back - same
+    // graphs, same stream order, same Philox draws as the gated launch, so drafts and probs are bit-identical;
+    // draft_finish()'s readout trims at the first prob under min_p.  Back-to-back is REQUIRED by this path's
+    // shape: the gated form spins between launches, and draft_launch() exists so every slot's round launches
+    // before any of them is waited on (F-206) - a spin here would re-serialize the slots.
+    const Clock::time_point tls = Clock::now();
+    for (int j = 1; j < max_steps; ++j) {
+        if (cudaGraphLaunch(cp ? step_exec_c_[j] : step_exec_[j], cs_) != cudaSuccess) {
+            err = std::string("mtp draft step: ") + cudaGetErrorString(cudaGetLastError());
+            return false;
+        }
+    }
+    if (g_dt.on && max_steps > 1)
+        g_dt.launch_ms += std::chrono::duration<double, std::milli>(Clock::now() - tls).count();
     (void) cudaStreamQuery(cs_);
     SessionState* const pss = ple_ss_ ? ple_ss_ : ss_;
     pend_do_ple_ = pss != nullptr && pss->ple.ready() && pss->ple.table != nullptr;
@@ -1921,24 +1939,39 @@ bool MtpDrafter::draft_finish(std::string& err) {
     }
     pend_drafts_[0] = ((volatile int32_t*) h_out_)[0];
     if (pend_probs_) pend_probs_[0] = pj;
-    if (pend_do_ple_ && pend_drafts_[0] >= 0) {
-        SessionState* const pss = ple_ss_ ? ple_ss_ : ss_;
+    SessionState* const pss = ple_ss_ ? ple_ss_ : ss_;
+    auto prefetch_ple = [&](int32_t tok) {
+        if (!pend_do_ple_ || tok < 0) return;
         uint32_t rows16[strata::kernels::PLE_N_HEADS];
-        strata::kernels::ngram_rows(&pend_drafts_[0], pend_ple_prev_, 1, pss->ple.consts, rows16);
+        strata::kernels::ngram_rows(&tok, pend_ple_prev_, 1, pss->ple.consts, rows16);
+        pend_ple_prev_[0] = pend_ple_prev_[1];
+        pend_ple_prev_[1] = tok;
         pss->ple.table->prefetch_rows(rows16);
+    };
+    prefetch_ple(pend_drafts_[0]);
+    // The trim, the draft() readout's exact rule (both its shapes): draft j is kept iff prob[j - 1] >= min_p -
+    // the first proposal always, each next one only while the previous cleared the floor.  Every step graph was
+    // already enqueued back-to-back in draft_launch(), so the outputs are all stable behind the sync above and
+    // this is a pure readout: the kept prefix is bit-identical to the gated launch's (same graphs, same stream
+    // order, same Philox draws), and the steps past the trim only cost their execution (~50 us each).
+    int n = 1;
+    for (; n < pend_max_steps_; ++n) {
+        if (((volatile float*) h_prob_)[n - 1] < pend_min_p_) break;
+        pend_drafts_[n] = ((volatile int32_t*) h_out_)[n];
+        if (pend_probs_) pend_probs_[n] = ((volatile float*) h_prob_)[n];
+        prefetch_ple(pend_drafts_[n]);
     }
-    const int n = 1;
     for (int j = n; j < max_t_ - 1; ++j) { pend_drafts_[j] = 0; if (pend_probs_) pend_probs_[j] = 0.0f; }
     if (pend_n_) *pend_n_ = n;
     if (pend_dth_) {
         float ms = 0;
         if (cudaEventElapsedTime(&ms, g_dt.eb[0], g_dt.ea[0]) == cudaSuccess) g_dt.round_ms += ms;
         g_dt.wait0_ms += std::chrono::duration<double, std::milli>(Clock::now() - tw).count();
-        g_dt.steps += 0; ++g_dt.rounds;
+        g_dt.steps += n - 1; ++g_dt.rounds;
         g_dt.wall_ms += ms_since(pend_t0_);
         if (g_dt.rounds % 300 == 0) g_dt.report();
     }
-    if (g_mp.on) { g_mp.collect(1); if (g_mp.n[0] % 300 == 0) g_mp.report(); }
+    if (g_mp.on) { g_mp.collect(n); if (g_mp.n[0] % 300 == 0) g_mp.report(); }
     ms_draft += ms_since(pend_t0_);
     ++rounds;
     return true;

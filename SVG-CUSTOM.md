@@ -11363,3 +11363,36 @@ a verdict; the pair MEAN is.
 checkpoints, P-A cadence under prompt+decode concurrency, latency tail) — not from assuming the
 adopted arms carry more than measured.
 Evidence: campaign/results/f351-{off,on}{1,2}-*.txt. Standing (ON) boot kept.
+
+## F-352 — 10-26 ~21:30: **THE BATCH-DEPTH FALSIFIER (the campaign's biggest single hypothesis): the
+## serving lane HAS been running 1 proposal/slot; multi-proposal was BUILT (187 lines, D=1
+## byte-identical) and D=2 FALSIFIED at current acceptance — rows +19%, window +20-22%, pair −7%,
+## conc −6%. The depth lever re-opens only behind a better drafter (the DAgger keystone)**
+
+**THE DISCOVERY:** the batch/cohort lane — which serves ALL traffic, solo included — pinned
+set_max_drafts(1) (generate.cpp:5620) and built nrows = 2 per slot, while the drafter's multi-step
+machinery (max_steps, back-to-back step graphs, min_p trim: mtp.cpp:1741-1783 STRATA_DRAFT_UNGATED
+shape) and multi-depth API calls (set_max_drafts(S_mtp-1) at :11447/:17446) already existed — only
+the pipeline/serial lanes used them. The serving lane has been decoding at depth 1 all along.
+
+**THE BUILD (agent, 3 files 187 lines):** STRATA_BATCH_DRAFT_DEPTH (default 1, clamp 1..min(spec-1,3));
+draft_launch's max_steps!=1 hard error removed (lazy step-graph capture, ungated launch shape);
+draft_finish's hardcoded n=1 replaced by the real min_p trim readout; both collect loops build
+1+min(n_draft,D) rows; both accept sites chain-compare; residual copies width-generic. D=1
+dead-code argument per-site (notes: campaign/batch-draft-depth-notes.md). Window-period sanity:
+D=1 restore read 4.68 rows/15.25 ms vs D=2's 5.83/17.0.
+
+**THE FALSIFIER (D=2, 3 legs, same hour):** M1 209.7 (vs ~206-217 standing = noise), pair 192.2
+(vs ~204-206; **−7%**), conc 284.2 (vs ~301-305; **−6%**), M3b 77.5 (chain acceptance ran; steady).
+THE ECONOMICS: rows/window +19% but period +20-22% — the marginal draft row does NOT pay at 77%
+per-draft acceptance; the row's expected yield (~0.77 tokens) loses to its cost growth (verify rows
++ 2 extra draft step graphs/slot + the CPU-row term). The engine's original depth-1 hardening was
+right for these economics. D=3 not tested (D=2 already negative; deeper is worse).
+
+**RE-OPEN CONDITION (the compounding keystone):** depth pays when per-draft acceptance at shallow
+depths approaches ~0.9+ (SmartSpec's l(alpha,T)/(T+1) argmax flips). That is EXACTLY what the
+DAgger drafter retrain (F-327 loop) targets (depth-tail recovery). The depth patch stays in-tree,
+env-gated and inert, as the mechanism waiting for the drafter. Priority note for the 250/350 targets:
+the drafter retrain is now the highest-ROI long pole (it raises tokens/window on EVERY lane AND
+re-opens depth); it needs GPU-exclusive training windows.
+Evidence: campaign/results/f352-*; patch committed (inert). Standing D=1 boot serving.

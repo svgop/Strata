@@ -111,8 +111,10 @@ public:
     /// savage-custom F-206 (R33): draft() split in two so the serving loop can overlap all slots'
     /// draft graphs — the drafters' streams are independent, but draft() is launch->spin->sync, so
     /// slot t+1's GPU work began only after slot t's finished.  draft_launch() stages and launches
-    /// and returns at once; draft_finish() does the wait/read/sync and the bookkeeping.  Only the
-    /// serving shape (max_drafts_ <= 1, min_p > 0) is split — the general draft() is untouched.
+    /// and returns at once; draft_finish() does the wait/read/sync and the bookkeeping.  The sampled
+    /// shape at any max_drafts_ (min_p > 0): every step graph enqueues back-to-back (the STRATA_DRAFT_UNGATED
+    /// twin's shape — bit-identical drafts and probs), and draft_finish() trims at the first prob under
+    /// min_p and reports the kept count through `n_drafts`.  draft() stays the general path.
     bool draft_launch(int T, const int32_t* tokens, int64_t p, int a, int32_t* drafts, std::string& err,
                       float* probs = nullptr, float min_p = 0.0f, int* n_drafts = nullptr);
     bool draft_finish(std::string& err);   // completes the pending draft_launch (error if none)
