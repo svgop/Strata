@@ -11452,3 +11452,29 @@ PATH: the L6 tail re-quant (+27-32% slots on the same VRAM) would ABSORB this co
 is the only route to the 355-390 band the F-284 note hoped for. Queue order: L6 re-quant FIRST (it
 also helps cohort-2), then re-test ternary on the bigger cache. ctx-probe's arena math applies.
 Standing restored (b6/c2). Evidence: campaign/results/f354{,b}-c3*-*.txt; campaign/arms/f354-b9c3.*.
+
+## F-355 — 10-26 ~22:50: **THE KV-WINDOW TRADE, MEASURED BOTH WAYS: --kv-resident 16384/8192 both
+## clamp to 20,480 cells => +342 expert slots (10,788) and conc +4-5% on short contexts, BUT long-context
+## decode −5..9% at 8/32/64k vs the 32k-window control. REJECTED for standing; shelved as a
+## SHORT-CONTEXT variant. The L6 per-expert mixed-quant route is BLOCKED by the per-layer pack format**
+
+**L6 FORMAT BLOCK (the day's structural finding):** native_experts.txt v3 carries gu_type/d_type PER
+LAYER (one type for all 512 experts, offset/blob_bytes/gate/up/down offsets). Per-expert mixed
+precision (hot IQ3_S / tail IQ2) is NOT representable without a pack-format + engine change. The
+tractable variants: (a) per-layer mixed quant (all experts equally hot across layers — routing dump:
+every layer 7,940 records — so layer-level quantization is a global quality trade, not a tail win);
+(b) a separate low-bit shadow store for misses (HOBBIT-class, engine work, byte savings on the miss
+path only); (c) the ternary composition now waits on either.
+
+**THE KV TRADE (the measured result):**
+| config | slots | conc (3-leg means) | long-ctx decode 8k/32k/64k |
+|---|---|---|---|
+| standing kv 32768 | 10,476 | ~301-305 (this hour) | 192.2 / 239.4 / 250.4 |
+| kv 16384 (=clamped 20,480) | 10,788 (+342) | 315.4 | — |
+| kv 8192 (=clamped 20,480) | 10,795 | 318.2 | 182.3 / 218.2 / 235.9 |
+The window clamps at 20,480 (kernel granularity; 8k and 16k requests are identical). The extra 342
+slots buy conc +4-5% at short contexts; the long-context lane pays −5..9% (KV streaming past 20k
+cells) — and the user's real traffic IS long-context. VERDICT: SHELF VARIANT (a second launcher at
+kv 16384 for short-context/serving profiles), never a silent standing change. Evidence:
+campaign/results/f355-{kv16,kv8}-*; f355-ctx-{kv20k,kv32k}.txt; campaign/arms/f355-kv*.{json,sh}.
+Standing (kv 32768) serving.
