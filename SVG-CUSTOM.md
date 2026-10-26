@@ -11557,3 +11557,31 @@ logprobs-based comparison (top-k delta distributions, llama.cpp percentile-tail 
 needs the server to expose logprobs (serve work). Until then: DO NOT cite mimic scores as quality
 evidence in any F-entry; MMLU gates stand alone.
 Evidence: mimicbench2-mimic-{aa1,aa2}.json; mimic-compare output above. Standing boot untouched.
+
+## F-359 — 10-27 ~01:40: **THE SHADOW-STORE FALSIFIER PASSES WITH MARGIN: Q2_0 blobs stream at 75 µs/entry
+## vs IQ3_S's 152 µs (2.0x bytes, ≥32% faster after dequant) — the first MEANINGFUL non-capability-
+## reducing lever since the record era. Implementation map fixed; build pending (agent dispatch flaky)**
+
+**THE FALSIFIER (real data, real layouts, mmap streaming):** IQ3_S L0 2,176,000 B: 64 experts in
+9.74 ms = 14.3 GB/s = 152.2 µs/entry — EXACTLY the engine's measured pool per-entry (~150 µs), so
+the pool is byte-bound per core. Q2_0 L0 (experts.bin, 1,382,400 B blobs): 64 experts in 4.81 ms =
+18.4 GB/s = 75.1 µs/entry. Mean IQ3_S blob 2,046,400 B = 1.48x Q2_0. PREDICTED SHADOW ENTRY: ~90-101
+µs (with dequant margin) = 32-40% faster. GATE (>=25%): PASSED.
+IMPACT ARITHMETIC: the per-group CPU-rows wait (~1.2 ms, 22.6% of wall at solo) shrinks ~35% =>
+~+5-8% solo, more at conc where pool work is wider. Quality: only the ~3% missed routing computes
+at Q2_0 (the model's own second quantization) — MMLU gate judges on adoption.
+
+**ASSETS ON DISK (no requantization tooling needed):** /home/svg/LLM/data/packs/q2_0/experts.bin
+(33.97 GB = 48*512 blobs of 1,382,400 B, index = layer*512+expert, zero padding) + experts.json
+(layout/types) — the engine's Phase-2 source already knows this exact store shape (expert_source.cpp
+'PHASE 2'S ONLY SOURCE: experts.bin'). CPU kernels cover the types (iq_avx512.hpp IQ2/IQ3 families;
+native_expert.cpp dispatch).
+
+**IMPLEMENTATION MAP (for the patch):** (1) map q2_0/experts.bin + build the shadow per-layer layout
+from experts.json; (2) in expert_pool_dispatch_multi's miss path (the nmiss/jobs construction,
+expert_source.cpp:4532+, miss blob resolution feeding ExpertPool::run_split_multi), resolve MISS
+entries' blob pointer to shadow base + (layers*512+expert)*1382400 with the shadow layout; hits/PCIe/
+residuals untouched; (3) env STRATA_SHADOW_EXPERTS=<dir>, default empty = byte-identical; (4) build +
+deploy via the binary ladder (champion = current, candidate = shadow build); forced-miss smoke boot
+(--vram-reserve-mib raise) + MMLU gate + the gauntlet.
+Evidence: streaming falsifier inline above; q2_0 pack on disk. Standing untouched.
