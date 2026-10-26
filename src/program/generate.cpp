@@ -10505,6 +10505,14 @@ int main(int argc, char** argv) {
         // engine's exit still flush.  Default off = flush in finish(), byte-identical.
         static const bool emit_late_flush = [] { const char* v = std::getenv("STRATA_EMIT_LATE_FLUSH");
                                                  return v != nullptr && v[0] != '\0' && v[0] != '0'; }();
+        // F-338 (keep-win-drop-loss scope): the early scan's pooled form CONFIRMED pair +2.1% (3/3) but
+        // measured a 6-conc tax of -4.7% under background load (3/3, F-336/F-337: not core contention -
+        // the one-round-staler residency tables widen the conc miss path).  Gate the early scan on the
+        // round's ACTIVE SLOT count: solo/pair keep the win, 3+ slots fall back to the inline scan (the
+        // always-correct path) so the conc tax is gone by construction.  STRATA_ADAPT_EARLY_MAX_SLOTS
+        // sets the threshold (default 3); =0 on STRATA_ADAPT_EARLY stays the full rollback.
+        static const int adapt_early_max_slots = [] { const char* v = std::getenv("STRATA_ADAPT_EARLY_MAX_SLOTS");
+                                                      return v != nullptr && std::atoi(v) > 0 ? std::atoi(v) : 3; }();
         static const float pred_w = [] { const char* v = std::getenv("STRATA_PREDICT_CREDIT");
                                          return v != nullptr ? std::max(0.0f, (float) std::atof(v)) : 0.0f; }();
         static const int credit_budget = [] { const char* v = std::getenv("STRATA_PREDICT_BUDGET");
@@ -12159,7 +12167,8 @@ int main(int argc, char** argv) {
                     ~AdaptPreC() { if (th.joinable()) th.join(); }
                 } adapt_pre;
                 if (adapt_early_env && !drive.d.usage.empty() && !ajob && !in_prompt_read &&
-                    pending.empty() && ((ba_window + 1) % o.adapt_every) == 0 && !peer.valid() && remote_opt == nullptr) {
+                    pending.empty() && ((ba_window + 1) % o.adapt_every) == 0 && !peer.valid() && remote_opt == nullptr &&
+                    (wa.A + wb.A + wc.A) < adapt_early_max_slots) {   // F-338: conc traffic keeps the inline scan
                     adapt_pre.snap_u = drive.d.usage;
                     if (pred_w > 0.0f && pred.size() == drive.d.usage.size()) adapt_pre.snap_pc = pred;
                     if (!heat.empty()) adapt_pre.snap_heat = heat;
