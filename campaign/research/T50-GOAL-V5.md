@@ -160,3 +160,14 @@ serve/server.py (8.3k lines) is a request/API/tokenize/streaming front end over 
 | 7 | Cold/warm P3 (cross-restart parking); L7 device-launch + megakernels | endgame items |
 
 New goal rows added to the mission: **TTFT p99 <1.2s, ITL p99 <10ms** (T51-r8), **restart-to-first-quality-token halved + warm band durable under pressure** (T51-r7). Throughput targets unchanged (chase resumes from 219/306 standing).
+
+---
+
+# V5.4 DOCTRINE (user order, 2026-10-26): SHARED-COMPUTE IS THE STANDARD TEST CONDITION
+
+All baselines and A/B forms from now on run WITH the user's background load live. Comparisons are
+fair only within the same shared-compute condition; the cleaned-box banks (F-334/F-339) become a
+SEPARATE ledger re-visited only at a later quiet-device stage. The shared-compute anchor mean (today's
+battery) is the number to beat; the quiet bests (232.5 solo / 327.2 conc) are the GOAL UNDER LOAD —
+beating them shared-compute implies the quiet-device best lifts proportionally (user projection:
+quiet solo 300+, quiet conc 400+; to be measured once, later, as confirmation — not as a gate).
