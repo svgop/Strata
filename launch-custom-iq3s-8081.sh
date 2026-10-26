@@ -17,7 +17,7 @@ export STRATA_POOL_DIET=1  # F-227 ADOPTED 2026-10-17: trailing repark waits ski
 # T28 share=1.0 arm REVERTED (F-263: no reproducible gain - single-window wins were noise; shelf: export STRATA_BATCH_DECODE_SHARE=1.0
 export STRATA_COHORTS="${STRATA_COHORTS:-2}"  # F-233 ADOPTED 2026-10-17: two cohort verifiers on the batch lane (R2-S3) - B pool work runs under A GPU window (the F-223 escape). 3v3 fenced: conc +24.8% (306.8 vs 245.9, every arm round >304 = the 300 stretch goal CLEARED), M1 +1.2%, pair noise (byte-identical path), M3b -0.04pp flat. =1 off rolls back; env-overridable since F-284 (the hard export silently overrode the ternary arm boots - STRATA_COHORTS=3 now passes through; 3 needs batch>=9 AND the b9 lane fixed first)
 export STRATA_TYPICAL_ACCEPT=0.2    # Medusa typical acceptance (sampled traffic only; R5: worth +20.6pts accept / +8% M1)
-export STRATA_POOL_SPIN_US=100      # pool workers park after 100us instead of 20ms
+export STRATA_POOL_SPIN_US="${STRATA_POOL_SPIN_US:-100}"  # pool workers park after 100us instead of 20ms (overridable F-346: the wake-latency arm tests 2000)
 export STRATA_KV_PREFETCH=1         # +5.3%/4.1% prefill at 32K/64K
 export STRATA_ADAPT_LAG=2           # kills the lag-1 event sync stall in the adapt tier
 export STRATA_DMA_BATCH=1           # 84.9% fewer DMA submit cycles
