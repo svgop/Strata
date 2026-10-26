@@ -11478,3 +11478,32 @@ cells) — and the user's real traffic IS long-context. VERDICT: SHELF VARIANT (
 kv 16384 for short-context/serving profiles), never a silent standing change. Evidence:
 campaign/results/f355-{kv16,kv8}-*; f355-ctx-{kv20k,kv32k}.txt; campaign/arms/f355-kv*.{json,sh}.
 Standing (kv 32768) serving.
+
+## F-356 — 10-26 ~23:30: **THE 12-HOUR AUDIT (user challenge: "something we added is making it slower"):
+## NO CODE REGRESSION FOUND — the pre-F-332 binary (the F-328-era code) reads the SAME band today
+## (220.7/202.2/303.4 vs current 213.3/204.9/300.2, one pair, all inside the lottery). The gap vs the
+## F-328 evening (conc 338.5) is BOX STATE, not code. KV reduction confirmed as a capability trade,
+## shelved for good**
+
+**THE AUDIT (adjacent boots, same hour, shared compute, page cache verified 100% resident 51.1 GB):**
+pre-F-332 binary (= the F-328-era code: F-331 env arms, no F-332/333/338/349/352 code):
+M1 220.7 / pair 202.2 / conc 303.4 / M3b 77.4.
+current binary (all of today): M1 213.3 / pair 204.9 / conc 300.2 / M3b 78.7.
+Deltas: M1 −3.3, pair +1.4, conc −1.0 — inside the one-pair lottery (F-351 saw the M1 sign flip
+−4.0/+4.5 across pairs). NOTHING ADDED IN 12 HOURS COSTS MEASURABLE SPEED.
+
+**WHY THE FEELING IS REAL ANYWAY (the conditions ledger):** every added mechanism is either
+gated-inert (pool-split OFF, draft-depth D=1 byte-identical, cadence OFF) or proven neutral-positive
+(F-338 gate + F-333 pin: F-351 ABAB M1 +0.2/pair −0.8/conc +1.9). The F-328 evening (M1 223.4 mean,
+conc 338.5 BEST leg with flanks 321/318) was a CLEANED box at a different hour; since then the box
+runs the user's background load and three days of uptime. The F-328-era binary in TODAY's conditions
+reads 303 conc — proving the delta is environment, not commit.
+**LESSON (reinforced): cross-condition comparisons are the illusion machine; only same-hour
+interleaved pairs are currency (V5.4). The user's "slower" feel = the old bank was a quiet-box bank.**
+
+**KV REDUCTION — CONFIRMED AS A CAPABILITY TRADE (user verdict, adopted):** the 20,480-cell clamp
+buys +342 slots and short-context conc, at the cost of the long-context KV window. It is NOT a
+performance improvement in the honest sense; the shelf launcher stays parked and the standing kv
+32,768 is final. Gains must come from non-capability-reducing levers.
+Evidence: campaign/results/f356-{pre332b,cur}-*.txt; binaries: engine/strata.pre-f332 vs current.
+Current binary re-deployed and serving.
