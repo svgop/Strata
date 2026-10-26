@@ -38,6 +38,10 @@ export STRATA_ADAPT_EARLY="${STRATA_ADAPT_EARLY:-1}"  # F-332 ADOPTED (10-25): t
                                   # 198.8), M1 +0.1 flat, conc +1.6 in-band, M3b +1.6pp; MECHANISM PROVEN: "adapt wait" 1.03 -> 0.28-0.62 ms/window.
                                   # =0 rolls back (inline scan, byte-identical legacy path). Rider: five-boot pooled confirmation (pair leg-1
                                   # sensitivity noted in F-332); engine rollback: engine/strata.pre-f332
+export STRATA_SHADOW_EXPERTS="${STRATA_SHADOW_EXPERTS:-/home/svg/LLM/data/packs/q2_0}"  # F-360 PROMOTED (10-27): CPU misses compute from the Q2_0 expert
+                                  # store (31.64 GiB mapped, 1.38 MB blobs vs IQ3_S's 2.05 MB; the pool is byte-bound at ~150 us/entry). Warm legs vs the fresh
+                                  # champion: M1 -0.7 (noise), pair +7.7%, conc +8.4%; MMLU 95.71 >= 93.3; falsifier: 2.0x bytes, >=32% faster entries. Hits,
+                                  # the PCIe share, the prompt path unchanged (bit-identical); only the ~3% missed routing computes at Q2_0. ="" rolls back.
 # F-331 ARMS (10-25, both never priced on this lane; see SVG-CUSTOM F-331):
 export STRATA_QSA_SPLIT_ATTN="${STRATA_QSA_SPLIT_ATTN:-1}"     # decode+drafter attention through the split int8-MMA kernel (verify.cpp:1973 + mtp.cpp:1088;
                                   # qsa_prompt_attn.cu:2271: each query's cells split over up to 20 blocks, LSE merge; int8-KV sm_80+;

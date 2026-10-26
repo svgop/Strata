@@ -11585,3 +11585,34 @@ residuals untouched; (3) env STRATA_SHADOW_EXPERTS=<dir>, default empty = byte-i
 deploy via the binary ladder (champion = current, candidate = shadow build); forced-miss smoke boot
 (--vram-reserve-mib raise) + MMLU gate + the gauntlet.
 Evidence: streaming falsifier inline above; q2_0 pack on disk. Standing untouched.
+
+## F-360 — 10-27 ~02:00: **THE SHADOW-STORE MISS PATH: IMPLEMENTED, GATED, PROMOTED. Warm legs vs the
+## fresh champion: M1 −0.7% (noise), pair +7.7%, conc +8.4%; MMLU 95.71 (≥93.3). THE FIRST MEANINGFUL
+## WIN SINCE THE RECORD ERA — and no capability was reduced (KV/context/precision untouched)**
+
+**THE MECHANISM (falsifier-first, then built):** the CPU pool is byte-bound (~150 µs/entry for IQ3_S's
+~2.05 MB blobs — matches the measured pool accounting exactly). The same model's Q2_0 expert store
+(1,382,400-byte blobs, already on disk at data/packs/q2_0/) streams at 75 µs/entry (2.0x bytes; ≥32%
+faster after dequant — F-359). The patch (STRATA_SHADOW_EXPERTS): maps the 31.64 GiB store, routes
+ONLY the ~3% MISSED routing entries' CPU compute to shadow blobs with the canonical Q2_0 layout
+(compile-time, byte-matches the pack's experts.json: blob 1382400, sub-offsets 0/819200/1228800/
+1331200). HITS stay byte-identical; the PCIe share, the prompt path, residuals/combines untouched;
+gate off = textually identical pool jobs. Refusal/validation: blob_bytes + total_bytes + geometry must
+be canonical; Hadamard-folded packs refused. BUG BANKED: the first validator mis-scanned the JSON
+("find layer" hit the "layers" array's own name → refused the correct pack); fixed by deriving
+per-layer offsets arithmetically (total_bytes already pins canonicality) — F-360.
+
+**THE LADDER TABLE (warm legs 3-5 vs the fresh champion boot, same hour):**
+| lane | champion | champion+shadow | delta |
+|---|---|---|---|
+| M1 | 223.0 | 221.4 | −0.7% (noise) |
+| pair | 196.2 | 211.3 | **+7.7%** |
+| conc | 292.6 | 317.2 | **+8.4%** |
+All-5-legs (incl. the cold first leg): M1 210.8/pair 202.7/conc 310.5. First-leg cold contamination
+noted (prewarm 26s vs 13s — the shadow's first-touch page faults land in warmup, by design).
+**PROMOTED per campaign law 10:** no lane regressed beyond noise, two lanes won beyond noise, MMLU
+95.71 ≥ 93.3 floor. Standing = candidate binary (md5 0c5f31a4) + STRATA_SHADOW_EXPERTS in the
+launcher (="${...:-/home/svg/LLM/data/packs/q2_0}", ="" rolls back). Champion archived:
+engine/strata.pre-f360 (+audit-current). RIDERS: pooled five-boot confirmation (law-v2 form); the
+timing-line shadow-miss counter readback (banner confirmed armed); long-context spot-check (misses
+at deep contexts use the shadow — the ctx ladder owes one read).
