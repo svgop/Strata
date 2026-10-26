@@ -11017,3 +11017,25 @@ conc legs took the inline path with no tax event visible — conc best 318.4 vs 
 pending battery per F-338.
 
 Evidence: campaign/results/f339-restore-{1..10}.txt.
+
+## F-340 — 10-26 ~12:40: **V5.4 DOCTRINE LIVE + THE SHARED-COMPUTE ANCHOR (M1 222.4/231.8 — within 0.3%
+## of the quiet all-time best UNDER LOAD) + THE F-338 GATE CONFIRMED: pair +2.1% kept (2/2), conc tax
+## gone (split deltas, mean −1.0% vs the ungated −4.7% 3/3) — standing-arms scoping CLOSED**
+
+**THE ANCHOR (10 legs, shared compute per V5.4, load ~1.5, deep-warm boot, gated binary):**
+M1 222.4 mean / 231.8 best | pair 207.6 / 214.2 | conc 297.8 / 319.2 | M3b 76.3.
+The M1 best is 0.3% from the QUIET all-time best (232.5, F-334) — beaten-without-closing is
+effectively reached on solo; this anchor (f340-anchor-*) is the standing number to beat.
+
+**THE GATE BATTERY (2 interleaved pairs, 3 legs/boot, same hour, same load):**
+ctl1 206.5/200.3/297.8 | arm1 216.4/202.2/303.7 | ctl2 216.5/200.3/296.6 | arm2 212.7/206.7/284.9
+(M1/pair/conc). Adjacent arm−ctl deltas: M1 +4.8/−1.8 (mean +1.5, noise — protected); pair +0.9/+3.2
+(mean **+2.1%, 2/2 — the F-332 win holds identically through the gate**); 6-conc +2.0/−4.0 (mean −1.0,
+SPLIT — no consistent tax; arm2's conc dragged by one 264.5 outlier leg at a load spike) vs the
+UNGATED −4.7 at 3/3. VERDICT: the F-338 slot gate keeps the win and drops the loss —
+standing-arms' scoping item CLOSES (2-pair strength, honest note; a third pair would tighten the
+conc CI but the sign-split already separates it from the ungated 3/3-negative).
+
+Standing recipe (F-331 + gated F-332 + pin) serves; final battery boot IS standing. Next per pick
+order: latency P-A (decode-first budget), L1 falsifiers.
+Evidence: campaign/results/f340-{anchor,g-*}-*.txt.
