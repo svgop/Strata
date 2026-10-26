@@ -10974,3 +10974,24 @@ back to the inline scan (the F-336 conc tax gone by construction). ~2 lines + on
 clone carries the standing env; its `cd $(dirname $0)` must be made absolute when cloned out of root —
 footgun banked).
 Evidence: campaign/results/f337-{ctl,cmb}-{1,2,3}.txt. Standing recipe restored, prewarmed.
+
+## F-338 — 10-26 ~11:55: **KEEP-WIN-DROP-LOSS SHIPPED: slot-count-gated adapt-early (user order after
+## reboot; API choppy recon) — solo/pair keeps the +2.1% pair win, conc falls back to the inline scan;
+## VERIFICATION BATTERY PENDING (operator no-test order on the fresh reboot)**
+
+**RECON (user: "API choppy, did we regress?"):** (1) the box was REBOOTED — nothing survived, the server
+was DOWN = the primary choppy cause; (2) the one real regression on record = F-332's 6-conc tax −4.7%
+under bg load (F-336/F-337) — consistent with choppy concurrent traffic; (3) everything else held:
+F-331 standing, flush never adopted, pool-14 dropped.
+
+**THE GATE (generate.cpp, commit on top of F-337):** the early scan launches only when the round's
+active slots < STRATA_ADAPT_EARLY_MAX_SLOTS (default 3). Solo(1)/pair(2) = early scan (the confirmed
++2.1% path); 3+ slots = the inline scan (the always-correct pre-F-332 path) — the conc tax is gone by
+construction, no new mechanism. =0 on STRATA_ADAPT_EARLY remains the full rollback; engine rollback
+engine/strata.pre-f338.
+
+**STATE:** fresh-reboot boot, standing recipe verified on the process (QSA_SPLIT/ADAPT_EARLY/
+PROMPT_ATTN_IMMA on, flush off), pool 15, prewarm2 done, idle. NO battery run (operator order): the
+gate's verification (interleaved pairs, conc lane) is QUEUED until tests are allowed — and per the
+measurement law it must run under MATCHED conditions (bg load on, same hour), never against the
+rebooted clean box.
