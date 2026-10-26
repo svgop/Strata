@@ -270,6 +270,18 @@ private:
     /// claim already fences a straggler out of the next batch, so the repark is latency shaping, not
     /// correctness (see the completion protocol above and the note in run_phase).
     bool pool_diet_ = false;
+    /// F-348 STRATA_POOL_SPLIT=1: the automatic multi-phase granularity (phase_tasks) becomes
+    /// STRATA_POOL_SPLIT_CHUNKS tasks per participating thread (clamped 2..64, default 4) instead of
+    /// the historical 3 - the Maya CPU_SPLIT pattern ("a thread's token share cut into ~48 pieces so a
+    /// stalled thread cannot hold the token").  The claim protocol already hands a stalled worker's
+    /// REMAINING tasks to the others; what it cannot hand over is the task it is INSIDE, and at 3 tasks
+    /// per thread that task is 1/(3*threads) of the phase - the 88-vs-150 us entry spread's tail.  More,
+    /// smaller tasks shrink what one stall pins, at a CAS per task against a ~100 us phase slice.  A
+    /// task is an equal global-row range of the phase and every output row is computed whole by exactly
+    /// one task, so any task count writes the same bits (the invariant pool_tasks_test proves over
+    /// 1..kMaxTasks tasks); only the schedule moves.  An explicit --pool-tasks count still wins.
+    /// 0/unset: the historical path, byte for byte.
+    int split_per_thread_ = 0;
     ExpertJob* jobs_ = nullptr;
     int njobs_ = 0;
     /// The host's own scratch when `host_works_`.  A separate object rather than a share of `scratch_[i]`,

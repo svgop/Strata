@@ -11284,3 +11284,27 @@ Design note: campaign/pat-cadence-design.md.
 **STATE:** standing recipe restored (cadence off, standard config), prewarmed, healthy. Record: this
 entry + the three agent reports folded in. L5a patch plan and L1 fused-checkpoint target remain the
 next implementation engagements.
+
+## F-349 — 10-26 ~19:20: **THE MAYA TRANSFER ROUND: CPU_SPLIT BUILT (parity-proven, 240 bitwise) and
+## armed; thread-count 12 NULL; chunks-16 IN-NOISE with an M1 lean — the pool-strain lever needs
+## strained traffic to show (probe traffic leaves the pool light at 96%+ hits)**
+
+**THE PATCH (builder, 3 files +69/−1):** the pool ALREADY work-steals (CAS-claimed global-row
+ranges, pool.cpp claim()); the straggler exposure is only the chunk count (phase_tasks() = 3*threads
+default). STRATA_POOL_SPLIT=1 + STRATA_POOL_SPLIT_CHUNKS (2..64) arms a finer cut; parity by
+construction (floor-division ranges tile exactly, no cross-row sums) + harness 240 bitwise
+comparisons (chunks {2,4,64} x host on/off x precedence x NaN-poison). Built, linked, deployed
+(engine/strata.pre-f349 rollback); gate off = byte-identical.
+
+**ARMS (same hour, shared compute):** pw12: M1 209.0 / pair 200.2 / conc 283.1 / M3b 77.3 — NULL
+(conc lean-low; 15 stays). split chunks=16 (vs the 45-task default): M1 216.1 / pair 201.8 /
+conc 296.1 / M3b 78.4 — inside noise, M1 lean-positive, conc mid. NEITHER clears the bar on probe
+traffic; the honest framing: probe traffic (96%+ hits, narrow expert set) barely strains the pool,
+so the anti-straggler lever cannot show. The right instrument is REAL agent traffic or an induced
+miss burst (vram-reserve shrink + concurrent load) — queued as the split's decisive test.
+
+**MAYA TRANSFER LEDGER:** row-reuse (CPU_MT) = already ours; AVX-512 = compiled; CPU_SPLIT = patched
+now; thread-count = null here; PCIE_SHARE cost model = open; PROMOTE_MIN anti-churn = open
+(our STRATA_ADAPT_MIN_AGE/DORMANT/PINCAP likely covers). The remaining Maya items go to the queue
+with the pricing note: they gate on pool share, which is 3% at current hits.
+Standing restored (split inert). Evidence: campaign/results/f349-*; notes campaign/pool-split-notes.md.

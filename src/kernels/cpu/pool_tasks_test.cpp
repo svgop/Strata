@@ -70,6 +70,40 @@ int main(int argc, char** argv) {
         }
         const auto ref = out;
         for (float v : ref) if (!std::isfinite(v)) return 1;
+#if defined(_WIN32)
+        auto set_env = [](const char* k, const char* v) { _putenv_s(k, v); };
+        auto unset_env = [](const char* k) { _putenv_s(k, ""); };
+#else
+        auto set_env = [](const char* k, const char* v) { ::setenv(k, v, 1); };
+        auto unset_env = [](const char* k) { ::unsetenv(k); };
+#endif
+        // F-348 STRATA_POOL_SPLIT: the env-gated automatic granularity (chunks per thread instead of 3)
+        // must write the default partition's bits too, and an explicit tasks count must keep precedence
+        // over the env.  The env is read per ExpertPool construction, so arming it here cannot leak into
+        // the reference above.
+        char chunks_text[16];
+        for (int chunks : {2, 4, 64}) {
+            std::snprintf(chunks_text, sizeof chunks_text, "%d", chunks);
+            set_env("STRATA_POOL_SPLIT", "1");
+            set_env("STRATA_POOL_SPLIT_CHUNKS", chunks_text);
+            for (bool host : {false, true}) for (int explicit_tasks : {0, 41}) {
+                cpu::ExpertPool pool(3, false, host, cpu::PoolAffinity::All, explicit_tasks);
+                for (int repeat = 0; repeat < 2; ++repeat) {
+                    std::fill(out.begin(), out.end(), 0.0f);
+                    for (const auto& job : jobs) for (int t = 0; t < job.nt; ++t)
+                        std::fill(job.out[t], job.out[t] + cpu::H, std::numeric_limits<float>::quiet_NaN());
+                    pool.run_split_multi_native(f, jobs.data(), n);
+                    if (std::memcmp(ref.data(), out.data(), out.size() * sizeof(float)) != 0) {
+                        std::fprintf(stderr, "split mismatch n=%d chunks=%d host=%d tasks=%d repeat=%d\n",
+                                     n, chunks, host, explicit_tasks, repeat);
+                        return 1;
+                    }
+                    ++checks;
+                }
+            }
+        }
+        unset_env("STRATA_POOL_SPLIT");
+        unset_env("STRATA_POOL_SPLIT_CHUNKS");
         for (bool host : {false, true}) for (int workers : {1, 3})
             for (int tasks : {0, 1, 41, 128, 192, 256, cpu::ExpertPool::kMaxTasks}) {
                 cpu::ExpertPool pool(workers, false, host, cpu::PoolAffinity::All, tasks);

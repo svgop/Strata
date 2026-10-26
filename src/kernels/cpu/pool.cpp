@@ -745,6 +745,20 @@ ExpertPool::ExpertPool(int n_workers, bool pin, bool host_works, PoolAffinity af
     plan_cores_ = plan.cores;
     plan_logical_ = plan_in.logical;
     if (n_ < 1) n_ = 1;
+    // F-348 STRATA_POOL_SPLIT: the anti-straggler task granularity (split_per_thread_ in pool.hpp).  The
+    // decode's pool wait measured ~1.2 ms per layer-group with an 88-150 us spread across entries; at the
+    // historical 3 tasks per thread, one stalled worker pins up to a full thread-share of the phase behind
+    // it.  Chunks per thread is read once here; an explicit --pool-tasks count keeps precedence in
+    // phase_tasks.  0/unset: today's path, bit for bit.
+    if (const char* e = std::getenv("STRATA_POOL_SPLIT"); e != nullptr && std::atoi(e) != 0) {
+        int chunks = 4;   // four pieces per thread: one stall pins at most 1/(4*threads) of a phase
+        if (const char* c = std::getenv("STRATA_POOL_SPLIT_CHUNKS"); c != nullptr && c[0] != '\0')
+            chunks = std::atoi(c);
+        split_per_thread_ = std::clamp(chunks, 2, 64);
+        std::fprintf(stderr, "strata cpu pool: STRATA_POOL_SPLIT=1: %d tasks per phase thread (%d workers "
+                             "+%d host; STRATA_POOL_SPLIT_CHUNKS clamped 2..64)\n",
+                     split_per_thread_, n_, host_works_ ? 1 : 0);
+    }
     scratch_.resize((size_t) n_);
     wstate_.reset(new std::atomic<int32_t>[(size_t) n_]);
     for (int i = 0; i < n_; ++i) wstate_[(size_t) i].store(kParked);
@@ -1037,7 +1051,14 @@ void ExpertPool::run_split(ExpertJob* jobs, int n) {
 }
 
 int ExpertPool::phase_tasks(int64_t rows) const {
-    return tasks_ == 0 ? 3 * (n_ + (host_works_ ? 1 : 0)) : (int) (std::min)(rows, (int64_t) tasks_);
+    // An explicit --pool-tasks count wins over everything (today's shape).  STRATA_POOL_SPLIT replaces only
+    // the AUTOMATIC default - "3 tasks per thread" becomes STRATA_POOL_SPLIT_CHUNKS per thread, capped by
+    // rows and by kMaxTasks (begin_batch refuses a batch above 0xffff, and the claim's index field is 16
+    // bits).  With the gate off, the expression is the historical one, byte for byte.
+    if (tasks_ != 0) return (int) (std::min)(rows, (int64_t) tasks_);
+    if (split_per_thread_ != 0)
+        return (int) (std::min)(rows, (int64_t) (std::min)(kMaxTasks, split_per_thread_ * (n_ + (host_works_ ? 1 : 0))));
+    return 3 * (n_ + (host_works_ ? 1 : 0));
 }
 
 void ExpertPool::run_split_multi(ExpertJobMulti* jobs, int n) {
