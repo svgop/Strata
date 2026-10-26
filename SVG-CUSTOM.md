@@ -11171,3 +11171,27 @@ queued. F-183's vram-800 datum remains the best slope point (more slots: conc +4
 
 **STATE:** standing recipe serving (f345 artifacts: campaign/arms/f345-*.json + launchers — the
 launcher-clone absolute-cd fix applied). Evidence: campaign/results/f345-*.txt.
+
+## F-346 — 10-26 ~16:45: **NEW TARGETS SET (user): solo 250 / conc 350 (from 234.8/319.2 bests). The
+## Maya intel banked as external intel. The pool-spin arm: NULL (spin 2000 = all lanes in-noise) — the
+## worker park is not the per-group 1.2 ms; the batch_serve wake path is the next suspect**
+
+**TARGETS (V5.4 conditions):** solo 250 (+6.5% over the 234.8 record), conc 350 (+9.5% over 319.2).
+The priced path to both: the CPU-rows delivery (F-344's ~2.5 ms/window) is the solo lever; conc adds
+the draft throttle (L5a, +12-19% verified-token efficiency) and cohort-3.
+
+**MAYA INTEL (user observation, banked):** Project Maya now aggressively shuttles VRAM<->RAM with
+the full 16-core AVX-512 setup — CPU-side expert compute as a MAINLINE strategy, previously deemed
+not useful. Our Fiddler-class falsification was at 97% hit rate; Maya's operating point (CPU-heavy,
+PCIe-heavy) is different. Relevant if ever the hit-rate economics change or for the pool's per-entry
+speed (88.6 µs native_kernel — AVX-512-class tuning is what Maya cranks). Not a queue item now;
+re-price if (a) the pool share grows or (b) a Maya benchmark lands on a comparable workload.
+
+**THE ARM (STRATA_POOL_SPIN_US 100 -> 2000, launcher made overridable — the hard export swallowed
+the first attempt; caught by env-verify):** arm means M1 208.3 / pair 196.8 / conc 300.4 vs standing
+same-hour samples — every lane inside noise, CPU-experts line unchanged (2.5-3.8). NULL: the worker
+park is not the per-group wait. The wait must live in the batch_serve wake path itself (external
+serve thread, verify.cpp:4137 comment) or the dispatch's own latency under bg load. Next candidate
+instruments: stamp batch_serve's ring->dispatch->publish span (the tg.ms_pool-style counter), or
+run the serve thread's wake under LOAD vs quiet to split load-sensitivity.
+Standing restored (spin 100). Evidence: campaign/results/f346-*.
