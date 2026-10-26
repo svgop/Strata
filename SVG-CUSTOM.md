@@ -11396,3 +11396,33 @@ env-gated and inert, as the mechanism waiting for the drafter. Priority note for
 the drafter retrain is now the highest-ROI long pole (it raises tokens/window on EVERY lane AND
 re-opens depth); it needs GPU-exclusive training windows.
 Evidence: campaign/results/f352-*; patch committed (inert). Standing D=1 boot serving.
+
+## F-353 — 10-26 ~22:15: **THE DAGGER ROUND-2 ATTEMPT, RUN END-TO-END FOR REAL: harvest under rt2 (10
+## streams, ~5 min) + aligned replay (752,552 records, pos/tok IDENTICAL) + 26-min training chunk
+## (21,430 steps, final +29.5..34.1pt offline) — OFFLINE PLATEAU: best stayed 0.7932 (step 7500),
+## export = the OLD best; engine stair: rt2 0.520 accept / 1.47 t/r vs LIVE 0.587 / 2.14 — REJECTED,
+## live drafter stands. The offline->engine gap is not closed by one more aligned round**
+
+**WHAT RAN (server down ~40 min, GPU-exclusive per the training law):**
+1. tools/harvest_sweep.sh under rt2 (the round-1 export staged with experts.bin + EN draft_vocab):
+   10 streams, exit=0 each, ~25-35s/stream, 2-4 GB records each — the harness works.
+2. Alignment: the trainer asserts pos/tok identity against the STOCK shard set
+   [dagger-0..3, probe, stream-4..9]; staged records-round2-aligned matched exactly (probe added via
+   one manual boot — the sweep globs stream-*.ids only). Assert passed: 752,552 replay records.
+3. Training chunk (train_cycle.py --minutes 26 --dagger-glob ...): resumed step 9863, 21,430 steps,
+   evals 0.7029/0.7564/0.7462/0.7132/0.7401, final 0.7298. **Best of record stayed 0.7932 @ step
+   7500 — round 2 never beat it**, and the trainer (by design) exported the BEST state over the final.
+4. Engine stair (STRATA_SPEC_DEPTH=1, T=8): live rt 0.587 accept / 2.14 t/r (tail 0:427 1:241 2:135
+   3:76 4:32 5:45); rt2-round2 0.520 / 1.47 (tail 0:934 1:322 2:95 3:41 4:3) — WORSE at every depth.
+
+**VERDICT: REJECT.** The live r17 drafter remains. The round-2 export is the round-1 best (meta:
+step 21430/best 0.7932) — nothing new shipped, and the old best still loses to live on the engine.
+THE OPEN QUESTION SHARPENS: the offline top-1 metric plateaued at 0.7932 while the engine measures
+0.52-0.59 acceptance — the offline->engine transfer (exposure bias + the drafter's own sampling
+distribution) is the binding gap, not training quantity. NEXT-ATTEMPT CONDITION: any future round
+must ADVANCE the best mean past 0.7932 before an export is worth an engine stair; if on-policy data
+cannot move it, the loss/metric needs a change (e.g., acceptance-weighted objective) rather than
+more steps.
+Riders: harvest+alignment harness is now documented and reproducible (constitution for the loop);
+rt2-deploy bundle staged; stair results at campaign/results/f325-stair-{live,rt2round2}.out.
+Server RESTORED (standing recipe, prewarmed).
