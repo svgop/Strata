@@ -6,6 +6,7 @@
 #include "strata/core/remote_experts.hpp"
 #include "strata/core/peer_experts.hpp"
 #include "strata/kernels/cpu/expert_layout.hpp"
+#include "strata/core/shadow_experts.hpp"
 #include "strata/artifact/gguf_reader.hpp"
 
 #include "strata/core/pinned.hpp"
@@ -4555,6 +4556,12 @@ void expert_pool_dispatch_multi(ExpertDispatch& d, const float* x_f, const int32
     if ((int64_t) d.act_multi.size() < n_tok) d.act_multi.resize((size_t) MAXT);
     const ExpertLayout& lay = expert_layout();
     const bool native = lay.native;
+    // F-359 STRATA_SHADOW_EXPERTS: armed, every CPU miss below computes from the shadow Q2_0 store - the
+    // canonical kernels (run_split_multi) over `shadow::blob(layer, expert)` - instead of the native pack's
+    // blob.  The misses' outputs differ by the shadow's quantization, by design; the plan's hit/PCIe kinds,
+    // the GPU's share and every combine path read none of this.  Unset, `shadow` is false and nothing below
+    // takes a new branch: byte-identical.
+    const bool shadow = strata::core::shadow::armed();
     if (native && d.nact_multi.size() < (size_t) MAXT * kNativeActBytes) d.nact_multi.resize((size_t) MAXT * kNativeActBytes);
     // T18 (the iq4nl_nt SIGSEGV, 3 sightings under 6-stream load): `job_of` maps an expert id to its job for
     // THIS call and was reset only on the success path - a dispatch that returned early (`d.failed`: a blob
@@ -4851,7 +4858,9 @@ void expert_pool_dispatch_multi(ExpertDispatch& d, const float* x_f, const int32
         const bool ep = d.remote_count > 0 && d.remote[0]->optimized_decode();
         for (int64_t t = 0; t < n_tok; ++t) {
             if (ep && std::all_of(kind + t * k, kind + (t + 1) * k, [](int32_t v) { return v >= 0; })) continue;
-            if (native && strata::kernels::cpu::q2_native_kernels(lay.fmt[(size_t) d.layers].gu_type))   // a native Q2_0 pack: the Q2_0 kernels' activations
+            if (shadow)   // the shadow's misses are canonical Q2_0 jobs: Strata's own activation quantizer
+                act_quant_q8_1(x_f + (size_t) t * H, H, d.act_multi[(size_t) t]);
+            else if (native && strata::kernels::cpu::q2_native_kernels(lay.fmt[(size_t) d.layers].gu_type))   // a native Q2_0 pack: the Q2_0 kernels' activations
                 act_quant_any(x_f + (size_t) t * H, H, d.act_multi[(size_t) t]);
             else if (native)
                 native_quant_act(lay.fmt[(size_t) d.layers], x_f + (size_t) t * H, d.nact_multi.data() + (size_t) t * kNativeActBytes);
@@ -4875,7 +4884,10 @@ void expert_pool_dispatch_multi(ExpertDispatch& d, const float* x_f, const int32
             if (kind[i] == -1 && ids[i] >= 0 && ids[i] < d.n_expert &&
                 std::find(miss.begin(), miss.end(), (int64_t) ids[i]) == miss.end())
                 miss.push_back(ids[i]);
-        if (d.cold_mode == 0) {
+        if (shadow) {
+            // the misses read the shadow's own mapping; pulling the native pack's 2 MiB blobs into the page
+            // cache for them would only evict pages the window will never touch
+        } else if (d.cold_mode == 0) {
             d.src->prefetch(d.layers, miss.data(), (int64_t) miss.size());
         } else {
             mstate.assign(miss.size(), 0);
@@ -4937,8 +4949,9 @@ void expert_pool_dispatch_multi(ExpertDispatch& d, const float* x_f, const int32
             int16_t& jo = d.job_of[(size_t) e];
             if (jo < 0) {
                 const uint8_t* zp[3] = {nullptr, nullptr, nullptr};
-                const bool zc = d.cold_mode >= 3 && native && d.src->zc_roles(d.layers, e, zp);
-                const uint8_t* b = zc ? zp[0] : d.src->blob(d.layers, e);
+                const bool zc = !shadow && d.cold_mode >= 3 && native && d.src->zc_roles(d.layers, e, zp);
+                const uint8_t* b = zc ? zp[0]
+                                      : (shadow ? strata::core::shadow::blob(d.layers, e) : d.src->blob(d.layers, e));
                 if (b == nullptr) {
                     d.failed = true;
                     d.fail = "the expert source could not produce a blob";
@@ -4952,6 +4965,7 @@ void expert_pool_dispatch_multi(ExpertDispatch& d, const float* x_f, const int32
                 nj.blob = b;
                 nj.nt = 0;
                 nj.fmt = nullptr;
+                if (shadow) ++d.shadow_misses;   // F-359: this miss computes from the shadow Q2_0 store
                 if (zc) {   // 149-cold mode 3: the gate rows are the blob; up and down at their distance in the mapping
                     if (d.zc_fmt.size() < d.jobs_multi.size()) d.zc_fmt.resize(d.jobs_multi.size());
                     strata::kernels::cpu::NativeFmt& f = d.zc_fmt[(size_t) jo];
@@ -4974,7 +4988,7 @@ void expert_pool_dispatch_multi(ExpertDispatch& d, const float* x_f, const int32
                 return;
             }
             jb.act[jb.nt] = &d.act_multi[(size_t) t];
-            jb.nact[jb.nt] = native ? d.nact_multi.data() + (size_t) t * kNativeActBytes : nullptr;
+            jb.nact[jb.nt] = native && !shadow ? d.nact_multi.data() + (size_t) t * kNativeActBytes : nullptr;
             jb.out[jb.nt] = row;
             ++jb.nt;
             ++d.multi_entries;
@@ -4984,7 +4998,7 @@ void expert_pool_dispatch_multi(ExpertDispatch& d, const float* x_f, const int32
     {
         const auto b0 = std::chrono::steady_clock::now();
         if (njobs > 0) {
-            if (native) d.pool->run_split_multi_native(lay.fmt[(size_t) d.layers], d.jobs_multi.data(), njobs);
+            if (native && !shadow) d.pool->run_split_multi_native(lay.fmt[(size_t) d.layers], d.jobs_multi.data(), njobs);
             else d.pool->run_split_multi(d.jobs_multi.data(), njobs);
             ++d.cold_batches;
         }
@@ -5029,7 +5043,7 @@ void expert_pool_dispatch_multi(ExpertDispatch& d, const float* x_f, const int32
     if (d.plan != nullptr) d.plan->cpu_jobs = njobs;
     pt("run", njobs);
     if (njobs > 0 && npend == 0) {
-        if (native) d.pool->run_split_multi_native(lay.fmt[(size_t) d.layers], d.jobs_multi.data(), njobs);
+        if (native && !shadow) d.pool->run_split_multi_native(lay.fmt[(size_t) d.layers], d.jobs_multi.data(), njobs);
         else d.pool->run_split_multi(d.jobs_multi.data(), njobs);
     }
     if (d.remote_count > 0) {

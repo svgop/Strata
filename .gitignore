@@ -100,3 +100,6 @@ campaign/headport/head_q6k.bin
 campaign/headport/vhead*
 campaign/headport/head_requant_probe
 campaign/retrain/*.npy
+
+# campaign local build artifacts (keep sources + results, never the ELF)
+campaign/shadow-bench/shadow_bench

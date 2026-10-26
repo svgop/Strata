@@ -25,6 +25,7 @@
 #include "strata/core/device.hpp"
 #include "strata/core/remote_expert_opt.hpp"
 #include "strata/core/expert_cache.hpp"
+#include "strata/core/shadow_experts.hpp"
 #include "strata/core/conversation_snapshot.hpp"
 #include "strata/core/conversation_file.hpp"
 #include "strata/core/session_save_reclaim.hpp"
@@ -3526,6 +3527,11 @@ int main(int argc, char** argv) {
             (void) strata::prefill::mmq::supported(f.d_type);
 #endif
         }
+        // F-359 STRATA_SHADOW_EXPERTS: the optional shadow Q2_0 expert store.  Unset, arm() maps nothing and
+        // returns before printing: every decode path stays byte-identical.  Armed, the decode's CPU misses
+        // compute from <dir>/experts.bin in the canonical BLOB form - their outputs differ by the shadow's
+        // quantization, by design; hits, the PCIe share and the prompt path do not change.
+        strata::core::shadow::arm(g0.n_layers, g0.n_expert);
         // APR (prism.hadamard) packs: every expert path rotates its activations (CPU pool: native_quant_act / _h;
         // GPU verify, remote GPUs, prompt FP16 path: hadamard_rows).  Validated end to end on CUDA (sm_86, sm_89 with
         // a two-GPU layer split and peer decode, sm_120) and on HIP gfx1151.  Other HIP architectures run the same
@@ -17706,6 +17712,10 @@ int main(int argc, char** argv) {
                         pool.ms_multi_q / rounds, pool.ms_multi_down / rounds,
                         (double) pool.multi_bytes / 1e6 / std::max(1e-9, pool.ms_multi_gu + pool.ms_multi_down),
                         (drive.cpu_ms - pool_ms0) / rounds);
+        if (rounds > 0 && strata::core::shadow::armed())
+            std::printf("%-24s %lld of %lld CPU misses computed from the shadow Q2_0 store (%s)\n", "  shadow experts",
+                        (long long) drive.d.shadow_misses, (long long) drive.d.multi_misses,
+                        strata::core::shadow::dir());
         if (rounds > 0)
             std::printf("%-24s plan %.3f  activation quantize %.3f  jobs %.3f  run %.3f ms/round\n", "dispatch",
                         drive.d.ms_plan / rounds, drive.d.ms_actq / rounds, drive.d.ms_jobs / rounds,

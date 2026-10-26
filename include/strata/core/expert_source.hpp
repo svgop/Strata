@@ -639,6 +639,9 @@ struct ExpertDispatch {
     int64_t stale_x = 0;
     int64_t multi_misses = 0;      ///< distinct (layer, expert) pairs the CPU computed in verify windows
     int64_t multi_entries = 0;     ///< routed (token, expert) entries the CPU served in verify windows
+    /// F-359 STRATA_SHADOW_EXPERTS: the multi_misses computed from the shadow Q2_0 store.  Equal to
+    /// `multi_misses` while the shadow is armed (every CPU miss takes it) and 0 when it is not.
+    int64_t shadow_misses = 0;
     /// STRATA_LAYER_HITS: per-layer VRAM-tier accounting, [layer], cumulative since the start (empty = off).
     /// The same three events the aggregate counters count, so layer sums reconcile with `cache_*` exactly.
     std::vector<int64_t> layer_hits, layer_admitted, layer_refused;
