@@ -10995,3 +10995,25 @@ PROMPT_ATTN_IMMA on, flush off), pool 15, prewarm2 done, idle. NO battery run (o
 gate's verification (interleaved pairs, conc lane) is QUEUED until tests are allowed — and per the
 measurement law it must run under MATCHED conditions (bg load on, same hour), never against the
 rebooted clean box.
+
+## F-339 — 10-26 ~12:10: **POST-REBOOT RECORD CHECK ON THE GATED BINARY (user order): all four lanes
+## inside the record band's noise (−3.3/−2.1/−1.6%/−1.1pp vs the F-334 bank), warm legs at bank level,
+## gate behaving — no regression; the 232.5/327.2 bests remain F-334's boot**
+
+**THE FORM:** 10 legs, clean rebooted box (light load 1.7, user bg not restarted), prewarm2 ×2 (boot +
+pre-battery), the F-338 slot-gated binary. MEANS: M1 211.9 / pair 204.6 / conc 301.0 / M3b 76.7.
+BESTS: 224.9 / 216.4 / 318.4 / 79.2. Warm trend textbook: legs 1-5 M1 208.5 -> legs 8-10 218.9 (bank
+level); boot was 15 min old at leg 1.
+
+**vs THE F-334 CLEANED-BOX BANK** (M1 219.2/232.5, pair 208.9/218.4, conc 305.9/327.2, M3b 77.8):
+every lane within ±3.3% — deep inside the ±8-15% boot lottery. VERDICT: the recipe is at record
+SPEEDS; today's boot did not beat the bank's best legs (the lottery), and nothing regressed. The
+rebooted clean box also did NOT read inflated above the bank — the user's infection concern cut the
+other way this time (fresh boot, shallower warmth).
+
+**F-338 GATE SMOKE (clean box):** solo/pair legs ran the early scan (adapt-wait line 0.36 in band);
+conc legs took the inline path with no tax event visible — conc best 318.4 vs bank best 327.2, mean
+301.0 vs 305.9, inside noise. The gate's REAL verdict (interleaved pairs UNDER BG LOAD) stays the
+pending battery per F-338.
+
+Evidence: campaign/results/f339-restore-{1..10}.txt.
