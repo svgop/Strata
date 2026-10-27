@@ -104,7 +104,13 @@ Ranked by expected ms/window (or lane effect) per unit of engineering risk. The 
 
 ## 5. Execution order
 
-Lever 1 (tmpfs shadow) is priced by env-ladder boot pair now. Lever 2 (conc scheduling)
-follows — it is the only lever that clears 350 conc without touching the model. Lever 3
-(drafter) is the only lever that clears 250 solo at the current ms/window; its next round
-must carry an acceptance-weighted objective before another boot pair is spent on it.
+Lever 1 (tmpfs shadow) ADOPTED 10-27 (F-367: M1 +5.5 / pair +4.2 / conc +3.5). Lever 2
+(conc scheduling) follows — it is the only lever that clears 350 conc without touching the
+model. **Design pass done (`c2a-tail-overlap-design-2026-10-27.md`): the T47-1 headline band
+is gated behind a hazard — `draft_finish` blocks on `cudaStreamSynchronize` (mtp.cpp:1922-1936)
+and the draft tail does a host D2D copy (generate.cpp:12353), both the issue-#31/F-285a
+deadlock class inside another cohort's window. Split into slice 1 (overlap the acceptance +
+commit + emit head only; honest +1-3% conc, low risk) and slice 2 (non-blocking draft
+completion port, which makes the +8-15% band reachable).** Lever 3 (drafter) is the only lever
+that clears 250 solo at the current ms/window; its next round must carry an
+acceptance-weighted objective before another boot pair is spent on it.
