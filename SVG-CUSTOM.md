@@ -11723,3 +11723,37 @@ level and the best is below. Conclusion: a quiet box does not unlock a jump beyo
 on this recipe; the M1 gap to the 250 target is still ~+12%, and the lever for it remains tokens/window
 (acceptance), not box conditions.
 Evidence: `campaign/results/quiet-*.txt`.
+
+## F-365 — 10-27 ~10:00: **FAULT WATCH: the live engine takes 2,635,199 minor faults DURING ONE PROBE LEG
+## while the shadow RSS grows only +160 MB — the page cache is turning over the 31.64 GiB shadow mapping
+## under load; this is the tail's mechanism and the tmpfs lever's evidence**
+
+**WHY:** the pool review flagged the shadow mapping's first-touch faults as the `dm_wait_combine`
+9.8 ms max's mechanism; the claim needed live proof, not inference. Watched `/proc/<pid>/stat`
+minflt during one probe leg (f365-faultwatch: M1 227.8 / pair 197.1 / conc 309.8 — load conditions,
+consistent with the shared-compute bank). Result: 2.63M minor faults against +160 MB RSS growth —
+the same 4K pages faulted out and back in, not new pages. The pool reads ~41 MB of blobs per
+window (10.5k pages); evicted blobs re-fault from NVMe inside a layer. `ulimit -l` = 8 GiB rules
+out mlock as the fix; the store itself must be RAM-resident — tmpfs (`/dev/shm`, 93 GiB free,
+THP-eligible, never evicted). Next lever: point STRATA_SHADOW_EXPERTS at /dev/shm and price the
+boot pair (env-ladder).
+Evidence: `campaign/results/f365-faultwatch*.txt`.
+
+## F-366 — 10-27 ~10:15: **EXP_MODE MATRIX ON THE REAL SHAPES: the standing CUDA layout (mode 0) is
+## already the best on the 5090 — every alternative layout is slower or a tie; the grouped kernel's gap
+## to the head's 1.18 TB/s is dequant-ALU/short-row bound, not memory bound, so the kernel lever is a
+## rewrite project, not a switch**
+
+**WHY:** the anatomy priced the expert-math gap at ~1.5 ms/window (710 GB/s vs the head's 1.18 TB/s);
+the cheap version of that lever is a layout switch (`STRATA_EXP_MODE`, iq_kernels.cu:4079-4712 —
+mode 8 is the V100/P100 default, mode 4 the Turing one). Measured on the real shapes with
+`native_expert_bench` on the real GGUF shard (G=32 T=7 = the decode window's 31.8 VRAM hits;
+layer 20 iq3_xxs/q2_0 and layer 36 iq2_s/q2_0; bitwise-equal to mode 0 for every mode; min-of-3
+interleaved; GPU-free window — the engine was idle-killed and respawned by its wrapper, bench
+numbers unaffected, engine re-prewarmed after).
+Layer 20 all-call µs: mode 0 85.5–94.5 · mode 2 173.9 · mode 3 98.3 · mode 4 173.5 · mode 5 179.4 ·
+mode 6 164.3 · mode 7 97.4 · mode 8 93.5–97.6. Gate/up 644–709 GB/s, down 371–394 GB/s at mode 0
+(DRAM ceiling ~1.79 TB/s). The down projection is overhead-bound (2560 rows × 640 values ≈ 340 B/row),
+not bandwidth-bound. **Verdict: no layout switch; the 1.5–2 ms kernel headroom needs a dequant-rewrite
+project — parked as lever 6 in the synthesis.**
+Evidence: `campaign/research/high-value-lever-synthesis-2026-10-27.md` (full ranked lever map).
