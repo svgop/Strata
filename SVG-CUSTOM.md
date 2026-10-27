@@ -11690,3 +11690,36 @@ and the ladder alive for a minute. Cleanup now filters by exact PID with the cal
 **LANE STATE:** `engine/strata` = 0c5f31a4 (the F-361-confirmed champion), standing recipe booted, healthy,
 prewarm2 now runs the shadow warm pass end to end (8 s: complement pin → shadow path read from the engine's
 `/proc/<pid>/environ` → 31.64 GiB store warmed → replay).
+
+## F-363 — 10-27 ~09:05: **AUX-CORE PINNING (STRATA_AUX_CPUS=auto) IS A CLEAR LOSS: M1 −7.7%, conc −8.2%,
+## pair flat — consistent across both ABAB rounds. The pool is better left unpinned on this lane**
+
+**WHY IT WAS TESTED:** the anatomy (F-361's nsys pass) shows the GPU spending ~2.0 s of 15.7 s inside
+spin-wait kernels blocked on the host, with a long tail on the pool's arrival (`dm_wait_combine` p99
+169 µs, max 9.8 ms). The bell thread tight-spins during decode and shares cores with the 15 pool workers;
+`STRATA_POOL_CORES` and `STRATA_AUX_CPUS` were both unset, so nothing was separated.
+
+**THE ARM (env-only, same binary 0c5f31a4; ABAB, 2 rounds, shared compute, law 11 warm legs discarded):**
+| lane | off1 | on1 | off2 | on2 | pair deltas | mean |
+|---|---|---|---|---|---|---|
+| M1 | 220.4 | 207.7 | 229.7 | 207.7 | −5.8% / −9.6% | **−7.7%** |
+| pair | 202.4 | 204.0 | 206.2 | 205.7 | +0.8% / −0.2% | +0.3% |
+| conc | 315.2 | 286.5 | 307.5 | 285.4 | −9.1% / −7.2% | **−8.2%** |
+Every M1 and conc leg of the armed boot is below every leg of its paired control. HOLD — not adopted.
+Mechanism, stated as a hypothesis only: `auto` reserves a core set and the pool's latency-critical
+stragglers lose the ability to spread onto whichever core is free; the pairing does not separate the
+bell thread from the pool at all, so the contended case is unchanged and the lost flexibility is pure cost.
+Evidence: `campaign/results/f363-*.txt`; ladder script `campaign/env-ladder.sh` (new, reusable for
+env-gated arms — the binary ladder cannot test a flag).
+
+## F-364 — 10-27 ~09:20: **QUIET-BOX BANK AFTER THE OPERATOR'S REBOOT (separate ledger, V5.4): M1 mean 223.0
+## (best 227.4), pair 213.9 (best 219.3), conc 324.8 (best 333.3), M3b 76.9%**
+
+Standing recipe, champion binary 0c5f31a4, shadow armed, law 11 (one full discarded warm leg; means over
+legs 2..4). The warm leg read M1 226.4 / pair 207.6 / conc 317.9. This is the QUIET box — its own metric,
+never cashed in for a promotion (V5.4). Against the stored quiet bank (M1 219.2 mean / 232.5 best) the mean
+moved +1.7% and the best did not; against the shared-compute bank (M1 221.7 mean / 241.8 best) the mean is
+level and the best is below. Conclusion: a quiet box does not unlock a jump beyond the shared-compute bank
+on this recipe; the M1 gap to the 250 target is still ~+12%, and the lever for it remains tokens/window
+(acceptance), not box conditions.
+Evidence: `campaign/results/quiet-*.txt`.
