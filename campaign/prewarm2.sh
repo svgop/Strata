@@ -29,6 +29,15 @@ done
 # campaign law 11: every mapping the run reads pays its first-touch faults in warmup.  The shadow
 # store (F-360) is mmap'd but never touched by the replay, so without this pass its 31.64 GiB of
 # page faults land in the first measured leg (~15% error, F-360 leg 1).
+# The launcher exports STRATA_SHADOW_EXPERTS into the ENGINE's environment, not this shell's, so the
+# path is read back from the running process (env-verify discipline: the process is the truth).
+if [ -z "${STRATA_SHADOW_EXPERTS:-}" ]; then
+  _ep=$(pgrep -x strata | head -1)
+  if [ -n "${_ep:-}" ] && [ -r "/proc/$_ep/environ" ]; then
+    STRATA_SHADOW_EXPERTS=$(tr '\0' '\n' < "/proc/$_ep/environ" | sed -n 's/^STRATA_SHADOW_EXPERTS=//p' | head -1)
+    echo "[$(date +%H:%M:%S)] prewarm2: shadow path read from engine pid $_ep: ${STRATA_SHADOW_EXPERTS:-<unset>}"
+  fi
+fi
 if [ -n "${STRATA_SHADOW_EXPERTS:-}" ] && [ -f "$STRATA_SHADOW_EXPERTS/experts.bin" ]; then
   dd if="$STRATA_SHADOW_EXPERTS/experts.bin" of=/dev/null bs=8M status=none 2>/dev/null || true
   echo "[$(date +%H:%M:%S)] prewarm2: shadow store warmed ($STRATA_SHADOW_EXPERTS/experts.bin)"

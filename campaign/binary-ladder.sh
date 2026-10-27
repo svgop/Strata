@@ -35,6 +35,9 @@ boot_and_probe() {   # $1 = binary, $2 = tag
   done
 }
 
+cp engine/strata /tmp/ladder-pre-run.bin   # the lane's own binary, restored at the end
+echo "lane binary saved: $(md5sum engine/strata | cut -c1-8)"
+
 stop_server() {
   local p; p=$(ps aux | grep "serve/server\.py --engine" | grep -v grep | awk '{print $2}' | head -1)
   [ -n "$p" ] && kill "$p"
@@ -48,7 +51,9 @@ for round in 1 2; do
   echo "=== round $round: champion ==="; stop_server; boot_and_probe "$CHAMP" "champ$round"
   echo "=== round $round: candidate ==="; stop_server; boot_and_probe "$CAND" "cand$round"
 done
-stop_server; cp "$CHAMP" engine/strata; nohup ./launch-custom-iq3s-8081.sh > /tmp/ladder-restore.out 2>&1 &
+# campaign law 10/11: restore the binary the lane was RUNNING when the gauntlet started, never the
+# (possibly older) champion argument - a held candidate must not silently downgrade the lane.
+stop_server; cp /tmp/ladder-pre-run.bin engine/strata; nohup ./launch-custom-iq3s-8081.sh > /tmp/ladder-restore.out 2>&1 &
 for i in $(seq 1 100); do curl -s -m 3 http://127.0.0.1:8081/health 2>/dev/null | grep -q '"status": "ok"' && break; sleep 5; done
 bash campaign/prewarm2.sh > /dev/null 2>&1
 
