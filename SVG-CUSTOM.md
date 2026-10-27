@@ -11616,3 +11616,44 @@ launcher (="${...:-/home/svg/LLM/data/packs/q2_0}", ="" rolls back). Champion ar
 engine/strata.pre-f360 (+audit-current). RIDERS: pooled five-boot confirmation (law-v2 form); the
 timing-line shadow-miss counter readback (banner confirmed armed); long-context spot-check (misses
 at deep contexts use the shadow — the ctx ladder owes one read).
+
+## F-361 — 10-27 ~02:35: **WARMUP BECOMES LAW, AND THE SHADOW PROMOTION SURVIVES THE GAUNTLET IN ITS HONEST
+## FORM: M1 +5.7%, pair +3.3%, conc +1.3% — every one of the six ABAB pairs positive, warm legs discarded**
+
+**THE LAW (user, 2026-10-26; AGENTS.md law 11):** warmup is part of the bench. Health → prewarm2 → ONE
+FULL DISCARDED PROBE LEG → measured legs only. F-360 forced it: the shadow mapping's first-touch faults
+turned its leg 1 into 184.8 t/s against 205-226 warm, a ~15% error on any mean built from leg 1 — larger
+than every effect this campaign chases. `campaign/binary-ladder.sh` now runs a `-warm` leg per boot,
+tees it tagged `[warm-discard]`, and excludes it from the verdict.
+
+**TWO HARNESS BUGS FIXED IN THE SAME PASS (both would have silently corrupted future batteries):**
+1. `prewarm2.sh` could never see `STRATA_SHADOW_EXPERTS` — the launcher exports it into the *engine's*
+   environment, not the caller's, so the shadow warm pass added in b481ba74 was dead code. It now reads
+   `/proc/<engine pid>/environ` and prints the path it found (env-verify: the process is the truth).
+2. `binary-ladder.sh` restored `$CHAMP` at the end, so a gauntlet run with an old baseline as champion
+   would silently downgrade the lane. It now snapshots the running binary and restores exactly that.
+
+**THE LADDER (law 11 form; champion = `engine/strata.pre-f360` md5 4e33b17c, candidate = promoted shadow
+md5 0c5f31a4; ABAB, shared compute, same hour; warm legs discarded):**
+| lane | champ1 | cand1 | champ2 | cand2 | pair deltas | mean |
+|---|---|---|---|---|---|---|
+| M1 | 207.4 | 217.8 | 208.5 | 221.7 | +5.0% / +6.3% | **+5.7%** |
+| pair | 200.3 | 207.7 | 202.8 | 208.7 | +3.7% / +2.9% | **+3.3%** |
+| conc | 294.3 | 296.4 | 296.8 | 302.1 | +0.7% / +1.8% | **+1.3%** |
+Both rounds positive on every lane; the F-360 promotion is CONFIRMED in the honest form. Note the absolute
+level (~207-222 M1) is box state, not a regression: the record 241.8 was a different window of the same
+shared-compute conditions, which is exactly why the verdict is paired deltas, never absolute means.
+Evidence: `campaign/results/f361-confirm-*.txt`.
+
+**ANATOMY TAKEN (nsys, node-level; `campaign/research/decode-anatomy-2026-10-27.md`):** at solo the GPU is
+87% occupied (15,659 ms busy / 18,000 ms), ~2.0 s of that inside spin-wait kernels waiting for the host,
+and ~50% in expert math. The window is 14.15 ms (profiled) / ~12.4 ms standing for 2.74 tokens. Ruled out
+with numbers in the note: per-node spacing, mmvq_il table retune (−4.7% on the kernel's measured shapes =
+~0.6% of the window → SHELF, not a candidate), the head kernel (already at its measured optimum), the
+combine's N-parallelism (already split).
+
+**NEXT (designed, not yet built):** the split-group window (G=2, default) computes the DENSE SHARED EXPERT
+per group, so its gate/up/down weights stream TWICE per layer for the same rows set. The measured
+"shared+quant" stage is 0.94 ms/window (6.6%); hoisting the launch to once per layer over all T rows is
+designed behind `STRATA_SHARED_HOIST=1` (declines: qdedup, T=2/3 under LFUSE, batch S>8, dec_batch off)
+and is bitwise per row by construction.
