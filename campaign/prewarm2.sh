@@ -39,8 +39,17 @@ if [ -z "${STRATA_SHADOW_EXPERTS:-}" ]; then
   fi
 fi
 if [ -n "${STRATA_SHADOW_EXPERTS:-}" ] && [ -f "$STRATA_SHADOW_EXPERTS/experts.bin" ]; then
-  dd if="$STRATA_SHADOW_EXPERTS/experts.bin" of=/dev/null bs=8M status=none 2>/dev/null || true
-  echo "[$(date +%H:%M:%S)] prewarm2: shadow store warmed ($STRATA_SHADOW_EXPERTS/experts.bin)"
+  case "$STRATA_SHADOW_EXPERTS" in
+    /dev/shm/*)
+      # F-367: tmpfs pages are RAM-resident — the first-touch fault pass below is a no-op read of
+      # RAM; skip it (the copy itself is campaign/shm-shadow.sh's job after reboot).
+      echo "[$(date +%H:%M:%S)] prewarm2: shadow on tmpfs ($STRATA_SHADOW_EXPERTS) — RAM-resident, no warm pass needed"
+      ;;
+    *)
+      dd if="$STRATA_SHADOW_EXPERTS/experts.bin" of=/dev/null bs=8M status=none 2>/dev/null || true
+      echo "[$(date +%H:%M:%S)] prewarm2: shadow store warmed ($STRATA_SHADOW_EXPERTS/experts.bin)"
+      ;;
+  esac
 fi
 echo "[$(date +%H:%M:%S)] prewarm2: page cache re-warmed in $(( $(date +%s) - T0 ))s"
 

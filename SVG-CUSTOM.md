@@ -11757,3 +11757,49 @@ mode 6 164.3 · mode 7 97.4 · mode 8 93.5–97.6. Gate/up 644–709 GB/s, down 
 not bandwidth-bound. **Verdict: no layout switch; the 1.5–2 ms kernel headroom needs a dequant-rewrite
 project — parked as lever 6 in the synthesis.**
 Evidence: `campaign/research/high-value-lever-synthesis-2026-10-27.md` (full ranked lever map).
+
+## F-367 — 10-27 ~10:37: **TMPFS SHADOW STORE ADOPTED: moving the Q2_0 store from the disk page cache
+## to /dev/shm is M1 +5.5%, pair +4.2%, conc +3.5% — all three lanes positive, all clear the gate,
+## zero lane regressions. The F-365 fault mechanism is confirmed and the fix is a path change**
+
+**WHY IT WAS TESTED:** F-365 measured 2,635,199 minor faults in one probe leg while the engine's RSS
+grew only +160 MB — page churn, not new pages — and `ulimit -l` = 8 GiB rules out mlock of a 31.64 GiB
+store. The pool is byte-bound at ~150 µs/entry, and a fault is on that path. tmpfs pages are
+RAM-resident, THP-eligible and never evicted; /dev/shm had 93 GiB, the copy is 38.5 GiB. The synthesis
+ranked this lever 1 at 0.6–1.0 ms/window.
+
+**THE ARM (env-only, same binary 0c5f31a4; ABAB, 2 rounds, shared compute; law 11 — every boot pays
+health → prewarm2 → one discarded warm leg, means over legs 2..4; `STRATA_SHADOW_EXPERTS` disk →
+`/dev/shm/strata-shadow-q2_0`, byte-identical copy verified by rsync):**
+| lane | off1 | on1 | off2 | on2 | pair deltas | mean | gate 2·sd/√3 |
+|---|---|---|---|---|---|---|---|
+| M1 | 204.1 | 216.4 | 211.9 | 222.2 | +6.0% / +4.9% | **+5.5%** | 0.97 PASS |
+| pair | 202.9 | 209.1 | 205.7 | 216.8 | +3.0% / +5.4% | **+4.2%** | 1.91 PASS |
+| conc | 298.3 | 311.5 | 307.4 | 315.0 | +4.4% / +2.5% | **+3.5%** | 1.61 PASS |
+Every ON leg above 212.5 M1 with the best ON leg 233.1; best conc leg 319.2. No lane negative in
+either round. Warm legs are discarded but recorded: off2's warm conc leg hit 112.9 t/s (31.9 s for
+3,600 tok) — a first-leg straggler, exactly the class law 11 exists to throw away.
+**Mechanism:** M1 +5.5% on a 14.15 ms window ≈ 0.78 ms recovered, inside F-365's 0.6–1.0 ms fault
+estimate. The store's bytes and the miss path's arithmetic are unchanged — the only delta is where
+the pages live.
+
+**BIT-CHECK CAVEAT (not a tmpfs regression):** the OFF/ON temp-0 shas differ, but so do all stored
+references under the shadow arm: `f209-bit-ref.json` and the three reps of one config
+(`merged`, `merged-rep1/2/3`) have six distinct sha sets for p1/p2/p3. With F-360 standing, which
+experts sit in VRAM at request time is timing-shaped (adaptive tier EWMA), and the ~3% missed routing
+computes at Q2_0, so output is boot-dependent by design. The F-209 bit gate predates the shadow; the
+shadow's quality gate is MMLU (95.71 at F-360), and tmpfs moves no bits.
+
+**ADOPTED — standing changes (this commit):**
+- `launch-custom-iq3s-8081.sh`: `STRATA_SHADOW_EXPERTS` default is `/dev/shm/strata-shadow-q2_0`
+  with a guard — if the copy is absent (post-reboot, tmpfs is wiped) it falls back to the disk path
+  so the lane always boots. Explicit `=""` still rolls the shadow back.
+- `campaign/shm-shadow.sh` (new): rsync re-establish + per-file size/count verification after a
+  reboot; checks /dev/shm headroom first.
+- `campaign/prewarm2.sh`: skips the 38.5 GiB dd warm pass when the shadow is on tmpfs (RAM-resident
+  by construction); boot warm 14 s → no pass (replay unchanged).
+- Standing boot restarted 14:45, env-verified from `/proc/<engine>/environ`
+  (`STRATA_SHADOW_EXPERTS=/dev/shm/strata-shadow-q2_0`) and `/proc/<engine>/maps` (36 GiB `r--s`
+  mapping from /dev/shm); prewarm2 replay 9×200.
+Evidence: `logs/f367-shm-ladder.log`, `campaign/results/f209-bit-f367-shm-{off,on}.json`.
+RAM check after adoption: 79 GiB available, /dev/shm 38.5/93 GiB used.

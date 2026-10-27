@@ -1,0 +1,9 @@
+# f367-shm env-ladder summary (from logs/f367-shm-ladder.log, gitignored)
+off1 {'M1': 204.06666666666666, 'pair': 202.93333333333334, 'conc': 298.26666666666665}
+on1  {'M1': 216.4, 'pair': 209.06666666666666, 'conc': 311.5333333333333}
+off2 {'M1': 211.9, 'pair': 205.73333333333335, 'conc': 307.43333333333334}
+on2  {'M1': 222.2, 'pair': 216.76666666666668, 'conc': 315.0333333333333}
+M1: pairs +6.0% / +4.9%  mean +5.5%
+pair: pairs +3.0% / +5.4%  mean +4.2%
+conc: pairs +4.4% / +2.5%  mean +3.5%
+ENV LADDER DONE — lane binary restored from /tmp/env-ladder-pre-run.bin

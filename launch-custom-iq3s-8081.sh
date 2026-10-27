@@ -38,10 +38,19 @@ export STRATA_ADAPT_EARLY="${STRATA_ADAPT_EARLY:-1}"  # F-332 ADOPTED (10-25): t
                                   # 198.8), M1 +0.1 flat, conc +1.6 in-band, M3b +1.6pp; MECHANISM PROVEN: "adapt wait" 1.03 -> 0.28-0.62 ms/window.
                                   # =0 rolls back (inline scan, byte-identical legacy path). Rider: five-boot pooled confirmation (pair leg-1
                                   # sensitivity noted in F-332); engine rollback: engine/strata.pre-f332
-export STRATA_SHADOW_EXPERTS="${STRATA_SHADOW_EXPERTS:-/home/svg/LLM/data/packs/q2_0}"  # F-360 PROMOTED (10-27): CPU misses compute from the Q2_0 expert
+# F-367 ADOPTED (10-27): the shadow store's canonical home is /dev/shm (tmpfs). F-365: one probe leg
+# took 2,635,199 minor faults for +160 MB of RSS — page churn on the disk-backed page cache, and the
+# pool is byte-bound at ~150 us/entry. tmpfs pages are RAM-resident, THP-eligible, never evicted.
+# env-ladder ABAB f367-shm (same binary 0c5f31a4): M1 +5.5% (+6.0/+4.9), pair +4.2% (+3.0/+5.4),
+# conc +3.5% (+4.4/+2.5) — all three lanes positive, all clear the gate, no lane regression.
+# /dev/shm is wiped on reboot: campaign/shm-shadow.sh re-establishes the copy; until it runs, the
+# guard below falls back to the disk path so the lane never fails to boot. ="" rolls back the shadow.
+_shm_shadow=/dev/shm/strata-shadow-q2_0
+[ -f "$_shm_shadow/experts.bin" ] || _shm_shadow=/home/svg/LLM/data/packs/q2_0
+export STRATA_SHADOW_EXPERTS="${STRATA_SHADOW_EXPERTS:-$_shm_shadow}"  # F-360 PROMOTED (10-27): CPU misses compute from the Q2_0 expert
                                   # store (31.64 GiB mapped, 1.38 MB blobs vs IQ3_S's 2.05 MB; the pool is byte-bound at ~150 us/entry). Warm legs vs the fresh
                                   # champion: M1 -0.7 (noise), pair +7.7%, conc +8.4%; MMLU 95.71 >= 93.3; falsifier: 2.0x bytes, >=32% faster entries. Hits,
-                                  # the PCIe share, the prompt path unchanged (bit-identical); only the ~3% missed routing computes at Q2_0. ="" rolls back.
+                                  # the PCIe share, the prompt path unchanged (bit-identical); only the ~3% missed routing computes at Q2_0.
 # F-331 ARMS (10-25, both never priced on this lane; see SVG-CUSTOM F-331):
 export STRATA_QSA_SPLIT_ATTN="${STRATA_QSA_SPLIT_ATTN:-1}"     # decode+drafter attention through the split int8-MMA kernel (verify.cpp:1973 + mtp.cpp:1088;
                                   # qsa_prompt_attn.cu:2271: each query's cells split over up to 20 blocks, LSE merge; int8-KV sm_80+;
