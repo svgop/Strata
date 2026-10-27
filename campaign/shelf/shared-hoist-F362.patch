@@ -1,0 +1,129 @@
+# F-362 shelf: STRATA_SHARED_HOIST - the shared expert once per layer (G=2 windows only)
+#
+# FALSIFIER (why it is shelved, not adopted): the hoist NEVER ARMS on the standing lane.
+# record_window's G = (T >= 2 && ((!batch_rec_ && split_) || (batch_rec_ && batch_g2))) ? 2 : 1;
+# the standing recipe serves with --batch 6, so every decode window is a batch window
+# (batch_rec_ true) and STRATA_BATCH_G2 is unset, so G=1: the shared expert already runs once
+# per layer over all rows.  The armed boots printed only 'declined (G != 2 or T outside 2..8)'
+# - 37 of 37 captures.
+#
+# NOT DEAD CODE IN GENERAL: for non-batch windows split_ (Verifier::set_split, default on)
+# still yields G=2, so this arms on the serial/coalesced and pipeline-windows lanes.  Shelf it
+# for those lanes.
+#
+# The change is bitwise-per-row by construction (env-gated, default off, unset = byte-identical);
+# with it applied, shared_expert_parity / mmvq_multi_parity / verify_parity all passed, and
+# src/core/verify.cpp compiled with no new warnings (the one raise_flag warning predates it).
+# Apply with: git apply campaign/shelf/shared-hoist-F362.patch  (rollback: git checkout -- src/core/verify.cpp)
+# Arm with: STRATA_SHARED_HOIST=1 (decline cases print one line per captured window).
+#
+diff --git a/src/core/verify.cpp b/src/core/verify.cpp
+index 2cb716b..6990a3d 100755
+--- a/src/core/verify.cpp
++++ b/src/core/verify.cpp
+@@ -1203,6 +1203,33 @@ bool Verifier::record_window(int T, cudaStream_t cs, std::string& err) {
+                shared_expert_native_bf16_enabled();
+     };
+     bool sg_gated_[2] = {false, false};   // per group: the combine applies the shared gate
++    // STRATA_SHARED_HOIST=1 (opt-in; unset / =0: byte-identical to before): the dense shared expert is
++    // row-independent, so a G=2 window computes it ONCE per layer over all T rows - in the LAST group's
++    // pre, where both groups' mixers have written mixed_ - instead of per group, and its gate/up/down
++    // weights stream from VRAM once per layer, not twice.  Declined (the legacy per-group path, the
++    // reason said once per captured window) unless the shapes agree: the kernel takes 1..8 tokens (a
++    // batch window's row count is its T), dec_batch is on, qdedup is off (the per-group folded-APR
++    // rewrite would reorder the bytes the hoisted read needs), and LFUSE agrees between T and both
++    // groups (only T=2,3 can disagree).  The router GEMV and the plan/doorbell stay per group either
++    // way - the doorbell latency is load-bearing for the CPU-expert overlap.
++    static const bool sh_hoist_env = [] { const char* e = std::getenv("STRATA_SHARED_HOIST"); return e && e[0] == '1'; }();
++    bool sh_hoist = false, sh_hoist_sg0 = false;   // group 0's router made its shared-gate rows (sg_ready)
++    if (sh_hoist_env) {
++        const int n0 = te_[0] - tb_[0], n1 = te_[1] - tb_[1];
++        const char* why = nullptr;
++        if (G != 2 || T < 2 || T > 8) why = "G != 2 or T outside 2..8";
++        else if (!dec_batch) why = "dec_batch off";
++        else if (g_qdedup()) why = "qdedup on";
++        else if (lfuse_on(T) != lfuse_on(n0) || lfuse_on(T) != lfuse_on(n1)) why = "LFUSE disagrees over T and the groups";
++        if (why != nullptr)
++            std::fprintf(stderr, "strata verify: STRATA_SHARED_HOIST=1 declined (%s): the shared expert per group\n", why);
++        else {
++            sh_hoist = true;
++            const bool sh_fork_now = sh_stream_on() && !prof_on_ && sh_cs_ != nullptr && ev_fork_ != nullptr && ev_join_ != nullptr;
++            std::fprintf(stderr, "strata verify: STRATA_SHARED_HOIST=1: the shared expert once per layer (T=%d G=%d fork=%d lfuse=%d)\n",
++                         T, G, (int) sh_fork_now, (int) lfuse_on(T));
++        }
++    }
+     if (!batch_rec_) groups_[T] = G;
+     else batch_groups_ = G;   // STRATA_BATCH_G2: the batch service loops read this (the graphs are captured once)
+     // Programmatic dependent launch (pdl.hpp; sm_90+, opt-in: STRATA_DF_PDL=1): the window's quantizations and dense
+@@ -2011,7 +2038,7 @@ bool Verifier::record_window(int T, cudaStream_t cs, std::string& err) {
+         const bool sh_fork = sh_stream_on() && !prof_on_ && sh_cs_ != nullptr && ev_fork_ != nullptr && ev_join_ != nullptr;
+         const bool sh_fork_late = sh_fork && sh_fork_late_env && !ar_on();
+         cudaStream_t sh_stream = sh_fork ? sh_cs_ : cs;
+-        if (sh_fork && !sh_fork_late) {
++        if (sh_fork && !sh_fork_late && (!sh_hoist || grp == G - 1)) {   // STRATA_SHARED_HOIST: fork once per layer
+             cudaEventRecord(ev_fork_, cs);
+             cudaStreamWaitEvent(sh_cs_, ev_fork_, 0);
+         }
+@@ -2048,6 +2075,8 @@ bool Verifier::record_window(int T, cudaStream_t cs, std::string& err) {
+             mb.logits = logits_ + t * NE; mb.ids = ids_ + t * K; mb.weights = w_ + t * K;
+             if (!moe_route(wt, g, l, K, mb, mixed_ + t * N, cs, err, nullptr)) return false;
+         }
++        if (sh_hoist && grp == 0) sh_hoist_sg0 = sg_ready;   // STRATA_SHARED_HOIST: the last group's pre needs both
++        // routers' gate rows (pre(l,0) is always enqueued before pre(l,1), nothing of another layer between them)
+         // STRATA_ROUTE_PRIOR=lambda (opt-in, changes the output): the top-10 picked again with a logit bonus for the
+         // resident experts; the weights stay the router's (route_prior.cu)
+         static const float route_prior = [] { const char* v = std::getenv("STRATA_ROUTE_PRIOR"); return v ? (float) std::atof(v) : 0.0f; }();
+@@ -2094,14 +2123,14 @@ bool Verifier::record_window(int T, cudaStream_t cs, std::string& err) {
+                 doorbell_publish_res(xm, ids_ + tb * K, layer_res, (int) g.n_expert, (int64_t) n * N, (int64_t) n * K,
+                                      m_x_ + tb * N, m_ids_ + tb * K, m_seq_, cs);
+             }
+-            if (sh_fork_late) {
++            if (sh_fork_late && (!sh_hoist || grp == G - 1)) {   // STRATA_SHARED_HOIST: fork once per layer
+                 cudaEventRecord(ev_fork_, cs);
+                 cudaStreamWaitEvent(sh_cs_, ev_fork_, 0);
+             }
+         }
+         stamp(l, 17, grp);
+         bool qdedup = false;   // STRATA_VERIFY_QDEDUP took effect: the experts' q8_1 image of xm is already made
+-        {
++        if (!sh_hoist) {
+             const WeightRef *wgi = need(v, "ffn_gate_inp_shexp.weight", err), *wsg = need(v, "ffn_gate_shexp.weight", err),
+                             *wsu = need(v, "ffn_up_shexp.weight", err), *wsd = need(v, "ffn_down_shexp.weight", err);
+             if (!wgi || !wsg || !wsu || !wsd) return false;
+@@ -2133,6 +2162,36 @@ bool Verifier::record_window(int T, cudaStream_t cs, std::string& err) {
+                 return false;
+             }
+             if (sh_fork) cudaEventRecord(ev_join_, sh_cs_);
++        } else if (grp == G - 1) {
++            // STRATA_SHARED_HOIST: once per layer, over all T rows, base pointers and T for every buffer
++            // (they are T-sized; the per-group offsets that feed the router, plan/doorbell, APR rewrite and
++            // experts stay per group below).  qdedup is declined at the top, so the kernel quantizes into
++            // nsw.q8_1 exactly as the per-group call did.  One call covers both groups, so the LFUSE gate
++            // applies only when BOTH routers made their gate rows - one without them un-gates the pair.
++            const WeightRef *wgi = need(v, "ffn_gate_inp_shexp.weight", err), *wsg = need(v, "ffn_gate_shexp.weight", err),
++                            *wsu = need(v, "ffn_up_shexp.weight", err), *wsd = need(v, "ffn_down_shexp.weight", err);
++            if (!wgi || !wsg || !wsu || !wsd) return false;
++            if (!native_of(wsg, v.name("ffn_gate_shexp.weight"), err) || !native_of(wsu, v.name("ffn_up_shexp.weight"), err) ||
++                !native_of(wsd, v.name("ffn_down_shexp.weight"), err))
++                return false;
++            NativeSharedWeights nsw;
++            nsw.gate_type = wsg->native_type; nsw.gate_data = wsg->native_data;
++            nsw.up_type = wsu->native_type; nsw.up_data = wsu->native_data;
++            nsw.down_type = wsd->native_type; nsw.down_data = wsd->native_data;
++            nsw.q8_1 = sh_fork ? sh_xq_ : xq_;
++            if (!shared_expert_native_bf16_enabled())
++                f32_to_bf16_bulk(mixed_, sh_bf16_, (int64_t) T * N, sh_stream);   // contiguous rows, all T
++            try {
++                const bool sg_both = sh_hoist_sg0 && sg_ready;
++                shared_expert_multi(T, mixed_, sh_bf16_, nsw, (const uint16_t*) wgi->data, sh_gate_, sh_up_, sh_g_,
++                                    shared_, N, g.n_ff, sh_stream, nullptr,
++                                    (sg_both ? 1 : 0) | (lfuse_on(T) && g_lfuse_pair() ? 2 : 0));
++                sg_gated_[0] = sg_gated_[1] = sg_both;
++            } catch (const std::exception& e) {
++                err = std::string("verify shared expert: ") + e.what();
++                return false;
++            }
++            if (sh_fork) cudaEventRecord(ev_join_, sh_cs_);
+         }
+         if (strata::kernels::cpu::expert_layout().native) {
+             // APR: Hadamard-folded gate/up take H (s * x); xm itself stays as it is (the shared expert above and the
