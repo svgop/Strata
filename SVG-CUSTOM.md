@@ -11803,3 +11803,7 @@ shadow's quality gate is MMLU (95.71 at F-360), and tmpfs moves no bits.
   mapping from /dev/shm); prewarm2 replay 9×200.
 Evidence: `logs/f367-shm-ladder.log`, `campaign/results/f209-bit-f367-shm-{off,on}.json`.
 RAM check after adoption: 79 GiB available, /dev/shm 38.5/93 GiB used.
+Post-adoption state read (single probe leg on the restarted standing boot, diagnostic — NOT a record,
+one leg): M1 222.0 / pair 233.0 / **conc 350.8** / M3b 79.7. The conc leg touches the 350 target for
+the first time on the standing shared-compute boot (prior best 338.5 quiet, 327.2 bank). One leg,
+high variance; a battery must bank any record. Evidence: `/tmp/f367-postprobe.txt`.
