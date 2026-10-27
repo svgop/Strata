@@ -86,3 +86,18 @@ nsys export --type sqlite --output /tmp/trace.sqlite /tmp/trace.nsys-rep
 Timestamps in `CUPTI_ACTIVITY_KIND_KERNEL` are **ns since session start**; the wall-clock offset is
 `utcEpochNs - systemClockNs` from `TARGET_INFO_SESSION_START_TIME`. Without that offset the filter
 silently matches zero rows.
+
+## 6. Correction (F-362, same day): the window is NOT split on the standing lane
+
+The hypothesis "the dense shared expert streams twice per layer because G=2" is **false here**. In
+`Verifier::record_window`, `G = (T >= 2 && ((!batch_rec_ && split_) || (batch_rec_ && batch_g2))) ? 2 : 1`.
+The standing recipe serves with `--batch 6`, so every decode window is a batch window (`batch_rec_`)
+and `STRATA_BATCH_G2` is unset → **G = 1**: the shared expert already runs once per layer over all rows.
+
+The `native_gu_swiglu_kernel` count of ~2/layer in the section-2 table is the gate+up pair, not two
+groups. (An env-gated hoist for the G=2 case — which *does* exist on the non-batch `split_` lanes —
+was built and shelved: `campaign/shelf/shared-hoist-F362.patch`.)
+
+Lesson worth keeping: the armed boot's own banner refused all 37 captures with `declined (G != 2 or T
+outside 2..8)`. A flag that prints why it declined costs nothing and prevented a boot-pair from being
+spent on an inert arm.

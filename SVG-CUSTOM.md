@@ -11657,3 +11657,36 @@ per group, so its gate/up/down weights stream TWICE per layer for the same rows 
 "shared+quant" stage is 0.94 ms/window (6.6%); hoisting the launch to once per layer over all T rows is
 designed behind `STRATA_SHARED_HOIST=1` (declines: qdedup, T=2/3 under LFUSE, batch S>8, dec_batch off)
 and is bitwise per row by construction.
+
+## F-362 — 10-27 ~02:55: **NEGATIVE, CAUGHT BEFORE A BOOT WAS WASTED: the shared-expert hoist never arms on this
+## lane. The standing recipe is G=1 (--batch 6, no STRATA_BATCH_G2), so the shared expert already runs ONCE
+## per layer — the "twice per layer" premise was my misreading of a gate+up pair of launches**
+
+**THE HYPOTHESIS (from the nsys table):** `native_gu_swiglu_kernel` appears ~2 launches per layer-window, the
+profile stage "shared+quant" costs 0.94 ms/window (6.6%), and `G=2` (the split-group window) computes the
+row-independent dense shared expert per group — so its gate/up/down weights should stream twice per layer.
+~3% of window was the prize.
+
+**THE FALSIFIER:** the code says
+`G = (T >= 2 && ((!batch_rec_ && split_) || (batch_rec_ && batch_g2))) ? 2 : 1`.
+The standing recipe serves with `--batch 6`, so every decode window is a batch window (`batch_rec_` true) and
+`STRATA_BATCH_G2` is unset → **G = 1**. One launch pair per layer is gate+up of the SAME single shared-expert
+call, not two groups. Verified on the armed boot: 37 of 37 captures printed
+`strata verify: STRATA_SHARED_HOIST=1 declined (G != 2 or T outside 2..8)` and zero printed the armed banner.
+
+**WHAT WAS BUILT ANYWAY, AND WHY IT IS SHELVED, NOT DELETED:** `STRATA_SHARED_HOIST=1` (env-gated, default
+off) hoists the shared expert to one call per layer over all T rows in the last group's `pre`, with the fork
+recorded once per layer and both posts' existing `ev_join_` wait covering it; declines on qdedup, dec_batch
+off, T outside 2..8, and LFUSE disagreement; bitwise per row by construction (parity binaries
+`shared_expert_parity`, `mmvq_multi_parity`, `verify_parity` all pass). It is dead on THIS lane but live on
+the non-batch `split_` lanes (serial/coalesced and pipeline-windows), where G=2 is the default. Patch shelved
+at `campaign/shelf/shared-hoist-F362.patch`; the source was reverted so the mainline carries no inert code.
+
+**ALSO FIXED IN PASSING (self-inflicted, banked as a repeat of a known trap):** my cleanup used
+`pkill -f "campaign/env-ladder.sh"`, whose pattern matched the shell running it — the same self-match that
+`pgrep -f` bit earlier in the campaign. Killed the shell mid-cleanup, leaving the candidate binary in place
+and the ladder alive for a minute. Cleanup now filters by exact PID with the caller's own PID excluded.
+
+**LANE STATE:** `engine/strata` = 0c5f31a4 (the F-361-confirmed champion), standing recipe booted, healthy,
+prewarm2 now runs the shadow warm pass end to end (8 s: complement pin → shadow path read from the engine's
+`/proc/<pid>/environ` → 31.64 GiB store warmed → replay).
