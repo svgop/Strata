@@ -177,7 +177,7 @@ int main(int argc, char** argv) {
         ap[(size_t) t] = a[(size_t) t].data();
     }
     if (k512) {   // --k512: Strata's AVX-512 rows (iq512x_rows) called directly against ggml-cpu's dot, bit for bit: no dispatcher in between
-        const bool cpu_ok = strata::kernels::cpu::cpu_avx512_ok(), sup = strata::kernels::cpu::iq512x_supported(type);
+        const bool cpu_ok = strata::kernels::cpu::cpu_avx512_ok(), sup = strata::kernels::cpu::iq512_supported(type);
         std::printf("k512: type %d nt %d: cpu_avx512_ok %d, iq512x_supported %d%s\n", type, nt, (int) cpu_ok, (int) sup,
                     cpu_ok && sup ? "" : "  -> the AVX-512 rows cannot run here");
         if (!cpu_ok || !sup) return 3;
@@ -187,7 +187,7 @@ int main(int argc, char** argv) {
         for (int t = 0; t < nt; ++t) q1.push_back(r1v[(size_t) t].data());
         for (long r = 0; r < rows; ++r)
             for (int t = 0; t < nt; ++t) tc->vec_dot(n, &r0v[(size_t) t][(size_t) r], 0, w.data() + (size_t) r * rb, 0, ap[(size_t) t], 0, 1);
-        strata::kernels::cpu::iq512x_rows(type, w.data(), rb, n, ap.data(), nt, q1.data(), 0, (int) rows);
+        strata::kernels::cpu::iq512_rows(type, w.data(), rb, n, ap.data(), nt, q1.data(), 0, (int) rows);
         long dif = 0;
         for (int t = 0; t < nt; ++t)
             for (long r = 0; r < rows; ++r)

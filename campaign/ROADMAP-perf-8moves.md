@@ -6,7 +6,7 @@ created: 2026-10-27
 owner: campaign/probe-lane.py battery + this file's exit criteria per move
 ---
 
-# Strata performance roadmap — 14 moves (W1–W8 + W9–W14 second pass), 2026-10-27
+# Strata performance roadmap — 19 moves (W1–W8 + W9–W14 + W15–W16 + W17–W19), 2026-10-27/28
 
 Mission: ≥ +10% per lane (solo M1 / pair / concurrent 6-way) warm, more while cold, via core
 engine moves only. Source: full code-only study of engine + kernels + serve stack, 2026-10-27.
@@ -20,6 +20,9 @@ Tracker board: `/home/svg/LLM/.zcode/rich-tracking/strata-perf-roadmap.board.jso
 | Pair warm | t/s (3-leg mean) | ______ | +25–45% |
 | Conc 6-way warm | rows/s + acceptance | ______ (344.9 rows/s @ 68.5% accept, 2026-10-27 log) | +15–30% |
 | Prefill 8K / 32K | t/s (t42-prefill-ladder) | ______ | +10–25% |
+| Depth ~134K | solo t/s / conc 6-way rows/s | 173–180 / 179–210 (2026-10-27/28 depth tests) | solo ≥ 200 / conc ≥ 260 |
+| Depth 228–262K | solo t/s | 114–166 (256K verification) | ≥ 180 at 256K |
+| Reuse-scan | median ms at 9K / 99K | 73 / 313 | ≤ 5 at 99K |
 | Decode window anatomy | ms/window, tok/window | 11.27–11.71 ms, 2.39–2.47 tok (solo) | fewer ms/tok |
 
 Capture commands (all from repo root):
@@ -280,6 +283,142 @@ Do: double-buffer the KV staging pool (chunk N+1 H2D overlaps chunk N compute); 
 host grouping path entirely (W7 item (1) then has no fallback); cross-chunk staging lookahead.
 Battery: t42-prefill-ladder 8K/32K/64K.
 
+## Third-pass additions (2026-10-28 — depth persistence & measurement stability, W15–W16)
+
+Depth map (measured, 2026-10-27/28): 0–60K solo 209–222 / conc 341–351 · ~134K solo 173–180 /
+conc 179–210 · 228–262K solo 114–166. All three degradation mechanisms verified in source
+2026-10-28; the A/B verdicts elsewhere in this roadmap are same-depth comparisons and stand.
+
+### W15 — Depth persistence (134K/256K lanes; biggest unaddressed gap)
+Mechanisms (verified):
+- **KV tier is static.** `--kv-resident 32768` is a boot constant (layer.cpp:575,793
+  `qsa_set_kv_resident`, floor 20480). Past the tier, every QSA window pays
+  `resolve_kernel<<<1, RT>>>` — atomicCAS page claims + a serial clock sweep
+  (kv_stream.cu:104–160, launched :230) — then host→VRAM page copies, absent pages masked to
+  −∞. At 134K × 6 conc lanes the page misses contend on the same PCIe as shadow-expert traffic
+  (pcie-frac 0.35), which is why conc falls harder than solo.
+- **The attention knee is the score scan.** Decode scores run the SIMT
+  `block_scores_multi_kernel`, looping `max_blocks = ctx/4` blocks linearly
+  (qsa_select.cu:1003,1032–1038): 8.2K blocks at 32K → 33.6K at 134K, ×12 QSA layers. A TF32
+  tensor-core variant (`qsa_block_scores_tc`, sm_80+ gated, qsa_select.cu:173+) exists but only
+  prefill uses it. Top-k is a single 1×1024 block over the whole score row (qsa_select.cu:2579–2580).
+- **Reuse-scan is linear in depth.** `ConversationCache::best()` runs `conversation_prefix`
+  (a full `std::equal`) per entry × checkpoint on the admission path
+  (conversation_cache.hpp:315–330, :233–249) — the 73→313 ms median growth 9K→99K.
+
+Sizing: KV int8 ≈ 1 KB/cell/layer → full 131K residency ≈ 1.6 GiB across the 12 QSA layers
+(that is the entire pinned host mirror) vs a 19.6 GiB expert cache. MEASURE whether the stream
+pools are shared or per-session before sizing the demotion (per-session × 6 lanes = 9.6 GiB).
+
+Do (order by cost):
+1. Elastic KV resident tier: resident cells scale with the deepest active conversation
+   (auto-rebalance vs expert-cache slots; the adapt tier refills from the profile). Env-gated.
+2. TC block scores on decode: port `qsa_block_scores_tc` into the decode multi path.
+3. Prune/widen top-k: multi-CTA or two-level (pooled-of-pooled) top-k so the scan stops
+   growing linearly at ctx/4.
+4. Prev-window cell prefetch: adjacent tokens' QSA selections overlap — pre-DMA the previous
+   window's non-resident sel_ pages on the copy stream before this window's resolve; batch KV
+   page DMA across the 12 QSA layers (STRATA_DMA_BATCH-style) on conc.
+5. Reuse-scan rolling hash: incremental hash per checkpoint (maintained on park/append);
+   `best()` hash-compares first, full `std::equal` only on hit. Byte-identical outputs.
+6. Depth battery: 134K + 256K lanes 3v3 vs the depth baselines + MMLU 2x + standard-lane
+   no-regression; verify W1's controller auto-shrinks T at depth (its cost EMAs rise) — W1 is
+   itself a depth-persistence mechanism and composes with every item here.
+
+Expected (stacked, stretch): 134K solo ≥ 200, 256K solo ≥ 180, 134K conc ≥ 260. Honest
+per-sub-move: 5–15% at depth.
+
+### W16 — Measurement stability & drift discipline (protects every gate above)
+Ledger facts: window drift M1 180–222 across same-boot windows under sustained load; five
+back-to-back boots 02:10–03:30 confounded tonight's depth reads (final standard M1 209.6 at
+03:25 was inside the banked band on the adopted binary); strata-gpu-lock.service holds clocks
+and M17's ~6% deficit is a Blackwell Reliability hardware derate — not a missing lock, do not
+chase it.
+Do:
+1. WSTAT per-depth bands: bucket window p50/p99 by active depth in STRATA_SERVE_TELEMETRY.
+2. Temp/clock trace during every battery (nvidia-smi poll appended to the battery log).
+3. Boot-spacing rule: interleave A/B legs across windows — never all-A then all-B back-to-back.
+4. Noise-floor gate: a lane verdict must exceed the recorded drift band for that window slot.
+5. Depth-slope watch: record depth-lane t/s vs depth per engine build in the ledger so depth
+   regressions are caught at review time, not rediscovered.
+
+### Board mapping (tracker rows ↔ this doc)
+The tracker board (`.zcode/rich-tracking/strata-perf-roadmap.board.json`, 12-row cap)
+consolidates: `w6` = §W6+§W10+§W12 (QSA decode kernel + GDN split arm) · `w7` = §W7+§W14+§W19
+(prefill) · `w4` = §W4 + §W13 items (2)-(3) (MoE/HC neighborhood: defer + fusion) ·
+`w5` = §W5 + §W13 item (4) (TC quality-canary arms) · `w9` = §W9 + §W13 item (1) (env-only
+arms) · `w11` = §W11 · `w15` = §W15 · `w0` carries §W16's measurement discipline ·
+§W17 (cadence flag) + §W18 (batch draft-depth ramp + telemetry gap) live as items on `w8` and
+`w1` respectively. Doc section numbers are canonical; row ids are stable.
+Numbering note: `MEASURED-opt-map-2026-10-27.md` proposed its own W15/W16/W17 — they are §W17,
+§W18, §W19 here (this file's W15/W16 are depth persistence and measurement stability).
+Order of attack (measured, MEASURED-opt-map §Order): W9 → W11 → W1+W2 → W10 → W8 → W7/W14 →
+W4/W13/W6/W3/W5/W12 → W15; W17/W18 are one-boot env flags to arm at the next restart.
+
+
+## Fourth pass (2026-10-28 — measured-map integration, W17–W19)
+
+Source: `campaign/MEASURED-opt-map-2026-10-27.md` (live self-telemetry pass: /metrics, 450-sample
+series, SSE traces, 1/2/4/6-lane probes, cost-model fit, 80k→108k knee series, 11,373-block log
+mining). Its proposed "W15/W16/W17" candidates are recorded here as **W17/W18/W19** to avoid
+colliding with this roadmap's W15 (depth persistence) and W16 (measurement stability). The map
+itself is frozen evidence; this file is the plan.
+
+### Measured corrections applied to existing moves
+- **W1 gets a measured number (M15):** window wall = 8.4 + 1.57×rows ms (R²=0.99,
+  context-independent ≤~72k). Solo depth-8 windows run 30–41% row-efficient; trimming to ~4 rows
+  keeps the tokens at ~16.3 ms/window → **+35–38% solo, measured**. Batch D=1 lanes run 78–91%
+  row-efficient — the D=2 upside is small (see W18).
+- **W8's SSE batching is latency-neutral (M14):** client gap ≈ server gap on loopback; the
+  per-token send loop adds nothing measurable. Keep the item only as a GIL/throughput note.
+- **W3 must not re-introduce the F-30b rescue (M23):** STRATA_BATCH_RESCUE=0 is law — the batch-site
+  typical rescue cost MMLU 95.7 → 91.4–92.9 (F-30b). W3's p/q rejection sampling is
+  distribution-exact (unbiased) and different machinery; the MMLU gate stays mandatory.
+- **W11's costs are size-scaled, not constant (M19/M23/M25):** demote parks 21.6–30.6 ms on small
+  conversations but up to 299 ms (park 214.6) on large ones; reuse-scan median 73→313 ms from
+  0–9k to 90–99k ctx with a 2–413 ms variance band; conversation-cache eviction costs a FULL cold
+  re-read on the first turn after (11.3 s at 80k, M25). Conversation cache ran 24/24 slots with 7
+  evictions — budget sizing is part of W11. Elastic promote is cheap (1.1–6.6 ms) — the cost is
+  all on the park side.
+- **W15 depth gets knee + reuse-granularity facts (M20/M21/M16):** windows pick up a
+  +4.7–7.6 ms context term above ~80k (35% of the window) with p99 widening; cross-conversation
+  reuse caps at kv-resident 32768 and, once the cache evicts, falls back to whole 32768-token
+  blocks (observed 65536/98304 landings) — up to 32,768 tail tokens re-read at bulk rate.
+- **Clock law (M17/M24):** chronic ~6% SM deficit is the always-on 0x400 "Reliability" flag — a
+  Blackwell hardware V-F guardband, root-only, NOT a software lever (lock service already runs).
+  Episodic power-cap spikes (1785 MHz transient) occur during concurrent cold-prefill storms —
+  W17's cadence flattens that condition.
+- **Prefill shape quantified (M6/M9/M22):** ~1.0–1.3 s fixed launch tax + ~6.8k tok/s marginal
+  ceiling (PCIe-capped, 31 GB/s spike at 475 W); small reads <2k run 1.2–2.2k tok/s launch-bound —
+  4–5× below bulk. The W19 prize is the fixed term.
+- **Lane curve baseline (M8):** 1/2/4/6 lanes = 209 / 164 / 279 / 341.5 aggregate tok/s, window
+  p50 17.1–23.8 ms, rows/window 3.5–9.6 — the GPU absorbs rows almost free. Batch drafts are
+  counted as verifier rows, NOT in drafts_offered (telemetry gap, fixed under W18).
+
+### W17 — Enable prefill cadence (boot flag; conc smoothness)
+`STRATA_PREFILL_CADENCE=1` (+ `PREFILL_CADENCE_N`, default 2) is shipped, documented, and OFF
+(server.py:325–339, cites vLLM #44558: P50 ITL 274.9 → 32.1 ms). M18 measured the disease on
+this engine: cold 4k/16k reads interleaved with six decoding lanes spike per-lane ITL to
+0.1–0.8 s and inflate the injected read's TTFT 3–5× (6.6–6.9 s) — one prompt-chunk read forces
+the decode graph out of replay. Zero code change, one boot. Measure TTFT p50/p99 alongside lane
+ITL (cadence delays prefill admission while decode is busy). Pairs with #656 BYIELD (fired 0
+times this session — the long-prompt case is the live one).
+
+### W18 — Batch draft-depth ramp + telemetry gap (env-only, one measurement)
+`STRATA_BATCH_DRAFT_DEPTH` is 1 (generate.cpp:5375); batch_mtp is live with 6 slot drafters.
+M8/M15: the batch lane is already 78–91% row-efficient at D=1 — D=2 adds rows the lane can
+barely convert, so run the ramp (D=2, D=3; `batch-draft-depth-notes.md` has the test) for the
+measurement, do not plan on the gain. Alongside, fix the telemetry gap: batch drafts are counted
+as verifier rows and never appear in `drafts_offered` (the 5,462 "drafts accepted 0 of 0" lines)
+— make batch acceptance directly readable per request.
+
+### W19 — Small-read prefill fast path (agent-loop latency)
+M9/M22: reads of ~1–2k tokens run at 1,207–2,236 tok/s — launch-bound, 4–5× below the 6,512
+tok/s bulk rate; the curve is ~1.0–1.3 s fixed + 6.8k marginal, so a 2k read costs 1.03 s where
+only ~0.3 s is compute. A per-window small-read path that skips the full prefill staging
+machinery below ~2k tokens cuts the agent-loop marginal term. OPEN ONLY AFTER W8/W11 land; the
+acceptance metric is the per-request prompt_ms term in the `requests` block (visible today).
+
 ## Flagged experiments (NOT adopted recommendations)
 - Re-A/B STRATA_COHORTS=2 vs STRATA_BATCH_G2 now that STRATA_DM folded the doorbell waits —
   cohorts duplicate every dense-weight read (generate.cpp:9366–9395).
@@ -303,3 +442,8 @@ Battery: t42-prefill-ladder 8K/32K/64K.
 | W12 | STRATA_GDN_SPLIT=0 (default-off today) | | |
 | W13 | STRATA_LFUSE unset; mix/combine fusion env off / pre-w13 | | |
 | W14 | staging-pool env off / pre-w14 | | |
+| W15 | kv-resident rebalance env off (static 32768 restored) / pre-w15 | | |
+| W16 | telemetry/battery protocol only — no engine change | | |
+| W17 | STRATA_PREFILL_CADENCE unset (off) — env-only | | |
+| W18 | STRATA_BATCH_DRAFT_DEPTH back to 1 (default) — env-only; telemetry fix is additive | | |
+| W19 | small-read fast path env off / pre-w19 | | |

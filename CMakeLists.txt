@@ -2288,6 +2288,11 @@ endif()
     if(STRATA_NATIVE_EXPERTS)   # Strata's CPU trellis kernels (tq_cpu.hpp) for the trellis experts on the CPU lane
       target_link_libraries(strata-dsv41 PRIVATE strata_kernels_cpu)
       target_compile_definitions(strata-dsv41 PRIVATE STRATA_DSV41_TQ_CPU=1)
+      add_executable(ds4_gg_bench tests/dsv41/gg_dot_bench.cpp src/dsv41/ds4_gg_cpu.cpp)
+      target_include_directories(ds4_gg_bench PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include ${CMAKE_CURRENT_SOURCE_DIR}/src/dsv41
+                                 ${CMAKE_CURRENT_SOURCE_DIR}/third_party/ggml)
+      target_link_libraries(ds4_gg_bench PRIVATE strata_kernels_cpu Threads::Threads)
+      target_compile_definitions(ds4_gg_bench PRIVATE STRATA_DSV41_TQ_CPU=1)
     endif()
     install(TARGETS strata-dsv41 RUNTIME DESTINATION .)
   endif()
