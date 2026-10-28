@@ -1,0 +1,270 @@
+commit 8c0301484e735219b5553ef01fb48751a42bf456
+Author: Niko1221 <Niko1221@users.noreply.github.com>
+Date:   Tue Oct 27 01:15:08 2026 +0100
+
+    Conversation cache: skip a restore only when a card would have to create its copy stream and has no room for it (#2409)
+    
+    Problem. #2408 / PR #2409: restoring a large parked conversation on a layer split ended the server with a CUDA out of memory
+    on a later card. The PR checks the free VRAM of every card against --vram-reserve-mib before a restore. Its own review
+    points out that a loaded card is always below that reserve, so the check would skip nearly every restore on a split (and
+    on one GPU). It is not ported.
+    
+    What a restore allocates. conversation_snapshot_restore writes into the session's existing buffers (pools(st), the GDN
+    state, the indexer tails); refresh_residency only launches kv_stream_reset or copies into the existing ring. The elastic K/V
+    growth (kvg_ensure) allocates, but only on one GPU. The one thing a restore can create on a card is the calling thread's
+    private copy stream for it (conversation_copy.hpp private_stream), which it takes from the pool of finished threads when
+    there is one (#3350). A failed restore is fatal by contract (the session may be half written). So the need is one stream
+    and one event, and only for a card whose stream does not exist yet (a snapshot loaded from disk, or a restore on a thread
+    that never copied on that card).
+    
+    Change. conv_cache.hpp: kRestoreFirstUseMib (64) and restore_fits(free, stream_ready, n, need): a restore is refused only
+    for a card that has no copy stream yet and less than 64 MiB free. conversation_copy_stream_ready(device) says whether a
+    card has one. generate.cpp: before the restore, each card of the run is checked; a snapshot that would not fit goes back to
+    the cache and the prompt is read again, with a log line. A card that has its stream is never refused, however full.
+    No sample (a failed cudaMemGetInfo) means the restore goes ahead as it did.
+    
+    Tests. conv_cache_test: the predicate (cards with a stream are admitted at any free size; the edge at the need; no
+    sample / no cards / no need). conversation_copy_streams_test: copy_stream_ready before and after the first copy, in the pool
+    after a thread ends, and the measured cost of a card's first copy stream and event (printed; the test requires under
+    16 MiB, so 64 MiB leaves a wide margin). conversation_snapshot_test: after the first restore, six more restores of two
+    images leave the free VRAM where it was.
+    
+    Not covered. The pure predicate and the generate.cpp code build on z440 (CUDA 13.0); the GPU tests are listed in the stream
+    notes. No model run: gates/2409-restore-guard.sh (a held-VRAM start on a layer split) shows the skip line and an
+    unchanged answer on the second turn.
+
+diff --git a/include/strata/core/conversation_snapshot.hpp b/include/strata/core/conversation_snapshot.hpp
+index dcee29fa..caf8a2ad 100644
+--- a/include/strata/core/conversation_snapshot.hpp
++++ b/include/strata/core/conversation_snapshot.hpp
+@@ -106,6 +106,10 @@ bool conversation_snapshot_sources(SavedConversation& meta, std::vector<SessionK
+                                    const ModelGeometry& g, const QsaState& draft, std::string& error);
+ bool conversation_snapshot_validate(const SavedConversation& image, const SessionState& session,
+                                     const ModelGeometry& g, const QsaState& draft, std::string& error);
++/// #2409: true when a restore (or a copy) on CUDA device `device` from the calling thread creates no copy stream: this
++/// thread has one for the card or a finished thread left one in the pool. A restore writes into buffers that exist
++/// already; a new stream is the one thing it can allocate (see program/conv_cache.hpp restore_fits).
++bool conversation_copy_stream_ready(int device);
+ enum class ConversationRestore { restored, invalid, transfer_failed };
+ // Invalid images are rejected before any CUDA call/write. Transfer failure may
+ // leave partial state: caller MUST NOT continue inference from that session.
+diff --git a/include/strata/program/conv_cache.hpp b/include/strata/program/conv_cache.hpp
+index d8e97f32..6f07a214 100644
+--- a/include/strata/program/conv_cache.hpp
++++ b/include/strata/program/conv_cache.hpp
+@@ -77,6 +77,25 @@ inline size_t eviction_victim(const uint64_t* stamps, size_t n, int64_t cap, con
+     return v;
+ }
+ 
++/// #2409: what a conversation restore can allocate on a card. It writes into session buffers that already exist; the one
++/// thing it may create is the calling thread's private copy stream for that card (conversation_copy.hpp), which it takes
++/// from the pool of finished threads when there is one, and the first launch of the two small residency kernels loads
++/// their code. A stream and an event cost well under 2 MiB where it was measured (conversation_copy_streams_test prints
++/// it); 64 MiB covers both many times over and is far below the reserves (--vram-reserve-mib 700), so the check can only
++/// fire on a card that is really full.
++constexpr uint64_t kRestoreFirstUseMib = 64;
++
++/// Whether a parked snapshot can be restored without a first-use allocation failing: every card for which the restore
++/// would have to create its copy stream (`stream_ready[i]` false) must have `need_bytes` free. A card that already has a
++/// stream needs nothing, so it never refuses - unlike a floor on `--vram-reserve-mib`, which a loaded card is always under
++/// (#2409's review). A missing sample (`free_bytes` null) does not refuse.
++inline bool restore_fits(const uint64_t* free_bytes, const uint8_t* stream_ready, size_t n, uint64_t need_bytes) {
++    if (free_bytes == nullptr || stream_ready == nullptr || need_bytes == 0) return true;
++    for (size_t i = 0; i < n; ++i)
++        if (!stream_ready[i] && free_bytes[i] < need_bytes) return false;
++    return true;
++}
++
+ /// --prompt-cache-spread: the item whose removal leaves the smallest gap for its distance from the newest, so the kept
+ /// points thin out geometrically towards the root and an edit d tokens before the end reads about d again.  `lens`:
+ /// the chain's token counts.  Never the root, the newest or a pinned item; the tail rule first, as above.
+diff --git a/src/core/conversation_copy.hpp b/src/core/conversation_copy.hpp
+index 7ffb87f4..1cc12d3c 100644
+--- a/src/core/conversation_copy.hpp
++++ b/src/core/conversation_copy.hpp
+@@ -97,6 +97,17 @@ inline cudaError_t private_stream(cudaStream_t& s) {
+     return cudaSuccess;
+ }
+ 
++/// #2409: true when a copy on `dev` from this thread needs no new stream: the thread has one, or a thread that ended left
++/// one in the pool. false: the next copy creates one (a small device allocation, which can fail on a full card).
++inline bool copy_stream_ready(int dev) {
++    if (dev < 0) dev = 0;
++    const std::vector<cudaStream_t>& streams = thread_copy_handles().streams;
++    if ((size_t) dev < streams.size() && streams[(size_t) dev]) return true;
++    CopyHandlePool& p = copy_handle_pool();
++    std::lock_guard<std::mutex> lk(p.mu);
++    return (size_t) dev < p.streams.size() && !p.streams[(size_t) dev].empty();
++}
++
+ /// STRATA_TEST_COPY_FAIL_AT=N (tests only, #3350): the N-th snapshot / checkpoint copy of the process fails with
+ /// cudaErrorMemoryAllocation, as when a card has no memory left for the copy.  Unset: nothing.
+ inline long test_copy_fail_at() {
+diff --git a/src/core/conversation_copy_streams_test.cpp b/src/core/conversation_copy_streams_test.cpp
+index 6e709c84..03d38830 100644
+--- a/src/core/conversation_copy_streams_test.cpp
++++ b/src/core/conversation_copy_streams_test.cpp
+@@ -40,6 +40,35 @@ int main() {
+     check(cudaMalloc(&d, bytes) == cudaSuccess, "device buffer");
+     std::vector<char> h(bytes, 7);
+ 
++    // 0. #2409: what the first copy stream and event of a card cost, on a context that is warm (the buffer above is
++    //    allocated, and a first copy has loaded the copy path's code on a thread that is then discarded)
++    {
++        bool fresh_ready = true;
++        std::thread probe([&] { fresh_ready = copy_stream_ready(0); });
++        probe.join();
++        check(!fresh_ready, "before any copy no thread has a stream for the card (copy_stream_ready is false)");
++        cudaDeviceSynchronize();
++        size_t free0 = 0, free1 = 0, tot = 0;
++        check(cudaMemGetInfo(&free0, &tot) == cudaSuccess, "free memory before the first stream");
++        bool ok = false, ready_after = false;
++        std::thread t([&] {
++            ok = one_thread(0, d, h.data(), bytes);
++            ready_after = copy_stream_ready(0);
++        });
++        t.join();
++        check(ok && ready_after, "the first copy creates the stream, and the thread then has it");
++        check(cudaMemGetInfo(&free1, &tot) == cudaSuccess, "free memory after the first stream");
++        const long long used = (long long) free0 - (long long) free1;
++        std::printf("conversation_copy_streams_test: the first copy stream + event of the card took %lld KiB of device memory\n",
++                    used / 1024);
++        // the restore's guard (program/conv_cache.hpp kRestoreFirstUseMib = 64) is 4x this bound
++        check(used <= (16ll << 20), "a card's first copy stream and event take under 16 MiB");
++        bool pooled = false;
++        std::thread t2([&] { pooled = copy_stream_ready(0); });
++        t2.join();
++        check(pooled, "a finished thread's stream is in the pool: the next thread needs no new one");
++    }
++
+     // 1. 200 threads, one after the other (a chunk per std::async thread): the handles are reused, not created per thread
+     const long s0 = copy_streams_created(), e0 = copy_events_created();
+     for (int i = 0; i < 200; ++i) {
+diff --git a/src/core/conversation_snapshot_test.cpp b/src/core/conversation_snapshot_test.cpp
+index 074a3ae9..e3705270 100644
+--- a/src/core/conversation_snapshot_test.cpp
++++ b/src/core/conversation_snapshot_test.cpp
+@@ -193,6 +193,21 @@ void full_session(int fmt, int mode, int experts) {
+           restored.live.dead==a.live.dead && restored.live.block_pos==a.live.block_pos &&
+           equal(restored.kv[0],a.kv[0]) && equal(restored.kv[1],a.kv[1]),"whole-session A/B/A exactness including spare key");
+     check(ss.ple_prev[0]==64 && ss.ple_prev[1]==65,"PLE token window reconstructed");
++    {
++        // #2409: a restore writes into the session's own buffers. After the copy stream exists (the restores above made
++        // it) a restore of either image allocates nothing on the card: free memory does not move (2 MiB allocation
++        // granules; 4 MiB of slack for a desktop card's other programs).
++        check(conversation_copy_stream_ready(0),"this thread has its copy stream after the first restore");
++        cudaDeviceSynchronize();
++        size_t before=0,after=0,total=0;
++        check(cudaMemGetInfo(&before,&total)==cudaSuccess,"free memory before the repeated restores");
++        for(int i=0;i<6;++i)
++            check(conversation_snapshot_restore(i%2?b:a,ss,g,draft.state,err)==ConversationRestore::restored,"repeated restore");
++        cudaDeviceSynchronize();
++        check(cudaMemGetInfo(&after,&total)==cudaSuccess,"free memory after the repeated restores");
++        check((long long)after+(4ll<<20)>=(long long)before,"six more restores allocate nothing on the card");
++        check(conversation_snapshot_restore(a,ss,g,draft.state,err)==ConversationRestore::restored,"A is back");
++    }
+     {
+         // a borrowed prefix (ConversationCache::borrows): the K/V of A's first tokens and A's checkpoint there, A
+         // untouched - the same bytes as restoring A whole and rewinding to that checkpoint
+diff --git a/src/core/conversation_state.cpp b/src/core/conversation_state.cpp
+index c64e09d9..7fa40ca6 100644
+--- a/src/core/conversation_state.cpp
++++ b/src/core/conversation_state.cpp
+@@ -397,6 +397,8 @@ bool conversation_snapshot_validate(const SavedConversation& image, const Sessio
+     return !draft || conversation_kv_validate(image.kv.back(), *draft, g, upto, false, error);
+ }
+ 
++bool conversation_copy_stream_ready(int device) { return conversation_detail::copy_stream_ready(device); }
++
+ ConversationRestore conversation_snapshot_restore(const SavedConversation& image, SessionState& ss,
+                                                    const ModelGeometry& g, const QsaState* draft, std::string& error) {
+     if (!conversation_snapshot_validate(image, ss, g, draft, error)) return ConversationRestore::invalid;
+diff --git a/src/program/conv_cache_test.cpp b/src/program/conv_cache_test.cpp
+index 40da7957..6cb99038 100644
+--- a/src/program/conv_cache_test.cpp
++++ b/src/program/conv_cache_test.cpp
+@@ -20,6 +20,7 @@
+ #include <vector>
+ 
+ using strata::program::conv_cache::eviction_victim;
++using strata::program::conv_cache::restore_fits;
+ using strata::program::conv_cache::spread_victim;
+ 
+ namespace {
+@@ -132,6 +133,24 @@ int main() {
+         check(eviction_victim(s4.data(), s4.size(), 4, nullptr, all) == 2, "everything pinned: the oldest pin leaves, never the root");
+         check(eviction_victim(s4.data(), s4.size(), 1, nullptr, all) == 0, "a one-slot budget keeps no pin: the oldest leaves");
+     }
++    {   // #2409: a restore is refused only for a card that must create its copy stream and has no room for it
++        constexpr uint64_t need = strata::program::conv_cache::kRestoreFirstUseMib << 20;
++        const uint64_t loaded[] = {300ull << 20, 104ull << 20};         // a loaded card: far under --vram-reserve-mib
++        const uint8_t ready[] = {1, 1};
++        check(restore_fits(loaded, ready, 2, need), "cards with their stream already: any amount free admits (the #2409 review's case)");
++        const uint8_t later_new[] = {1, 0};
++        check(restore_fits(loaded, later_new, 2, need), "a card that must create its stream, with 104 MiB free: admitted");
++        const uint64_t full[] = {300ull << 20, 20ull << 20};
++        check(!restore_fits(full, later_new, 2, need), "a card that must create its stream, with 20 MiB free: reread instead");
++        check(restore_fits(full, ready, 2, need), "the same full card with its stream: admitted");
++        const uint64_t edge[] = {need, need - 1};
++        const uint8_t none[] = {0, 0};
++        check(!restore_fits(edge, none, 2, need), "one byte under the need refuses");
++        check(restore_fits(edge, none, 1, need), "exactly the need admits");
++        check(restore_fits(nullptr, none, 2, need) && restore_fits(full, nullptr, 2, need) && restore_fits(full, none, 0, need) &&
++                  restore_fits(full, none, 2, 0),
++              "no sample, no cards, no need: do not refuse");
++    }
+     std::printf(g_fail ? "FAIL\n" : "PASS\n");
+     return g_fail ? 1 : 0;
+ }
+diff --git a/src/program/generate.cpp b/src/program/generate.cpp
+index 1adb7e18..ee4de8ec 100644
+--- a/src/program/generate.cpp
++++ b/src/program/generate.cpp
+@@ -12963,6 +12963,47 @@ int main(int argc, char** argv) {
+                 incoming.reset();
+                 err.clear();
+             }
++            // #2409: a restore writes into buffers that exist already. The one thing it can still allocate on a card is
++            // this thread's private copy stream for it (a pooled one is reused), and an out-of-memory there is fatal
++            // for the process (a failed restore must not be decoded from). So a card that would have to create one and
++            // has less than kRestoreFirstUseMib free gets no restore: the snapshot goes back to the cache and this
++            // prompt is read again. A card that already has its stream is never refused, however full it is.
++            if (incoming) {
++                std::vector<int> restore_devs{-1};
++                for (const auto& stp : stages) restore_devs.push_back(stp->dev);
++                std::vector<uint64_t> restore_free;
++                std::vector<uint8_t> restore_ready;
++                int tight = -1;
++                bool sampled = true;
++                for (const int rd : restore_devs) {
++                    const strata::core::OnDevice on(rd);
++                    int cur = 0;
++                    size_t fb = 0, tb = 0;
++                    if (cudaGetDevice(&cur) != cudaSuccess || cudaMemGetInfo(&fb, &tb) != cudaSuccess) {
++                        (void) cudaGetLastError();
++                        sampled = false;   // no sample: the restore goes ahead as it always did
++                        break;
++                    }
++                    restore_free.push_back((uint64_t) fb);
++                    restore_ready.push_back(strata::core::conversation_copy_stream_ready(cur) ? 1 : 0);
++                }
++                if (sampled &&
++                    !strata::program::conv_cache::restore_fits(restore_free.data(), restore_ready.data(), restore_free.size(),
++                                                               strata::program::conv_cache::kRestoreFirstUseMib << 20)) {
++                    for (size_t k = 0; k < restore_free.size(); ++k)
++                        if (!restore_ready[k] && restore_free[k] < (strata::program::conv_cache::kRestoreFirstUseMib << 20)) tight = (int) k;
++                    std::fprintf(stderr, "strata serve: conversation cache: skip restore (%s has %lld MiB free and no copy stream "
++                                         "yet, which needs up to %lld MiB); rereading the prompt\n",
++                                 tight <= 0 ? "CUDA0" : ("stage " + std::to_string(tight)).c_str(),
++                                 (long long) (tight >= 0 ? restore_free[(size_t) tight] >> 20 : 0),
++                                 (long long) strata::program::conv_cache::kRestoreFirstUseMib);
++                    auto retry = std::move(*incoming);
++                    incoming.reset();
++                    if (!conversations.put(std::move(retry)))
++                        std::fprintf(stderr, "strata serve: conversation cache: could not return the skipped snapshot\n");
++                    err.clear();
++                }
++            }
+             if (borrow) {
+                 const strata::core::SavedConversation* donor = conversations.find(parked.serial);
+                 if (donor == nullptr ||

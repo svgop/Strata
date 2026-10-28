@@ -1,0 +1,222 @@
+commit 7d1016f3f42b4a88b4871e29d09b06779bee4bdf
+Author: Niko1221 <Niko1221@users.noreply.github.com>
+Date:   Tue Oct 27 02:02:46 2026 +0100
+
+    QFUSE: the fused q8_1 producers divide the way the separate quantiser does; they gave a different code at about one element in a million (#3948)
+    
+    Problem. #3948: with STRATA_QFUSE=1 the verified text changes and MTP acceptance drops (RTX 3080, sm_86). The report suspected the
+    group counter or the nat_xq_ offsets of fused_gr.cu; the audit and the new two-group test (previous commit of this stream)
+    rule those out. What the new test found instead, on an RTX 5070 (sm_120, CUDA 13.0, MSVC), over 10,500 random windows of two groups: in
+    about 1 run of 400 one q8_1 code of the fused image differs by exactly one from native_quantize_q8_1's, in every mode (group-relative,
+    window-indexed, direct, graph replay). The scale/sum pair and the other codes agree.
+    
+    Cause. native_mmvq.cu, which holds native_quantize_q8_1 (the quantiser every consumer of a q8_1 image was written for), is
+    compiled with --use_fast_math (CMakeLists.txt, the native_* list), so its `amax / 127` and `x / d` are the fast full-range division
+    (div.full.f32, up to 2 ulp off). fused_gr.cu (the hyper-connection read's tail, gr_up_q32_kernel) and verify_kernels.cu (the GDN
+    output norm, gdn_q8_1_store) are not in that list and divide with IEEE rounding. roundf(x / d) then lands on the other side of a .5
+    at the rare element whose quotient is next to a boundary. One changed activation code per ~10^6 values is about one per few
+    hundred tokens at 80 hyper-connection reads of 2560 values per token: enough to move a near-tie in the verify, and the
+    draft (which quantises with the separate kernel) disagrees with the verifier a little more often, which lowers acceptance. That
+    matches the report (acceptance 0.755 against 0.79, different text, and an unchanged text where no draft is made).
+    
+    Change. include/strata/kernels/q8_1_finite.hpp: q81_div(a, b) is `a / b`, except in a translation unit that defines
+    STRATA_Q81_FASTMATH_DIV (CUDA device code only, never HIP), where it is the same PTX division the fast-math file gets (div.full.f32).
+    q8_1_quant and the scale use it. fused_gr.cu and verify_kernels.cu define the macro; nothing else does, so every other kernel,
+    the separate quantiser and every HIP build compile to what they did. STRATA_QFUSE is off by default on CUDA (it is on by default on
+    gfx1151, which is HIP and unchanged), so the default path is bit-identical.
+    
+    Result (RTX 5070, sm_120): gr_parity's two-group window test: 10,500 runs with 1,500 random inputs for each T, all modes, zero
+    differences (before: dozens); the whole of gr_parity, gdn_parity and gdn_parity with STRATA_GDN_SPLIT=1 pass.
+    
+    Tests. gr_parity: the two-group test prints the first differing bytes (block, field), and STRATA_GRP_REPS=N / STRATA_GRP_KEEP_GOING=1
+    repeat it longer and count every failure. gdn_parity: the q8_1 destination check uses its own stream (native_quantize_q8_1 refuses the
+    null stream, which crashed the test on Windows), unbuffered stdout and STRATA_GDN_PARITY_TRACE=1.
+    
+    Not covered. sm_86 (the report's card) has not run the new test yet (z440 was reserved for other jobs); the cause is not
+    architecture specific. The model run (gates/3948-qfuse.sh) is still owed: QFUSE on against off must now be byte-identical, and the
+    draft counters equal.
+
+diff --git a/include/strata/kernels/q8_1_finite.hpp b/include/strata/kernels/q8_1_finite.hpp
+index 7826dbc5..81022bb3 100644
+--- a/include/strata/kernels/q8_1_finite.hpp
++++ b/include/strata/kernels/q8_1_finite.hpp
+@@ -19,10 +19,27 @@ __device__ __forceinline__ float q8_1_finite(const float v) {
+     return fabsf(v) > kHalfMax ? copysignf(kHalfMax, v) : v;
+ }
+ 
++/// #3948: native_mmvq.cu (native_quantize_q8_1, the separate quantiser every consumer of a q8_1 image was written for)
++/// is compiled with --use_fast_math, which makes `a / b` the fast full-range division (div.full.f32, up to 2 ulp off). The
++/// fused producers (fused_gr.cu's hyper-connection read, verify_kernels.cu's GDN output norm: STRATA_QFUSE) are not, so
++/// their IEEE division gave a different code at the rare element whose x / d lies next to a rounding boundary (found by
++/// gr_parity: one code in about 10^6, off by one). A translation unit that defines STRATA_Q81_FASTMATH_DIV before including
++/// this header divides the way the fast-math one does; every other one, and every HIP build, keeps `a / b` (so nothing
++/// that compiled before this changes).
++__device__ __forceinline__ float q81_div(const float a, const float b) {
++#if defined(STRATA_Q81_FASTMATH_DIV) && defined(__CUDA_ARCH__) && !defined(__HIPCC__)
++    float r;
++    asm("div.full.f32 %0, %1, %2;" : "=f"(r) : "f"(a), "f"(b));
++    return r;
++#else
++    return a / b;
++#endif
++}
++
+ /// The block's quantized value of `xi` for the (finite) scale `d`; `amax` = 0 is an all-zero block.
+ __device__ __forceinline__ int8_t q8_1_quant(const float xi, const float d, const float amax) {
+     if (amax == 0.0f) return 0;
+-    const float q = roundf(xi / d);
++    const float q = roundf(q81_div(xi, d));
+     return (int8_t) (q > 127.0f ? 127.0f : q < -127.0f ? -127.0f : q);
+ }
+ 
+diff --git a/src/kernels/cuda/fused_gr.cu b/src/kernels/cuda/fused_gr.cu
+index 576e5d67..3811e782 100644
+--- a/src/kernels/cuda/fused_gr.cu
++++ b/src/kernels/cuda/fused_gr.cu
+@@ -2,6 +2,7 @@
+ #include "strata/core/emulate.hpp"
+ #include "strata/core/sm75_series.hpp"
+ #include "strata/core/sm120_series.hpp"
++#define STRATA_Q81_FASTMATH_DIV 1   // #3948: the q8_1 tails divide as native_mmvq.cu (--use_fast_math) does, see q8_1_finite.hpp
+ #include "strata/kernels/q8_1_finite.hpp"   // #606: q8_1_ds
+ #include "strata/core/geometry.hpp"
+ #include "strata/kernels/fused_gr.hpp"
+@@ -244,7 +245,7 @@ __device__ __forceinline__ void gr_q8_tail(const GrMulti& m, int d0) {
+     for (int o = 16; o > 0; o >>= 1) amax = fmaxf(amax, __shfl_xor_sync(0xffffffffu, amax, o));
+ #pragma unroll
+     for (int o = 16; o > 0; o >>= 1) sum += __shfl_xor_sync(0xffffffffu, sum, o);
+-    const float d = q8_1_finite(amax / 127.0f);   // #606: as native_quantize_q8_1_kernel - finite blocks bit for bit
++    const float d = q8_1_finite(q81_div(amax, 127.0f));   // #606: as native_quantize_q8_1_kernel - finite blocks bit for bit
+     const int8_t q = q8_1_quant(xi, d, amax);
+     GrQ81* y = reinterpret_cast<GrQ81*>(m.a[warp].q8_mixed) + c0 / 32;
+     y->qs[lane] = q;
+@@ -595,7 +596,7 @@ __global__ void __launch_bounds__(Q32_THREADS) gr_up_q32_kernel(GrMulti m) {
+         for (int o = 16; o > 0; o >>= 1) amax = fmaxf(amax, __shfl_xor_sync(0xffffffffu, amax, o));
+ #pragma unroll
+         for (int o = 16; o > 0; o >>= 1) sum += __shfl_xor_sync(0xffffffffu, sum, o);
+-        const float d = q8_1_finite(amax / 127.0f);
++        const float d = q8_1_finite(q81_div(amax, 127.0f));
+         const int8_t q = q8_1_quant(xi, d, amax);
+         GrQ81* y = reinterpret_cast<GrQ81*>(m.a[warp].q8_mixed) + d0 / 32;
+         y->qs[lane] = q;
+@@ -1914,7 +1915,7 @@ __global__ void __launch_bounds__(Q32_THREADS) gr_up_q8_q32_kernel(GrMulti m, co
+         for (int o = 16; o > 0; o >>= 1) amax = fmaxf(amax, __shfl_xor_sync(0xffffffffu, amax, o));
+ #pragma unroll
+         for (int o = 16; o > 0; o >>= 1) sum += __shfl_xor_sync(0xffffffffu, sum, o);
+-        const float d = q8_1_finite(amax / 127.0f);
++        const float d = q8_1_finite(q81_div(amax, 127.0f));
+         const int8_t q = q8_1_quant(xi, d, amax);
+         GrQ81* y = reinterpret_cast<GrQ81*>(m.a[warp].q8_mixed) + d0 / 32;
+         y->qs[lane] = q;
+diff --git a/src/kernels/cuda/verify_kernels.cu b/src/kernels/cuda/verify_kernels.cu
+index 26566475..3da7ac63 100644
+--- a/src/kernels/cuda/verify_kernels.cu
++++ b/src/kernels/cuda/verify_kernels.cu
+@@ -5,6 +5,7 @@
+ #include "strata/kernels/verify_kernels.hpp"
+ #include "strata/core/geometry.hpp"
+ #include "strata/core/emulate.hpp"
++#define STRATA_Q81_FASTMATH_DIV 1   // #3948: the q8_1 stores divide as native_mmvq.cu (--use_fast_math) does, see q8_1_finite.hpp
+ #include "strata/kernels/q8_1_finite.hpp"   // #606: q8_1_ds
+ #include "strata/kernels/window_start.hpp"  // KVA: the draft layer's window floor
+ #include "strata/kernels/dp4a.hpp"
+@@ -277,7 +278,7 @@ __device__ __forceinline__ void gdn_q8_1_store(GdnQ81* __restrict__ xq, size_t i
+     for (int o = 16; o > 0; o >>= 1) amax = fmaxf(amax, __shfl_xor_sync(0xffffffffu, amax, o));
+ #pragma unroll
+     for (int o = 16; o > 0; o >>= 1) sum += __shfl_xor_sync(0xffffffffu, sum, o);
+-    const float d = q8_1_finite(amax / 127.0f);   // #606: as native_quantize_q8_1_kernel - finite blocks bit for bit
++    const float d = q8_1_finite(q81_div(amax, 127.0f));   // #606: as native_quantize_q8_1_kernel - finite blocks bit for bit (#3948: and its division)
+     const int8_t q = q8_1_quant(xi, d, amax);
+     xq[idx / 32].qs[idx % 32] = q;
+     if (idx % 32 == 0) xq[idx / 32].ds = q8_1_ds(d, sum);   // #606: clamped (the QFUSE path bypassed the finite helper)
+diff --git a/src/kernels/gdn_parity.cpp b/src/kernels/gdn_parity.cpp
+index ae650031..b672300f 100644
+--- a/src/kernels/gdn_parity.cpp
++++ b/src/kernels/gdn_parity.cpp
+@@ -98,6 +98,7 @@ double rel_l1(const std::vector<float>& a, const std::vector<float>& b) {
+ }  // namespace
+ 
+ int main(int argc, char** argv) {
++    std::setvbuf(stdout, nullptr, _IONBF, 0);   // (progress lines survive a crash)
+     bool selftest = false;
+     for (int i = 1; i < argc; ++i) {
+         if (std::string(argv[i]) == "--selftest") selftest = true;
+@@ -509,6 +510,7 @@ int main(int argc, char** argv) {
+                 // at (t - tb) * value_dim: the bytes native_quantize_q8_1 makes of y rows [tb, n), the outputs and the state
+                 // unchanged by asking for it, and nothing written past those rows (the engine's second group has tb > 0)
+                 if (c.tb < n) {
++                    if (std::getenv("STRATA_GDN_PARITY_TRACE")) std::printf("    trace: T=%d '%s' with a q8_1 destination\n", T, c.name);
+                     const size_t qb = (size_t) (vd / 32) * 36, rows = (size_t) (n - c.tb);
+                     void *d_q = dev((size_t) T * qb), *d_qr = dev((size_t) T * qb);
+                     check(cudaMemset(d_q, 0x5a, (size_t) T * qb), "q0");
+@@ -517,7 +519,9 @@ int main(int argc, char** argv) {
+                     check(cudaMemset(d_y, 0, (size_t) T * vd * 4), "y1");
+                     strata::kernels::gdn_step_norm_multi(d_st, d_h, C, d_gate, d_beta, d_z, d_gm, eps, d_y, h_k, h_v, T,
+                                                          c.n_keep >= 0 ? d_nk : nullptr, nullptr, c.tb, d_q);
+-                    strata::kernels::native_quantize_q8_1(d_y + (size_t) c.tb * vd, d_qr, vd, (int) rows, nullptr);
++                    static cudaStream_t qstream = nullptr;   // (native_quantize_q8_1 refuses the null stream; a blocking stream orders with the legacy one)
++                    if (qstream == nullptr) check(cudaStreamCreate(&qstream), "qstream");
++                    strata::kernels::native_quantize_q8_1(d_y + (size_t) c.tb * vd, d_qr, vd, (int) rows, qstream);
+                     check(cudaDeviceSynchronize(), "q sync");
+                     std::vector<uint8_t> hq((size_t) T * qb), hr((size_t) T * qb);
+                     check(cudaMemcpy(hq.data(), d_q, hq.size(), cudaMemcpyDeviceToHost), "q read");
+diff --git a/src/kernels/gr_parity.cpp b/src/kernels/gr_parity.cpp
+index 18cc57eb..4778d66e 100644
+--- a/src/kernels/gr_parity.cpp
++++ b/src/kernels/gr_parity.cpp
+@@ -468,7 +468,9 @@ int fused_multi_lds_parity(const float* d_norm, const uint16_t* d_down, const ui
+     // shows), direct and as a graph replay. After every repetition: both groups' q8_1 bytes equal what
+     // native_quantize_q8_1 makes of `mixed`, nothing outside the written ranges changed, and the counters are back at zero.
+     if (!v3) {
+-        constexpr int REPS = 200;
++        // (STRATA_GRP_REPS=N more repetitions, STRATA_GRP_KEEP_GOING=1 counts every failure instead of stopping at the first: to measure a rare one)
++        const int REPS = std::getenv("STRATA_GRP_REPS") ? std::max(1, std::atoi(std::getenv("STRATA_GRP_REPS"))) : 200;
++        const bool keep_going = std::getenv("STRATA_GRP_KEEP_GOING") != nullptr;
+         const size_t B = (size_t) (N / 32) * 36;   // one token's q8_1 image
+         uint8_t *d_qa = nullptr, *d_qb = nullptr, *d_qabs = nullptr, *d_ref2 = nullptr;
+         unsigned* d_cnt2 = nullptr;
+@@ -484,7 +486,7 @@ int fused_multi_lds_parity(const float* d_norm, const uint16_t* d_down, const ui
+         std::vector<unsigned> h_cnt(N / 32);
+         int g2bad = 0;
+         long runs = 0;
+-        for (int tt = 2; tt <= T && !g2bad; ++tt) {
++        for (int tt = 2; tt <= T && (!g2bad || keep_going); ++tt) {
+             const int h = (tt + 1) / 2;   // verify.cpp: tb_/te_ = {0, (T + 1) / 2}, {(T + 1) / 2, T}
+             std::vector<FusedGrArgs> rel1(args.begin(), args.begin() + h), rel2(args.begin() + h, args.begin() + tt);
+             std::vector<FusedGrArgs> abs1 = rel1, abs2 = rel2;
+@@ -504,7 +506,7 @@ int fused_multi_lds_parity(const float* d_norm, const uint16_t* d_down, const ui
+             check(cudaStreamEndCapture(stream, &gg), "qfuse2 end");
+             check(cudaGraphInstantiate(&gx, gg, nullptr, nullptr, 0), "qfuse2 instantiate");
+             if (!w1 || !w2) { std::printf("  QFUSE two groups: T=%d: a group did not write its q8_1\n", tt); ++g2bad; }
+-            for (int rep = 0; rep < REPS && !g2bad; ++rep) {
++            for (int rep = 0; rep < REPS && (!g2bad || keep_going); ++rep) {
+                 for (auto& x : r) x = pn(prng);
+                 for (auto& x : bo) x = pn(prng);
+                 for (auto& x : inj) x = pn(prng);
+@@ -541,6 +543,13 @@ int fused_multi_lds_parity(const float* d_norm, const uint16_t* d_down, const ui
+                         for (int t = 0; t < tt; ++t)
+                             if (std::memcmp(g_all.data() + (size_t) t * B, g_ref.data() + (size_t) t * B, B) != 0) {
+                                 std::printf("  QFUSE two groups (window-indexed): T=%d rep %d: token %d (group %d) differs\n", tt, rep, t, t < h ? 0 : 1);
++                                int nd = 0;   // where: block = 32 columns, bytes 0-3 the (scale, sum) pair, 4-35 the codes
++                                for (size_t o = 0; o < B && nd < 6; ++o)
++                                    if (g_all[(size_t) t * B + o] != g_ref[(size_t) t * B + o]) {
++                                        std::printf("    block %zu byte %zu (%s): got 0x%02x, separate quantise 0x%02x\n", o / 36, o % 36,
++                                                    o % 36 < 4 ? "scale/sum" : "code", g_all[(size_t) t * B + o], g_ref[(size_t) t * B + o]);
++                                        ++nd;
++                                    }
+                                 break;
+                             }
+                         ++g2bad;
+@@ -552,6 +561,12 @@ int fused_multi_lds_parity(const float* d_norm, const uint16_t* d_down, const ui
+                     check(cudaMemcpy(g_b.data(), d_qb, (size_t) T * B, cudaMemcpyDeviceToHost), "qfuse2 read b");
+                     if (std::memcmp(g_a.data(), g_ref.data(), (size_t) h * B) != 0) {
+                         std::printf("  QFUSE two groups (group-relative, %s): T=%d rep %d: group 0 differs\n", mode == 2 ? "graph" : "direct", tt, rep);
++                        for (size_t o = 0, nd = 0; o < (size_t) h * B && nd < 6; ++o)
++                            if (g_a[o] != g_ref[o]) {
++                                std::printf("    token %zu block %zu byte %zu (%s): got 0x%02x, separate quantise 0x%02x\n", o / B, (o % B) / 36,
++                                            o % 36, o % 36 < 4 ? "scale/sum" : "code", g_a[o], g_ref[o]);
++                                ++nd;
++                            }
+                         ++g2bad;
+                     }
+                     if (std::memcmp(g_b.data(), g_ref.data() + (size_t) h * B, (size_t) (tt - h) * B) != 0) {

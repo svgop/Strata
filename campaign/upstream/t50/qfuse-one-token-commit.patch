@@ -1,0 +1,45 @@
+commit 789d83903ba01bc65bb590328f94a7417abd093d
+Author: Niko1221 <Niko1221@users.noreply.github.com>
+Date:   Tue Oct 27 03:11:15 2026 +0100
+
+    STRATA_QFUSE=1: a one-token window did not self-commit, but commit() skipped the commit graph as if it had (#3948)
+    
+    Problem. #3948: with STRATA_QFUSE=1 the verified text changes and MTP acceptance drops, on CUDA. The QFUSE kernels are bit-exact
+    (gr_parity, gdn_parity, 10,500 random windows each on sm_86 and sm_120, after 91a4b8a67), yet the engine's greedy text still differed
+    from QFUSE off on every prompt tried. Model run, l620 (RTX PRO 5000, sm_120), Qwen3.8-Flash-Next IQ3_S, MTP --spec 6, identity-gate
+    flags, 4 prompts of 4K and 12K tokens, 96 greedy tokens: QFUSE on differed from off on 4 of 4 (the off-vs-off control was identical).
+    
+    Cause. A window of one token advances the GDN state and the indexer tail itself ("self-commit") so that commit() needs no commit
+    graph. Verifier::record_window decides this with
+    `T == 1 && !always_publish_ && !batch_rec_ && !g_qfuse() && one_token_self_commit()`: with STRATA_QFUSE the fused GDN output
+    kernel takes the q8_1 destination and the window does not self-commit. Verifier::commit() skipped the commit graph with
+    `last_t_ == 1 && !always_publish_ && one_token_self_commit()`, without the QFUSE term. So with QFUSE on, every accepted one-token
+    window left the recurrent state (and the indexer tail) one token behind. Windows of one token are the ordinary case when the drafter
+    offers nothing, which matches the report: fewer drafts offered, lower acceptance, different text, and an unchanged text where
+    no window of one token occurs. On HIP (where QFUSE is the default on gfx1151) one_token_self_commit() is off unless
+    STRATA_ONE_TOKEN_COMMIT=1, so the two sides agreed there.
+    
+    Change. commit() takes the same condition: `... && one_token_self_commit() && !g_qfuse()`. Without STRATA_QFUSE nothing changes.
+    
+    Result (same l620 run). QFUSE on with this change against QFUSE off, same build: logits md5 and the 96 greedy tokens byte-identical
+    on all 4 prompts (IDENTITY PASS); the build without the change differs on all 4. The default path (QFUSE unset) of the merged head
+    against the f-027-int2 head (2a2264c21): first-window logits and greedy tokens byte-identical on the same 4 prompts.
+    
+    Not covered. Serve answers and draft counters (3948-qfuse.sh step 2, SERVE=1), sm_86, and the reporter's 40-prompt set.
+
+diff --git a/src/core/verify.cpp b/src/core/verify.cpp
+index 193b8f5b..391b9531 100644
+--- a/src/core/verify.cpp
++++ b/src/core/verify.cpp
+@@ -3427,8 +3427,9 @@ bool Verifier::commit(int n_keep, std::string& err) {
+     h_commit_[0] = n_keep;
+     h_commit_[1] = n_keep - 1;
+     for (int t = 0; t < max_t_; ++t) h_commit_[2 + t] = t < n_keep ? (int32_t) (last_pos0_ + t) : -1;
+-    if (last_t_ == 1 && !always_publish_ && one_token_self_commit()) {
+-        // a one-token window has advanced the state itself (record_window): no commit graph
++    if (last_t_ == 1 && !always_publish_ && one_token_self_commit() && !g_qfuse()) {
++        // a one-token window has advanced the state itself (record_window): no commit graph. (Not with STRATA_QFUSE: its windows
++        // do not self-commit, see `self_commit` there - skipping the commit here left the GDN state and the indexer tail one token behind.)
+     } else {
+         std::atomic_thread_fence(std::memory_order_seq_cst);
+         // STRATA_COMMIT_TIMING=1 (measurement only): the commit graph's GPU time, from an event pair around it (read at the
