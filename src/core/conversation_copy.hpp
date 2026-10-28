@@ -19,12 +19,16 @@ namespace strata::core::conversation_detail {
 /// device, and while another thread captures a graph on one (a drafter or a stage worker), HIP refuses it with
 /// "operation would make the legacy stream depend on a capturing blocking stream".  The caller's contract is
 /// unchanged: the device was synchronized before the copy (the copy itself is complete on return).
+inline std::vector<cudaStream_t>& thread_copy_streams() {
+    thread_local std::vector<cudaStream_t> streams;   // never destroyed: process lifetime
+    return streams;
+}
 /// private_stream: this thread's stream on the current device, created on first use.
 inline cudaError_t private_stream(cudaStream_t& s) {
     int dev = 0;
     cudaError_t e = cudaGetDevice(&dev);
     if (e != cudaSuccess) return e;
-    thread_local std::vector<cudaStream_t> streams;
+    std::vector<cudaStream_t>& streams = thread_copy_streams();
     if (dev < 0) dev = 0;
     if ((size_t) dev >= streams.size()) streams.resize((size_t) dev + 1, nullptr);   // never destroyed: process lifetime
     if (!streams[(size_t) dev]) {
@@ -33,6 +37,16 @@ inline cudaError_t private_stream(cudaStream_t& s) {
     }
     s = streams[(size_t) dev];
     return cudaSuccess;
+}
+
+/// #2409 (adapted; upstream pools finished threads' streams, our streams are thread-local for the thread's
+/// lifetime): true when a copy on `dev` from this thread creates no stream - this thread has one.  A restore
+/// must not die on the stream's small device allocation of a full card, so the caller checks this before it
+/// restores (see program/conv_cache.hpp restore_fits).
+inline bool copy_stream_ready(int dev) {
+    if (dev < 0) dev = 0;
+    const std::vector<cudaStream_t>& streams = thread_copy_streams();
+    return (size_t) dev < streams.size() && streams[(size_t) dev] != nullptr;
 }
 
 /// `queued`: the copy is only queued on the private stream, and the caller synchronizes the device (or orders a
