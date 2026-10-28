@@ -394,3 +394,21 @@ port, merge:
       `probe-lane.py` battery; the DeepSeek lever queue (T53+: DS4_CACHE_THREADS, CACHE_MARGIN,
       dspark-conf, hugepages) is maintained in the tracker README so the next point always has a
       named source.
+
+13. **THE ONLY WAY OUT IS THROUGH (user law, 2026-10-28).** A regression is not closed by
+    reverting it. The revert CONTAINS it; the item stays OPEN until it is a real net win —
+    scoped to where it pays (law 4b), composed with another mechanism (F-270 precedent), or
+    rebuilt at a different structure (laws 6, 9). "Not adopted" is a state, never an ending,
+    and no round closes while a regression it introduced is merely shelved.
+    - **No shortcuts, no easy ways out.** The chart moves because the engine got faster, or it
+      does not move. Curation is not performance; a lucky boot is not a bank; a lane trade no
+      one signed is not a win; dropping a hard lever because an easy one reads flatter is the
+      shortcut wearing effort's clothes.
+    - **When the push stalls, zoom out — then go deeper.** Grinding the same wall with the same
+      map is not pushing through. The cycle when a wall refuses to move: ZOOM OUT (restate the
+      constraint at the structure level, law 7), RECALIBRATE (re-measure where the time
+      actually goes — new instruments if the old ones cannot see it; a wall the instruments
+      cannot explain is an instrumentation debt first), then GO DEEPER with the recalibrated
+      map (attack the newly-visible term, not the old one). Each stalled pass must end with
+      either a win, a named wall with its priced constraint, or a recalibrated map — never
+      with silence.
