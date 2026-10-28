@@ -89,6 +89,11 @@ const int16_t* tq_state_table() {
     return g_table;
 }
 
+const int16_t* tq_state_table_for(int ggml_type) {   // T50/F-370: one table for every type this tree knows
+    (void) ggml_type;
+    return tq_state_table();
+}
+
 bool tq_supported(int t) noexcept { return t == 144 || t == 145 || t == 146; }
 
 int tq_kbits(int t) noexcept { return t == 144 ? 8 : t == 145 ? 6 : t == 146 ? 7 : 0; }

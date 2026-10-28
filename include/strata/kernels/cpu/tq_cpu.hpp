@@ -51,6 +51,9 @@ const char* tq_isa_name(TqIsa isa);
 
 /// The 32768 x 4 int16 state table (filled on first use; thread-safe).
 const int16_t* tq_state_table();
+/// T50/F-370 (the dsv41 path): the state table for a trellis ggml type.  Our tree has the one table (TQ2_T/TQK6/TQK7
+/// all read it); the computed-table experimental types of the later upstream tree do not exist here.
+const int16_t* tq_state_table_for(int ggml_type);
 
 /// Rows [r0, r1) of a trellis matrix (`row_bytes` per row, `n` weights per row) against `nt` (<= 8) Q8_0
 /// activations of n values: out[t][r] = w_r . a[t].
