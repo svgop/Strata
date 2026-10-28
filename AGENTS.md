@@ -395,6 +395,26 @@ port, merge:
       dspark-conf, hugepages) is maintained in the tracker README so the next point always has a
       named source.
 
+14. **NOTHING SHIPS HALF-DONE (user law, 2026-10-28).** A port, integration, or feature is
+    COMPLETE or it is not shipped as done. The priced precedent: F-370 shipped the DeepSeek
+    family "text-first" with the DSML tool-call parser deferred — the missing piece was exactly
+    the piece a downstream agent needed, and the result was 24,000-token degeneration loops on
+    the operator's rig, closed only by F-371 finishing the port at triple the cost.
+    - **"First light" is not a scope cut.** If a reduced scope is genuinely unavoidable, the
+      reduced state is named INCOMPLETE in the commit, the docs, and the memory — with the
+      missing surface enumerated precisely (never "parser: follow-up"; always "tool calls DO
+      NOT WORK: agents will degenerate-loop") — and the missing capability fails LOUDLY (a
+      clear refusal), never silently (raw output a client misreads and chokes on).
+    - **Verification covers the feature surface, not the happy path.** A server port verifies
+      tools AND text AND the refusal paths; a knob verifies its invalid values; an engine port
+      verifies the interfaces the real consumers use. "Verified" means the consumer's shape of
+      use, not the author's.
+    - **The edit is not the change; the deployed process is.** Every text patch asserts its
+      anchor (a silent no-op replace ghosted a fix once and cost a debugging cycle), and every
+      "the fix does not work" check starts by comparing the process start time with the patch
+      time (a stale process masqueraded as a failed fix once). The round closes on the live
+      system's verified behavior — nothing else counts.
+
 13. **THE ONLY WAY OUT IS THROUGH (user law, 2026-10-28).** A regression is not closed by
     reverting it. The revert CONTAINS it; the item stays OPEN until it is a real net win —
     scoped to where it pays (law 4b), composed with another mechanism (F-270 precedent), or
