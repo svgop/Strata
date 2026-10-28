@@ -304,6 +304,12 @@ class Tokenizer:
         if b is None:
             if i < 0 or i >= len(self.tokens):
                 raise IndexError("token id %d is outside the vocabulary (%d)" % (i, len(self.tokens)))
+            if self.token_types and i < len(self.token_types) and self.token_types[i] in (3, 4):
+                # a special token's string is the literal text (DeepSeek's `<｜User｜>`, `｜DSML｜` hold characters
+                # outside the byte alphabet); for Qwen's ASCII specials it is the same bytes the alphabet would give
+                # (F-371: ported from upstream v0.2.7's tokenizer)
+                b = cache[i] = self.tokens[i].encode("utf-8")
+                return b
             raw = bytearray()
             for ch in self.tokens[i]:
                 v = UNICODE_TO_BYTE.get(ch)

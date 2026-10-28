@@ -64,6 +64,7 @@ from serve.frontend import (THINK_END, ChatTemplate, Event, OutputParser, anthro
                             forced_call, images_of, literal_tags, mark_think_literals, openai_to_messages,
                             tool_choice_of, unmark_think_literals)
 from serve.mcp import McpCancelled, hub_from_config  # noqa: E402
+from serve.ds_pictures import DsPictures  # noqa: E402  (F-371: the engine's own vision tower path)
 from serve import runconfig  # noqa: E402
 from strata_control import engine_component  # noqa: E402
 from strata_control import hipblaslt_tuning  # noqa: E402
@@ -3770,7 +3771,9 @@ class Service:
         self.restore_after_load = None                    # a session file an image job saved before it unloaded
         self.stop_ids = set(tokenizer.encode(IM_END, parse_special=True) +
                             tokenizer.encode("<|endoftext|>", parse_special=True))
-        self.family = None        # T50/F-370: the model family ("deepseek41"); the boot sets it with the config's arch
+        self.family = None        # the model family ("deepseek41"): set_family() below
+        self.parser_cls = OutputParser   # reads the model's output (reasoning, content, tool calls); the family may swap it
+        self._force_text = None
         # #567: a prompt re-encodes only what follows the last special token it shares with a recent prompt (the
         # same ids as a full encode: tools/strata_tokenizer.py PromptEncoder).  Tokenizers without resume points
         # encode in full.
@@ -3782,6 +3785,27 @@ class Service:
             slots = conversation_slots(engine)
             self.prompts = PromptEncoder(tokenizer, keep=slots) if slots is not None and slots > 0 \
                 else PromptEncoder(tokenizer)
+
+    def set_family(self, family: str | None) -> None:
+        """A family whose text differs from the Qwen form this server was written for (DeepSeek-V4.1: its own end
+        token, DSML tool calls, reasoning-effort words).  The others keep the defaults.  (F-371: ported in full.)"""
+        self.family = family
+        if family == "deepseek41":
+            from serve import dsml
+            eos = (getattr(self.tok, "special_ids", None) or {}).get("eos", 1)
+            self.stop_ids = {int(eos)}
+            self.parser_cls = dsml.DsmlOutputParser
+            self._force_text = dsml.to_dsml_force
+        else:
+            self.parser_cls = OutputParser
+            self._force_text = None
+        import serve.frontend as _frontend
+        if hasattr(_frontend, "use_family"):
+            _frontend.use_family(family)
+
+    def force_text(self, force):
+        """forced_call's opening of the call the reply must make, in this model's spelling."""
+        return self._force_text(force) if self._force_text is not None else force
 
     def loaded(self) -> bool:
         return not hasattr(self.engine, "alive") or self.engine.alive()
@@ -4656,10 +4680,14 @@ class Service:
         self.embeddings.path = None
         self.embeddings.keys = None
         images = images_of(messages)
+        ds_pics = False                                  # DeepSeek pictures (the engine's own tower): the file is already written
         if images:
             if self.offline and any(src.startswith(("http://", "https://")) for src in images):
                 raise ValueError("offline mode cannot download an image URL; send a data: image instead")
             if self.vision is None:
+                if self.family == "deepseek41":
+                    raise ValueError("this server was started without pictures for DeepSeek (--vision off, or a pack "
+                                     "made without the picture reader): run with the vision tower packed to read images")
                 raise ValueError("this server was started without the vision encoder (run setup again and choose "
                                  "'vision'), so it cannot read images")
             pad = self.tok.encode(IMAGE_PAD, parse_special=True)[0]
@@ -4672,6 +4700,14 @@ class Service:
                 return fetched[src] if src in fetched else Vision.download(src) \
                     if src.startswith(("http://", "https://")) else src
             images = [fetch(src) for src in images]
+            if isinstance(self.vision, DsPictures):
+                # DeepSeek-V4.1: the engine has its own vision tower.  The pictures go to it as raw RGB in the file
+                # of a GENI line (serve/ds_pictures.py); each template placeholder becomes the run of image tokens
+                # its picture takes.
+                ids, ds_file = self.vision.build(ids, [Vision.load(src) if isinstance(src, str) else src for src in images])
+                self.embeddings.path = ds_file
+                self.embeddings.keys = None
+                images, ds_pics = [], True
             # Encode only while the engine is idle: the engine and the image encoder (a separate process) must not
             # run on the GPU at the same time - an encode during a running request left that request stuck at
             # "reading the prompt" with CPU and GPU busy, for good (reproduced).  So encoding takes its turn in the
@@ -4743,7 +4779,7 @@ class Service:
             # (an encoder restart, the cache's eviction) with other bits still matches its checkpoints
             self.embeddings.keys = [Path(p).stem[:16] for p, _ in encoded]
             write_temporary(combined, [p for p, _ in encoded])
-        if self.family == "deepseek41" and req is not None and req.get("strata_prefix") is None and not images:
+        if self.family == "deepseek41" and req is not None and req.get("strata_prefix") is None and not images and not ds_pics:
             # T50/F-370: an agent and its sub-agents behind the same system prompt and tools share exactly this
             # start, so the engine keeps a checkpoint of its state there (pin=N): the next agent behind the same
             # start goes back to it instead of reading it again.  STRATA_DS4_AUTO_PIN=0 turns it off.
@@ -4751,7 +4787,7 @@ class Service:
             if lead:
                 req["strata_prefix"] = {"messages": lead}
         if req is not None and req.get("strata_prefix") is not None:
-            req["strata_prefix"] = self.resolve_prefix(req["strata_prefix"], messages, tools, kwargs, ids, bool(images))
+            req["strata_prefix"] = self.resolve_prefix(req["strata_prefix"], messages, tools, kwargs, ids, bool(images) or ds_pics)
         return ids, kwargs.get("enable_thinking", True) is not False, max_new
 
     @staticmethod
@@ -4921,6 +4957,14 @@ class Service:
             budget = max_new - min(max(ANSWER_RESERVE_MIN, max_new // 4), max_new // 2)
             if max_new <= 32768: print(f"[strata] thinking limited to {budget} of max_tokens {max_new} so the answer has room "
                   "(\"answer_room\": false in the config turns this off)", flush=True)
+        if (thinking and not budget and self.answer_room and self.family == "deepseek41"
+                and max_new and DS41_SMALL_CAP_MIN <= max_new < ANSWER_ROOM_MIN_CAP):
+            # DeepSeek-V4.1 only: a short max_tokens (200-600) was spent entirely on the thinking, so no text block
+            # ever arrived.  With no budget of the client's own, the thinking is capped at half of max_tokens; then
+            # the wrap-up, </think> and the answer follow in the other half.  (F-371.)
+            budget = max_new // 2
+            print(f"[strata] thinking limited to {budget} of max_tokens {max_new} so the answer has room "
+                  "(\"answer_room\": false in the config turns this off)", flush=True)
         if budget and max_new and max_new > 0:
             # #984: a budget at or near max_tokens never fires before the reply is cut off while still thinking, so
             # it has no answer.  Close the thinking early enough to leave room for one.
@@ -4937,7 +4981,7 @@ class Service:
         # overrides exactly, and 0 disables the reservation entirely (stock behavior).
         if budget is None and thinking and max_new and max_new > 512:
             budget = max_new - max(384, max_new // 4)
-        parser = OutputParser(thinking=thinking, tools=tools, stream_tools=True, recover=self.tool_call_recovery)
+        parser = self.parser_cls(thinking=thinking, tools=tools, stream_tools=True, recover=self.tool_call_recovery)
         detok, n, finish = Detokenizer(self.tok), 0, "length"
         run_tok, run_len, repeated = None, 0, False     # #606: the current run of one repeated token
         thinking_n = 0                                  # tokens written while thinking (Responses' reasoning_tokens)
@@ -6935,7 +6979,7 @@ def make_handler(svc: Service):
             self._no_local_images(messages)
             if tool_choice_of(req.get("tool_choice"))[0] == "none":   # as the Responses route: no tools are offered
                 tools = None
-            force = forced_call(req.get("tool_choice"), tools)      # a bad value is a 400 before anything is sent
+            force = svc.force_text(forced_call(req.get("tool_choice"), tools))      # a bad value is a 400 before anything is sent; the family spells the opener its own way
             messages, validator = prepare_format(req.get("response_format"), messages)
             if validator is not None and (tools or req.get("strata_mcp")):
                 raise ValueError("structured response_format with tools/MCP is not supported")
@@ -7187,7 +7231,7 @@ def make_handler(svc: Service):
             self._no_local_images(messages)
             if tool_choice_of(req.get("tool_choice"))[0] == "none":   # Anthropic's {"type": "none"}: no tools offered
                 tools = None
-            force = forced_call(req.get("tool_choice"), tools)        # "any" / {"type": "tool", "name": N}
+            force = svc.force_text(forced_call(req.get("tool_choice"), tools))        # "any" / {"type": "tool", "name": N}; the family spells the opener
             max_new = int(req.get("max_tokens") or 0)                  # 0/-1: the rest of the context
             svc.reasoning_budget(req)                         # a bad value is a 400 before anything is sent
             stop_strings(req)                                 # ... and so is a bad stop / stop_sequences
@@ -7828,6 +7872,7 @@ def check_request_sampling(req) -> None:
 DS41_DEFAULT_BUDGET = 32768   # DeepSeek-V4.1 only: the thinking budget when neither the request nor the config names one
 DS41_SLOT_KEEP_DEFAULT = "1"  # the engine keeps a displaced conversation in RAM and in the slot folder (see below)
 DS41_SLOT_GB_DEFAULT = "2"    # the folder's cap in GB (a 6.5K-token conversation is about 17 MB)
+DS41_SMALL_CAP_MIN = 48       # DeepSeek-V4.1 only: from this max_tokens up to ANSWER_ROOM_MIN_CAP, thinking is capped at half of it
 FAMILY_MODEL_NAMES = {"qwen4exp": "qwen3.8-flash-next", "qwen35moe": "qwen3.6-35b-a3b",
                       "deepseek41": "deepseek-v4.1-flash"}
 
@@ -8190,10 +8235,16 @@ def main(argv=None, *, lifecycle_event=None, interrupt_exit_code: int = 0) -> in
     svc.queue_timeout_s = float(queue_timeout) if queue_timeout is not None else None
     if a.engine == "strata":                            # the model card's sampling when nothing else is said (see MODEL_CARD_SAMPLING)
         svc.model_arch = cfg.get("arch") or "qwen4exp"
-        if svc.model_arch == "deepseek41":            # T50/F-370: the family's own end token
-            svc.family = "deepseek41"
-            eos = (getattr(getattr(svc, "tok", tok), "special_ids", None) or {}).get("eos", 1)
-            svc.stop_ids = {int(eos)}
+        svc.set_family(svc.model_arch if svc.model_arch == "deepseek41" else None)
+        if svc.model_arch == "deepseek41" and svc.vision is None:
+            # DeepSeek-V4.1 reads pictures with the engine's own tower (--vision on): no separate reader process.
+            # A pack without a tower leaves vision None: pictures are refused with a clear 400.
+            from serve.ds_pictures import DsPictures
+            from pathlib import Path as _P
+            _dsp = DsPictures.from_config(cfg, tmp_dir=_P(cfg["log"]).parent / "ds-pictures" if cfg.get("log") else None)
+            if _dsp is not None:
+                svc.vision = _dsp
+                print("[strata] pictures: on (DeepSeek-V4.1 reads them with the engine's own vision tower; --vision off turns them off)", flush=True)
         requested = cfg.get("parallel")
         if requested is None:
             args = cfg.get("args", [])
