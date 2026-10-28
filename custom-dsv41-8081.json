@@ -10,7 +10,9 @@
   "--dspark",
   "auto",
   "--dspark-conf",
-  "0.65"
+  "0.65",
+  "--experts",
+  "5"
  ],
  "cwd": "/home/svg/LLM/strata-custom-2",
  "tokenizer": "/home/svg/LLM/data/packs/deepseek-v4.1-flash-ist-das-2.00bpw/tokenizer",

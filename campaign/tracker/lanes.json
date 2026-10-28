@@ -244,6 +244,19 @@
       "pair": "single",
       "conc": "single"
      }
+    },
+    {
+     "date": "2026-10-28",
+     "commit": "STANDING-5e",
+     "label": "T53 --experts 5 ADOPTED standing (two boots 46.3/48.5/51.7 + 47.7/47.3/52.4)",
+     "solo": 47.0,
+     "pair": 47.9,
+     "conc": 52.1,
+     "kinds": {
+      "solo": "standing",
+      "pair": "standing",
+      "conc": "standing"
+     }
     }
    ]
   }

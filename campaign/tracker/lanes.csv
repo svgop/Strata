@@ -43,3 +43,6 @@ deepseek,2026-10-28,988a4ccf,T52 first lane battery (standing 6-experts),conc,43
 deepseek,2026-10-28,988a4ccf,T52 --experts 5 lane battery (quality-traded arm),solo,46.3,0,single
 deepseek,2026-10-28,988a4ccf,T52 --experts 5 lane battery (quality-traded arm),pair,48.5,0,single
 deepseek,2026-10-28,988a4ccf,T52 --experts 5 lane battery (quality-traded arm),conc,51.7,0,single
+deepseek,2026-10-28,STANDING-5e,T53 --experts 5 ADOPTED standing (two boots 46.3/48.5/51.7 + 47.7/47.3/52.4),solo,47.0,0,standing
+deepseek,2026-10-28,STANDING-5e,T53 --experts 5 ADOPTED standing (two boots 46.3/48.5/51.7 + 47.7/47.3/52.4),pair,47.9,0,standing
+deepseek,2026-10-28,STANDING-5e,T53 --experts 5 ADOPTED standing (two boots 46.3/48.5/51.7 + 47.7/47.3/52.4),conc,52.1,0,standing
