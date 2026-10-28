@@ -1,0 +1,166 @@
+[strata] 2026-10-28 15:56:19 engine started: /home/svg/LLM/strata-custom-2/build-fresh/strata-dsv41 --serve --pack /home/svg/LLM/data/packs/deepseek-v4.1-flash-ist-das-2.00bpw --max-context 262144 --eos 1 --dspark auto --dspark-conf 0.65 --experts 5 --verbose
+ds4: build fcc45f0a1 (0.1.46)
+ds4: tensor parallel 2 -> 1: the experts' 256-value blocks split n_ff 2304 no other way (each GPU its own layers)
+ds4: prompts in chunks of 4096 tokens (the experts are copied into RAM, 31 GiB of graphics memory; --prefill-chunk N changes it)
+ds4: DSpark not loaded: the routed experts (132 GB) are far more than the GPU holds (32 GB), where its verify rounds read 3.3x a token's bytes and gain nothing (--dspark on loads it anyway)
+ds4: experts per word: 5 (as asked; full quality: --experts 6)
+ds4: dense weights loaded in 2.0 s
+ds4: Engram rows read on 16 threads, issued with the tokens, collected before their layer; row cache 256 MB (1016800 rows)
+ds4: staging ring: experts 132.1 GB, VRAM room 30.2 GB, dense 5.7 GB -> 1200 MB
+ds4: the experts VRAM leaves over (~109.5 GB) are read in place from the model's files (--mmap-experts off copies them into RAM) (181.0 GB of RAM free to keep them: the most-routed 109.5 GB read ahead; prompts in chunks of 4096)
+ds4: experts 0 / 2583 (0.0 GB, 0.70 GB/s)
+ds4: experts 1024 / 2583 (8.3 GB, 5.03 GB/s)
+ds4: experts 2048 / 2583 (17.2 GB, 5.11 GB/s)
+ds4: --mmap-experts auto: the CPU lane's experts (110.6 GB) fit the RAM this process can get (171.3 GB beside 9 GB for the rest): copied in at load, no demand store (--mmap-experts on keeps them in place)
+ds4: copying experts 0 / 12777 (0.0 GB, 1.27 GB/s)
+ds4: copying experts 2048 / 12777 (15.9 GB, 5.10 GB/s)
+ds4: copying experts 4096 / 12777 (33.0 GB, 5.12 GB/s)
+ds4: copying experts 6144 / 12777 (50.3 GB, 5.09 GB/s)
+ds4: copying experts 8192 / 12777 (68.2 GB, 4.64 GB/s)
+ds4: copying experts 10240 / 12777 (86.4 GB, 3.74 GB/s)
+ds4: copying experts 12288 / 12777 (105.0 GB, 2.52 GB/s)
+ds4: 12777 of the CPU lane's 12777 experts copied into RAM (109.9 GB, 1 NUMA part) in 49.9 s
+ds4: CPU lane: 16 threads, MXFP4 rows avx512vnni (avx2 222 us, avxvnni 202 us, avx512 157 us, avx512vnni 144 us)
+ds4: CPU lane's experts pinned in 0.0 s
+ds4: prompts through the flow or windows by this PC's speeds: DMA 53.2 GB/s, RAM to staging 18.2 GB/s, the disk not measured; the CPU lane 61.9 GB/s in RAM, not measured from the disk (48 ms)
+ds4: loaded in 58.1 s
+ds4: CUDA0 layers [0, 39] + head: weights 5.86 GB, experts 22.53 GB (2583 of 15360 in VRAM), caches 0.24 GB, 608 MiB free
+ds4: 12777 routed experts on the CPU lane (109.9 GB): 12777 copied into RAM (1 NUMA parts), the rest in place in the model's files; 16 threads
+ds4: prompt path: the chunked pass from 96 tokens, windows of 16 below
+ds4: CUDA0 layers [0, 39] + head: weights 5.86 GB, experts 22.53 GB (2583 of 15360 in VRAM), caches 0.24 GB, 608 MiB free
+ds4: 12777 routed experts on the CPU lane (109.9 GB): 12777 copied into RAM (1 NUMA parts), the rest in place in the model's files; 16 threads
+maya ds4 serve: GEN <max_new> [keys] <ids>; GENI <max_new> [keys] <pictures> <ids>; STOP, QUIT
+ds4 slots: folder /home/svg/LLM/strata-custom-2/ds4-slots: 51 conversation(s) kept from earlier runs (0.68 GB)
+ds4: prompt path warmed up in 99 ms
+ds4 prompt stream, CUDA0: 597 tokens in 5357 ms; 7078 experts streamed: 0 from the files (0.0 GB, 0.00 GB/s: 0.0 GB from the disk unbuffered, 0.0 GB through the page cache), 7078 from RAM (54.8 GB); 624 likely ones queued early, 136 of them unpicked; the compute waited 4466 ms for reads; io threads busy 38668 ms, copy_ahead staging 0 ms, DMA issues 0 ms, slot waits 0 ms
+ds4: expert cache: 1365 swaps after the prompt (2016 ms)
+maya ds4 serve: prompt 597 tokens = 0 reused + 597 read in 7379 ms (80.9 tok/s), 300 generated in 7141 ms (42.01 tok/s); CPU lane 11.2% of the experts
+maya ds4 serve: prompt 914 tokens = 897 reused + 17 read in 236 ms (72.2 tok/s), 283 generated in 6325 ms (44.74 tok/s); CPU lane 16.0% of the experts
+ds4 slots: saved a 1196-token conversation (0.01 GB in RAM in 0.0 s); 1 in RAM, 51 in /home/svg/LLM/strata-custom-2/ds4-slots
+maya ds4 serve: prompt 597 tokens = 596 reused + 1 read in 26 ms (38.5 tok/s), 200 generated in 3793 ms (52.72 tok/s); CPU lane 16.8% of the experts
+maya ds4 serve: prompt 814 tokens = 797 reused + 17 read in 208 ms (81.7 tok/s), 183 generated in 3425 ms (53.44 tok/s); CPU lane 17.5% of the experts
+ds4 prompt stream, CUDA0: 597 tokens in 4856 ms; 6604 experts streamed: 0 from the files (0.0 GB, 0.00 GB/s: 0.0 GB from the disk unbuffered, 0.0 GB through the page cache), 6604 from RAM (51.1 GB); 415 likely ones queued early, 90 of them unpicked; the compute waited 4271 ms for reads; io threads busy 36065 ms, copy_ahead staging 0 ms, DMA issues 0 ms, slot waits 0 ms
+ds4: expert cache: 107 swaps after the prompt (176 ms)
+maya ds4 serve: prompt 597 tokens = 0 reused + 597 read in 5035 ms (118.6 tok/s), 200 generated in 3609 ms (55.42 tok/s); CPU lane 13.3% of the experts
+maya ds4 serve: prompt 814 tokens = 797 reused + 17 read in 197 ms (86.4 tok/s), 183 generated in 3521 ms (51.97 tok/s); CPU lane 14.1% of the experts
+ds4 prompt stream, CUDA0: 597 tokens in 4808 ms; 6570 experts streamed: 0 from the files (0.0 GB, 0.00 GB/s: 0.0 GB from the disk unbuffered, 0.0 GB through the page cache), 6570 from RAM (50.9 GB); 414 likely ones queued early, 91 of them unpicked; the compute waited 4159 ms for reads; io threads busy 35860 ms, copy_ahead staging 0 ms, DMA issues 0 ms, slot waits 0 ms
+ds4: expert cache: 43 swaps after the prompt (56 ms)
+maya ds4 serve: prompt 597 tokens = 0 reused + 597 read in 4866 ms (122.7 tok/s), 200 generated in 3691 ms (54.19 tok/s); CPU lane 12.0% of the experts
+maya ds4 serve: prompt 814 tokens = 797 reused + 17 read in 192 ms (88.7 tok/s), 183 generated in 3411 ms (53.66 tok/s); CPU lane 12.6% of the experts
+ds4 prompt stream, CUDA0: 597 tokens in 4911 ms; 6598 experts streamed: 0 from the files (0.0 GB, 0.00 GB/s: 0.0 GB from the disk unbuffered, 0.0 GB through the page cache), 6598 from RAM (51.1 GB); 414 likely ones queued early, 92 of them unpicked; the compute waited 4325 ms for reads; io threads busy 36492 ms, copy_ahead staging 0 ms, DMA issues 0 ms, slot waits 0 ms
+ds4: expert cache: 22 swaps after the prompt (29 ms)
+maya ds4 serve: prompt 597 tokens = 0 reused + 597 read in 4942 ms (120.8 tok/s), 200 generated in 3669 ms (54.51 tok/s); CPU lane 11.2% of the experts
+maya ds4 serve: prompt 814 tokens = 797 reused + 17 read in 201 ms (84.5 tok/s), 183 generated in 3665 ms (49.93 tok/s); CPU lane 11.9% of the experts
+ds4 prompt stream, CUDA0: 597 tokens in 4961 ms; 6586 experts streamed: 0 from the files (0.0 GB, 0.00 GB/s: 0.0 GB from the disk unbuffered, 0.0 GB through the page cache), 6586 from RAM (51.0 GB); 414 likely ones queued early, 92 of them unpicked; the compute waited 4343 ms for reads; io threads busy 36812 ms, copy_ahead staging 0 ms, DMA issues 0 ms, slot waits 0 ms
+ds4: expert cache: 29 swaps after the prompt (39 ms)
+maya ds4 serve: prompt 597 tokens = 0 reused + 597 read in 5002 ms (119.4 tok/s), 200 generated in 3724 ms (53.71 tok/s); CPU lane 10.9% of the experts
+maya ds4 serve: prompt 814 tokens = 797 reused + 17 read in 197 ms (86.3 tok/s), 183 generated in 3547 ms (51.59 tok/s); CPU lane 11.4% of the experts
+ds4 prompt stream, CUDA0: 597 tokens in 4814 ms; 6516 experts streamed: 0 from the files (0.0 GB, 0.00 GB/s: 0.0 GB from the disk unbuffered, 0.0 GB through the page cache), 6516 from RAM (50.4 GB); 415 likely ones queued early, 91 of them unpicked; the compute waited 4201 ms for reads; io threads busy 35859 ms, copy_ahead staging 0 ms, DMA issues 0 ms, slot waits 0 ms
+ds4: expert cache: 12 swaps after the prompt (17 ms)
+maya ds4 serve: prompt 597 tokens = 0 reused + 597 read in 4833 ms (123.5 tok/s), 200 generated in 3600 ms (55.56 tok/s); CPU lane 10.5% of the experts
+maya ds4 serve: prompt 814 tokens = 797 reused + 17 read in 194 ms (87.5 tok/s), 183 generated in 3549 ms (51.56 tok/s); CPU lane 10.9% of the experts
+ds4 slots: took back a 596-token conversation at token 596 of 1196 from RAM (0.0 s); 1 new tokens to read
+maya ds4 serve: prompt 597 tokens = 596 reused + 1 read in 26 ms (39.2 tok/s), 200 generated in 3609 ms (55.42 tok/s); CPU lane 11.2% of the experts
+maya ds4 serve: prompt 814 tokens = 797 reused + 17 read in 194 ms (87.6 tok/s), 183 generated in 3609 ms (50.71 tok/s); CPU lane 11.6% of the experts
+ds4 prompt stream, CUDA0: 597 tokens in 4906 ms; 6579 experts streamed: 0 from the files (0.0 GB, 0.00 GB/s: 0.0 GB from the disk unbuffered, 0.0 GB through the page cache), 6579 from RAM (50.9 GB); 415 likely ones queued early, 91 of them unpicked; the compute waited 4413 ms for reads; io threads busy 36762 ms, copy_ahead staging 0 ms, DMA issues 0 ms, slot waits 0 ms
+ds4: expert cache: 3 swaps after the prompt (6 ms)
+maya ds4 serve: prompt 597 tokens = 0 reused + 597 read in 4914 ms (121.5 tok/s), 200 generated in 3706 ms (53.97 tok/s); CPU lane 10.9% of the experts
+maya ds4 serve: prompt 814 tokens = 797 reused + 17 read in 192 ms (88.7 tok/s), 183 generated in 3494 ms (52.37 tok/s); CPU lane 11.2% of the experts
+ds4 prompt stream, CUDA0: 597 tokens in 4810 ms; 6559 experts streamed: 0 from the files (0.0 GB, 0.00 GB/s: 0.0 GB from the disk unbuffered, 0.0 GB through the page cache), 6559 from RAM (50.8 GB); 415 likely ones queued early, 92 of them unpicked; the compute waited 4321 ms for reads; io threads busy 35880 ms, copy_ahead staging 0 ms, DMA issues 0 ms, slot waits 0 ms
+ds4: expert cache: 8 swaps after the prompt (12 ms)
+maya ds4 serve: prompt 597 tokens = 0 reused + 597 read in 4824 ms (123.8 tok/s), 200 generated in 3800 ms (52.63 tok/s); CPU lane 10.6% of the experts
+maya ds4 serve: prompt 814 tokens = 797 reused + 17 read in 218 ms (77.8 tok/s), 183 generated in 3676 ms (49.78 tok/s); CPU lane 10.9% of the experts
+ds4 prompt stream, CUDA0: 597 tokens in 4856 ms; 6557 experts streamed: 0 from the files (0.0 GB, 0.00 GB/s: 0.0 GB from the disk unbuffered, 0.0 GB through the page cache), 6557 from RAM (50.8 GB); 415 likely ones queued early, 91 of them unpicked; the compute waited 4320 ms for reads; io threads busy 36359 ms, copy_ahead staging 0 ms, DMA issues 0 ms, slot waits 0 ms
+ds4: expert cache: 3 swaps after the prompt (5 ms)
+maya ds4 serve: prompt 597 tokens = 0 reused + 597 read in 4863 ms (122.8 tok/s), 200 generated in 3762 ms (53.16 tok/s); CPU lane 10.4% of the experts
+maya ds4 serve: prompt 814 tokens = 797 reused + 17 read in 208 ms (81.6 tok/s), 183 generated in 3629 ms (50.42 tok/s); CPU lane 10.7% of the experts
+ds4 prompt stream, CUDA0: 597 tokens in 4956 ms; 6568 experts streamed: 0 from the files (0.0 GB, 0.00 GB/s: 0.0 GB from the disk unbuffered, 0.0 GB through the page cache), 6568 from RAM (50.8 GB); 415 likely ones queued early, 91 of them unpicked; the compute waited 4337 ms for reads; io threads busy 36738 ms, copy_ahead staging 0 ms, DMA issues 0 ms, slot waits 0 ms
+ds4: expert cache: 8 swaps after the prompt (13 ms)
+maya ds4 serve: prompt 597 tokens = 0 reused + 597 read in 4972 ms (120.1 tok/s), 200 generated in 4102 ms (48.76 tok/s); CPU lane 10.4% of the experts
+maya ds4 serve: prompt 814 tokens = 797 reused + 17 read in 204 ms (83.4 tok/s), 183 generated in 3691 ms (49.58 tok/s); CPU lane 10.6% of the experts
+ds4 prompt stream, CUDA0: 597 tokens in 4906 ms; 6565 experts streamed: 0 from the files (0.0 GB, 0.00 GB/s: 0.0 GB from the disk unbuffered, 0.0 GB through the page cache), 6565 from RAM (50.8 GB); 415 likely ones queued early, 92 of them unpicked; the compute waited 4255 ms for reads; io threads busy 36643 ms, copy_ahead staging 0 ms, DMA issues 0 ms, slot waits 0 ms
+ds4: expert cache: 9 swaps after the prompt (15 ms)
+maya ds4 serve: prompt 597 tokens = 0 reused + 597 read in 4923 ms (121.3 tok/s), 200 generated in 3857 ms (51.85 tok/s); CPU lane 10.3% of the experts
+maya ds4 serve: prompt 814 tokens = 797 reused + 17 read in 210 ms (80.8 tok/s), 183 generated in 3745 ms (48.87 tok/s); CPU lane 10.5% of the experts
+ds4 prompt stream, CUDA0: 597 tokens in 4763 ms; 6578 experts streamed: 0 from the files (0.0 GB, 0.00 GB/s: 0.0 GB from the disk unbuffered, 0.0 GB through the page cache), 6578 from RAM (50.9 GB); 415 likely ones queued early, 93 of them unpicked; the compute waited 4104 ms for reads; io threads busy 35298 ms, copy_ahead staging 0 ms, DMA issues 0 ms, slot waits 0 ms
+ds4: expert cache: 12 swaps after the prompt (18 ms)
+maya ds4 serve: prompt 597 tokens = 0 reused + 597 read in 4783 ms (124.8 tok/s), 200 generated in 4045 ms (49.45 tok/s); CPU lane 10.2% of the experts
+maya ds4 serve: prompt 814 tokens = 797 reused + 17 read in 193 ms (88.1 tok/s), 183 generated in 3780 ms (48.41 tok/s); CPU lane 10.4% of the experts
+ds4 prompt stream, CUDA0: 597 tokens in 4956 ms; 6540 experts streamed: 0 from the files (0.0 GB, 0.00 GB/s: 0.0 GB from the disk unbuffered, 0.0 GB through the page cache), 6540 from RAM (50.6 GB); 415 likely ones queued early, 92 of them unpicked; the compute waited 4306 ms for reads; io threads busy 37034 ms, copy_ahead staging 0 ms, DMA issues 0 ms, slot waits 0 ms
+ds4: expert cache: 6 swaps after the prompt (11 ms)
+maya ds4 serve: prompt 597 tokens = 0 reused + 597 read in 4970 ms (120.1 tok/s), 200 generated in 4171 ms (47.95 tok/s); CPU lane 10.2% of the experts
+maya ds4 serve: prompt 814 tokens = 797 reused + 17 read in 205 ms (83.0 tok/s), 183 generated in 3918 ms (46.70 tok/s); CPU lane 10.4% of the experts
+ds4 prompt stream, CUDA0: 597 tokens in 4906 ms; 6562 experts streamed: 0 from the files (0.0 GB, 0.00 GB/s: 0.0 GB from the disk unbuffered, 0.0 GB through the page cache), 6562 from RAM (50.8 GB); 415 likely ones queued early, 92 of them unpicked; the compute waited 4144 ms for reads; io threads busy 36450 ms, copy_ahead staging 0 ms, DMA issues 0 ms, slot waits 0 ms
+ds4: expert cache: 3 swaps after the prompt (7 ms)
+maya ds4 serve: prompt 597 tokens = 0 reused + 597 read in 4916 ms (121.4 tok/s), 200 generated in 3904 ms (51.23 tok/s); CPU lane 10.1% of the experts
+maya ds4 serve: prompt 814 tokens = 797 reused + 17 read in 194 ms (87.5 tok/s), 183 generated in 3594 ms (50.92 tok/s); CPU lane 10.3% of the experts
+ds4 prompt stream, CUDA0: 598 tokens in 5008 ms; 6542 experts streamed: 0 from the files (0.0 GB, 0.00 GB/s: 0.0 GB from the disk unbuffered, 0.0 GB through the page cache), 6542 from RAM (50.6 GB); 415 likely ones queued early, 91 of them unpicked; the compute waited 4321 ms for reads; io threads busy 37224 ms, copy_ahead staging 0 ms, DMA issues 0 ms, slot waits 0 ms
+ds4: expert cache: 6 swaps after the prompt (9 ms)
+maya ds4 serve: prompt 598 tokens = 0 reused + 598 read in 5019 ms (119.1 tok/s), 200 generated in 3955 ms (50.57 tok/s); CPU lane 10.1% of the experts
+maya ds4 serve: prompt 815 tokens = 798 reused + 17 read in 196 ms (86.6 tok/s), 183 generated in 3921 ms (46.67 tok/s); CPU lane 10.3% of the experts
+ds4 prompt stream, CUDA0: 598 tokens in 4856 ms; 6559 experts streamed: 0 from the files (0.0 GB, 0.00 GB/s: 0.0 GB from the disk unbuffered, 0.0 GB through the page cache), 6559 from RAM (50.8 GB); 414 likely ones queued early, 91 of them unpicked; the compute waited 4294 ms for reads; io threads busy 36190 ms, copy_ahead staging 0 ms, DMA issues 0 ms, slot waits 0 ms
+ds4: expert cache: 8 swaps after the prompt (11 ms)
+maya ds4 serve: prompt 598 tokens = 0 reused + 598 read in 4869 ms (122.8 tok/s), 200 generated in 3749 ms (53.34 tok/s); CPU lane 10.1% of the experts
+maya ds4 serve: prompt 815 tokens = 798 reused + 17 read in 197 ms (86.3 tok/s), 183 generated in 3636 ms (50.33 tok/s); CPU lane 10.3% of the experts
+ds4 prompt stream, CUDA0: 597 tokens in 4859 ms; 6547 experts streamed: 0 from the files (0.0 GB, 0.00 GB/s: 0.0 GB from the disk unbuffered, 0.0 GB through the page cache), 6547 from RAM (50.7 GB); 414 likely ones queued early, 90 of them unpicked; the compute waited 4253 ms for reads; io threads busy 36235 ms, copy_ahead staging 0 ms, DMA issues 0 ms, slot waits 0 ms
+ds4: expert cache: 5 swaps after the prompt (8 ms)
+maya ds4 serve: prompt 597 tokens = 0 reused + 597 read in 4869 ms (122.6 tok/s), 200 generated in 3819 ms (52.37 tok/s); CPU lane 10.0% of the experts
+maya ds4 serve: prompt 814 tokens = 797 reused + 17 read in 201 ms (84.7 tok/s), 183 generated in 3627 ms (50.46 tok/s); CPU lane 10.2% of the experts
+ds4 slots: wrote 1 conversation(s) to /home/svg/LLM/strata-custom-2/ds4-slots; 52 there in all
+[strata] 2026-10-28 16:05:49 engine started: /home/svg/LLM/strata-custom-2/build-fresh/strata-dsv41 --serve --pack /home/svg/LLM/data/packs/deepseek-v4.1-flash-ist-das-2.00bpw --max-context 262144 --eos 1 --dspark auto --dspark-conf 0.65 --experts 5 --verbose
+ds4: build fcc45f0a1 (0.1.46)
+ds4: tensor parallel 2 -> 1: the experts' 256-value blocks split n_ff 2304 no other way (each GPU its own layers)
+ds4: prompts in chunks of 4096 tokens (the experts are copied into RAM, 31 GiB of graphics memory; --prefill-chunk N changes it)
+ds4: DSpark not loaded: the routed experts (132 GB) are far more than the GPU holds (32 GB), where its verify rounds read 3.3x a token's bytes and gain nothing (--dspark on loads it anyway)
+ds4: experts per word: 5 (as asked; full quality: --experts 6)
+ds4: dense weights loaded in 2.2 s
+ds4: Engram rows read on 16 threads, issued with the tokens, collected before their layer; row cache 256 MB (1016800 rows)
+ds4: staging ring: experts 132.1 GB, VRAM room 30.2 GB, dense 5.7 GB -> 1200 MB
+ds4: the experts VRAM leaves over (~109.5 GB) are read in place from the model's files (--mmap-experts off copies them into RAM) (182.4 GB of RAM free to keep them: the most-routed 109.5 GB read ahead; prompts in chunks of 4096)
+ds4: experts 0 / 2582 (0.1 GB, 1.50 GB/s)
+ds4: experts 1024 / 2582 (8.2 GB, 5.23 GB/s)
+ds4: experts 2048 / 2582 (17.2 GB, 5.19 GB/s)
+ds4: --mmap-experts auto: the CPU lane's experts (110.6 GB) fit the RAM this process can get (172.9 GB beside 9 GB for the rest): copied in at load, no demand store (--mmap-experts on keeps them in place)
+ds4: copying experts 0 / 12778 (0.1 GB, 2.13 GB/s)
+ds4: copying experts 2048 / 12778 (15.9 GB, 5.32 GB/s)
+ds4: copying experts 4096 / 12778 (33.0 GB, 5.38 GB/s)
+ds4: copying experts 6144 / 12778 (50.3 GB, 5.30 GB/s)
+ds4: copying experts 8192 / 12778 (68.1 GB, 4.69 GB/s)
+ds4: copying experts 10240 / 12778 (86.2 GB, 3.77 GB/s)
+ds4: copying experts 12288 / 12778 (104.9 GB, 2.76 GB/s)
+ds4: 12778 of the CPU lane's 12778 experts copied into RAM (109.9 GB, 1 NUMA part) in 40.5 s
+ds4: CPU lane: 16 threads, MXFP4 rows avx512vnni (avx2 222 us, avxvnni 204 us, avx512 156 us, avx512vnni 142 us)
+ds4: CPU lane's experts pinned in 0.0 s
+ds4: prompts through the flow or windows by this PC's speeds: DMA 50.4 GB/s, RAM to staging 20.0 GB/s, the disk not measured; the CPU lane 39.5 GB/s in RAM, not measured from the disk (53 ms)
+ds4: loaded in 48.9 s
+ds4: CUDA0 layers [0, 39] + head: weights 5.86 GB, experts 22.53 GB (2582 of 15360 in VRAM), caches 0.24 GB, 586 MiB free
+ds4: 12778 routed experts on the CPU lane (109.9 GB): 12778 copied into RAM (1 NUMA parts), the rest in place in the model's files; 16 threads
+ds4: prompt path: the chunked pass from 96 tokens, windows of 16 below
+ds4: CUDA0 layers [0, 39] + head: weights 5.86 GB, experts 22.53 GB (2582 of 15360 in VRAM), caches 0.24 GB, 586 MiB free
+ds4: 12778 routed experts on the CPU lane (109.9 GB): 12778 copied into RAM (1 NUMA parts), the rest in place in the model's files; 16 threads
+maya ds4 serve: GEN <max_new> [keys] <ids>; GENI <max_new> [keys] <pictures> <ids>; STOP, QUIT
+ds4 slots: folder /home/svg/LLM/strata-custom-2/ds4-slots: 52 conversation(s) kept from earlier runs (0.69 GB)
+ds4: prompt path warmed up in 118 ms
+ds4 slots: took back a 596-token conversation at token 596 of 1196 from the folder (0.0 s); 1 new tokens to read
+maya ds4 serve: prompt 597 tokens = 596 reused + 1 read in 61 ms (16.4 tok/s), 100 generated in 3168 ms (31.56 tok/s); CPU lane 40.4% of the experts
+maya ds4 serve: prompt 714 tokens = 697 reused + 17 read in 254 ms (67.0 tok/s), 83 generated in 1976 ms (42.00 tok/s); CPU lane 35.6% of the experts
+ds4 prompt stream, CUDA0: 597 tokens in 5107 ms; 6763 experts streamed: 0 from the files (0.0 GB, 0.00 GB/s: 0.0 GB from the disk unbuffered, 0.0 GB through the page cache), 6763 from RAM (52.4 GB); 418 likely ones queued early, 87 of them unpicked; the compute waited 4356 ms for reads; io threads busy 37319 ms, copy_ahead staging 0 ms, DMA issues 0 ms, slot waits 0 ms
+ds4: expert cache: 796 swaps after the prompt (1093 ms)
+maya ds4 serve: prompt 597 tokens = 0 reused + 597 read in 6203 ms (96.2 tok/s), 100 generated in 2133 ms (46.89 tok/s); CPU lane 10.8% of the experts
+maya ds4 serve: prompt 714 tokens = 697 reused + 17 read in 199 ms (85.3 tok/s), 83 generated in 1796 ms (46.22 tok/s); CPU lane 12.6% of the experts
+ds4 prompt stream, CUDA0: 597 tokens in 4856 ms; 6537 experts streamed: 0 from the files (0.0 GB, 0.00 GB/s: 0.0 GB from the disk unbuffered, 0.0 GB through the page cache), 6537 from RAM (50.6 GB); 414 likely ones queued early, 90 of them unpicked; the compute waited 4236 ms for reads; io threads busy 36348 ms, copy_ahead staging 0 ms, DMA issues 0 ms, slot waits 0 ms
+ds4: expert cache: 84 swaps after the prompt (110 ms)
+maya ds4 serve: prompt 597 tokens = 0 reused + 597 read in 4968 ms (120.2 tok/s), 100 generated in 2117 ms (47.24 tok/s); CPU lane 9.0% of the experts
+maya ds4 serve: prompt 714 tokens = 697 reused + 17 read in 204 ms (83.3 tok/s), 83 generated in 1758 ms (47.22 tok/s); CPU lane 10.1% of the experts
+ds4 prompt stream, CUDA0: 597 tokens in 4813 ms; 6501 experts streamed: 0 from the files (0.0 GB, 0.00 GB/s: 0.0 GB from the disk unbuffered, 0.0 GB through the page cache), 6501 from RAM (50.3 GB); 413 likely ones queued early, 92 of them unpicked; the compute waited 4081 ms for reads; io threads busy 35685 ms, copy_ahead staging 0 ms, DMA issues 0 ms, slot waits 0 ms
+ds4: expert cache: 31 swaps after the prompt (47 ms)
+maya ds4 serve: prompt 597 tokens = 0 reused + 597 read in 4862 ms (122.8 tok/s), 100 generated in 2180 ms (45.88 tok/s); CPU lane 8.4% of the experts
+maya ds4 serve: prompt 714 tokens = 697 reused + 17 read in 189 ms (90.1 tok/s), 83 generated in 1783 ms (46.54 tok/s); CPU lane 9.2% of the experts
+ds4 prompt stream, CUDA0: 597 tokens in 4806 ms; 6472 experts streamed: 0 from the files (0.0 GB, 0.00 GB/s: 0.0 GB from the disk unbuffered, 0.0 GB through the page cache), 6472 from RAM (50.1 GB); 414 likely ones queued early, 92 of them unpicked; the compute waited 4220 ms for reads; io threads busy 35802 ms, copy_ahead staging 0 ms, DMA issues 0 ms, slot waits 0 ms
+ds4: expert cache: 16 swaps after the prompt (29 ms)
+maya ds4 serve: prompt 597 tokens = 0 reused + 597 read in 4838 ms (123.4 tok/s), 100 generated in 1903 ms (52.54 tok/s); CPU lane 7.9% of the experts
+maya ds4 serve: prompt 714 tokens = 697 reused + 17 read in 183 ms (93.1 tok/s), 83 generated in 1823 ms (45.52 tok/s); CPU lane 8.5% of the experts
+ds4 prompt stream, CUDA0: 597 tokens in 4856 ms; 6485 experts streamed: 0 from the files (0.0 GB, 0.00 GB/s: 0.0 GB from the disk unbuffered, 0.0 GB through the page cache), 6485 from RAM (50.2 GB); 414 likely ones queued early, 93 of them unpicked; the compute waited 4182 ms for reads; io threads busy 36005 ms, copy_ahead staging 0 ms, DMA issues 0 ms, slot waits 0 ms
+ds4: expert cache: 17 swaps after the prompt (28 ms)
+maya ds4 serve: prompt 597 tokens = 0 reused + 597 read in 4886 ms (122.2 tok/s), 100 generated in 1998 ms (50.06 tok/s); CPU lane 7.6% of the experts
+maya ds4 serve: prompt 714 tokens = 697 reused + 17 read in 190 ms (89.7 tok/s), 83 generated in 1887 ms (43.99 tok/s); CPU lane 8.2% of the experts
