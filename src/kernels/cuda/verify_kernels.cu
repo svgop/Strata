@@ -5,6 +5,7 @@
 #include "strata/kernels/verify_kernels.hpp"
 #include "strata/core/geometry.hpp"
 #include "strata/core/emulate.hpp"
+#define STRATA_Q81_FASTMATH_DIV 1   // #3948 (T50 port): the GDN q8_1 tail divides as native_mmvq.cu does, see q8_1_finite.hpp
 #include "strata/kernels/q8_1_finite.hpp"   // #606: q8_1_ds
 #include "strata/kernels/dp4a.hpp"
 #include "strata/kernels/pdl.hpp"
@@ -277,7 +278,7 @@ __device__ __forceinline__ void gdn_q8_1_store(GdnQ81* __restrict__ xq, size_t i
     for (int o = 16; o > 0; o >>= 1) amax = fmaxf(amax, __shfl_xor_sync(0xffffffffu, amax, o));
 #pragma unroll
     for (int o = 16; o > 0; o >>= 1) sum += __shfl_xor_sync(0xffffffffu, sum, o);
-    const float d = q8_1_finite(amax / 127.0f);   // #606: as native_quantize_q8_1_kernel - finite blocks bit for bit
+    const float d = q8_1_finite(q81_div(amax, 127.0f));   // #606: as native_quantize_q8_1_kernel - finite blocks bit for bit (#3948: and its division)
     const int8_t q = q8_1_quant(xi, d, amax);
     xq[idx / 32].qs[idx % 32] = q;
     if (idx % 32 == 0) xq[idx / 32].ds = q8_1_ds(d, sum);   // #606: clamped (the QFUSE path bypassed the finite helper)
