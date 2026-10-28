@@ -231,7 +231,8 @@ follow it whether a person or an agent writes the text. The short version:
 
 `campaign/README.md` is the authoritative map. Short version: living instruments (probe-lane,
 probe-metrics, prewarm2, gates, ctx/depth probes) sit at `campaign/` top level — batteries reference
-those paths, do not move them. Reusable harnesses live in `campaign/batteries/` (abab-run, t20-gates,
+those paths, do not move them. The lane-trend tracker (the incline chart's data + builder) is
+`campaign/tracker/` (law 12 below). Reusable harnesses live in `campaign/batteries/` (abab-run, t20-gates,
 t22-custom-vs-stock, t31-rebank + summary). Parked future work in `campaign/arms/` (the 262k pair,
 refresh owed at GO). Dossiers/specs in `campaign/research/`, evidence in `campaign/results/`,
 execution specs in `campaign/T14B-specs/`. The standing boot pair (`launch-custom-iq3s-8081.sh`,
@@ -359,3 +360,37 @@ port, merge:
     measured legs only (2..N), and every new mapping a candidate adds gets its own warmup coverage
     in `prewarm2.sh` in the same commit that adds the mapping. A benchmark whose first leg is
     counted is a wrong benchmark, regardless of how many legs follow it.
+
+12. **THE INCLINE LAW (user law, 2026-10-28 — the tracker is the state of record).** Every lane
+    point lives in `campaign/tracker/lanes.csv` (protocol: `campaign/tracker/README.md`); after
+    every battery, adoption, or standing re-bank, the rows are appended and
+    `python3 campaign/tracker/build-trend.py` is rerun IN THE SAME COMMIT. The chart's contract is
+    an incline: **the standing line never steps down.** This is enforced by construction, not
+    hope:
+    - **Only the standing recipe earns points.** A tracker point means "this was the adopted
+      state on this date." Falsified arms, failed candidates, and diagnostic boots NEVER append —
+      they live in the F-entry and the commit, not the chart. (Precedent: F-263's reverted arms
+      left the bank standing.)
+    - **A read below the last bank is a question, not a point.** Ladder of response, in order:
+      re-run the control same-hour (the drift law); take five-boot means; if the deficit is real,
+      the CHANGE reverts under the binary-ladder law and the incumbent champion remains the
+      standing — the previous bank stands untouched (F-263/F-356 precedent: "banked scoreboard
+      STANDS"). A regression is never appended as the new state.
+    - **A point is appended only when the standing improved or a fresh re-bank confirms it**
+      (kind `mean` for banked means — preferred; `best` for record legs, always labeled). Non-
+      standing arm reads may appear only when they EXCEED the standing bank (a record), labeled
+      `single`; a downward arm read is ledger material, never chart material.
+    - **Capability trades are the one exception, and they are loud:** a deliberately traded lane
+      (quality gate, memory for context) appends ONLY as a `kind=tradeoff` row with its own
+      point and an operator sign-off named in the F-entry — the line shows the trade as a
+      labeled fork, and the prior bank stays banked (the KV-reduction precedent: shelved, not
+      traded).
+    - **After every rebuild, READ THE CHART.** If any lane declined across the last two standing
+      points, the round is not closed: name the mechanism, revert, or escalate. The operator's
+      goal is a STEEP incline — which orders the work itself: prefer structure levers and
+      composed adoptions (laws 6, 4b, 9) over micro-wins, and stack small confirmed wins into
+      one promotion so each plotted step clears the noise band.
+    - **Both engines, one instrument.** Qwen (purple) and DeepSeek (blue) run the same
+      `probe-lane.py` battery; the DeepSeek lever queue (T53+: DS4_CACHE_THREADS, CACHE_MARGIN,
+      dspark-conf, hugepages) is maintained in the tracker README so the next point always has a
+      named source.
