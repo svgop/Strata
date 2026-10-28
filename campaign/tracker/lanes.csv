@@ -1,0 +1,46 @@
+engine,date,commit,label,lane,tps,ctx,kind
+qwen,2026-10-17,3df7161f,F-233 full recipe (five-boot means; COHORTS era),solo,198.5,0,mean
+qwen,2026-10-17,3df7161f,F-233 full recipe (five-boot means; COHORTS era),pair,197.6,0,mean
+qwen,2026-10-17,3df7161f,F-233 full recipe (five-boot means; COHORTS era),conc,312.4,0,mean
+qwen,2026-10-19,57731412,F-238 five-boot re-bank,solo,193.7,0,mean
+qwen,2026-10-19,57731412,F-238 five-boot re-bank,pair,199.3,0,mean
+qwen,2026-10-19,57731412,F-238 five-boot re-bank,conc,303.4,0,mean
+qwen,2026-10-20,28b55bcc,F-242 norm_fast adopted,solo,203.9,0,mean
+qwen,2026-10-20,28b55bcc,F-242 norm_fast adopted,pair,202.0,0,mean
+qwen,2026-10-20,28b55bcc,F-242 norm_fast adopted,conc,306.1,0,mean
+qwen,2026-10-20,881af6cb,F-248 v0.2.1 merge re-bank,solo,212.5,0,mean
+qwen,2026-10-20,881af6cb,F-248 v0.2.1 merge re-bank,pair,202.8,0,mean
+qwen,2026-10-20,881af6cb,F-248 v0.2.1 merge re-bank,conc,315.7,0,mean
+qwen,2026-10-22,d53cfd56,F-266 prewarmed anchor (post profile-poison fix),solo,215.2,0,mean
+qwen,2026-10-22,d53cfd56,F-266 prewarmed anchor (post profile-poison fix),pair,206.4,0,mean
+qwen,2026-10-22,d53cfd56,F-266 prewarmed anchor (post profile-poison fix),conc,323.0,0,mean
+qwen,2026-10-24,0df8f60e,F-293 composition base certified (five-boot pool),solo,217.3,0,mean
+qwen,2026-10-24,0df8f60e,F-293 composition base certified (five-boot pool),pair,206.9,0,mean
+qwen,2026-10-24,0df8f60e,F-293 composition base certified (five-boot pool),conc,319.5,0,mean
+qwen,2026-10-24,040fd5d0,F-328 records proven (cleaned box),solo,223.4,0,mean
+qwen,2026-10-24,040fd5d0,F-328 records proven (cleaned box),pair,222.0,0,mean
+qwen,2026-10-24,040fd5d0,F-328 records proven (cleaned box),conc,338.5,0,best
+qwen,2026-10-25,e1f2cc58,F-334 cleaned-box 10-leg battery,solo,219.2,0,mean
+qwen,2026-10-25,e1f2cc58,F-334 cleaned-box 10-leg battery,pair,208.9,0,mean
+qwen,2026-10-25,e1f2cc58,F-334 cleaned-box 10-leg battery,conc,305.9,0,mean
+qwen,2026-10-26,3540d7b0,F-345 M1 record (V5.4 goal met),solo,234.8,0,best
+qwen,2026-10-26,3540d7b0,F-345 M1 record (V5.4 goal met),pair,221.2,0,best
+qwen,2026-10-26,7aee88dc,F-357 M1 all-time record,solo,241.8,0,best
+qwen,2026-10-27,d9091d83,F-364 quiet-box bank (post-reboot),solo,223.0,0,mean
+qwen,2026-10-27,d9091d83,F-364 quiet-box bank (post-reboot),pair,213.9,0,mean
+qwen,2026-10-27,d9091d83,F-364 quiet-box bank (post-reboot),conc,324.8,0,mean
+qwen,2026-10-27,50684ddd,F-367 standing bank (shm shadow store; THE bank),solo,222.0,0,mean
+qwen,2026-10-27,50684ddd,F-367 standing bank (shm shadow store; THE bank),pair,233.0,0,mean
+qwen,2026-10-27,50684ddd,F-367 standing bank (shm shadow store; THE bank),conc,350.8,0,mean
+qwen,2026-10-28,b865d253,T50 adopted state (F-368 ports; drift window 03:25),solo,209.6,0,single
+deepseek,2026-10-27,upstream-pkg,dsv41 first boot (upstream engine; 8K ctx),solo,28.6,8192,single
+deepseek,2026-10-27,upstream-pkg,dsv41 64K bench cold decode best,solo,45.7,65536,best
+deepseek,2026-10-28,87277ead,F-370 custom-tree first light (warm 8K),solo,36.8,8192,single
+deepseek,2026-10-28,988a4ccf,T51 standing 6-experts (2048-ctx legs),solo,38.5,2048,single
+deepseek,2026-10-28,988a4ccf,T51 --experts 5 arm (cold conversation),solo,52.2,2929,single
+deepseek,2026-10-28,988a4ccf,T52 first lane battery (standing 6-experts),solo,31.4,0,single
+deepseek,2026-10-28,988a4ccf,T52 first lane battery (standing 6-experts),pair,32.5,0,single
+deepseek,2026-10-28,988a4ccf,T52 first lane battery (standing 6-experts),conc,43.6,0,single
+deepseek,2026-10-28,988a4ccf,T52 --experts 5 lane battery (quality-traded arm),solo,46.3,0,single
+deepseek,2026-10-28,988a4ccf,T52 --experts 5 lane battery (quality-traded arm),pair,48.5,0,single
+deepseek,2026-10-28,988a4ccf,T52 --experts 5 lane battery (quality-traded arm),conc,51.7,0,single

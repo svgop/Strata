@@ -1,0 +1,22 @@
+=== PROBE t52-ds-5exp | 2026-10-28 10:54:49 | log=/home/svg/LLM/strata-custom-2/custom-dsv41-e5-8081.log
+    warmup: 4 tok in 7.06s
+    A.short[1]: 220 tok in 10.05s = 21.9 t/s
+    A.short[2]: 220 tok in 4.27s = 51.6 t/s
+    A.short[3]: 220 tok in 4.23s = 52.0 t/s
+    A.short[4]: 220 tok in 4.11s = 53.6 t/s
+    A.short[5]: 220 tok in 4.01s = 54.9 t/s
+    A.short[6]: 220 tok in 3.89s = 56.6 t/s
+    fresh-long-prompt: 80 tok out in 1.86s
+    B.short[1]: 220 tok in 8.65s = 25.4 t/s
+    B.short[2]: 220 tok in 3.91s = 56.3 t/s
+    B.short[3]: 220 tok in 3.93s = 55.9 t/s
+    B.short[4]: 220 tok in 3.85s = 57.2 t/s
+    B.short[5]: 220 tok in 3.82s = 57.7 t/s
+    B.short[6]: 220 tok in 3.93s = 56.0 t/s
+SHORT-CLASS A/B   : before long prompt 48.4 t/s -> after 51.4 t/s (6%)
+M1 single-stream : 46.3 t/s (2000 tok in 43.23s)
+M2 pair          : 48.5 t/s aggregate (1800 tok in 37.11s)
+M2 6-conc        : 51.7 t/s aggregate (3600 tok in 69.64s)
+--- engine accounting, in order (ms/window is the degradation signal) ---
+M3d per-position : not printed (arm STRATA_SPEC_DEPTH=1 to publish accepted/tested by depth)
+=== PROBE END t52-ds-5exp
