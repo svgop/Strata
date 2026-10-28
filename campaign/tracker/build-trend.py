@@ -162,17 +162,24 @@ TEMPLATE = r'''<div id="lane-trend-9f3" style="font:inherit">
 
     for (const lane of ['solo', 'pair', 'conc']) {
       const col = COLORS[p.eng];
-      const dat = pts.map((d, i) => ({ i, v: d[lane], d }));
+      const all = pts.map((d, i) => ({ i, v: d[lane], d, k: d.kinds[lane] || 'mean' }));
+      const isLine = q => q.v != null && (q.k === 'mean' || q.k === 'standing');
+      const isDet = q => q.v != null && !isLine(q);
       const line = d3.line().defined(q => q.v != null).x(q => x(q.i)).y(q => y(q.v));
       if (visible[p.eng][lane]) {
-        g.append('path').datum(dat.filter(q => q.v != null)).attr('d', line)
+        g.append('path').datum(all.filter(isLine)).attr('d', line)
           .attr('fill', 'none').attr('stroke', col).attr('stroke-width', 2)
           .attr('stroke-dasharray', LANES[lane].dash === 'none' ? null : LANES[lane].dash);
-        g.selectAll(null).data(dat.filter(q => q.v != null)).join('path')
+        g.selectAll(null).data(all.filter(isLine)).join('path')
           .attr('d', LANES[lane].symbol).attr('transform', q => `translate(${x(q.i)},${y(q.v)})`)
           .attr('fill', col).attr('data-chart-hit', true)
           .append('title').text(q => `${q.d.label} (${q.d.commit}) ${q.d.date} · ${lane}: ${fmt(q.v)} tok/s`);
-        const last = [...dat].reverse().find(q => q.v != null);
+        // records / arm reads: detached diamonds (never a line segment - the incline law)
+        g.selectAll(null).data(all.filter(isDet)).join('path')
+          .attr('d', 'M0,-4.2L4.2,0L0,4.2L-4.2,0Z').attr('transform', q => `translate(${x(q.i)},${y(q.v)})`)
+          .attr('fill', 'none').attr('stroke', col).attr('stroke-width', 1.6).attr('data-chart-hit', true)
+          .append('title').text(q => `${q.d.label} (${q.d.commit}) ${q.d.date} · ${lane}: ${fmt(q.v)} tok/s [${q.k}, not standing]`);
+        const last = [...all].reverse().find(q => q.v != null);
         if (last) g.append('text').attr('x', x(last.i) + 7).attr('y', y(last.v) + 4)
           .attr('fill', col).style('font-size', '12px').attr('class', 'tabular-nums')
           .text(`${LANE_NAMES[lane]} ${fmt(last.v)}`);

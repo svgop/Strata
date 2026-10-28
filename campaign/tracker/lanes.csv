@@ -32,15 +32,14 @@ qwen,2026-10-27,d9091d83,F-364 quiet-box bank (post-reboot),conc,324.8,0,mean
 qwen,2026-10-27,50684ddd,F-367 standing bank (shm shadow store; THE bank),solo,222.0,0,mean
 qwen,2026-10-27,50684ddd,F-367 standing bank (shm shadow store; THE bank),pair,233.0,0,mean
 qwen,2026-10-27,50684ddd,F-367 standing bank (shm shadow store; THE bank),conc,350.8,0,mean
-qwen,2026-10-28,b865d253,T50 adopted state (F-368 ports; drift window 03:25),solo,209.6,0,single
-deepseek,2026-10-27,upstream-pkg,dsv41 first boot (upstream engine; 8K ctx),solo,28.6,8192,single
-deepseek,2026-10-27,upstream-pkg,dsv41 64K bench cold decode best,solo,45.7,65536,best
+deepseek,2026-10-27,upstream-pkg,dsv41 first boot (upstream engine; 8K ctx),solo,28.6,8192,standing
+deepseek,2026-10-27,upstream-pkg,dsv41 64K bench cold decode best,solo,45.7,65536,standing
 deepseek,2026-10-28,87277ead,F-370 custom-tree first light (warm 8K),solo,36.8,8192,single
 deepseek,2026-10-28,988a4ccf,T51 standing 6-experts (2048-ctx legs),solo,38.5,2048,single
 deepseek,2026-10-28,988a4ccf,T51 --experts 5 arm (cold conversation),solo,52.2,2929,single
-deepseek,2026-10-28,988a4ccf,T52 first lane battery (standing 6-experts),solo,31.4,0,single
-deepseek,2026-10-28,988a4ccf,T52 first lane battery (standing 6-experts),pair,32.5,0,single
-deepseek,2026-10-28,988a4ccf,T52 first lane battery (standing 6-experts),conc,43.6,0,single
+deepseek,2026-10-28,988a4ccf,T52 first lane battery (standing 6-experts),solo,31.4,0,standing
+deepseek,2026-10-28,988a4ccf,T52 first lane battery (standing 6-experts),pair,32.5,0,standing
+deepseek,2026-10-28,988a4ccf,T52 first lane battery (standing 6-experts),conc,43.6,0,standing
 deepseek,2026-10-28,988a4ccf,T52 --experts 5 lane battery (quality-traded arm),solo,46.3,0,single
 deepseek,2026-10-28,988a4ccf,T52 --experts 5 lane battery (quality-traded arm),pair,48.5,0,single
 deepseek,2026-10-28,988a4ccf,T52 --experts 5 lane battery (quality-traded arm),conc,51.7,0,single

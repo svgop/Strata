@@ -158,17 +158,6 @@
       "pair": "mean",
       "conc": "mean"
      }
-    },
-    {
-     "date": "2026-10-28",
-     "commit": "b865d253",
-     "label": "T50 adopted state (F-368 ports; drift window 03:25)",
-     "solo": 209.6,
-     "pair": null,
-     "conc": null,
-     "kinds": {
-      "solo": "single"
-     }
     }
    ]
   },
@@ -183,7 +172,7 @@
      "pair": null,
      "conc": null,
      "kinds": {
-      "solo": "single"
+      "solo": "standing"
      }
     },
     {
@@ -194,7 +183,7 @@
      "pair": null,
      "conc": null,
      "kinds": {
-      "solo": "best"
+      "solo": "standing"
      }
     },
     {
@@ -238,9 +227,9 @@
      "pair": 32.5,
      "conc": 43.6,
      "kinds": {
-      "solo": "single",
-      "pair": "single",
-      "conc": "single"
+      "solo": "standing",
+      "pair": "standing",
+      "conc": "standing"
      }
     },
     {
