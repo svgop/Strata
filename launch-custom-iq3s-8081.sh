@@ -45,9 +45,30 @@ export STRATA_ADAPT_EARLY="${STRATA_ADAPT_EARLY:-1}"  # F-332 ADOPTED (10-25): t
 # conc +3.5% (+4.4/+2.5) — all three lanes positive, all clear the gate, no lane regression.
 # /dev/shm is wiped on reboot: campaign/shm-shadow.sh re-establishes the copy; until it runs, the
 # guard below falls back to the disk path so the lane never fails to boot. ="" rolls back the shadow.
-_shm_shadow=/dev/shm/strata-shadow-q2_0
-[ -f "$_shm_shadow/experts.bin" ] || _shm_shadow=/home/svg/LLM/data/packs/q2_0
-export STRATA_SHADOW_EXPERTS="${STRATA_SHADOW_EXPERTS:-$_shm_shadow}"  # F-360 PROMOTED (10-27): CPU misses compute from the Q2_0 expert
+# THE SHADOW STORE (F-359/F-360, architecture - not a temp file)
+# The CPU expert pool is byte-bound (~150 us/entry on IQ3_S's 2.05 MB blobs).  The SAME model's Q2_0 pack
+# (1.38 MB blobs, 33% fewer bytes) is what the ~3% of picks that miss VRAM compute from: 75 us/entry instead
+# of 152.  Only the CPU-miss path reads it; the GPU, the PCIe share and the prompt path are untouched.
+#
+# CANONICAL HOME: /home/svg/LLM/data/packs/q2_0 - a full pack (experts.bin + experts.json + index.txt +
+# manifest.json + tokenizer), publishable alongside any other pack.  It is the artifact of record.
+# PLACEMENT CACHE: /dev/shm/strata-shadow-q2_0 - a byte-identical copy on tmpfs.  Pure placement, not a
+# second artifact: RAM-resident pages are THP-eligible and never evicted, so the pool pays no page faults
+# (F-365: 2.6M minor faults per probe leg on the page-cached copy).  Rebuilt by campaign/shm-shadow.sh,
+# which this launcher calls below, and which is a no-op when the copy is intact.
+_SHADOW_CANON=/home/svg/LLM/data/packs/q2_0
+_SHADOW_TMPFS=/dev/shm/strata-shadow-q2_0
+if [ -f "$_SHADOW_TMPFS/experts.bin" ]; then
+  _shadow="$_SHADOW_TMPFS"          # placement cache present: the fast one
+elif [ -f "$_SHADOW_CANON/experts.bin" ]; then
+  _shadow="$_SHADOW_CANON"          # canonical artifact, page-cached (works; slower misses)
+else
+  _shadow=""                        # no shadow: the native store serves every miss (byte-identical outputs)
+fi
+# NOTE the `-` (not `:-`): an explicit empty STRATA_SHADOW_EXPERTS="" must survive as the rollback
+# (the engine treats unset and empty alike - shadow_experts.hpp), so only an UNSET variable takes the default.
+export STRATA_SHADOW_EXPERTS="${STRATA_SHADOW_EXPERTS-$_shadow}"
+[ -n "$STRATA_SHADOW_EXPERTS" ] && echo "launcher: shadow store $STRATA_SHADOW_EXPERTS" >&2
                                   # store (31.64 GiB mapped, 1.38 MB blobs vs IQ3_S's 2.05 MB; the pool is byte-bound at ~150 us/entry). Warm legs vs the fresh
                                   # champion: M1 -0.7 (noise), pair +7.7%, conc +8.4%; MMLU 95.71 >= 93.3; falsifier: 2.0x bytes, >=32% faster entries. Hits,
                                   # the PCIe share, the prompt path unchanged (bit-identical); only the ~3% missed routing computes at Q2_0.
