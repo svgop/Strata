@@ -14,6 +14,21 @@ if [ "$avail" -lt "$((need + 8 * 1024 * 1024 * 1024))" ]; then
   echo "shm-shadow: /dev/shm has $((avail / 2**30)) GiB free, need $((need / 2**30)) GiB + 8 GiB headroom - NOT copying"
   exit 1
 fi
+# fast path (the launcher now calls this on every start): an already-restored store with the source's
+# file count and total size skips the copy and the verify walk entirely
+fast_ok() {
+  [ -f "$DST/experts.bin" ] || return 1
+  local a b
+  a=$(find "$SRC" -type f | wc -l); b=$(find "$DST" -type f | wc -l)
+  [ "$a" = "$b" ] || return 1
+  a=$(du -sB1 "$SRC" | cut -f1); b=$(du -sB1 "$DST" | cut -f1)
+  [ "$a" = "$b" ] || return 1
+  return 0
+}
+if fast_ok; then
+  echo "shm-shadow: already restored ($(du -sh "$DST" | cut -f1)) - nothing to do"
+  exit 0
+fi
 mkdir -p "$DST"
 rsync -a "$SRC/" "$DST/"
 # verify: every file in SRC exists in DST with identical size

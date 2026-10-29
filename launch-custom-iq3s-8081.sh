@@ -80,5 +80,10 @@ export STRATA_SPEC_DRAFT_TEMP=0.85  # F-201 ADOPTED 2026-10-15: coupled drafter 
 export STRATA_ROUTE_RESIDENT=0.75     # F-200 ADOPTED 2026-10-15: battery +14.9/+8.5/+12.2 M1/pair/conc vs interpolated control; routing-changing -> 2x MMLU gate PASSED (92.86/97.14, mean 95.00)
 export STRATA_ROUTE_RESIDENT_MTP=1
 
+# NORMALIZED (2026-10-29, user law): the F-367 tmpfs shadow store is re-established on EVERY lane start -
+# the manual post-reboot step is gone.  Fast path inside the script: an intact store costs two `find`s.
+# Non-fatal by design: a failed copy leaves the launch-time guard above on the disk path (never a no-boot).
+bash campaign/shm-shadow.sh >/dev/null 2>&1 || true
+
 cd "$(dirname "$0")"
 exec .venv/bin/python serve/server.py --engine strata --config "$PWD/custom-iq3_s-8081.json" --port 8081 --host 0.0.0.0
