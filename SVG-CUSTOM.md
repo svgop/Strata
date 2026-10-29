@@ -11900,3 +11900,17 @@ OFF 201.6 / 191.1 / **243.5** = **+2.9 / +3.8 / +20.8%**. The conc lane is where
 (0 tokens in 130.75 s; the engine's own #2065 warning). Restored to 2000: 0 warnings, 9958 slots. The 597-slot gain
 was never measurable (all arms 292-295 conc); the conc lever is the shadow's byte-bound CPU path, not slot count.
 Evidence: `campaign/results/t59-shadow-architecture.txt`.
+
+### F-376 — abliteration fixed: the control-vector layer range was truncating it (2026-10-30)
+
+The operator reported the refusal vector not working.  Root cause: **the layer range, not the scale.**  `refusal-r.gguf`
+carries 47 unit-normalized directions (`direction.1..direction.47`, `|v|=1.0`; `layer_count=47`), and the standing
+config armed only `--control-vector-layer-range 4 24` — 21 of 48 layers, discarding 26 directions and never steering
+the late layers where final behaviour consolidates.  `project` mode is `h ← h − s_l(h·v_l)v_l` with `s_l = |d_l|`; the
+unit-normalized directions make `s_l = 1.0` a full removal per armed layer, so scale 1.0 was already correct.
+
+Measured (temp 0, 1400-token budget): at 4..24 the model REFUSED phishing / AV-bypass / ransomware asks and COMPLIED on
+"hack my app"; at **1..47 all comply**.  Throughput unchanged (in-graph projection, sub-0.5%/window).  Change: range
+4 24 → 1 47, commit 29aca578, revert = the reverse.  Also banked: a short `max_tokens` is spent entirely inside
+`reasoning_content` and returns `content=null` + `finish_reason=length`, which reads as a refusal but is budget
+exhaustion — the probe uses a 1400-token budget; a distinct "thinking exhausted" finish signal is a follow-up.
