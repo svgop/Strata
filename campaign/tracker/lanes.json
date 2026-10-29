@@ -158,6 +158,19 @@
       "pair": "mean",
       "conc": "mean"
      }
+    },
+    {
+     "date": "2026-10-29",
+     "commit": "d8ebe9f7",
+     "label": "T58 262K reserve-1024 standing (262K era; 350.8 was a 131K reading)",
+     "solo": 222.9,
+     "pair": 199.3,
+     "conc": 295.2,
+     "kinds": {
+      "solo": "standing",
+      "pair": "standing",
+      "conc": "standing"
+     }
     }
    ]
   },

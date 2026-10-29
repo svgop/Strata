@@ -49,3 +49,6 @@ deepseek,2026-10-28,STANDING-5e,T53 --experts 5 ADOPTED standing (two boots 46.3
 deepseek,2026-10-29,0dacce9e,T56 DS4_ATTN_SPLIT adopted standing (batteries 51.9/51.9/57.0 + 52.7/51.3/58.0),solo,52.3,0,standing
 deepseek,2026-10-29,0dacce9e,T56 DS4_ATTN_SPLIT adopted standing (batteries 51.9/51.9/57.0 + 52.7/51.3/58.0),pair,51.6,0,standing
 deepseek,2026-10-29,0dacce9e,T56 DS4_ATTN_SPLIT adopted standing (batteries 51.9/51.9/57.0 + 52.7/51.3/58.0),conc,57.5,0,standing
+qwen,2026-10-29,d8ebe9f7,T58 262K reserve-1024 standing (262K era; 350.8 was a 131K reading),solo,222.9,0,standing
+qwen,2026-10-29,d8ebe9f7,T58 262K reserve-1024 standing (262K era; 350.8 was a 131K reading),pair,199.3,0,standing
+qwen,2026-10-29,d8ebe9f7,T58 262K reserve-1024 standing (262K era; 350.8 was a 131K reading),conc,295.2,0,standing

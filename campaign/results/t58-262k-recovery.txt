@@ -1,0 +1,32 @@
+T58 - the 262K conc recovery (2026-10-29, box: 9950X3D + RTX 5090)
+
+THE QUESTION: conc read 350.8 on 10-27, reads ~280-300 since. Regression or box?
+ANSWER: neither code regression nor pure box - a CONFIG change plus a lost cache asset.
+
+1. The 350.8 bank (F-367, 2026-10-27) was measured at --max-context 131072.
+   The engine log proves it: every 10-27 boot is ctx=131072; the first 262144
+   boot is 2026-10-28 00:50 (T50, commit 4c53e861).  89 of 116 boots are 131K.
+
+2. Same binary, 262K (the F-368 gauntlet, 10-28 12:09): conc 293.8-325.0,
+   mean 305.5 over 8 legs.  So the config alone costs ~10-15% on conc.
+
+3. The F-367 tmpfs shadow store (/dev/shm, +3.5% conc by its own battery) is
+   WIPED on every reboot and the launcher silently fell back to the disk pack.
+   NORMALIZED: campaign/shm-shadow.sh gained a fast path and the launcher calls
+   it on every start (commit 08eab826).  Restored: 37 GiB, 12 s.
+
+4. The 262K tax, measured: slot sessions 0.73 -> 0.95 GiB each (5.69 GiB of
+   VRAM "the expert cache would otherwise hold"), expert cache 10313 -> 9956
+   slots.  The 2000 MiB --vram-reserve was pure headroom.
+   ADOPTED: --vram-reserve-mib 1024 -> 10553 slots (+597, +6.0%) at FULL 262K.
+
+BATTERY (prewarmed, same hour, 3 legs):
+  262K reserve 2000: M1 216.2  pair 206.2  conc 275.8
+  262K reserve 1024: M1 222.9  pair 199.3  conc 295.2  (best leg 233.4 / 301.4)
+  131K reference:    M1 219.9  pair 206.6  conc 298.5
+Mechanism (batch telemetry): VRAM routed entries 95.6 -> 96.9%, CPU-lane entries
+3.6 -> 2.6%, PCIe 0.8 -> 0.5%.  Window time 15.65 -> 13.56 ms at 4.97 rows.
+
+STANDING (262K era, this box): M1 ~223 / pair ~199 / conc ~295.
+The 350.8 point is NOT comparable - it is a 131K-context reading.  Per law 12 the
+chart's standing line is now the 262K line; the 131K point stays as history.
