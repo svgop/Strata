@@ -30,7 +30,7 @@
   "--pcie-mode",
   "dma",
   "--vram-reserve-mib",
-  "2000",
+  "1024",
   "--conversation-cache-mib",
   "49152",
   "--conversation-cache-slots",
