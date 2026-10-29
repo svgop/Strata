@@ -11807,3 +11807,36 @@ Post-adoption state read (single probe leg on the restarted standing boot, diagn
 one leg): M1 222.0 / pair 233.0 / **conc 350.8** / M3b 79.7. The conc leg touches the 350 target for
 the first time on the standing shared-compute boot (prior best 338.5 quiet, 327.2 bank). One leg,
 high variance; a battery must bank any record. Evidence: `/tmp/f367-postprobe.txt`.
+
+### F-372 — T56: DS4_ATTN_SPLIT ADOPTED (+9.4/+7.2/+7.5%), dspark-on REJECTED (-14%), the DRAM ceiling priced (2026-10-29)
+
+A fresh-eyes pass (code-only investigation, then same-hour batteries; full evidence `campaign/results/t56-perf-pass.txt`).
+
+**Baselines:** Qwen 216.4/201.8/293.6, DS 47.5/48.4/53.0 (bank-matched).
+
+**DS diagnosis (new serve instrumentation, ds4_main.cpp, kept):** `--dspark auto` has refused the drafter on every
+boot since the import ("132 GB experts vs 32 GB VRAM") — serve decode has always been plain T=1 steps.  Per-token
+GPU stages (DS4_PROF): attention 36%, CPU-lane wait 37% (~40 CPU experts/token × 8.85 MB ≈ 354 MB at ~47 GB/s),
+routing+shared 15%, MoE 12%.  **The box's DRAM ceiling measured: ~50 GB/s** (ccd_bw: 8T 37.7 / 16T 49.8 / 8T-split
+45.8 — memory-controller-bound; ggml dot 48.4-48.6 ≈ plain read 49.9 — DRAM-bound, not ALU).  Both engines' CPU
+lanes sit at 94-96% of it; every byte-shuffling scheme is structurally neutral, only fewer bytes moves either lane.
+
+**ADOPTED:** `DS4_ATTN_SPLIT=1` (launcher; the in-tree split-KV decode kernel): 51.9/51.9/57.0 = +9.4/+7.2/+7.5%,
+every leg above every control leg; attention stage 5.8-7.1 → 5.6-5.8 ms/token.  Output class: merge-order rounding
+(4e-7, the F-224 class); the task gate is owed (T53 precedent).  **DS standing steps to 52.3/51.6/57.5** (tracker).
+
+**REJECTED:** `--dspark on` on serve: -14% M1 (44.7 vs 51.9) — the drafter fires (72-93%/position) but T=2-6 windows
+pull more experts over the saturated DRAM (CPU wait 5-8.7 → 10.2-11.7 ms/token).  The auto-refuse was right; priced
+definitively, config reverted.
+
+**NEUTRAL, walls named:** DS L3-warm-ahead (code in-tree, DS4_AHEAD_WARM=1, default off — doubled DDR5 traffic, noise);
+DS4_CACHE_MARGIN=1.05 (noise); Qwen draft overlap (the batch path's draft_launch/finish split — acceptance identical,
++0.6/+1.2/+2.9 noise: the round tail hides only ~0.1-0.3 ms of the draft's 1.0-1.3 ms; structurally serial; binary +
+code reverted, champion verified).
+
+**Gotcha banked:** `pkill -f '<pattern>'` matches the invoking shell's own cmdline and kills it — compound commands
+after it silently never run (cost one void battery; caught by checksum).  Use `pkill -f 'serve/server[.]py'`.
+
+**The next meaningful jumps (named, none started):** DS shadow-quant for the CPU lane (2.00 → ~1.5 bpw, est +15-25%
+solo — the only lever on the wait); dsv41 multi-conversation windows (conc ≈ solo today); Qwen speculative publish
+(F-347's design); DS attention indexer fusion (est +4-8%).  Commits 0dacce9e, fb3b6b57.
