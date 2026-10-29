@@ -46,3 +46,6 @@ deepseek,2026-10-28,988a4ccf,T52 --experts 5 lane battery (quality-traded arm),c
 deepseek,2026-10-28,STANDING-5e,T53 --experts 5 ADOPTED standing (two boots 46.3/48.5/51.7 + 47.7/47.3/52.4),solo,47.0,0,standing
 deepseek,2026-10-28,STANDING-5e,T53 --experts 5 ADOPTED standing (two boots 46.3/48.5/51.7 + 47.7/47.3/52.4),pair,47.9,0,standing
 deepseek,2026-10-28,STANDING-5e,T53 --experts 5 ADOPTED standing (two boots 46.3/48.5/51.7 + 47.7/47.3/52.4),conc,52.1,0,standing
+deepseek,2026-10-29,0dacce9e,T56 DS4_ATTN_SPLIT adopted standing (batteries 51.9/51.9/57.0 + 52.7/51.3/58.0),solo,52.3,0,standing
+deepseek,2026-10-29,0dacce9e,T56 DS4_ATTN_SPLIT adopted standing (batteries 51.9/51.9/57.0 + 52.7/51.3/58.0),pair,51.6,0,standing
+deepseek,2026-10-29,0dacce9e,T56 DS4_ATTN_SPLIT adopted standing (batteries 51.9/51.9/57.0 + 52.7/51.3/58.0),conc,57.5,0,standing
