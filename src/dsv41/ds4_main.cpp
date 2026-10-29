@@ -929,6 +929,31 @@ int serve(strata::ds4::Model& m, const std::string& eos_list, bool spec, float c
                      s.experts ? 100.0 * (double) s.cpu_experts / (double) s.experts : 0.0);
         if (d_off > 0) std::fprintf(stderr, "maya ds4 serve: drafts %lld of %lld kept; %s\n", d_acc, d_off,
                                     per_position(s_dec, s).c_str());
+        {   // the decode's per-token decomposition, so a slow lane names its term: the layers (of them the routing
+            // waits and the CPU lane), the head wait, Engram, and the drafter's cost a round
+            const double fed = (double) std::max<int64_t>(1, s.tokens - s_dec.tokens);
+            const double nv = (double) std::max<int64_t>(1, s.drafts_rounds - s_dec.drafts_rounds);
+            std::fprintf(stderr,
+                         "maya ds4 decode: per token layers %.2f ms (routing waits %.2f, CPU lane %.2f), head %.2f, "
+                         "Engram %.2f; drafts %.2f ms a round over %.0f rounds; warm %lld asked, %.1f MB swept\n",
+                         (s.layer_ms - s_dec.layer_ms) / fed, (s.gpu_wait_ms - s_dec.gpu_wait_ms) / fed,
+                         (s.cpu_ms - s_dec.cpu_ms) / fed, (s.head_ms - s_dec.head_ms) / fed,
+                         (s.engram_ms - s_dec.engram_ms) / fed, (s.draft_ms - s_dec.draft_ms) / nv, nv,
+                         (long long) (s.ahead_warm - s_dec.ahead_warm),
+                         (double) (s.warm_bytes - s_dec.warm_bytes) / 1e6 / fed);
+            if (s.prof_tokens > s_dec.prof_tokens) {   // DS4_PROF: the GPU's own per-stage times over T=1 windows
+                const double pt = (double) (s.prof_tokens - s_dec.prof_tokens);
+                std::fprintf(stderr,
+                             "maya ds4 gpu: per token %.2f ms - between layers %.2f, attention %.2f, routing + shared "
+                             "%.2f, gate/up %.2f, CPU-lane wait %.2f, down + post %.2f\n",
+                             ((s.prof_ms[0] - s_dec.prof_ms[0]) + (s.prof_ms[1] - s_dec.prof_ms[1]) +
+                              (s.prof_ms[2] - s_dec.prof_ms[2]) + (s.prof_ms[3] - s_dec.prof_ms[3]) +
+                              (s.prof_ms[4] - s_dec.prof_ms[4]) + (s.prof_ms[5] - s_dec.prof_ms[5])) / pt,
+                             (s.prof_ms[0] - s_dec.prof_ms[0]) / pt, (s.prof_ms[1] - s_dec.prof_ms[1]) / pt,
+                             (s.prof_ms[2] - s_dec.prof_ms[2]) / pt, (s.prof_ms[3] - s_dec.prof_ms[3]) / pt,
+                             (s.prof_ms[4] - s_dec.prof_ms[4]) / pt, (s.prof_ms[5] - s_dec.prof_ms[5]) / pt);
+            }
+        }
         m.save_profile();
     }
     // the engine ends (QUIT or the end of its input): the conversation in the model is set aside, and every one in

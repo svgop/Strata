@@ -87,6 +87,7 @@ struct Stats {
     // read from the files, of them prefetched early; experts prefetched early
     int64_t ahead_picks = 0, ahead_hit_k = 0, ahead_hit = 0, ahead_hit2 = 0;
     int64_t ahead_cold = 0, ahead_cold_hit = 0, ahead_pf = 0;
+    int64_t ahead_warm = 0, warm_bytes = 0;   // the L3 sweep: guessed RAM-resident experts asked for, bytes swept
     int64_t ahead_rank_n[16] = {}, ahead_rank_hit[16] = {};   // the next-layer guesses by rank, and how many were picked
     // the RAM store (--ssd-cache), totals since the load: reads asked for and found there (hits), missed (misses), started ahead
     // of use (prefetched) of which used / given up unused, slots given up, bytes read, ms the CPU lane waited for the reads

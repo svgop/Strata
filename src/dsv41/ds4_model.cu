@@ -35,6 +35,10 @@
 #include <cublas_v2.h>
 #include <cuda_runtime.h>
 
+#if defined(__x86_64__) || defined(_M_X64)
+#include <immintrin.h>   // the warm sweep's _mm_prefetch
+#endif
+
 #include <algorithm>
 #include <array>
 #include <condition_variable>
@@ -1032,11 +1036,23 @@ struct Model::Impl {
     int ahead_extra = std::getenv("DS4_AHEAD_EXTRA") ? std::atoi(std::getenv("DS4_AHEAD_EXTRA")) : 0;
     // (DS4_AHEAD_ORDER=0: the CPU lane computes a layer's experts in expert order, not the ones asked for early first)
     bool ahead_order = std::getenv("DS4_AHEAD_ORDER") == nullptr || std::atoi(std::getenv("DS4_AHEAD_ORDER")) != 0;
+    // DS4_AHEAD_WARM: the next layer's guessed RAM-resident experts swept toward the L3 ahead of time, so the CPU
+    // lane's just-in-time pass reads at cache speed instead of DDR5 (the wait_seq deficit).  OFF by default:
+    // priced 2026-10-29 on the 9950X3D lane (3 legs): the sweep fired (355-400 MB/token) but doubled the DDR5
+    // traffic the lane was already bound by - M1 +2.1%, pair -1.2%, conc +1.4%, all inside noise; the lane is
+    // bandwidth-saturated, moving the bytes earlier cannot pay.  =1 re-arms for a narrower variant (rank-0 only).
+    // DS4_AHEAD_WARM_THREADS: the sweep's workers.
+    bool warm_on = std::getenv("DS4_AHEAD_WARM") != nullptr && std::atoi(std::getenv("DS4_AHEAD_WARM")) != 0;
+    int warm_threads = std::getenv("DS4_AHEAD_WARM_THREADS") ? std::max(1, std::atoi(std::getenv("DS4_AHEAD_WARM_THREADS"))) : 4;
     std::vector<uint8_t> ahead_fl;     // [layer][1024]: 1 the top-k guess, 2 any guess, a layer before; 4 two layers before;
                                        // 8 asked for (prefetch)
     std::vector<uint8_t> ahead_rank;   // [layer][1024]: 1 + the expert's rank in the guess a layer before (0: not guessed)
     std::vector<unsigned> ahead_for;   // [layer]: the request (seq) its flags are for
     std::thread pf_th;
+    std::mutex wm_mu;
+    std::condition_variable wm_cv;
+    std::vector<std::pair<const void*, size_t>> wm_q;
+    std::vector<std::thread> wm_th;
     std::mutex pf_mu;
     std::condition_variable pf_cv;
     std::vector<std::pair<const void*, size_t>> pf_q;
@@ -1295,6 +1311,9 @@ struct Model::Impl {
         }
         pf_cv.notify_all();
         if (pf_th.joinable()) pf_th.join();
+        wm_cv.notify_all();
+        for (std::thread& t : wm_th)
+            if (t.joinable()) t.join();
         {
             std::lock_guard<std::mutex> lk(sw_mu);
         }
@@ -2886,6 +2905,31 @@ struct Model::Impl {
                 serve_lane();
             });
             if (ahead_mode > 0) pf_th = std::thread([this] { prefetch_loop(); });
+            if (ahead_mode > 0 && warm_on) {
+                // the sweep's workers on node 0's SMT siblings where they exist: the lane's physical cores stay
+                // untouched, and a sibling's prefetch fills the same CCD's L3 the lane reads from
+                std::vector<int> sib;
+#if defined(_WIN32)
+                {
+                    const std::vector<std::vector<int>> all = os::node_cores(true), phys = os::node_cores(false);
+                    if (!all.empty() && !phys.empty()) {
+                        sib = all[0];
+                        for (int c : phys[0]) sib.erase(std::remove(sib.begin(), sib.end(), c), sib.end());
+                    }
+                }
+#else
+                const std::vector<std::vector<int>> phys = node_cores();
+                if (!phys.empty())
+                    for (int c : phys[0])
+                        for (int x : cpu_list(read_file("/sys/devices/system/cpu/cpu" + std::to_string(c) +
+                                                        "/topology/thread_siblings_list")))
+                            if (x != c) sib.push_back(x);
+#endif
+                for (int i = 0; i < warm_threads; ++i) {
+                    wm_th.emplace_back([this] { warm_loop(); });
+                    if (!sib.empty()) os::pin_thread(wm_th.back(), sib[(size_t) i % sib.size()]);
+                }
+            }
         }
         if (o.expert_cache) {
             size_t maxb = 0;
@@ -6674,12 +6718,45 @@ struct Model::Impl {
             b.clear();
         }
     }
+    // the warm workers: the guesses' RAM-resident experts swept toward the L3 ahead of their layer (the lane's
+    // just-in-time pass then reads at cache speed; a DDR5 pass of 8.85 MB an expert, taken at the moment the
+    // answer was due, was the wait_seq deficit).  Newest ranges first; a guess whose layer has passed is dead
+    // weight, so the queue is trimmed hard.  Off the lane's own threads: a sweep is pure load issue.
+    void warm_loop() {
+        std::vector<std::pair<const void*, size_t>> b;
+        for (;;) {
+            {
+                std::unique_lock<std::mutex> lk(wm_mu);
+                wm_cv.wait(lk, [&] { return quit.load(std::memory_order_relaxed) || !wm_q.empty(); });
+                if (quit.load(std::memory_order_relaxed)) return;
+                const size_t n = std::min<size_t>(wm_q.size(), 12);
+                b.assign(wm_q.end() - n, wm_q.end());
+                wm_q.erase(wm_q.end() - n, wm_q.end());
+                if (wm_q.size() > 96) wm_q.erase(wm_q.begin(), wm_q.end() - 96);
+            }
+            for (const auto& rg : b) {
+                const char* p = (const char*) rg.first;
+                const size_t bytes = rg.second;
+#if defined(__x86_64__) || defined(_M_X64)
+                for (size_t i = 0; i + 64 <= bytes; i += 64) _mm_prefetch(p + i, _MM_HINT_T0);
+#else
+                volatile uint64_t sink = 0;
+                const uint64_t* w = (const uint64_t*) p;
+                for (size_t i = 0; i + 64 <= bytes; i += 64) sink += w[i / 8];
+                (void) sink;
+#endif
+                st.warm_bytes += (int64_t) bytes;
+            }
+            b.clear();
+        }
+    }
     // an expert the CPU lane reads from the files (neither in VRAM nor in the RAM tier)
     static bool file_read(const Layer& l, int e) {
         return l.slot[(size_t) e] < 0 && (l.ram.empty() || l.ram[(size_t) e] < 0);
     }
     // the layer whose picks layer l0 guesses a layers ahead (1, 2): the next ones of its stack on its device, MXFP4
-    // experts read in place, some of them from the files now (none: nothing to read early - null)
+    // experts read in place, some of them off the GPU now (a file's pages read in early, a RAM copy's warmed toward
+    // the cache - nothing off the GPU: nothing to prepare, null)
     const Layer* ahead_layer(const Layer& l0, int a) const {
         const int j = l0.il + a, end = l0.mtp ? g.nl + g.n_mtp : g.nl;
         if (j >= end || j >= (int) L.size()) return nullptr;
@@ -6688,14 +6765,15 @@ struct Model::Impl {
             (int) n.slot.size() < n.n_exp)
             return nullptr;
         for (int e = 0; e < n.n_exp; ++e)
-            if (file_read(n, e)) return &n;
+            if (file_read(n, e) || (warm_on && n.slot[(size_t) e] < 0)) return &n;   // (a RAM tier to warm counts only with the sweep armed)
         return nullptr;
     }
     // lookahead on the CPU lane: request r (layer li, seq) carries the device's guesses for the next layers - the
     // guessed experts read from the files asked for now (each once a window), the guesses kept for the hit counts
-    std::vector<std::pair<const void*, size_t>> pf_want;
+    std::vector<std::pair<const void*, size_t>> pf_want, wm_want;
     void ahead_ask(int li, const Req& r, unsigned seq, int T) {
         pf_want.clear();
+        wm_want.clear();
         for (int a = 1; a <= 2; ++a) {
             const int m = std::min(r.na[a - 1], a == 1 ? kAhead1 : kPicks), j = li + a;
             if (m <= 0 || j >= (int) L.size()) continue;
@@ -6713,20 +6791,38 @@ struct Model::Impl {
                     if (e < 0 || e >= n.n_exp || e >= (int) n.slot.size()) continue;
                     fl[e] |= a == 2 ? 4 : (i < n.k_exp ? 3 : 2);
                     if (a == 1 && (rk[e] == 0 || rk[e] > i + 1)) rk[e] = (uint8_t) (i + 1);
-                    if ((fl[e] & 8) || !file_read(n, e)) continue;
+                    if (fl[e] & 8) continue;
                     fl[e] |= 8;
-                    if (store) store->prefetch(j, e);
-                    else
-                        for (int q = 0; q < 3; ++q) pf_want.push_back({mx_mat(n, e, q), mx_part_bytes(n, q)});
-                    ++st.ahead_pf;
+                    if (file_read(n, e)) {
+                        if (store) store->prefetch(j, e);
+                        else
+                            for (int q = 0; q < 3; ++q) pf_want.push_back({mx_mat(n, e, q), mx_part_bytes(n, q)});
+                        ++st.ahead_pf;
+                    } else if (warm_on && T == 1 && a == 1 && n.slot[(size_t) e] < 0 && !n.ram.empty() &&
+                               n.ram[(size_t) e] >= 0) {
+                        // the next layer's guessed CPU-lane experts, RAM-resident: swept toward the L3 now so the
+                        // lane's pass reads them warm (decode windows only; the guesses' moment is one layer)
+                        for (int q = 0; q < 3; ++q)
+                            for (int X = 0; X < NH; ++X)
+                                wm_want.push_back({mx_part_ptr(n, e, q, X), (size_t) (mx_n(q) / NH) * mx_row_b(n, q)});
+                        ++st.ahead_warm;
+                    }
                 }
         }
-        if (pf_want.empty()) return;
-        {
-            std::lock_guard<std::mutex> lk(pf_mu);
-            pf_q.insert(pf_q.end(), pf_want.begin(), pf_want.end());
+        if (!pf_want.empty()) {
+            {
+                std::lock_guard<std::mutex> lk(pf_mu);
+                pf_q.insert(pf_q.end(), pf_want.begin(), pf_want.end());
+            }
+            pf_cv.notify_one();
         }
-        pf_cv.notify_one();
+        if (!wm_want.empty()) {
+            {
+                std::lock_guard<std::mutex> lk(wm_mu);
+                wm_q.insert(wm_q.end(), wm_want.begin(), wm_want.end());
+            }
+            wm_cv.notify_one();
+        }
     }
 
     // the decode path's host side: each published routing in turn - its CPU lane experts (if any) into the answer's
