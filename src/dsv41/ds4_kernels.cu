@@ -500,6 +500,30 @@ __global__ void __launch_bounds__(kThreads) gemv_f32_kernel(const float* __restr
     if (lane == 0) y[(size_t) t * ldy + row] = acc;
 }
 
+// ---------------------------------------------------------------- gemv over BF16 weights, a warp a row (the
+// router's gate: the GGUF stores it BF16; the F32 path promoted a copy at load and read double the bytes for the
+// same values.  bf16->f32 is exact, and every lane accumulates the f32 kernel's own elements in its own order,
+// so the sums are bit-identical)
+__global__ void __launch_bounds__(kThreads) gemv_bf16_kernel(const uint16_t* __restrict__ W, const float* __restrict__ x,
+                                                             int n, int k, float* __restrict__ y, int ldy) {
+    const int row = blockIdx.x * (kThreads / 32) + (threadIdx.x >> 5);
+    const int lane = threadIdx.x & 31, t = blockIdx.y;
+    if (row >= n) return;
+    const uint2* w = (const uint2*) (W + (size_t) row * k);   // 4 BF16 a fetch: the f32 kernel's float4's elements
+    const float4* xv = (const float4*) (x + (size_t) t * k);
+    float acc = 0.0f;
+    for (int c = lane; c < k / 4; c += 32) {
+        const uint2 q = w[c];
+        const float4 b = xv[c];
+        acc = fmaf(bf16f((uint16_t) (q.x & 0xffffu)), b.x, acc);
+        acc = fmaf(bf16f((uint16_t) (q.x >> 16)), b.y, acc);
+        acc = fmaf(bf16f((uint16_t) (q.y & 0xffffu)), b.z, acc);
+        acc = fmaf(bf16f((uint16_t) (q.y >> 16)), b.w, acc);
+    }
+    acc = warp_sum(acc);
+    if (lane == 0) y[(size_t) t * ldy + row] = acc;
+}
+
 // ---------------------------------------------------------------- the router
 __global__ void __launch_bounds__(512) route_kernel(const float* __restrict__ logits, const float* __restrict__ bias,
                                                     int n, int k, float route_scale, int* idx, float* w,
@@ -2203,6 +2227,10 @@ void gemv_f16_rows(const uint16_t* W, const float* x, size_t ldx, int n, int k, 
 
 void gemv_f32(const float* W, const float* x, int n, int k, int T, float* y, int ldy, cudaStream_t s) {
     if (T > 0) gemv_f32_kernel<<<dim3(cdiv(n, kThreads / 32), T), kThreads, 0, s>>>(W, x, n, k, y, ldy);
+}
+
+void gemv_bf16(const uint16_t* W, const float* x, int n, int k, int T, float* y, int ldy, cudaStream_t s) {
+    if (T > 0) gemv_bf16_kernel<<<dim3(cdiv(n, kThreads / 32), T), kThreads, 0, s>>>(W, x, n, k, y, ldy);
 }
 
 void route(const float* logits, const float* bias, int n, int k, int T, float route_scale, int* idx, float* w,
