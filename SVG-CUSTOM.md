@@ -11854,3 +11854,26 @@ Battery (same binary, same hour): 51.55/50.5/56.65 vs 50.15/49.3/54.9 = +2.8/+2.
 individually but mechanism-backed (157 MB/token less dense read, 157 MB VRAM freed ≈ 18 expert slots) and zero
 risk class; adopted default-on, `DS4_GATE_BF16=0` rolls back.  Tracker not stepped (sub-bar, low-drift box).
 Commit 1bc5d0a3; evidence campaign/results/t57-bf16-gate.txt.
+
+### F-374 — T58: the 350.8 explained (it was a 131K reading), the shadow normalized, +597 slots back at 262K (2026-10-29)
+
+**The question the operator asked:** conc read 350.8 on 10-27 and ~280-300 since — regression or box? **Neither: a config
+change plus a lost cache asset, and the bank was not comparable.**
+
+1. **The 350.8 bank was a 131K-context reading.** The engine log proves it: all 89 boots up to 2026-10-27 are
+   `--max-context 131072`; the first 262144 boot is 2026-10-28 00:50 (T50, 4c53e861). The same binary at 262K (the
+   F-368 gauntlet, 10-28 12:09) read conc 293.8-325.0, mean **305.5** over 8 legs — the config alone costs 10-15% on conc.
+2. **The F-367 tmpfs shadow store was silently lost.** `/dev/shm` is wiped on reboot and the launcher fell back to the
+   disk pack — the +3.5% conc / +5.5% M1 mechanism was off for every post-reboot reading. **Normalized per operator law:**
+   `campaign/shm-shadow.sh` gained a fast path (two `find`s when intact) and `launch-custom-iq3s-8081.sh` calls it before
+   exec, non-fatal by design (commit 08eab826).
+3. **The 262K tax, measured and paid back.** Slot sessions went 0.73 → 0.95 GiB each (5.69 GiB "the expert cache would
+   otherwise hold"), expert cache 10313 → 9956 slots. The 2000 MiB `--vram-reserve-mib` was pure headroom.
+   **Adopted `--vram-reserve-mib 1024`: 10553 slots (+597, +6.0%) at full 262K** (commit d8ebe9f7).
+
+Battery (prewarmed, same hour, 3 legs): 262K/2000 → M1 216.2, pair 206.2, conc 275.8; 262K/1024 → **M1 222.9, pair 199.3,
+conc 295.2** (best legs 233.4 / 301.4); 131K reference → 219.9 / 206.6 / 298.5.  Mechanism in the batch telemetry: VRAM
+routed entries 95.6 → 96.9%, CPU-lane 3.6 → 2.6%, PCIe 0.8 → 0.5%; window 15.65 → 13.56 ms at 4.97 rows.
+
+**The tracker line is re-based to the 262K era** (M1 222.9 / pair 199.3 / conc 295.2, commit 13b53a24); the 350.8 point
+stays in the ledger as a 131K reading and is not a like-for-like comparison.  Evidence: `campaign/results/t58-262k-recovery.txt`.
