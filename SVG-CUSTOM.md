@@ -11877,3 +11877,26 @@ routed entries 95.6 → 96.9%, CPU-lane 3.6 → 2.6%, PCIe 0.8 → 0.5%; window 
 
 **The tracker line is re-based to the 262K era** (M1 222.9 / pair 199.3 / conc 295.2, commit 13b53a24); the 350.8 point
 stays in the ledger as a 131K reading and is not a like-for-like comparison.  Evidence: `campaign/results/t58-262k-recovery.txt`.
+
+### F-375 — T59: the shadow store becomes architecture; DeepSeek has no shadow (measured); the reserve-stall correction (2026-10-29)
+
+**A. DS shadow — measured, and the answer is no.** `ds4_gg_bench` on real DS weights (16 threads, 1 GB) across the
+pack's own quant types: IQ1_M 44.8, IQ2_XXS 45.6, IQ3_XXS 47.1, IQ3_S 45.7 GB/s against a 48-50 GB/s plain read —
+the DS CPU lane runs at **93-96% of the box's DRAM ceiling on every type**. The pack is already mixed-quant by
+sensitivity (23,040 IQ1_M + 16,128 IQ2_XXS + 6,912 IQ2_XS, 1.75-2.31 bpw), so there is no lighter artifact to swap
+to (TQK5X/4X would need an encoder the tree does not have). No DS shadow, on evidence.
+
+**B. Architecture, per operator law.** `docs/SHADOW_STORE.md` states the contract: **artifact of record**
+`data/packs/q2_0` (full publishable pack, built by tools/iq_pack.py) vs **placement cache** `/dev/shm/...` (a
+byte-identical tmpfs copy — pure placement, no page faults, F-365's 2.6M/leg). The launcher resolves three tiers
+(tmpfs → canonical → none) and names the one it took; `setup.py` marks `IQ3_S` with `shadow_companion: Q2_0`.
+**Rollback bug fixed:** `${VAR:-default}` substituted on empty, so `STRATA_SHADOW_EXPERTS=""` re-armed the shadow;
+now `${VAR-default}`, verified both ways.
+
+**C. Clean A/B (262K, reserve 2000, prewarmed, 3 legs each, same hour):** shadow ON 207.4 / 198.4 / **294.1** vs
+OFF 201.6 / 191.1 / **243.5** = **+2.9 / +3.8 / +20.8%**. The conc lane is where the mechanism lives.
+
+**D. T58's reserve cut was wrong and is void.** 1024 MiB drove VRAM to 151-498 MiB free and produced a **hard stall**
+(0 tokens in 130.75 s; the engine's own #2065 warning). Restored to 2000: 0 warnings, 9958 slots. The 597-slot gain
+was never measurable (all arms 292-295 conc); the conc lever is the shadow's byte-bound CPU path, not slot count.
+Evidence: `campaign/results/t59-shadow-architecture.txt`.

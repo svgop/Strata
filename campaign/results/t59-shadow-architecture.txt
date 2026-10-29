@@ -1,0 +1,40 @@
+T59 - the shadow store as architecture + clean A/B + the reserve-stall correction (2026-10-29)
+
+A. DS SHADOW TEST (operator: "test the shadow for deepseek too")
+ds4_gg_bench on real DS weights, 16 threads, 1 GB, 4 quant types:
+  IQ1_M 44.8 GB/s | IQ2_XXS 45.6 | IQ3_XXS 47.1 | IQ3_S 45.7  (plain read 48.1-50.6)
+=> the DS CPU lane runs at 93-96% of the box's DRAM ceiling on EVERY type: byte-bound,
+   quant-invariant.  And the DS pack is ALREADY mixed-quant by sensitivity
+   (23,040 IQ1_M + 16,128 IQ2_XXS + 6,912 IQ2_XS = 1.75-2.31 bpw).  A shadow only pays
+   when the compute path is byte-bound on a HEAVIER format than a lighter one; on DS
+   there is no lighter artifact to swap to (TQK5X/4X need an encoder the tree lacks).
+VERDICT: no DS shadow.  Nothing to gain, measured rather than assumed.
+
+B. ARCHITECTURE (operator: "shouldn't it be in data/? should a new installer get it?")
+Artifact of record: /home/svg/LLM/data/packs/q2_0 - a full, publishable pack
+  (experts.bin 32 GB + experts.json + index.txt + manifest.json + tokenizer), same
+  form as any other pack.  Built by tools/iq_pack.py from the published Q2_0 shards.
+Placement cache: /dev/shm/strata-shadow-q2_0 - BYTE-IDENTICAL copy on tmpfs.  Not a
+  second artifact: RAM-resident pages, THP-eligible, never evicted (F-365: 2.6M minor
+  faults/leg on the page-cached copy).  Wiped by reboot; campaign/shm-shadow.sh rebuilds
+  it in 12 s; the launcher calls it on every start.
+Launcher: three-tier resolution (tmpfs -> canonical pack -> none), named at boot.
+setup.py: IQ3_S carries shadow_companion: Q2_0.
+Rollback bug FIXED: ${VAR:-default} substituted on EMPTY, so ="" silently re-armed the
+  shadow; now ${VAR-default} - explicit empty survives, verified both ways.
+
+C. CLEAN A/B (262K, reserve 2000, prewarmed, 3 legs each, same hour)
+  shadow ON : M1 207.4  pair 198.4  conc 294.1
+  shadow OFF: M1 201.6  pair 191.1  conc 243.5
+  delta     : +2.9%     +3.8%       +20.8%
+
+D. THE RESERVE CORRECTION (void of my own T58 claim)
+--vram-reserve-mib 1024 (T58) repeatedly drove VRAM to 151-498 MiB free and produced a
+HARD STALL: one conc leg returned 0 tokens in 130.75 s (the engine's own #2065 warning:
+"the driver can page GPU memory to system RAM ... a window may never finish").  Reserve
+restored to 2000: 0 warnings, 9958 slots, 3 clean legs.
+The 597-slot gain is NOT worth an intermittent stall, and was never measurable in the
+first place (all reserve arms read 292-295 conc).  The conc lever is the shadow's
+byte-bound CPU path, not slot count.  T58's "recovery" framing is superseded by C.
+
+Standing after this round: 262K, shadow ON, reserve 2000 - M1 ~207 / pair ~198 / conc ~294.
