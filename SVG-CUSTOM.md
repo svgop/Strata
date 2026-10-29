@@ -11840,3 +11840,17 @@ after it silently never run (cost one void battery; caught by checksum).  Use `p
 **The next meaningful jumps (named, none started):** DS shadow-quant for the CPU lane (2.00 → ~1.5 bpw, est +15-25%
 solo — the only lever on the wait); dsv41 multi-conversation windows (conc ≈ solo today); Qwen speculative publish
 (F-347's design); DS attention indexer fusion (est +4-8%).  Commits 0dacce9e, fb3b6b57.
+
+### F-373 — T57: the BF16 router gate (bit-identical, +2.8/+2.4/+3.2%), and the A/A lesson (2026-10-29)
+
+The pack stores `ffn.gate.weight` BF16; the engine promoted an F32 copy at load and read 7.86 MB/layer/token.
+Now kept verbatim and read by `gemv_bf16` (the f32 kernel's own lane→element mapping and accumulation order;
+bf16→f32 is exact).  **Bit-identity proven by the only sound instrument on this engine**: standalone kernel
+tests on synthetic data and on the pack's real gate tensors (layers 0/17/39), 0/384 rows differ throughout.
+The cautionary result: an **A/A control** (two identical boots, pinned profile, same prewarm) **diverges**
+(text similarities 0.36-0.84) — residency/tier races plus CPU-vs-GPU expert bit differences make dsv41 outputs
+state-dependent by design, so text A/B can never isolate a change; chain-level tests must carry the proof.
+Battery (same binary, same hour): 51.55/50.5/56.65 vs 50.15/49.3/54.9 = +2.8/+2.4/+3.2% — inside the +4% band
+individually but mechanism-backed (157 MB/token less dense read, 157 MB VRAM freed ≈ 18 expert slots) and zero
+risk class; adopted default-on, `DS4_GATE_BF16=0` rolls back.  Tracker not stepped (sub-bar, low-drift box).
+Commit 1bc5d0a3; evidence campaign/results/t57-bf16-gate.txt.

@@ -1,0 +1,21 @@
+T57 BF16 router gate (2026-10-29 evening) - adopted, bit-identical proven
+
+Mechanism: pack stores ffn.gate.weight BF16; engine promoted F32 copy at load,
+read 7.86 MB/layer/token via gemv_f32. Change: verbatim BF16 keep + gemv_bf16
+(same lane->element mapping and accumulation order as gemv_f32; bf16->f32 exact).
+
+Bit-identity proof (the only sound instrument on this engine):
+- synthetic kernel test: 0/384 rows differ
+- real pack tensors layers 0/17/39: 0/384 rows differ each
+- A/A control (identical boots, pinned profile, same prewarm): DIVERGES
+  (similarities 0.362/0.839/0.411/0.757) - the engine's outputs are
+  residency/tier-state-dependent by design; text A/B cannot isolate a change.
+
+Battery (same binary, control DS4_GATE_BF16=0 vs arm, same hour, legs 1-2):
+control: M1 49.4/50.9  pair 48.7/49.9  conc 55.2/54.6  (means 50.15/49.3/54.9)
+arm:     M1 51.2/51.9  pair 49.1/51.9  conc 56.1/57.2  (means 51.55/50.5/56.65)
+delta:   +2.8% M1  +2.4% pair  +3.2% conc (inside +4% band individually;
+mechanism-backed: 157 MB/token less dense read + 157 MB VRAM freed)
+DS4_PROF: routing+shared 2.6 -> 2.53-2.56 ms/token.
+Tracker NOT stepped (sub-bar on a low-drift box day; 52.3/51.6/57.5 stands).
+Rollback: DS4_GATE_BF16=0.
