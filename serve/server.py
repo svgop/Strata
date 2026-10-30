@@ -4957,11 +4957,13 @@ class Service:
             budget = max_new - min(max(ANSWER_RESERVE_MIN, max_new // 4), max_new // 2)
             if max_new <= 32768: print(f"[strata] thinking limited to {budget} of max_tokens {max_new} so the answer has room "
                   "(\"answer_room\": false in the config turns this off)", flush=True)
-        if (thinking and not budget and self.answer_room and self.family == "deepseek41"
-                and max_new and DS41_SMALL_CAP_MIN <= max_new < ANSWER_ROOM_MIN_CAP):
-            # DeepSeek-V4.1 only: a short max_tokens (200-600) was spent entirely on the thinking, so no text block
-            # ever arrived.  With no budget of the client's own, the thinking is capped at half of max_tokens; then
-            # the wrap-up, </think> and the answer follow in the other half.  (F-371.)
+        if (thinking and not budget and self.answer_room
+                and max_new and SMALL_CAP_MIN <= max_new < ANSWER_ROOM_MIN_CAP):
+            # F-371 generalised (T60): a short max_tokens (200-600) was spent entirely on the thinking, so no text
+            # block ever arrived - first seen on DeepSeek-V4.1, then measured on the Qwen lane too (F-376: a
+            # 220-token probe returned content=null, finish_reason=length).  With no budget of the client's own,
+            # the thinking is capped at half of max_tokens; then the wrap-up, </think> and the answer follow in the
+            # other half.
             budget = max_new // 2
             print(f"[strata] thinking limited to {budget} of max_tokens {max_new} so the answer has room "
                   "(\"answer_room\": false in the config turns this off)", flush=True)
@@ -7872,7 +7874,10 @@ def check_request_sampling(req) -> None:
 DS41_DEFAULT_BUDGET = 32768   # DeepSeek-V4.1 only: the thinking budget when neither the request nor the config names one
 DS41_SLOT_KEEP_DEFAULT = "1"  # the engine keeps a displaced conversation in RAM and in the slot folder (see below)
 DS41_SLOT_GB_DEFAULT = "2"    # the folder's cap in GB (a 6.5K-token conversation is about 17 MB)
-DS41_SMALL_CAP_MIN = 48       # DeepSeek-V4.1 only: from this max_tokens up to ANSWER_ROOM_MIN_CAP, thinking is capped at half of it
+SMALL_CAP_MIN = 48            # T60: from this max_tokens up to ANSWER_ROOM_MIN_CAP, thinking is capped at
+                              # half of it so the wrap-up and an answer fit (was DS41_SMALL_CAP_MIN, F-371;
+                              # generalised to every family after the Qwen empty-answer measurement, F-376)
+DS41_SMALL_CAP_MIN = SMALL_CAP_MIN   # (the old name, kept for anything that still reads it)
 FAMILY_MODEL_NAMES = {"qwen4exp": "qwen3.8-flash-next", "qwen35moe": "qwen3.6-35b-a3b",
                       "deepseek41": "deepseek-v4.1-flash"}
 
