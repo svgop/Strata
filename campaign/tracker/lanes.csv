@@ -53,8 +53,8 @@ qwen,2026-10-29,5c46e95b,T59 262K shadow-on reserve-2000 standing (shadow A/B: +
 qwen,2026-10-29,5c46e95b,T59 262K shadow-on reserve-2000 standing (shadow A/B: +20.8% conc),pair,198.4,0,standing
 qwen,2026-10-29,5c46e95b,T59 262K shadow-on reserve-2000 standing (shadow A/B: +20.8% conc),conc,294.1,0,standing
 deepseek,2026-10-30,b23b7472,T61 same-hour baseline 3-leg (old binary; parity on new binary in-band 50.1/50.3/55.9),solo,51.5,0,mean
-deepseek,2026-10-30,b23b7472,T61 same-hour baseline 3-leg,pair,49.3,0,mean
-deepseek,2026-10-30,b23b7472,T61 same-hour baseline 3-leg,conc,56.2,0,mean
-deepseek,2026-10-30,b23b7472,T61-4e --experts 4 battery 2-leg 59.3/59.3 solo (every leg above every baseline leg; CPU lane 7.0-8.7 -> 4.96-5.92 ms; MMLU 4e 90.0 vs 5e 88.57 clean),solo,59.3,0,standing
-deepseek,2026-10-30,b23b7472,T61-4e --experts 4 ADOPTED standing (the T51 class: lane bytes -20%, quality gate clean),pair,57.9,0,standing
-deepseek,2026-10-30,b23b7472,T61-4e --experts 4 ADOPTED standing,conc,65.3,0,standing
+deepseek,2026-10-30,b23b7472,T61 same-hour baseline 3-leg (old binary; parity on new binary in-band 50.1/50.3/55.9),pair,49.3,0,mean
+deepseek,2026-10-30,b23b7472,T61 same-hour baseline 3-leg (old binary; parity on new binary in-band 50.1/50.3/55.9),conc,56.2,0,mean
+deepseek,2026-10-30,b23b7472,T61-4e --experts 4 ADOPTED standing (battery 59.3/57.9/65.3 = +15.1/+17.4/+16.1 vs 51.5/49.3/56.2; every leg above every baseline leg; CPU lane 7.0-8.7 -> 4.96-5.92 ms; MMLU 4e 90.0 vs 5e 88.57 clean),solo,59.3,0,standing
+deepseek,2026-10-30,b23b7472,T61-4e --experts 4 ADOPTED standing (battery 59.3/57.9/65.3 = +15.1/+17.4/+16.1 vs 51.5/49.3/56.2; every leg above every baseline leg; CPU lane 7.0-8.7 -> 4.96-5.92 ms; MMLU 4e 90.0 vs 5e 88.57 clean),pair,57.9,0,standing
+deepseek,2026-10-30,b23b7472,T61-4e --experts 4 ADOPTED standing (battery 59.3/57.9/65.3 = +15.1/+17.4/+16.1 vs 51.5/49.3/56.2; every leg above every baseline leg; CPU lane 7.0-8.7 -> 4.96-5.92 ms; MMLU 4e 90.0 vs 5e 88.57 clean),conc,65.3,0,standing

@@ -1,6 +1,6 @@
 {
  "type": "strata-lane-trend",
- "updated": "2026-10-29",
+ "updated": "2026-10-30",
  "unit": "tok/s",
  "engines": {
   "qwen": {
@@ -278,6 +278,32 @@
      "solo": 52.3,
      "pair": 51.6,
      "conc": 57.5,
+     "kinds": {
+      "solo": "standing",
+      "pair": "standing",
+      "conc": "standing"
+     }
+    },
+    {
+     "date": "2026-10-30",
+     "commit": "b23b7472",
+     "label": "T61 same-hour baseline 3-leg (old binary; parity on new binary in-band 50.1/50.3/55.9)",
+     "solo": 51.5,
+     "pair": 49.3,
+     "conc": 56.2,
+     "kinds": {
+      "solo": "mean",
+      "pair": "mean",
+      "conc": "mean"
+     }
+    },
+    {
+     "date": "2026-10-30",
+     "commit": "b23b7472",
+     "label": "T61-4e --experts 4 ADOPTED standing (battery 59.3/57.9/65.3 = +15.1/+17.4/+16.1 vs 51.5/49.3/56.2; every leg above every baseline leg; CPU lane 7.0-8.7 -> 4.96-5.92 ms; MMLU 4e 90.0 vs 5e 88.57 clean)",
+     "solo": 59.3,
+     "pair": 57.9,
+     "conc": 65.3,
      "kinds": {
       "solo": "standing",
       "pair": "standing",
