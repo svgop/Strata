@@ -200,8 +200,10 @@ bool round(strata::ds4::Model& m, int tok, int room, bool spec, float conf_min, 
             return true;
         }
     }
-    if (!m.step(tok, true, err)) return false;
-    out.push_back(m.sample(temperature, top_p, top_k, min_p, seed, counter++));
+    int nxt = -1;   // D1: with DS4_ONE_DRAIN the sampler rides the step's one drain (the same token, one sync fewer)
+    if (!m.step_sample(tok, temperature, top_p, top_k, min_p, seed, counter, nxt, err)) return false;
+    ++counter;
+    out.push_back(nxt);
     return true;
 }
 
@@ -934,10 +936,12 @@ int serve(strata::ds4::Model& m, const std::string& eos_list, bool spec, float c
             const double fed = (double) std::max<int64_t>(1, s.tokens - s_dec.tokens);
             const double nv = (double) std::max<int64_t>(1, s.drafts_rounds - s_dec.drafts_rounds);
             std::fprintf(stderr,
-                         "maya ds4 decode: per token layers %.2f ms (routing waits %.2f, CPU lane %.2f), head %.2f, "
+                         "maya ds4 decode: per token layers %.2f ms (routing waits %.2f, CPU lane %.2f), head %.2f "
+                         "(gpu %.2f), "
                          "Engram %.2f; drafts %.2f ms a round over %.0f rounds; warm %lld asked, %.1f MB swept\n",
                          (s.layer_ms - s_dec.layer_ms) / fed, (s.gpu_wait_ms - s_dec.gpu_wait_ms) / fed,
                          (s.cpu_ms - s_dec.cpu_ms) / fed, (s.head_ms - s_dec.head_ms) / fed,
+                         (s.head_true_ms - s_dec.head_true_ms) / fed,
                          (s.engram_ms - s_dec.engram_ms) / fed, (s.draft_ms - s_dec.draft_ms) / nv, nv,
                          (long long) (s.ahead_warm - s_dec.ahead_warm),
                          (double) (s.warm_bytes - s_dec.warm_bytes) / 1e6 / fed);

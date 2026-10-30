@@ -74,6 +74,8 @@ struct Stats {
     int64_t experts = 0, cpu_experts = 0;   // routed experts run, and how many of them on the CPU lane
     double cpu_ms = 0.0, gpu_wait_ms = 0.0;   // the CPU lane's time; the host's waits for the routing
     double layer_ms = 0.0, head_ms = 0.0, engram_ms = 0.0;   // the layers' host time in all; the head's wait; Engram reads
+    double head_true_ms = 0.0;   // D9: the head's GPU time (event-bracketed norm+GEMV) - head_ms above absorbs the
+                                 // async lane waits on the default path, so the two split the drain honestly
     int64_t eg_rows = 0, eg_hits = 0, eg_reads = 0;   // Engram rows asked for, served without a read, read from the files
     double eg_io_ms = 0.0;                            // the windows' Engram reads, issue to last done (mostly hidden)
     int64_t eg_cached = 0, eg_cache_cap = 0;          // the row cache's rows held, its capacity
@@ -119,6 +121,10 @@ public:
     bool feed_mark(const int* tokens, int n, int logits_rows, int slot, std::string& err);
     /// The next token from the last feed's last logit row (greedy when temperature <= 0).
     int sample(float temperature, float top_p, int top_k, float min_p, uint64_t seed, uint64_t counter);
+    /// step() + sample() fused (D1, DS4_ONE_DRAIN): the sampler is staged ahead of the round's one stream drain,
+    /// so a decode token costs one host sync instead of two.  Falls back to step()+sample() when the arm is off.
+    bool step_sample(int token, float temperature, float top_p, int top_k, float min_p, uint64_t seed,
+                     uint64_t counter, int& out, std::string& err);
     /// The last feed's logit rows on the host (rows x vocab floats).
     bool logits(std::vector<float>& out);
 

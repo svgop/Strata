@@ -200,11 +200,17 @@ private:
             }
             const auto t0 = std::chrono::steady_clock::now();
             const uint64_t lead = j.off % os::kDirectAlign;
+            // D3 (ROADMAP-dsv41): DS4_STORE_BUFFERED=1 skips O_DIRECT, so misses read through the page cache - on a
+            // box whose cache holds the pack's shards (prewarm-ds4.sh warms them), the SSD leaves the answer path.
+            static const int prefer_buffered = [] {
+                const char* e = std::getenv("DS4_STORE_BUFFERED");
+                return e != nullptr ? std::atoi(e) : 0;
+            }();
             bool ok = false;
             if (j.mem != nullptr) {
                 std::memcpy(j.dst, j.mem, (size_t) j.len);
                 ok = true;
-            } else if (j.dfd != os::kBadFd && !(j.map != nullptr && os::resident(j.map, (size_t) j.len)) &&
+            } else if (prefer_buffered == 0 && j.dfd != os::kBadFd && !(j.map != nullptr && os::resident(j.map, (size_t) j.len)) &&
                        os::pread_direct(j.dfd, j.dst, j.len, j.off)) {   // (the page cache's ones: buffered, below)
                 ok = true;
                 direct_.fetch_add(j.len, std::memory_order_relaxed);

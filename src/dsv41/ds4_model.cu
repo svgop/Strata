@@ -1023,6 +1023,11 @@ struct Model::Impl {
     std::atomic<bool> quit{false};
     std::thread store_bg;   // the RAM store's fill beyond the first 48 GB, read after the model is ready (preload_store)
     bool sync_decode = std::getenv("DS4_SYNC") != nullptr;
+    // D1 (ROADMAP-dsv41): the sampler rides the round's one drain instead of paying a second stream sync per token
+    bool one_drain_ = std::getenv("DS4_ONE_DRAIN") != nullptr;
+    int staged_tok_ = -1;             // the staged sampler's answer, valid after the forward drain when staged_tok_ok_
+    bool staged_tok_ok_ = false;
+    cudaEvent_t ev_head_a_ = nullptr, ev_head_b_ = nullptr;   // D9: bracket the head's GPU work on the head stream
     // a window of one through moe_gate_up / moe_down (DS4_MOE_TOKEN=0: win_experts, whose down rows run
     // before the wait for the CPU lane - the same bits, no faster)
     bool moe_token_path = std::getenv("DS4_MOE_TOKEN") == nullptr || std::atoi(std::getenv("DS4_MOE_TOKEN")) != 0;
@@ -7446,6 +7451,32 @@ struct Model::Impl {
     // ---- a window: T tokens at positions pos .. pos + T - 1 through every layer; the logits of its last `logits` rows
     bool step(int token, bool want_logits, std::string& err) { return forward(&token, 1, want_logits ? 1 : 0, err); }
 
+    // D1: step + sample in one drain.  The staged sampler launches stream-ordered behind the head GEMV (identical
+    // order to the old sample() call), so the token it returns is the old path's, minus the second sync.
+    bool step_sample(int token, float temperature, float top_p, int top_k, float min_p, uint64_t seed,
+                     uint64_t counter, int& out, std::string& err) {
+        if (!one_drain_) {
+            if (!step(token, true, err)) return false;
+            out = sample(temperature, top_p, top_k, min_p, seed, counter);
+            return true;
+        }
+        strata::dsv41k::SamplerParams sp;
+        sp.temperature = temperature;
+        sp.greedy = temperature <= 0.0f;
+        sp.top_p = top_p;
+        sp.top_k = top_k;
+        sp.min_p = min_p;
+        sp.seed = seed;
+        sp.counter = counter;
+        if (!forward(&token, 1, 1, err, -1, &sp)) return false;
+        if (!staged_tok_ok_) {   // (no logits row this round: the old path still answers)
+            out = sample(temperature, top_p, top_k, min_p, seed, counter);
+            return true;
+        }
+        out = staged_tok_;
+        return true;
+    }
+
 
     // layer L0 for a chunk of T tokens at p0 as group member mi: layer()'s arithmetic over the chunk's rows (the
     // projections as GEMMs, the attention and the indexer in slabs, the routed experts as sorted rows: the VRAM ones in
@@ -8989,8 +9020,15 @@ struct Model::Impl {
         const int D = g.dim, H = g.hc;
         if (n_logits <= 0) return true;
         const int t0 = T - n_logits;
+        if (ev_head_a_ == nullptr) {   // D9: lazy once; re-recorded per call, read after the forward drain
+            CK(cudaEventCreate(&ev_head_a_));
+            CK(cudaEventCreate(&ev_head_b_));
+        }
+        CK(cudaEventRecord(ev_head_a_, d.st));
         hc_pre_norm(d.h + (size_t) t0 * H * D, d.pre + (size_t) t0 * 8, d.norm_w, D, H, n_logits, g.eps, d.x, d.st);
-        return head_share(d, d.mi, d.x, n_logits, err);
+        if (!head_share(d, d.mi, d.x, n_logits, err)) return false;
+        CK(cudaEventRecord(ev_head_b_, d.st));
+        return true;
     }
 
     // the DSpark drafter's taps: the streams' mean entering target layer il, on device d (after the last seeding read
@@ -9008,7 +9046,9 @@ struct Model::Impl {
         return true;
     }
 
-    bool forward(const int* tk, int T, int logits_rows, std::string& err, int seed_rows = -1) {
+    bool forward(const int* tk, int T, int logits_rows, std::string& err, int seed_rows = -1,
+                 const strata::dsv41k::SamplerParams* stage_sp = nullptr) {
+        staged_tok_ok_ = false;
         if (T < 1 || T > kWin) {
             err = "a window of " + std::to_string(T) + " tokens";
             return false;
@@ -9055,9 +9095,19 @@ struct Model::Impl {
         eg_stats();
         Dev& d = devs[(size_t) head_dev];
         cudaSetDevice(d.id);
+        if (stage_sp != nullptr && n_logits >= 1) {   // D1: the sampler + its 4B answer ride this one drain
+            strata::dsv41k::sample_tokens(d.logits + (size_t) std::max(0, n_logits - 1) * g.vocab, 1, g.vocab,
+                                          nullptr, 0, *stage_sp, d.tok, d.st);
+            CK(cudaMemcpyAsync(&staged_tok_, d.tok, 4, cudaMemcpyDeviceToHost, d.st));
+            staged_tok_ok_ = true;
+        }
         const double th = now_ms();
         CK(cudaStreamSynchronize(d.st));
         st.head_ms += now_ms() - th;
+        if (ev_head_b_ != nullptr) {   // D9: the head's GPU segment, read after the drain (no extra sync)
+            float hms = 0.0f;
+            if (cudaEventElapsedTime(&hms, ev_head_a_, ev_head_b_) == cudaSuccess) st.head_true_ms += hms;
+        }
         prof_collect();
         pos += T;
         st.tokens += T;
@@ -9792,6 +9842,10 @@ Model::Model() : p_(new Impl) {}
 Model::~Model() = default;
 bool Model::load(const Options& o, std::string& err) { return p_->load(o, err); }
 bool Model::step(int token, bool logits, std::string& err) { return p_->step(token, logits, err); }
+bool Model::step_sample(int token, float t, float tp, int tk, float mp, uint64_t seed, uint64_t counter, int& out,
+                        std::string& err) {
+    return p_->step_sample(token, t, tp, tk, mp, seed, counter, out, err);
+}
 bool Model::feed(const int* tokens, int n, int logits_rows, std::string& err) {
     Impl& p = *p_;
     p.pm.last = -1;

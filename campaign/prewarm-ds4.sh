@@ -10,8 +10,12 @@ KEY="3f0940df8efb9c363e4189956ae907d3e4acac221aab39f44804fe0b0df1b8"
 PORT="${PORT:-8081}"
 T0=$(date +%s)
 
+# NOTE 2026-10-30: the old second glob (deepseek-v4.1-flash-ist-das-2.00bpw*.gguf) matched NOTHING -
+# the pack manifest (tensors.txt) names the GSQ-RCO-IQ2_XXS shards in data/models, so the store's
+# actual read source was never warmed. Warm exactly what tensors.txt references.
 for f in /home/svg/LLM/data/packs/deepseek-v4.1-flash-ist-das-2.00bpw/* \
-         /home/svg/LLM/data/models/deepseek-v4.1-flash-ist-das-2.00bpw*.gguf \
+         /home/svg/LLM/data/models/DeepSeek-V4.1-Flash-1017-GSQ-RCO-IQ2_XXS-0000*-of-00004.gguf \
+         /home/svg/LLM/data/models/DeepSeek-V4.1-Flash-Engram-IQ4_NL.gguf \
          /home/svg/LLM/data/models/deepseek-v4.1-flash-shared/*; do
   [ -f "$f" ] || continue
   dd if="$f" of=/dev/null bs=8M status=none 2>/dev/null || true
