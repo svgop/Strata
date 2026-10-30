@@ -1,0 +1,445 @@
+{
+ "label": "t61-5e",
+ "floor": 0.7,
+ "suite": "MMLU-Pro validation (70q)",
+ "score_pct": 88.57142857142857,
+ "sigma_pts": 3.8027150037068145,
+ "by_cat": {
+  "math": "5/5",
+  "health": "4/5",
+  "physics": "5/5",
+  "business": "4/5",
+  "biology": "4/5",
+  "chemistry": "5/5",
+  "computer science": "4/5",
+  "economics": "5/5",
+  "engineering": "5/5",
+  "philosophy": "5/5",
+  "other": "4/5",
+  "history": "4/5",
+  "psychology": "4/5",
+  "law": "4/5"
+ },
+ "rows": [
+  {
+   "cat": "math",
+   "ok": true,
+   "pred": "A",
+   "gold": "A"
+  },
+  {
+   "cat": "math",
+   "ok": true,
+   "pred": "H",
+   "gold": "H"
+  },
+  {
+   "cat": "math",
+   "ok": true,
+   "pred": "E",
+   "gold": "E"
+  },
+  {
+   "cat": "math",
+   "ok": true,
+   "pred": "I",
+   "gold": "I"
+  },
+  {
+   "cat": "math",
+   "ok": true,
+   "pred": "B",
+   "gold": "B"
+  },
+  {
+   "cat": "health",
+   "ok": true,
+   "pred": "J",
+   "gold": "J"
+  },
+  {
+   "cat": "health",
+   "ok": true,
+   "pred": "G",
+   "gold": "G"
+  },
+  {
+   "cat": "health",
+   "ok": true,
+   "pred": "F",
+   "gold": "F"
+  },
+  {
+   "cat": "health",
+   "ok": false,
+   "pred": "I",
+   "gold": "F"
+  },
+  {
+   "cat": "health",
+   "ok": true,
+   "pred": "D",
+   "gold": "D"
+  },
+  {
+   "cat": "physics",
+   "ok": true,
+   "pred": "E",
+   "gold": "E"
+  },
+  {
+   "cat": "physics",
+   "ok": true,
+   "pred": "A",
+   "gold": "A"
+  },
+  {
+   "cat": "physics",
+   "ok": true,
+   "pred": "H",
+   "gold": "H"
+  },
+  {
+   "cat": "physics",
+   "ok": true,
+   "pred": "E",
+   "gold": "E"
+  },
+  {
+   "cat": "physics",
+   "ok": true,
+   "pred": "A",
+   "gold": "A"
+  },
+  {
+   "cat": "business",
+   "ok": true,
+   "pred": "F",
+   "gold": "F"
+  },
+  {
+   "cat": "business",
+   "ok": true,
+   "pred": "D",
+   "gold": "D"
+  },
+  {
+   "cat": "business",
+   "ok": true,
+   "pred": "A",
+   "gold": "A"
+  },
+  {
+   "cat": "business",
+   "ok": false,
+   "pred": "F",
+   "gold": "G"
+  },
+  {
+   "cat": "business",
+   "ok": true,
+   "pred": "H",
+   "gold": "H"
+  },
+  {
+   "cat": "biology",
+   "ok": true,
+   "pred": "B",
+   "gold": "B"
+  },
+  {
+   "cat": "biology",
+   "ok": false,
+   "pred": "F",
+   "gold": "D"
+  },
+  {
+   "cat": "biology",
+   "ok": true,
+   "pred": "D",
+   "gold": "D"
+  },
+  {
+   "cat": "biology",
+   "ok": true,
+   "pred": "A",
+   "gold": "A"
+  },
+  {
+   "cat": "biology",
+   "ok": true,
+   "pred": "H",
+   "gold": "H"
+  },
+  {
+   "cat": "chemistry",
+   "ok": true,
+   "pred": "B",
+   "gold": "B"
+  },
+  {
+   "cat": "chemistry",
+   "ok": true,
+   "pred": "J",
+   "gold": "J"
+  },
+  {
+   "cat": "chemistry",
+   "ok": true,
+   "pred": "E",
+   "gold": "E"
+  },
+  {
+   "cat": "chemistry",
+   "ok": true,
+   "pred": "A",
+   "gold": "A"
+  },
+  {
+   "cat": "chemistry",
+   "ok": true,
+   "pred": "J",
+   "gold": "J"
+  },
+  {
+   "cat": "computer science",
+   "ok": false,
+   "pred": "G",
+   "gold": "B"
+  },
+  {
+   "cat": "computer science",
+   "ok": true,
+   "pred": "I",
+   "gold": "I"
+  },
+  {
+   "cat": "computer science",
+   "ok": true,
+   "pred": "C",
+   "gold": "C"
+  },
+  {
+   "cat": "computer science",
+   "ok": true,
+   "pred": "I",
+   "gold": "I"
+  },
+  {
+   "cat": "computer science",
+   "ok": true,
+   "pred": "A",
+   "gold": "A"
+  },
+  {
+   "cat": "economics",
+   "ok": true,
+   "pred": "F",
+   "gold": "F"
+  },
+  {
+   "cat": "economics",
+   "ok": true,
+   "pred": "H",
+   "gold": "H"
+  },
+  {
+   "cat": "economics",
+   "ok": true,
+   "pred": "C",
+   "gold": "C"
+  },
+  {
+   "cat": "economics",
+   "ok": true,
+   "pred": "G",
+   "gold": "G"
+  },
+  {
+   "cat": "economics",
+   "ok": true,
+   "pred": "F",
+   "gold": "F"
+  },
+  {
+   "cat": "engineering",
+   "ok": true,
+   "pred": "C",
+   "gold": "C"
+  },
+  {
+   "cat": "engineering",
+   "ok": true,
+   "pred": "A",
+   "gold": "A"
+  },
+  {
+   "cat": "engineering",
+   "ok": true,
+   "pred": "C",
+   "gold": "C"
+  },
+  {
+   "cat": "engineering",
+   "ok": true,
+   "pred": "I",
+   "gold": "I"
+  },
+  {
+   "cat": "engineering",
+   "ok": true,
+   "pred": "A",
+   "gold": "A"
+  },
+  {
+   "cat": "philosophy",
+   "ok": true,
+   "pred": "B",
+   "gold": "B"
+  },
+  {
+   "cat": "philosophy",
+   "ok": true,
+   "pred": "J",
+   "gold": "J"
+  },
+  {
+   "cat": "philosophy",
+   "ok": true,
+   "pred": "B",
+   "gold": "B"
+  },
+  {
+   "cat": "philosophy",
+   "ok": true,
+   "pred": "I",
+   "gold": "I"
+  },
+  {
+   "cat": "philosophy",
+   "ok": true,
+   "pred": "D",
+   "gold": "D"
+  },
+  {
+   "cat": "other",
+   "ok": false,
+   "pred": "G",
+   "gold": "E"
+  },
+  {
+   "cat": "other",
+   "ok": true,
+   "pred": "B",
+   "gold": "B"
+  },
+  {
+   "cat": "other",
+   "ok": true,
+   "pred": "B",
+   "gold": "B"
+  },
+  {
+   "cat": "other",
+   "ok": true,
+   "pred": "J",
+   "gold": "J"
+  },
+  {
+   "cat": "other",
+   "ok": true,
+   "pred": "J",
+   "gold": "J"
+  },
+  {
+   "cat": "history",
+   "ok": true,
+   "pred": "A",
+   "gold": "A"
+  },
+  {
+   "cat": "history",
+   "ok": true,
+   "pred": "C",
+   "gold": "C"
+  },
+  {
+   "cat": "history",
+   "ok": false,
+   "pred": "D",
+   "gold": "E"
+  },
+  {
+   "cat": "history",
+   "ok": true,
+   "pred": "E",
+   "gold": "E"
+  },
+  {
+   "cat": "history",
+   "ok": true,
+   "pred": "G",
+   "gold": "G"
+  },
+  {
+   "cat": "psychology",
+   "ok": true,
+   "pred": "H",
+   "gold": "H"
+  },
+  {
+   "cat": "psychology",
+   "ok": true,
+   "pred": "H",
+   "gold": "H"
+  },
+  {
+   "cat": "psychology",
+   "ok": true,
+   "pred": "A",
+   "gold": "A"
+  },
+  {
+   "cat": "psychology",
+   "ok": true,
+   "pred": "J",
+   "gold": "J"
+  },
+  {
+   "cat": "psychology",
+   "ok": false,
+   "pred": "F",
+   "gold": "E"
+  },
+  {
+   "cat": "law",
+   "ok": true,
+   "pred": "I",
+   "gold": "I"
+  },
+  {
+   "cat": "law",
+   "ok": false,
+   "pred": "F",
+   "gold": "I"
+  },
+  {
+   "cat": "law",
+   "ok": true,
+   "pred": "J",
+   "gold": "J"
+  },
+  {
+   "cat": "law",
+   "ok": true,
+   "pred": "G",
+   "gold": "G"
+  },
+  {
+   "cat": "law",
+   "ok": true,
+   "pred": "F",
+   "gold": "F"
+  }
+ ]
+}
