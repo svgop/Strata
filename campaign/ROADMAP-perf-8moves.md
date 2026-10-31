@@ -16,10 +16,10 @@ Tracker board: `/home/svg/LLM/.zcode/rich-tracking/strata-perf-roadmap.board.jso
 
 | Lane | Metric | Baseline | After-roadmap target |
 |---|---|---|---|
-| M1 solo warm | t/s (3-leg mean) | ______ | +25–40% vs baseline |
-| Pair warm | t/s (3-leg mean) | ______ | +25–45% |
-| Conc 6-way warm | rows/s + acceptance | ______ (344.9 rows/s @ 68.5% accept, 2026-10-27 log) | +15–30% |
-| Prefill 8K / 32K | t/s (t42-prefill-ladder) | ______ | +10–25% |
+| M1 solo warm | t/s (3-leg mean) | 207.4 (T59 262K standing @5c46e95b, lanes.csv; 131K-era F-367 bank 222.0 — the drop is the --max-context 262144 config step, not a regression) | +25–40% vs baseline |
+| Pair warm | t/s (3-leg mean) | 198.4 (T59 262K standing; 131K-era 233.0) | +25–45% |
+| Conc 6-way warm | rows/s + acceptance | 294.1 (T59 262K standing; 131K-era 350.8; 2026-10-27 log line: 344.9 rows/s @ 68.5% accept) | +15–30% |
+| Prefill 8K / 32K | t/s (t42-prefill-ladder) | ______ (references: fresh-read 6,925 t/s at 262K, M6/M22 curves) | +10–25% |
 | Depth ~134K | solo t/s / conc 6-way rows/s | 173–180 / 179–210 (2026-10-27/28 depth tests) | solo ≥ 200 / conc ≥ 260 |
 | Depth 228–262K | solo t/s | 114–166 (256K verification) | ≥ 180 at 256K |
 | Reuse-scan | median ms at 9K / 99K | 73 / 313 | ≤ 5 at 99K |
@@ -40,7 +40,7 @@ Capture commands (all from repo root):
 
 1. Campaign law: every change env-gated, default off; A/B via env only until adopted.
 2. Gate = 3v3 same-hour ABAB battery (probe-lane.py) on M1/pair/conc + MMLU-Pro 2x
-   (`campaign/mmlu-pro-gate.py`, floor 92.9) + mimic check (`campaign/mimic-compare.py`).
+   (`campaign/mmlu-pro-gate.py`, floor 93.3 (`campaign/mmlu-pro-gate.py 0.933`, law 3)) + mimic check (`campaign/mimic-compare.py`).
    Output-changing moves (W3 acceptance semantics, W5 dense_tc, W6 i8v3 in decode) require the
    MMLU gate to PASS both runs; bitwise-parity moves (W2, W4-THP, W7 grouping) need parity
    suites only, still run the battery for speed.
@@ -352,8 +352,29 @@ arms) · `w11` = §W11 · `w15` = §W15 · `w0` carries §W16's measurement disc
 `w1` respectively. Doc section numbers are canonical; row ids are stable.
 Numbering note: `MEASURED-opt-map-2026-10-27.md` proposed its own W15/W16/W17 — they are §W17,
 §W18, §W19 here (this file's W15/W16 are depth persistence and measurement stability).
-Order of attack (measured, MEASURED-opt-map §Order): W9 → W11 → W1+W2 → W10 → W8 → W7/W14 →
-W4/W13/W6/W3/W5/W12 → W15; W17/W18 are one-boot env flags to arm at the next restart.
+SCOUT corpus (2026-10-31): one research digest per open row, 12 files at
+`.docs/research/digest/` (w0..w15), each 3-6 reference implementations, confidence-graded,
+folded into the board rows. Notable adjudication: the w9 digest's "S26 already armed on CUDA"
+claim was refuted against source (arch guard arch_defaults.cpp:32; nv_defaults.cpp has no
+sm_120 table) — the arm items stand.
+TRIAGE corpus (2026-10-31, law 15): every board item priced KEEP/DOWNGRADE/KILL in
+`.docs/research/digest/triage-t1..t6*.md`; verdicts are tagged on the board items themselves.
+
+Order of attack (TRIAGE-corrected 2026-10-31; supersedes the measured-map order above):
+0. FALSIFIER PACK (no legs, ~a day): W0 gate-quality half-day (drift floor + depth
+   re-measures + WSTAT bands — every ±4% verdict needs it) · W3.1's one instrumented conc
+   window (prices the +24-34% needle's mass) · W1's rows/window + per-depth dp dump (bimodal
+   verdict) · W7's one diagnostic boot (STRATA_PREFILL_TIMING + KV_PREFETCH toggles; prices
+   items 1/5/6/9) · W9's ~90-min nsys of the VRAM-hit GEMV · W15's GPU-stages scan check.
+1. W2 (bit-identical promotion, +3.9-6.6% solo/pair) — first ladder leg.
+2. W3 bundle (biggest needle: +24-34% tokens/window) — BEFORE W1.
+3. W4.1+W4.2 one candidate (conc wall time) → nsys → W4.3+W4.4.
+4. W9 composed env leg + W6's GDN split arm (both bitwise) in one promotion.
+5. W11 warmth; W8 PROMOTE + cadence (N=2 + saturation guard); W15 reuse hash (row champion);
+   then the rest by the row orders.
+NOT RUN (law 15 — killed or must compose first): SSE batching, per-token lock sampling,
+standalone top-k prune, standalone W3.2-4, W7 autotune or staging alone, W5 dense_tc unless
+the parity multiplier reads ≥1.2× at T=4-8, W15 tier without a paired demotion.
 
 
 ## Fourth pass (2026-10-28 — measured-map integration, W17–W19)

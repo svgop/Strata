@@ -432,3 +432,14 @@ port, merge:
       map (attack the newly-visible term, not the old one). Each stalled pass must end with
       either a win, a named wall with its priced constraint, or a recalibrated map — never
       with silence.
+
+15. **THE NEEDLE, PRICED BEFORE IT RUNS (user doctrine, 2026-10-31).** An optimization is
+    proposed with its needle priced BEFORE the leg: the measured term it removes (law 9's
+    pathway), the lane math that converts that term into t/s (stage ms × improvement × lane
+    share, against the window anatomy), and the latency terms it cuts (TTFT, ITL, window
+    boundary gaps, admission waits — delays count exactly like t/s; prefill and decode are both
+    first-class). An arm whose priced expectation is inside the drift band on every lane and
+    every latency term is NOT RUN — it is composed (law 4b) or dropped with the pricing
+    recorded. Regressions are forbidden: no adopted change may leave a lane or latency metric
+    worse beyond noise (laws 2, 4, 12), and a regression that ships is remediated under law 13
+    (scoped, composed, or rebuilt) — containment alone never closes it.
