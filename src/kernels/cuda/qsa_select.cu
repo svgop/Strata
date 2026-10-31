@@ -1715,6 +1715,12 @@ void qsa_block_scores(const float* pooled, const float* dead, const float* q_idx
     }
     // a block past a query's n_bid returns at once: the grid need only reach the batch's largest n_bid (C-1)
     if (scores_multi_on() && nq <= MQ && active_blocks <= 0) {   // no active count: decode (captured or not) and prefill's pooled16
+        // X2 (research 2026-10-31): the TF32 tensor-core scorer on the decode scan.  The warp kernel spends a
+        // 5-step shuffle chain per indexer head (32 per block-score); the m16n8k8 hi/lo-split MMA does the same
+        // dots with far less issue pressure.  Its sums are another order (hi/lo TF32, ~24-bit precision - the
+        // F-224 class the prefill side already ships): STRATA_SCORES_TC=1 arms it.
+        static const bool tc_env = [] { const char* v = std::getenv("STRATA_SCORES_TC"); return v != nullptr && std::atoi(v) != 0; }();
+        if (tc_env && qsa_block_scores_tc(pooled, dead, q_idx, steps, nq, max_blocks, s, scores, stream, active_blocks)) return;
         // QSAROWS: STRATA_QSA_ROWS=1 (exactly) takes block_scores_rows_kernel for calls of up to 4 queries - the same bits
         static const bool rows_env = [] { const char* v = std::getenv("STRATA_QSA_ROWS"); return v != nullptr && v[0] == '1' && v[1] == '\0'; }();
         if (rows_env && qsa_block_scores_rows(pooled, dead, q_idx, steps, nq, max_blocks, s, scores, stream)) return;
