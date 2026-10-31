@@ -9,9 +9,11 @@
 
 ## The svg custom line — core differentiators of this fork
 
-This fork carries a performance-engineering campaign (F-01..F-273 in `SVG-CUSTOM.md`; the curated
-list in **`SVG-CUSTOM-FEATURES.md`**) that holds **+17.8–33.4% engine-only over stock at identical
-quant bytes** with quality floors (MMLU-Pro 95.0 mean, mimic 87.9) never traded. Headlines:
+This fork carries a performance-engineering campaign (F-01..F-376 and T-01..T-62 in `SVG-CUSTOM.md`
+and `campaign/tracker/`; the curated list in **`SVG-CUSTOM-FEATURES.md`**) that holds
+**+17.8–33.4% engine-only over stock at identical quant bytes** on the Qwen line and
+**+49/+47/+19%** on the DeepSeek line at 5 experts, then **+15.1/+17.4/+16.1** more at 4 experts
+with the quality gate clean, floors (MMLU-Pro 95.0 mean, mimic 87.9) never traded. Headlines:
 
 - **MAGMA memory architecture** — the pinned resident complement: the whole expert mass the GPU
   cannot hold stays page-locked and device-mapped in host RAM; the file tier never reads at serving
@@ -25,8 +27,45 @@ quant bytes** with quality floors (MMLU-Pro 95.0 mean, mimic 87.9) never traded.
   +24.8% concurrent throughput.
 - **Coupled MTP exact-match speculation** with device-side typical rescue, a suffix drafter with
   economics arbitration, and a trace-calibrated draft keep rule (74–87% acceptance held throughout).
-- **Proof-carrying performance methodology** — ABAB interleaved batteries, quiet-window five-boot
-  means, parity-first ports, and a no-terminal-trade-offs scoping law (AGENTS.md).
+- **The shadow store** — a second, deliberately lighter quantization whose *only* consumer is the
+  byte-bound CPU lane: Q2_0 blobs live as an artifact of record in `data/packs` (shipped, versioned)
+  with a tmpfs placement cache that the launcher resolves on every start, so a cold boot can never
+  silently lose it. The lane pays 75 µs per entry instead of 152 — the same token stream on a
+  different byte diet. The canonical-vs-placement split is the pattern worth stealing: facts live in
+  the repo, hot bytes live in RAM.
+- **A five-tier expert economy** — VRAM expert cache (admit-never-evict, learned per-layer heat,
+  margin-gated background swaps) → PCIe DMA share → CPU lane over the RAM-resident complement → RAM
+  tier → shadow store → file tier, each tier priced by measured bandwidth. Residency itself is a
+  **coverage-quota solve**: slots follow the profile's heat-per-byte across layers by marginal
+  coverage gain, not a uniform per-layer fraction (+3.4/+4.3% solo/pair when the quota replaced the
+  flat split).
+- **Two engines, one ledger** — DeepSeek-V4.1-Flash runs in-tree as its own target (dsv41) on the
+  same serving surface: a 16-thread CPU lane over 110 GB of RAM-resident experts, a device-side
+  mailbox that publishes routing and merges the answer in-kernel, YOCO replay (upper layers touch
+  only ~316 rows of a long prompt), and layer-major chunked prefill. Its decode anatomy is measured
+  to the per-phase bytes — the lane runs at 46–50 GB/s of the box's 50 GB/s ceiling, which is why
+  the DeepSeek gains came from *fewer bytes* (expert-count tiering in three measured steps) and from
+  the telemetry that proved where the time was, not from re-tuning kernels already at the roofline.
+- **Phase-aware structural steering** — control vectors as an architectural feature, not a global
+  knob: project-mode per-layer unit directions that subtract a behaviour direction from every
+  hyper-connection stream, per-request switching that drops nothing else in the cache, and arming at
+  think-end so reasoning runs untouched and the answer phase runs steered. The fork found and fixed
+  the layer-range truncation that silently disabled it (1..47 of 48, not the inherited 4..24), and
+  pairs it with a reasoning wrap-up rule that guarantees short-budget requests still produce an
+  answer instead of an empty thinking block.
+- **Truth-first telemetry** — instrument the bucket before optimizing it. The decode decomposition
+  prints lanes / attention / routing+shared / gate-up / down+post / head per token, with
+  event-bracketed head GPU time — the measurement that disproved the standing "head is 40%" belief:
+  the true head is 0.29 ms, and the rest was CPU-lane wait draining into the final sync. Per-entry
+  lane GB/s, window p50/p99, true token gaps, and admission waits complete the picture. Every
+  optimization this fork adopted or killed was priced by these numbers first.
+- **Proof-carrying performance methodology** — the campaign laws as engineering constraints: ABAB
+  interleaved batteries, quiet-window five-boot means, parity-first ports, the incline law (a
+  standing line never steps down), the through law (a regression stays open until it is a net win,
+  never a silent revert), nothing-ships-half-done scoping, and the needle priced before it runs — a
+  change whose expected win sits inside the drift band is composed or dropped, not measured.
+  Falsifications are first-class ledger entries: arms that lose a week of compute are worth more
+  than arms that merely feel fast.
 
 
 <h3 align="center">Run a state-of-the-art model on your own gaming PC</h3>
