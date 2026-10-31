@@ -38,12 +38,16 @@ def main():
     rows = list(csv.DictReader(open(LANES)))
     for r in rows:
         r['tps'] = float(r['tps'])
-    # group: engine -> ordered points -> lanes
-    pts = {}
+    # group: engine -> ordered points -> lanes; prefill rows ride their own series (x = prompt size)
+    pts, pf = {}, {eng: [] for eng in ENGINES}
     for eng in ENGINES:
         e = [r for r in rows if r['engine'] == eng]
         seen, order = {}, []
         for r in e:
+            if r['lane'] == 'prefill':
+                pf[eng].append({'date': r['date'], 'commit': r['commit'], 'label': r['label'],
+                                'tps': r['tps'], 'ctx': int(r['ctx']), 'kind': r['kind']})
+                continue
             key = (r['date'], r['commit'], r['label'])
             if key not in seen:
                 seen[key] = {'date': r['date'], 'commit': r['commit'], 'label': r['label'],
@@ -56,7 +60,7 @@ def main():
                 p['kinds'][r['lane']] = r['kind']
         pts[eng] = [seen[k] | {'kinds': seen[k]['kinds']} for k in order]
     data = {'type': 'strata-lane-trend', 'updated': rows[-1]['date'], 'unit': 'tok/s',
-            'engines': {eng: {'label': ENGINES[eng]['label'], 'points': pts[eng]} for eng in ENGINES}}
+            'engines': {eng: {'label': ENGINES[eng]['label'], 'points': pts[eng], 'prefill': pf[eng]} for eng in ENGINES}}
     with open(os.path.join(HERE, 'lanes.json'), 'w') as f:
         json.dump(data, f, indent=1)
     frag = TEMPLATE.replace('__DATA__', json.dumps(data['engines'])) \
@@ -73,6 +77,8 @@ TEMPLATE = r'''<div id="lane-trend-9f3" style="font:inherit">
 <p class="text-small" style="margin:2px 0 10px">tok/s, client-measured standard battery (solo M1, pair M2, 6-lane conc M2) &middot; updated __UPDATED__ &middot; source: campaign/tracker/lanes.csv</p>
 <div id="lt-legend-9f3" class="viz-row" style="gap:2px 10px;margin-bottom:8px"></div>
 <div id="lt-panels-9f3"></div>
+<h3 style="margin:14px 0 2px">Prefill &mdash; prompt tok/s by prompt size</h3>
+<div id="lt-prefill-9f3"></div>
 <div class="tooltip" id="lt-tip-9f3" role="tooltip" style="position:absolute;pointer-events:none;opacity:0"></div>
 </div>
 <script src="https://cdn.jsdelivr.net/npm/d3@7.9.0/dist/d3.min.js"></script>
@@ -213,7 +219,60 @@ TEMPLATE = r'''<div id="lane-trend-9f3" style="font:inherit">
     tip.style.left = Math.min(rr.width - 190, Math.max(0, px + 12)) + 'px';
     tip.style.top = (svg.node().getBoundingClientRect().top - rr.top + 16) + 'px';
   }
-  function drawAll() { panels.forEach(draw); }
+  function drawPrefill() {
+    const host = document.getElementById('lt-prefill-9f3');
+    if (!host) return;
+    host.textContent = '';
+    const series = [];
+    for (const eng of Object.keys(ENGINES)) {
+      const pts = (ENGINES[eng].prefill || []).filter(p => p.tps != null && p.ctx > 0);
+      if (pts.length) series.push({ eng, pts: [...pts].sort((a, b) => a.ctx - b.ctx) });
+    }
+    if (!series.length) return;
+    const W = Math.max(320, host.clientWidth || 320);
+    const H = Math.max(150, Math.min(230, W * 0.3));
+    const M = { t: 12, r: 110, b: 32, l: 56 };
+    const svg = d3.select(host).append('svg')
+      .attr('viewBox', `0 0 ${W} ${H}`).attr('width', '100%').style('display', 'block')
+      .attr('role', 'img').attr('aria-label', 'Prefill tok/s by prompt size');
+    const all = series.flatMap(s => s.pts);
+    const x = d3.scaleLog().domain(d3.extent(all, p => p.ctx)).range([M.l + 6, W - M.r - 6]).nice();
+    const y = d3.scaleLinear().domain([0, d3.max(all, p => p.tps) * 1.12]).range([H - M.b, M.t]).nice();
+    svg.append('rect').attr('data-chart-frame', true).attr('x', M.l).attr('y', M.t)
+       .attr('width', Math.max(10, W - M.l - M.r)).attr('height', Math.max(10, H - M.t - M.b))
+       .attr('fill', 'none').attr('stroke', 'var(--border)').attr('stroke-width', 1);
+    const g = svg.append('g');
+    g.append('g').attr('transform', `translate(${M.l},0)`)
+      .call(d3.axisLeft(y).ticks(4).tickSize(0).tickPadding(6))
+      .call(sel => sel.select('.domain').remove())
+      .selectAll('text').attr('fill', 'var(--muted-foreground)').style('font-size', '12px').attr('class', 'tabular-nums');
+    g.append('g').selectAll('line.grid').data(y.ticks(4)).join('line')
+      .attr('x1', M.l).attr('x2', W - M.r).attr('y1', d => y(d)).attr('y2', d => y(d))
+      .attr('stroke', 'var(--border)').attr('stroke-width', 0.5).attr('opacity', 0.55);
+    const kfmt = v => v >= 1e6 ? (v / 1e6).toFixed(v % 1e6 ? 1 : 0) + 'M' : Math.round(v / 1e3) + 'K';
+    g.append('g').attr('transform', `translate(0,${H - M.b})`)
+      .call(d3.axisBottom(x).tickValues([4e3, 1e4, 4e4, 1e5, 4e5, 1e6].filter(v => v >= x.domain()[0] * 0.9 && v <= x.domain()[1] * 1.1)).tickFormat(kfmt).tickSize(0).tickPadding(8))
+      .call(sel => sel.select('.domain').attr('stroke', 'var(--border)'))
+      .selectAll('text').attr('fill', 'var(--muted-foreground)').style('font-size', '11px');
+    svg.append('text').attr('x', M.l).attr('y', H - 6).attr('fill', 'var(--muted-foreground)').style('font-size', '12px').text('prompt tokens (log)');
+    svg.append('text').attr('data-axis', 'y').attr('x', 14).attr('y', M.t + 2).attr('fill', 'var(--muted-foreground)').style('font-size', '12px').text('tok/s');
+    for (const s of series) {
+      const col = COLORS[s.eng];
+      const line = d3.line().x(p => x(p.ctx)).y(p => y(p.tps));
+      g.append('path').datum(s.pts).attr('d', line)
+        .attr('fill', 'none').attr('stroke', col).attr('stroke-width', 1.4).attr('stroke-dasharray', '4 3').attr('opacity', 0.7);
+      g.selectAll(null).data(s.pts).join('circle')
+        .attr('cx', p => x(p.ctx)).attr('cy', p => y(p.tps)).attr('r', 3.6).attr('fill', col)
+        .attr('data-chart-hit', true)
+        .append('title').text(p => `${p.label} (${p.commit}) ${p.date} · ${p.ctx.toLocaleString()} tok prompt · ${p.tps.toFixed(0)} tok/s [${p.kind}]`);
+    }
+    const key = svg.append('g').attr('transform', `translate(${W - M.r + 12},${M.t + 2})`);
+    series.forEach((s, i) => {
+      key.append('circle').attr('cx', 0).attr('cy', i * 15 + 3).attr('r', 3.6).attr('fill', COLORS[s.eng]);
+      key.append('text').attr('x', 8).attr('y', i * 15 + 7).attr('fill', 'var(--muted-foreground)').style('font-size', '11px').text(ENAME[s.eng]);
+    });
+  }
+  function drawAll() { panels.forEach(draw); drawPrefill(); }
   drawAll();
   if (window.ResizeObserver) new ResizeObserver(() => drawAll()).observe(panelsRoot);
 })();

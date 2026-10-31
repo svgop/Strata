@@ -172,6 +172,88 @@
       "conc": "standing"
      }
     }
+   ],
+   "prefill": [
+    {
+     "date": "2026-10-17",
+     "commit": "3df7161f",
+     "label": "ctx-ladder standing (131K era)",
+     "tps": 3356.0,
+     "ctx": 4086,
+     "kind": "mean"
+    },
+    {
+     "date": "2026-10-17",
+     "commit": "3df7161f",
+     "label": "ctx-ladder standing (131K era)",
+     "tps": 5696.0,
+     "ctx": 16186,
+     "kind": "mean"
+    },
+    {
+     "date": "2026-10-17",
+     "commit": "3df7161f",
+     "label": "ctx-ladder standing (131K era)",
+     "tps": 6326.0,
+     "ctx": 32238,
+     "kind": "mean"
+    },
+    {
+     "date": "2026-10-17",
+     "commit": "3df7161f",
+     "label": "ctx-ladder standing (131K era)",
+     "tps": 6587.0,
+     "ctx": 64468,
+     "kind": "mean"
+    },
+    {
+     "date": "2026-10-17",
+     "commit": "3df7161f",
+     "label": "ctx-ladder standing (131K era)",
+     "tps": 6582.0,
+     "ctx": 96663,
+     "kind": "mean"
+    },
+    {
+     "date": "2026-10-17",
+     "commit": "3df7161f",
+     "label": "ctx-ladder standing (131K era)",
+     "tps": 6386.0,
+     "ctx": 120678,
+     "kind": "mean"
+    },
+    {
+     "date": "2026-10-28",
+     "commit": "231290e9",
+     "label": "262K verification (227997 fresh tokens)",
+     "tps": 6925.0,
+     "ctx": 227997,
+     "kind": "mean"
+    },
+    {
+     "date": "2026-10-29",
+     "commit": "5c46e95b",
+     "label": "262K-era cold 148K read",
+     "tps": 6190.0,
+     "ctx": 148000,
+     "kind": "mean"
+    },
+    {
+     "date": "2026-10-31",
+     "commit": "4080d3f3",
+     "label": "fresh 15K cold-read probe (262K standing)",
+     "tps": 4376.0,
+     "ctx": 15172,
+     "kind": "single"
+    },
+    {
+     "date": "2026-10-31",
+     "commit": "4080d3f3",
+     "label": "fresh 3.3K cold-read probe (fixed tax visible)",
+     "tps": 2423.0,
+     "ctx": 3292,
+     "kind": "single"
+    }
    ]
   },
   "deepseek": {
@@ -345,6 +427,48 @@
       "pair": "single",
       "conc": "single"
      }
+    }
+   ],
+   "prefill": [
+    {
+     "date": "2026-10-27",
+     "commit": "upstream-pkg",
+     "label": "dsv41 first light warm 8K",
+     "tps": 946.0,
+     "ctx": 8192,
+     "kind": "single"
+    },
+    {
+     "date": "2026-10-28",
+     "commit": "upstream-pkg",
+     "label": "dsv41 261K prompt read",
+     "tps": 1846.0,
+     "ctx": 261669,
+     "kind": "single"
+    },
+    {
+     "date": "2026-10-28",
+     "commit": "upstream-pkg",
+     "label": "dsv41 1M prompt read",
+     "tps": 1380.0,
+     "ctx": 1047686,
+     "kind": "single"
+    },
+    {
+     "date": "2026-10-31",
+     "commit": "5e4207bc",
+     "label": "4e standing 15K cold read",
+     "tps": 1520.0,
+     "ctx": 15154,
+     "kind": "single"
+    },
+    {
+     "date": "2026-10-31",
+     "commit": "5e4207bc",
+     "label": "4e standing 50K cold read",
+     "tps": 2072.0,
+     "ctx": 50434,
+     "kind": "single"
     }
    ]
   }

@@ -64,3 +64,18 @@ deepseek,2026-10-31,5e4207bc,T62 same-hour baseline 3-leg,conc,62.3,0,mean
 deepseek,2026-10-31,5e4207bc,T62-E4 coverage-quota arm (battery + confirm = +3.4/+4.3/+0.6; under bar; env-gated),solo,58.0,0,single
 deepseek,2026-10-31,5e4207bc,T62-E4 coverage-quota arm (battery + confirm = +3.4/+4.3/+0.6; under bar; env-gated),pair,56.1,0,single
 deepseek,2026-10-31,5e4207bc,T62-E4 coverage-quota arm (battery + confirm = +3.4/+4.3/+0.6; under bar; env-gated),conc,62.7,0,single
+qwen,2026-10-17,3df7161f,ctx-ladder standing (131K era),prefill,3356,4086,mean
+qwen,2026-10-17,3df7161f,ctx-ladder standing (131K era),prefill,5696,16186,mean
+qwen,2026-10-17,3df7161f,ctx-ladder standing (131K era),prefill,6326,32238,mean
+qwen,2026-10-17,3df7161f,ctx-ladder standing (131K era),prefill,6587,64468,mean
+qwen,2026-10-17,3df7161f,ctx-ladder standing (131K era),prefill,6582,96663,mean
+qwen,2026-10-17,3df7161f,ctx-ladder standing (131K era),prefill,6386,120678,mean
+qwen,2026-10-28,231290e9,262K verification (227997 fresh tokens),prefill,6925,227997,mean
+qwen,2026-10-29,5c46e95b,262K-era cold 148K read,prefill,6190,148000,mean
+qwen,2026-10-31,4080d3f3,fresh 15K cold-read probe (262K standing),prefill,4376,15172,single
+qwen,2026-10-31,4080d3f3,fresh 3.3K cold-read probe (fixed tax visible),prefill,2423,3292,single
+deepseek,2026-10-27,upstream-pkg,dsv41 first light warm 8K,prefill,946,8192,single
+deepseek,2026-10-28,upstream-pkg,dsv41 261K prompt read,prefill,1846,261669,single
+deepseek,2026-10-28,upstream-pkg,dsv41 1M prompt read,prefill,1380,1047686,single
+deepseek,2026-10-31,5e4207bc,4e standing 15K cold read,prefill,1520,15154,single
+deepseek,2026-10-31,5e4207bc,4e standing 50K cold read,prefill,2072,50434,single
