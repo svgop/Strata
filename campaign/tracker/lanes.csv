@@ -58,3 +58,9 @@ deepseek,2026-10-30,b23b7472,T61 same-hour baseline 3-leg (old binary; parity on
 deepseek,2026-10-30,b23b7472,T61-4e --experts 4 ADOPTED standing (battery 59.3/57.9/65.3 = +15.1/+17.4/+16.1 vs 51.5/49.3/56.2; every leg above every baseline leg; CPU lane 7.0-8.7 -> 4.96-5.92 ms; MMLU 4e 90.0 vs 5e 88.57 clean),solo,59.3,0,standing
 deepseek,2026-10-30,b23b7472,T61-4e --experts 4 ADOPTED standing (battery 59.3/57.9/65.3 = +15.1/+17.4/+16.1 vs 51.5/49.3/56.2; every leg above every baseline leg; CPU lane 7.0-8.7 -> 4.96-5.92 ms; MMLU 4e 90.0 vs 5e 88.57 clean),pair,57.9,0,standing
 deepseek,2026-10-30,b23b7472,T61-4e --experts 4 ADOPTED standing (battery 59.3/57.9/65.3 = +15.1/+17.4/+16.1 vs 51.5/49.3/56.2; every leg above every baseline leg; CPU lane 7.0-8.7 -> 4.96-5.92 ms; MMLU 4e 90.0 vs 5e 88.57 clean),conc,65.3,0,standing
+deepseek,2026-10-31,5e4207bc,T62 same-hour baseline 3-leg (54.0/57.5/56.7 solo),solo,56.1,0,mean
+deepseek,2026-10-31,5e4207bc,T62 same-hour baseline 3-leg,pair,53.8,0,mean
+deepseek,2026-10-31,5e4207bc,T62 same-hour baseline 3-leg,conc,62.3,0,mean
+deepseek,2026-10-31,5e4207bc,T62-E4 coverage-quota arm (battery + confirm = +3.4/+4.3/+0.6; under bar; env-gated),solo,58.0,0,single
+deepseek,2026-10-31,5e4207bc,T62-E4 coverage-quota arm (battery + confirm = +3.4/+4.3/+0.6; under bar; env-gated),pair,56.1,0,single
+deepseek,2026-10-31,5e4207bc,T62-E4 coverage-quota arm (battery + confirm = +3.4/+4.3/+0.6; under bar; env-gated),conc,62.7,0,single

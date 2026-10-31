@@ -1,6 +1,6 @@
 {
  "type": "strata-lane-trend",
- "updated": "2026-10-30",
+ "updated": "2026-10-31",
  "unit": "tok/s",
  "engines": {
   "qwen": {
@@ -308,6 +308,42 @@
       "solo": "standing",
       "pair": "standing",
       "conc": "standing"
+     }
+    },
+    {
+     "date": "2026-10-31",
+     "commit": "5e4207bc",
+     "label": "T62 same-hour baseline 3-leg (54.0/57.5/56.7 solo)",
+     "solo": 56.1,
+     "pair": null,
+     "conc": null,
+     "kinds": {
+      "solo": "mean"
+     }
+    },
+    {
+     "date": "2026-10-31",
+     "commit": "5e4207bc",
+     "label": "T62 same-hour baseline 3-leg",
+     "solo": null,
+     "pair": 53.8,
+     "conc": 62.3,
+     "kinds": {
+      "pair": "mean",
+      "conc": "mean"
+     }
+    },
+    {
+     "date": "2026-10-31",
+     "commit": "5e4207bc",
+     "label": "T62-E4 coverage-quota arm (battery + confirm = +3.4/+4.3/+0.6; under bar; env-gated)",
+     "solo": 58.0,
+     "pair": 56.1,
+     "conc": 62.7,
+     "kinds": {
+      "solo": "single",
+      "pair": "single",
+      "conc": "single"
      }
     }
    ]
