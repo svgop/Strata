@@ -1038,6 +1038,11 @@ struct Model::Impl {
     // waiting for the whole answer (the T=1 decode path only)
     bool partial_combine_ = std::getenv("DS4_PARTIAL_COMBINE") != nullptr;
     LaneStage* lane_stage_ = nullptr;   // mapped, kRing slots (UVA: one pointer for host and device)
+    // X1 (research R-1: Fate-class cross-layer prediction, 2026-10-31): the next layer's fresh guesses are
+    // credited into its heat one layer early, so the margin-gated swap path admits them before the next
+    // token's route needs them.  Our RAM-resident config has no slower tier to prefetch FROM, so the
+    // predicted picks ride the existing swap path instead of a prefetch queue (DS4_PREDICT_CREDIT=w).
+    float predict_credit_ = std::getenv("DS4_PREDICT_CREDIT") ? (float) std::atof(std::getenv("DS4_PREDICT_CREDIT")) : 0.0f;
     int staged_tok_ = -1;             // the staged sampler's answer, valid after the forward drain when staged_tok_ok_
     bool staged_tok_ok_ = false;
     cudaEvent_t ev_head_a_ = nullptr, ev_head_b_ = nullptr;   // D9: bracket the head's GPU work on the head stream
@@ -7052,6 +7057,17 @@ struct Model::Impl {
                         for (int i = 0; i < l.k_exp; ++i) hit = hit || r.ids[0][i] == e;
                         ++st.ahead_rank_n[rk[e] - 1];
                         st.ahead_rank_hit[rk[e] - 1] += hit;
+                    }
+                }
+                // X1: the guesses this request carries are for the NEXT layer - credit its heat now (rank 1
+                // full, the rest half), only for experts the lane would otherwise carry (slot < 0).
+                if (predict_credit_ > 0.0f && li + 1 < (int)L.size() && r.na[0] > 0 && !L[(size_t) (li + 1)].mtp) {
+                    Layer& ln = L[(size_t) (li + 1)];
+                    const int ng = std::min(r.na[0], kAhead1);
+                    for (int i = 0; i < ng; ++i) {
+                        const int g = r.ahead[0][i];
+                        if (g >= 0 && g < ln.n_exp && ln.slot[(size_t) g] < 0)
+                            ln.heat[(size_t) g] += i == 0 ? predict_credit_ : predict_credit_ * 0.5f;
                     }
                 }
                 if (ahead_mode > 0 && !ahead_for.empty()) ahead_ask(li, r, next, T);
