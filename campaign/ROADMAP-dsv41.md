@@ -47,24 +47,81 @@ lane-bound engine — its cost scales with verify width while its benefit doesn'
 | D5 store lookahead | **DEAD BY CONFIG** — same (and naive arm already falsified in-code) | — |
 | dspark in serve | **auto-off is correct** (lane bytes scale with verify width) | — |
 
-## The remaining levers (re-priced by the measured anatomy)
+## The remaining levers (re-priced by the measured anatomy — v2, 2026-10-31)
 
-1. **Fewer lane bytes** — the only lane lever that exists:
-   - `--experts 4` (quality-traded, the T51 class): lane bytes −20%. Battery T61-4e below.
-   - A lighter CPU-lane pack build (2.06 → ~1.6 bpw for the cold tail): a pack decision,
-     quality-traded; the "already 1.75–2.31 bpw mixed" floor limits the headroom.
-   - VRAM hit-rate tuning via the learned profile (online, no code; watch the 7–18% spread).
-2. **The ~4 ms ping-pong slack** — the only structural "free" term: accumulate-as-entries-land
-   partial combine (per-entry flags; the combine overlaps the lane's tail entries). Est. +3–5%.
-   Medium kernel work; verify the combine's sum-order determinism story first.
-3. **Attention (~5.6–5.8 ms/token)** — the biggest GPU class: nsys-guided kernel pass on the
-   FP4-KV/indexer path (post-ATTN_SPLIT). No quick arm exists.
-4. **Prefill** (946 t/s @8K first-light): its own lane; W19-class small-read work applies.
+Source: second four-investigator sweep (attention / routing+shared / slack+residency / prefill),
+all headline anchors verified against source. Measured frame (4e): round ~16 ms = lane wait
+5.8–6.4 + attention 5.4 + routing+shared 2.4 + down+post 1.0 + gate/up 0.85 + head 0.3.
 
-## Order of attack (current)
+### E1 — Partial combine: the slack attack, DESIGNED (est. +15–25% decode — the biggest DS lever mapped)
+Facts: the T=1 decode path waits for the lane BETWEEN gate/up and down (`wait_seq`,
+ds4_model.cu:9584) — the whole ~366 µs answer serializes per pick-layer, while the window path
+already runs down BEFORE waiting (vendor/exl3.cu:1168 then :1587-1588). The lane completes
+entries one at a time (DS4_MISS_SPLIT, ds4_model.cu:6215-6256) but publishes only after the LAST
+entry + a host-side weighted sum (ds4_model.cu:7017-7040).
+Design (verified): per-entry pinned staging + per-entry seq-flags (same release/volatile pattern
+as the mailbox, ds4_kernels.cu:1713-1730); the GPU combine accumulates `w*entry` per landing
+entry instead of adding one pre-summed part; wait_seq moves after moe_down. Determinism is
+pre-sold: the engine ships three summation orders already (token plan order, window group order,
+host ascending-expert; DS4_MISS_SPLIT makes entry order timing-dependent today), entry outputs
+are order-independent, and the sampler has no order dependency. Expected: GPU dead time per
+lane-layer 366 → ~166 µs × ~16 lane-layers ≈ 3.2–3.5 ms of the 5.8–6.4 wait.
+Caveat: the reorder half alone is capped by the win_experts "same bits, no faster" in-code
+measurement (ds4_model.cu:1032) — the per-entry accumulation is the prize, the reorder rides free.
+Gate: MMLU (summation-order class, the F-224 precedent) + lane battery.
 
-T61-4e battery → partial-combine design review (slack) → attention nsys pass → pack-level
-byte decisions with the operator.
+### E2 — Attention fusion package (est. +8–10% decode)
+Facts: ~20 kernel launches/layer in the attention region (ds4_model.cu:9324-9530); ~11 are tiny
+waves (1-64 blocks on 170 SMs). The launch/drain tax is ~28-38 µs of the 136 µs/layer; the GEMV
+weight stream (~45 MB) is already batched EXL3-TC (near-optimal), the split kernels are sound.
+Sinkhorn is NOT a term (one warp, tens of ns, in-kernel).
+Do (bit-identical elementwise fusions): fold the five Finish launches into neighbors (fr→wq_b
+epilogue, fo→attn_merge epilogue, fiq+gemv_f16_rows+index_score→one indexer kernel); append-only
+ring staging (write the 1 new row instead of restaging 128, ds4_model.cu:9352); skip the empty
+compress_win launch 63/64 tokens (ds4_model.cu:9401); skip identity topk (ctx ≤ 32K).
+Rider: parallelize index_score over (row × head-block) — 1-2 SMs today (ds4_kernels.cu:649-709).
+
+### E3 — Routing+shared fusion package (est. +4–5% decode)
+Facts: 10 launches/layer for 7 pieces of work; bytes 30.2 MB/layer of which the shared expert's
+Q5_K is 24.33 MB (w1/w2/w3, verified tensors.txt) — over half the chain.
+Do (bit-identical): swiglu → s2's q8_quant item hook (ds4_gguf.cu:216-258; deletes one launch +
+the sh round-trip); gate_mv + route_publish + publish → one last-block-pattern kernel
+(ds4_kernels.cu:507-525, 1605-1671, 1713-1720); hc_pre_norm → hc_mix_split's last-block tail
+(ds4_kernels.cu:348-403). 10 → 5-6 launches/layer.
+
+### E4 — Residency quota (est. +3–6% decode; boot-time arithmetic, zero runtime risk)
+Facts: VRAM placement is a UNIFORM fraction per layer (frac × n_exp, place_experts
+ds4_model.cu:4218-4242) with per-layer top-heat inside — flat-heat layers systematically leak
+picks to the lane. Per-layer coverage is computable from the existing prof arrays; the RAM tier
+already ranks globally by p[e]/blob (preload_store, ds4_model.cu:5088-5105 — precedent).
+Do: per-layer hottest K_l to a coverage floor, then distribute remaining slots by marginal
+coverage gain per byte. Est. 10-15% fewer lane picks (lane bytes −10-15%). dspark reservation
+check: ZERO reclaimable (auto-disable fires before any allocation; KV already FP4).
+
+### E5 — Shared-expert byte cut (QUALITY-TRADED; est. +4% decode; separate gate)
+Facts: the shared expert reads 24.33 MB Q5_K per layer per token; the routed experts' blob format
+is 7.74 MB. Re-baking the shared expert into the routed format (a re-quant — pack authors chose
+Q5_K deliberately) cuts ~17 µs/layer ≈ 0.68 ms/round, and lets it ride as a synthetic 6th plan
+pick (MoeArgs sh_out epilogue exists, ds4_kernels.cuh:204-213) deleting 4-5 more launches.
+Gate: full MMLU + mimic; the pack-level decision is the operator's.
+
+### E6 — Prefill package (TTFT class; the operator's 100–260K prompts)
+- **Layer-major verification (first)**: the mode that streams each layer's experts ONCE per
+  prompt (lm_begin, ds4_model.cu:8546-8598) collapses ~0.5 TB/260K of per-chunk re-streaming to
+  one 16 GB pass — tens of seconds to minutes per 260K prompt. Its gate/alloc/DS4_LAYER_MAJOR=0
+  failures are SILENT today: add one decision log line, then a 100K+ probe tells.
+- **PF-3 dense dequant cache**: weights re-dequantized per 256-row slab (~50% of dense-projection
+  time is waste at base slab — the code's own measurement); keep the FP16 reconstruction per chunk.
+- **PF-5 cache_settle concurrent**: up to 6000 ms (DS4_SETTLE_MS) blocks the cold TTFT after a
+  long prompt (ds4_model.cu:6554-6603, call at :8886); run it against the first decode rounds.
+- **PF-2 bounds mailbox**: one host sync per layer per chunk (ds4_model.cu:7738-7760) — decode
+  already solved this with the mailbox; publish bounds one layer behind.
+- YOCO is already the dominant structural win (upper 20 layers run only ~316 rows) — keep on.
+
+### Composite (E1+E2+E3+E4): +30–45% decode (16 → ~11–12.3 ms), one quality-neutral class
+(E2/E3/E4 bit-identical or placement-only; E1 summation-order, MMLU-gated). E5 is the only
+quality trade. Protocol per campaign law: env-gated arms, ABAB batteries, MMLU where output-
+class changes, tracker incline law governs adoption.
 
 ## The measurement-model correction (read first)
 
