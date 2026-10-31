@@ -142,17 +142,25 @@ std::vector<std::vector<int>> node_cores() {
     std::vector<std::vector<int>> nodes = os::node_cores(smt);
 #else
     std::vector<std::vector<int>> nodes;
-    for (int n = 0; n < 64; ++n) {
-        const std::string cl = read_file("/sys/devices/system/node/node" + std::to_string(n) + "/cpulist");
-        if (cl.empty()) break;
-        std::vector<int> cores;
-        for (int c : cpu_list(cl)) {
-            const std::vector<int> sib = cpu_list(
-                read_file("/sys/devices/system/cpu/cpu" + std::to_string(c) + "/topology/thread_siblings_list"));
-            if (sib.empty() || sib[0] == c) cores.push_back(c);
+        static const bool smt = [] {   // DS4_CPU_SMT=1 on Linux too: the lane's pools take every logical CPU
+            const char* v = std::getenv("DS4_CPU_SMT");   // (memory-bound rows gain from it - the Windows note)
+            return v != nullptr && std::atoi(v) != 0;
+        }();
+        for (int n = 0; n < 64; ++n) {
+            const std::string cl = read_file("/sys/devices/system/node/node" + std::to_string(n) + "/cpulist");
+            if (cl.empty()) break;
+            std::vector<int> cores;
+            for (int c : cpu_list(cl)) {
+                if (smt) {   // every logical CPU (the cpulist's own order: physical cores first, siblings after)
+                    cores.push_back(c);
+                    continue;
+                }
+                const std::vector<int> sib = cpu_list(
+                    read_file("/sys/devices/system/cpu/cpu" + std::to_string(c) + "/topology/thread_siblings_list"));
+                if (sib.empty() || sib[0] == c) cores.push_back(c);
+            }
+            if (!cores.empty()) nodes.push_back(cores);
         }
-        if (!cores.empty()) nodes.push_back(cores);
-    }
 #endif
     if (nodes.empty()) {
         std::vector<int> all;
@@ -1025,6 +1033,11 @@ struct Model::Impl {
     bool sync_decode = std::getenv("DS4_SYNC") != nullptr;
     // D1 (ROADMAP-dsv41): the sampler rides the round's one drain instead of paying a second stream sync per token
     bool one_drain_ = std::getenv("DS4_ONE_DRAIN") != nullptr;
+    // E1 (ROADMAP-dsv41, DS4_PARTIAL_COMBINE): the lane posts each entry as it lands and the combine
+    // accumulates per entry, so the GPU's own layer work covers the lane's first entry instead of
+    // waiting for the whole answer (the T=1 decode path only)
+    bool partial_combine_ = std::getenv("DS4_PARTIAL_COMBINE") != nullptr;
+    LaneStage* lane_stage_ = nullptr;   // mapped, kRing slots (UVA: one pointer for host and device)
     int staged_tok_ = -1;             // the staged sampler's answer, valid after the forward drain when staged_tok_ok_
     bool staged_tok_ok_ = false;
     cudaEvent_t ev_head_a_ = nullptr, ev_head_b_ = nullptr;   // D9: bracket the head's GPU work on the head stream
@@ -2926,6 +2939,15 @@ struct Model::Impl {
             }
             host_allocs.push_back(m);
             resps = (Resp*) m;
+            if (partial_combine_) {   // E1: the per-entry staging (mapped; one slot per ring request)
+                if (cudaHostAlloc(&m, sizeof(LaneStage) * kRing, cudaHostAllocMapped | cudaHostAllocPortable) != cudaSuccess) {
+                    err = "host-mapped memory for the partial-combine staging";
+                    return false;
+                }
+                host_allocs.push_back(m);
+                lane_stage_ = (LaneStage*) m;
+                std::memset((void*) lane_stage_, 0, sizeof(LaneStage) * kRing);
+            }
             std::memset((void*) reqs, 0, sizeof(Req) * kRing);
             std::memset((void*) resps, 0, sizeof(Resp) * kRing);
             for (auto& x : layer_of) x.store(-1);
@@ -4219,25 +4241,69 @@ struct Model::Impl {
             for (const Layer& l : L)
                 if (l.grp == (int) gi && !l.mtp && !l.cpu_only) want += (double) ucount(l) * l.n_exp;
             const double frac = want > 0 ? std::min(1.0, std::max(0.0, budget_t) / want) : 0.0;
-            for (Layer& l : L) {
-                if (l.grp != (int) gi || l.mtp) continue;
-                if (l.cpu_only) {   // (its type has no device kernel: the CPU lane reads every expert of it)
+            // E4 (ROADMAP-dsv41, DS4_RESIDENCY_COVER=1): the slots go to the globally hottest experts per byte
+            // instead of a uniform fraction per layer - a flat-heat layer under the uniform share was leaking
+            // picks to the CPU lane while a concentrated layer kept residents it did not need.  Same slot count,
+            // same per-layer top-heat order inside each layer (the slot assignment below is unchanged).
+            static const bool cover_quota = [] {
+                const char* v = std::getenv("DS4_RESIDENCY_COVER");
+                return v != nullptr && std::atoi(v) != 0;
+            }();
+            if (cover_quota) {
+                struct Cand { Layer* l; int e; double v; };
+                std::vector<Cand> cands;   // (no reserve: `want` above is in BYTES, not entries)
+                for (Layer& l : L) {
+                    if (l.grp != (int) gi || l.mtp) continue;
+                    if (l.cpu_only) {
+                        l.n_vram = 0;
+                        continue;
+                    }
                     l.n_vram = 0;
-                    continue;
+                    const uint32_t* p = prof.data() + (size_t) l.il * g.n_exp;
+                    const double ub = (double) ucount(l);
+                    uint64_t mass = 0;
+                    for (int e = 0; e < l.n_exp; ++e) mass += p[e];
+                    if (mass == 0) {   // (a layer the profile never saw: keep it at the uniform share)
+                        l.n_vram = std::min(l.n_exp, (int) std::floor(frac * l.n_exp));
+                        continue;
+                    }
+                    for (int e = 0; e < l.n_exp; ++e) cands.push_back({&l, e, (double) p[e] / ub});
                 }
-                l.n_vram = std::min(l.n_exp, (int) std::floor(frac * l.n_exp));
-                // never more than fits: the floor of each layer's share can still round up the total
-                while (l.n_vram > 0 && (double) ucount(l) * l.n_vram > budget) --l.n_vram;
-            }
-            double used = 0;
-            for (Layer& l : L)
-                if (l.grp == (int) gi) used += (double) ucount(l) * l.n_vram;
-            // what the floors left: whole experts, layer by layer
-            for (Layer& l : L) {
-                if (l.grp != (int) gi || l.cpu_only) continue;
-                while (l.n_vram < l.n_exp && used + (double) ucount(l) <= budget) {
-                    ++l.n_vram;
-                    used += (double) ucount(l);
+                double used = 0;
+                if (!cands.empty()) {
+                    std::sort(cands.begin(), cands.end(), [](const Cand& a, const Cand& b) { return a.v > b.v; });
+                    for (const Cand& c : cands) {
+                        const double ub = (double) ucount(*c.l);
+                        if (used + ub > budget_t) break;
+                        ++c.l->n_vram;
+                        used += ub;
+                    }
+                }
+                static std::atomic<bool> said{false};
+                if (!said.exchange(true))
+                    std::fprintf(stderr, "ds4: coverage-quota residency (DS4_RESIDENCY_COVER): the slots follow the "
+                                         "profile's heat per byte across layers, not a uniform fraction\n");
+            } else {
+                for (Layer& l : L) {
+                    if (l.grp != (int) gi || l.mtp) continue;
+                    if (l.cpu_only) {   // (its type has no device kernel: the CPU lane reads every expert of it)
+                        l.n_vram = 0;
+                        continue;
+                    }
+                    l.n_vram = std::min(l.n_exp, (int) std::floor(frac * l.n_exp));
+                    // never more than fits: the floor of each layer's share can still round up the total
+                    while (l.n_vram > 0 && (double) ucount(l) * l.n_vram > budget) --l.n_vram;
+                }
+                double used = 0;
+                for (Layer& l : L)
+                    if (l.grp == (int) gi) used += (double) ucount(l) * l.n_vram;
+                // what the floors left: whole experts, layer by layer
+                for (Layer& l : L) {
+                    if (l.grp != (int) gi || l.cpu_only) continue;
+                    while (l.n_vram < l.n_exp && used + (double) ucount(l) <= budget) {
+                        ++l.n_vram;
+                        used += (double) ucount(l);
+                    }
                 }
             }
         }
@@ -6558,9 +6624,14 @@ struct Model::Impl {
     void cache_settle() {
         if (!o.expert_cache || cache_ths.empty()) return;
         static const double budget = env_f("DS4_SETTLE_MS", 6000.0f);
+        // PF-5 (ROADMAP-dsv41, DS4_SETTLE_ROUNDS=N): queue at most N swap rounds and return at once - the
+        // cache threads drain them while the first decode tokens run, instead of the prompt's TTFT paying
+        // the whole drain (up to DS4_SETTLE_MS on a cold cache).  0 = the old wait-until-drained behavior.
+        static const int max_rounds = (int) env_f("DS4_SETTLE_ROUNDS", 0.0f);
         if (budget <= 0.0) return;
         const double t0 = now_ms();
         const int64_t s0 = st.swaps;
+        int rounds = 0;
         while (now_ms() - t0 < budget) {
             for (Layer& l : L) {
                 if (l.mtp || l.spare_vram < 0 || l.swap_pending) continue;
@@ -6569,7 +6640,9 @@ struct Model::Impl {
                     if (l.slot[(size_t) e] < 0 && l.heat[(size_t) e] >= 2.0f) l.cpu_hits.push_back(e);
             }
             cache_tick_swaps(0);
+            ++rounds;
             if (sw_inflight == 0) break;   // (nothing queued: every layer's best CPU-lane expert is not hotter than its coldest VRAM one)
+            if (max_rounds > 0 && rounds >= max_rounds) break;   // the rest drains under the first decode tokens
             std::this_thread::sleep_for(std::chrono::milliseconds(1));
         }
         // The RAM store's preload after a chunked prompt is off by default: measured on Strix Halo (code fixture, prompt +
@@ -7014,7 +7087,33 @@ struct Model::Impl {
                         }
                     po = ord;
                 }
-                if (!ents.empty()) {
+                if (partial_combine_ && lane_stage_ != nullptr && T == 1) {
+                    // E1: one entry at a time, each posted to the device the moment its rows are ready - the
+                    // combine on the device accumulates per landing entry instead of waiting for them all.
+                    // The header posts even for an empty answer (n_ent = 0): the combine reads it as the
+                    // request-consumed signal either way.  (ents.size() <= kPicks always at T == 1.)
+                    const double tc = now_ms();
+                    LaneStage* ls = lane_stage_ + (next % kRing);
+                    ls->n_ent = (int) ents.size();
+                    std::atomic_thread_fence(std::memory_order_release);
+                    *(volatile unsigned*) &ls->seq_hdr = next;
+                    const int D = g.dim;
+                    int j = 0;
+                    for (const Ent& en : ents) {
+                        std::vector<Ent> one(1, en);
+                        cpu_experts(l, &r.x[0][0], one, (size_t) kMaxDim, nullptr);
+                        std::memcpy(ls->row[j], c_yd.data() + (size_t) en.slot0 * D, (size_t) D * 4);
+                        ls->tok[j] = 0;
+                        ls->w[j] = wv[en.slot0];
+                        std::atomic_thread_fence(std::memory_order_release);
+                        *(volatile unsigned*) &ls->flag[j] = next;
+                        ++j;
+                    }
+                    if (!ents.empty()) {
+                        st.cpu_ms += now_ms() - tc;
+                        st.cpu_experts += nslots;
+                    }
+                } else if (!ents.empty()) {
                     const double tc = now_ms();
                     cpu_experts(l, &r.x[0][0], ents, (size_t) kMaxDim, po);
                     const int D = g.dim;
@@ -8717,6 +8816,9 @@ struct Model::Impl {
         }
         prof_chunk = prof_on;
         const bool lm = lm_begin(run);
+        // E6 (ROADMAP-dsv41): the layer-major decision is the long-prompt lever and was silent - say it once a run
+        if (run.T.size() >= 2)
+            std::fprintf(stderr, "ds4: a %zu-chunk prompt runs layer-major %s\n", run.T.size(), lm ? "ON" : "OFF");
         struct LmEnd {   // (every way out: its host memory freed once the device is done with it)
             Impl* p;
             bool on;
@@ -9568,8 +9670,11 @@ struct Model::Impl {
                 x3::MoeArgs ma;
                 ma.plan_ptr = d.plan_ptr;
                 ma.plan_w = d.rw;
-                ma.cpu_part = lead ? resps[slot].part[0] : nullptr;
-                ma.cpu_flag = lead ? &resps[slot].cpu[0] : nullptr;
+                // E1: with the partial combine armed, the lane's entries arrive one at a time into the
+                // staging slot - the down GEMV runs first, lane_accum collects them per entry after it.
+                const bool pc = partial_combine_ && lane_stage_ != nullptr && lead;
+                ma.cpu_part = (lead && !pc) ? resps[slot].part[0] : nullptr;
+                ma.cpu_flag = (lead && !pc) ? &resps[slot].cpu[0] : nullptr;
                 ma.lay = lay;
                 ma.k = l.k_exp;
                 ma.n_embd = D;
@@ -9581,10 +9686,11 @@ struct Model::Impl {
                 if (mx) gg::moe_gate_up(ma, d.x, d.xg, s);
                 else x3::moe_gate_up(ma, d.x, d.xg, s);
                 prof_mark(d, 3);
-                if (lead) wait_seq(&resps[slot].seq, sq, s);
+                if (lead && !pc) wait_seq(&resps[slot].seq, sq, s);
                 prof_mark(d, 4);
                 if (mx) gg::moe_down(ma, d.xg, d.sh_out, d.moe_out, s);
                 else x3::moe_down(ma, d.xg, d.sh_out, d.moe_out, s);
+                if (pc) lane_accum(lane_stage_ + slot, D, sq, d.moe_out, s);   // E1: per entry as it lands
             } else {   // each distinct expert read once for the window's tokens
                 gf::MoeWin mw;
                 mw.plan_ptr = d.plan_ptr;

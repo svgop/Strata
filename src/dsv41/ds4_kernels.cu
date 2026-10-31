@@ -1729,6 +1729,40 @@ __global__ void wait_seq_kernel(const unsigned* seq_ptr, unsigned seq) {
     __threadfence_system();
 }
 
+// E1 (DS4_PARTIAL_COMBINE): accumulate the lane's entries into `out` as each one's flag lands, instead of
+// waiting for the layer's whole answer.  One block per 256 output dims; the T=1 token's row of the output.
+// The stage order is the host's old sum order (sorted-expert), so the sum is the legacy one's own chain.
+__global__ void lane_accum_kernel(LaneStage* st, int dim, unsigned seq, float* out) {
+    __shared__ int s_n;
+    __shared__ float s_w;
+    if (threadIdx.x == 0) {
+        while (*(volatile unsigned*) &st->seq_hdr != seq) {
+#if defined(__CUDA_ARCH__) && __CUDA_ARCH__ >= 700
+            __nanosleep(200);
+#endif
+        }
+        __threadfence_system();
+        s_n = st->n_ent;
+    }
+    __syncthreads();
+    const int n = s_n > kLaneSlots ? kLaneSlots : s_n;
+    const int r = blockIdx.x * blockDim.x + threadIdx.x;
+    for (int j = 0; j < n; ++j) {
+        if (threadIdx.x == 0) {
+            while (*(volatile unsigned*) &st->flag[j] != seq) {
+#if defined(__CUDA_ARCH__) && __CUDA_ARCH__ >= 700
+                __nanosleep(200);
+#endif
+            }
+            __threadfence_system();   // the host released the row before the flag; this acquires it
+            s_w = st->w[j];
+        }
+        __syncthreads();
+        if (r < dim) out[r] = fmaf(s_w, st->row[j][r], out[r]);
+        __syncthreads();   // the block is done with row j before anyone re-checks a flag
+    }
+}
+
 __global__ void init_pre_kernel(float* pre, int T) {
     const int i = blockIdx.x * blockDim.x + threadIdx.x;
     if (i < T * 8) pre[i] = (i % 8) == 0 ? 1.0f : 0.0f;
@@ -2123,6 +2157,9 @@ void route_ahead(const float* logits, const float* bias, int n, int m, int T, Re
         route_ahead_kernel<<<T, 512, 0, s>>>(logits, bias, n, m, req, off);
 }
 void wait_seq(const unsigned* seq_ptr, unsigned seq, cudaStream_t s) { wait_seq_kernel<<<1, 32, 0, s>>>(seq_ptr, seq); }
+void lane_accum(LaneStage* st, int dim, unsigned seq, float* out, cudaStream_t s) {
+    lane_accum_kernel<<<dim3((unsigned) ((dim + 255) / 256), 1), 256, 0, s>>>(st, dim, seq, out);
+}
 
 // the RAM store's experts for the device (a decode token, window of one): a pick the VRAM table left at 0 whose expert the store holds
 // (zc_tab[expert] = the slot's device address over PCIe, 0: not) is copied to staging slot i with wide coalesced loads (the PCIe

@@ -233,6 +233,22 @@ struct Resp {
     int cpu[kWin];   // 1: part[t] is the CPU lane's weighted sum for token t
     float part[kWin][kMaxDim];
 };
+// E1 (DS4_PARTIAL_COMBINE): the lane posts each entry the moment its rows land, one slot per ring request,
+// instead of answering with one pre-summed part after the last entry.  The combine accumulates per landing entry.
+constexpr int kLaneSlots = 8;   // a token's CPU-lane entries at T=1 (never more than kPicks)
+static_assert(kLaneSlots >= kPicks, "a request's staging holds every pick a token can make");
+struct LaneStage {
+    unsigned seq_hdr;                // the request's seq once n_ent is valid
+    int n_ent;
+    int pad[2];
+    unsigned flag[kLaneSlots];       // == the request's seq once row j is posted
+    int tok[kLaneSlots];             // the entry's token (0 on the T=1 path this serves)
+    float w[kLaneSlots];             // its route weight
+    float row[kLaneSlots][kMaxDim];  // its down-projection output
+};
+// spin per staged entry until its flag carries the request's seq, then accumulate w*row into out (the T=1
+// decode path's combine for the CPU lane).  Stage order = the host's old sum order.
+void lane_accum(LaneStage* st, int dim, unsigned seq, float* out, cudaStream_t s);
 /// route() for the T tokens of a window, plus: plan_ptr[t][i] = vram[idx[t][i]] (0: not on the device), each token's x
 /// (dim floats) and picks into the request slot, then T and seq (req null: no request, the plan alone).
 void route_publish(const float* logits, const float* bias, int n, int k, int T, float route_scale,
