@@ -142,3 +142,61 @@ parity-first porting (bitwise harnesses before batteries) · probe-metrics stabi
 spec-trace instrument (per-window draft probabilities banked for offline refits) · the KL yardstick
 (F-230-anchored numerics gate) · the single-engine law (F-271) · and AGENTS.md law 4b: **no
 terminal trade-offs** — a lane-negative result is a scoping problem, not a verdict.
+
+---
+
+## 6. The research epoch (F-359..F-376 + the T/X/W sessions, 2026-10-27 → 11-02)
+
+Curated from the T-epoch (SVG-CUSTOM.md's tail + the commit journal + `campaign/tracker/lanes.csv`).
+The era's law: **falsifications are first-class** — every entry below carries its number, and the
+era's negative results (E1, SMT, X1, X2, W9-composite, W12) are banked in the same ledger so no
+future session re-pays for them.
+
+**The shadow store (F-359/F-360/F-367).** A second, deliberately lighter quantization (Q2_0) whose
+only consumer is the byte-bound CPU lane: the artifact of record ships in `data/packs/q2_0`, a
+tmpfs placement cache is re-established by the launcher on every boot (a silent reboot-time loss
+was found and normalized), and the lane pays 75 µs/entry instead of 152. Clean A/B:
+**+2.9/+3.8/+20.8%** (solo/pair/conc).
+
+**Two engines, one ledger (F-370, the dsv41 port).** DeepSeek-V4.1-Flash runs in-tree as its own
+target on the same serving surface. Its decode anatomy is measured to the per-phase bytes: the
+16-thread CPU lane over 110 GB of RAM-resident experts runs at **46–50 GB/s of the box's 50 GB/s
+ceiling** (DS4_PROF, per-entry accounting) — the measured fact that redirected the whole DS line
+from kernel work to byte cuts. Wins banked on it: `--experts 5` (+49/+47/+19%), then `--experts 4`
+(+15.1/+17.4/+16.1, MMLU 90.0 vs 88.57 — the quality gate clean), DS4_ATTN_SPLIT (+9.4/+7.2/+7.5),
+the BF16 router gate (bit-identical, +2.8/+2.4/+3.2).
+
+**Truth-first telemetry (D9/D1).** The decode decomposition split with event-bracketed head GPU
+time — the measurement that killed the standing "head is 40%" belief (true head: 0.29 ms; the rest
+was CPU-lane wait draining into the final sync), plus per-entry lane GB/s. D1 stages the sampler
+ahead of the round's one stream drain (one host sync per token instead of two). PF-5
+(`DS4_SETTLE_ROUNDS`) queues the post-prompt expert-cache settle and returns — the drain overlaps
+the first decode tokens instead of blocking cold TTFT up to 6 s.
+
+**Coverage-quota residency (T62/E4, env-gated).** VRAM expert slots follow the profile's
+heat-per-byte across layers by marginal coverage gain, not a uniform per-layer fraction
+(+3.4/+4.3/+0.6 measured — a positive lean under the adoption bar, kept armed for composition).
+
+**The adaptive-speculation controller (W1, adopted 2026-11-02).** The complete cost-model
+controller (`src/spec/controller.cpp` — E[tokens]/step_ms(T) over window sizes, min-gain guarded,
+acceptance learned from the session's own per-depth EMAs) now sizes the serial verify window:
+cut-only, after the min_p walk, before the keep rule. Telemetry proves the mechanism (avg window
+3.1–3.9 at ~85% acceptance held). Battery-neutral on the standard probe (all lanes inside noise);
+the measured +35–38% class is live deep-context traffic — the owed live-session watch carries the
+verdict there.
+
+**The lane-trend tracker + the chart (the methodology's instrument).** `campaign/tracker/`:
+append-only lanes.csv, the incline law (a standing line never steps down; falsified arms never
+append), `build-trend.py` regenerating the chart with solo/pair/conc trend panels **and a
+prefill-by-prompt-size panel** (both engines' history from first light to today). The campaign
+laws (AGENTS.md): the incline law (12), the through law (13 — a regression stays open until it is
+a net win), nothing-ships-half-done (14), and **the needle priced before it runs** (15 — an arm
+whose expected win sits inside the drift band is composed or dropped, not measured).
+
+**The arXiv research corpus (2026-10-31).** Four parallel researchers scraped the literature
+against the measured walls; the synthesis (memory + `campaign/ROADMAP-dsv41.md`) ranks the
+techniques with evidence and flags the dead ends — and four of its cheapest recommendations
+(X1 Fate-prediction, X2 TC scorer, W9 composite, W12 GDN-split) were then implemented, measured,
+and honestly falsified on this hardware, each with its mechanism named. The remaining validated
+queue: the DS round CUDA graph (X3), micro-group conc pipelining (X4), speculative verification
+with reuse-aware gating (X6) — designs published in the roadmap.

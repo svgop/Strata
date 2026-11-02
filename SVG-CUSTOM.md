@@ -11914,3 +11914,29 @@ Measured (temp 0, 1400-token budget): at 4..24 the model REFUSED phishing / AV-b
 4 24 → 1 47, commit 29aca578, revert = the reverse.  Also banked: a short `max_tokens` is spent entirely inside
 `reasoning_content` and returns `content=null` + `finish_reason=length`, which reads as a refusal but is budget
 exhaustion — the probe uses a 1400-token budget; a distinct "thinking exhausted" finish signal is a follow-up.
+
+## F-377 — the T/X/W epoch record (2026-10-28 → 11-02; the per-move detail lives in the commit journal and campaign/tracker/)
+
+The campaign's second epoch ran under T-numbers (T50..T62) and session letters (X/W), tracked in
+`campaign/tracker/lanes.csv` (the incline law governs) with the per-move evidence in the commit
+messages and `campaign/ROADMAP-dsv41.md`. The scoreboard at epoch close:
+
+- **DS line** (dsv41, standing `--experts 4`, 262K): first light 36.8 → 62.3/60.9/68.2 (best-day
+  3-leg). Adopted: --experts 5 (T53) → 4 (T61, +15.1/+17.4/+16.1, MMLU clean), DS4_ATTN_SPLIT
+  (T56), BF16 router gate (T57), D9 truth-split telemetry, D1 one-drain sampler, PF-5 settle
+  rounds. Falsified with mechanisms named: E1 partial combine (the 4e lane is throughput-bound —
+  overlap never materializes), SMT lane threads (−20%, sibling contention), X1 Fate-prediction
+  (−8.4%: the guesses cost two gate GEMVs/layer and the RAM-copy config has no slow tier to
+  prefetch from), X2 TC scorer (neutral: TC_QT=16 vs decode nq=1..8 = 15/16 tile waste).
+- **Qwen line** (262K standing): T59 207.4/198.4/294.1 → the fresh-OS epoch 232.2/222.3/315.4
+  with W1 adopted. Falsified: W9 composite (pair −4.6%; bisection found a real S26×LFUSE
+  interaction), W12 GDN_SPLIT (−7.1 solo lean) — the gfx1151 precedent does not transfer to
+  sm_120. **W1 ADOPTED (2026-11-02):** the cost-model controller sizes the serial window
+  (battery-neutral, mechanism proven avg T 3.1–3.9 at 85% acceptance; the M15 +35% class is live
+  deep traffic — the live-session watch and MMLU 2× are the owed gates).
+- **The UD-IQ1_M verdict:** the 250 GB unsloth pack downloaded and analyzed — our GSQ pack's
+  routed experts are ALREADY IQ1_M at the same byte class; the UD pack is 2× the size (dense at
+  Q4–Q8) in a fused layout incompatible with our manifest loader. GSQ stays canonical; the model
+  is 748B-A16B (GGUF metadata).
+- **The measurement constitution grew:** law 15 (the needle priced before it runs); the chart
+  gained the prefill panel; the falsification ledger now covers eight honestly-killed arms.

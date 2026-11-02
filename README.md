@@ -59,6 +59,12 @@ with the quality gate clean, floors (MMLU-Pro 95.0 mean, mimic 87.9) never trade
   the true head is 0.29 ms, and the rest was CPU-lane wait draining into the final sync. Per-entry
   lane GB/s, window p50/p99, true token gaps, and admission waits complete the picture. Every
   optimization this fork adopted or killed was priced by these numbers first.
+- **The adaptive-speculation controller** — a complete cost-model controller sizes every serial
+  verify window: argmax over window sizes of expected-tokens ÷ step-cost, where the cost curve is
+  the measured window wall (8.4 + 1.57×rows ms, R²=0.99) and the acceptance is learned live from
+  the session's own per-depth EMAs. Cut-only and min-gain guarded — it can choose smaller windows,
+  never riskier ones; telemetry shows windows trimmed to T≈3–4 with acceptance held at ~85%.
+  Battery-neutral by construction; its measured +35% class is deep-context live traffic.
 - **Proof-carrying performance methodology** — the campaign laws as engineering constraints: ABAB
   interleaved batteries, quiet-window five-boot means, parity-first ports, the incline law (a
   standing line never steps down), the through law (a regression stays open until it is a net win,
