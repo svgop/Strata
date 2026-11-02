@@ -85,3 +85,12 @@ qwen,2026-11-02,fcc130d5,W1 matched control (champion binary + tmpfs shadow) 2-l
 qwen,2026-11-02,fcc130d5,W1 adaptive-spec ADOPTED standing (battery-neutral +0.9/-0.4/+3.0 all inside noise; mechanism proven avg T 3.1-3.9 at 85% accept; the M15 +35% class is live deep traffic - live watch owed),solo,232.2,0,standing
 qwen,2026-11-02,fcc130d5,W1 adaptive-spec ADOPTED standing (battery-neutral; live watch owed),pair,222.3,0,standing
 qwen,2026-11-02,fcc130d5,W1 adaptive-spec ADOPTED standing (battery-neutral; live watch owed),conc,315.4,0,standing
+qwen,2026-11-02,30a7ef7b,T63 control (tail-skip off; box 2955MHz + 3GB swap - not bankable),solo,197.3,0,mean
+qwen,2026-11-02,30a7ef7b,T63 control (tail-skip off; box 2955MHz + 3GB swap - not bankable),pair,197.8,0,mean
+qwen,2026-11-02,30a7ef7b,T63 control (tail-skip off; box 2955MHz + 3GB swap - not bankable),conc,292.1,0,mean
+qwen,2026-11-02,30a7ef7b,T63 tail-skip rank 7 ADOPTED (+10.2 solo +4.4 pair -0.6 conc vs ctl; golden==ctl; MMLU 98.6/95.7; mimic 90.9=ctl; clean re-bank owed),solo,217.5,0,mean
+qwen,2026-11-02,30a7ef7b,T63 tail-skip rank 7 ADOPTED (+10.2 solo +4.4 pair -0.6 conc vs ctl; golden==ctl; MMLU 98.6/95.7; mimic 90.9=ctl; clean re-bank owed),pair,206.5,0,mean
+qwen,2026-11-02,30a7ef7b,T63 tail-skip rank 7 ADOPTED (+10.2 solo +4.4 pair -0.6 conc vs ctl; golden==ctl; MMLU 98.6/95.7; mimic 90.9=ctl; clean re-bank owed),conc,290.5,0,mean
+deepseek,2026-11-02,30a7ef7b,T64 A2 baseline (adaptive-k arm off; top-4 routing flat per the 400K-sample histogram),solo,65.3,0,mean
+deepseek,2026-11-02,30a7ef7b,T64 A2 baseline (adaptive-k arm off; top-4 routing flat per the 400K-sample histogram),pair,62.05,0,mean
+deepseek,2026-11-02,30a7ef7b,T64 A2 baseline (adaptive-k arm off; top-4 routing flat per the 400K-sample histogram),conc,70.45,0,mean

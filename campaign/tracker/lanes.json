@@ -207,6 +207,32 @@
       "pair": "standing",
       "conc": "standing"
      }
+    },
+    {
+     "date": "2026-11-02",
+     "commit": "30a7ef7b",
+     "label": "T63 control (tail-skip off; box 2955MHz + 3GB swap - not bankable)",
+     "solo": 197.3,
+     "pair": 197.8,
+     "conc": 292.1,
+     "kinds": {
+      "solo": "mean",
+      "pair": "mean",
+      "conc": "mean"
+     }
+    },
+    {
+     "date": "2026-11-02",
+     "commit": "30a7ef7b",
+     "label": "T63 tail-skip rank 7 ADOPTED (+10.2 solo +4.4 pair -0.6 conc vs ctl; golden==ctl; MMLU 98.6/95.7; mimic 90.9=ctl; clean re-bank owed)",
+     "solo": 217.5,
+     "pair": 206.5,
+     "conc": 290.5,
+     "kinds": {
+      "solo": "mean",
+      "pair": "mean",
+      "conc": "mean"
+     }
     }
    ],
    "prefill": [
@@ -462,6 +488,19 @@
       "solo": "single",
       "pair": "single",
       "conc": "single"
+     }
+    },
+    {
+     "date": "2026-11-02",
+     "commit": "30a7ef7b",
+     "label": "T64 A2 baseline (adaptive-k arm off; top-4 routing flat per the 400K-sample histogram)",
+     "solo": 65.3,
+     "pair": 62.05,
+     "conc": 70.45,
+     "kinds": {
+      "solo": "mean",
+      "pair": "mean",
+      "conc": "mean"
      }
     }
    ],

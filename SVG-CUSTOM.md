@@ -11940,3 +11940,29 @@ messages and `campaign/ROADMAP-dsv41.md`. The scoreboard at epoch close:
   is 748B-A16B (GGUF metadata).
 - **The measurement constitution grew:** law 15 (the needle priced before it runs); the chart
   gained the prefill panel; the falsification ledger now covers eight honestly-killed arms.
+
+## F-378 — the A2 gate-mass adaptive-k campaign: the wall is proven, one lane moves, one closes (2026-11-02)
+
+- **The probe first (campaign/probe-bandwidth.c, userland AVX-512, no root):** the DRAM ceiling
+  is real at 49.5 GB/s and the CPU lane rides 93–100% of it. The 8.5 MB expert-block access
+  shape costs nothing (chunk/seq 0.98–1.01), the thread curve is flat from 6 to 16, and
+  MADV_COLLAPSE cannot even collapse on the fragmented box. The whole "move the bytes faster"
+  family — hugepages, TLB, prefetch shape, more lane threads — is closed with measurements, not
+  vibes. Only fewer bytes moves a lane.
+- **Qwen: STRATA_ROUTE_TAIL_SKIP=7 ADOPTED.** The tail-skip existed but was OFF in the standing
+  config (--batch 6 defeats the CUDA default's o.batch==0 condition). T63 2v2 interleaved
+  (degraded box: 2955 MHz + 3 GB swap from a double-battery incident; the interleave keeps the
+  A/B honest, the clean re-bank is owed): +10.2% solo / +4.4% pair / −0.6% conc vs control, the
+  golden hash IDENTICAL to control (rank-7 skipping changed no output on the golden set), MMLU
+  98.6 + 95.7 (floor 93.3), mimic 90.9% = the banked control. ts6 killed (output-changing,
+  dominated on M1; its rows never append, law 12).
+- **DeepSeek: the arm that never booted (law 15).** DS4_ADAPTIVE_K implemented in
+  route_publish_kernel (in-kernel tail-pick elision: ids=-1 / plan=0 / w=0 with renormalise-kept;
+  zc_copy/zc_fix OOB guards; an always-on tail-share histogram). The histogram priced it out
+  with zero armed boots: over 400K sampled token-layers the top-4 routing is FLAT — 92% of 4th
+  picks carry ≥11% of the routed mass. A quality-safe tau saves ≤1.7% of lane bytes (under the
+  bar); a bar-clearing tau (0.20) deletes a 15–20% mass share on half the layers. Arm kept
+  env-gated default-off; the flat-routing fact is the durable insight (it is also why --experts 4
+  holds and why DeepSeek's balanced MoE leaves no free tail).
+- **DS baseline banked above the T61 standing:** 65.3/62.1/70.4 (2 legs, arm off) — box state,
+  not an arm; the standing line stays.

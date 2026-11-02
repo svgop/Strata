@@ -200,3 +200,19 @@ techniques with evidence and flags the dead ends — and four of its cheapest re
 and honestly falsified on this hardware, each with its mechanism named. The remaining validated
 queue: the DS round CUDA graph (X3), micro-group conc pipelining (X4), speculative verification
 with reuse-aware gating (X6) — designs published in the roadmap.
+
+**The tail-skip arm (T63, adopted 2026-11-02).** Upstream's `STRATA_ROUTE_TAIL_SKIP` (a
+CPU-missed expert that every token of a verify window ranks ≥ the rank is neither copied nor
+computed) was OFF in our standing config the whole time — `--batch 6` defeats its CUDA default.
+Arming it at rank 7 measured **+10.2% solo / +4.4% pair** (2v2 interleaved, conc flat), the
+golden hash identical to control (the skipped tail changed no output on the golden set), MMLU
+98.6 + 95.7, mimic = the banked control. Rank 6 is output-changing and dominated — killed.
+
+**The wall, measured (2026-11-02).** `campaign/probe-bandwidth.c` (userland AVX-512, no root):
+the DRAM ceiling is real at **49.5 GB/s** and the CPU lane rides 93–100% of it; the expert-block
+access shape costs nothing; the thread curve is flat; THP can't even collapse here. The
+move-bytes-faster family is closed with measurements. And the DS histogram (400K token-layers,
+`DS4_ADAPTIVE_K_STATS`): **DeepSeek's top-4 routing is flat** — 92% of 4th picks carry ≥11% of
+the routed mass, so gate-mass adaptive-k on DS is priced out before a single armed boot (law
+15). Fewer bytes now means re-quantization (VQ/codebooks) or expert merging — those are the open
+lane levers.
