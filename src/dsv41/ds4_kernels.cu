@@ -1602,12 +1602,17 @@ __global__ void combine_kernel(const float* __restrict__ ed, const float* __rest
     out[(size_t) t * dim + e] = a;
 }
 
+// T63/A2 gate-mass adaptive-k: the last pick's share of its token's routed mass, counted on k >= 4 routes
+// (the drafter routes k = 3 and is never counted or touched).  bins: <.02 <.05 <.08 <.11 <.15 <.20 <.30 >=.30.
+__device__ unsigned g_ak_hist[8];
+
 __global__ void __launch_bounds__(512) route_publish_kernel(const float* __restrict__ logits,
                                                             const float* __restrict__ bias, int n, int k,
                                                             float route_scale, const unsigned long long* __restrict__ vram,
                                                             const float* __restrict__ x, int dim, int* idx, float* w,
                                                             unsigned long long* plan_ptr, Req* req,
-                                                            const float* __restrict__ bias_vl, unsigned vl) {
+                                                            const float* __restrict__ bias_vl, unsigned vl,
+                                                            float ak_tau) {
     __shared__ float sc[1024], bs[1024];
     __shared__ float bv[32];
     __shared__ int bi[32];
@@ -1649,15 +1654,29 @@ __global__ void __launch_bounds__(512) route_publish_kernel(const float* __restr
     if (threadIdx.x == 0) {
         float s = 0.0f;
         for (int r = 0; r < k; ++r) s += sc[pick[r]];
+        // A2: the tail pick's mass share.  Below tau it is dropped: the slot publishes -1/0/0, which the lane
+        // (ids < 0), the VRAM kernels and moe_win_group (plan == 0) and the combines (w == 0) all already skip,
+        // and the kept picks renormalise over s - share for strict k-1 routing.
+        int nd = k;
+        float kept = s;
+        if (k >= 4) {
+            const float share = sc[pick[k - 1]] / (s + 1e-20f);
+            atomicAdd(&g_ak_hist[share < 0.02f ? 0 : share < 0.05f ? 1 : share < 0.08f ? 2 :
+                                 share < 0.11f ? 3 : share < 0.15f ? 4 : share < 0.20f ? 5 :
+                                 share < 0.30f ? 6 : 7],
+                          1u);
+            if (ak_tau > 0.0f && share < ak_tau) { nd = k - 1; kept = s - sc[pick[k - 1]]; }
+        }
         int cpu = 0;
         for (int r = 0; r < k; ++r) {
-            const float wv = sc[pick[r]] / (s + 1e-20f) * route_scale;
-            idx[(size_t) t * kPicks + r] = pick[r];
+            const bool drop = r >= nd;
+            const float wv = drop ? 0.0f : sc[pick[r]] / (kept + 1e-20f) * route_scale;
+            idx[(size_t) t * kPicks + r] = drop ? -1 : pick[r];
             w[(size_t) t * kPicks + r] = wv;
-            plan_ptr[(size_t) t * kPicks + r] = vram[pick[r]];
-            cpu |= vram[pick[r]] == 0ull;
+            plan_ptr[(size_t) t * kPicks + r] = drop ? 0ull : vram[pick[r]];
+            if (!drop) cpu |= vram[pick[r]] == 0ull;
             if (req != nullptr) {
-                req->ids[t][r] = pick[r];
+                req->ids[t][r] = drop ? -1 : pick[r];
                 req->w[t][r] = wv;
             }
         }
@@ -2147,10 +2166,18 @@ attnsplit::AttnSplitScratch split_scratch(cudaStream_t s, int heads) {
 void route_publish(const float* logits, const float* bias, int n, int k, int T, float route_scale,
                    const unsigned long long* vram, const float* x, int dim, int* idx, float* w,
                    unsigned long long* plan_ptr, Req* req, unsigned seq, cudaStream_t s, const float* bias_vl,
-                   unsigned vl, int na0, int na1) {
+                   unsigned vl, int na0, int na1, float ak_tau) {
     route_publish_kernel<<<T, 512, 0, s>>>(logits, bias, n, k, route_scale, vram, x, dim, idx, w, plan_ptr, req,
-                                           vl != 0 ? bias_vl : nullptr, vl);
+                                           vl != 0 ? bias_vl : nullptr, vl, ak_tau);
     if (req != nullptr) publish_kernel<<<1, 1, 0, s>>>(req, T, seq, na0, na1);
+}
+
+bool adaptive_k_hist(unsigned* out8) {
+    return cudaMemcpyFromSymbol(out8, g_ak_hist, 8 * sizeof(unsigned)) == cudaSuccess;
+}
+void adaptive_k_hist_reset() {
+    static const unsigned zero[8] = {};
+    cudaMemcpyToSymbol(g_ak_hist, zero, sizeof zero);
 }
 void route_ahead(const float* logits, const float* bias, int n, int m, int T, Req* req, int off, cudaStream_t s) {
     if (req != nullptr && m > 0 && T > 0 && n <= 1024 && off + m <= kAhead)
@@ -2167,7 +2194,7 @@ void lane_accum(LaneStage* st, int dim, unsigned seq, float* out, cudaStream_t s
 __global__ void zc_copy_kernel(const unsigned long long* __restrict__ plan, const int* __restrict__ idx,
                                const unsigned long long* __restrict__ zc_tab, uint8_t* __restrict__ stage, size_t stride, size_t bytes) {
     const int i = blockIdx.y;
-    if (plan[i] != 0) return;
+    if (plan[i] != 0 || idx[i] < 0) return;   // (A2: a dropped pick carries no expert)
     const unsigned long long p = zc_tab[idx[i]];
     if (p == 0) return;
     const uint4* src = (const uint4*) p;
@@ -2178,7 +2205,7 @@ __global__ void zc_copy_kernel(const unsigned long long* __restrict__ plan, cons
 __global__ void zc_fix_kernel(unsigned long long* __restrict__ plan, const int* __restrict__ idx, const unsigned long long* __restrict__ zc_tab,
                               int k, uint8_t* __restrict__ stage, size_t stride) {
     const int i = threadIdx.x;
-    if (i >= k || plan[i] != 0) return;
+    if (i >= k || plan[i] != 0 || idx[i] < 0) return;   // (A2: a dropped pick carries no expert)
     if (zc_tab[idx[i]] != 0) plan[i] = (unsigned long long) (stage + (size_t) i * stride);
 }
 void zc_stage(unsigned long long* plan, const int* idx, const unsigned long long* zc_tab, int k, uint8_t* stage, size_t stride, size_t bytes,

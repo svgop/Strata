@@ -251,10 +251,18 @@ struct LaneStage {
 void lane_accum(LaneStage* st, int dim, unsigned seq, float* out, cudaStream_t s);
 /// route() for the T tokens of a window, plus: plan_ptr[t][i] = vram[idx[t][i]] (0: not on the device), each token's x
 /// (dim floats) and picks into the request slot, then T and seq (req null: no request, the plan alone).
+/// ak_tau > 0 (T63/A2 gate-mass adaptive-k): a token's last pick whose share of its routed mass falls below ak_tau is
+/// published as ids = -1 / plan = 0 / w = 0, and the kept picks renormalise to the same total - strict k-1 routing.
+/// Every consumer already honours those sentinels (the lane skips ids < 0, the VRAM kernels and moe_win_group skip
+/// plan == 0, the combines multiply by w = 0), so the dropped expert is never read anywhere.  Pass 0 for the drafter.
 void route_publish(const float* logits, const float* bias, int n, int k, int T, float route_scale,
                    const unsigned long long* vram, const float* x, int dim, int* idx, float* w,
                    unsigned long long* plan_ptr, Req* req, unsigned seq, cudaStream_t s, const float* bias_vl = nullptr,
-                   unsigned vl = 0, int na0 = 0, int na1 = 0);
+                   unsigned vl = 0, int na0 = 0, int na1 = 0, float ak_tau = 0.0f);
+/// The last-pick mass-share histogram behind the elision (8 bins: <.02 <.05 <.08 <.11 <.15 <.20 <.30 >=.30, one count
+/// per k >= 4 token): fires(tau) = the share of tokens below tau.  Always counted, cheap; read + reset from the host.
+bool adaptive_k_hist(unsigned* out8);
+void adaptive_k_hist_reset();
 /// Lookahead: the m picks a later layer will likely make (its gate's logits on this layer's FFN input, the routing's
 /// score + bias, the m best of n) into req->ahead[t][off ..) for the T tokens - before route_publish, which publishes them.
 void route_ahead(const float* logits, const float* bias, int n, int m, int T, Req* req, int off, cudaStream_t s);

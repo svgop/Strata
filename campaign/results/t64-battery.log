@@ -1,0 +1,67 @@
+T64 BATTERY start Mon Nov  2 04:06:59 PM SAST 2026 tau='off'
+=== LEG t64-ctl-r1 health=1 16:07:51 env='DS4_ADAPTIVE_K_STATS=1' ===
+[16:08:33] prewarm-ds4: page cache re-warmed in 42s
+Traceback (most recent call last):
+  File "<stdin>", line 4, in <module>
+TypeError: 'NoneType' object is not subscriptable
+200
+200
+200
+[16:08:45] prewarm-ds4: replay done in 54s total
+=== PROBE t64-ctl-r1 | 2026-11-02 16:08:45 | log=/home/svg/LLM/strata-custom-2/custom-iq3_s.log
+    warmup: 4 tok in 0.45s
+    A.short[1]: 220 tok in 3.86s = 57.0 t/s
+    A.short[2]: 220 tok in 3.01s = 73.1 t/s
+    A.short[3]: 220 tok in 3.10s = 71.1 t/s
+    A.short[4]: 220 tok in 2.91s = 75.5 t/s
+    A.short[5]: 220 tok in 2.82s = 77.9 t/s
+    A.short[6]: 220 tok in 2.85s = 77.2 t/s
+    fresh-long-prompt: 80 tok out in 1.36s
+    B.short[1]: 220 tok in 3.33s = 66.0 t/s
+    B.short[2]: 220 tok in 2.85s = 77.1 t/s
+    B.short[3]: 220 tok in 2.75s = 79.9 t/s
+    B.short[4]: 220 tok in 2.71s = 81.1 t/s
+    B.short[5]: 220 tok in 2.76s = 79.8 t/s
+    B.short[6]: 220 tok in 2.69s = 81.8 t/s
+SHORT-CLASS A/B   : before long prompt 72.0 t/s -> after 77.6 t/s (8%)
+M1 single-stream : 65.0 t/s (2000 tok in 30.76s)
+M2 pair          : 61.8 t/s aggregate (1800 tok in 29.13s)
+M2 6-conc        : 71.0 t/s aggregate (3600 tok in 50.68s)
+--- engine accounting, in order (ms/window is the degradation signal) ---
+M3d per-position : not printed (arm STRATA_SPEC_DEPTH=1 to publish accepted/tested by depth)
+=== PROBE END t64-ctl-r1
+[metrics t64-ctl-r1] TTFT p50/p99 26ms/935ms  ITL p99 20ms  accept None%  clock 2955.0MHz 45.0C 92.12W  golden f895fd0d08e9ff64  DRIFT a974bc5a6f6c8ec6 -> f895fd0d08e9ff64
+=== LEG t64-ctl-r2 health=1 16:12:32 env='DS4_ADAPTIVE_K_STATS=1' ===
+[16:13:15] prewarm-ds4: page cache re-warmed in 43s
+Traceback (most recent call last):
+  File "<stdin>", line 4, in <module>
+TypeError: 'NoneType' object is not subscriptable
+200
+200
+200
+[16:13:27] prewarm-ds4: replay done in 55s total
+=== PROBE t64-ctl-r2 | 2026-11-02 16:13:27 | log=/home/svg/LLM/strata-custom-2/custom-iq3_s.log
+    warmup: 4 tok in 0.44s
+    A.short[1]: 220 tok in 3.73s = 59.0 t/s
+    A.short[2]: 220 tok in 3.15s = 69.8 t/s
+    A.short[3]: 220 tok in 2.97s = 74.2 t/s
+    A.short[4]: 220 tok in 2.86s = 76.9 t/s
+    A.short[5]: 220 tok in 2.80s = 78.5 t/s
+    A.short[6]: 220 tok in 2.80s = 78.5 t/s
+    fresh-long-prompt: 80 tok out in 1.17s
+    B.short[1]: 220 tok in 3.26s = 67.5 t/s
+    B.short[2]: 220 tok in 2.73s = 80.6 t/s
+    B.short[3]: 220 tok in 2.78s = 79.2 t/s
+    B.short[4]: 220 tok in 2.75s = 80.1 t/s
+    B.short[5]: 220 tok in 2.68s = 82.0 t/s
+    B.short[6]: 220 tok in 2.72s = 80.8 t/s
+SHORT-CLASS A/B   : before long prompt 72.8 t/s -> after 78.4 t/s (8%)
+M1 single-stream : 65.6 t/s (2000 tok in 30.47s)
+M2 pair          : 62.3 t/s aggregate (1800 tok in 28.90s)
+M2 6-conc        : 69.9 t/s aggregate (3600 tok in 51.50s)
+--- engine accounting, in order (ms/window is the degradation signal) ---
+M3d per-position : not printed (arm STRATA_SPEC_DEPTH=1 to publish accepted/tested by depth)
+=== PROBE END t64-ctl-r2
+[metrics t64-ctl-r2] TTFT p50/p99 26ms/935ms  ITL p99 20ms  accept None%  clock 2955.0MHz 45.0C 91.4W  golden 7e1f55df3f21e033  DRIFT a974bc5a6f6c8ec6 -> 7e1f55df3f21e033
+T64 BATTERY end Mon Nov  2 04:16:05 PM SAST 2026
+done

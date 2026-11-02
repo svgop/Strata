@@ -1058,6 +1058,14 @@ struct Model::Impl {
     // picks by rank on Sun: 97 91 81 70 57 41 %, past the top 6 29 20 %: reads wasted on an SSD-bound PC).
     int ahead_mode = std::getenv("DS4_AHEAD") ? std::atoi(std::getenv("DS4_AHEAD")) : 1;
     int ahead_extra = std::getenv("DS4_AHEAD_EXTRA") ? std::atoi(std::getenv("DS4_AHEAD_EXTRA")) : 0;
+    // T63/A2 gate-mass adaptive-k (DS4_ADAPTIVE_K = tau, off at 0): a decode token's tail pick carrying less than
+    // tau of its routed mass is dropped at the router (the lane skips ids < 0, the VRAM path skips plan == 0, the
+    // kept picks renormalise - strict k-1 routing).  The lane is DRAM-saturated (probe: 49.5 GB/s achievable, the
+    // lane at 46-50), so only fewer bytes moves it; this is the byte-count lever.  The tail-share histogram is
+    // always counted and prints every 4096 routes with DS4_ADAPTIVE_K_STATS=1.
+    float adaptive_k_tau_ = std::getenv("DS4_ADAPTIVE_K") ? (float) std::atof(std::getenv("DS4_ADAPTIVE_K")) : 0.0f;
+    bool ak_stats_ = std::getenv("DS4_ADAPTIVE_K_STATS") != nullptr;
+    uint64_t ak_routes_ = 0;
     // (DS4_AHEAD_ORDER=0: the CPU lane computes a layer's experts in expert order, not the ones asked for early first)
     bool ahead_order = std::getenv("DS4_AHEAD_ORDER") == nullptr || std::atoi(std::getenv("DS4_AHEAD_ORDER")) != 0;
     // DS4_AHEAD_WARM: the next layer's guessed RAM-resident experts swept toward the L3 ahead of time, so the CPU
@@ -9676,7 +9684,22 @@ struct Model::Impl {
             }
             route_publish(d.glog, l.gate_bias, l.n_exp, l.k_exp, T, g.route_scale, l.vram_tab, d.x, D, d.ridx, d.rw,
                           d.plan_ptr, lead ? reqs + slot : nullptr, sq, s, l.gate_bias_vl, l.mtp ? 0u : wp.vl, na[0],
-                          na[1]);
+                          na[1], l.mtp ? 0.0f : adaptive_k_tau_);
+            if (ak_stats_ && lead && !l.mtp && (++ak_routes_ & 4095) == 0) {   // A2: the tau-pricing histogram
+                unsigned h[8] = {};
+                cudaSetDevice(d.id);
+                if (adaptive_k_hist(h)) {
+                    unsigned tot = 0;
+                    for (unsigned v : h) tot += v;
+                    if (tot > 0)
+                        std::fprintf(stderr,
+                                     "ds4 adaptive-k tail share: <.02 %.2f%% <.05 %.2f%% <.08 %.2f%% <.11 %.2f%% "
+                                     "<.15 %.2f%% <.20 %.2f%% <.30 %.2f%% >=.30 %.2f%% (tokens %u)\n",
+                                     100.0 * h[0] / tot, 100.0 * h[1] / tot, 100.0 * h[2] / tot, 100.0 * h[3] / tot,
+                                     100.0 * h[4] / tot, 100.0 * h[5] / tot, 100.0 * h[6] / tot, 100.0 * h[7] / tot,
+                                     tot);
+                }
+            }
             if (!mv(d, {job(l.s1, d.x, d.sg, T, D, FF), job(l.s3, d.x, d.su, T, D, FF)}, err)) return false;
             swiglu(d.sg, d.su, T * FF, g.lim, d.sh, s);
             if (!mv(d, {job(l.s2, d.sh, d.sh_out, T, FF, D)}, err)) return false;
