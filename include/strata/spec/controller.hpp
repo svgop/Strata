@@ -56,6 +56,14 @@ public:
     /// After verification: `accepted` of the `k` drafted tokens matched (a prefix).
     void observe(const Choice& c, int accepted, int lookup_match);
 
+    /// W1 wiring: seed the per-position acceptance straight from the engine's own depth EMAs
+    /// (dp_ok/dp_tested by position).  `p[i] < 0` leaves position i at its prior - the engine has
+    /// not tested it yet this session.
+    void set_mtp_accept(const double* p, int n) {
+        for (int i = 0; i < n && i < K_MAX; ++i)
+            if (p[i] >= 0.0) mtp_p_[i] = p[i];
+    }
+
     double mtp_accept(int position) const { return mtp_p_[position]; }     // position 0 = first draft token
     double lookup_accept(int match) const { return lookup_q_[bucket(match)]; }
     const CostModel& cost() const { return cost_; }

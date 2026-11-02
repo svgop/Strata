@@ -79,3 +79,9 @@ deepseek,2026-10-28,upstream-pkg,dsv41 261K prompt read,prefill,1846,261669,sing
 deepseek,2026-10-28,upstream-pkg,dsv41 1M prompt read,prefill,1380,1047686,single
 deepseek,2026-10-31,5e4207bc,4e standing 15K cold read,prefill,1520,15154,single
 deepseek,2026-10-31,5e4207bc,4e standing 50K cold read,prefill,2072,50434,single
+qwen,2026-11-02,fcc130d5,W1 matched control (champion binary + tmpfs shadow) 2-leg,solo,230.2,0,mean
+qwen,2026-11-02,fcc130d5,W1 matched control (champion binary + tmpfs shadow) 2-leg,pair,223.1,0,mean
+qwen,2026-11-02,fcc130d5,W1 matched control (champion binary + tmpfs shadow) 2-leg,conc,306.3,0,mean
+qwen,2026-11-02,fcc130d5,W1 adaptive-spec ADOPTED standing (battery-neutral +0.9/-0.4/+3.0 all inside noise; mechanism proven avg T 3.1-3.9 at 85% accept; the M15 +35% class is live deep traffic - live watch owed),solo,232.2,0,standing
+qwen,2026-11-02,fcc130d5,W1 adaptive-spec ADOPTED standing (battery-neutral; live watch owed),pair,222.3,0,standing
+qwen,2026-11-02,fcc130d5,W1 adaptive-spec ADOPTED standing (battery-neutral; live watch owed),conc,315.4,0,standing

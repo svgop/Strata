@@ -82,6 +82,7 @@
 #include "strata/program/prefill_plan.hpp"
 #include "strata/program/draft_kv_plan.hpp"
 #include "strata/program/message_boundary.hpp"
+#include "strata/spec/controller.hpp"
 #include "strata/spec/draft_policy.hpp"
 #include "strata/spec/draft_source.hpp"
 #include "strata/spec/suffix_drafter.hpp"
@@ -15378,6 +15379,27 @@ int main(int argc, char** argv) {
             int64_t chain_windows = 0, chain_drafts = 0, chain_ok = 0;   // --lookup-chain's own counts
             int64_t t2_rej[8] = {}, t2_hit[8] = {};   // STRATA_MTP_TOP2: rejections inside the MTP drafts by depth, runner-up hits
             int64_t dp_tested[8] = {}, dp_ok[8] = {};   // STRATA_SPEC_DEPTH=1: MTP drafts tested / accepted by depth
+            // W1 (ROADMAP W1, STRATA_ADAPTIVE_SPEC=1): the cost-model controller sizes the serial window -
+            // argmax_T E[tokens] / step_ms(T) from this session's own per-depth acceptance EMAs (dp_ok/dp_tested
+            // by position) and the measured window wall (M15: 8.4 + 1.57 x rows ms, R^2 = 0.99 over 450 samples;
+            // solo depth-8 windows run 30-41% row-efficient, so trimming pays ~+35%).  Cut-only: it never raises T
+            // above what the min_p walk and the keep rule would allow.
+            const bool adaptive_spec = std::getenv("STRATA_ADAPTIVE_SPEC") != nullptr;
+            const int64_t adaptive_warm = [] {
+                const char* v = std::getenv("STRATA_ADAPTIVE_WARM");
+                return v ? (int64_t) std::atoll(v) : 100;
+            }();
+            strata::spec::CostModel adaptive_cost;
+            {
+                const double base = 8.4 + 1.57;   // the T = 1 wall from M15's fit
+                adaptive_cost.dense_ms = base;
+                for (int n = 1; n <= strata::spec::K_MAX + 1; ++n)
+                    adaptive_cost.dense_ratio[(size_t) n - 1] = (8.4 + 1.57 * n) / base;
+                adaptive_cost.cpu_all_miss_ms = 0.0;   // the curve is the measured WHOLE wall: the CPU-expert,
+                adaptive_cost.sync_ms = 0.0;           // sync and draft terms are already inside it, so only the
+                adaptive_cost.mtp_draft_ms = 0.0;      // per-size ratios carry information here
+                adaptive_cost.lookup_draft_ms = 0.0;
+            }
             std::vector<int32_t> cbuf((size_t) S, 0), ctail;
             strata::spec::PromptLookupSource lookup_src(sfx);
             static const bool chain_fixed = std::getenv("STRATA_LOOKUP_CHAIN_FIXED") != nullptr;   // no policy gate
@@ -16081,9 +16103,26 @@ int main(int argc, char** argv) {
             }
             while (!pl_ran && !cancelled && produced_n < max_new) {
                 int T = use_mtp ? S_mtp : 1;   // no --mtp: one token a round unless a lookup draft fires
-                if (use_mtp && req_spec_min_p > 0.0) {
+                if (use_mtp && req_spec_min_p > 0.0f) {
                     T = 1;
                     while (T < S_mtp && dprob[(size_t) T - 1] >= (float) req_spec_min_p) ++T;
+                }
+                if (adaptive_spec && use_mtp && !first_window) {
+                    // W1: cap the window at the controller's economic size.  Warm-up: the session's own
+                    // depth EMAs must have `adaptive_warm` tested drafts before the controller speaks;
+                    // until then (and whenever no window beats plain decoding by min_gain) stock behavior.
+                    int64_t tested_n = 0;
+                    for (int d = 0; d < 8; ++d) tested_n += dp_tested[d];
+                    if (tested_n >= adaptive_warm) {
+                        strata::spec::Controller ctrl(adaptive_cost, 0.05);
+                        double p[strata::spec::K_MAX];
+                        for (int d = 0; d < strata::spec::K_MAX; ++d)
+                            p[d] = dp_tested[d] >= 8 ? (double) dp_ok[d] / (double) dp_tested[d] : -1.0;
+                        ctrl.set_mtp_accept(p, strata::spec::K_MAX);
+                        const strata::spec::Choice ch = ctrl.choose(0, 0, true);   // Mtp sizing only
+                        const int want = ch.source == strata::spec::Source::Mtp ? ch.k + 1 : 1;
+                        if (want < T) T = want;   // cut-only; the keep rule still trims after
+                    }
                 }
                 T = sk.apply(dprob.data(), T);   // savage-custom F-269 keep rule, cut-only (serial-lane twin)
                 if (first_window) T = merge_T > 0 ? merge_T : 1;
