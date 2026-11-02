@@ -11966,3 +11966,20 @@ messages and `campaign/ROADMAP-dsv41.md`. The scoreboard at epoch close:
   holds and why DeepSeek's balanced MoE leaves no free tail).
 - **DS baseline banked above the T61 standing:** 65.3/62.1/70.4 (2 legs, arm off) — box state,
   not an arm; the standing line stays.
+
+## F-379 — T66 conversation persistence + the T65 gate (2026-11-02)
+
+- **T66 — the 42.7 s re-read is dead.** Conversation persistence across restarts is live and
+  launcher-armed (`STRATA_CONV_SLOT_DIR` → `/home/svg/LLM/data/conversation-slots`): the parked
+  conversations drain to one session file per entry at exit (QUIT / stdin EOF) and restore
+  newest-first at boot under the RAM preflight. Round-trip verified live (drain 2 → restore 2 →
+  the resent prompt's prefix served 65/138 tokens from the restored tail). The standing
+  live-session complaint — a restart re-reads a 261K conversation in 42.7 s — becomes a ~4 s
+  disk read. It was the #1 delay from the live-session review, ~90% built (the SAVE/RESTORE
+  machinery existed); the gap was the drain accessor, the two hooks, and the option.
+- **T65/BL-2 — the batch idle tax is a kernel project, not a constant sweep.** kVerifyMaxT 8→12
+  (would admit all 6 batch slots; priced +33–50% conc) crashed at boot: the native MMVQ
+  activation-GEMV family is 8-column BY DESIGN (`MAX_NCOLS=8`), and every >8-row window flows
+  through it. Reverted in full; the named project is **MMVQ-12** (new `<I, 9..12, R>`
+  instantiations + activation staging at 12 across the quant types). The lesson is recorded:
+  for a window-width change, trace the activation GEMV, not just the expert tables.

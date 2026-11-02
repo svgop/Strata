@@ -216,3 +216,11 @@ move-bytes-faster family is closed with measurements. And the DS histogram (400K
 the routed mass, so gate-mass adaptive-k on DS is priced out before a single armed boot (law
 15). Fewer bytes now means re-quantization (VQ/codebooks) or expert merging — those are the open
 lane levers.
+
+**Conversation persistence across restarts (T66, 2026-11-02).** The parked conversations now
+survive an engine restart: at exit they drain to one session file per entry
+(`slot-<serial>.bin`, the same session-file v1 as SAVE/RESTORE), trimmed to the deepest
+checkpoint; at boot they restore newest-first under the RAM preflight. A restart resumes at the
+parked tail instead of re-reading the prompt — the 42.7 s @261K cold re-read becomes a ~4 s
+disk read. Armed by `STRATA_CONV_SLOT_DIR` (the launcher points it at
+`/home/svg/LLM/data/conversation-slots`); round-trip verified live.
