@@ -507,6 +507,10 @@ public:
         return true;
     }
 
+    // T66 (persistence): read-only access for the exit drain, oldest first.  entries_[i] pairs serials_[i].
+    const SavedConversation& entry_at(size_t i) const { return entries_.at(i); }
+    uint64_t serial_at(size_t i) const { return serials_.at(i); }
+
 private:
     void erase(size_t index) {
         entries_.erase(entries_.begin() + (std::ptrdiff_t) index);

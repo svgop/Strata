@@ -809,6 +809,12 @@ struct Options {
     /// (drop_superseded) after writing the same bytes once more, so on a long single conversation every turn pays a
     /// whole-snapshot copy for nothing.  0 = park every turn, as before.
     int64_t conversation_cache_park_gain = 0;
+    /// --conversation-cache-dir PATH / STRATA_CONV_SLOT_DIR: persist the parked conversations across restarts as
+    /// one session file (slot-<serial>.bin) per entry.  On exit (QUIT or the server closing stdin) the newest
+    /// parked entries are written; on boot they are read back newest-first under the RAM preflight, so a restart
+    /// resumes at the parked tail instead of re-reading the prompt (the 42.7 s re-read of a 261K conversation
+    /// becomes a ~4 s disk read).  Empty = off.
+    std::string conversation_cache_dir;
     /// --memory-limit-mib N / STRATA_MEMORY_LIMIT_MIB: the total RAM this engine's container or cgroup may use, for a
     /// container that cannot see its real limit (0 or unset = none; the flag wins over the variable)
     int64_t memory_limit_mib = -1;
@@ -964,6 +970,9 @@ void usage() {
                  "  --conversation-cache-slots N  --serve: at most N parked conversations (default 4)\n"
                  "  --conversation-cache-min-free-mib N  --serve: RAM floor (under MemAvailable, the cgroup limits and\n"
                  "                       --memory-limit-mib) when parking, saving or restoring a session (default 2560)\n"
+                 "  --conversation-cache-dir PATH  --serve: persist the parked conversations across restarts as session\n"
+                 "                       files (slot-<serial>.bin), drained at exit and restored at boot (also\n"
+                 "                       STRATA_CONV_SLOT_DIR; empty = off)\n"
                  "  --memory-limit-mib N  --serve: the total RAM (MiB) this engine's container or cgroup may use, when\n"
                  "                       the container cannot see its real limit (also STRATA_MEMORY_LIMIT_MIB; the flag\n"
                  "                       wins; 0 = none). Parking and session save/restore keep their floor under it\n"
@@ -2701,6 +2710,7 @@ int main(int argc, char** argv) {
         else if (a == "--spec-follow") o.spec_follow = next("--spec-follow");
         else if (a == "--window-hashes") o.window_hashes = next("--window-hashes");
         else if (a == "--mtp") o.mtp = next("--mtp");
+        else if (a == "--conversation-cache-dir") o.conversation_cache_dir = next("--conversation-cache-dir");
         else if (a == "--mtp-window") o.mtp_window = std::atoll(next("--mtp-window"));
         else if (a == "--pcie-frac") o.pcie_frac = std::atof(next("--pcie-frac"));
         else if (a == "--adapt-every") o.adapt_every = std::atoi(next("--adapt-every"));
@@ -12396,7 +12406,7 @@ int main(int argc, char** argv) {
                         std::printf("ERR %s\n", err.c_str());
                         return false;
                     }
-                    int launched[8] = {};
+                    int launched[strata::kernels::kVerifyMaxT] = {};   // T65/BL-2
                     int n_launched = 0;
                     for (int t = 0; t < w.A; ++t) {
                         const int b = w.active[t];
@@ -12648,7 +12658,7 @@ int main(int argc, char** argv) {
             // savage-custom F-206 (R33): the slot drafts de-serialized — every residual copy and draft
             // graph is enqueued first (the drafters' streams are independent), THEN the waits.  The old
             // per-slot draft() was launch->spin->sync, so slot t+1's GPU work began only after slot t's.
-            int launched[8] = {};
+            int launched[strata::kernels::kVerifyMaxT] = {};   // T65/BL-2
             int n_launched = 0;
             for (int t = 0; t < A; ++t) {
                 const int b = active[t];
@@ -13037,6 +13047,112 @@ int main(int argc, char** argv) {
                 if (!pump(false)) return false;
             return true;
         };
+        // T66: persist the parked conversations across restarts (--conversation-cache-dir / STRATA_CONV_SLOT_DIR;
+        // empty = off).  At boot the slot dir is read back newest-first under the RAM preflight; at exit (QUIT or
+        // the server closing stdin) the newest parked entries are written as slot-<serial>.bin and any slot not in
+        // the drained set is removed, so the dir mirrors the cache exactly.  The 42.7 s re-read of a 261K
+        // conversation becomes a disk read (~4 s).
+        const std::string conv_slot_dir = !o.conversation_cache_dir.empty() ? o.conversation_cache_dir
+            : (std::getenv("STRATA_CONV_SLOT_DIR") != nullptr ? std::getenv("STRATA_CONV_SLOT_DIR") : "");
+        auto session_restore = [&]() {
+            if (conv_slot_dir.empty() || !conversations.enabled()) return;
+            std::error_code ec;
+            if (!std::filesystem::is_directory(conv_slot_dir, ec)) return;
+            struct Found { std::string path; uint64_t serial; };
+            std::vector<Found> found;
+            for (const auto& de : std::filesystem::directory_iterator(conv_slot_dir, ec)) {
+                const std::string fn = de.path().filename().string();
+                if (fn.rfind("slot-", 0) != 0 || fn.size() < 6 || fn.compare(fn.size() - 4, 4, ".bin") != 0) {
+                    if (fn.rfind("slot-", 0) == 0) std::filesystem::remove(de.path(), ec);   // an interrupted write's temp
+                    continue;
+                }
+                uint64_t serial = 0;
+                std::from_chars(fn.data() + 5, fn.data() + fn.size() - 4, serial);
+                found.push_back({de.path().string(), serial});
+            }
+            if (found.empty()) return;
+            std::sort(found.begin(), found.end(), [](const Found& a, const Found& b) { return a.serial > b.serial; });
+            strata::core::SessionFileIdentity id;
+            std::string err;
+            if (!session_identity(id, err, nullptr)) {
+                std::fprintf(stderr, "strata serve: conversation restore: %s\n", err.c_str());
+                return;
+            }
+            const uint64_t floor = (uint64_t) o.conversation_cache_min_free_mib << 20;
+            int kept = 0, dropped = 0;
+            for (const auto& f : found) {
+                if ((int) conversations.size() >= o.conversation_cache_slots) break;
+                strata::core::SessionReadLimits limits;
+                limits.admit = [floor](uint64_t need, std::string& why) {
+                    const auto mem = strata::core::sample_host_memory();
+                    const std::optional<uint64_t> avail = mem ? std::optional<uint64_t>(mem->available) : std::nullopt;
+                    if (strata::core::conversation_memory_admit(avail, need, floor)) return true;
+                    why = "not enough RAM to restore it";
+                    return false;
+                };
+                if (!strata::core::conversation_session_read_limits(limits, ss, g, mtp.kv_state(), (uint64_t) o.max_context,
+                                                                    (uint64_t) std::max(o.prompt_cache, 1), err)) {
+                    std::fprintf(stderr, "strata serve: conversation restore limits: %s\n", err.c_str());
+                    break;
+                }
+                strata::core::SavedConversation image;
+                size_t bytes = 0;
+                strata::core::SessionStatus st;
+                if (!strata::core::session_file_read(f.path, id, image, bytes, err, limits, &st)) {
+                    ++dropped;
+                    std::filesystem::remove(f.path, ec);
+                    continue;
+                }
+                if (conversations.put(std::move(image))) ++kept;
+                else { ++dropped; std::filesystem::remove(f.path, ec); }
+            }
+            if (kept || dropped)
+                std::fprintf(stderr, "strata serve: conversation cache restored %d parked conversation%s from %s%s\n",
+                             kept, kept == 1 ? "" : "s", conv_slot_dir.c_str(),
+                             dropped ? (" (" + std::to_string(dropped) + " stale or oversized removed)").c_str() : "");
+        };
+        auto session_drain = [&]() {
+            if (conv_slot_dir.empty() || !conversations.enabled() || conversations.size() == 0) return;
+            std::error_code ec;
+            std::filesystem::create_directories(conv_slot_dir, ec);
+            strata::core::SessionFileIdentity id;
+            std::string err;
+            if (!session_identity(id, err, nullptr)) {
+                std::fprintf(stderr, "strata serve: conversation drain: %s\n", err.c_str());
+                return;
+            }
+            std::set<std::string> live_files;
+            size_t written = 0;
+            try {
+                while (conversations.size() > 0 && written < (size_t) o.conversation_cache_slots) {
+                    // newest first; the cache is being torn down, so the entry is moved out (no deep copy) and
+                    // trimmed to the checkpoints a disk write keeps (the deepest: the next turn's resume point)
+                    const size_t last = conversations.size() - 1;
+                    const uint64_t serial = conversations.serial_at(last);
+                    strata::core::SavedConversation image = conversations.take(last);
+                    image.checkpoints = strata::core::session_checkpoints_to_save(image.checkpoints);
+                    const std::string name = "slot-" + std::to_string(serial) + ".bin";
+                    const std::string path = conv_slot_dir + "/" + name;
+                    size_t bytes = 0;
+                    if (!strata::core::session_file_write(path, image, id, bytes, err)) {
+                        std::fprintf(stderr, "strata serve: conversation drain: %s\n", err.c_str());
+                        break;
+                    }
+                    live_files.insert(name);
+                    ++written;
+                }
+            } catch (const std::bad_alloc&) {
+                std::fprintf(stderr, "strata serve: conversation drain: out of memory after %zu\n", written);
+            }
+            for (const auto& de : std::filesystem::directory_iterator(conv_slot_dir, ec)) {
+                const std::string fn = de.path().filename().string();
+                if (fn.rfind("slot-", 0) == 0 && live_files.count(fn) == 0) std::filesystem::remove(de.path(), ec);
+            }
+            if (written)
+                std::fprintf(stderr, "strata serve: conversation cache drained %zu parked conversation%s to %s\n",
+                             written, written == 1 ? "" : "s", conv_slot_dir.c_str());
+        };
+        session_restore();
         for (;;) {
             line_drain_ms = 0.0;
             if (batch_on() || (piped && pipe_inflight())) {
@@ -16998,6 +17114,13 @@ int main(int argc, char** argv) {
                 helper_bytes_before = bytes;
             }
         }
+        // T66: persist the parked conversations (and the live one, parked now) before the process goes
+        try {
+            park_current(0);
+        } catch (...) {
+            // a park failure at exit must not hold the shutdown; the parked set still drains
+        }
+        session_drain();
         save_profile("exit");   // #477: QUIT, or the server closed stdin
 #if defined(STRATA_GPU_METAL)
         // the stdin reader (detached above) may still take in_mu when the server closes the pipe after QUIT; on macOS

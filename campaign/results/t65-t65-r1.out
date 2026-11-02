@@ -1,0 +1,46 @@
+launcher: shadow store /dev/shm/strata-shadow-q2_0
+[strata] WARNING: This session has a real-time CPU limit (RLIMIT_RTTIME hard limit 200000; the desktop's audio system sets it to 0 when rtkit is not installed). Linux can then end a program with signal 9 for no visible reason. Install rtkit, or start Strata outside the desktop session's limits, for example: systemd-run --user --collect -p LimitRTTIME=infinity -- strata serve ...
+loading the model (the first start takes a minute or two) ...
+[strata] starting the engine: reading the model's weights ...
+[strata] loading the experts the GPU does not hold into RAM (of about 55 GB) and locking part of them for the GPU.
+         YOUR PC CAN BE SLOW OR STOP RESPONDING FOR 1-3 MINUTES NOW - this is normal.
+         Please wait and don't close this window; the server says when it is ready.
+[strata] filling the GPU's expert cache (9940 experts, 18.86 GiB of VRAM) ...
+[strata] almost ready ...
+[strata] still starting (31 s) - please wait ...
+[strata] still starting (51 s) - please wait ...
+[strata] still starting (71 s) - please wait ...
+[strata] still starting (91 s) - please wait ...
+Traceback (most recent call last):
+  File "/home/svg/LLM/strata-custom-2/serve/server.py", line 8523, in <module>
+    sys.exit(main())
+             ~~~~^^
+  File "/home/svg/LLM/strata-custom-2/serve/server.py", line 8211, in main
+    engine = StrataEngine(exe, engine_args(cfg) + (effort_end or []), cwd=cfg.get("cwd"), log=cfg.get("log"),
+                          env=env, lazy=lazy)
+  File "/home/svg/LLM/strata-custom-2/serve/server.py", line 1167, in __init__
+    raise EngineDied(why + (f" (see {log})" if log else "") + note +
+                     start_failure_hint(log, log_start) + tail)
+EngineDied: the engine exited before it was ready (see /home/svg/LLM/strata-custom-2/custom-iq3_s.log)
+the engine process ended: killed by signal 6 (SIGABRT, Aborted)
+the engine log's last lines:
+  FileExpertSource: allocating 37.78 GiB page-locked cache complement
+  FileExpertSource: 33.94 GiB really free for a 37.78 GiB page-locked complement; the model files' cached pages were released: 83.08 GiB free
+  FileExpertSource: copied cache complement through layer 8/48 (7.22 GiB, 3 s)
+  FileExpertSource: copied cache complement through layer 16/48 (12.74 GiB, 5 s)
+  FileExpertSource: copied cache complement through layer 24/48 (18.33 GiB, 6 s)
+  FileExpertSource: copied cache complement through layer 32/48 (25.29 GiB, 8 s)
+  FileExpertSource: copied cache complement through layer 40/48 (31.96 GiB, 9 s)
+  FileExpertSource: copied cache complement through layer 48/48 (37.78 GiB, 10 s)
+  FileExpertSource: mapped pinned cache complement ready: resident 37.78 GiB, pinned 37.78 GiB in 18 s; page-locked and mapped
+  FileExpertSource: 5185 of the prompt path's 5185 lendable slots keep their experts in RAM too
+  strata generate: resident RAM mode: 37.78 GiB of experts in RAM (page-locked), 9940 in the GPU cache; adaptive swaps exchange them with the GPU cache (no file reads)
+  strata: prefill plan: chunk 32768, ring 96 kept: file set 0.4 GiB fits the page cache 69.9 GiB -> about 0.0 GB read from the drive per 32768-token prompt (1 chunks)
+  strata: prefill plan inputs: 46.8 GiB experts, 18.9 GiB in the GPU caches, 37.8 GiB RAM copy (5185 lend slots kept), file tier 0.0 GiB; 69.9 GiB available for the page cache; PCIe 12.0 GB/s; drive 1.50 GB/s (assumed); a 32768-token prompt
+  strata serve: prompt chunk auto: 32768 tokens, a 96-slot ring
+  strata serve: the prompt path borrows 5185 CUDA0 cache slots (9.80 GiB)
+  strata generate: STRATA_ROUTE_RESIDENT_MTP: the MTP draft's router is biased toward layer 47's resident experts (margin 0.75, ranks 6-9; experimental)
+  strata hc: STRATA_GR_NORM_FAST=1 (T15C S3 default): the split norm runs the fast kernel
+  strata hc: CUDA0: the hyper-connection read runs as staged (the norm per token and stream, the down projection's activations staged ahead by cp.async); checked bit for bit against the plain read on this card (STRATA_HC_SPLIT=1 or 0 for the earlier ones)
+  terminate called after throwing an instance of 'std::invalid_argument'
+    what():  native MMVQ requires 1 <= ncols <= 8

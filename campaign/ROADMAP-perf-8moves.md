@@ -468,3 +468,21 @@ acceptance metric is the per-request prompt_ms term in the `requests` block (vis
 | W17 | STRATA_PREFILL_CADENCE unset (off) — env-only | | |
 | W18 | STRATA_BATCH_DRAFT_DEPTH back to 1 (default) — env-only; telemetry fix is additive | | |
 | W19 | small-read fast path env off / pre-w19 | | |
+
+## BL-2 / T65 (2026-11-02): the batch idle-tax attack is GATED, not a quick win — named blocker
+
+Priced and attempted: kVerifyMaxT 8 -> 12 (the admission S + 2 <= kVerifyMaxT admits only 4 of 6
+slots at 2 rows/slot; 12 would admit all 6, worth ~+33-50% conc). The sweep landed (constants,
+exec_ arrays, expert_multi 9-12, combine guards, GMAX, dm_fold gate, the three verifier-init
+max_t expressions — the last was itself a latent bug: it counted batch SLOTS not batch ROWS,
+masked at 8 by o.spec's +2 bump). **Boot crashed at warmup: `native MMVQ requires 1 <= ncols <=
+8` (native_mmvq.cu:1800 and the il/wave variants) — the engine's entire activation-GEMV family
+is 8-column BY DESIGN (MAX_NCOLS=8, the activation staging `cp = 8 copy`, native_mmvq.cu:829),
+and every projection in a >8-row window flows through it.** The BL-2 dig measured the
+expert-source tables' headroom (120 <= 128) but missed this gate.
+
+Verdict: REVERTED in full (law 14). The batch idle tax needs the MMVQ 12-column family first
+(new <I, 9..12, R> instantiations + cp staging at 12 across all quant types — multi-day kernel
+project, named MMVQ-12). Cheaper sibling inside MAX_NCOLS=8: a per-slot depth admission
+(6 slots x 1 row + 2 spare rows to two slots' drafts) — priced ~+3% with a fairness trade, not
+run. Control legs banked on the degraded box (2955 MHz): 204.2/190.6/268.1 and 201.4/195.8/266.6.
