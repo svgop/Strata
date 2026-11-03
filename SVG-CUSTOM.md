@@ -12004,3 +12004,11 @@ storage canon (reference updates in the same commit):
   because the models moved mid-run (its 13 parked conversations were not persisted — safe, the
   dir was left empty; the feature recaptures from the next session). Both engines re-verified
   booting from the new layout.
+
+  Correction (operator, same day): the models organize by QUANTIZATION LINEAGE, not an invented
+  per-family dir — `GSQ-RCO/Qwen3.8-Flash-Next/` (the Qwen shards) and
+  `GSQ-RCO/Deepseek-v4.1-Flash/IQ2-XXS/` (the DS shards + engram + mmproj + the restored
+  drafter at `…/IQ2-XXS/deepseek-v4.1-flash-shared/`, the pack's fixed relative path), beside
+  the existing `GSQ-RCO/Deepseek-v4.1-Flash/Coder/` and the parked `UD3.1/`. References
+  re-pointed (config, ds4.txt model_dir, prewarms, arms); both engines re-verified from the
+  lineage paths.

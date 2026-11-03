@@ -21,8 +21,8 @@ grep -q "mapped pinned cache complement ready" "$LOG" \
   || echo "[$(date +%H:%M:%S)] prewarm2: WARNING - pin line not found in $LOG (continuing)"
 
 for f in /home/svg/LLM/data/packs/iq3_s/* \
-         /home/svg/LLM/data/models/qwen3.8-flash-next/Qwen3.8-Flash-Next-GSQ-RCO-IQ3_S-00001-of-00002.gguf \
-         /home/svg/LLM/data/models/qwen3.8-flash-next/Qwen3.8-Flash-Next-GSQ-RCO-IQ3_S-00002-of-00002.gguf; do
+         /home/svg/LLM/data/models/GSQ-RCO/Qwen3.8-Flash-Next/Qwen3.8-Flash-Next-GSQ-RCO-IQ3_S-00001-of-00002.gguf \
+         /home/svg/LLM/data/models/GSQ-RCO/Qwen3.8-Flash-Next/Qwen3.8-Flash-Next-GSQ-RCO-IQ3_S-00002-of-00002.gguf; do
   [ -f "$f" ] || continue
   dd if="$f" of=/dev/null bs=8M status=none 2>/dev/null || cat "$f" > /dev/null 2>/dev/null || true
 done

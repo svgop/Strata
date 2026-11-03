@@ -14,8 +14,8 @@ T0=$(date +%s)
 # the pack manifest (tensors.txt) names the GSQ-RCO-IQ2_XXS shards in data/models, so the store's
 # actual read source was never warmed. Warm exactly what tensors.txt references.
 for f in /home/svg/LLM/data/packs/deepseek-v4.1-flash-ist-das-2.00bpw/* \
-         /home/svg/LLM/data/models/deepseek-v4.1-flash/DeepSeek-V4.1-Flash-1017-GSQ-RCO-IQ2_XXS-0000*-of-00004.gguf \
-         /home/svg/LLM/data/models/deepseek-v4.1-flash/DeepSeek-V4.1-Flash-Engram-IQ4_NL.gguf \
+         /home/svg/LLM/data/models/GSQ-RCO/Deepseek-v4.1-Flash/IQ2-XXS/DeepSeek-V4.1-Flash-1017-GSQ-RCO-IQ2_XXS-0000*-of-00004.gguf \
+         /home/svg/LLM/data/models/GSQ-RCO/Deepseek-v4.1-Flash/IQ2-XXS/DeepSeek-V4.1-Flash-Engram-IQ4_NL.gguf \
          /home/svg/LLM/data/models/deepseek-v4.1-flash-shared/*; do
   [ -f "$f" ] || continue
   dd if="$f" of=/dev/null bs=8M status=none 2>/dev/null || true
