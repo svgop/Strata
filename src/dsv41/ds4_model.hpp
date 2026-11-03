@@ -49,6 +49,13 @@ struct Options {
     bool dspark = true;              // load the DSpark drafter (the checkpoint's mtp.* blocks) for speculative decoding
     int dspark_block = 0;             // at most this many drafts a round (--dspark-block N; 0: the pack's block size)
     float dspark_conf = 0.5f;         // a draft is verified while its confidence (sigmoid) is at least this
+    // A control vector on the residual stream (the Qwen engine's cvec, ported): a GGUF of per-layer unit
+    // directions (direction.1..N, F32, hidden_size each) applied after each layer's FFN write as
+    // h <- h - s (h . v) v - project mode, per-layer, exactly the refusal-direction files the Qwen
+    // engine loads (--control-vector-scaled FILE:SCALE, --control-vector-layer-range A B).  Empty: off.
+    std::string cvec_file;
+    double cvec_scale = 1.0;
+    int cvec_first = 0, cvec_last = -1;   // the steered layers, inclusive (-1: every layer the file covers)
     // tensor parallelism: runs of tp GPUs of one kind (the same memory) take the same layers, each a share of the
     // heads, of the output projection and of every expert's FFN, summed through host-mapped memory (a GPU unlike the
     // next stays alone); tp > 1 runs with threads (--tp 1 --threads off: one host thread, layer split only)

@@ -485,6 +485,7 @@ std::vector<float> rope_freqs(int dim, int original, double base, double factor,
 // ------------------------------------------------------------------ devices, layers
 struct Dev {
     int id = 0;
+    float *cv_dir = nullptr, *cv_s = nullptr;   // the control vector's tables on this device (n_layers each)
     cudaStream_t st = nullptr;
     cudaEvent_t ev = nullptr;
     size_t free0 = 0, total = 0, weights = 0, experts = 0, caches = 0, scratch = 0;
@@ -3027,6 +3028,7 @@ struct Model::Impl {
         calibrate_paths();
         init_store();      // (last: the store's arena is registered with the driver - page-locked memory the other pinned allocations must come before)
         preload_store();
+        if (!o.cvec_file.empty() && !cvec_load(o.cvec_file, o.cvec_scale, o.cvec_first, o.cvec_last, err)) return false;
         if (o.verbose) std::fprintf(stderr, "ds4: loaded in %.1f s\n%s", (now_ms() - t0) / 1000.0, describe().c_str());
         if (chunk > 0) (void) pick_flow_min();   // (the startup line)
         reset();
@@ -3064,6 +3066,130 @@ struct Model::Impl {
             (void) cudaGetLastError();
         }
     }
+
+    // ---- the control vector (the Qwen engine's cvec, ported) ----------------------------------------
+    // A GGUF of per-layer unit directions applied after each layer's FFN write: h <- h - s (h . v) v on
+    // every (token, stream) row of the residual.  Loaded once at start; the tables sit on every device.
+    struct Cvec {
+        std::vector<float> dir, s;   // nl * dim unit rows (zero: not steered), nl strengths (0: not steered)
+        int dim = 0, first = 0, last = -1, steered = 0;
+        bool on(int il) const { return il >= first && il <= last && il >= 0 && il < (int) s.size() && s[il] != 0.0f; }
+    } cv_;
+    bool cvec_load(const std::string& path, double scale, int first, int last, std::string& err) {
+        std::FILE* f = std::fopen(path.c_str(), "rb");
+        if (f == nullptr) {
+            err = path + ": cannot open";
+            return false;
+        }
+        std::fseek(f, 0, SEEK_END);
+        std::vector<uint8_t> buf((size_t) std::ftell(f));
+        std::rewind(f);
+        if (std::fread(buf.data(), 1, buf.size(), f) != buf.size()) {
+            std::fclose(f);
+            err = path + ": short read";
+            return false;
+        }
+        std::fclose(f);
+        struct CvParse {
+            const std::vector<uint8_t>& buf;
+            size_t p = 0;
+            size_t rd(size_t n) {
+                if (p + n > buf.size()) throw std::runtime_error("cvec: past the end");
+                const size_t at = p;
+                p += n;
+                return at;
+            }
+            void skip_val(uint32_t ty) {
+                if (ty == 8) {
+                    const uint64_t n = *reinterpret_cast<const uint64_t*>(buf.data() + rd(8));
+                    rd((size_t) n);
+                } else if (ty == 9) {
+                    const uint32_t at = *reinterpret_cast<const uint32_t*>(buf.data() + rd(4));
+                    const uint64_t n = *reinterpret_cast<const uint64_t*>(buf.data() + rd(8));
+                    for (uint64_t i = 0; i < n; ++i) skip_val(at);
+                } else {
+                    rd(ty == 0 || ty == 1 || ty == 7 ? 1 : ty == 2 || ty == 3 || ty == 4 || ty == 5 || ty == 6 ? 4
+                                                     : ty == 10 || ty == 11 || ty == 12 ? 8 : 0);
+                }
+            }
+        } ps{buf};
+        try {
+            if (std::memcmp(buf.data(), "GGUF", 4) != 0) throw std::runtime_error("cvec: not a GGUF");
+            ps.p = 4;
+            (void) ps.rd(4);                                     // version
+            const uint64_t nt = *reinterpret_cast<const uint64_t*>(buf.data() + ps.rd(8));
+            const uint64_t nk = *reinterpret_cast<const uint64_t*>(buf.data() + ps.rd(8));
+            for (uint64_t i = 0; i < nk; ++i) {
+                const uint64_t nl = *reinterpret_cast<const uint64_t*>(buf.data() + ps.rd(8));
+                ps.rd((size_t) nl);
+                ps.skip_val(*reinterpret_cast<const uint32_t*>(buf.data() + ps.rd(4)));
+            }
+            // the tensor headers; the payload follows them, 32-byte aligned (gguf's general.alignment default)
+            struct Ent { std::string name; uint32_t type; uint64_t off; size_t bytes; };
+            std::vector<Ent> ents;
+            ents.reserve((size_t) nt);
+            for (uint64_t i = 0; i < nt; ++i) {
+                const uint64_t nl = *reinterpret_cast<const uint64_t*>(buf.data() + ps.rd(8));
+                Ent e;
+                e.name.assign(reinterpret_cast<const char*>(buf.data() + ps.rd((size_t) nl)), (size_t) nl);
+                const uint32_t nd = *reinterpret_cast<const uint32_t*>(buf.data() + ps.rd(4));
+                size_t elems = 1;
+                for (uint32_t dq = 0; dq < nd; ++dq) {
+                    const uint64_t dm = *reinterpret_cast<const uint64_t*>(buf.data() + ps.rd(8));
+                    elems *= (size_t) dm;
+                }
+                e.type = *reinterpret_cast<const uint32_t*>(buf.data() + ps.rd(4));
+                e.off = *reinterpret_cast<const uint64_t*>(buf.data() + ps.rd(8));
+                e.bytes = elems * (e.type == 0 ? 4 : 2);
+                if (e.type != 0 && e.type != 1) continue;      // F32 (and F16, widened below) only
+                ents.push_back(std::move(e));
+            }
+            const size_t base = (ps.p + 31u) & ~size_t(31u);
+            cv_ = Cvec{};
+            cv_.dir.assign((size_t) g.nl * g.dim, 0.0f);
+            cv_.s.assign((size_t) g.nl, 0.0f);
+            cv_.dim = g.dim;
+            for (const Ent& e : ents) {
+                if (e.name.rfind("direction.", 0) != 0 || e.bytes != (size_t) g.dim * 4) continue;
+                const int il = std::atoi(e.name.c_str() + 10);
+                if (il <= 0 || il >= g.nl) continue;
+                const float* src = reinterpret_cast<const float*>(buf.data() + base + (size_t) e.off);
+                double n = 0.0;
+                for (int q = 0; q < g.dim; ++q) n += (double) src[q] * src[q];
+                const float len = (float) std::sqrt(n);
+                if (!(len > 0.0f)) continue;
+                for (int q = 0; q < g.dim; ++q) cv_.dir[(size_t) il * g.dim + q] = src[q] / len;
+                cv_.s[(size_t) il] = len * (float) scale;
+            }
+            cv_.first = first;
+            cv_.last = last < 0 ? g.nl - 1 : last;
+            for (int il = 0; il < g.nl; ++il)
+                if (cv_.on(il)) ++cv_.steered;
+            if (cv_.steered == 0) {
+                err = path + ": no direction.<1..N> of " + std::to_string(g.dim) + " floats found";
+                return false;
+            }
+        } catch (const std::exception& ex) {
+            err = path + ": " + ex.what();
+            return false;
+        }
+        for (auto& d : devs) {
+            cudaSetDevice(d.id);
+            CK(cudaMalloc(&d.cv_dir, cv_.dir.size() * 4));
+            CK(cudaMalloc(&d.cv_s, cv_.s.size() * 4));
+            CK(cudaMemcpy(d.cv_dir, cv_.dir.data(), cv_.dir.size() * 4, cudaMemcpyHostToDevice));
+            CK(cudaMemcpy(d.cv_s, cv_.s.data(), cv_.s.size() * 4, cudaMemcpyHostToDevice));
+        }
+        std::fprintf(stderr, "ds4: control vector: project:%d-%d:per-layer:%d/%d layers (%s)\n",
+                     cv_.first, cv_.last, cv_.steered, g.nl, path.c_str());
+        return true;
+    }
+    /// after a layer's FFN residual write: the vector's project step, on this device's residual
+    void cv_step(const Dev& d, int il, float* h, int T, cudaStream_t s) {
+        if (cv_.on(il) && d.cv_dir != nullptr)
+            cvec_project(h, d.cv_dir + (size_t) il * cv_.dim, cv_.s[(size_t) il], g.hc, g.dim, T, s);
+    }
+
     // The warm-up runs once the model is loaded, on a thread of its own: HIP serialises the BLAS start with the store's page-locked
     // arena (measured: beside the store's read it finished only when the read did, 21 s, and load still grew by its 3.5 s), so
     // it cannot hide inside the load; after it, a person typing gives it the seconds it needs.  A chunked pass that starts first
@@ -7961,6 +8087,7 @@ struct Model::Impl {
             if (!flow_layer(d, c, L0, mi, wp.k, T, b, err)) return false;
             if (nm > 1) allreduce(c.acc, T * D, ab, mi, ++c.arb_seq, d.xcnt, s);
             hc_post_inplace(c.acc, c.h, c.f_post, c.f_comb, D, H, T, s);
+            cv_step(d, l.il, c.h, T, s);   // the control vector, after the FFN write
             CK(cudaMemcpyAsync(c.pre, c.f_pre, (size_t) T * 8 * 4, cudaMemcpyDeviceToDevice, s));
             prof_mark(d, 3);
             return true;
@@ -7989,6 +8116,7 @@ struct Model::Impl {
         if (!run_set(d, c, l, l.vram_base, 0, unit(l), c.bounds, b.data(), v_done, L0.n_slots, T, err)) return false;
         if (nm > 1) allreduce(c.acc, T * D, ab, mi, ++c.arb_seq, d.xcnt, s);
         hc_post_inplace(c.acc, c.h, c.f_post, c.f_comb, D, H, T, s);
+        cv_step(d, l.il, c.h, T, s);   // the control vector, after the FFN write
         CK(cudaMemcpyAsync(c.pre, c.f_pre, (size_t) T * 8 * 4, cudaMemcpyDeviceToDevice, s));
         prof_mark(d, 3);
         return true;
@@ -9774,6 +9902,7 @@ struct Model::Impl {
             if (nm > 1) allreduce(d.moe_out, T * D, ag, mi, ++d.ar_seq, d.xcnt, s);
             hc_post(d.moe_out, d.h, d.f_post, d.f_comb, D, H, T, d.h2, s);
             std::swap(d.h, d.h2);
+            cv_step(d, l.il, d.h, T, s);   // the control vector, after the FFN write
             CK(cudaMemcpyAsync(d.pre, d.f_pre, (size_t) T * 8 * 4, cudaMemcpyDeviceToDevice, s));
             prof_mark(d, 5);
             return true;
@@ -9892,6 +10021,7 @@ struct Model::Impl {
         combine(d.ed, ents.empty() ? nullptr : d.cpu_part, d.sh_out, cm, T, D, d.moe_out, s);
         hc_post(d.moe_out, d.h, d.f_post, d.f_comb, D, H, T, d.h2, s);
         std::swap(d.h, d.h2);
+        cv_step(d, l.il, d.h, T, s);   // the control vector, after the FFN write
         CK(cudaMemcpyAsync(d.pre, d.f_pre, (size_t) T * 8 * 4, cudaMemcpyDeviceToDevice, s));
         // (h_part / h_x are written again only after the next layer's route has synchronized, which follows these)
         return true;

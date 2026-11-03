@@ -1263,6 +1263,24 @@ int main(int argc, char** argv) {
             o.experts = v == "auto" ? -1 : std::max(1, std::atoi(v.c_str()));
         }
         else if (a == "--dspark-block") o.dspark_block = std::max(0, std::atoi(val("--dspark-block").c_str()));
+        // the control vector (the Qwen engine's cvec, ported): --control-vector-scaled FILE[:SCALE] with
+        // --control-vector-layer-range A B (project mode, per-layer - the refusal-direction files)
+        else if (a == "--control-vector-scaled") {
+            const std::string v = val("--control-vector-scaled");
+            const size_t cl = v.rfind(':');
+            char* end = nullptr;
+            const double sc = cl == std::string::npos ? 0.0 : std::strtod(v.c_str() + cl + 1, &end);
+            if (cl != std::string::npos && end != nullptr && *end == 0 && sc > 0.0) {
+                o.cvec_file = v.substr(0, cl);
+                o.cvec_scale = sc;
+            } else {
+                o.cvec_file = v;
+                o.cvec_scale = 1.0;
+            }
+        } else if (a == "--control-vector-layer-range") {
+            o.cvec_first = std::max(1, std::atoi(val("--control-vector-layer-range").c_str()));
+            o.cvec_last = std::atoi(val("--control-vector-layer-range").c_str());
+        }
         else if (a == "--tp") o.tp = std::max(1, std::atoi(val("--tp").c_str()));
         else if (a == "--prefill-chunk") o.prefill_chunk = std::max(0, std::atoi(val("--prefill-chunk").c_str()));
         else if (a == "--threads") o.threads = val("--threads") != "off";

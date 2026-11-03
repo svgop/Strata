@@ -2262,6 +2262,32 @@ void hc_post_inplace(const float* y, float* h, const float* post, const float* c
                      cudaStream_t s) {
     hc_post_inplace_kernel<<<dim3(cdiv(dim, kThreads), T), kThreads, 0, s>>>(y, h, post, comb, dim, hc);
 }
+
+// The control vector's project step (the Qwen engine's cvec, ported): after a layer's FFN write every
+// hyper-connection stream h of every token loses its component along the layer's unit direction v,
+// h <- h - s (h . v) v (an abliteration / refusal-direction projection).  One block a (token, stream):
+// the residual is [T][hc][dim] floats, so block b is row b's dim values.
+__global__ void __launch_bounds__(512) cvec_project_kernel(float* __restrict__ h, const float* __restrict__ v,
+                                                           float s, int dim) {
+    float* row = h + (size_t) blockIdx.x * dim;
+    float part = 0.0f;
+    for (int i = threadIdx.x; i < dim; i += blockDim.x) part += row[i] * v[i];
+    __shared__ float red[16];
+    for (int o = 16; o > 0; o >>= 1) part += __shfl_xor_sync(0xffffffffu, part, o);
+    if ((threadIdx.x & 31) == 0) red[threadIdx.x >> 5] = part;
+    __syncthreads();
+    if (threadIdx.x < 32) {
+        float p = threadIdx.x < (int) (blockDim.x >> 5) ? red[threadIdx.x] : 0.0f;
+        for (int o = 16; o > 0; o >>= 1) p += __shfl_xor_sync(0xffffffffu, p, o);
+        if (threadIdx.x == 0) red[0] = p * s;
+    }
+    __syncthreads();
+    const float k = red[0];
+    for (int i = threadIdx.x; i < dim; i += blockDim.x) row[i] -= k * v[i];
+}
+void cvec_project(float* h, const float* v, float s, int hc, int dim, int T, cudaStream_t st) {
+    if (T > 0 && hc > 0 && dim > 0) cvec_project_kernel<<<T * hc, 512, 0, st>>>(h, v, s, dim);
+}
 void hc_mix_scale(const float* h, int hcdim, int n_mix, int T, float eps, float* mixes, cudaStream_t s) {
     hc_mix_scale_kernel<<<T, kThreads, 0, s>>>(h, hcdim, n_mix, eps, mixes);
 }

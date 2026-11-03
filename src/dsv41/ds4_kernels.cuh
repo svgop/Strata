@@ -338,4 +338,8 @@ struct ArGroup {
 constexpr int kArBlocks = 64;
 void allreduce(float* x, int n, const ArGroup& a, int mi, unsigned seq, unsigned* cnt, cudaStream_t s);
 
+/// The control vector's project step (the Qwen engine's cvec, ported): h <- h - s (h . v) v on every
+/// (token, hyper-connection stream) row of the [T][hc][dim] residual, v the layer's unit direction.
+void cvec_project(float* h, const float* v, float s, int hc, int dim, int T, cudaStream_t st);
+
 }  // namespace strata::ds4
