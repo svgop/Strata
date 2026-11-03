@@ -39,7 +39,7 @@ for t in $(seq 1 100); do
 done
 echo "=== BOOT t40-verify health=$ok $(date +%H:%M:%S) ===" >> "$OUT"
 if [ "$ok" = 1 ]; then
-  grep -a "STRATA_DM armed\|strata pdl\|conversation.cache\|COHORTS" "$REPO/custom-iq3_s.log" | tail -4 >> "$OUT"
+  grep -a "STRATA_DM armed\|strata pdl\|conversation.cache\|COHORTS" "$REPO/logs/custom-iq3_s.log" | tail -4 >> "$OUT"
   # cohort-lane traffic: 6 concurrent short requests, two waves (rotate slots, park/restore)
   python3 - "$PORT" "$KEY" >> "$OUT" 2>&1 <<'PY'
 import json, sys, time, urllib.request
@@ -64,7 +64,7 @@ PY
   echo "--- trace twin (b lines):" >> "$OUT"
   head -3 /tmp/t40-btrace.txt >> "$OUT" 2>/dev/null; wc -l /tmp/t40-btrace.txt >> "$OUT" 2>/dev/null
   echo "--- WSTAT lines:" >> "$OUT"
-  grep -a "^WSTAT" "$REPO/custom-iq3_s.log" | tail -2 >> "$OUT"
+  grep -a "^WSTAT" "$REPO/logs/custom-iq3_s.log" | tail -2 >> "$OUT"
 fi
 echo "SERVER LEFT RUNNING $(date +%H:%M:%S)" >> "$OUT"
 echo "T40 VERIFY end $(date)" >> "$OUT"

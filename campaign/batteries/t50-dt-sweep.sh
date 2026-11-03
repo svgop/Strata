@@ -33,7 +33,7 @@ run_leg() {  # $1 dt value
   done
   echo "=== LEG dt=$1 health=$ok $(date +%H:%M:%S) ===" >> "$OUT"
   [ "$ok" = 1 ] || { cleanup_engine; return; }
-  ( cd "$REPO" && bash campaign/prewarm2.sh "$REPO/custom-iq3_s.log" >> "$OUT" 2>&1 )
+  ( cd "$REPO" && bash campaign/prewarm2.sh "$REPO/logs/custom-iq3_s.log" >> "$OUT" 2>&1 )
   ( cd "$REPO" && python3 campaign/probe-lane.py --port "$PORT" --label "$lbl" --short-n 6 >> "$OUT" 2>&1 )
   ( cd "$REPO" && .venv/bin/python campaign/probe-metrics.py --port "$PORT" --label "$lbl" 2>&1 | tail -2 >> "$OUT" )
 }
@@ -46,6 +46,6 @@ for t in $(seq 1 100); do
   [ -n "$(curl -s -m 3 http://127.0.0.1:$PORT/health 2>/dev/null)" ] && { echo "SERVER UP $(date +%H:%M:%S)" >> "$OUT"; break; }
   sleep 3
 done
-( cd "$REPO" && bash campaign/prewarm2.sh "$REPO/custom-iq3_s.log" >> "$OUT" 2>&1 )
+( cd "$REPO" && bash campaign/prewarm2.sh "$REPO/logs/custom-iq3_s.log" >> "$OUT" 2>&1 )
 echo "T50 DT SWEEP end $(date)" >> "$OUT"
 echo "done" >> "$OUT"

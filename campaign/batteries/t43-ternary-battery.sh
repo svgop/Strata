@@ -42,7 +42,7 @@ run_leg() {  # $1 tag, $2 round, $3 env
   done
   echo "=== LEG $lbl health=$ok $(date +%H:%M:%S) env='$3' ===" >> "$OUT"
   [ "$ok" = 1 ] || { cleanup_engine; return; }
-  ( cd "$REPO" && bash campaign/prewarm2.sh "$REPO/custom-iq3_s.log" >> "$OUT" 2>&1 )
+  ( cd "$REPO" && bash campaign/prewarm2.sh "$REPO/logs/custom-iq3_s.log" >> "$OUT" 2>&1 )
   ( cd "$REPO" && python3 campaign/probe-lane.py --port "$PORT" --label "$lbl" --short-n 6 --conc-n 9 >> "$OUT" 2>&1 )
   ( cd "$REPO" && .venv/bin/python campaign/probe-metrics.py --port "$PORT" --label "$lbl" 2>&1 | tail -2 >> "$OUT" )
 }
@@ -57,7 +57,7 @@ for t in $(seq 1 100); do
 done
 echo "=== SMOKE boot health=$ok ===" >> "$OUT"
 if [ "$ok" = 1 ]; then
-  ( cd "$REPO" && bash campaign/prewarm2.sh "$REPO/custom-iq3_s.log" >> "$OUT" 2>&1 )
+  ( cd "$REPO" && bash campaign/prewarm2.sh "$REPO/logs/custom-iq3_s.log" >> "$OUT" 2>&1 )
   ( cd "$REPO" && python3 campaign/t43-smoke.py >> "$OUT" 2>&1 )
   echo "--- boot lines:" >> "$OUT"
   grep -E "COHORTS=3|COHORTS=2" "$RES/t43-smoke.out" | head -3 >> "$OUT"
@@ -76,6 +76,6 @@ for t in $(seq 1 100); do
   [ -n "$(curl -s -m 3 http://127.0.0.1:$PORT/health 2>/dev/null)" ] && { echo "SERVER UP (standing) $(date +%H:%M:%S)" >> "$OUT"; break; }
   sleep 3
 done
-( cd "$REPO" && bash campaign/prewarm2.sh "$REPO/custom-iq3_s.log" >> "$OUT" 2>&1 )
+( cd "$REPO" && bash campaign/prewarm2.sh "$REPO/logs/custom-iq3_s.log" >> "$OUT" 2>&1 )
 echo "T43 TERNARY end $(date)" >> "$OUT"
 echo "done" >> "$OUT"

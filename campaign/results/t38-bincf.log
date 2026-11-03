@@ -1,7 +1,7 @@
 T38 BINARY COUNTERFACTUAL start Fri Oct 23 04:55:55 PM SAST 2026
 rollback binary deployed for leg A
 === BOOT t38-bincf (pre-t38 binary, dm launcher) health=1 16:56:21 ===
-[16:56:21] prewarm2: complement pin confirmed in /home/svg/LLM/strata-custom-2/custom-iq3_s.log
+[16:56:21] prewarm2: complement pin confirmed in /home/svg/LLM/strata-custom-2/logs/custom-iq3_s.log
 [16:56:26] prewarm2: page cache re-warmed in 5s
 200
 200
@@ -13,7 +13,7 @@ rollback binary deployed for leg A
 200
 200
 [16:56:35] prewarm2: replay done (2 short + 1 mid prefill + 6-way burst) in 14s total
-=== PROBE t38-bincf | 2026-10-23 16:56:35 | log=/home/svg/LLM/strata-custom-2/custom-iq3_s.log
+=== PROBE t38-bincf | 2026-10-23 16:56:35 | log=/home/svg/LLM/strata-custom-2/logs/custom-iq3_s.log
     warmup: 8 tok in 0.28s
     A.short[1]: 220 tok in 1.37s = 160.4 t/s
     A.short[2]: 220 tok in 1.10s = 199.8 t/s

@@ -1,7 +1,7 @@
 T38 ABAB-B start Fri Oct 23 05:02:59 PM SAST 2026
 rollback binary deployed for leg B
 === BOOT t38-abab-b (pre-t38 binary, standing launcher) health=1 17:03:25 ===
-[17:03:25] prewarm2: complement pin confirmed in /home/svg/LLM/strata-custom-2/custom-iq3_s.log
+[17:03:25] prewarm2: complement pin confirmed in /home/svg/LLM/strata-custom-2/logs/custom-iq3_s.log
 [17:03:30] prewarm2: page cache re-warmed in 5s
 200
 200
@@ -13,7 +13,7 @@ rollback binary deployed for leg B
 200
 200
 [17:03:39] prewarm2: replay done (2 short + 1 mid prefill + 6-way burst) in 14s total
-=== PROBE t38-abab-b | 2026-10-23 17:03:39 | log=/home/svg/LLM/strata-custom-2/custom-iq3_s.log
+=== PROBE t38-abab-b | 2026-10-23 17:03:39 | log=/home/svg/LLM/strata-custom-2/logs/custom-iq3_s.log
     warmup: 8 tok in 0.30s
     A.short[1]: 220 tok in 1.57s = 140.2 t/s
     A.short[2]: 220 tok in 1.12s = 197.2 t/s

@@ -40,7 +40,7 @@ for t in $(seq 1 100); do
 done
 echo "=== BOOT t38-abab-b (pre-t38 binary, standing launcher) health=$ok $(date +%H:%M:%S) ===" >> "$OUT"
 if [ "$ok" = 1 ]; then
-  ( cd "$REPO" && bash campaign/prewarm2.sh "$REPO/custom-iq3_s.log" >> "$OUT" 2>&1 )
+  ( cd "$REPO" && bash campaign/prewarm2.sh "$REPO/logs/custom-iq3_s.log" >> "$OUT" 2>&1 )
   ( cd "$REPO" && python3 campaign/probe-lane.py --port "$PORT" --label "t38-abab-b" --short-n 6 >> "$OUT" 2>&1 )
   ( cd "$REPO" && .venv/bin/python campaign/probe-metrics.py --port "$PORT" --label "t38-abab-b" 2>&1 | tail -2 >> "$OUT" )
 fi

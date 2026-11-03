@@ -38,8 +38,8 @@ for t in $(seq 1 100); do
 done
 echo "=== BOOT t38-tiebreak (T38 binary, standing launcher) health=$ok $(date +%H:%M:%S) ===" >> "$OUT"
 if [ "$ok" = 1 ]; then
-  grep -a "STRATA_DM armed" "$REPO/custom-iq3_s.log" | tail -1 >> "$OUT"
-  ( cd "$REPO" && bash campaign/prewarm2.sh "$REPO/custom-iq3_s.log" >> "$OUT" 2>&1 )
+  grep -a "STRATA_DM armed" "$REPO/logs/custom-iq3_s.log" | tail -1 >> "$OUT"
+  ( cd "$REPO" && bash campaign/prewarm2.sh "$REPO/logs/custom-iq3_s.log" >> "$OUT" 2>&1 )
   ( cd "$REPO" && python3 campaign/probe-lane.py --port "$PORT" --label "t38-tiebreak" --short-n 6 >> "$OUT" 2>&1 )
   ( cd "$REPO" && .venv/bin/python campaign/probe-metrics.py --port "$PORT" --label "t38-tiebreak" 2>&1 | tail -3 >> "$OUT" )
 fi

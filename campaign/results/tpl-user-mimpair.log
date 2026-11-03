@@ -1,7 +1,7 @@
 TPL-USER MIMPAIR legs B-D start Sat Oct 24 12:01:10 AM SAST 2026
 === leg B template=standing md5=411cacef8142 00:01:18 ===
 boot B health=1
-[00:01:37] prewarm2: complement pin confirmed in /home/svg/LLM/strata-custom-2/custom-iq3_s.log
+[00:01:37] prewarm2: complement pin confirmed in /home/svg/LLM/strata-custom-2/logs/custom-iq3_s.log
 [00:01:41] prewarm2: page cache re-warmed in 4s
 200
 200
@@ -50,7 +50,7 @@ by category: {'doctrine': '6/8', 'voice': '6/6', 'arch-continue': '8/8', 'correc
 saved: /home/svg/LLM/strata-custom-2/campaign/results/mimicbench2-tpl-mp-B.json
 === leg C template=user md5=461afc276cf9 00:05:01 ===
 boot C health=1
-[00:05:19] prewarm2: complement pin confirmed in /home/svg/LLM/strata-custom-2/custom-iq3_s.log
+[00:05:19] prewarm2: complement pin confirmed in /home/svg/LLM/strata-custom-2/logs/custom-iq3_s.log
 [00:05:24] prewarm2: page cache re-warmed in 5s
 200
 200
@@ -99,7 +99,7 @@ by category: {'doctrine': '6/8', 'voice': '6/6', 'arch-continue': '6/8', 'correc
 saved: /home/svg/LLM/strata-custom-2/campaign/results/mimicbench2-tpl-mp-C.json
 === leg D template=standing md5=411cacef8142 00:12:46 ===
 boot D health=1
-[00:13:04] prewarm2: complement pin confirmed in /home/svg/LLM/strata-custom-2/custom-iq3_s.log
+[00:13:04] prewarm2: complement pin confirmed in /home/svg/LLM/strata-custom-2/logs/custom-iq3_s.log
 [00:13:09] prewarm2: page cache re-warmed in 5s
 200
 200

@@ -16,7 +16,7 @@ a6d5a4db F-256: stale cleanup (engine 737M->249M: 7 superseded intermediates del
 ?? campaign/t27-baseline.sh
 4 %, 964 MiB, 2962 MHz
 === LEG share-ctl-r1 health=1 20:17:49 env=[] ===
-=== PROBE t26-share-ctl-r1 | 2026-10-21 20:17:49 | log=/home/svg/LLM/strata-custom-2/custom-iq3_s.log
+=== PROBE t26-share-ctl-r1 | 2026-10-21 20:17:49 | log=/home/svg/LLM/strata-custom-2/logs/custom-iq3_s.log
     warmup: 8 tok in 0.31s
     A.short[1]: 220 tok in 1.72s = 128.3 t/s
     A.short[2]: 220 tok in 1.17s = 187.6 t/s
@@ -78,7 +78,7 @@ M3d per-position : not printed (arm STRATA_SPEC_DEPTH=1 to publish accepted/test
 strata verify: window up to 8 tokens, 127.2 MiB of device buffers
 strata verify: window up to 8 tokens, 127.2 MiB of device buffers
 === LEG share075-r1 health=1 20:19:11 env=[STRATA_BATCH_DECODE_SHARE=0.75] ===
-=== PROBE t26-share075-r1 | 2026-10-21 20:19:11 | log=/home/svg/LLM/strata-custom-2/custom-iq3_s.log
+=== PROBE t26-share075-r1 | 2026-10-21 20:19:11 | log=/home/svg/LLM/strata-custom-2/logs/custom-iq3_s.log
     warmup: 8 tok in 0.33s
     A.short[1]: 220 tok in 1.62s = 135.9 t/s
     A.short[2]: 220 tok in 1.15s = 191.9 t/s
@@ -140,7 +140,7 @@ M3d per-position : not printed (arm STRATA_SPEC_DEPTH=1 to publish accepted/test
 strata verify: window up to 8 tokens, 127.2 MiB of device buffers
 strata verify: window up to 8 tokens, 127.2 MiB of device buffers
 === LEG share-ctl-r2 health=1 20:20:32 env=[] ===
-=== PROBE t26-share-ctl-r2 | 2026-10-21 20:20:32 | log=/home/svg/LLM/strata-custom-2/custom-iq3_s.log
+=== PROBE t26-share-ctl-r2 | 2026-10-21 20:20:32 | log=/home/svg/LLM/strata-custom-2/logs/custom-iq3_s.log
     warmup: 8 tok in 0.32s
     A.short[1]: 220 tok in 1.63s = 134.8 t/s
     A.short[2]: 220 tok in 1.10s = 200.8 t/s
@@ -202,7 +202,7 @@ M3d per-position : not printed (arm STRATA_SPEC_DEPTH=1 to publish accepted/test
 strata verify: window up to 8 tokens, 127.2 MiB of device buffers
 strata verify: window up to 8 tokens, 127.2 MiB of device buffers
 === LEG share075-r2 health=1 20:21:52 env=[STRATA_BATCH_DECODE_SHARE=0.75] ===
-=== PROBE t26-share075-r2 | 2026-10-21 20:21:52 | log=/home/svg/LLM/strata-custom-2/custom-iq3_s.log
+=== PROBE t26-share075-r2 | 2026-10-21 20:21:52 | log=/home/svg/LLM/strata-custom-2/logs/custom-iq3_s.log
     warmup: 8 tok in 0.32s
     A.short[1]: 220 tok in 1.69s = 130.1 t/s
     A.short[2]: 220 tok in 1.34s = 164.8 t/s
@@ -264,7 +264,7 @@ M3d per-position : not printed (arm STRATA_SPEC_DEPTH=1 to publish accepted/test
 strata verify: window up to 8 tokens, 127.2 MiB of device buffers
 strata verify: window up to 8 tokens, 127.2 MiB of device buffers
 === LEG share-ctl-r3 health=1 20:23:13 env=[] ===
-=== PROBE t26-share-ctl-r3 | 2026-10-21 20:23:13 | log=/home/svg/LLM/strata-custom-2/custom-iq3_s.log
+=== PROBE t26-share-ctl-r3 | 2026-10-21 20:23:13 | log=/home/svg/LLM/strata-custom-2/logs/custom-iq3_s.log
     warmup: 8 tok in 0.33s
     A.short[1]: 220 tok in 1.63s = 135.1 t/s
     A.short[2]: 220 tok in 1.25s = 176.1 t/s
@@ -326,7 +326,7 @@ M3d per-position : not printed (arm STRATA_SPEC_DEPTH=1 to publish accepted/test
 strata verify: window up to 8 tokens, 127.2 MiB of device buffers
 strata verify: window up to 8 tokens, 127.2 MiB of device buffers
 === LEG share075-r3 health=1 20:24:34 env=[STRATA_BATCH_DECODE_SHARE=0.75] ===
-=== PROBE t26-share075-r3 | 2026-10-21 20:24:34 | log=/home/svg/LLM/strata-custom-2/custom-iq3_s.log
+=== PROBE t26-share075-r3 | 2026-10-21 20:24:34 | log=/home/svg/LLM/strata-custom-2/logs/custom-iq3_s.log
     warmup: 8 tok in 0.32s
     A.short[1]: 220 tok in 1.64s = 134.4 t/s
     A.short[2]: 220 tok in 1.24s = 177.2 t/s
@@ -400,7 +400,7 @@ Traceback (most recent call last):
   File "/home/svg/LLM/strata-custom-2/serve/server.py", line 1087, in __init__
     raise EngineDied(why + (f" (see {log})" if log else "") + note +
                      start_failure_hint(log, log_start) + tail)
-serve.server.EngineDied: the engine exited before it was ready (see /home/svg/LLM/strata-custom-2/custom-iq3_s.log)
+serve.server.EngineDied: the engine exited before it was ready (see /home/svg/LLM/strata-custom-2/logs/custom-iq3_s.log)
 the engine process ended: exit code 1
 the engine log's last lines:
   [strata] 2026-10-21 20:25:56 engine started: /home/svg/LLM/strata-custom-2/engine/strata --serve --pack /home/svg/LLM/data/packs/iq3_s --native /home/svg/LLM/data/models/Qwen3.8-Flash-Next-GSQ-RCO-IQ3_S-00001-of-00002.gguf --ple-gguf /home/svg/LLM/data/models/Qwen3.8-Flash-Next-GSQ-RCO-IQ3_S-00002-of-00002.gguf --expert-cache auto --spec 6 --max-context 131072 --kv int8 --kv-resident 32768 --prefill auto:32768 --mtp-q4 all --mtp-hnorm stream --pcie-mode dma --vram-reserve-mib 2000 --conversation-cache-mib 49152 --control-vector-scaled refusal-r.gguf:1.0 --control-vector-layer-range 4 24 --cvec-mode project --cvec-dir per-layer --ple-io mmap --expert-profile data/expert-profile.bin --expert-profile-save data/expert-profile-learned.bin --expert-profile-save-every 30 --resident-experts --mtp /home/svg/LLM/data/mtp-en/rt --batch 6 --spec-min-p 0.5
@@ -410,7 +410,7 @@ the engine log's last lines:
   strata generate: cudaMalloc(1538035200) for the weight arena failed (out of memory): 641 MiB of 32179 MiB VRAM free on this GPU. The arena is allocated first, before the KV and expert caches: another program (or an engine that is still exiting) holds the rest - nvidia-smi / rocm-smi lists them
 calibrate failed
 === LEG prewarm2 health=1 20:26:26 env=[] ===
-[20:26:26] prewarm2: complement pin confirmed in /home/svg/LLM/strata-custom-2/custom-iq3_s.log
+[20:26:26] prewarm2: complement pin confirmed in /home/svg/LLM/strata-custom-2/logs/custom-iq3_s.log
 [20:26:33] prewarm2: page cache re-warmed in 7s
 200
 200
@@ -422,7 +422,7 @@ calibrate failed
 200
 200
 [20:26:43] prewarm2: replay done (2 short + 1 mid prefill + 6-way burst) in 17s total
-=== PROBE t26-prewarm2 | 2026-10-21 20:26:43 | log=/home/svg/LLM/strata-custom-2/custom-iq3_s.log
+=== PROBE t26-prewarm2 | 2026-10-21 20:26:43 | log=/home/svg/LLM/strata-custom-2/logs/custom-iq3_s.log
     warmup: 8 tok in 0.29s
     A.short[1]: 220 tok in 1.53s = 144.1 t/s
     A.short[2]: 220 tok in 1.08s = 203.1 t/s

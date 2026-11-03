@@ -1,6 +1,6 @@
 REBANK2 start Tue Oct 20 06:02:51 AM SAST 2026
 === RUN 1 health=1 06:03:16 ===
-=== PROBE rebank2-r1 | 2026-10-20 06:03:16 | log=/home/svg/LLM/strata-custom-2/custom-iq3_s.log
+=== PROBE rebank2-r1 | 2026-10-20 06:03:16 | log=/home/svg/LLM/strata-custom-2/logs/custom-iq3_s.log
     warmup: 8 tok in 0.31s
     A.short[1]: 220 tok in 1.56s = 141.0 t/s
     A.short[2]: 220 tok in 1.12s = 196.4 t/s
@@ -59,7 +59,7 @@ M3b rate         : 77.2% mean over 15 requests (diagnostic)
 M3d per-position : not printed (arm STRATA_SPEC_DEPTH=1 to publish accepted/tested by depth)
 === PROBE END rebank2-r1
 === RUN 2 health=1 06:04:33 ===
-=== PROBE rebank2-r2 | 2026-10-20 06:04:33 | log=/home/svg/LLM/strata-custom-2/custom-iq3_s.log
+=== PROBE rebank2-r2 | 2026-10-20 06:04:33 | log=/home/svg/LLM/strata-custom-2/logs/custom-iq3_s.log
     warmup: 8 tok in 0.31s
     A.short[1]: 220 tok in 1.50s = 146.4 t/s
     A.short[2]: 220 tok in 1.15s = 191.3 t/s
@@ -118,7 +118,7 @@ M3b rate         : 76.5% mean over 15 requests (diagnostic)
 M3d per-position : not printed (arm STRATA_SPEC_DEPTH=1 to publish accepted/tested by depth)
 === PROBE END rebank2-r2
 === RUN 3 health=1 06:05:51 ===
-=== PROBE rebank2-r3 | 2026-10-20 06:05:51 | log=/home/svg/LLM/strata-custom-2/custom-iq3_s.log
+=== PROBE rebank2-r3 | 2026-10-20 06:05:51 | log=/home/svg/LLM/strata-custom-2/logs/custom-iq3_s.log
     warmup: 8 tok in 0.32s
     A.short[1]: 220 tok in 1.64s = 134.4 t/s
     A.short[2]: 220 tok in 1.08s = 203.8 t/s
@@ -177,7 +177,7 @@ M3b rate         : 78.5% mean over 15 requests (diagnostic)
 M3d per-position : not printed (arm STRATA_SPEC_DEPTH=1 to publish accepted/tested by depth)
 === PROBE END rebank2-r3
 === RUN 4 health=1 06:07:08 ===
-=== PROBE rebank2-r4 | 2026-10-20 06:07:08 | log=/home/svg/LLM/strata-custom-2/custom-iq3_s.log
+=== PROBE rebank2-r4 | 2026-10-20 06:07:08 | log=/home/svg/LLM/strata-custom-2/logs/custom-iq3_s.log
     warmup: 8 tok in 0.31s
     A.short[1]: 220 tok in 1.60s = 137.8 t/s
     A.short[2]: 220 tok in 1.07s = 205.1 t/s
@@ -236,7 +236,7 @@ M3b rate         : 77.2% mean over 15 requests (diagnostic)
 M3d per-position : not printed (arm STRATA_SPEC_DEPTH=1 to publish accepted/tested by depth)
 === PROBE END rebank2-r4
 === RUN 5 health=1 06:08:25 ===
-=== PROBE rebank2-r5 | 2026-10-20 06:08:25 | log=/home/svg/LLM/strata-custom-2/custom-iq3_s.log
+=== PROBE rebank2-r5 | 2026-10-20 06:08:25 | log=/home/svg/LLM/strata-custom-2/logs/custom-iq3_s.log
     warmup: 8 tok in 0.31s
     A.short[1]: 220 tok in 1.55s = 142.2 t/s
     A.short[2]: 220 tok in 1.21s = 181.7 t/s

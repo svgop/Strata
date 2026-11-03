@@ -39,7 +39,7 @@ for t in $(seq 1 100); do
 done
 echo "=== BOOT user-template health=$ok $(date +%H:%M:%S) ===" >> "$OUT"
 if [ "$ok" = 1 ]; then
-  ( cd "$REPO" && bash campaign/prewarm2.sh "$REPO/custom-iq3_s.log" >> "$OUT" 2>&1 )
+  ( cd "$REPO" && bash campaign/prewarm2.sh "$REPO/logs/custom-iq3_s.log" >> "$OUT" 2>&1 )
   echo "--- exact prompt overhead (1-token request, usage.prompt_tokens):" >> "$OUT"
   curl -s -m 120 http://127.0.0.1:$PORT/v1/chat/completions \
     -H "Content-Type: application/json" -H "Authorization: Bearer $KEY" \

@@ -1,4 +1,4 @@
-=== PROBE mtpw-ctl-r3 | 2026-10-16 04:03:56 | log=/home/svg/LLM/strata-custom-2/custom-iq3_s.log
+=== PROBE mtpw-ctl-r3 | 2026-10-16 04:03:56 | log=/home/svg/LLM/strata-custom-2/logs/custom-iq3_s.log
     warmup: 8 tok in 0.33s
     A.short[1]: 220 tok in 1.71s = 128.8 t/s
     A.short[2]: 220 tok in 1.16s = 189.8 t/s

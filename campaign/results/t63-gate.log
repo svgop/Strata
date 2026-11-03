@@ -1,7 +1,7 @@
 T63 GATE start Mon Nov  2 04:24:26 PM SAST 2026
 === BOOT ts7 health=1 16:25:03 ===
 strata serve: STRATA_ROUTE_TAIL_SKIP=7 is ON: a missed expert that every token of a verify window routes at rank 7 or lower is skipped (+10..20% decode on 12-16 GB cards that miss experts, answers differ slightly from 0.1.41); STRATA_ROUTE_TAIL_SKIP=0 turns it off
-[16:25:03] prewarm2: complement pin confirmed in /home/svg/LLM/strata-custom-2/custom-iq3_s.log
+[16:25:03] prewarm2: complement pin confirmed in /home/svg/LLM/strata-custom-2/logs/custom-iq3_s.log
 [16:25:15] prewarm2: shadow path read from engine pid 632368: /dev/shm/strata-shadow-q2_0
 [16:25:15] prewarm2: shadow on tmpfs (/dev/shm/strata-shadow-q2_0) — RAM-resident, no warm pass needed
 [16:25:15] prewarm2: page cache re-warmed in 12s

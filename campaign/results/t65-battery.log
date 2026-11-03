@@ -1,6 +1,6 @@
 T65 BATTERY start Mon Nov  2 05:18:31 PM SAST 2026
 === LEG t65-ctl-r1 health=1 17:19:10 bin=fcc130d5 ===
-[17:19:10] prewarm2: complement pin confirmed in /home/svg/LLM/strata-custom-2/custom-iq3_s.log
+[17:19:10] prewarm2: complement pin confirmed in /home/svg/LLM/strata-custom-2/logs/custom-iq3_s.log
 [17:19:24] prewarm2: shadow path read from engine pid 707688: /dev/shm/strata-shadow-q2_0
 [17:19:24] prewarm2: shadow on tmpfs (/dev/shm/strata-shadow-q2_0) — RAM-resident, no warm pass needed
 [17:19:24] prewarm2: page cache re-warmed in 14s
@@ -14,7 +14,7 @@ T65 BATTERY start Mon Nov  2 05:18:31 PM SAST 2026
 200
 200
 [17:19:37] prewarm2: replay done (2 short + 1 mid prefill + 6-way burst) in 27s total
-=== PROBE t65-ctl-r1 | 2026-11-02 17:19:37 | log=/home/svg/LLM/strata-custom-2/custom-iq3_s.log
+=== PROBE t65-ctl-r1 | 2026-11-02 17:19:37 | log=/home/svg/LLM/strata-custom-2/logs/custom-iq3_s.log
     warmup: 8 tok in 0.31s
     A.short[1]: 220 tok in 1.71s = 128.7 t/s
     A.short[2]: 220 tok in 1.07s = 206.3 t/s
@@ -88,7 +88,7 @@ M3d per-position : not printed (arm STRATA_SPEC_DEPTH=1 to publish accepted/test
 [metrics t65-ctl-r1] TTFT p50/p99 361ms/2260ms  ITL p99 20ms  accept 76.58%  clock 2955.0MHz 46.0C 94.67W  golden a974bc5a6f6c8ec6
 === LEG t65-t65-r1 health=0 17:26:42 bin=7503667d ===
 === LEG t65-ctl-r2 health=1 17:27:25 bin=fcc130d5 ===
-[17:27:25] prewarm2: complement pin confirmed in /home/svg/LLM/strata-custom-2/custom-iq3_s.log
+[17:27:25] prewarm2: complement pin confirmed in /home/svg/LLM/strata-custom-2/logs/custom-iq3_s.log
 [17:27:39] prewarm2: shadow path read from engine pid 715444: /dev/shm/strata-shadow-q2_0
 [17:27:39] prewarm2: shadow on tmpfs (/dev/shm/strata-shadow-q2_0) — RAM-resident, no warm pass needed
 [17:27:39] prewarm2: page cache re-warmed in 14s
@@ -102,7 +102,7 @@ M3d per-position : not printed (arm STRATA_SPEC_DEPTH=1 to publish accepted/test
 200
 200
 [17:27:51] prewarm2: replay done (2 short + 1 mid prefill + 6-way burst) in 26s total
-=== PROBE t65-ctl-r2 | 2026-11-02 17:27:51 | log=/home/svg/LLM/strata-custom-2/custom-iq3_s.log
+=== PROBE t65-ctl-r2 | 2026-11-02 17:27:51 | log=/home/svg/LLM/strata-custom-2/logs/custom-iq3_s.log
     warmup: 8 tok in 0.31s
     A.short[1]: 220 tok in 1.44s = 152.8 t/s
     A.short[2]: 220 tok in 1.00s = 219.3 t/s

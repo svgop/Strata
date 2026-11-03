@@ -1,7 +1,7 @@
 T19 REGRESSION AB start Tue Oct 20 04:52:31 PM SAST 2026
 markers: pre=23 cur=23 t18=59
 === LEG pre-r1 health=1 16:53:05 ===
-=== PROBE rab-pre-r1 | 2026-10-20 16:53:05 | log=/home/svg/LLM/strata-custom-2/custom-iq3_s.log
+=== PROBE rab-pre-r1 | 2026-10-20 16:53:05 | log=/home/svg/LLM/strata-custom-2/logs/custom-iq3_s.log
     warmup: 8 tok in 0.33s
     A.short[1]: 220 tok in 1.64s = 134.2 t/s
     A.short[2]: 220 tok in 1.28s = 172.4 t/s
@@ -61,7 +61,7 @@ M3b rate         : 76.1% mean over 17 requests (diagnostic)
 M3d per-position : not printed (arm STRATA_SPEC_DEPTH=1 to publish accepted/tested by depth)
 === PROBE END rab-pre-r1
 === LEG cur-r1 health=1 16:54:41 ===
-=== PROBE rab-cur-r1 | 2026-10-20 16:54:41 | log=/home/svg/LLM/strata-custom-2/custom-iq3_s.log
+=== PROBE rab-cur-r1 | 2026-10-20 16:54:41 | log=/home/svg/LLM/strata-custom-2/logs/custom-iq3_s.log
     warmup: 8 tok in 0.32s
     A.short[1]: 220 tok in 1.61s = 136.6 t/s
     A.short[2]: 220 tok in 1.21s = 182.0 t/s
@@ -120,7 +120,7 @@ M3b rate         : 77.2% mean over 15 requests (diagnostic)
 M3d per-position : not printed (arm STRATA_SPEC_DEPTH=1 to publish accepted/tested by depth)
 === PROBE END rab-cur-r1
 === LEG pre-r2 health=1 16:56:13 ===
-=== PROBE rab-pre-r2 | 2026-10-20 16:56:13 | log=/home/svg/LLM/strata-custom-2/custom-iq3_s.log
+=== PROBE rab-pre-r2 | 2026-10-20 16:56:13 | log=/home/svg/LLM/strata-custom-2/logs/custom-iq3_s.log
     warmup: 8 tok in 0.33s
     A.short[1]: 220 tok in 1.55s = 142.1 t/s
     A.short[2]: 220 tok in 1.23s = 179.1 t/s
@@ -179,7 +179,7 @@ M3b rate         : 74.6% mean over 16 requests (diagnostic)
 M3d per-position : not printed (arm STRATA_SPEC_DEPTH=1 to publish accepted/tested by depth)
 === PROBE END rab-pre-r2
 === LEG cur-r2 health=1 16:57:43 ===
-=== PROBE rab-cur-r2 | 2026-10-20 16:57:43 | log=/home/svg/LLM/strata-custom-2/custom-iq3_s.log
+=== PROBE rab-cur-r2 | 2026-10-20 16:57:43 | log=/home/svg/LLM/strata-custom-2/logs/custom-iq3_s.log
     warmup: 8 tok in 0.30s
     A.short[1]: 220 tok in 1.66s = 132.4 t/s
     A.short[2]: 220 tok in 1.21s = 182.5 t/s
@@ -238,7 +238,7 @@ M3b rate         : 75.4% mean over 15 requests (diagnostic)
 M3d per-position : not printed (arm STRATA_SPEC_DEPTH=1 to publish accepted/tested by depth)
 === PROBE END rab-cur-r2
 === LEG pre-r3 health=1 16:59:12 ===
-=== PROBE rab-pre-r3 | 2026-10-20 16:59:12 | log=/home/svg/LLM/strata-custom-2/custom-iq3_s.log
+=== PROBE rab-pre-r3 | 2026-10-20 16:59:12 | log=/home/svg/LLM/strata-custom-2/logs/custom-iq3_s.log
     warmup: 8 tok in 0.31s
     A.short[1]: 220 tok in 1.58s = 139.0 t/s
     A.short[2]: 220 tok in 1.28s = 172.1 t/s
@@ -297,7 +297,7 @@ M3b rate         : 77.2% mean over 15 requests (diagnostic)
 M3d per-position : not printed (arm STRATA_SPEC_DEPTH=1 to publish accepted/tested by depth)
 === PROBE END rab-pre-r3
 === LEG cur-r3 health=1 17:00:44 ===
-=== PROBE rab-cur-r3 | 2026-10-20 17:00:44 | log=/home/svg/LLM/strata-custom-2/custom-iq3_s.log
+=== PROBE rab-cur-r3 | 2026-10-20 17:00:44 | log=/home/svg/LLM/strata-custom-2/logs/custom-iq3_s.log
     warmup: 8 tok in 0.31s
     A.short[1]: 220 tok in 1.55s = 142.0 t/s
     A.short[2]: 220 tok in 1.13s = 195.2 t/s

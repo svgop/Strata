@@ -45,10 +45,10 @@ run_leg() {  # run_leg <tag> <round>; env via $ENV_PASS
   done
   echo "=== LEG $lbl health=$ok $(date +%H:%M:%S) env='$ENV_PASS' ===" >> "$OUT"
   [ "$ok" = 1 ] || { cleanup_engine; return; }
-  ( cd "$REPO" && bash campaign/prewarm2.sh "$REPO/custom-iq3_s.log" >> "$OUT" 2>&1 )
+  ( cd "$REPO" && bash campaign/prewarm2.sh "$REPO/logs/custom-iq3_s.log" >> "$OUT" 2>&1 )
   ( cd "$REPO" && python3 campaign/probe-lane.py --port "$PORT" --label "$lbl" --short-n 6 >> "$OUT" 2>&1 )
   ( cd "$REPO" && .venv/bin/python campaign/probe-metrics.py --port "$PORT" --label "$lbl" 2>&1 | tee -a "$OUT" )
-  grep -a "spec-keep: armed\|strata dm" "$REPO/custom-iq3_s.log" | tail -1 >> "$OUT" 2>/dev/null
+  grep -a "spec-keep: armed\|strata dm" "$REPO/logs/custom-iq3_s.log" | tail -1 >> "$OUT" 2>/dev/null
   cleanup_engine
 }
 

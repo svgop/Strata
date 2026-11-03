@@ -13,7 +13,7 @@ TPL SPEED A/B start Sat Oct 24 12:46:48 AM SAST 2026
 === UX-PROBE tpl-ux-A-user: n=10  mean wall=7.8s  mean completion=1535 tok  mean content=3091 ch  mean reason=3052 ch ===
 === leg B: old template fresh boot ===
 boot standing health=1 md5=411cacef8142
-[00:48:32] prewarm2: complement pin confirmed in /home/svg/LLM/strata-custom-2/custom-iq3_s.log
+[00:48:32] prewarm2: complement pin confirmed in /home/svg/LLM/strata-custom-2/logs/custom-iq3_s.log
 [00:48:37] prewarm2: page cache re-warmed in 5s
 200
 200
@@ -38,7 +38,7 @@ boot standing health=1 md5=411cacef8142
 === UX-PROBE tpl-ux-B-standing: n=10  mean wall=6.9s  mean completion=1343 tok  mean content=3027 ch  mean reason=2338 ch ===
 === leg C: user template fresh boot + speed lanes ===
 boot user health=1 md5=461afc276cf9
-[00:50:22] prewarm2: complement pin confirmed in /home/svg/LLM/strata-custom-2/custom-iq3_s.log
+[00:50:22] prewarm2: complement pin confirmed in /home/svg/LLM/strata-custom-2/logs/custom-iq3_s.log
 [00:50:27] prewarm2: page cache re-warmed in 5s
 200
 200
@@ -62,7 +62,7 @@ boot user health=1 md5=461afc276cf9
 [5.2]   5.0s  completion= 1097  reason=  330ch  content= 3574ch
 === UX-PROBE tpl-ux-C-user: n=10  mean wall=7.5s  mean completion=1511 tok  mean content=3142 ch  mean reason=2980 ch ===
 --- probe-lane (engine speed, current recipe):
-=== PROBE tpl-ab-C-lane | 2026-10-24 00:51:52 | log=/home/svg/LLM/strata-custom-2/custom-iq3_s.log
+=== PROBE tpl-ab-C-lane | 2026-10-24 00:51:52 | log=/home/svg/LLM/strata-custom-2/logs/custom-iq3_s.log
     warmup: 8 tok in 0.39s
     A.short[1]: 220 tok in 1.63s = 134.8 t/s
     A.short[2]: 220 tok in 1.14s = 192.8 t/s

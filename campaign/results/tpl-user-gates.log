@@ -1,7 +1,7 @@
 TPL-USER GATES leg1 start Fri Oct 23 11:47:38 PM SAST 2026
 swapped in user template: 461afc276cf9
 === BOOT user-template health=1 23:48:04 ===
-[23:48:04] prewarm2: complement pin confirmed in /home/svg/LLM/strata-custom-2/custom-iq3_s.log
+[23:48:04] prewarm2: complement pin confirmed in /home/svg/LLM/strata-custom-2/logs/custom-iq3_s.log
 [23:48:09] prewarm2: page cache re-warmed in 5s
 200
 200

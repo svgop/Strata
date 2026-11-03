@@ -1,6 +1,6 @@
 T24-S2 BATTERY start Wed Oct 21 01:18:21 PM SAST 2026
 === LEG ctl-r1 health=1 13:18:42 ===
-=== PROBE t24s2-ctl-r1 | 2026-10-21 13:18:42 | log=/home/svg/LLM/strata-custom-2/custom-iq3_s.log
+=== PROBE t24s2-ctl-r1 | 2026-10-21 13:18:42 | log=/home/svg/LLM/strata-custom-2/logs/custom-iq3_s.log
     warmup: 8 tok in 0.28s
     A.short[1]: 220 tok in 1.51s = 146.0 t/s
     A.short[2]: 220 tok in 0.99s = 222.0 t/s
@@ -60,7 +60,7 @@ M3d per-position : not printed (arm STRATA_SPEC_DEPTH=1 to publish accepted/test
 === PROBE END t24s2-ctl-r1
 strata generate: STRATA_HC_REQ8: hyper-connection projections as int8 + fp32/32 scales, 675 MiB
 === LEG arm-r1 health=1 13:19:55 ===
-=== PROBE t24s2-arm-r1 | 2026-10-21 13:19:55 | log=/home/svg/LLM/strata-custom-2/custom-iq3_s.log
+=== PROBE t24s2-arm-r1 | 2026-10-21 13:19:55 | log=/home/svg/LLM/strata-custom-2/logs/custom-iq3_s.log
     warmup: 8 tok in 0.30s
     A.short[1]: 220 tok in 1.54s = 143.3 t/s
     A.short[2]: 220 tok in 1.19s = 185.2 t/s
@@ -120,7 +120,7 @@ M3d per-position : not printed (arm STRATA_SPEC_DEPTH=1 to publish accepted/test
 === PROBE END t24s2-arm-r1
 strata generate: STRATA_HC_REQ8: hyper-connection projections as int8 + fp32/32 scales, 675 MiB
 === LEG ctl-r2 health=1 13:21:07 ===
-=== PROBE t24s2-ctl-r2 | 2026-10-21 13:21:07 | log=/home/svg/LLM/strata-custom-2/custom-iq3_s.log
+=== PROBE t24s2-ctl-r2 | 2026-10-21 13:21:07 | log=/home/svg/LLM/strata-custom-2/logs/custom-iq3_s.log
     warmup: 8 tok in 0.28s
     A.short[1]: 220 tok in 1.49s = 147.3 t/s
     A.short[2]: 220 tok in 1.10s = 199.7 t/s
@@ -180,7 +180,7 @@ M3d per-position : not printed (arm STRATA_SPEC_DEPTH=1 to publish accepted/test
 === PROBE END t24s2-ctl-r2
 strata generate: STRATA_HC_REQ8: hyper-connection projections as int8 + fp32/32 scales, 675 MiB
 === LEG arm-r2 health=1 13:22:19 ===
-=== PROBE t24s2-arm-r2 | 2026-10-21 13:22:19 | log=/home/svg/LLM/strata-custom-2/custom-iq3_s.log
+=== PROBE t24s2-arm-r2 | 2026-10-21 13:22:19 | log=/home/svg/LLM/strata-custom-2/logs/custom-iq3_s.log
     warmup: 8 tok in 0.30s
     A.short[1]: 220 tok in 1.52s = 144.8 t/s
     A.short[2]: 220 tok in 1.11s = 198.5 t/s
@@ -240,7 +240,7 @@ M3d per-position : not printed (arm STRATA_SPEC_DEPTH=1 to publish accepted/test
 === PROBE END t24s2-arm-r2
 strata generate: STRATA_HC_REQ8: hyper-connection projections as int8 + fp32/32 scales, 675 MiB
 === LEG ctl-r3 health=1 13:23:31 ===
-=== PROBE t24s2-ctl-r3 | 2026-10-21 13:23:31 | log=/home/svg/LLM/strata-custom-2/custom-iq3_s.log
+=== PROBE t24s2-ctl-r3 | 2026-10-21 13:23:31 | log=/home/svg/LLM/strata-custom-2/logs/custom-iq3_s.log
     warmup: 8 tok in 0.29s
     A.short[1]: 220 tok in 1.53s = 144.0 t/s
     A.short[2]: 220 tok in 1.12s = 196.2 t/s
@@ -300,7 +300,7 @@ M3d per-position : not printed (arm STRATA_SPEC_DEPTH=1 to publish accepted/test
 === PROBE END t24s2-ctl-r3
 strata generate: STRATA_HC_REQ8: hyper-connection projections as int8 + fp32/32 scales, 675 MiB
 === LEG arm-r3 health=1 13:24:44 ===
-=== PROBE t24s2-arm-r3 | 2026-10-21 13:24:44 | log=/home/svg/LLM/strata-custom-2/custom-iq3_s.log
+=== PROBE t24s2-arm-r3 | 2026-10-21 13:24:44 | log=/home/svg/LLM/strata-custom-2/logs/custom-iq3_s.log
     warmup: 8 tok in 0.29s
     A.short[1]: 220 tok in 1.53s = 143.5 t/s
     A.short[2]: 220 tok in 1.07s = 204.9 t/s

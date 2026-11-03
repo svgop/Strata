@@ -32,7 +32,7 @@ for t in $(seq 1 100); do
 done
 echo "=== BOOT dm-gates health=$ok $(date +%H:%M:%S) ===" >> "$OUT"
 if [ "$ok" = 1 ]; then
-  grep -a "strata dm" "$REPO/custom-iq3_s.log" | tail -1 >> "$OUT" 2>/dev/null
+  grep -a "strata dm" "$REPO/logs/custom-iq3_s.log" | tail -1 >> "$OUT" 2>/dev/null
   cd "$REPO"
   timeout 600 .venv/bin/python campaign/mmlu-pro-gate.py 0.933 t32b-mmlu-a >> "$OUT" 2>&1 || echo "MMLU A failed" >> "$OUT"
   timeout 600 .venv/bin/python campaign/mmlu-pro-gate.py 0.933 t32b-mmlu-b >> "$OUT" 2>&1 || echo "MMLU B failed" >> "$OUT"

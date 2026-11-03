@@ -1,6 +1,6 @@
 T39 TEMPLATE GATES start Fri Oct 23 05:27:39 PM SAST 2026
 === BOOT t39-template health=1 17:28:06 ===
-[17:28:06] prewarm2: complement pin confirmed in /home/svg/LLM/strata-custom-2/custom-iq3_s.log
+[17:28:06] prewarm2: complement pin confirmed in /home/svg/LLM/strata-custom-2/logs/custom-iq3_s.log
 [17:28:11] prewarm2: page cache re-warmed in 5s
 200
 200

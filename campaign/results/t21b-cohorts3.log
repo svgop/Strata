@@ -1,7 +1,7 @@
 T21B COHORTS3 start Tue Oct 20 09:41:54 PM SAST 2026
 === LEG c3-arm-r1 health=1 21:42:27 ===
 strata serve: STRATA_COHORTS=2 on: slots [0,3) on verifier A, [3,6) on B
-=== PROBE t21b-c3-arm-r1 | 2026-10-20 21:42:27 | log=/home/svg/LLM/strata-custom-2/custom-iq3_s.log
+=== PROBE t21b-c3-arm-r1 | 2026-10-20 21:42:27 | log=/home/svg/LLM/strata-custom-2/logs/custom-iq3_s.log
     warmup: 8 tok in 0.31s
     A.short[1]: 220 tok in 1.52s = 145.1 t/s
     A.short[2]: 220 tok in 1.13s = 194.7 t/s
@@ -61,7 +61,7 @@ M3d per-position : not printed (arm STRATA_SPEC_DEPTH=1 to publish accepted/test
 === PROBE END t21b-c3-arm-r1
 === LEG c2-ctl-r1 health=1 21:43:56 ===
 strata serve: STRATA_COHORTS=2 on: slots [0,3) on verifier A, [3,6) on B
-=== PROBE t21b-c2-ctl-r1 | 2026-10-20 21:43:56 | log=/home/svg/LLM/strata-custom-2/custom-iq3_s.log
+=== PROBE t21b-c2-ctl-r1 | 2026-10-20 21:43:56 | log=/home/svg/LLM/strata-custom-2/logs/custom-iq3_s.log
     warmup: 8 tok in 0.31s
     A.short[1]: 220 tok in 1.57s = 139.9 t/s
     A.short[2]: 220 tok in 1.14s = 193.4 t/s
@@ -121,7 +121,7 @@ M3d per-position : not printed (arm STRATA_SPEC_DEPTH=1 to publish accepted/test
 === PROBE END t21b-c2-ctl-r1
 === LEG c3-arm-r2 health=1 21:45:21 ===
 strata serve: STRATA_COHORTS=2 on: slots [0,3) on verifier A, [3,6) on B
-=== PROBE t21b-c3-arm-r2 | 2026-10-20 21:45:21 | log=/home/svg/LLM/strata-custom-2/custom-iq3_s.log
+=== PROBE t21b-c3-arm-r2 | 2026-10-20 21:45:21 | log=/home/svg/LLM/strata-custom-2/logs/custom-iq3_s.log
     warmup: 8 tok in 0.31s
     A.short[1]: 220 tok in 1.59s = 138.1 t/s
     A.short[2]: 220 tok in 1.25s = 176.2 t/s
@@ -181,7 +181,7 @@ M3d per-position : not printed (arm STRATA_SPEC_DEPTH=1 to publish accepted/test
 === PROBE END t21b-c3-arm-r2
 === LEG c2-ctl-r2 health=1 21:46:47 ===
 strata serve: STRATA_COHORTS=2 on: slots [0,3) on verifier A, [3,6) on B
-=== PROBE t21b-c2-ctl-r2 | 2026-10-20 21:46:47 | log=/home/svg/LLM/strata-custom-2/custom-iq3_s.log
+=== PROBE t21b-c2-ctl-r2 | 2026-10-20 21:46:47 | log=/home/svg/LLM/strata-custom-2/logs/custom-iq3_s.log
     warmup: 8 tok in 0.31s
     A.short[1]: 220 tok in 1.64s = 134.0 t/s
     A.short[2]: 220 tok in 1.03s = 214.3 t/s
@@ -242,7 +242,7 @@ M3d per-position : not printed (arm STRATA_SPEC_DEPTH=1 to publish accepted/test
 === PROBE END t21b-c2-ctl-r2
 === LEG c3-arm-r3 health=1 21:48:16 ===
 strata serve: STRATA_COHORTS=2 on: slots [0,3) on verifier A, [3,6) on B
-=== PROBE t21b-c3-arm-r3 | 2026-10-20 21:48:16 | log=/home/svg/LLM/strata-custom-2/custom-iq3_s.log
+=== PROBE t21b-c3-arm-r3 | 2026-10-20 21:48:16 | log=/home/svg/LLM/strata-custom-2/logs/custom-iq3_s.log
     warmup: 8 tok in 0.31s
     A.short[1]: 220 tok in 1.60s = 137.8 t/s
     A.short[2]: 220 tok in 1.14s = 192.4 t/s
@@ -302,7 +302,7 @@ M3d per-position : not printed (arm STRATA_SPEC_DEPTH=1 to publish accepted/test
 === PROBE END t21b-c3-arm-r3
 === LEG c2-ctl-r3 health=1 21:49:42 ===
 strata serve: STRATA_COHORTS=2 on: slots [0,3) on verifier A, [3,6) on B
-=== PROBE t21b-c2-ctl-r3 | 2026-10-20 21:49:42 | log=/home/svg/LLM/strata-custom-2/custom-iq3_s.log
+=== PROBE t21b-c2-ctl-r3 | 2026-10-20 21:49:42 | log=/home/svg/LLM/strata-custom-2/logs/custom-iq3_s.log
     warmup: 8 tok in 0.31s
     A.short[1]: 220 tok in 1.57s = 139.8 t/s
     A.short[2]: 220 tok in 1.02s = 216.4 t/s

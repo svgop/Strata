@@ -1,7 +1,7 @@
 V02 BENCH start Tue Oct 20 10:40:04 AM SAST 2026
 artifacts: 2/2 present
 === LEG iq3s-45-a1 health=1 10:40:37 bin=strata.v0.1.45-pre-v02 ===
-=== PROBE v02-iq3s-45-a1 | 2026-10-20 10:40:37 | log=/home/svg/LLM/strata-custom-2/custom-iq3_s.log
+=== PROBE v02-iq3s-45-a1 | 2026-10-20 10:40:37 | log=/home/svg/LLM/strata-custom-2/logs/custom-iq3_s.log
     warmup: 8 tok in 0.45s
     A.short[1]: 220 tok in 2.12s = 103.9 t/s
     A.short[2]: 220 tok in 1.52s = 144.5 t/s
@@ -24,7 +24,7 @@ M2 6-conc        : 234.2 t/s aggregate (3600 tok in 15.37s)
 M3d per-position : not printed (arm STRATA_SPEC_DEPTH=1 to publish accepted/tested by depth)
 === PROBE END v02-iq3s-45-a1
 === LEG iq3s-21-b health=1 10:42:18 bin=strata.v0.2.1 ===
-=== PROBE v02-iq3s-21-b | 2026-10-20 10:42:18 | log=/home/svg/LLM/strata-custom-2/custom-iq3_s.log
+=== PROBE v02-iq3s-21-b | 2026-10-20 10:42:18 | log=/home/svg/LLM/strata-custom-2/logs/custom-iq3_s.log
     warmup: 8 tok in 0.41s
     A.short[1]: 220 tok in 1.94s = 113.6 t/s
     A.short[2]: 220 tok in 1.29s = 170.7 t/s
@@ -47,7 +47,7 @@ M2 6-conc        : 281.4 t/s aggregate (3600 tok in 12.79s)
 M3d per-position : not printed (arm STRATA_SPEC_DEPTH=1 to publish accepted/tested by depth)
 === PROBE END v02-iq3s-21-b
 === LEG iq3s-45-a2 health=1 10:43:50 bin=strata.v0.1.45-pre-v02 ===
-=== PROBE v02-iq3s-45-a2 | 2026-10-20 10:43:50 | log=/home/svg/LLM/strata-custom-2/custom-iq3_s.log
+=== PROBE v02-iq3s-45-a2 | 2026-10-20 10:43:50 | log=/home/svg/LLM/strata-custom-2/logs/custom-iq3_s.log
     warmup: 8 tok in 0.44s
     A.short[1]: 220 tok in 2.07s = 106.3 t/s
     A.short[2]: 220 tok in 1.57s = 140.5 t/s
@@ -70,7 +70,7 @@ M2 6-conc        : 243.8 t/s aggregate (3600 tok in 14.76s)
 M3d per-position : not printed (arm STRATA_SPEC_DEPTH=1 to publish accepted/tested by depth)
 === PROBE END v02-iq3s-45-a2
 === LEG q2-45-a1 health=1 10:45:13 bin=strata.v0.1.45-pre-v02 ===
-=== PROBE v02-q2-45-a1 | 2026-10-20 10:45:13 | log=/home/svg/LLM/strata-custom-2/custom-iq3_s.log
+=== PROBE v02-q2-45-a1 | 2026-10-20 10:45:13 | log=/home/svg/LLM/strata-custom-2/logs/custom-iq3_s.log
     warmup: 8 tok in 0.21s
     A.short[1]: 220 tok in 1.31s = 167.6 t/s
     A.short[2]: 220 tok in 1.06s = 208.3 t/s
@@ -93,7 +93,7 @@ M2 6-conc        : 192.6 t/s aggregate (3600 tok in 18.69s)
 M3d per-position : not printed (arm STRATA_SPEC_DEPTH=1 to publish accepted/tested by depth)
 === PROBE END v02-q2-45-a1
 === LEG q2-21-b health=1 10:46:27 bin=strata.v0.2.1 ===
-=== PROBE v02-q2-21-b | 2026-10-20 10:46:27 | log=/home/svg/LLM/strata-custom-2/custom-iq3_s.log
+=== PROBE v02-q2-21-b | 2026-10-20 10:46:27 | log=/home/svg/LLM/strata-custom-2/logs/custom-iq3_s.log
     warmup: 8 tok in 0.19s
     A.short[1]: 220 tok in 1.19s = 185.3 t/s
     A.short[2]: 220 tok in 1.03s = 212.6 t/s
@@ -116,7 +116,7 @@ M2 6-conc        : 220.8 t/s aggregate (3600 tok in 16.30s)
 M3d per-position : not printed (arm STRATA_SPEC_DEPTH=1 to publish accepted/tested by depth)
 === PROBE END v02-q2-21-b
 === LEG q2-45-a2 health=1 10:47:36 bin=strata.v0.1.45-pre-v02 ===
-=== PROBE v02-q2-45-a2 | 2026-10-20 10:47:36 | log=/home/svg/LLM/strata-custom-2/custom-iq3_s.log
+=== PROBE v02-q2-45-a2 | 2026-10-20 10:47:36 | log=/home/svg/LLM/strata-custom-2/logs/custom-iq3_s.log
     warmup: 8 tok in 0.21s
     A.short[1]: 220 tok in 1.32s = 166.4 t/s
     A.short[2]: 220 tok in 1.21s = 182.3 t/s

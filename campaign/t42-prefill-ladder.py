@@ -9,7 +9,7 @@ import json, re, sys, time, urllib.request
 PORT = sys.argv[1] if len(sys.argv) > 1 else "8081"
 LABEL = sys.argv[2] if len(sys.argv) > 2 else "ladder"
 KEY = "3f0940df8efb9c363e4189956ae907d3e4acac221aab39f44804fe0b0df1b8"
-LOG = "/home/svg/LLM/strata-custom-2/custom-iq3_s.log"
+LOG = "/home/svg/LLM/strata-custom-2/logs/custom-iq3_s.log"
 
 SIZES = [2000, 8000, 32000, 96000]          # target prompt tokens (approx; filler ~4 ch/tok)
 pat = re.compile(r"prompt (\d+) tokens = (\d+) reused \+ (\d+) read in (\d+) ms \(([\d.]+) tok/s\)")

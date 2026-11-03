@@ -1,4 +1,4 @@
-=== PROBE vram800-3 | 2026-10-14 14:09:18 | log=/home/svg/LLM/strata-custom-2/custom-iq3_s.log
+=== PROBE vram800-3 | 2026-10-14 14:09:18 | log=/home/svg/LLM/strata-custom-2/logs/custom-iq3_s.log
     warmup: 8 tok in 0.40s
     A.short[1]: 220 tok in 1.59s = 138.0 t/s
     A.short[2]: 220 tok in 1.34s = 164.5 t/s

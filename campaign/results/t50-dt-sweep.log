@@ -1,6 +1,6 @@
 T50 DT SWEEP start Sat Oct 24 06:27:56 AM SAST 2026
 === LEG dt=0.75 health=1 06:28:20 ===
-[06:28:20] prewarm2: complement pin confirmed in /home/svg/LLM/strata-custom-2/custom-iq3_s.log
+[06:28:20] prewarm2: complement pin confirmed in /home/svg/LLM/strata-custom-2/logs/custom-iq3_s.log
 [06:28:28] prewarm2: page cache re-warmed in 8s
 200
 200
@@ -12,7 +12,7 @@ T50 DT SWEEP start Sat Oct 24 06:27:56 AM SAST 2026
 503
 503
 [06:30:38] prewarm2: replay done (2 short + 1 mid prefill + 6-way burst) in 138s total
-=== PROBE t50-dt0.75 | 2026-10-24 06:30:38 | log=/home/svg/LLM/strata-custom-2/custom-iq3_s.log
+=== PROBE t50-dt0.75 | 2026-10-24 06:30:38 | log=/home/svg/LLM/strata-custom-2/logs/custom-iq3_s.log
     warmup: 8 tok in 15.90s
     A.short[1]: 220 tok in 1.48s = 148.6 t/s
     A.short[2]: 220 tok in 1.03s = 214.4 t/s
@@ -64,7 +64,7 @@ M3d per-position : not printed (arm STRATA_SPEC_DEPTH=1 to publish accepted/test
 === PROBE END t50-dt0.75
 [metrics t50-dt0.75] TTFT p50/p99 261ms/2065ms  ITL p99 8ms  accept 77.92%  clock 2970.0MHz 33.0C 87.25W  golden 5d02c01a85b1644a  DRIFT a974bc5a6f6c8ec6 -> 5d02c01a85b1644a
 === LEG dt=0.85 health=1 06:34:12 ===
-[06:34:12] prewarm2: complement pin confirmed in /home/svg/LLM/strata-custom-2/custom-iq3_s.log
+[06:34:12] prewarm2: complement pin confirmed in /home/svg/LLM/strata-custom-2/logs/custom-iq3_s.log
 [06:34:16] prewarm2: page cache re-warmed in 4s
 200
 200
@@ -76,7 +76,7 @@ M3d per-position : not printed (arm STRATA_SPEC_DEPTH=1 to publish accepted/test
 503
 503
 [06:36:08] prewarm2: replay done (2 short + 1 mid prefill + 6-way burst) in 116s total
-=== PROBE t50-dt0.85 | 2026-10-24 06:36:08 | log=/home/svg/LLM/strata-custom-2/custom-iq3_s.log
+=== PROBE t50-dt0.85 | 2026-10-24 06:36:08 | log=/home/svg/LLM/strata-custom-2/logs/custom-iq3_s.log
     warmup: 8 tok in 15.90s
     A.short[1]: 220 tok in 1.46s = 150.7 t/s
     A.short[2]: 220 tok in 1.01s = 218.3 t/s
@@ -128,7 +128,7 @@ M3d per-position : not printed (arm STRATA_SPEC_DEPTH=1 to publish accepted/test
 === PROBE END t50-dt0.85
 [metrics t50-dt0.85] TTFT p50/p99 261ms/2065ms  ITL p99 9ms  accept 76.22%  clock 2970.0MHz 33.0C 87.73W  golden 5d02c01a85b1644a  DRIFT a974bc5a6f6c8ec6 -> 5d02c01a85b1644a
 === LEG dt=0.95 health=1 06:39:29 ===
-[06:39:29] prewarm2: complement pin confirmed in /home/svg/LLM/strata-custom-2/custom-iq3_s.log
+[06:39:29] prewarm2: complement pin confirmed in /home/svg/LLM/strata-custom-2/logs/custom-iq3_s.log
 [06:39:36] prewarm2: page cache re-warmed in 7s
 200
 200
@@ -140,7 +140,7 @@ M3d per-position : not printed (arm STRATA_SPEC_DEPTH=1 to publish accepted/test
 503
 503
 [06:41:45] prewarm2: replay done (2 short + 1 mid prefill + 6-way burst) in 136s total
-=== PROBE t50-dt0.95 | 2026-10-24 06:41:45 | log=/home/svg/LLM/strata-custom-2/custom-iq3_s.log
+=== PROBE t50-dt0.95 | 2026-10-24 06:41:45 | log=/home/svg/LLM/strata-custom-2/logs/custom-iq3_s.log
     warmup: 8 tok in 15.89s
     A.short[1]: 220 tok in 1.42s = 155.0 t/s
     A.short[2]: 220 tok in 1.07s = 205.6 t/s
@@ -193,7 +193,7 @@ M3d per-position : not printed (arm STRATA_SPEC_DEPTH=1 to publish accepted/test
 === PROBE END t50-dt0.95
 [metrics t50-dt0.95] TTFT p50/p99 275ms/2050ms  ITL p99 10ms  accept 75.85%  clock 2970.0MHz 33.0C 87.72W  golden dbb294a93550f4fc  DRIFT a974bc5a6f6c8ec6 -> dbb294a93550f4fc
 SERVER UP 06:45:21
-[06:45:21] prewarm2: complement pin confirmed in /home/svg/LLM/strata-custom-2/custom-iq3_s.log
+[06:45:21] prewarm2: complement pin confirmed in /home/svg/LLM/strata-custom-2/logs/custom-iq3_s.log
 [06:45:28] prewarm2: page cache re-warmed in 7s
 200
 200

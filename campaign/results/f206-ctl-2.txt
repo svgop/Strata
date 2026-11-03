@@ -1,4 +1,4 @@
-=== PROBE f206-ctl-2 | 2026-10-15 10:52:43 | log=/home/svg/LLM/strata-custom-2/custom-iq3_s.log
+=== PROBE f206-ctl-2 | 2026-10-15 10:52:43 | log=/home/svg/LLM/strata-custom-2/logs/custom-iq3_s.log
     warmup: 8 tok in 0.41s
     A.short[1]: 220 tok in 1.58s = 139.1 t/s
     A.short[2]: 220 tok in 1.29s = 170.6 t/s

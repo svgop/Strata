@@ -1,4 +1,4 @@
-=== PROBE mqctl-r3 | 2026-10-17 03:03:18 | log=/home/svg/LLM/strata-custom-2/custom-iq3_s.log
+=== PROBE mqctl-r3 | 2026-10-17 03:03:18 | log=/home/svg/LLM/strata-custom-2/logs/custom-iq3_s.log
     warmup: 8 tok in 0.33s
     A.short[1]: 220 tok in 1.55s = 141.8 t/s
     A.short[2]: 220 tok in 1.04s = 212.2 t/s

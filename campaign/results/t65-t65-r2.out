@@ -21,7 +21,7 @@ Traceback (most recent call last):
   File "/home/svg/LLM/strata-custom-2/serve/server.py", line 1167, in __init__
     raise EngineDied(why + (f" (see {log})" if log else "") + note +
                      start_failure_hint(log, log_start) + tail)
-EngineDied: the engine exited before it was ready (see /home/svg/LLM/strata-custom-2/custom-iq3_s.log)
+EngineDied: the engine exited before it was ready (see /home/svg/LLM/strata-custom-2/logs/custom-iq3_s.log)
 the engine process ended: killed by signal 6 (SIGABRT, Aborted)
 the engine log's last lines:
   FileExpertSource: allocating 37.63 GiB page-locked cache complement

@@ -1,6 +1,6 @@
 T22 CUSTOM vs STOCK start Tue Oct 20 09:59:10 PM SAST 2026
 === LEG stock-r1 health=1 21:59:43 ===
-=== PROBE t22-stock-r1 | 2026-10-20 21:59:43 | log=/home/svg/LLM/strata-custom-2/custom-iq3_s.log
+=== PROBE t22-stock-r1 | 2026-10-20 21:59:43 | log=/home/svg/LLM/strata-custom-2/logs/custom-iq3_s.log
     warmup: 8 tok in 0.41s
     A.short[1]: 220 tok in 2.05s = 107.5 t/s
     A.short[2]: 220 tok in 1.30s = 169.8 t/s
@@ -23,7 +23,7 @@ M2 6-conc        : 275.3 t/s aggregate (3600 tok in 13.07s)
 M3d per-position : not printed (arm STRATA_SPEC_DEPTH=1 to publish accepted/tested by depth)
 === PROBE END t22-stock-r1
 === LEG custom-r1 health=1 22:01:17 ===
-=== PROBE t22-custom-r1 | 2026-10-20 22:01:17 | log=/home/svg/LLM/strata-custom-2/custom-iq3_s.log
+=== PROBE t22-custom-r1 | 2026-10-20 22:01:17 | log=/home/svg/LLM/strata-custom-2/logs/custom-iq3_s.log
     warmup: 8 tok in 0.30s
     A.short[1]: 220 tok in 1.59s = 138.4 t/s
     A.short[2]: 220 tok in 1.08s = 202.8 t/s
@@ -82,7 +82,7 @@ M3b rate         : 75.9% mean over 16 requests (diagnostic)
 M3d per-position : not printed (arm STRATA_SPEC_DEPTH=1 to publish accepted/tested by depth)
 === PROBE END t22-custom-r1
 === LEG stock-r2 health=1 22:02:41 ===
-=== PROBE t22-stock-r2 | 2026-10-20 22:02:41 | log=/home/svg/LLM/strata-custom-2/custom-iq3_s.log
+=== PROBE t22-stock-r2 | 2026-10-20 22:02:41 | log=/home/svg/LLM/strata-custom-2/logs/custom-iq3_s.log
     warmup: 8 tok in 0.42s
     A.short[1]: 220 tok in 1.94s = 113.5 t/s
     A.short[2]: 220 tok in 1.25s = 175.7 t/s
@@ -105,7 +105,7 @@ M2 6-conc        : 268.7 t/s aggregate (3600 tok in 13.40s)
 M3d per-position : not printed (arm STRATA_SPEC_DEPTH=1 to publish accepted/tested by depth)
 === PROBE END t22-stock-r2
 === LEG custom-r2 health=1 22:04:14 ===
-=== PROBE t22-custom-r2 | 2026-10-20 22:04:14 | log=/home/svg/LLM/strata-custom-2/custom-iq3_s.log
+=== PROBE t22-custom-r2 | 2026-10-20 22:04:14 | log=/home/svg/LLM/strata-custom-2/logs/custom-iq3_s.log
     warmup: 8 tok in 0.30s
     A.short[1]: 220 tok in 1.66s = 132.8 t/s
     A.short[2]: 220 tok in 1.01s = 218.4 t/s
@@ -164,7 +164,7 @@ M3b rate         : 78.5% mean over 15 requests (diagnostic)
 M3d per-position : not printed (arm STRATA_SPEC_DEPTH=1 to publish accepted/tested by depth)
 === PROBE END t22-custom-r2
 === LEG stock-r3 health=1 22:05:38 ===
-=== PROBE t22-stock-r3 | 2026-10-20 22:05:38 | log=/home/svg/LLM/strata-custom-2/custom-iq3_s.log
+=== PROBE t22-stock-r3 | 2026-10-20 22:05:38 | log=/home/svg/LLM/strata-custom-2/logs/custom-iq3_s.log
     warmup: 8 tok in 0.44s
     A.short[1]: 220 tok in 2.09s = 105.1 t/s
     A.short[2]: 220 tok in 1.43s = 154.3 t/s
@@ -187,7 +187,7 @@ M2 6-conc        : 258.2 t/s aggregate (3600 tok in 13.94s)
 M3d per-position : not printed (arm STRATA_SPEC_DEPTH=1 to publish accepted/tested by depth)
 === PROBE END t22-stock-r3
 === LEG custom-r3 health=1 22:07:16 ===
-=== PROBE t22-custom-r3 | 2026-10-20 22:07:16 | log=/home/svg/LLM/strata-custom-2/custom-iq3_s.log
+=== PROBE t22-custom-r3 | 2026-10-20 22:07:16 | log=/home/svg/LLM/strata-custom-2/logs/custom-iq3_s.log
     warmup: 8 tok in 0.32s
     A.short[1]: 220 tok in 1.62s = 135.9 t/s
     A.short[2]: 220 tok in 1.11s = 198.0 t/s

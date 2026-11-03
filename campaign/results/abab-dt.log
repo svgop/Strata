@@ -10,7 +10,7 @@ M3b rate         : 75.2% mean over 16 requests (diagnostic)
 [02:23:53] probe done rc=0
 [02:23:58] standing env loaded: SPEC_DRAFT_TEMP=0.85 BATCH_MTP=1 TYPICAL_ACCEPT=0.2
 [02:24:01] prewarm done in 3s (page cache now carries pack+shards)
-[02:24:01] booting config=custom-iq3_s-8081.json log=/home/svg/LLM/strata-custom-2/custom-iq3_s.log
+[02:24:01] booting config=custom-iq3_s-8081.json log=/home/svg/LLM/strata-custom-2/logs/custom-iq3_s.log
 [02:24:16] ready; settling 10s
 M1 single-stream : 208.8 t/s (2000 tok in 9.58s)
 M2 pair          : 195.8 t/s aggregate (1800 tok in 9.19s)
@@ -30,7 +30,7 @@ M3b rate         : 76.0% mean over 16 requests (diagnostic)
 [02:26:40] probe done rc=0
 [02:26:45] standing env loaded: SPEC_DRAFT_TEMP=0.85 BATCH_MTP=1 TYPICAL_ACCEPT=0.2
 [02:26:48] prewarm done in 3s (page cache now carries pack+shards)
-[02:26:48] booting config=custom-iq3_s-8081.json log=/home/svg/LLM/strata-custom-2/custom-iq3_s.log
+[02:26:48] booting config=custom-iq3_s-8081.json log=/home/svg/LLM/strata-custom-2/logs/custom-iq3_s.log
 [02:27:03] ready; settling 10s
 M1 single-stream : 207.2 t/s (2000 tok in 9.65s)
 M2 pair          : 199.3 t/s aggregate (1800 tok in 9.03s)
@@ -50,7 +50,7 @@ M3b rate         : 75.3% mean over 16 requests (diagnostic)
 [02:29:27] probe done rc=0
 [02:29:32] standing env loaded: SPEC_DRAFT_TEMP=0.85 BATCH_MTP=1 TYPICAL_ACCEPT=0.2
 [02:29:35] prewarm done in 3s (page cache now carries pack+shards)
-[02:29:35] booting config=custom-iq3_s-8081.json log=/home/svg/LLM/strata-custom-2/custom-iq3_s.log
+[02:29:35] booting config=custom-iq3_s-8081.json log=/home/svg/LLM/strata-custom-2/logs/custom-iq3_s.log
 [02:29:50] ready; settling 10s
 M1 single-stream : 204.0 t/s (2000 tok in 9.80s)
 M2 pair          : 208.3 t/s aggregate (1800 tok in 8.64s)

@@ -10,7 +10,7 @@ ready: http://127.0.0.1:8081/v1  (OpenAI: /v1/chat/completions, Anthropic: /v1/m
        open http://127.0.0.1:8081/ in a browser to chat; close this window to stop the model
        from other devices: http://192.168.0.22:8081/   (API: http://192.168.0.22:8081/v1)
        from other devices: http://192.168.0.182:8081/   (API: http://192.168.0.182:8081/v1)
-[strata] the engine stopped unexpectedly (exit code 1). The engine exited (code 1). Its last log line: strata serve: 1250 MiB of VRAM free with everything loaded - if that does not explain it, please report it at github.com/Niko1221/Strata/issues with the log. The next request starts the engine again. Its log: /home/svg/LLM/strata-custom-2/custom-iq3_s.log
+[strata] the engine stopped unexpectedly (exit code 1). The engine exited (code 1). Its last log line: strata serve: 1250 MiB of VRAM free with everything loaded - if that does not explain it, please report it at github.com/Niko1221/Strata/issues with the log. The next request starts the engine again. Its log: /home/svg/LLM/strata-custom-2/logs/custom-iq3_s.log
 [strata] done: 1 tokens in 4 s (0.3 tok/s) (error, cancel=False)
 [strata] the engine had stopped (exit code 1); starting it again (a minute or two) ...
 [strata] starting the engine: reading the model's weights ...
@@ -20,7 +20,7 @@ ready: http://127.0.0.1:8081/v1  (OpenAI: /v1/chat/completions, Anthropic: /v1/m
 [strata] filling the GPU's expert cache (10362 experts, 19.66 GiB of VRAM) ...
 [strata] almost ready ...
 [strata] the engine is running again
-[strata] the engine stopped unexpectedly (exit code 1). The engine exited (code 1). Its last log line: strata serve: 1233 MiB of VRAM free with everything loaded - if that does not explain it, please report it at github.com/Niko1221/Strata/issues with the log. The next request starts the engine again. Its log: /home/svg/LLM/strata-custom-2/custom-iq3_s.log
+[strata] the engine stopped unexpectedly (exit code 1). The engine exited (code 1). Its last log line: strata serve: 1233 MiB of VRAM free with everything loaded - if that does not explain it, please report it at github.com/Niko1221/Strata/issues with the log. The next request starts the engine again. Its log: /home/svg/LLM/strata-custom-2/logs/custom-iq3_s.log
 [strata] done: 1 tokens in 4 s (0.3 tok/s) (error, cancel=False)
 
 [strata] stopping (Ctrl+C again to end the engine at once) ...

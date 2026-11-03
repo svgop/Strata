@@ -12,7 +12,7 @@ import json, subprocess, sys, time, urllib.request
 
 PORT = "8081"
 KEY = "3f0940df8efb9c363e4189956ae907d3e4acac221aab39f44804fe0b0df1b8"
-LOG = "/home/svg/LLM/strata-custom-2/custom-iq3_s.log"
+LOG = "/home/svg/LLM/strata-custom-2/logs/custom-iq3_s.log"
 OUT = "/home/svg/LLM/strata-custom-2/campaign/results/t48-ngram-raw.json"
 
 COPY_HEAVY = [

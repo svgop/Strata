@@ -1,6 +1,6 @@
 KNOB MARATHON start Mon Oct 19 11:44:12 PM SAST 2026
 === LEG pft health=1 23:44:37 env=[STRATA_PREFILL_TIMING=1] ===
-=== PROBE knob-pft | 2026-10-19 23:44:37 | log=/home/svg/LLM/strata-custom-2/custom-iq3_s.log
+=== PROBE knob-pft | 2026-10-19 23:44:37 | log=/home/svg/LLM/strata-custom-2/logs/custom-iq3_s.log
     warmup: 8 tok in 0.33s
     A.short[1]: 220 tok in 1.51s = 145.6 t/s
     A.short[2]: 220 tok in 1.16s = 189.7 t/s
@@ -84,7 +84,7 @@ strata prefill timing: host: chunk setup (PLE rows, the expert stream plan) 2 ms
 strata prefill timing: 1350 tokens, GPU timeline 910 ms, wall 911 ms, host staging 183 ms: embed+steps 6 (0.6%) hc read 23 (2.6%) gdn 43 (4.7%) qsa proj 25 (2.7%) qsa indexer 0 (0.0%) qsa select 9 (0.9%) qsa attn 15 (1.6%) router+shared 16 (1.7%) host grouping 5 (0.5%) gather 2 (0.3%) wait copy 398 (43.7%) dequant 186 (20.5%) gemm gate/up 85 (9.3%) gemm down 47 (5.2%) combine 13 (1.5%) ple 1 (0.1%) kv stage 0 (0.0%) gdn conv+gates 4 (0.4%) gdn recurrence 15 (1.6%) gdn out proj 19 (2.1%)
 strata prefill timing: host: chunk setup (PLE rows, the expert stream plan) 2 ms, waiting for each chunk 17 ms, after each chunk (the draft layer, progress) 1 ms, PLE 487 ms
 === LEG lanecell health=1 23:46:08 env=[STRATA_ATTN_LANECELL=1] ===
-=== PROBE knob-lanecell | 2026-10-19 23:46:08 | log=/home/svg/LLM/strata-custom-2/custom-iq3_s.log
+=== PROBE knob-lanecell | 2026-10-19 23:46:08 | log=/home/svg/LLM/strata-custom-2/logs/custom-iq3_s.log
     warmup: 8 tok in 0.32s
     A.short[1]: 220 tok in 1.61s = 137.0 t/s
     A.short[2]: 220 tok in 1.12s = 196.7 t/s
@@ -161,7 +161,7 @@ strata prefill timing: host: chunk setup (PLE rows, the expert stream plan) 2 ms
 strata prefill timing: 1350 tokens, GPU timeline 910 ms, wall 911 ms, host staging 183 ms: embed+steps 6 (0.6%) hc read 23 (2.6%) gdn 43 (4.7%) qsa proj 25 (2.7%) qsa indexer 0 (0.0%) qsa select 9 (0.9%) qsa attn 15 (1.6%) router+shared 16 (1.7%) host grouping 5 (0.5%) gather 2 (0.3%) wait copy 398 (43.7%) dequant 186 (20.5%) gemm gate/up 85 (9.3%) gemm down 47 (5.2%) combine 13 (1.5%) ple 1 (0.1%) kv stage 0 (0.0%) gdn conv+gates 4 (0.4%) gdn recurrence 15 (1.6%) gdn out proj 19 (2.1%)
 strata prefill timing: host: chunk setup (PLE rows, the expert stream plan) 2 ms, waiting for each chunk 17 ms, after each chunk (the draft layer, progress) 1 ms, PLE 487 ms
 === LEG tsum health=1 23:47:25 env=[STRATA_TSUM=1] ===
-=== PROBE knob-tsum | 2026-10-19 23:47:25 | log=/home/svg/LLM/strata-custom-2/custom-iq3_s.log
+=== PROBE knob-tsum | 2026-10-19 23:47:25 | log=/home/svg/LLM/strata-custom-2/logs/custom-iq3_s.log
     warmup: 8 tok in 0.32s
     A.short[1]: 220 tok in 1.52s = 144.7 t/s
     A.short[2]: 220 tok in 1.14s = 193.6 t/s
@@ -238,7 +238,7 @@ strata prefill timing: host: chunk setup (PLE rows, the expert stream plan) 2 ms
 strata prefill timing: 1350 tokens, GPU timeline 910 ms, wall 911 ms, host staging 183 ms: embed+steps 6 (0.6%) hc read 23 (2.6%) gdn 43 (4.7%) qsa proj 25 (2.7%) qsa indexer 0 (0.0%) qsa select 9 (0.9%) qsa attn 15 (1.6%) router+shared 16 (1.7%) host grouping 5 (0.5%) gather 2 (0.3%) wait copy 398 (43.7%) dequant 186 (20.5%) gemm gate/up 85 (9.3%) gemm down 47 (5.2%) combine 13 (1.5%) ple 1 (0.1%) kv stage 0 (0.0%) gdn conv+gates 4 (0.4%) gdn recurrence 15 (1.6%) gdn out proj 19 (2.1%)
 strata prefill timing: host: chunk setup (PLE rows, the expert stream plan) 2 ms, waiting for each chunk 17 ms, after each chunk (the draft layer, progress) 1 ms, PLE 487 ms
 === LEG q6packed health=1 23:48:42 env=[STRATA_Q6_PACKED=1] ===
-=== PROBE knob-q6packed | 2026-10-19 23:48:42 | log=/home/svg/LLM/strata-custom-2/custom-iq3_s.log
+=== PROBE knob-q6packed | 2026-10-19 23:48:42 | log=/home/svg/LLM/strata-custom-2/logs/custom-iq3_s.log
     warmup: 8 tok in 0.33s
     A.short[1]: 220 tok in 1.50s = 146.5 t/s
     A.short[2]: 220 tok in 1.17s = 188.8 t/s
@@ -315,7 +315,7 @@ strata prefill timing: host: chunk setup (PLE rows, the expert stream plan) 2 ms
 strata prefill timing: 1350 tokens, GPU timeline 910 ms, wall 911 ms, host staging 183 ms: embed+steps 6 (0.6%) hc read 23 (2.6%) gdn 43 (4.7%) qsa proj 25 (2.7%) qsa indexer 0 (0.0%) qsa select 9 (0.9%) qsa attn 15 (1.6%) router+shared 16 (1.7%) host grouping 5 (0.5%) gather 2 (0.3%) wait copy 398 (43.7%) dequant 186 (20.5%) gemm gate/up 85 (9.3%) gemm down 47 (5.2%) combine 13 (1.5%) ple 1 (0.1%) kv stage 0 (0.0%) gdn conv+gates 4 (0.4%) gdn recurrence 15 (1.6%) gdn out proj 19 (2.1%)
 strata prefill timing: host: chunk setup (PLE rows, the expert stream plan) 2 ms, waiting for each chunk 17 ms, after each chunk (the draft layer, progress) 1 ms, PLE 487 ms
 === LEG q8packed health=1 23:49:56 env=[STRATA_Q8_PACKED=1] ===
-=== PROBE knob-q8packed | 2026-10-19 23:49:56 | log=/home/svg/LLM/strata-custom-2/custom-iq3_s.log
+=== PROBE knob-q8packed | 2026-10-19 23:49:56 | log=/home/svg/LLM/strata-custom-2/logs/custom-iq3_s.log
     warmup: 8 tok in 0.32s
     A.short[1]: 220 tok in 1.66s = 132.3 t/s
     A.short[2]: 220 tok in 1.04s = 211.2 t/s
@@ -392,7 +392,7 @@ strata prefill timing: host: chunk setup (PLE rows, the expert stream plan) 2 ms
 strata prefill timing: 1350 tokens, GPU timeline 910 ms, wall 911 ms, host staging 183 ms: embed+steps 6 (0.6%) hc read 23 (2.6%) gdn 43 (4.7%) qsa proj 25 (2.7%) qsa indexer 0 (0.0%) qsa select 9 (0.9%) qsa attn 15 (1.6%) router+shared 16 (1.7%) host grouping 5 (0.5%) gather 2 (0.3%) wait copy 398 (43.7%) dequant 186 (20.5%) gemm gate/up 85 (9.3%) gemm down 47 (5.2%) combine 13 (1.5%) ple 1 (0.1%) kv stage 0 (0.0%) gdn conv+gates 4 (0.4%) gdn recurrence 15 (1.6%) gdn out proj 19 (2.1%)
 strata prefill timing: host: chunk setup (PLE rows, the expert stream plan) 2 ms, waiting for each chunk 17 ms, after each chunk (the draft layer, progress) 1 ms, PLE 487 ms
 === LEG lp health=1 23:51:10 env=[] ===
-=== PROBE knob-lp | 2026-10-19 23:51:10 | log=/home/svg/LLM/strata-custom-2/custom-iq3_s.log
+=== PROBE knob-lp | 2026-10-19 23:51:10 | log=/home/svg/LLM/strata-custom-2/logs/custom-iq3_s.log
     warmup: 8 tok in 0.34s
     A.short[1]: 220 tok in 1.53s = 143.4 t/s
     A.short[2]: 220 tok in 1.11s = 199.1 t/s
@@ -469,7 +469,7 @@ strata prefill timing: host: chunk setup (PLE rows, the expert stream plan) 2 ms
 strata prefill timing: 1350 tokens, GPU timeline 910 ms, wall 911 ms, host staging 183 ms: embed+steps 6 (0.6%) hc read 23 (2.6%) gdn 43 (4.7%) qsa proj 25 (2.7%) qsa indexer 0 (0.0%) qsa select 9 (0.9%) qsa attn 15 (1.6%) router+shared 16 (1.7%) host grouping 5 (0.5%) gather 2 (0.3%) wait copy 398 (43.7%) dequant 186 (20.5%) gemm gate/up 85 (9.3%) gemm down 47 (5.2%) combine 13 (1.5%) ple 1 (0.1%) kv stage 0 (0.0%) gdn conv+gates 4 (0.4%) gdn recurrence 15 (1.6%) gdn out proj 19 (2.1%)
 strata prefill timing: host: chunk setup (PLE rows, the expert stream plan) 2 ms, waiting for each chunk 17 ms, after each chunk (the draft layer, progress) 1 ms, PLE 487 ms
 === LEG q6psel health=1 23:52:27 env=[STRATA_Q6P_SELFTEST=1] ===
-=== PROBE knob-q6psel | 2026-10-19 23:52:27 | log=/home/svg/LLM/strata-custom-2/custom-iq3_s.log
+=== PROBE knob-q6psel | 2026-10-19 23:52:27 | log=/home/svg/LLM/strata-custom-2/logs/custom-iq3_s.log
     warmup: 8 tok in 0.32s
     A.short[1]: 220 tok in 1.52s = 144.9 t/s
     A.short[2]: 220 tok in 1.20s = 184.0 t/s

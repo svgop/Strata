@@ -1,6 +1,6 @@
 T31 REBANK start Thu Oct 22 10:56:49 AM SAST 2026
 === LEG t31-base-r1 health=1 10:57:19 ===
-=== PROBE t31-base-r1 | 2026-10-22 10:57:19 | log=/home/svg/LLM/strata-custom-2/custom-iq3_s.log
+=== PROBE t31-base-r1 | 2026-10-22 10:57:19 | log=/home/svg/LLM/strata-custom-2/logs/custom-iq3_s.log
     warmup: 8 tok in 0.39s
     A.short[1]: 220 tok in 1.73s = 126.9 t/s
     A.short[2]: 220 tok in 1.12s = 196.6 t/s
@@ -62,7 +62,7 @@ M3d per-position : not printed (arm STRATA_SPEC_DEPTH=1 to publish accepted/test
 strata verify: window up to 8 tokens, 127.2 MiB of device buffers
 strata verify: window up to 8 tokens, 127.2 MiB of device buffers
 === LEG t31-base-r2 health=1 10:58:35 ===
-=== PROBE t31-base-r2 | 2026-10-22 10:58:35 | log=/home/svg/LLM/strata-custom-2/custom-iq3_s.log
+=== PROBE t31-base-r2 | 2026-10-22 10:58:35 | log=/home/svg/LLM/strata-custom-2/logs/custom-iq3_s.log
     warmup: 8 tok in 0.29s
     A.short[1]: 220 tok in 1.50s = 146.6 t/s
     A.short[2]: 220 tok in 1.09s = 202.5 t/s
@@ -124,7 +124,7 @@ M3d per-position : not printed (arm STRATA_SPEC_DEPTH=1 to publish accepted/test
 strata verify: window up to 8 tokens, 127.2 MiB of device buffers
 strata verify: window up to 8 tokens, 127.2 MiB of device buffers
 === LEG t31-base-r3 health=1 10:59:49 ===
-=== PROBE t31-base-r3 | 2026-10-22 10:59:49 | log=/home/svg/LLM/strata-custom-2/custom-iq3_s.log
+=== PROBE t31-base-r3 | 2026-10-22 10:59:49 | log=/home/svg/LLM/strata-custom-2/logs/custom-iq3_s.log
     warmup: 8 tok in 0.30s
     A.short[1]: 220 tok in 1.62s = 135.5 t/s
     A.short[2]: 220 tok in 1.05s = 208.5 t/s
@@ -187,7 +187,7 @@ M3d per-position : not printed (arm STRATA_SPEC_DEPTH=1 to publish accepted/test
 strata verify: window up to 8 tokens, 127.2 MiB of device buffers
 strata verify: window up to 8 tokens, 127.2 MiB of device buffers
 === LEG t31-base-r4 health=1 11:01:04 ===
-=== PROBE t31-base-r4 | 2026-10-22 11:01:04 | log=/home/svg/LLM/strata-custom-2/custom-iq3_s.log
+=== PROBE t31-base-r4 | 2026-10-22 11:01:04 | log=/home/svg/LLM/strata-custom-2/logs/custom-iq3_s.log
     warmup: 8 tok in 0.29s
     A.short[1]: 220 tok in 1.57s = 140.1 t/s
     A.short[2]: 220 tok in 1.06s = 207.2 t/s
@@ -249,7 +249,7 @@ M3d per-position : not printed (arm STRATA_SPEC_DEPTH=1 to publish accepted/test
 strata verify: window up to 8 tokens, 127.2 MiB of device buffers
 strata verify: window up to 8 tokens, 127.2 MiB of device buffers
 === LEG t31-base-r5 health=1 11:02:18 ===
-=== PROBE t31-base-r5 | 2026-10-22 11:02:18 | log=/home/svg/LLM/strata-custom-2/custom-iq3_s.log
+=== PROBE t31-base-r5 | 2026-10-22 11:02:18 | log=/home/svg/LLM/strata-custom-2/logs/custom-iq3_s.log
     warmup: 8 tok in 0.30s
     A.short[1]: 220 tok in 1.55s = 142.0 t/s
     A.short[2]: 220 tok in 1.09s = 202.2 t/s
@@ -313,7 +313,7 @@ strata verify: window up to 8 tokens, 127.2 MiB of device buffers
 strata verify: window up to 8 tokens, 127.2 MiB of device buffers
 === LEG t31-pre-r1 health=1 11:03:33 ===
 --- prewarm2 t31-pre-r1 11:03:33 ---
-[11:03:33] prewarm2: complement pin confirmed in /home/svg/LLM/strata-custom-2/custom-iq3_s.log
+[11:03:33] prewarm2: complement pin confirmed in /home/svg/LLM/strata-custom-2/logs/custom-iq3_s.log
 [11:03:39] prewarm2: page cache re-warmed in 6s
 200
 200
@@ -325,7 +325,7 @@ strata verify: window up to 8 tokens, 127.2 MiB of device buffers
 200
 200
 [11:03:48] prewarm2: replay done (2 short + 1 mid prefill + 6-way burst) in 15s total
-=== PROBE t31-pre-r1 | 2026-10-22 11:03:48 | log=/home/svg/LLM/strata-custom-2/custom-iq3_s.log
+=== PROBE t31-pre-r1 | 2026-10-22 11:03:48 | log=/home/svg/LLM/strata-custom-2/logs/custom-iq3_s.log
     warmup: 8 tok in 0.27s
     A.short[1]: 220 tok in 1.32s = 166.9 t/s
     A.short[2]: 220 tok in 1.05s = 209.5 t/s
@@ -388,7 +388,7 @@ strata verify: window up to 8 tokens, 127.2 MiB of device buffers
 strata verify: window up to 8 tokens, 127.2 MiB of device buffers
 === LEG t31-pre-r2 health=1 11:05:02 ===
 --- prewarm2 t31-pre-r2 11:05:02 ---
-[11:05:02] prewarm2: complement pin confirmed in /home/svg/LLM/strata-custom-2/custom-iq3_s.log
+[11:05:02] prewarm2: complement pin confirmed in /home/svg/LLM/strata-custom-2/logs/custom-iq3_s.log
 [11:05:04] prewarm2: page cache re-warmed in 2s
 200
 200
@@ -400,7 +400,7 @@ strata verify: window up to 8 tokens, 127.2 MiB of device buffers
 200
 200
 [11:05:13] prewarm2: replay done (2 short + 1 mid prefill + 6-way burst) in 11s total
-=== PROBE t31-pre-r2 | 2026-10-22 11:05:13 | log=/home/svg/LLM/strata-custom-2/custom-iq3_s.log
+=== PROBE t31-pre-r2 | 2026-10-22 11:05:13 | log=/home/svg/LLM/strata-custom-2/logs/custom-iq3_s.log
     warmup: 0 tok in 44.07s
     A.short[1]: 220 tok in 16.08s = 13.7 t/s
     A.short[2]: 220 tok in 1.11s = 198.5 t/s
@@ -462,7 +462,7 @@ strata verify: window up to 8 tokens, 127.2 MiB of device buffers
 strata verify: window up to 8 tokens, 127.2 MiB of device buffers
 === LEG t31-pre-r3 health=1 11:07:26 ===
 --- prewarm2 t31-pre-r3 11:07:26 ---
-[11:07:26] prewarm2: complement pin confirmed in /home/svg/LLM/strata-custom-2/custom-iq3_s.log
+[11:07:26] prewarm2: complement pin confirmed in /home/svg/LLM/strata-custom-2/logs/custom-iq3_s.log
 [11:07:33] prewarm2: page cache re-warmed in 7s
 200
 200
@@ -474,7 +474,7 @@ strata verify: window up to 8 tokens, 127.2 MiB of device buffers
 200
 200
 [11:07:42] prewarm2: replay done (2 short + 1 mid prefill + 6-way burst) in 16s total
-=== PROBE t31-pre-r3 | 2026-10-22 11:07:42 | log=/home/svg/LLM/strata-custom-2/custom-iq3_s.log
+=== PROBE t31-pre-r3 | 2026-10-22 11:07:42 | log=/home/svg/LLM/strata-custom-2/logs/custom-iq3_s.log
     warmup: 8 tok in 0.28s
     A.short[1]: 220 tok in 1.46s = 150.8 t/s
     A.short[2]: 220 tok in 1.03s = 212.7 t/s

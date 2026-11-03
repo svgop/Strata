@@ -1,4 +1,4 @@
-=== PROBE f200-hcs0-1 | 2026-10-15 00:54:27 | log=/home/svg/LLM/strata-custom-2/custom-iq3_s.log
+=== PROBE f200-hcs0-1 | 2026-10-15 00:54:27 | log=/home/svg/LLM/strata-custom-2/logs/custom-iq3_s.log
     warmup: 8 tok in 0.51s
     A.short[1]: 220 tok in 2.76s = 79.8 t/s
     A.short[2]: 220 tok in 1.91s = 115.5 t/s

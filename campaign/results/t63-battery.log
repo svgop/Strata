@@ -1,7 +1,7 @@
 T63 BATTERY start Mon Nov  2 03:47:34 PM SAST 2026
 NOTE: port not busy at start (the live engine should have been up)
 === LEG t63-ctl-r1 health=1 15:48:11 env='' ===
-[15:48:11] prewarm2: complement pin confirmed in /home/svg/LLM/strata-custom-2/custom-iq3_s.log
+[15:48:11] prewarm2: complement pin confirmed in /home/svg/LLM/strata-custom-2/logs/custom-iq3_s.log
 [15:48:26] prewarm2: shadow path read from engine pid 599578: /dev/shm/strata-shadow-q2_0
 [15:48:26] prewarm2: shadow on tmpfs (/dev/shm/strata-shadow-q2_0) — RAM-resident, no warm pass needed
 [15:48:26] prewarm2: page cache re-warmed in 15s
@@ -15,7 +15,7 @@ NOTE: port not busy at start (the live engine should have been up)
 200
 200
 [15:48:38] prewarm2: replay done (2 short + 1 mid prefill + 6-way burst) in 27s total
-=== PROBE t63-ctl-r1 | 2026-11-02 15:48:38 | log=/home/svg/LLM/strata-custom-2/custom-iq3_s.log
+=== PROBE t63-ctl-r1 | 2026-11-02 15:48:38 | log=/home/svg/LLM/strata-custom-2/logs/custom-iq3_s.log
     warmup: 8 tok in 0.30s
     A.short[1]: 220 tok in 1.35s = 163.3 t/s
     A.short[2]: 220 tok in 0.96s = 230.2 t/s
@@ -88,7 +88,7 @@ M3d per-position : not printed (arm STRATA_SPEC_DEPTH=1 to publish accepted/test
 === PROBE END t63-ctl-r1
 [metrics t63-ctl-r1] TTFT p50/p99 350ms/2260ms  ITL p99 19ms  accept 76.9%  clock 2955.0MHz 44.0C 93.65W  golden dbb294a93550f4fc  DRIFT a974bc5a6f6c8ec6 -> dbb294a93550f4fc
 === LEG t63-ts7-r1 health=1 15:50:10 env='STRATA_ROUTE_TAIL_SKIP=7' ===
-[15:50:10] prewarm2: complement pin confirmed in /home/svg/LLM/strata-custom-2/custom-iq3_s.log
+[15:50:10] prewarm2: complement pin confirmed in /home/svg/LLM/strata-custom-2/logs/custom-iq3_s.log
 [15:50:25] prewarm2: shadow path read from engine pid 603304: /dev/shm/strata-shadow-q2_0
 [15:50:25] prewarm2: shadow on tmpfs (/dev/shm/strata-shadow-q2_0) — RAM-resident, no warm pass needed
 [15:50:25] prewarm2: page cache re-warmed in 15s
@@ -102,7 +102,7 @@ M3d per-position : not printed (arm STRATA_SPEC_DEPTH=1 to publish accepted/test
 200
 200
 [15:50:36] prewarm2: replay done (2 short + 1 mid prefill + 6-way burst) in 26s total
-=== PROBE t63-ts7-r1 | 2026-11-02 15:50:36 | log=/home/svg/LLM/strata-custom-2/custom-iq3_s.log
+=== PROBE t63-ts7-r1 | 2026-11-02 15:50:36 | log=/home/svg/LLM/strata-custom-2/logs/custom-iq3_s.log
     warmup: 8 tok in 0.28s
     A.short[1]: 220 tok in 1.33s = 165.7 t/s
     A.short[2]: 220 tok in 0.99s = 222.0 t/s
@@ -175,7 +175,7 @@ M3d per-position : not printed (arm STRATA_SPEC_DEPTH=1 to publish accepted/test
 === PROBE END t63-ts7-r1
 [metrics t63-ts7-r1] TTFT p50/p99 350ms/2260ms  ITL p99 19ms  accept 76.56%  clock 2955.0MHz 45.0C 93.43W  golden dbb294a93550f4fc  DRIFT a974bc5a6f6c8ec6 -> dbb294a93550f4fc
 === LEG t63-ts6-r1 health=1 15:52:07 env='STRATA_ROUTE_TAIL_SKIP=6' ===
-[15:52:07] prewarm2: complement pin confirmed in /home/svg/LLM/strata-custom-2/custom-iq3_s.log
+[15:52:07] prewarm2: complement pin confirmed in /home/svg/LLM/strata-custom-2/logs/custom-iq3_s.log
 [15:52:22] prewarm2: shadow path read from engine pid 607696: /dev/shm/strata-shadow-q2_0
 [15:52:22] prewarm2: shadow on tmpfs (/dev/shm/strata-shadow-q2_0) — RAM-resident, no warm pass needed
 [15:52:22] prewarm2: page cache re-warmed in 15s
@@ -189,7 +189,7 @@ M3d per-position : not printed (arm STRATA_SPEC_DEPTH=1 to publish accepted/test
 200
 200
 [15:52:33] prewarm2: replay done (2 short + 1 mid prefill + 6-way burst) in 26s total
-=== PROBE t63-ts6-r1 | 2026-11-02 15:52:33 | log=/home/svg/LLM/strata-custom-2/custom-iq3_s.log
+=== PROBE t63-ts6-r1 | 2026-11-02 15:52:33 | log=/home/svg/LLM/strata-custom-2/logs/custom-iq3_s.log
     warmup: 8 tok in 0.28s
     A.short[1]: 220 tok in 1.60s = 137.5 t/s
     A.short[2]: 220 tok in 1.14s = 193.4 t/s
@@ -262,7 +262,7 @@ M3d per-position : not printed (arm STRATA_SPEC_DEPTH=1 to publish accepted/test
 === PROBE END t63-ts6-r1
 [metrics t63-ts6-r1] TTFT p50/p99 344ms/2020ms  ITL p99 19ms  accept 76.68%  clock 2955.0MHz 46.0C 94.01W  golden a974bc5a6f6c8ec6
 === LEG t63-ctl-r2 health=1 15:54:06 env='' ===
-[15:54:06] prewarm2: complement pin confirmed in /home/svg/LLM/strata-custom-2/custom-iq3_s.log
+[15:54:06] prewarm2: complement pin confirmed in /home/svg/LLM/strata-custom-2/logs/custom-iq3_s.log
 [15:54:20] prewarm2: shadow path read from engine pid 611266: /dev/shm/strata-shadow-q2_0
 [15:54:20] prewarm2: shadow on tmpfs (/dev/shm/strata-shadow-q2_0) — RAM-resident, no warm pass needed
 [15:54:20] prewarm2: page cache re-warmed in 14s
@@ -276,7 +276,7 @@ M3d per-position : not printed (arm STRATA_SPEC_DEPTH=1 to publish accepted/test
 200
 200
 [15:54:31] prewarm2: replay done (2 short + 1 mid prefill + 6-way burst) in 25s total
-=== PROBE t63-ctl-r2 | 2026-11-02 15:54:31 | log=/home/svg/LLM/strata-custom-2/custom-iq3_s.log
+=== PROBE t63-ctl-r2 | 2026-11-02 15:54:31 | log=/home/svg/LLM/strata-custom-2/logs/custom-iq3_s.log
     warmup: 8 tok in 0.29s
     A.short[1]: 220 tok in 1.33s = 165.1 t/s
     A.short[2]: 220 tok in 1.00s = 220.7 t/s
@@ -349,7 +349,7 @@ M3d per-position : not printed (arm STRATA_SPEC_DEPTH=1 to publish accepted/test
 === PROBE END t63-ctl-r2
 [metrics t63-ctl-r2] TTFT p50/p99 350ms/2020ms  ITL p99 18ms  accept 78.56%  clock 2955.0MHz 46.0C 93.99W  golden dbb294a93550f4fc  DRIFT a974bc5a6f6c8ec6 -> dbb294a93550f4fc
 === LEG t63-ts7-r2 health=1 15:56:06 env='STRATA_ROUTE_TAIL_SKIP=7' ===
-[15:56:06] prewarm2: complement pin confirmed in /home/svg/LLM/strata-custom-2/custom-iq3_s.log
+[15:56:06] prewarm2: complement pin confirmed in /home/svg/LLM/strata-custom-2/logs/custom-iq3_s.log
 [15:56:21] prewarm2: shadow path read from engine pid 614897: /dev/shm/strata-shadow-q2_0
 [15:56:21] prewarm2: shadow on tmpfs (/dev/shm/strata-shadow-q2_0) — RAM-resident, no warm pass needed
 [15:56:21] prewarm2: page cache re-warmed in 15s
@@ -363,7 +363,7 @@ M3d per-position : not printed (arm STRATA_SPEC_DEPTH=1 to publish accepted/test
 200
 200
 [15:56:32] prewarm2: replay done (2 short + 1 mid prefill + 6-way burst) in 26s total
-=== PROBE t63-ts7-r2 | 2026-11-02 15:56:32 | log=/home/svg/LLM/strata-custom-2/custom-iq3_s.log
+=== PROBE t63-ts7-r2 | 2026-11-02 15:56:32 | log=/home/svg/LLM/strata-custom-2/logs/custom-iq3_s.log
     warmup: 8 tok in 0.36s
     A.short[1]: 220 tok in 1.61s = 136.7 t/s
     A.short[2]: 220 tok in 1.03s = 212.6 t/s
@@ -436,7 +436,7 @@ M3d per-position : not printed (arm STRATA_SPEC_DEPTH=1 to publish accepted/test
 === PROBE END t63-ts7-r2
 [metrics t63-ts7-r2] TTFT p50/p99 350ms/2260ms  ITL p99 18ms  accept 76.76%  clock 2955.0MHz 46.0C 91.72W  golden dbb294a93550f4fc  DRIFT a974bc5a6f6c8ec6 -> dbb294a93550f4fc
 === LEG t63-ts6-r2 health=1 15:58:07 env='STRATA_ROUTE_TAIL_SKIP=6' ===
-[15:58:07] prewarm2: complement pin confirmed in /home/svg/LLM/strata-custom-2/custom-iq3_s.log
+[15:58:07] prewarm2: complement pin confirmed in /home/svg/LLM/strata-custom-2/logs/custom-iq3_s.log
 [15:58:22] prewarm2: shadow path read from engine pid 618572: /dev/shm/strata-shadow-q2_0
 [15:58:22] prewarm2: shadow on tmpfs (/dev/shm/strata-shadow-q2_0) — RAM-resident, no warm pass needed
 [15:58:22] prewarm2: page cache re-warmed in 15s
@@ -450,7 +450,7 @@ M3d per-position : not printed (arm STRATA_SPEC_DEPTH=1 to publish accepted/test
 200
 200
 [15:58:33] prewarm2: replay done (2 short + 1 mid prefill + 6-way burst) in 26s total
-=== PROBE t63-ts6-r2 | 2026-11-02 15:58:33 | log=/home/svg/LLM/strata-custom-2/custom-iq3_s.log
+=== PROBE t63-ts6-r2 | 2026-11-02 15:58:33 | log=/home/svg/LLM/strata-custom-2/logs/custom-iq3_s.log
     warmup: 8 tok in 0.28s
     A.short[1]: 220 tok in 1.61s = 136.9 t/s
     A.short[2]: 220 tok in 1.12s = 197.1 t/s

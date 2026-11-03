@@ -29,7 +29,7 @@ run_leg() {  # run_leg <tag> <round> <env-pass> [launcher] [conc-n] [config]
   local lbl="t34-$tag-r$2"
   [ -n "$cfg" ] && launcher=$REPO/launch-custom-iq3s-8081-b9.sh
   cleanup_engine
-  local e0; e0=$(grep -ac "engine started" "$REPO/custom-iq3_s.log" 2>/dev/null || echo 0)
+  local e0; e0=$(grep -ac "engine started" "$REPO/logs/custom-iq3_s.log" 2>/dev/null || echo 0)
   ( cd "$REPO" && env $envp nohup bash "$launcher" >"$RES/$lbl.out" 2>&1 & )
   local ok=0 t
   for t in $(seq 1 100); do
@@ -37,13 +37,13 @@ run_leg() {  # run_leg <tag> <round> <env-pass> [launcher] [conc-n] [config]
     sleep 3
   done
   sleep 20   # settle; the single-engine check follows
-  local e1; e1=$(grep -ac "engine started" "$REPO/custom-iq3_s.log" 2>/dev/null || echo 0)
+  local e1; e1=$(grep -ac "engine started" "$REPO/logs/custom-iq3_s.log" 2>/dev/null || echo 0)
   echo "=== LEG $lbl health=$ok engines_delta=$((e1-e0)) $(date +%H:%M:%S) env='$envp' ===" >> "$OUT"
   [ "$ok" = 1 ] || { cleanup_engine; return; }
-  ( cd "$REPO" && bash campaign/prewarm2.sh "$REPO/custom-iq3_s.log" >> "$OUT" 2>&1 )
+  ( cd "$REPO" && bash campaign/prewarm2.sh "$REPO/logs/custom-iq3_s.log" >> "$OUT" 2>&1 )
   ( cd "$REPO" && python3 campaign/probe-lane.py --port "$PORT" --label "$lbl" --short-n 6 --conc-n "$conc" >> "$OUT" 2>&1 )
   ( cd "$REPO" && .venv/bin/python campaign/probe-metrics.py --port "$PORT" --label "$lbl" 2>&1 | tee -a "$OUT" )
-  grep -a "ELASTIC_SESSIONS on\|materialized\|demoted\|below 512" "$REPO/custom-iq3_s.log" | tail -2 >> "$OUT" 2>/dev/null
+  grep -a "ELASTIC_SESSIONS on\|materialized\|demoted\|below 512" "$REPO/logs/custom-iq3_s.log" | tail -2 >> "$OUT" 2>/dev/null
   cleanup_engine
 }
 
@@ -56,7 +56,7 @@ done
 # F4: parallel-9 elastic (config copy created here, deleted at the end)
 python3 - <<'PY'
 import json
-cfg = json.load(open('/home/svg/LLM/strata-custom-2/custom-iq3_s-8081.json'))
+cfg = json.load(open('/home/svg/LLM/strata-custom-2/config/custom-iq3_s-8081.json'))
 cfg['parallel'] = 9
 json.dump(cfg, open('/home/svg/LLM/strata-custom-2/custom-iq3s-b9.json', 'w'), indent=2)
 PY

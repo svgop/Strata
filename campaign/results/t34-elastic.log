@@ -1,6 +1,6 @@
 T34 ELASTIC start Fri Oct 23 04:37:37 AM SAST 2026
 === LEG t34-ctl-r1 health=1 engines_delta=1 04:38:30 env='' ===
-[04:38:30] prewarm2: complement pin confirmed in /home/svg/LLM/strata-custom-2/custom-iq3_s.log
+[04:38:30] prewarm2: complement pin confirmed in /home/svg/LLM/strata-custom-2/logs/custom-iq3_s.log
 [04:38:39] prewarm2: page cache re-warmed in 9s
 200
 200
@@ -12,7 +12,7 @@ T34 ELASTIC start Fri Oct 23 04:37:37 AM SAST 2026
 200
 200
 [04:38:49] prewarm2: replay done (2 short + 1 mid prefill + 6-way burst) in 19s total
-=== PROBE t34-ctl-r1 | 2026-10-23 04:38:49 | log=/home/svg/LLM/strata-custom-2/custom-iq3_s.log
+=== PROBE t34-ctl-r1 | 2026-10-23 04:38:49 | log=/home/svg/LLM/strata-custom-2/logs/custom-iq3_s.log
     warmup: 8 tok in 0.28s
     A.short[1]: 220 tok in 1.29s = 170.1 t/s
     A.short[2]: 220 tok in 1.00s = 220.7 t/s
@@ -74,7 +74,7 @@ M3d per-position : not printed (arm STRATA_SPEC_DEPTH=1 to publish accepted/test
 strata elastic: slot 4 demoted in 26.8 ms (unmap 6.3, 373 chunks to the spare pool; the cache ate them back and refilled from the profile; 0 chunks spare)
 strata elastic: slot 5 demoted in 26.1 ms (unmap 6.4, 373 chunks to the spare pool; the cache ate them back and refilled from the profile; 0 chunks spare)
 === LEG t34-ela-r1 health=1 engines_delta=1 04:40:25 env='STRATA_ELASTIC_SESSIONS=1' ===
-[04:40:25] prewarm2: complement pin confirmed in /home/svg/LLM/strata-custom-2/custom-iq3_s.log
+[04:40:25] prewarm2: complement pin confirmed in /home/svg/LLM/strata-custom-2/logs/custom-iq3_s.log
 [04:40:30] prewarm2: page cache re-warmed in 5s
 200
 200
@@ -86,7 +86,7 @@ strata elastic: slot 5 demoted in 26.1 ms (unmap 6.4, 373 chunks to the spare po
 200
 200
 [04:40:38] prewarm2: replay done (2 short + 1 mid prefill + 6-way burst) in 13s total
-=== PROBE t34-ela-r1 | 2026-10-23 04:40:38 | log=/home/svg/LLM/strata-custom-2/custom-iq3_s.log
+=== PROBE t34-ela-r1 | 2026-10-23 04:40:38 | log=/home/svg/LLM/strata-custom-2/logs/custom-iq3_s.log
     warmup: 8 tok in 0.28s
     A.short[1]: 220 tok in 1.45s = 151.4 t/s
     A.short[2]: 220 tok in 0.99s = 222.4 t/s
@@ -148,7 +148,7 @@ M3d per-position : not printed (arm STRATA_SPEC_DEPTH=1 to publish accepted/test
 strata elastic: slot 3 demoted in 27.2 ms (unmap 5.7, 373 chunks to the spare pool; the cache ate them back and refilled from the profile; 0 chunks spare)
 strata elastic: slot 4 demoted in 23.9 ms (unmap 4.4, 373 chunks to the spare pool; the cache ate them back and refilled from the profile; 0 chunks spare)
 === LEG t34-ctl-r2 health=1 engines_delta=1 04:42:13 env='' ===
-[04:42:13] prewarm2: complement pin confirmed in /home/svg/LLM/strata-custom-2/custom-iq3_s.log
+[04:42:13] prewarm2: complement pin confirmed in /home/svg/LLM/strata-custom-2/logs/custom-iq3_s.log
 [04:42:18] prewarm2: page cache re-warmed in 5s
 200
 200
@@ -160,7 +160,7 @@ strata elastic: slot 4 demoted in 23.9 ms (unmap 4.4, 373 chunks to the spare po
 200
 200
 [04:42:26] prewarm2: replay done (2 short + 1 mid prefill + 6-way burst) in 13s total
-=== PROBE t34-ctl-r2 | 2026-10-23 04:42:26 | log=/home/svg/LLM/strata-custom-2/custom-iq3_s.log
+=== PROBE t34-ctl-r2 | 2026-10-23 04:42:26 | log=/home/svg/LLM/strata-custom-2/logs/custom-iq3_s.log
     warmup: 8 tok in 0.28s
     A.short[1]: 220 tok in 1.24s = 177.2 t/s
     A.short[2]: 220 tok in 1.10s = 199.1 t/s
@@ -223,7 +223,7 @@ M3d per-position : not printed (arm STRATA_SPEC_DEPTH=1 to publish accepted/test
 strata elastic: slot 3 demoted in 27.2 ms (unmap 5.7, 373 chunks to the spare pool; the cache ate them back and refilled from the profile; 0 chunks spare)
 strata elastic: slot 4 demoted in 23.9 ms (unmap 4.4, 373 chunks to the spare pool; the cache ate them back and refilled from the profile; 0 chunks spare)
 === LEG t34-ela-r2 health=1 engines_delta=1 04:44:02 env='STRATA_ELASTIC_SESSIONS=1' ===
-[04:44:02] prewarm2: complement pin confirmed in /home/svg/LLM/strata-custom-2/custom-iq3_s.log
+[04:44:02] prewarm2: complement pin confirmed in /home/svg/LLM/strata-custom-2/logs/custom-iq3_s.log
 [04:44:07] prewarm2: page cache re-warmed in 5s
 200
 200
@@ -235,7 +235,7 @@ strata elastic: slot 4 demoted in 23.9 ms (unmap 4.4, 373 chunks to the spare po
 200
 200
 [04:44:15] prewarm2: replay done (2 short + 1 mid prefill + 6-way burst) in 13s total
-=== PROBE t34-ela-r2 | 2026-10-23 04:44:16 | log=/home/svg/LLM/strata-custom-2/custom-iq3_s.log
+=== PROBE t34-ela-r2 | 2026-10-23 04:44:16 | log=/home/svg/LLM/strata-custom-2/logs/custom-iq3_s.log
     warmup: 8 tok in 0.28s
     A.short[1]: 220 tok in 1.37s = 161.0 t/s
     A.short[2]: 220 tok in 0.95s = 230.5 t/s
@@ -297,7 +297,7 @@ M3d per-position : not printed (arm STRATA_SPEC_DEPTH=1 to publish accepted/test
 strata elastic: slot 2 materialized in 12.2 ms (map 11.6 from the spare pool, zero 0.5; 373 chunks of 0.73 GiB; 0 chunks left in the spare pool)
 strata elastic: slot 4 demoted in 27.4 ms (unmap 5.6, 373 chunks to the spare pool; the cache ate them back and refilled from the profile; 0 chunks spare)
 === LEG t34-ctl-r3 health=1 engines_delta=1 04:45:50 env='' ===
-[04:45:50] prewarm2: complement pin confirmed in /home/svg/LLM/strata-custom-2/custom-iq3_s.log
+[04:45:50] prewarm2: complement pin confirmed in /home/svg/LLM/strata-custom-2/logs/custom-iq3_s.log
 [04:45:55] prewarm2: page cache re-warmed in 5s
 200
 200
@@ -309,7 +309,7 @@ strata elastic: slot 4 demoted in 27.4 ms (unmap 5.6, 373 chunks to the spare po
 200
 200
 [04:46:04] prewarm2: replay done (2 short + 1 mid prefill + 6-way burst) in 14s total
-=== PROBE t34-ctl-r3 | 2026-10-23 04:46:04 | log=/home/svg/LLM/strata-custom-2/custom-iq3_s.log
+=== PROBE t34-ctl-r3 | 2026-10-23 04:46:04 | log=/home/svg/LLM/strata-custom-2/logs/custom-iq3_s.log
     warmup: 8 tok in 0.27s
     A.short[1]: 220 tok in 1.32s = 167.0 t/s
     A.short[2]: 220 tok in 0.97s = 226.0 t/s
@@ -371,7 +371,7 @@ M3d per-position : not printed (arm STRATA_SPEC_DEPTH=1 to publish accepted/test
 strata elastic: slot 2 materialized in 12.2 ms (map 11.6 from the spare pool, zero 0.5; 373 chunks of 0.73 GiB; 0 chunks left in the spare pool)
 strata elastic: slot 4 demoted in 27.4 ms (unmap 5.6, 373 chunks to the spare pool; the cache ate them back and refilled from the profile; 0 chunks spare)
 === LEG t34-ela-r3 health=1 engines_delta=1 04:47:39 env='STRATA_ELASTIC_SESSIONS=1' ===
-[04:47:39] prewarm2: complement pin confirmed in /home/svg/LLM/strata-custom-2/custom-iq3_s.log
+[04:47:39] prewarm2: complement pin confirmed in /home/svg/LLM/strata-custom-2/logs/custom-iq3_s.log
 [04:47:43] prewarm2: page cache re-warmed in 4s
 200
 200
@@ -383,7 +383,7 @@ strata elastic: slot 4 demoted in 27.4 ms (unmap 5.6, 373 chunks to the spare po
 200
 200
 [04:47:52] prewarm2: replay done (2 short + 1 mid prefill + 6-way burst) in 13s total
-=== PROBE t34-ela-r3 | 2026-10-23 04:47:52 | log=/home/svg/LLM/strata-custom-2/custom-iq3_s.log
+=== PROBE t34-ela-r3 | 2026-10-23 04:47:52 | log=/home/svg/LLM/strata-custom-2/logs/custom-iq3_s.log
     warmup: 8 tok in 0.28s
     A.short[1]: 220 tok in 1.44s = 152.9 t/s
     A.short[2]: 220 tok in 1.05s = 210.5 t/s
@@ -445,7 +445,7 @@ M3d per-position : not printed (arm STRATA_SPEC_DEPTH=1 to publish accepted/test
 strata elastic: slot 3 demoted in 28.1 ms (unmap 7.8, 373 chunks to the spare pool; the cache ate them back and refilled from the profile; 0 chunks spare)
 strata elastic: slot 5 demoted in 23.5 ms (unmap 4.4, 373 chunks to the spare pool; the cache ate them back and refilled from the profile; 0 chunks spare)
 === LEG t34-b9ela-r1 health=1 engines_delta=1 04:49:40 env='STRATA_ELASTIC_SESSIONS=1' ===
-[04:49:40] prewarm2: complement pin confirmed in /home/svg/LLM/strata-custom-2/custom-iq3_s.log
+[04:49:40] prewarm2: complement pin confirmed in /home/svg/LLM/strata-custom-2/logs/custom-iq3_s.log
 [04:49:50] prewarm2: page cache re-warmed in 10s
 200
 200
@@ -457,7 +457,7 @@ strata elastic: slot 5 demoted in 23.5 ms (unmap 4.4, 373 chunks to the spare po
 200
 200
 [04:49:59] prewarm2: replay done (2 short + 1 mid prefill + 6-way burst) in 19s total
-=== PROBE t34-b9ela-r1 | 2026-10-23 04:49:59 | log=/home/svg/LLM/strata-custom-2/custom-iq3_s.log
+=== PROBE t34-b9ela-r1 | 2026-10-23 04:49:59 | log=/home/svg/LLM/strata-custom-2/logs/custom-iq3_s.log
     warmup: 8 tok in 0.29s
     A.short[1]: 220 tok in 1.34s = 163.7 t/s
     A.short[2]: 220 tok in 1.04s = 212.0 t/s

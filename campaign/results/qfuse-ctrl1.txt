@@ -1,4 +1,4 @@
-=== PROBE qfuse-ctrl1 | 2026-10-14 18:18:35 | log=/home/svg/LLM/strata-custom-2/custom-iq3_s.log
+=== PROBE qfuse-ctrl1 | 2026-10-14 18:18:35 | log=/home/svg/LLM/strata-custom-2/logs/custom-iq3_s.log
     warmup: 8 tok in 0.38s
     A.short[1]: 220 tok in 1.83s = 120.1 t/s
     A.short[2]: 220 tok in 1.24s = 177.6 t/s

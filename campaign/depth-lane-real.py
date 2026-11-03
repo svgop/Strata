@@ -22,7 +22,7 @@ ap.add_argument('--depth', type=int, default=120000, help='target prompt tokens'
 ap.add_argument('--decode-tok', type=int, default=1500)
 ap.add_argument('--key', default='3f0940df8efb9c363e4189956ae907d3e4acac221aab39f44804fe0b0df1b8')
 ap.add_argument('--temp', type=float, default=0.7)
-ap.add_argument('--log', default='/home/svg/LLM/strata-custom-2/custom-iq3_s.log')
+ap.add_argument('--log', default='/home/svg/LLM/strata-custom-2/logs/custom-iq3_s.log')
 a = ap.parse_args()
 
 REPO = '/home/svg/LLM/strata-custom-2'

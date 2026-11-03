@@ -1,7 +1,7 @@
 == GATE 1: COHORTS=1 (standing, must be in-band)
 [10:06:37] standing env loaded: SPEC_DRAFT_TEMP=0.85 BATCH_MTP=1 TYPICAL_ACCEPT=0.2
 [10:06:40] prewarm done in 3s (page cache now carries pack+shards)
-[10:06:40] booting config=custom-iq3_s-8081.json log=/home/svg/LLM/strata-custom-2/custom-iq3_s.log
+[10:06:40] booting config=custom-iq3_s-8081.json log=/home/svg/LLM/strata-custom-2/logs/custom-iq3_s.log
 [10:06:55] ready; settling 10s
 M1 single-stream : 184.5 t/s (2000 tok in 10.84s)
 M2 pair          : 193.9 t/s aggregate (1800 tok in 9.29s)

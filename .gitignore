@@ -103,3 +103,5 @@ campaign/retrain/*.npy
 
 # campaign local build artifacts (keep sources + results, never the ELF)
 campaign/shadow-bench/shadow_bench
+ds4-slots/
+# engine logs (runtime)

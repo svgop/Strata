@@ -110,4 +110,4 @@ export STRATA_ROUTE_RESIDENT_MTP=1
 bash campaign/shm-shadow.sh >/dev/null 2>&1 || true
 
 cd "$(dirname "$0")"
-exec .venv/bin/python serve/server.py --engine strata --config "$PWD/custom-iq3_s-8081.json" --port 8081 --host 0.0.0.0
+exec .venv/bin/python serve/server.py --engine strata --config "$PWD/config/custom-iq3_s-8081.json" --port 8081 --host 0.0.0.0

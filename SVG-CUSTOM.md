@@ -11983,3 +11983,24 @@ messages and `campaign/ROADMAP-dsv41.md`. The scoreboard at epoch close:
   through it. Reverted in full; the named project is **MMVQ-12** (new `<I, 9..12, R>`
   instantiations + activation staging at 12 across the quant types). The lesson is recorded:
   for a window-width change, trace the activation GEMV, not just the expert tables.
+
+## F-380 — estate hygiene: one class, one home (2026-11-03)
+
+The estate had scattered into four places at once (the steering vectors split repo-root vs
+models/, 10 loose engine logs and 9 loose configs at the repo root, 22 binary archives loose in
+engine/, 230 git-tracked ds4 runtime slots, a flat 330 GB models/ dump). Reorganized per the
+storage canon (reference updates in the same commit):
+
+- **`data/vectors/`** — steering/control vectors: `qwen3.8-flash-next-refusal-r.gguf` (from the
+  repo root) and `deepseek-v4.1-flash-cvec-q0.gguf` (the downloaded refusal vector).
+- **`config/`** — all 9 `custom-*.json` (git mv); the three launchers stay at the root (Launch
+  Law) and now pass `config/…`. **`logs/`** — all engine logs; every config's `log` key updated.
+- **`engine/snapshots/`** — the 22 binary archives (the live `engine/strata` stays).
+- **`data/models/<family>/`** — `qwen3.8-flash-next/` (2 shards) and `deepseek-v4.1-flash/`
+  (4 shards + engram + mmproj); the DS pack's `ds4.txt model_dir`, `prewarm2.sh`,
+  `prewarm-ds4.sh`, the standing config and the parked `campaign/arms/*.json` all re-pointed.
+- **ds4-slots/** — 230 runtime slot files untracked and gitignored (never repo content).
+- One reorg artifact owned: the previous engine's exit drain failed its session fingerprint
+  because the models moved mid-run (its 13 parked conversations were not persisted — safe, the
+  dir was left empty; the feature recaptures from the next session). Both engines re-verified
+  booting from the new layout.

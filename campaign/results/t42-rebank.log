@@ -1,6 +1,6 @@
 T42 RE-BANK start Sat Oct 24 12:59:30 AM SAST 2026
 === LEG t42-ctl-r1 health=1 00:59:54 ===
-[00:59:54] prewarm2: complement pin confirmed in /home/svg/LLM/strata-custom-2/custom-iq3_s.log
+[00:59:54] prewarm2: complement pin confirmed in /home/svg/LLM/strata-custom-2/logs/custom-iq3_s.log
 [00:59:59] prewarm2: page cache re-warmed in 5s
 200
 200
@@ -12,7 +12,7 @@ T42 RE-BANK start Sat Oct 24 12:59:30 AM SAST 2026
 200
 200
 [01:00:09] prewarm2: replay done (2 short + 1 mid prefill + 6-way burst) in 15s total
-=== PROBE t42-ctl-r1 | 2026-10-24 01:00:09 | log=/home/svg/LLM/strata-custom-2/custom-iq3_s.log
+=== PROBE t42-ctl-r1 | 2026-10-24 01:00:09 | log=/home/svg/LLM/strata-custom-2/logs/custom-iq3_s.log
     warmup: 8 tok in 0.27s
     A.short[1]: 220 tok in 1.49s = 148.1 t/s
     A.short[2]: 220 tok in 1.09s = 202.2 t/s
@@ -102,7 +102,7 @@ Traceback (most recent call last):
     raise HTTPError(req.full_url, code, msg, hdrs, fp)
 urllib.error.HTTPError: HTTP Error 400: Bad Request
 === LEG t42-ctl-r2 health=1 01:02:01 ===
-[01:02:01] prewarm2: complement pin confirmed in /home/svg/LLM/strata-custom-2/custom-iq3_s.log
+[01:02:01] prewarm2: complement pin confirmed in /home/svg/LLM/strata-custom-2/logs/custom-iq3_s.log
 [01:02:06] prewarm2: page cache re-warmed in 5s
 200
 200
@@ -114,7 +114,7 @@ urllib.error.HTTPError: HTTP Error 400: Bad Request
 200
 200
 [01:02:16] prewarm2: replay done (2 short + 1 mid prefill + 6-way burst) in 15s total
-=== PROBE t42-ctl-r2 | 2026-10-24 01:02:16 | log=/home/svg/LLM/strata-custom-2/custom-iq3_s.log
+=== PROBE t42-ctl-r2 | 2026-10-24 01:02:16 | log=/home/svg/LLM/strata-custom-2/logs/custom-iq3_s.log
     warmup: 8 tok in 0.31s
     A.short[1]: 220 tok in 1.46s = 150.9 t/s
     A.short[2]: 220 tok in 1.13s = 194.7 t/s
@@ -174,7 +174,7 @@ M3d per-position : not printed (arm STRATA_SPEC_DEPTH=1 to publish accepted/test
 === PROBE END t42-ctl-r2
 [metrics t42-ctl-r2] TTFT p50/p99 354ms/2020ms  ITL p99 36ms  accept 77.39%  clock 2955.0MHz 44.0C 99.74W  golden dbb294a93550f4fc  DRIFT a974bc5a6f6c8ec6 -> dbb294a93550f4fc
 === LEG t42-ctl-r3 health=1 01:03:32 ===
-[01:03:32] prewarm2: complement pin confirmed in /home/svg/LLM/strata-custom-2/custom-iq3_s.log
+[01:03:32] prewarm2: complement pin confirmed in /home/svg/LLM/strata-custom-2/logs/custom-iq3_s.log
 [01:03:37] prewarm2: page cache re-warmed in 5s
 200
 200
@@ -186,7 +186,7 @@ M3d per-position : not printed (arm STRATA_SPEC_DEPTH=1 to publish accepted/test
 200
 200
 [01:03:46] prewarm2: replay done (2 short + 1 mid prefill + 6-way burst) in 14s total
-=== PROBE t42-ctl-r3 | 2026-10-24 01:03:46 | log=/home/svg/LLM/strata-custom-2/custom-iq3_s.log
+=== PROBE t42-ctl-r3 | 2026-10-24 01:03:46 | log=/home/svg/LLM/strata-custom-2/logs/custom-iq3_s.log
     warmup: 8 tok in 0.30s
     A.short[1]: 220 tok in 1.48s = 148.4 t/s
     A.short[2]: 220 tok in 1.22s = 179.9 t/s
@@ -246,7 +246,7 @@ M3d per-position : not printed (arm STRATA_SPEC_DEPTH=1 to publish accepted/test
 === PROBE END t42-ctl-r3
 [metrics t42-ctl-r3] TTFT p50/p99 354ms/2020ms  ITL p99 36ms  accept 76.99%  clock 2955.0MHz 45.0C 100.82W  golden dbb294a93550f4fc  DRIFT a974bc5a6f6c8ec6 -> dbb294a93550f4fc
 === LEG t42-ctl-r4 health=1 01:05:04 ===
-[01:05:04] prewarm2: complement pin confirmed in /home/svg/LLM/strata-custom-2/custom-iq3_s.log
+[01:05:04] prewarm2: complement pin confirmed in /home/svg/LLM/strata-custom-2/logs/custom-iq3_s.log
 [01:05:08] prewarm2: page cache re-warmed in 4s
 200
 200
@@ -258,7 +258,7 @@ M3d per-position : not printed (arm STRATA_SPEC_DEPTH=1 to publish accepted/test
 200
 200
 [01:05:18] prewarm2: replay done (2 short + 1 mid prefill + 6-way burst) in 14s total
-=== PROBE t42-ctl-r4 | 2026-10-24 01:05:18 | log=/home/svg/LLM/strata-custom-2/custom-iq3_s.log
+=== PROBE t42-ctl-r4 | 2026-10-24 01:05:18 | log=/home/svg/LLM/strata-custom-2/logs/custom-iq3_s.log
     warmup: 8 tok in 0.28s
     A.short[1]: 220 tok in 1.55s = 142.0 t/s
     A.short[2]: 220 tok in 1.18s = 186.2 t/s
@@ -317,7 +317,7 @@ M3d per-position : not printed (arm STRATA_SPEC_DEPTH=1 to publish accepted/test
 === PROBE END t42-ctl-r4
 [metrics t42-ctl-r4] TTFT p50/p99 318ms/2260ms  ITL p99 38ms  accept 76.47%  clock 2955.0MHz 46.0C 101.11W  golden dbb294a93550f4fc  DRIFT a974bc5a6f6c8ec6 -> dbb294a93550f4fc
 === LEG t42-ctl-r5 health=1 01:06:33 ===
-[01:06:33] prewarm2: complement pin confirmed in /home/svg/LLM/strata-custom-2/custom-iq3_s.log
+[01:06:33] prewarm2: complement pin confirmed in /home/svg/LLM/strata-custom-2/logs/custom-iq3_s.log
 [01:06:38] prewarm2: page cache re-warmed in 5s
 200
 200
@@ -329,7 +329,7 @@ M3d per-position : not printed (arm STRATA_SPEC_DEPTH=1 to publish accepted/test
 200
 200
 [01:06:48] prewarm2: replay done (2 short + 1 mid prefill + 6-way burst) in 15s total
-=== PROBE t42-ctl-r5 | 2026-10-24 01:06:48 | log=/home/svg/LLM/strata-custom-2/custom-iq3_s.log
+=== PROBE t42-ctl-r5 | 2026-10-24 01:06:48 | log=/home/svg/LLM/strata-custom-2/logs/custom-iq3_s.log
     warmup: 8 tok in 0.29s
     A.short[1]: 220 tok in 1.47s = 149.2 t/s
     A.short[2]: 220 tok in 1.14s = 193.8 t/s
@@ -420,7 +420,7 @@ Traceback (most recent call last):
     raise HTTPError(req.full_url, code, msg, hdrs, fp)
 urllib.error.HTTPError: HTTP Error 400: Bad Request
 SERVER UP 01:08:40
-[01:08:40] prewarm2: complement pin confirmed in /home/svg/LLM/strata-custom-2/custom-iq3_s.log
+[01:08:40] prewarm2: complement pin confirmed in /home/svg/LLM/strata-custom-2/logs/custom-iq3_s.log
 [01:08:46] prewarm2: page cache re-warmed in 6s
 200
 200

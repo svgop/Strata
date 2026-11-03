@@ -40,7 +40,7 @@ for t in $(seq 1 100); do
 done
 echo "=== BOOT t38-bincf (pre-t38 binary, dm launcher) health=$ok $(date +%H:%M:%S) ===" >> "$OUT"
 if [ "$ok" = 1 ]; then
-  ( cd "$REPO" && bash campaign/prewarm2.sh "$REPO/custom-iq3_s.log" >> "$OUT" 2>&1 )
+  ( cd "$REPO" && bash campaign/prewarm2.sh "$REPO/logs/custom-iq3_s.log" >> "$OUT" 2>&1 )
   ( cd "$REPO" && python3 campaign/probe-lane.py --port "$PORT" --label "t38-bincf" --short-n 6 >> "$OUT" 2>&1 )
 fi
 cleanup_engine

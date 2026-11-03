@@ -1,6 +1,6 @@
 T15C s1up8 battery start Tue Oct 20 04:50:10 AM SAST 2026 arm-env: STRATA_GR_UP8=1
 === LEG s1up8-arm-r1 health=1 04:50:34 ===
-=== PROBE t15c-s1up8-arm-r1 | 2026-10-20 04:50:34 | log=/home/svg/LLM/strata-custom-2/custom-iq3_s.log
+=== PROBE t15c-s1up8-arm-r1 | 2026-10-20 04:50:34 | log=/home/svg/LLM/strata-custom-2/logs/custom-iq3_s.log
     warmup: 8 tok in 0.31s
     A.short[1]: 220 tok in 1.54s = 142.9 t/s
     A.short[2]: 220 tok in 1.05s = 209.2 t/s
@@ -59,7 +59,7 @@ M3b rate         : 77.6% mean over 15 requests (diagnostic)
 M3d per-position : not printed (arm STRATA_SPEC_DEPTH=1 to publish accepted/tested by depth)
 === PROBE END t15c-s1up8-arm-r1
 === LEG s1up8-ctl-r1 health=1 04:51:50 ===
-=== PROBE t15c-s1up8-ctl-r1 | 2026-10-20 04:51:50 | log=/home/svg/LLM/strata-custom-2/custom-iq3_s.log
+=== PROBE t15c-s1up8-ctl-r1 | 2026-10-20 04:51:50 | log=/home/svg/LLM/strata-custom-2/logs/custom-iq3_s.log
     warmup: 8 tok in 0.31s
     A.short[1]: 220 tok in 1.64s = 134.2 t/s
     A.short[2]: 220 tok in 1.18s = 186.5 t/s
@@ -118,7 +118,7 @@ M3b rate         : 78.8% mean over 15 requests (diagnostic)
 M3d per-position : not printed (arm STRATA_SPEC_DEPTH=1 to publish accepted/tested by depth)
 === PROBE END t15c-s1up8-ctl-r1
 === LEG s1up8-arm-r2 health=1 04:53:05 ===
-=== PROBE t15c-s1up8-arm-r2 | 2026-10-20 04:53:05 | log=/home/svg/LLM/strata-custom-2/custom-iq3_s.log
+=== PROBE t15c-s1up8-arm-r2 | 2026-10-20 04:53:05 | log=/home/svg/LLM/strata-custom-2/logs/custom-iq3_s.log
     warmup: 8 tok in 0.30s
     A.short[1]: 220 tok in 1.51s = 145.3 t/s
     A.short[2]: 220 tok in 1.12s = 196.0 t/s
@@ -177,7 +177,7 @@ M3b rate         : 78.5% mean over 15 requests (diagnostic)
 M3d per-position : not printed (arm STRATA_SPEC_DEPTH=1 to publish accepted/tested by depth)
 === PROBE END t15c-s1up8-arm-r2
 === LEG s1up8-ctl-r2 health=1 04:54:20 ===
-=== PROBE t15c-s1up8-ctl-r2 | 2026-10-20 04:54:20 | log=/home/svg/LLM/strata-custom-2/custom-iq3_s.log
+=== PROBE t15c-s1up8-ctl-r2 | 2026-10-20 04:54:20 | log=/home/svg/LLM/strata-custom-2/logs/custom-iq3_s.log
     warmup: 8 tok in 0.31s
     A.short[1]: 220 tok in 1.56s = 140.9 t/s
     A.short[2]: 220 tok in 1.09s = 201.2 t/s
@@ -236,7 +236,7 @@ M3b rate         : 76.9% mean over 15 requests (diagnostic)
 M3d per-position : not printed (arm STRATA_SPEC_DEPTH=1 to publish accepted/tested by depth)
 === PROBE END t15c-s1up8-ctl-r2
 === LEG s1up8-arm-r3 health=1 04:55:37 ===
-=== PROBE t15c-s1up8-arm-r3 | 2026-10-20 04:55:37 | log=/home/svg/LLM/strata-custom-2/custom-iq3_s.log
+=== PROBE t15c-s1up8-arm-r3 | 2026-10-20 04:55:37 | log=/home/svg/LLM/strata-custom-2/logs/custom-iq3_s.log
     warmup: 8 tok in 0.31s
     A.short[1]: 220 tok in 1.49s = 147.2 t/s
     A.short[2]: 220 tok in 1.04s = 211.2 t/s
@@ -295,7 +295,7 @@ M3b rate         : 79.3% mean over 15 requests (diagnostic)
 M3d per-position : not printed (arm STRATA_SPEC_DEPTH=1 to publish accepted/tested by depth)
 === PROBE END t15c-s1up8-arm-r3
 === LEG s1up8-ctl-r3 health=1 04:56:52 ===
-=== PROBE t15c-s1up8-ctl-r3 | 2026-10-20 04:56:52 | log=/home/svg/LLM/strata-custom-2/custom-iq3_s.log
+=== PROBE t15c-s1up8-ctl-r3 | 2026-10-20 04:56:52 | log=/home/svg/LLM/strata-custom-2/logs/custom-iq3_s.log
     warmup: 8 tok in 0.31s
     A.short[1]: 220 tok in 1.66s = 132.6 t/s
     A.short[2]: 220 tok in 1.20s = 182.8 t/s

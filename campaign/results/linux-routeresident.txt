@@ -1,4 +1,4 @@
-=== PROBE linux-routeresident | 2026-10-13 18:16:16 | log=/home/svg/LLM/strata-custom-2/custom-iq3_s.log
+=== PROBE linux-routeresident | 2026-10-13 18:16:16 | log=/home/svg/LLM/strata-custom-2/logs/custom-iq3_s.log
     warmup: 8 tok in 0.32s
     A.short[1]: 220 tok in 1.59s = 138.6 t/s
     A.short[2]: 220 tok in 1.27s = 173.0 t/s

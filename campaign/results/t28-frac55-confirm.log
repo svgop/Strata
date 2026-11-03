@@ -1,6 +1,6 @@
 T28 FRAC55-CONFIRM start Wed Oct 21 09:33:20 PM SAST 2026
 === LEG f55-r1 health=1 21:33:44 ===
-=== PROBE t28-f55-r1 | 2026-10-21 21:33:44 | log=/home/svg/LLM/strata-custom-2/custom-iq3_s.log
+=== PROBE t28-f55-r1 | 2026-10-21 21:33:44 | log=/home/svg/LLM/strata-custom-2/logs/custom-iq3_s.log
     warmup: 8 tok in 0.32s
     A.short[1]: 220 tok in 1.73s = 127.4 t/s
     A.short[2]: 220 tok in 1.19s = 184.2 t/s
@@ -60,7 +60,7 @@ M3d per-position : not printed (arm STRATA_SPEC_DEPTH=1 to publish accepted/test
 === PROBE END t28-f55-r1
 [metrics t28-f55-r1] TTFT p50/p99 175ms/2155ms  ITL p99 20ms  accept 75.57%  clock 2962.0MHz 40.0C 91.28W  golden dbb294a93550f4fc  DRIFT a974bc5a6f6c8ec6 -> dbb294a93550f4fc
 === LEG f35-r1 health=1 21:35:09 ===
-=== PROBE t28-f35-r1 | 2026-10-21 21:35:09 | log=/home/svg/LLM/strata-custom-2/custom-iq3_s.log
+=== PROBE t28-f35-r1 | 2026-10-21 21:35:09 | log=/home/svg/LLM/strata-custom-2/logs/custom-iq3_s.log
     warmup: 8 tok in 0.33s
     A.short[1]: 220 tok in 1.63s = 134.9 t/s
     A.short[2]: 220 tok in 1.27s = 173.3 t/s
@@ -120,7 +120,7 @@ M3d per-position : not printed (arm STRATA_SPEC_DEPTH=1 to publish accepted/test
 === PROBE END t28-f35-r1
 [metrics t28-f35-r1] TTFT p50/p99 175ms/2155ms  ITL p99 20ms  accept 75.17%  clock 2962.0MHz 42.0C 93.36W  golden a974bc5a6f6c8ec6
 === LEG f55-r2 health=1 21:36:32 ===
-=== PROBE t28-f55-r2 | 2026-10-21 21:36:32 | log=/home/svg/LLM/strata-custom-2/custom-iq3_s.log
+=== PROBE t28-f55-r2 | 2026-10-21 21:36:32 | log=/home/svg/LLM/strata-custom-2/logs/custom-iq3_s.log
     warmup: 8 tok in 0.33s
     A.short[1]: 220 tok in 1.65s = 133.5 t/s
     A.short[2]: 220 tok in 1.15s = 191.7 t/s
@@ -180,7 +180,7 @@ M3d per-position : not printed (arm STRATA_SPEC_DEPTH=1 to publish accepted/test
 === PROBE END t28-f55-r2
 [metrics t28-f55-r2] TTFT p50/p99 175ms/2155ms  ITL p99 20ms  accept 77.19%  clock 2955.0MHz 43.0C 93.01W  golden a974bc5a6f6c8ec6
 === LEG f35-r2 health=1 21:37:55 ===
-=== PROBE t28-f35-r2 | 2026-10-21 21:37:55 | log=/home/svg/LLM/strata-custom-2/custom-iq3_s.log
+=== PROBE t28-f35-r2 | 2026-10-21 21:37:55 | log=/home/svg/LLM/strata-custom-2/logs/custom-iq3_s.log
     warmup: 8 tok in 0.33s
     A.short[1]: 220 tok in 1.67s = 132.0 t/s
     A.short[2]: 220 tok in 1.15s = 190.6 t/s
@@ -240,7 +240,7 @@ M3d per-position : not printed (arm STRATA_SPEC_DEPTH=1 to publish accepted/test
 === PROBE END t28-f35-r2
 [metrics t28-f35-r2] TTFT p50/p99 212ms/2155ms  ITL p99 20ms  accept 75.42%  clock 2962.0MHz 43.0C 90.11W  golden dbb294a93550f4fc  DRIFT a974bc5a6f6c8ec6 -> dbb294a93550f4fc
 === LEG f55-r3 health=1 21:39:16 ===
-=== PROBE t28-f55-r3 | 2026-10-21 21:39:16 | log=/home/svg/LLM/strata-custom-2/custom-iq3_s.log
+=== PROBE t28-f55-r3 | 2026-10-21 21:39:16 | log=/home/svg/LLM/strata-custom-2/logs/custom-iq3_s.log
     warmup: 8 tok in 0.28s
     A.short[1]: 220 tok in 1.62s = 135.7 t/s
     A.short[2]: 220 tok in 1.13s = 194.8 t/s
@@ -301,7 +301,7 @@ M3d per-position : not printed (arm STRATA_SPEC_DEPTH=1 to publish accepted/test
 === PROBE END t28-f55-r3
 [metrics t28-f55-r3] TTFT p50/p99 95ms/2155ms  ITL p99 19ms  accept 76.47%  clock 2955.0MHz 44.0C 91.3W  golden a974bc5a6f6c8ec6
 === LEG f35-r3 health=1 21:40:34 ===
-=== PROBE t28-f35-r3 | 2026-10-21 21:40:34 | log=/home/svg/LLM/strata-custom-2/custom-iq3_s.log
+=== PROBE t28-f35-r3 | 2026-10-21 21:40:34 | log=/home/svg/LLM/strata-custom-2/logs/custom-iq3_s.log
     warmup: 8 tok in 0.30s
     A.short[1]: 220 tok in 1.60s = 137.7 t/s
     A.short[2]: 220 tok in 1.12s = 195.8 t/s
@@ -361,7 +361,7 @@ M3d per-position : not printed (arm STRATA_SPEC_DEPTH=1 to publish accepted/test
 === PROBE END t28-f35-r3
 [metrics t28-f35-r3] TTFT p50/p99 95ms/2155ms  ITL p99 20ms  accept 77.02%  clock 2955.0MHz 44.0C 91.74W  golden dbb294a93550f4fc  DRIFT a974bc5a6f6c8ec6 -> dbb294a93550f4fc
 === LEG f55-r4 health=1 21:41:52 ===
-=== PROBE t28-f55-r4 | 2026-10-21 21:41:52 | log=/home/svg/LLM/strata-custom-2/custom-iq3_s.log
+=== PROBE t28-f55-r4 | 2026-10-21 21:41:52 | log=/home/svg/LLM/strata-custom-2/logs/custom-iq3_s.log
     warmup: 8 tok in 0.29s
     A.short[1]: 220 tok in 1.54s = 142.8 t/s
     A.short[2]: 220 tok in 1.03s = 212.8 t/s
@@ -421,7 +421,7 @@ M3d per-position : not printed (arm STRATA_SPEC_DEPTH=1 to publish accepted/test
 === PROBE END t28-f55-r4
 [metrics t28-f55-r4] TTFT p50/p99 95ms/2155ms  ITL p99 19ms  accept 77.36%  clock 2955.0MHz 44.0C 92.05W  golden a974bc5a6f6c8ec6
 === LEG f35-r4 health=1 21:43:10 ===
-=== PROBE t28-f35-r4 | 2026-10-21 21:43:10 | log=/home/svg/LLM/strata-custom-2/custom-iq3_s.log
+=== PROBE t28-f35-r4 | 2026-10-21 21:43:10 | log=/home/svg/LLM/strata-custom-2/logs/custom-iq3_s.log
     warmup: 8 tok in 0.31s
     A.short[1]: 220 tok in 1.53s = 144.2 t/s
     A.short[2]: 220 tok in 1.11s = 197.8 t/s
@@ -482,7 +482,7 @@ M3d per-position : not printed (arm STRATA_SPEC_DEPTH=1 to publish accepted/test
 === PROBE END t28-f35-r4
 [metrics t28-f35-r4] TTFT p50/p99 95ms/2155ms  ITL p99 19ms  accept 74.16%  clock 2955.0MHz 44.0C 91.97W  golden 3b680e29d05f760e  DRIFT a974bc5a6f6c8ec6 -> 3b680e29d05f760e
 === LEG f55-r5 health=1 21:44:28 ===
-=== PROBE t28-f55-r5 | 2026-10-21 21:44:28 | log=/home/svg/LLM/strata-custom-2/custom-iq3_s.log
+=== PROBE t28-f55-r5 | 2026-10-21 21:44:28 | log=/home/svg/LLM/strata-custom-2/logs/custom-iq3_s.log
     warmup: 8 tok in 0.29s
     A.short[1]: 220 tok in 1.55s = 142.0 t/s
     A.short[2]: 220 tok in 1.19s = 184.5 t/s
@@ -542,7 +542,7 @@ M3d per-position : not printed (arm STRATA_SPEC_DEPTH=1 to publish accepted/test
 === PROBE END t28-f55-r5
 [metrics t28-f55-r5] TTFT p50/p99 95ms/2155ms  ITL p99 19ms  accept 76.3%  clock 2955.0MHz 44.0C 92.26W  golden dbb294a93550f4fc  DRIFT a974bc5a6f6c8ec6 -> dbb294a93550f4fc
 === LEG f35-r5 health=1 21:45:46 ===
-=== PROBE t28-f35-r5 | 2026-10-21 21:45:46 | log=/home/svg/LLM/strata-custom-2/custom-iq3_s.log
+=== PROBE t28-f35-r5 | 2026-10-21 21:45:46 | log=/home/svg/LLM/strata-custom-2/logs/custom-iq3_s.log
     warmup: 8 tok in 0.31s
     A.short[1]: 220 tok in 1.60s = 137.6 t/s
     A.short[2]: 220 tok in 1.12s = 196.6 t/s

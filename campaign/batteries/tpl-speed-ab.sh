@@ -37,7 +37,7 @@ boot_tpl() {  # $1 = user|standing ; assumes port free
     sleep 3
   done
   echo "boot $1 health=$ok md5=$(md5sum "$REPO/serve/chat_template.jinja" | cut -c1-12)" >> "$OUT"
-  [ "$ok" = 1 ] && ( cd "$REPO" && bash campaign/prewarm2.sh "$REPO/custom-iq3_s.log" >> "$OUT" 2>&1 )
+  [ "$ok" = 1 ] && ( cd "$REPO" && bash campaign/prewarm2.sh "$REPO/logs/custom-iq3_s.log" >> "$OUT" 2>&1 )
   return 0
 }
 

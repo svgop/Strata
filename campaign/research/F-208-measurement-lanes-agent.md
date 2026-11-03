@@ -8,7 +8,7 @@ contact. This file is the spec; implementation is a later step. Design agent wro
 **Headline correction to F-198 note 3:** stock servers DO report per-request draft acceptance and
 fresh-only prefill timing. F-198's "M3b/accept accounting lines did not print on the stock servers"
 was a probe misconfiguration: `campaign/results/f198-up-1.txt` line 1 shows
-`log=/home/svg/LLM/strata-custom-2/custom-iq3_s.log` (the probe default) while the stock boot wrote
+`log=/home/svg/LLM/strata-custom-2/logs/custom-iq3_s.log` (the probe default) while the stock boot wrote
 its own log. That log — `/home/svg/LLM/strata-upstream-0144/strata-up.log` (Oct 14 23:04, the F-198
 window) — contains **116 `... drafts accepted X of Y` lines** in the identical format. Lane 3 needs
 no engine change and no new theory; it needs `--log` pointed at the boot under test.

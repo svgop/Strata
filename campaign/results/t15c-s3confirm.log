@@ -1,6 +1,6 @@
 T15C s3confirm battery start Tue Oct 20 05:46:57 AM SAST 2026 arm-env:  ctl-env: STRATA_GR_NORM_FAST=0
 === LEG s3confirm-arm-r1 health=1 05:47:21 ===
-=== PROBE t15c-s3confirm-arm-r1 | 2026-10-20 05:47:21 | log=/home/svg/LLM/strata-custom-2/custom-iq3_s.log
+=== PROBE t15c-s3confirm-arm-r1 | 2026-10-20 05:47:21 | log=/home/svg/LLM/strata-custom-2/logs/custom-iq3_s.log
     warmup: 8 tok in 0.31s
     A.short[1]: 220 tok in 1.64s = 134.2 t/s
     A.short[2]: 220 tok in 1.20s = 183.9 t/s
@@ -59,7 +59,7 @@ M3b rate         : 75.8% mean over 16 requests (diagnostic)
 M3d per-position : not printed (arm STRATA_SPEC_DEPTH=1 to publish accepted/tested by depth)
 === PROBE END t15c-s3confirm-arm-r1
 === LEG s3confirm-ctl-r1 health=1 05:48:36 ===
-=== PROBE t15c-s3confirm-ctl-r1 | 2026-10-20 05:48:36 | log=/home/svg/LLM/strata-custom-2/custom-iq3_s.log
+=== PROBE t15c-s3confirm-ctl-r1 | 2026-10-20 05:48:36 | log=/home/svg/LLM/strata-custom-2/logs/custom-iq3_s.log
     warmup: 8 tok in 0.31s
     A.short[1]: 220 tok in 1.57s = 139.8 t/s
     A.short[2]: 220 tok in 1.19s = 184.4 t/s
@@ -118,7 +118,7 @@ M3b rate         : 75.9% mean over 15 requests (diagnostic)
 M3d per-position : not printed (arm STRATA_SPEC_DEPTH=1 to publish accepted/tested by depth)
 === PROBE END t15c-s3confirm-ctl-r1
 === LEG s3confirm-arm-r2 health=1 05:49:53 ===
-=== PROBE t15c-s3confirm-arm-r2 | 2026-10-20 05:49:53 | log=/home/svg/LLM/strata-custom-2/custom-iq3_s.log
+=== PROBE t15c-s3confirm-arm-r2 | 2026-10-20 05:49:53 | log=/home/svg/LLM/strata-custom-2/logs/custom-iq3_s.log
     warmup: 8 tok in 0.31s
     A.short[1]: 220 tok in 1.51s = 146.0 t/s
     A.short[2]: 220 tok in 1.13s = 194.3 t/s
@@ -177,7 +177,7 @@ M3b rate         : 76.8% mean over 15 requests (diagnostic)
 M3d per-position : not printed (arm STRATA_SPEC_DEPTH=1 to publish accepted/tested by depth)
 === PROBE END t15c-s3confirm-arm-r2
 === LEG s3confirm-ctl-r2 health=1 05:51:08 ===
-=== PROBE t15c-s3confirm-ctl-r2 | 2026-10-20 05:51:08 | log=/home/svg/LLM/strata-custom-2/custom-iq3_s.log
+=== PROBE t15c-s3confirm-ctl-r2 | 2026-10-20 05:51:08 | log=/home/svg/LLM/strata-custom-2/logs/custom-iq3_s.log
     warmup: 8 tok in 0.31s
     A.short[1]: 220 tok in 1.54s = 143.0 t/s
     A.short[2]: 220 tok in 1.07s = 204.9 t/s
@@ -236,7 +236,7 @@ M3b rate         : 75.0% mean over 15 requests (diagnostic)
 M3d per-position : not printed (arm STRATA_SPEC_DEPTH=1 to publish accepted/tested by depth)
 === PROBE END t15c-s3confirm-ctl-r2
 === LEG s3confirm-arm-r3 health=1 05:52:25 ===
-=== PROBE t15c-s3confirm-arm-r3 | 2026-10-20 05:52:25 | log=/home/svg/LLM/strata-custom-2/custom-iq3_s.log
+=== PROBE t15c-s3confirm-arm-r3 | 2026-10-20 05:52:25 | log=/home/svg/LLM/strata-custom-2/logs/custom-iq3_s.log
     warmup: 8 tok in 0.31s
     A.short[1]: 220 tok in 1.58s = 139.0 t/s
     A.short[2]: 220 tok in 1.15s = 191.9 t/s
@@ -295,7 +295,7 @@ M3b rate         : 77.0% mean over 15 requests (diagnostic)
 M3d per-position : not printed (arm STRATA_SPEC_DEPTH=1 to publish accepted/tested by depth)
 === PROBE END t15c-s3confirm-arm-r3
 === LEG s3confirm-ctl-r3 health=1 05:53:41 ===
-=== PROBE t15c-s3confirm-ctl-r3 | 2026-10-20 05:53:41 | log=/home/svg/LLM/strata-custom-2/custom-iq3_s.log
+=== PROBE t15c-s3confirm-ctl-r3 | 2026-10-20 05:53:41 | log=/home/svg/LLM/strata-custom-2/logs/custom-iq3_s.log
     warmup: 8 tok in 0.31s
     A.short[1]: 220 tok in 1.69s = 130.3 t/s
     A.short[2]: 220 tok in 1.17s = 188.8 t/s

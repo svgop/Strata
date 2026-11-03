@@ -1,6 +1,6 @@
 T28 SHARE10 start Wed Oct 21 09:56:31 PM SAST 2026
 === LEG share10-r1 health=1 21:56:55 env=[STRATA_BATCH_DECODE_SHARE=1.0] ===
-=== PROBE t28-share10-r1 | 2026-10-21 21:56:55 | log=/home/svg/LLM/strata-custom-2/custom-iq3_s.log
+=== PROBE t28-share10-r1 | 2026-10-21 21:56:55 | log=/home/svg/LLM/strata-custom-2/logs/custom-iq3_s.log
     warmup: 8 tok in 0.33s
     A.short[1]: 220 tok in 1.71s = 128.4 t/s
     A.short[2]: 220 tok in 1.17s = 188.5 t/s
@@ -60,7 +60,7 @@ M3d per-position : not printed (arm STRATA_SPEC_DEPTH=1 to publish accepted/test
 === PROBE END t28-share10-r1
 [metrics t28-share10-r1] TTFT p50/p99 175ms/2155ms  ITL p99 20ms  accept 75.76%  clock 2955.0MHz 43.0C 93.54W  golden dbb294a93550f4fc  DRIFT a974bc5a6f6c8ec6 -> dbb294a93550f4fc
 === LEG share05-ctl-r1 health=1 21:58:19 env=[] ===
-=== PROBE t28-share05-ctl-r1 | 2026-10-21 21:58:19 | log=/home/svg/LLM/strata-custom-2/custom-iq3_s.log
+=== PROBE t28-share05-ctl-r1 | 2026-10-21 21:58:19 | log=/home/svg/LLM/strata-custom-2/logs/custom-iq3_s.log
     warmup: 8 tok in 0.33s
     A.short[1]: 220 tok in 1.76s = 125.0 t/s
     A.short[2]: 220 tok in 1.25s = 175.6 t/s
@@ -120,7 +120,7 @@ M3d per-position : not printed (arm STRATA_SPEC_DEPTH=1 to publish accepted/test
 === PROBE END t28-share05-ctl-r1
 [metrics t28-share05-ctl-r1] TTFT p50/p99 175ms/2155ms  ITL p99 20ms  accept 75.01%  clock 2955.0MHz 44.0C 94.94W  golden a974bc5a6f6c8ec6
 === LEG share10-r2 health=1 21:59:42 env=[STRATA_BATCH_DECODE_SHARE=1.0] ===
-=== PROBE t28-share10-r2 | 2026-10-21 21:59:42 | log=/home/svg/LLM/strata-custom-2/custom-iq3_s.log
+=== PROBE t28-share10-r2 | 2026-10-21 21:59:42 | log=/home/svg/LLM/strata-custom-2/logs/custom-iq3_s.log
     warmup: 8 tok in 0.32s
     A.short[1]: 220 tok in 1.64s = 134.4 t/s
     A.short[2]: 220 tok in 1.24s = 177.7 t/s
@@ -180,7 +180,7 @@ M3d per-position : not printed (arm STRATA_SPEC_DEPTH=1 to publish accepted/test
 === PROBE END t28-share10-r2
 [metrics t28-share10-r2] TTFT p50/p99 175ms/2155ms  ITL p99 20ms  accept 74.23%  clock 2955.0MHz 44.0C 94.08W  golden dbb294a93550f4fc  DRIFT a974bc5a6f6c8ec6 -> dbb294a93550f4fc
 === LEG share05-ctl-r2 health=1 22:01:06 env=[] ===
-=== PROBE t28-share05-ctl-r2 | 2026-10-21 22:01:06 | log=/home/svg/LLM/strata-custom-2/custom-iq3_s.log
+=== PROBE t28-share05-ctl-r2 | 2026-10-21 22:01:06 | log=/home/svg/LLM/strata-custom-2/logs/custom-iq3_s.log
     warmup: 8 tok in 0.33s
     A.short[1]: 220 tok in 1.68s = 131.1 t/s
     A.short[2]: 220 tok in 1.20s = 183.4 t/s
@@ -240,7 +240,7 @@ M3d per-position : not printed (arm STRATA_SPEC_DEPTH=1 to publish accepted/test
 === PROBE END t28-share05-ctl-r2
 [metrics t28-share05-ctl-r2] TTFT p50/p99 212ms/2155ms  ITL p99 20ms  accept 77.77%  clock 2955.0MHz 44.0C 94.51W  golden dbb294a93550f4fc  DRIFT a974bc5a6f6c8ec6 -> dbb294a93550f4fc
 === LEG share10-r3 health=1 22:02:28 env=[STRATA_BATCH_DECODE_SHARE=1.0] ===
-=== PROBE t28-share10-r3 | 2026-10-21 22:02:28 | log=/home/svg/LLM/strata-custom-2/custom-iq3_s.log
+=== PROBE t28-share10-r3 | 2026-10-21 22:02:28 | log=/home/svg/LLM/strata-custom-2/logs/custom-iq3_s.log
     warmup: 8 tok in 0.33s
     A.short[1]: 220 tok in 1.75s = 125.9 t/s
     A.short[2]: 220 tok in 1.24s = 177.5 t/s
@@ -300,7 +300,7 @@ M3d per-position : not printed (arm STRATA_SPEC_DEPTH=1 to publish accepted/test
 === PROBE END t28-share10-r3
 [metrics t28-share10-r3] TTFT p50/p99 175ms/2155ms  ITL p99 20ms  accept 76.62%  clock 2955.0MHz 44.0C 94.39W  golden dbb294a93550f4fc  DRIFT a974bc5a6f6c8ec6 -> dbb294a93550f4fc
 === LEG share05-ctl-r3 health=1 22:03:50 env=[] ===
-=== PROBE t28-share05-ctl-r3 | 2026-10-21 22:03:50 | log=/home/svg/LLM/strata-custom-2/custom-iq3_s.log
+=== PROBE t28-share05-ctl-r3 | 2026-10-21 22:03:50 | log=/home/svg/LLM/strata-custom-2/logs/custom-iq3_s.log
     warmup: 8 tok in 0.33s
     A.short[1]: 220 tok in 1.75s = 125.5 t/s
     A.short[2]: 220 tok in 1.24s = 177.4 t/s

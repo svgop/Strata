@@ -1,6 +1,6 @@
 T27 BASELINE start Wed Oct 21 08:13:00 PM SAST 2026
 === LEG base-r1 health=1 20:13:24 ===
-=== PROBE t27-base-r1 | 2026-10-21 20:13:24 | log=/home/svg/LLM/strata-custom-2/custom-iq3_s.log
+=== PROBE t27-base-r1 | 2026-10-21 20:13:24 | log=/home/svg/LLM/strata-custom-2/logs/custom-iq3_s.log
     warmup: 8 tok in 0.31s
     A.short[1]: 220 tok in 1.77s = 124.3 t/s
     A.short[2]: 220 tok in 1.16s = 189.8 t/s
@@ -62,7 +62,7 @@ M3d per-position : not printed (arm STRATA_SPEC_DEPTH=1 to publish accepted/test
 strata verify: window up to 8 tokens, 127.2 MiB of device buffers
 strata verify: window up to 8 tokens, 127.2 MiB of device buffers
 === LEG base-r2 health=1 20:14:45 ===
-=== PROBE t27-base-r2 | 2026-10-21 20:14:45 | log=/home/svg/LLM/strata-custom-2/custom-iq3_s.log
+=== PROBE t27-base-r2 | 2026-10-21 20:14:45 | log=/home/svg/LLM/strata-custom-2/logs/custom-iq3_s.log
     warmup: 8 tok in 0.32s
     A.short[1]: 220 tok in 1.77s = 124.5 t/s
     A.short[2]: 220 tok in 1.12s = 196.3 t/s
@@ -124,7 +124,7 @@ M3d per-position : not printed (arm STRATA_SPEC_DEPTH=1 to publish accepted/test
 strata verify: window up to 8 tokens, 127.2 MiB of device buffers
 strata verify: window up to 8 tokens, 127.2 MiB of device buffers
 === LEG base-r3 health=1 20:16:07 ===
-=== PROBE t27-base-r3 | 2026-10-21 20:16:07 | log=/home/svg/LLM/strata-custom-2/custom-iq3_s.log
+=== PROBE t27-base-r3 | 2026-10-21 20:16:07 | log=/home/svg/LLM/strata-custom-2/logs/custom-iq3_s.log
     warmup: 8 tok in 0.32s
     A.short[1]: 220 tok in 1.65s = 133.4 t/s
     A.short[2]: 220 tok in 1.15s = 190.8 t/s

@@ -61,7 +61,7 @@ ready: http://127.0.0.1:8081/v1  (OpenAI: /v1/chat/completions, Anthropic: /v1/m
 [strata] reading the prompt: 55 tokens, 20 s so far
 [strata] reading the prompt: 55 tokens, 30 s so far
 [strata] reading the prompt: 55 tokens, 40 s so far
-[strata] the engine stopped unexpectedly (exit code -11). The usual cause is running out of RAM: Linux then ends the biggest program (check: sudo dmesg | grep -i -E 'killed process|out of memory'); Windows slows down instead. Close other programs or use a smaller model (Q2_0 / IQ2_XS). The next request starts the engine again. Its log: /home/svg/LLM/strata-custom-2/custom-iq3_s.log
+[strata] the engine stopped unexpectedly (exit code -11). The usual cause is running out of RAM: Linux then ends the biggest program (check: sudo dmesg | grep -i -E 'killed process|out of memory'); Windows slows down instead. Close other programs or use a smaller model (Q2_0 / IQ2_XS). The next request starts the engine again. Its log: /home/svg/LLM/strata-custom-2/logs/custom-iq3_s.log
 [strata] done: 0 tokens in 47 s (0.0 tok/s) (error, cancel=False)
 [strata] the engine had stopped (exit code -11); starting it again (a minute or two) ...
 [strata] starting the engine: reading the model's weights ...

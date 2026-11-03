@@ -1,6 +1,6 @@
 T19 S7 confound start Tue Oct 20 12:53:48 PM SAST 2026 binary: 7a5e17d1
 === LEG s7-on-r1 health=1 bin=7a5e17d1 12:54:21 ===
-=== PROBE t19-s7-on-r1 | 2026-10-20 12:54:21 | log=/home/svg/LLM/strata-custom-2/custom-iq3_s.log
+=== PROBE t19-s7-on-r1 | 2026-10-20 12:54:21 | log=/home/svg/LLM/strata-custom-2/logs/custom-iq3_s.log
     warmup: 8 tok in 0.40s
     A.short[1]: 220 tok in 1.95s = 112.6 t/s
     A.short[2]: 220 tok in 1.27s = 173.3 t/s
@@ -27,7 +27,7 @@ greedy-on-r1 bccc43c087bfb766 115
 greedy-on-r1 4268b74ce513ac32 158
 greedy-on-r1 1570d52e90c20bad 648
 === LEG s7-off-r1 health=1 bin=7a5e17d1 12:55:58 ===
-=== PROBE t19-s7-off-r1 | 2026-10-20 12:55:58 | log=/home/svg/LLM/strata-custom-2/custom-iq3_s.log
+=== PROBE t19-s7-off-r1 | 2026-10-20 12:55:58 | log=/home/svg/LLM/strata-custom-2/logs/custom-iq3_s.log
     warmup: 8 tok in 0.42s
     A.short[1]: 220 tok in 2.14s = 102.9 t/s
     A.short[2]: 220 tok in 1.48s = 148.8 t/s
@@ -54,7 +54,7 @@ greedy-off-r1 bccc43c087bfb766 115
 greedy-off-r1 2c4f3d2a71fe3fb8 135
 greedy-off-r1 9a42a37de4524ccd 709
 === LEG s7-on-r2 health=1 bin=7a5e17d1 12:57:42 ===
-=== PROBE t19-s7-on-r2 | 2026-10-20 12:57:42 | log=/home/svg/LLM/strata-custom-2/custom-iq3_s.log
+=== PROBE t19-s7-on-r2 | 2026-10-20 12:57:42 | log=/home/svg/LLM/strata-custom-2/logs/custom-iq3_s.log
     warmup: 8 tok in 0.42s
     A.short[1]: 220 tok in 2.01s = 109.5 t/s
     A.short[2]: 220 tok in 1.26s = 175.1 t/s
@@ -81,7 +81,7 @@ greedy-on-r2 bccc43c087bfb766 115
 greedy-on-r2 0e2883bdfc01019b 149
 greedy-on-r2 31ad0390332dc16b 640
 === LEG s7-off-r2 health=1 bin=7a5e17d1 12:59:20 ===
-=== PROBE t19-s7-off-r2 | 2026-10-20 12:59:20 | log=/home/svg/LLM/strata-custom-2/custom-iq3_s.log
+=== PROBE t19-s7-off-r2 | 2026-10-20 12:59:20 | log=/home/svg/LLM/strata-custom-2/logs/custom-iq3_s.log
     warmup: 8 tok in 0.48s
     A.short[1]: 220 tok in 2.16s = 101.7 t/s
     A.short[2]: 220 tok in 1.45s = 151.5 t/s
@@ -108,7 +108,7 @@ greedy-off-r2 bccc43c087bfb766 115
 greedy-off-r2 0e2883bdfc01019b 149
 greedy-off-r2 31ad0390332dc16b 640
 === LEG s7-on-r3 health=1 bin=7a5e17d1 13:01:05 ===
-=== PROBE t19-s7-on-r3 | 2026-10-20 13:01:05 | log=/home/svg/LLM/strata-custom-2/custom-iq3_s.log
+=== PROBE t19-s7-on-r3 | 2026-10-20 13:01:05 | log=/home/svg/LLM/strata-custom-2/logs/custom-iq3_s.log
     warmup: 8 tok in 0.44s
     A.short[1]: 220 tok in 2.08s = 105.6 t/s
     A.short[2]: 220 tok in 1.44s = 153.1 t/s
@@ -135,7 +135,7 @@ greedy-on-r3 bccc43c087bfb766 115
 greedy-on-r3 4268b74ce513ac32 158
 greedy-on-r3 31ad0390332dc16b 640
 === LEG s7-off-r3 health=1 bin=7a5e17d1 13:02:47 ===
-=== PROBE t19-s7-off-r3 | 2026-10-20 13:02:47 | log=/home/svg/LLM/strata-custom-2/custom-iq3_s.log
+=== PROBE t19-s7-off-r3 | 2026-10-20 13:02:47 | log=/home/svg/LLM/strata-custom-2/logs/custom-iq3_s.log
     warmup: 8 tok in 0.48s
     A.short[1]: 220 tok in 2.29s = 96.1 t/s
     A.short[2]: 220 tok in 1.57s = 139.7 t/s

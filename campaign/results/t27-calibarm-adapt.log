@@ -1,7 +1,7 @@
 T27 CALIBARM/adapt start Wed Oct 21 08:58:02 PM SAST 2026
 arm config verified
 === LEG adapt-arm-r1 health=1 20:58:26 ===
-=== PROBE t27-adapt-arm-r1 | 2026-10-21 20:58:26 | log=/home/svg/LLM/strata-custom-2/custom-iq3_s.log
+=== PROBE t27-adapt-arm-r1 | 2026-10-21 20:58:26 | log=/home/svg/LLM/strata-custom-2/logs/custom-iq3_s.log
     warmup: 8 tok in 0.32s
     A.short[1]: 220 tok in 1.66s = 132.2 t/s
     A.short[2]: 220 tok in 1.12s = 196.2 t/s
@@ -61,7 +61,7 @@ M3d per-position : not printed (arm STRATA_SPEC_DEPTH=1 to publish accepted/test
 === PROBE END t27-adapt-arm-r1
 [metrics t27-adapt-arm-r1] TTFT p50/p99 175ms/2155ms  ITL p99 20ms  accept 77.22%  clock 2962.0MHz 42.0C 91.63W  golden dbb294a93550f4fc  DRIFT a974bc5a6f6c8ec6 -> dbb294a93550f4fc
 === LEG adapt-ctl-r1 health=1 20:59:47 ===
-=== PROBE t27-adapt-ctl-r1 | 2026-10-21 20:59:47 | log=/home/svg/LLM/strata-custom-2/custom-iq3_s.log
+=== PROBE t27-adapt-ctl-r1 | 2026-10-21 20:59:47 | log=/home/svg/LLM/strata-custom-2/logs/custom-iq3_s.log
     warmup: 8 tok in 0.33s
     A.short[1]: 220 tok in 1.74s = 126.3 t/s
     A.short[2]: 220 tok in 1.20s = 182.9 t/s
@@ -121,7 +121,7 @@ M3d per-position : not printed (arm STRATA_SPEC_DEPTH=1 to publish accepted/test
 === PROBE END t27-adapt-ctl-r1
 [metrics t27-adapt-ctl-r1] TTFT p50/p99 175ms/2155ms  ITL p99 20ms  accept 76.09%  clock 2955.0MHz 43.0C 92.41W  golden dbb294a93550f4fc  DRIFT a974bc5a6f6c8ec6 -> dbb294a93550f4fc
 === LEG adapt-arm-r2 health=1 21:01:07 ===
-=== PROBE t27-adapt-arm-r2 | 2026-10-21 21:01:07 | log=/home/svg/LLM/strata-custom-2/custom-iq3_s.log
+=== PROBE t27-adapt-arm-r2 | 2026-10-21 21:01:07 | log=/home/svg/LLM/strata-custom-2/logs/custom-iq3_s.log
     warmup: 8 tok in 0.33s
     A.short[1]: 220 tok in 1.65s = 133.5 t/s
     A.short[2]: 220 tok in 1.25s = 176.4 t/s
@@ -182,7 +182,7 @@ M3d per-position : not printed (arm STRATA_SPEC_DEPTH=1 to publish accepted/test
 === PROBE END t27-adapt-arm-r2
 [metrics t27-adapt-arm-r2] TTFT p50/p99 175ms/2155ms  ITL p99 20ms  accept 76.79%  clock 2962.0MHz 43.0C 92.01W  golden dbb294a93550f4fc  DRIFT a974bc5a6f6c8ec6 -> dbb294a93550f4fc
 === LEG adapt-ctl-r2 health=1 21:02:28 ===
-=== PROBE t27-adapt-ctl-r2 | 2026-10-21 21:02:28 | log=/home/svg/LLM/strata-custom-2/custom-iq3_s.log
+=== PROBE t27-adapt-ctl-r2 | 2026-10-21 21:02:28 | log=/home/svg/LLM/strata-custom-2/logs/custom-iq3_s.log
     warmup: 8 tok in 0.33s
     A.short[1]: 220 tok in 1.76s = 125.0 t/s
     A.short[2]: 220 tok in 1.08s = 204.4 t/s
@@ -242,7 +242,7 @@ M3d per-position : not printed (arm STRATA_SPEC_DEPTH=1 to publish accepted/test
 === PROBE END t27-adapt-ctl-r2
 [metrics t27-adapt-ctl-r2] TTFT p50/p99 175ms/2155ms  ITL p99 20ms  accept 76.52%  clock 2955.0MHz 44.0C 92.34W  golden dbb294a93550f4fc  DRIFT a974bc5a6f6c8ec6 -> dbb294a93550f4fc
 === LEG adapt-arm-r3 health=1 21:03:49 ===
-=== PROBE t27-adapt-arm-r3 | 2026-10-21 21:03:49 | log=/home/svg/LLM/strata-custom-2/custom-iq3_s.log
+=== PROBE t27-adapt-arm-r3 | 2026-10-21 21:03:49 | log=/home/svg/LLM/strata-custom-2/logs/custom-iq3_s.log
     warmup: 8 tok in 0.33s
     A.short[1]: 220 tok in 1.70s = 129.4 t/s
     A.short[2]: 220 tok in 1.12s = 196.2 t/s
@@ -302,7 +302,7 @@ M3d per-position : not printed (arm STRATA_SPEC_DEPTH=1 to publish accepted/test
 === PROBE END t27-adapt-arm-r3
 [metrics t27-adapt-arm-r3] TTFT p50/p99 175ms/2155ms  ITL p99 20ms  accept 75.64%  clock 2955.0MHz 44.0C 92.9W  golden dbb294a93550f4fc  DRIFT a974bc5a6f6c8ec6 -> dbb294a93550f4fc
 === LEG adapt-ctl-r3 health=1 21:05:10 ===
-=== PROBE t27-adapt-ctl-r3 | 2026-10-21 21:05:10 | log=/home/svg/LLM/strata-custom-2/custom-iq3_s.log
+=== PROBE t27-adapt-ctl-r3 | 2026-10-21 21:05:10 | log=/home/svg/LLM/strata-custom-2/logs/custom-iq3_s.log
     warmup: 8 tok in 0.33s
     A.short[1]: 220 tok in 1.64s = 133.8 t/s
     A.short[2]: 220 tok in 1.16s = 189.3 t/s

@@ -8,7 +8,7 @@ TypeError: 'NoneType' object is not subscriptable
 200
 200
 [16:08:45] prewarm-ds4: replay done in 54s total
-=== PROBE t64-ctl-r1 | 2026-11-02 16:08:45 | log=/home/svg/LLM/strata-custom-2/custom-iq3_s.log
+=== PROBE t64-ctl-r1 | 2026-11-02 16:08:45 | log=/home/svg/LLM/strata-custom-2/logs/custom-iq3_s.log
     warmup: 4 tok in 0.45s
     A.short[1]: 220 tok in 3.86s = 57.0 t/s
     A.short[2]: 220 tok in 3.01s = 73.1 t/s
@@ -40,7 +40,7 @@ TypeError: 'NoneType' object is not subscriptable
 200
 200
 [16:13:27] prewarm-ds4: replay done in 55s total
-=== PROBE t64-ctl-r2 | 2026-11-02 16:13:27 | log=/home/svg/LLM/strata-custom-2/custom-iq3_s.log
+=== PROBE t64-ctl-r2 | 2026-11-02 16:13:27 | log=/home/svg/LLM/strata-custom-2/logs/custom-iq3_s.log
     warmup: 4 tok in 0.44s
     A.short[1]: 220 tok in 3.73s = 59.0 t/s
     A.short[2]: 220 tok in 3.15s = 69.8 t/s

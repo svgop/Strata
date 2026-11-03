@@ -18,7 +18,7 @@
   "tokenizer": "/home/svg/LLM/data/packs/deepseek-v4.1-flash-ist-das-2.00bpw/tokenizer",
   "model_name": "deepseek-v4.1-flash",
   "arch": "deepseek41",
-  "log": "/home/svg/LLM/strata-custom-2/custom-dsv41-8081-ct32.log",
+  "log": "/home/svg/LLM/strata-custom-2/logs/custom-dsv41-8081-ct32.log",
   "lib_dirs": [
     "/usr/local/cuda-13.4/lib64"
   ],

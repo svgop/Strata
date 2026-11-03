@@ -1,4 +1,4 @@
-=== PROBE t52-f368-gauntlet-cand2-2 | 2026-10-28 12:18:43 | log=/home/svg/LLM/strata-custom-2/custom-iq3_s.log
+=== PROBE t52-f368-gauntlet-cand2-2 | 2026-10-28 12:18:43 | log=/home/svg/LLM/strata-custom-2/logs/custom-iq3_s.log
     warmup: 8 tok in 0.37s
     A.short[1]: 220 tok in 1.20s = 183.1 t/s
     A.short[2]: 220 tok in 1.12s = 196.9 t/s

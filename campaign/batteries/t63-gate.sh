@@ -29,8 +29,8 @@ for t in $(seq 1 120); do
 done
 echo "=== BOOT ts7 health=$ok $(date +%H:%M:%S) ===" >> "$OUT"
 if [ "$ok" = 1 ]; then
-  grep -m1 "TAIL_SKIP" "$REPO/custom-iq3_s.log" >> "$OUT" 2>&1 || true
-  ( cd "$REPO" && bash campaign/prewarm2.sh "$REPO/custom-iq3_s.log" >> "$OUT" 2>&1 )
+  grep -m1 "TAIL_SKIP" "$REPO/logs/custom-iq3_s.log" >> "$OUT" 2>&1 || true
+  ( cd "$REPO" && bash campaign/prewarm2.sh "$REPO/logs/custom-iq3_s.log" >> "$OUT" 2>&1 )
   cd "$REPO"
   timeout 600 .venv/bin/python campaign/mmlu-pro-gate.py 0.933 t63-ts7-mmlu-a >> "$OUT" 2>&1 || echo "MMLU A failed" >> "$OUT"
   timeout 600 .venv/bin/python campaign/mmlu-pro-gate.py 0.933 t63-ts7-mmlu-b >> "$OUT" 2>&1 || echo "MMLU B failed" >> "$OUT"

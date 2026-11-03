@@ -1,7 +1,7 @@
 T44 CHAMP BANK start Sat Oct 24 04:49:15 AM SAST 2026
 545362f18ed60266826ba57dc05ec99f  /home/svg/LLM/strata-custom-2/engine/strata
 === LEG t44-champ-r1 health=1 04:49:40 ===
-[04:49:40] prewarm2: complement pin confirmed in /home/svg/LLM/strata-custom-2/custom-iq3_s.log
+[04:49:40] prewarm2: complement pin confirmed in /home/svg/LLM/strata-custom-2/logs/custom-iq3_s.log
 [04:49:44] prewarm2: page cache re-warmed in 4s
 200
 200
@@ -13,7 +13,7 @@ T44 CHAMP BANK start Sat Oct 24 04:49:15 AM SAST 2026
 200
 200
 [04:49:53] prewarm2: replay done (2 short + 1 mid prefill + 6-way burst) in 13s total
-=== PROBE t44-champ-r1 | 2026-10-24 04:49:53 | log=/home/svg/LLM/strata-custom-2/custom-iq3_s.log
+=== PROBE t44-champ-r1 | 2026-10-24 04:49:53 | log=/home/svg/LLM/strata-custom-2/logs/custom-iq3_s.log
     warmup: 8 tok in 0.24s
     A.short[1]: 220 tok in 1.41s = 155.6 t/s
     A.short[2]: 220 tok in 1.06s = 207.3 t/s
@@ -74,7 +74,7 @@ M3d per-position : not printed (arm STRATA_SPEC_DEPTH=1 to publish accepted/test
 === PROBE END t44-champ-r1
 [metrics t44-champ-r1] TTFT p50/p99 318ms/2020ms  ITL p99 20ms  accept 76.68%  clock 2962.0MHz 40.0C 92.73W  golden dbb294a93550f4fc  DRIFT a974bc5a6f6c8ec6 -> dbb294a93550f4fc
 === LEG t44-champ-r2 health=1 04:51:04 ===
-[04:51:04] prewarm2: complement pin confirmed in /home/svg/LLM/strata-custom-2/custom-iq3_s.log
+[04:51:04] prewarm2: complement pin confirmed in /home/svg/LLM/strata-custom-2/logs/custom-iq3_s.log
 [04:51:08] prewarm2: page cache re-warmed in 4s
 200
 200
@@ -86,7 +86,7 @@ M3d per-position : not printed (arm STRATA_SPEC_DEPTH=1 to publish accepted/test
 200
 200
 [04:51:17] prewarm2: replay done (2 short + 1 mid prefill + 6-way burst) in 13s total
-=== PROBE t44-champ-r2 | 2026-10-24 04:51:17 | log=/home/svg/LLM/strata-custom-2/custom-iq3_s.log
+=== PROBE t44-champ-r2 | 2026-10-24 04:51:17 | log=/home/svg/LLM/strata-custom-2/logs/custom-iq3_s.log
     warmup: 8 tok in 0.24s
     A.short[1]: 220 tok in 1.43s = 153.5 t/s
     A.short[2]: 220 tok in 1.00s = 219.1 t/s
@@ -145,7 +145,7 @@ M3d per-position : not printed (arm STRATA_SPEC_DEPTH=1 to publish accepted/test
 === PROBE END t44-champ-r2
 [metrics t44-champ-r2] TTFT p50/p99 312ms/2020ms  ITL p99 20ms  accept 76.67%  clock 2962.0MHz 43.0C 95.19W  golden dbb294a93550f4fc  DRIFT a974bc5a6f6c8ec6 -> dbb294a93550f4fc
 === LEG t44-champ-r3 health=1 04:52:28 ===
-[04:52:28] prewarm2: complement pin confirmed in /home/svg/LLM/strata-custom-2/custom-iq3_s.log
+[04:52:28] prewarm2: complement pin confirmed in /home/svg/LLM/strata-custom-2/logs/custom-iq3_s.log
 [04:52:33] prewarm2: page cache re-warmed in 5s
 200
 200
@@ -157,7 +157,7 @@ M3d per-position : not printed (arm STRATA_SPEC_DEPTH=1 to publish accepted/test
 200
 200
 [04:52:42] prewarm2: replay done (2 short + 1 mid prefill + 6-way burst) in 14s total
-=== PROBE t44-champ-r3 | 2026-10-24 04:52:42 | log=/home/svg/LLM/strata-custom-2/custom-iq3_s.log
+=== PROBE t44-champ-r3 | 2026-10-24 04:52:42 | log=/home/svg/LLM/strata-custom-2/logs/custom-iq3_s.log
     warmup: 8 tok in 0.24s
     A.short[1]: 220 tok in 1.37s = 161.0 t/s
     A.short[2]: 220 tok in 1.08s = 203.1 t/s
@@ -217,7 +217,7 @@ M3d per-position : not printed (arm STRATA_SPEC_DEPTH=1 to publish accepted/test
 === PROBE END t44-champ-r3
 [metrics t44-champ-r3] TTFT p50/p99 312ms/2020ms  ITL p99 20ms  accept 75.11%  clock 2955.0MHz 45.0C 96.41W  golden dbb294a93550f4fc  DRIFT a974bc5a6f6c8ec6 -> dbb294a93550f4fc
 === LEG t44-champ-r4 health=1 04:53:52 ===
-[04:53:52] prewarm2: complement pin confirmed in /home/svg/LLM/strata-custom-2/custom-iq3_s.log
+[04:53:52] prewarm2: complement pin confirmed in /home/svg/LLM/strata-custom-2/logs/custom-iq3_s.log
 [04:53:57] prewarm2: page cache re-warmed in 5s
 200
 200
@@ -229,7 +229,7 @@ M3d per-position : not printed (arm STRATA_SPEC_DEPTH=1 to publish accepted/test
 200
 200
 [04:54:05] prewarm2: replay done (2 short + 1 mid prefill + 6-way burst) in 13s total
-=== PROBE t44-champ-r4 | 2026-10-24 04:54:05 | log=/home/svg/LLM/strata-custom-2/custom-iq3_s.log
+=== PROBE t44-champ-r4 | 2026-10-24 04:54:05 | log=/home/svg/LLM/strata-custom-2/logs/custom-iq3_s.log
     warmup: 8 tok in 0.24s
     A.short[1]: 220 tok in 1.40s = 157.0 t/s
     A.short[2]: 220 tok in 1.11s = 198.8 t/s
@@ -289,7 +289,7 @@ M3d per-position : not printed (arm STRATA_SPEC_DEPTH=1 to publish accepted/test
 === PROBE END t44-champ-r4
 [metrics t44-champ-r4] TTFT p50/p99 312ms/2020ms  ITL p99 20ms  accept 77.99%  clock 2955.0MHz 45.0C 96.55W  golden dbb294a93550f4fc  DRIFT a974bc5a6f6c8ec6 -> dbb294a93550f4fc
 === LEG t44-champ-r5 health=1 04:55:17 ===
-[04:55:17] prewarm2: complement pin confirmed in /home/svg/LLM/strata-custom-2/custom-iq3_s.log
+[04:55:17] prewarm2: complement pin confirmed in /home/svg/LLM/strata-custom-2/logs/custom-iq3_s.log
 [04:55:22] prewarm2: page cache re-warmed in 5s
 200
 200
@@ -301,7 +301,7 @@ M3d per-position : not printed (arm STRATA_SPEC_DEPTH=1 to publish accepted/test
 200
 200
 [04:55:30] prewarm2: replay done (2 short + 1 mid prefill + 6-way burst) in 13s total
-=== PROBE t44-champ-r5 | 2026-10-24 04:55:30 | log=/home/svg/LLM/strata-custom-2/custom-iq3_s.log
+=== PROBE t44-champ-r5 | 2026-10-24 04:55:30 | log=/home/svg/LLM/strata-custom-2/logs/custom-iq3_s.log
     warmup: 8 tok in 0.24s
     A.short[1]: 220 tok in 1.34s = 164.7 t/s
     A.short[2]: 220 tok in 1.01s = 218.2 t/s
@@ -361,7 +361,7 @@ M3d per-position : not printed (arm STRATA_SPEC_DEPTH=1 to publish accepted/test
 === PROBE END t44-champ-r5
 [metrics t44-champ-r5] TTFT p50/p99 312ms/2020ms  ITL p99 20ms  accept 77.7%  clock 2955.0MHz 46.0C 97.21W  golden a974bc5a6f6c8ec6
 SERVER UP (champion) 04:56:42
-[04:56:42] prewarm2: complement pin confirmed in /home/svg/LLM/strata-custom-2/custom-iq3_s.log
+[04:56:42] prewarm2: complement pin confirmed in /home/svg/LLM/strata-custom-2/logs/custom-iq3_s.log
 [04:56:47] prewarm2: page cache re-warmed in 5s
 200
 200

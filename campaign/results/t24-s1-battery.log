@@ -1,6 +1,6 @@
 T24-S1 BATTERY start Wed Oct 21 12:50:01 PM SAST 2026
 === LEG ctl-r1 health=1 12:50:34 ===
-=== PROBE t24s1-ctl-r1 | 2026-10-21 12:50:34 | log=/home/svg/LLM/strata-custom-2/custom-iq3_s.log
+=== PROBE t24s1-ctl-r1 | 2026-10-21 12:50:34 | log=/home/svg/LLM/strata-custom-2/logs/custom-iq3_s.log
     warmup: 8 tok in 0.30s
     A.short[1]: 220 tok in 1.58s = 139.1 t/s
     A.short[2]: 220 tok in 1.07s = 206.3 t/s
@@ -60,7 +60,7 @@ M3d per-position : not printed (arm STRATA_SPEC_DEPTH=1 to publish accepted/test
 === PROBE END t24s1-ctl-r1
 strata dense_tc: STRATA_DENSE_TC=unset -> mask 0 (the dense decode projections stay on native_mmvq)
 === LEG arm-r1 health=1 12:51:48 ===
-=== PROBE t24s1-arm-r1 | 2026-10-21 12:51:48 | log=/home/svg/LLM/strata-custom-2/custom-iq3_s.log
+=== PROBE t24s1-arm-r1 | 2026-10-21 12:51:48 | log=/home/svg/LLM/strata-custom-2/logs/custom-iq3_s.log
     warmup: 8 tok in 0.28s
     A.short[1]: 220 tok in 1.53s = 143.5 t/s
     A.short[2]: 220 tok in 0.99s = 221.9 t/s
@@ -121,7 +121,7 @@ M3d per-position : not printed (arm STRATA_SPEC_DEPTH=1 to publish accepted/test
 === PROBE END t24s1-arm-r1
 strata dense_tc: STRATA_DENSE_TC=1 -> mask 29 (the int8 tensor-core path is armed)
 === LEG ctl-r2 health=1 12:52:58 ===
-=== PROBE t24s1-ctl-r2 | 2026-10-21 12:52:58 | log=/home/svg/LLM/strata-custom-2/custom-iq3_s.log
+=== PROBE t24s1-ctl-r2 | 2026-10-21 12:52:58 | log=/home/svg/LLM/strata-custom-2/logs/custom-iq3_s.log
     warmup: 8 tok in 0.29s
     A.short[1]: 220 tok in 1.39s = 158.6 t/s
     A.short[2]: 220 tok in 1.06s = 208.0 t/s
@@ -182,7 +182,7 @@ M3d per-position : not printed (arm STRATA_SPEC_DEPTH=1 to publish accepted/test
 === PROBE END t24s1-ctl-r2
 strata dense_tc: STRATA_DENSE_TC=unset -> mask 0 (the dense decode projections stay on native_mmvq)
 === LEG arm-r2 health=1 12:54:09 ===
-=== PROBE t24s1-arm-r2 | 2026-10-21 12:54:09 | log=/home/svg/LLM/strata-custom-2/custom-iq3_s.log
+=== PROBE t24s1-arm-r2 | 2026-10-21 12:54:09 | log=/home/svg/LLM/strata-custom-2/logs/custom-iq3_s.log
     warmup: 8 tok in 0.28s
     A.short[1]: 220 tok in 1.52s = 144.3 t/s
     A.short[2]: 220 tok in 0.95s = 230.5 t/s
@@ -242,7 +242,7 @@ M3d per-position : not printed (arm STRATA_SPEC_DEPTH=1 to publish accepted/test
 === PROBE END t24s1-arm-r2
 strata dense_tc: STRATA_DENSE_TC=1 -> mask 29 (the int8 tensor-core path is armed)
 === LEG ctl-r3 health=1 12:55:19 ===
-=== PROBE t24s1-ctl-r3 | 2026-10-21 12:55:19 | log=/home/svg/LLM/strata-custom-2/custom-iq3_s.log
+=== PROBE t24s1-ctl-r3 | 2026-10-21 12:55:19 | log=/home/svg/LLM/strata-custom-2/logs/custom-iq3_s.log
     warmup: 8 tok in 0.29s
     A.short[1]: 220 tok in 1.54s = 143.2 t/s
     A.short[2]: 220 tok in 0.96s = 230.3 t/s
@@ -302,7 +302,7 @@ M3d per-position : not printed (arm STRATA_SPEC_DEPTH=1 to publish accepted/test
 === PROBE END t24s1-ctl-r3
 strata dense_tc: STRATA_DENSE_TC=unset -> mask 0 (the dense decode projections stay on native_mmvq)
 === LEG arm-r3 health=1 12:56:29 ===
-=== PROBE t24s1-arm-r3 | 2026-10-21 12:56:29 | log=/home/svg/LLM/strata-custom-2/custom-iq3_s.log
+=== PROBE t24s1-arm-r3 | 2026-10-21 12:56:29 | log=/home/svg/LLM/strata-custom-2/logs/custom-iq3_s.log
     warmup: 8 tok in 0.29s
     A.short[1]: 220 tok in 1.55s = 141.8 t/s
     A.short[2]: 220 tok in 0.98s = 224.9 t/s

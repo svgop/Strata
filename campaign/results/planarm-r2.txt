@@ -1,4 +1,4 @@
-=== PROBE planarm-r2 | 2026-10-17 01:26:33 | log=/home/svg/LLM/strata-custom-2/custom-iq3_s.log
+=== PROBE planarm-r2 | 2026-10-17 01:26:33 | log=/home/svg/LLM/strata-custom-2/logs/custom-iq3_s.log
     warmup: 8 tok in 0.35s
     A.short[1]: 220 tok in 1.70s = 129.8 t/s
     A.short[2]: 220 tok in 1.32s = 166.7 t/s

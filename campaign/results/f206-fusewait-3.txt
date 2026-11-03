@@ -1,4 +1,4 @@
-=== PROBE f206-fusewait-3 | 2026-10-15 10:56:59 | log=/home/svg/LLM/strata-custom-2/custom-iq3_s.log
+=== PROBE f206-fusewait-3 | 2026-10-15 10:56:59 | log=/home/svg/LLM/strata-custom-2/logs/custom-iq3_s.log
     warmup: 8 tok in 0.39s
     A.short[1]: 220 tok in 1.48s = 148.5 t/s
     A.short[2]: 220 tok in 1.30s = 168.9 t/s

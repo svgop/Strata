@@ -40,7 +40,7 @@ boot_leg() {  # $1 = leg tag, $2 = user|standing
   done
   echo "boot $1 health=$ok" >> "$OUT"
   if [ "$ok" = 1 ]; then
-    ( cd "$REPO" && bash campaign/prewarm2.sh "$REPO/custom-iq3_s.log" >> "$OUT" 2>&1 )
+    ( cd "$REPO" && bash campaign/prewarm2.sh "$REPO/logs/custom-iq3_s.log" >> "$OUT" 2>&1 )
     ( cd "$REPO" && timeout 900 .venv/bin/python campaign/mimicbench2.py 8081 tpl-mp-$1 >> "$OUT" 2>&1 ) \
       || echo "MIMIC $1 failed" >> "$OUT"
   fi

@@ -34,7 +34,7 @@ for t in $(seq 1 100); do
 done
 echo "=== BOOT t39-template health=$ok $(date +%H:%M:%S) ===" >> "$OUT"
 if [ "$ok" = 1 ]; then
-  ( cd "$REPO" && bash campaign/prewarm2.sh "$REPO/custom-iq3_s.log" >> "$OUT" 2>&1 )
+  ( cd "$REPO" && bash campaign/prewarm2.sh "$REPO/logs/custom-iq3_s.log" >> "$OUT" 2>&1 )
   echo "--- think-probe (new template):" >> "$OUT"
   ( cd "$REPO" && python3 campaign/template-probe.py 8081 new-template 2 2>&1 | tee "$RES/template-probe-new.txt" >> "$OUT" )
   cd "$REPO"

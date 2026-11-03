@@ -1,7 +1,7 @@
 T38 TIEBREAK start Fri Oct 23 04:58:42 PM SAST 2026
 === BOOT t38-tiebreak (T38 binary, standing launcher) health=1 16:59:08 ===
 strata verify: STRATA_DM armed (dm_wait_combine: the CPU-rows wait, the pool rows' read and the combine in one launch on the device-plan route)
-[16:59:08] prewarm2: complement pin confirmed in /home/svg/LLM/strata-custom-2/custom-iq3_s.log
+[16:59:08] prewarm2: complement pin confirmed in /home/svg/LLM/strata-custom-2/logs/custom-iq3_s.log
 [16:59:13] prewarm2: page cache re-warmed in 5s
 200
 200
@@ -13,7 +13,7 @@ strata verify: STRATA_DM armed (dm_wait_combine: the CPU-rows wait, the pool row
 200
 200
 [16:59:22] prewarm2: replay done (2 short + 1 mid prefill + 6-way burst) in 14s total
-=== PROBE t38-tiebreak | 2026-10-23 16:59:22 | log=/home/svg/LLM/strata-custom-2/custom-iq3_s.log
+=== PROBE t38-tiebreak | 2026-10-23 16:59:22 | log=/home/svg/LLM/strata-custom-2/logs/custom-iq3_s.log
     warmup: 8 tok in 0.29s
     A.short[1]: 220 tok in 1.51s = 145.3 t/s
     A.short[2]: 220 tok in 1.00s = 220.7 t/s

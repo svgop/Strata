@@ -1,4 +1,4 @@
-=== PROBE f205v-nodt-2 | 2026-10-15 10:31:03 | log=/home/svg/LLM/strata-custom-2/custom-iq3_s.log
+=== PROBE f205v-nodt-2 | 2026-10-15 10:31:03 | log=/home/svg/LLM/strata-custom-2/logs/custom-iq3_s.log
     warmup: 8 tok in 0.41s
     A.short[1]: 220 tok in 1.57s = 140.5 t/s
     A.short[2]: 220 tok in 1.27s = 173.0 t/s

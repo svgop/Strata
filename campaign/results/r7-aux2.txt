@@ -1,4 +1,4 @@
-=== PROBE r7-aux2 | 2026-10-13 23:08:50 | log=/home/svg/LLM/strata-custom-2/custom-iq3_s.log
+=== PROBE r7-aux2 | 2026-10-13 23:08:50 | log=/home/svg/LLM/strata-custom-2/logs/custom-iq3_s.log
     warmup: 8 tok in 0.46s
     A.short[1]: 220 tok in 1.57s = 139.7 t/s
     A.short[2]: 220 tok in 1.36s = 161.6 t/s

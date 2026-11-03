@@ -1,4 +1,4 @@
-=== PROBE dietctl-r2 | 2026-10-17 01:51:19 | log=/home/svg/LLM/strata-custom-2/custom-iq3_s.log
+=== PROBE dietctl-r2 | 2026-10-17 01:51:19 | log=/home/svg/LLM/strata-custom-2/logs/custom-iq3_s.log
     warmup: 8 tok in 0.32s
     A.short[1]: 220 tok in 1.57s = 140.2 t/s
     A.short[2]: 220 tok in 1.27s = 172.7 t/s

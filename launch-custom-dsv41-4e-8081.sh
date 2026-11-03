@@ -13,6 +13,7 @@
 # the quality gate is owed (the T53 task-gate precedent; the change is far below --experts 5's trade).
 # Revert: drop the line (the kernel stays default-off).
 export DS4_ATTN_SPLIT=1
+export STRATA_DS4_SLOT_DIR="${STRATA_DS4_SLOT_DIR:-/home/svg/LLM/data/ds4-slots}"  # the runtime slot cache lives in the estate, not the repo (server.py:3413 otherwise derives it from the log path)
 
 cd "$(dirname "$0")"
-exec .venv/bin/python serve/server.py --engine strata --config "$PWD/custom-dsv41-4e-8081.json" --port 8081 --host 0.0.0.0
+exec .venv/bin/python serve/server.py --engine strata --config "$PWD/config/custom-dsv41-4e-8081.json" --port 8081 --host 0.0.0.0

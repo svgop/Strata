@@ -61,7 +61,7 @@ leg() {  # leg <tag> <env-pass>
   echo "--- window histogram ($1):" >> "$OUT"
   curl -s -m 5 -H "Authorization: Bearer $KEY" "http://127.0.0.1:$PORT/metrics" 2>/dev/null | grep -ao '"window": {[^}]*}' >> "$OUT"
   echo "--- ERR count in engine log ($1):" >> "$OUT"
-  grep -ac "^ERR" "$REPO/custom-iq3_s.log" >> "$OUT"
+  grep -ac "^ERR" "$REPO/logs/custom-iq3_s.log" >> "$OUT"
 }
 
 leg off ""

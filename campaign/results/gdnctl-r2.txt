@@ -1,4 +1,4 @@
-=== PROBE gdnctl-r2 | 2026-10-16 08:13:32 | log=/home/svg/LLM/strata-custom-2/custom-iq3_s.log
+=== PROBE gdnctl-r2 | 2026-10-16 08:13:32 | log=/home/svg/LLM/strata-custom-2/logs/custom-iq3_s.log
     warmup: 8 tok in 0.33s
     A.short[1]: 220 tok in 1.78s = 123.6 t/s
     A.short[2]: 220 tok in 1.21s = 181.2 t/s

@@ -48,7 +48,7 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('--port', type=int, default=8081)
     ap.add_argument('--label', default='linux')
-    ap.add_argument('--log', default='/home/svg/LLM/strata-custom-2/custom-iq3_s.log')
+    ap.add_argument('--log', default='/home/svg/LLM/strata-custom-2/logs/custom-iq3_s.log')
     ap.add_argument('--key', default='3f0940df8efb9c363e4189956ae907d3e4acac221aab39f44804fe0b0df1b8')
     ap.add_argument('--short-n', type=int, default=6)
     ap.add_argument('--conc-n', type=int, default=6)
