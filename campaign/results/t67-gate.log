@@ -1,0 +1,173 @@
+T67 GATE start Tue Nov  3 02:37:52 PM SAST 2026
+=== BOOT coder health=1 14:38:49 ===
+[14:39:31] prewarm-ds4: page cache re-warmed in 42s
+Traceback (most recent call last):
+  File "<stdin>", line 4, in <module>
+TypeError: 'NoneType' object is not subscriptable
+200
+200
+200
+[14:39:46] prewarm-ds4: replay done in 57s total
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+[PASS] math               pred=A gold=A
+[PASS] math               pred=H gold=H
+[PASS] math               pred=E gold=E
+[PASS] math               pred=I gold=I
+[PASS] math               pred=B gold=B
+[PASS] health             pred=J gold=J
+[FAIL] health             pred=D gold=G
+[PASS] health             pred=F gold=F
+[FAIL] health             pred=I gold=F
+[FAIL] health             pred=E gold=D
+[FAIL] physics            pred=H gold=E
+[PASS] physics            pred=A gold=A
+[FAIL] physics            pred=B gold=H
+[PASS] physics            pred=E gold=E
+[PASS] physics            pred=A gold=A
+[PASS] business           pred=F gold=F
+[PASS] business           pred=D gold=D
+[PASS] business           pred=A gold=A
+[FAIL] business           pred=A gold=G
+[PASS] business           pred=H gold=H
+[PASS] biology            pred=B gold=B
+[FAIL] biology            pred=F gold=D
+[FAIL] biology            pred=I gold=D
+[PASS] biology            pred=A gold=A
+[PASS] biology            pred=H gold=H
+[PASS] chemistry          pred=B gold=B
+[PASS] chemistry          pred=J gold=J
+[PASS] chemistry          pred=E gold=E
+[PASS] chemistry          pred=A gold=A
+[PASS] chemistry          pred=J gold=J
+[PASS] computer science   pred=B gold=B
+[PASS] computer science   pred=I gold=I
+[PASS] computer science   pred=C gold=C
+[PASS] computer science   pred=I gold=I
+[PASS] computer science   pred=A gold=A
+[PASS] economics          pred=F gold=F
+[PASS] economics          pred=H gold=H
+[PASS] economics          pred=C gold=C
+[PASS] economics          pred=G gold=G
+[PASS] economics          pred=F gold=F
+[PASS] engineering        pred=C gold=C
+[PASS] engineering        pred=A gold=A
+[PASS] engineering        pred=C gold=C
+[PASS] engineering        pred=I gold=I
+[FAIL] engineering        pred=D gold=A
+[PASS] philosophy         pred=B gold=B
+[PASS] philosophy         pred=J gold=J
+[PASS] philosophy         pred=B gold=B
+[PASS] philosophy         pred=I gold=I
+[PASS] philosophy         pred=D gold=D
+[PASS] other              pred=E gold=E
+[PASS] other              pred=B gold=B
+[PASS] other              pred=B gold=B
+[FAIL] other              pred=D gold=J
+[PASS] other              pred=J gold=J
+[PASS] history            pred=A gold=A
+[PASS] history            pred=C gold=C
+MMLU A failed
+/usr/lib64/python3.15/multiprocessing/resource_tracker.py:475: UserWarning: resource_tracker: There appear to be 1 leaked semaphore objects to clean up at shutdown: {'/mp-17wgpgco'}
+  warnings.warn(
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+[PASS] math               pred=A gold=A
+[PASS] math               pred=H gold=H
+[PASS] math               pred=E gold=E
+[PASS] math               pred=I gold=I
+[PASS] math               pred=B gold=B
+[PASS] health             pred=J gold=J
+[FAIL] health             pred=D gold=G
+[PASS] health             pred=F gold=F
+[FAIL] health             pred=I gold=F
+[FAIL] health             pred=E gold=D
+[FAIL] physics            pred=H gold=E
+[PASS] physics            pred=A gold=A
+[PASS] physics            pred=H gold=H
+[PASS] physics            pred=E gold=E
+[PASS] physics            pred=A gold=A
+[PASS] business           pred=F gold=F
+[PASS] business           pred=D gold=D
+[PASS] business           pred=A gold=A
+[FAIL] business           pred=A gold=G
+[PASS] business           pred=H gold=H
+[PASS] biology            pred=B gold=B
+[FAIL] biology            pred=F gold=D
+[FAIL] biology            pred=I gold=D
+[PASS] biology            pred=A gold=A
+[PASS] biology            pred=H gold=H
+[FAIL] chemistry          pred=A gold=B
+[PASS] chemistry          pred=J gold=J
+[PASS] chemistry          pred=E gold=E
+[FAIL] chemistry          pred=B gold=A
+[PASS] chemistry          pred=J gold=J
+[PASS] computer science   pred=B gold=B
+[PASS] computer science   pred=I gold=I
+[PASS] computer science   pred=C gold=C
+[PASS] computer science   pred=I gold=I
+[PASS] computer science   pred=A gold=A
+[PASS] economics          pred=F gold=F
+[PASS] economics          pred=H gold=H
+[PASS] economics          pred=C gold=C
+[PASS] economics          pred=G gold=G
+[PASS] economics          pred=F gold=F
+[FAIL] engineering        pred=F gold=C
+[PASS] engineering        pred=A gold=A
+[PASS] engineering        pred=C gold=C
+[PASS] engineering        pred=I gold=I
+[FAIL] engineering        pred=F gold=A
+[PASS] philosophy         pred=B gold=B
+[PASS] philosophy         pred=J gold=J
+[PASS] philosophy         pred=B gold=B
+[PASS] philosophy         pred=I gold=I
+[PASS] philosophy         pred=D gold=D
+[PASS] other              pred=E gold=E
+[PASS] other              pred=B gold=B
+[PASS] other              pred=B gold=B
+[FAIL] other              pred=D gold=J
+[PASS] other              pred=J gold=J
+[PASS] history            pred=A gold=A
+[PASS] history            pred=C gold=C
+[PASS] history            pred=E gold=E
+[PASS] history            pred=E gold=E
+[PASS] history            pred=G gold=G
+[PASS] psychology         pred=H gold=H
+[PASS] psychology         pred=H gold=H
+MMLU B failed
+/usr/lib64/python3.15/multiprocessing/resource_tracker.py:475: UserWarning: resource_tracker: There appear to be 1 leaked semaphore objects to clean up at shutdown: {'/mp-3ha4khze'}
+  warnings.warn(
+[ 1] doctrine     d1-instr-density PASS (w2)
+[ 2] doctrine     d1-no-closers PASS (w2)
+[ 3] doctrine     d1-artifact-bullets PASS (w2)
+[ 4] doctrine     d1-frontload FAIL (w2)
+[ 5] voice        d2-1       PASS (w2)
+[ 6] voice        d2-2       PASS (w2)
+[ 7] voice        d2-3       PASS (w2)
+[ 8] arch-continue d3-1       PASS (w2)
+[ 9] arch-continue d3-2       PASS (w2)
+[10] arch-continue d3-3       PASS (w2)
+[11] arch-continue d3-4       PASS (w2)
+[12] correction   d4-1       PASS (w2)
+[13] correction   d4-2       PASS (w2)
+[14] correction   d4-3       PASS (w2)
+[15] correction   d4-5       PASS (w2)
+[16] blend        d5-1       PASS (w2)
+[17] blend        d5-2       PASS (w2)
+[18] blend        d5-3       PASS (w2)
+[19] blend        d5-4       FAIL (w2)
+[20] ui-deep      d6-1       FAIL (w2)
+[21] ui-deep      d6-2       FAIL (w2)
+[22] ui-deep      d6-3       PASS (w2)
+[23] ui-deep      d6-4       FAIL (w2)
+[24] ui-deep      d6-5       PASS (w2)
+[25] internalize  d7-1       PASS (w3)
+[26] internalize  d7-2       PASS (w3)
+[27] internalize  d7-3       PASS (w3)
+[28] internalize  d7-4       PASS (w3)
+[29] doc-structure d8-1       PASS (w2)
+[30] doc-structure d8-2       PASS (w2)
+[31] doc-structure d8-3       PASS (w2)
+
+MIMICBENCH2 [t67-coder-mimic]: 56/66 = 84.8%
+by category: {'doctrine': '6/8', 'voice': '6/6', 'arch-continue': '8/8', 'correction': '8/8', 'blend': '6/8', 'ui-deep': '4/10', 'internalize': '12/12', 'doc-structure': '6/6'}
+saved: /home/svg/LLM/strata-custom-2/campaign/results/mimicbench2-t67-coder-mimic.json
+T67 GATE end Tue Nov  3 03:18:12 PM SAST 2026

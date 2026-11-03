@@ -1,0 +1,127 @@
+T67 BATTERY start Tue Nov  3 02:11:02 PM SAST 2026
+=== LEG t67-coder-r1 health=1 14:12:05 ===
+[14:12:47] prewarm-ds4: page cache re-warmed in 42s
+Traceback (most recent call last):
+  File "<stdin>", line 4, in <module>
+TypeError: 'NoneType' object is not subscriptable
+200
+200
+200
+[14:13:04] prewarm-ds4: replay done in 59s total
+=== PROBE t67-coder-r1 | 2026-11-03 14:13:04 | log=/home/svg/LLM/strata-custom-2/logs/custom-iq3_s.log
+    warmup: 4 tok in 0.40s
+    A.short[1]: 220 tok in 4.26s = 51.7 t/s
+    A.short[2]: 220 tok in 3.50s = 62.9 t/s
+    A.short[3]: 220 tok in 3.44s = 64.0 t/s
+    A.short[4]: 220 tok in 3.41s = 64.5 t/s
+    A.short[5]: 220 tok in 3.24s = 68.0 t/s
+    A.short[6]: 220 tok in 3.18s = 69.2 t/s
+    fresh-long-prompt: 80 tok out in 7.22s
+    B.short[1]: 220 tok in 4.24s = 51.8 t/s
+    B.short[2]: 220 tok in 3.68s = 59.8 t/s
+    B.short[3]: 220 tok in 3.47s = 63.5 t/s
+    B.short[4]: 220 tok in 3.58s = 61.5 t/s
+    B.short[5]: 220 tok in 3.49s = 63.0 t/s
+    B.short[6]: 220 tok in 3.39s = 64.9 t/s
+SHORT-CLASS A/B   : before long prompt 63.4 t/s -> after 60.8 t/s (-4%)
+M1 single-stream : 57.0 t/s (2000 tok in 35.06s)
+M2 pair          : 58.9 t/s aggregate (1800 tok in 30.55s)
+M2 6-conc        : 71.3 t/s aggregate (3600 tok in 50.51s)
+--- engine accounting, in order (ms/window is the degradation signal) ---
+M3d per-position : not printed (arm STRATA_SPEC_DEPTH=1 to publish accepted/tested by depth)
+=== PROBE END t67-coder-r1
+=== LEG t67-base-r1 health=1 14:17:23 ===
+[14:18:04] prewarm-ds4: page cache re-warmed in 41s
+Traceback (most recent call last):
+  File "<stdin>", line 4, in <module>
+TypeError: 'NoneType' object is not subscriptable
+200
+200
+200
+[14:18:25] prewarm-ds4: replay done in 62s total
+=== PROBE t67-base-r1 | 2026-11-03 14:18:25 | log=/home/svg/LLM/strata-custom-2/logs/custom-iq3_s.log
+    warmup: 4 tok in 0.53s
+    A.short[1]: 220 tok in 5.08s = 43.3 t/s
+    A.short[2]: 220 tok in 4.18s = 52.7 t/s
+    A.short[3]: 220 tok in 4.03s = 54.6 t/s
+    A.short[4]: 220 tok in 3.95s = 55.6 t/s
+    A.short[5]: 220 tok in 3.67s = 60.0 t/s
+    A.short[6]: 220 tok in 3.63s = 60.6 t/s
+    fresh-long-prompt: 80 tok out in 10.26s
+    B.short[1]: 220 tok in 5.01s = 43.9 t/s
+    B.short[2]: 220 tok in 4.23s = 52.1 t/s
+    B.short[3]: 220 tok in 4.07s = 54.0 t/s
+    B.short[4]: 220 tok in 4.14s = 53.2 t/s
+    B.short[5]: 220 tok in 3.94s = 55.9 t/s
+    B.short[6]: 220 tok in 3.89s = 56.5 t/s
+SHORT-CLASS A/B   : before long prompt 54.5 t/s -> after 52.6 t/s (-3%)
+M1 single-stream : 51.2 t/s (2000 tok in 39.05s)
+M2 pair          : 53.2 t/s aggregate (1800 tok in 33.81s)
+M2 6-conc        : 64.3 t/s aggregate (3600 tok in 56.01s)
+--- engine accounting, in order (ms/window is the degradation signal) ---
+M3d per-position : not printed (arm STRATA_SPEC_DEPTH=1 to publish accepted/tested by depth)
+=== PROBE END t67-base-r1
+=== LEG t67-coder-r2 health=1 14:22:52 ===
+[14:23:33] prewarm-ds4: page cache re-warmed in 41s
+Traceback (most recent call last):
+  File "<stdin>", line 4, in <module>
+TypeError: 'NoneType' object is not subscriptable
+200
+200
+200
+[14:23:49] prewarm-ds4: replay done in 57s total
+=== PROBE t67-coder-r2 | 2026-11-03 14:23:49 | log=/home/svg/LLM/strata-custom-2/logs/custom-iq3_s.log
+    warmup: 4 tok in 0.38s
+    A.short[1]: 220 tok in 4.15s = 53.1 t/s
+    A.short[2]: 220 tok in 3.60s = 61.1 t/s
+    A.short[3]: 220 tok in 3.50s = 62.8 t/s
+    A.short[4]: 220 tok in 3.36s = 65.5 t/s
+    A.short[5]: 220 tok in 3.29s = 66.9 t/s
+    A.short[6]: 220 tok in 3.14s = 70.1 t/s
+    fresh-long-prompt: 80 tok out in 7.15s
+    B.short[1]: 220 tok in 4.03s = 54.7 t/s
+    B.short[2]: 220 tok in 3.50s = 62.9 t/s
+    B.short[3]: 220 tok in 3.60s = 61.1 t/s
+    B.short[4]: 220 tok in 3.48s = 63.3 t/s
+    B.short[5]: 220 tok in 3.41s = 64.6 t/s
+    B.short[6]: 220 tok in 3.34s = 66.0 t/s
+SHORT-CLASS A/B   : before long prompt 63.3 t/s -> after 62.1 t/s (-2%)
+M1 single-stream : 54.1 t/s (2000 tok in 36.99s)
+M2 pair          : 58.2 t/s aggregate (1800 tok in 30.92s)
+M2 6-conc        : 71.3 t/s aggregate (3600 tok in 50.51s)
+--- engine accounting, in order (ms/window is the degradation signal) ---
+M3d per-position : not printed (arm STRATA_SPEC_DEPTH=1 to publish accepted/tested by depth)
+=== PROBE END t67-coder-r2
+=== LEG t67-base-r2 health=1 14:27:46 ===
+[14:28:27] prewarm-ds4: page cache re-warmed in 41s
+Traceback (most recent call last):
+  File "<stdin>", line 4, in <module>
+TypeError: 'NoneType' object is not subscriptable
+200
+200
+200
+[14:28:48] prewarm-ds4: replay done in 62s total
+=== PROBE t67-base-r2 | 2026-11-03 14:28:48 | log=/home/svg/LLM/strata-custom-2/logs/custom-iq3_s.log
+    warmup: 4 tok in 0.52s
+    A.short[1]: 220 tok in 4.94s = 44.6 t/s
+    A.short[2]: 220 tok in 4.34s = 50.7 t/s
+    A.short[3]: 220 tok in 4.19s = 52.5 t/s
+    A.short[4]: 220 tok in 3.79s = 58.0 t/s
+    A.short[5]: 220 tok in 3.77s = 58.3 t/s
+    A.short[6]: 220 tok in 3.70s = 59.5 t/s
+    fresh-long-prompt: 80 tok out in 10.00s
+    B.short[1]: 220 tok in 4.83s = 45.6 t/s
+    B.short[2]: 220 tok in 4.18s = 52.6 t/s
+    B.short[3]: 220 tok in 4.15s = 53.0 t/s
+    B.short[4]: 220 tok in 4.08s = 53.9 t/s
+    B.short[5]: 220 tok in 4.00s = 55.0 t/s
+    B.short[6]: 220 tok in 3.92s = 56.1 t/s
+SHORT-CLASS A/B   : before long prompt 53.9 t/s -> after 52.7 t/s (-2%)
+M1 single-stream : 51.9 t/s (2000 tok in 38.50s)
+M2 pair          : 53.3 t/s aggregate (1800 tok in 33.77s)
+M2 6-conc        : 64.1 t/s aggregate (3600 tok in 56.18s)
+--- engine accounting, in order (ms/window is the degradation signal) ---
+M3d per-position : not printed (arm STRATA_SPEC_DEPTH=1 to publish accepted/tested by depth)
+=== PROBE END t67-base-r2
+T67 BATTERY end Tue Nov  3 02:32:05 PM SAST 2026
+done
