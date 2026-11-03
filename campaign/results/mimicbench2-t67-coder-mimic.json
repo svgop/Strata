@@ -1,0 +1,297 @@
+{
+ "label": "t67-coder-mimic",
+ "suite": "mimicbench2-v1 (31 tasks, weighted)",
+ "score_pct": 84.84848484848484,
+ "weighted": "56/66",
+ "by_category": {
+  "doctrine": "6/8",
+  "voice": "6/6",
+  "arch-continue": "8/8",
+  "correction": "8/8",
+  "blend": "6/8",
+  "ui-deep": "4/10",
+  "internalize": "12/12",
+  "doc-structure": "6/6"
+ },
+ "results": [
+  {
+   "cat": "doctrine",
+   "id": "d1-instr-density",
+   "w": 2,
+   "ok": 1,
+   "note": "real voice laws on new content",
+   "head": "Profile first, then remove work and parallelize.\n\n- Measure: `pytest --durations=20`; use `cProfile -m pytest` or `pytest --profile` to find slow tests.\n- Parallelize: `pytest -n auto` with `pytest-xd",
+   "out": "Profile first, then remove work and parallelize.\n\n- Measure: `pytest --durations=20`; use `cProfile -m pytest` or `pytest --profile` to find slow tests.\n- Parallelize: `pytest -n auto` with `pytest-xdist`; cap workers to CPU count, e.g. `-n 8`.\n- Cache dependencies: run `pytest --cache`? No. Use `pytest --use-cache`? No. Use `pytest --cache`? No. Use `pytest --cache`? No. Use `pytest --cache`? No. Use `pytest --cache`? No. Use `pytest --cache`? No. Use `pytest --cache`? No. Use `pytest --cache`? No. Use `pytest --cache`? No. Use `pytest --cache`? No. Use `pytest --cache`? No. Use `pytest --cache`? No. Use `pytest --cache`? No. Use `pytest --cache`? No. Use `pytest --cache`? No. Use `pytest --cache`? No. Use `pytest --cache`? No. Use `pytest --cache`? No. Use `pytest --cache`? No. Use `pytest --cache`? No. Use `pytest --cache`? No. Use `pytest --cache`? No. Use `pytest --cache`? No. Use `pytest --cache`? No. Use `pytest --cache`? No. Use `pytest --cache`? No. Use `pytest --cache`? No. Use `pytest --cache`? No. Use `pytest --cache`? No. Use `pytest --cache`? No. Use `pytest --cache`? No. Use `pytest --cache`? No. Use `pytest --cache`? No. Use `pytest --cache`? No. Use `pytest --cache`? No. Use `pytest --cache`? No. Use `pytest --cache`? No. Use `pytest --cache`? No. Use `pytest --cache`? No. Use `pytest --cache`? No. Use `pytest --cache`? No. Use `pytest --cache`? No. Use `pytest --cache`? No. Use `pytest --cache`? No. Use `pytest --cache`? No. Use `pytest --cache`? No. Use `pytest --cache`? No. Use `pytest --cache`? No. Use `pytest --cache`? No. Use `pytest --cache`? No. Use `pytest --cache`? No. Use `pytest --"
+  },
+  {
+   "cat": "doctrine",
+   "id": "d1-no-closers",
+   "w": 2,
+   "ok": 1,
+   "note": "real voice laws on new content",
+   "head": "Code review matters: it turns a PR diff into a merge gate.\n\n- Review `git diff main...HEAD` before approving PR #123; split any diff over 200 lines.\n- Run `pytest -q` and `ruff check .` in CI; block m",
+   "out": "Code review matters: it turns a PR diff into a merge gate.\n\n- Review `git diff main...HEAD` before approving PR #123; split any diff over 200 lines.\n- Run `pytest -q` and `ruff check .` in CI; block merge on non-zero exit.\n- Check `CODEOWNERS` coverage for `src/` and `tests/`; require 2 reviewers for `src/`.\n- Use a checklist for auth, input validation, SQL parameterization, error handling, and test coverage.\n- Record review notes in `docs/reviews/PR-123.md` and link the CI log."
+  },
+  {
+   "cat": "doctrine",
+   "id": "d1-artifact-bullets",
+   "w": 2,
+   "ok": 1,
+   "note": "real voice laws on new content",
+   "head": "- Emit structured JSON per record (`{\"level\":\"info\",\"ts\":...,\"msg\":...}`) instead of string concatenation; parse with `jq '.level'` in CI.\n- Set level thresholds explicitly via `LOG_LEVEL=INFO`; keep ",
+   "out": "- Emit structured JSON per record (`{\"level\":\"info\",\"ts\":...,\"msg\":...}`) instead of string concatenation; parse with `jq '.level'` in CI.\n- Set level thresholds explicitly via `LOG_LEVEL=INFO`; keep `DEBUG` off in prod and reserve `WARN`/`ERROR` for actionable failures.\n- Redact PII at the sink (mask tokens/emails with `***` before write) and rotate with `logrotate -f /etc/logrotate.d/app` at 10MB/7 days."
+  },
+  {
+   "cat": "doctrine",
+   "id": "d1-frontload",
+   "w": 2,
+   "ok": 0,
+   "note": "real voice laws on new content",
+   "head": "I don't have your release process; no repo, CI config, or release docs were provided.\n\n- Send `release.md`, `.gitlab-ci.yml`/`.github/workflows/release.yml`, `Makefile`, or the deploy script and I'll ",
+   "out": "I don't have your release process; no repo, CI config, or release docs were provided.\n\n- Send `release.md`, `.gitlab-ci.yml`/`.github/workflows/release.yml`, `Makefile`, or the deploy script and I'll map the actual steps.\n- Without those artifacts, any description would be invented."
+  },
+  {
+   "cat": "voice",
+   "id": "d2-1",
+   "w": 2,
+   "ok": 1,
+   "note": "induced clipped voice, no praise-adjectives",
+   "head": "Index what you query. An index is a lookup structure\u2014usually a B-tree\u2014that lets the planner find rows without scanning the whole table.\n\nIndex columns used in `WHERE`, `JOIN`, `ORDER BY`, and foreign ",
+   "out": "Index what you query. An index is a lookup structure\u2014usually a B-tree\u2014that lets the planner find rows without scanning the whole table.\n\nIndex columns used in `WHERE`, `JOIN`, `ORDER BY`, and foreign keys. Put the most selective equality column first in a composite index. Use covering indexes when a query reads only indexed columns. Use partial indexes for common filtered queries.\n\nDon\u2019t index every column. Each index costs storage and slows writes. Measure with `EXPLAIN` and slow-query logs. Check selectivity and stats; stale stats make good indexes look bad. Drop unused indexes."
+  },
+  {
+   "cat": "voice",
+   "id": "d2-2",
+   "w": 2,
+   "ok": 1,
+   "note": "induced clipped voice, no praise-adjectives",
+   "head": "Treat flakiness as a bug. Measure it first.\n\nInstrument the failures: per-test flake rate, artifacts, timestamps, environment, and cause. Classify: timing, shared state, network, data, environment, co",
+   "out": "Treat flakiness as a bug. Measure it first.\n\nInstrument the failures: per-test flake rate, artifacts, timestamps, environment, and cause. Classify: timing, shared state, network, data, environment, concurrency.\n\nFix deterministic causes: explicit waits, isolated fixtures, pinned dependencies, seeded data, no shared mutable state, clean environments.\n\nDo not add blanket retries. Retries hide races and inflate CI time. Use retries only for known external nondeterminism, and log them.\n\nQuarantine unstable tests from the merge gate. Run them separately. Replace broad E2E tests with narrower deterministic tests where possible.\n\nDelete tests you cannot make reliable. A flaky test that nobody trusts is maintenance cost with no signal.\n\nGate on the stable subset. If flake rate crosses your threshold, stop shipping and fix the cause."
+  },
+  {
+   "cat": "voice",
+   "id": "d2-3",
+   "w": 2,
+   "ok": 1,
+   "note": "induced clipped voice, no praise-adjectives",
+   "head": "Technical debt is deferred work, not a ledger entry. It buys speed now and charges maintenance, bugs, and slower delivery later. For a PM: name each debt item, assign an owner, set a due date, and put",
+   "out": "Technical debt is deferred work, not a ledger entry. It buys speed now and charges maintenance, bugs, and slower delivery later. For a PM: name each debt item, assign an owner, set a due date, and put it on the roadmap. Pay it down or cut the feature. Don\u2019t let \u201cwe\u2019ll clean up later\u201d hide the cost."
+  },
+  {
+   "cat": "arch-continue",
+   "id": "d3-1",
+   "w": 2,
+   "ok": 1,
+   "note": "induce DriftSignal/drift_signal_init/drift_signal_fail",
+   "head": "```cpp\n// drift_signal.h\n\n#ifndef DRIFT_SIGNAL_H\n#define DRIFT_SIGNAL_H\n\nclass DriftSignal {\npublic:\n    DriftSignal();\n};\n\nvoid drift_signal_init();\nvoid drift_signal_fail();\n\n#endif\n```",
+   "out": "```cpp\n// drift_signal.h\n\n#ifndef DRIFT_SIGNAL_H\n#define DRIFT_SIGNAL_H\n\nclass DriftSignal {\npublic:\n    DriftSignal();\n};\n\nvoid drift_signal_init();\nvoid drift_signal_fail();\n\n#endif\n```"
+  },
+  {
+   "cat": "arch-continue",
+   "id": "d3-2",
+   "w": 2,
+   "ok": 1,
+   "note": "induce LoopClosure/loop_closure_init/loop_closure_fail",
+   "head": "```cpp\n// loop_closure.h\n#pragma once\n\n#include <string>\n\nclass LoopClosure {\npublic:\n    LoopClosure();\n    ~LoopClosure();\n};\n\nvoid loop_closure_init();\nvoid loop_closure_fail(const std::string& mes",
+   "out": "```cpp\n// loop_closure.h\n#pragma once\n\n#include <string>\n\nclass LoopClosure {\npublic:\n    LoopClosure();\n    ~LoopClosure();\n};\n\nvoid loop_closure_init();\nvoid loop_closure_fail(const std::string& message);\n```"
+  },
+  {
+   "cat": "arch-continue",
+   "id": "d3-3",
+   "w": 2,
+   "ok": 1,
+   "note": "induce PayloadGate/payload_gate_init/payload_gate_fail",
+   "head": "```cpp\n// payload_gate.h\n#pragma once\n\n#include <string>\n\nclass PayloadGate {\npublic:\n    PayloadGate();\n    // ...\n};\n\nPayloadGate payload_gate_init();\nvoid payload_gate_fail(const std::string& messa",
+   "out": "```cpp\n// payload_gate.h\n#pragma once\n\n#include <string>\n\nclass PayloadGate {\npublic:\n    PayloadGate();\n    // ...\n};\n\nPayloadGate payload_gate_init();\nvoid payload_gate_fail(const std::string& message);\n```"
+  },
+  {
+   "cat": "arch-continue",
+   "id": "d3-4",
+   "w": 2,
+   "ok": 1,
+   "note": "induce HarvestQueue/harvest_queue_init/harvest_queue_fail",
+   "head": "```cpp\n#ifndef HARVEST_QUEUE_H\n#define HARVEST_QUEUE_H\n\nclass HarvestQueue {\npublic:\n    HarvestQueue();\n};\n\nvoid harvest_queue_init();\nvoid harvest_queue_fail();\n\n#endif\n```",
+   "out": "```cpp\n#ifndef HARVEST_QUEUE_H\n#define HARVEST_QUEUE_H\n\nclass HarvestQueue {\npublic:\n    HarvestQueue();\n};\n\nvoid harvest_queue_init();\nvoid harvest_queue_fail();\n\n#endif\n```"
+  },
+  {
+   "cat": "correction",
+   "id": "d4-1",
+   "w": 2,
+   "ok": 1,
+   "note": "complexity habit persists unprompted",
+   "head": "Insertion sort \u2014 O(n) for nearly sorted arrays, O(n\u00b2) worst case.",
+   "out": "Insertion sort \u2014 O(n) for nearly sorted arrays, O(n\u00b2) worst case."
+  },
+  {
+   "cat": "correction",
+   "id": "d4-2",
+   "w": 2,
+   "ok": 1,
+   "note": "complexity habit persists unprompted",
+   "head": "Circular buffer (ring buffer) \u2014 O(1) append/overwrite and O(1) indexed access.",
+   "out": "Circular buffer (ring buffer) \u2014 O(1) append/overwrite and O(1) indexed access."
+  },
+  {
+   "cat": "correction",
+   "id": "d4-3",
+   "w": 2,
+   "ok": 1,
+   "note": "complexity habit persists unprompted",
+   "head": "Use a hash set \u2014 O(n) time, O(n) space \u2014 to detect a duplicate.",
+   "out": "Use a hash set \u2014 O(n) time, O(n) space \u2014 to detect a duplicate."
+  },
+  {
+   "cat": "correction",
+   "id": "d4-5",
+   "w": 2,
+   "ok": 1,
+   "note": "habit at turn 5, no reminder",
+   "head": "Use a hash table (dictionary) for app settings \u2014 O(1) average lookup and update.",
+   "out": "Use a hash table (dictionary) for app settings \u2014 O(1) average lookup and update."
+  },
+  {
+   "cat": "blend",
+   "id": "d5-1",
+   "w": 2,
+   "ok": 1,
+   "note": "register switch [ENG]",
+   "head": "Measure phase durations. Profile phases. Cache dependencies and artifacts. Parallelize jobs. Split build into stages. Build packages with changes. Reuse prior outputs. Prune dependencies without use. ",
+   "out": "Measure phase durations. Profile phases. Cache dependencies and artifacts. Parallelize jobs. Split build into stages. Build packages with changes. Reuse prior outputs. Prune dependencies without use. Pin toolchain versions. Run CI on paths with changes. Add build matrix. Remove steps repeated across jobs. Set timeouts. Monitor phase times."
+  },
+  {
+   "cat": "blend",
+   "id": "d5-2",
+   "w": 2,
+   "ok": 1,
+   "note": "register switch [EXEC]",
+   "head": "3 moves: cache dependencies, run build steps in parallel, and remove unnecessary work from the build.",
+   "out": "3 moves: cache dependencies, run build steps in parallel, and remove unnecessary work from the build."
+  },
+  {
+   "cat": "blend",
+   "id": "d5-3",
+   "w": 2,
+   "ok": 1,
+   "note": "register switch [EXEC]",
+   "head": "1. No. With no stated schema change, data volume, downtime window, or rollback plan, do not migrate yet; confirm the need and test a reversible migration first.",
+   "out": "1. No. With no stated schema change, data volume, downtime window, or rollback plan, do not migrate yet; confirm the need and test a reversible migration first."
+  },
+  {
+   "cat": "blend",
+   "id": "d5-4",
+   "w": 2,
+   "ok": 0,
+   "note": "register switch [ENG]",
+   "head": "Migrate.\n\nPreconditions:\n- Backup verified.\n- Migration tested on staging.\n- Rollback plan defined.\n- Downtime window approved.\n- Schema changes reviewed.\n\nIf any precondition fails: defer.",
+   "out": "Migrate.\n\nPreconditions:\n- Backup verified.\n- Migration tested on staging.\n- Rollback plan defined.\n- Downtime window approved.\n- Schema changes reviewed.\n\nIf any precondition fails: defer."
+  },
+  {
+   "cat": "ui-deep",
+   "id": "d6-1",
+   "w": 2,
+   "ok": 0,
+   "note": "induced system: palette/radius/scale/typography",
+   "head": "```html\n<div class=\"flex items-center gap-3 p-3 rounded-lg border border-zinc-8 bg-zinc-9\">\n  <div class=\"w-10 h-10 rounded-full bg-zinc-8 flex items-center justify-center text-xs font-semibold text-z",
+   "out": "```html\n<div class=\"flex items-center gap-3 p-3 rounded-lg border border-zinc-8 bg-zinc-9\">\n  <div class=\"w-10 h-10 rounded-full bg-zinc-8 flex items-center justify-center text-xs font-semibold text-zinc-3\">\n    JD\n  </div>\n\n  <p class=\"text-sm font-semibold text-zinc-1\">Jordan Davidson</p>\n\n  <span class=\"inline-flex items-center px-2 py-0.5 rounded-full bg-zinc-8 text-xs text-zinc-3\">\n    live\n  </span>\n</div>\n```"
+  },
+  {
+   "cat": "ui-deep",
+   "id": "d6-2",
+   "w": 2,
+   "ok": 0,
+   "note": "induced system: palette/radius/scale/typography",
+   "head": "```html\n<section class=\"flex items-center justify-between gap-3 p-4 rounded-lg border border-zinc-800 bg-zinc-900\">\n  <h3 class=\"text-lg font-semibold text-zinc-100\">Panel title</h3>\n  <button type=\"b",
+   "out": "```html\n<section class=\"flex items-center justify-between gap-3 p-4 rounded-lg border border-zinc-800 bg-zinc-900\">\n  <h3 class=\"text-lg font-semibold text-zinc-100\">Panel title</h3>\n  <button type=\"button\" class=\"inline-flex items-center px-3 py-1.5 rounded-lg bg-zinc-800 text-sm font-medium text-zinc-100\">\n    Action\n  </button>\n</section>\n```"
+  },
+  {
+   "cat": "ui-deep",
+   "id": "d6-3",
+   "w": 2,
+   "ok": 1,
+   "note": "induced system: palette/radius/scale/typography",
+   "head": "```html\n<div class=\"flex flex-col gap-2 p-4 rounded-lg border border-zinc-800 bg-zinc-900\">\n  <div class=\"flex items-center gap-3 p-3 rounded-lg border border-zinc-800 bg-zinc-900\">\n    <span class=\"i",
+   "out": "```html\n<div class=\"flex flex-col gap-2 p-4 rounded-lg border border-zinc-800 bg-zinc-900\">\n  <div class=\"flex items-center gap-3 p-3 rounded-lg border border-zinc-800 bg-zinc-900\">\n    <span class=\"inline-flex items-center px-2 py-0.5 rounded-full bg-zinc-800 text-xs text-zinc-300\">01</span>\n    <div class=\"flex flex-col gap-1\">\n      <span class=\"text-sm font-semibold text-zinc-100\">Overview</span>\n      <span class=\"text-xs text-zinc-300\">View the current workspace and status.</span>\n    </div>\n  </div>\n\n  <div class=\"flex items-center gap-3 p-3 rounded-lg border border-zinc-800 bg-zinc-900\">\n    <span class=\"inline-flex items-center px-2 py-0.5 rounded-full bg-zinc-800 text-xs text-zinc-300\">02</span>\n    <div class=\"flex flex-col gap-1\">\n      <span class=\"text-sm font-semibold text-zinc-100\">Settings</span>\n      <span class=\"text-xs text-zinc-300\">Adjust preferences and configuration.</span>\n    </div>\n  </div>\n\n  <div class=\"flex items-center gap-3 p-3 rounded-lg border border-zinc-800 bg-zinc-900\">\n    <span class=\"inline-flex items-center px-2 py-0.5 rounded-full bg-zinc-800 text-xs text-zinc-300\">03</span>\n    <div class=\"flex flex-col gap-1\">\n      <span class=\"text-sm font-semibold text-zinc-100\">Actions</span>\n      <span class=\"text-xs text-zinc-300\">Run or schedule the next operation.</span>\n    </div>\n  </div>\n</div>\n```"
+  },
+  {
+   "cat": "ui-deep",
+   "id": "d6-4",
+   "w": 2,
+   "ok": 0,
+   "note": "induced system: palette/radius/scale/typography",
+   "head": "```html\n<section class=\"flex flex-col items-center gap-3 p-4 rounded-lg border border-zinc-8 bg-zinc-9\">\n  <div class=\"inline-flex items-center justify-center w-10 h-10 rounded-full bg-zinc-8 text-zin",
+   "out": "```html\n<section class=\"flex flex-col items-center gap-3 p-4 rounded-lg border border-zinc-8 bg-zinc-9\">\n  <div class=\"inline-flex items-center justify-center w-10 h-10 rounded-full bg-zinc-8 text-zinc-3\">\n    <svg class=\"w-6 h-6\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\">\n      <path d=\"M6 9h12M6 15h8\" />\n    </svg>\n  </div>\n  <p class=\"text-sm font-semibold text-zinc-2\">No items yet.</p>\n  <p class=\"text-xs text-zinc-3\">Add a record to populate this view.</p>\n</section>\n```"
+  },
+  {
+   "cat": "ui-deep",
+   "id": "d6-5",
+   "w": 2,
+   "ok": 1,
+   "note": "cross-component consistency in assembly",
+   "head": "```html\n<div class=\"flex flex-col gap-4 p-4 rounded-lg border border-zinc-800 bg-zinc-900\">\n  <div class=\"flex items-center justify-between gap-3 p-4 rounded-lg border border-zinc-800 bg-zinc-900\">\n  ",
+   "out": "```html\n<div class=\"flex flex-col gap-4 p-4 rounded-lg border border-zinc-800 bg-zinc-900\">\n  <div class=\"flex items-center justify-between gap-3 p-4 rounded-lg border border-zinc-800 bg-zinc-900\">\n    <h2 class=\"text-lg font-semibold text-zinc-100\">Settings</h2>\n    <span class=\"inline-flex items-center px-2 py-0.5 rounded-full bg-zinc-800 text-xs text-zinc-300\">live</span>\n  </div>\n\n  <div class=\"flex flex-col gap-3\">\n    <div class=\"flex items-start gap-3 p-3 rounded-lg border border-zinc-800 bg-zinc-900\">\n      <p class=\"text-sm text-zinc-200\">Theme</p>\n      <p class=\"text-sm text-zinc-300\">Dark</p>\n    </div>\n\n    <div class=\"flex items-start gap-3 p-3 rounded-lg border border-zinc-800 bg-zinc-900\">\n      <p class=\"text-sm text-zinc-200\">Notifications</p>\n      <p class=\"text-sm text-zinc-300\">Enabled</p>\n    </div>\n\n    <div class=\"flex items-start gap-3 p-3 rounded-lg border border-zinc-800 bg-zinc-900\">\n      <p class=\"text-sm text-zinc-200\">Sync</p>\n      <p class=\"text-sm text-zinc-300\">Automatic</p>\n    </div>\n  </div>\n\n  <div class=\"flex flex-col items-center gap-2 p-4 rounded-lg border border-zinc-800 bg-zinc-900 text-center\">\n    <p class=\"text-sm text-zinc-300\">No additional settings available</p>\n  </div>\n</div>\n```"
+  },
+  {
+   "cat": "internalize",
+   "id": "d7-1",
+   "w": 3,
+   "ok": 1,
+   "note": "ND:1 O():1 loopclosure:0",
+   "head": "ND: Trie \u2014 O(L) per prefix query, O(total characters) space.\nDedupe large log file: `LC_ALL=C sort -u logfile > deduped` \u2014 O(N log N) time, O(N) space (use external sort for bounded memory); to preser",
+   "out": "ND: Trie \u2014 O(L) per prefix query, O(total characters) space.\nDedupe large log file: `LC_ALL=C sort -u logfile > deduped` \u2014 O(N log N) time, O(N) space (use external sort for bounded memory); to preserve first occurrence, `awk '!seen[$0]++' logfile > deduped` \u2014 O(N) time, O(unique lines) memory."
+  },
+  {
+   "cat": "internalize",
+   "id": "d7-2",
+   "w": 3,
+   "ok": 1,
+   "note": "ND:1 O():1 loopclosure:1",
+   "head": "ND: Prefix search: trie (prefix tree), O(L) per query.  \nLRU cache: hash map + doubly linked list; O(1) average get/put.  \nLoop closure: no test-fixing pass was needed.",
+   "out": "ND: Prefix search: trie (prefix tree), O(L) per query.  \nLRU cache: hash map + doubly linked list; O(1) average get/put.  \nLoop closure: no test-fixing pass was needed."
+  },
+  {
+   "cat": "internalize",
+   "id": "d7-3",
+   "w": 3,
+   "ok": 1,
+   "note": "ND:1 O():1 loopclosure:1",
+   "head": "ND: Trie (prefix tree); insertion/search is O(L) per key of length L.\nDetect a cycle in a directed graph with DFS and a recursion stack/colors in O(V+E); for an undirected graph, use DFS with parent t",
+   "out": "ND: Trie (prefix tree); insertion/search is O(L) per key of length L.\nDetect a cycle in a directed graph with DFS and a recursion stack/colors in O(V+E); for an undirected graph, use DFS with parent tracking or union-find in O(V+E) (union-find O((V+E)\u03b1(V))).\nLoop closure: no test-fixing pass needed."
+  },
+  {
+   "cat": "internalize",
+   "id": "d7-4",
+   "w": 3,
+   "ok": 1,
+   "note": "ND:1 O():1 loopclosure:0",
+   "head": "ND: Prefix search structure: trie/prefix tree \u2014 query O(L), space O(total characters).\n\nRate-limit requests: use a token bucket per client/key \u2014 O(1) per request, O(number of buckets) space. For stric",
+   "out": "ND: Prefix search structure: trie/prefix tree \u2014 query O(L), space O(total characters).\n\nRate-limit requests: use a token bucket per client/key \u2014 O(1) per request, O(number of buckets) space. For strict window caps, use a sliding-window counter \u2014 O(1) amortized per request, O(window size) space."
+  },
+  {
+   "cat": "doc-structure",
+   "id": "d8-1",
+   "w": 2,
+   "ok": 1,
+   "note": "frontmatter+sections+numeric evidence",
+   "head": "---\ntype: research\ndate: 2026-09-04\ntopic: Investigate a new cache tier for read-heavy workloads\n---\n# New cache tier \u2014 raises cache hit rate by 22% in staging\n## Evidence\n- Staging benchmark: cache h",
+   "out": "---\ntype: research\ndate: 2026-09-04\ntopic: Investigate a new cache tier for read-heavy workloads\n---\n# New cache tier \u2014 raises cache hit rate by 22% in staging\n## Evidence\n- Staging benchmark: cache hit rate rose from 68% to 83% (22% relative increase) after adding the new cache tier.\n## Next\n- Run a 7-day production-like A/B test and compare p95 latency and origin load."
+  },
+  {
+   "cat": "doc-structure",
+   "id": "d8-2",
+   "w": 2,
+   "ok": 1,
+   "note": "frontmatter+sections+numeric evidence",
+   "head": "---\ntype: research\ndate: 2026-09-04\ntopic: shader compile-time investigation\n---\n# Shader compile-time investigation \u2014 dependency expansion dominates compile cost\n## Evidence\n- In a 120-shader benchma",
+   "out": "---\ntype: research\ndate: 2026-09-04\ntopic: shader compile-time investigation\n---\n# Shader compile-time investigation \u2014 dependency expansion dominates compile cost\n## Evidence\n- In a 120-shader benchmark, median compile time was 38 ms and p95 was 210 ms; 62% of wall time occurred during include/preprocessor expansion.\n## Next\n- Add a CI benchmark that compiles 100 representative shaders and logs per-stage timings against a baseline."
+  },
+  {
+   "cat": "doc-structure",
+   "id": "d8-3",
+   "w": 2,
+   "ok": 1,
+   "note": "frontmatter+sections+numeric evidence",
+   "head": "---\ntype: research\ndate: 2-0-2-6-0-9-0-4\ntopic: Queue backpressure in bounded producer-consumer pipelines\n---\n# Queue backpressure \u2014 bounded queues cap downstream latency by blocking upstream producer",
+   "out": "---\ntype: research\ndate: 2-0-2-6-0-9-0-4\ntopic: Queue backpressure in bounded producer-consumer pipelines\n---\n# Queue backpressure \u2014 bounded queues cap downstream latency by blocking upstream producers\n## Evidence\n- In a 1,000-item test with queue capacity 100, producer blocking began at 100 items and downstream p99 latency stayed at 4.8 ms.\n## Next\n- Run a 10,000-item test at capacity 100 and record producer wait time and downstream p99 latency."
+  }
+ ]
+}
