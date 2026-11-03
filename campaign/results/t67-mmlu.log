@@ -1,0 +1,99 @@
+T67 MMLU rerun start Tue Nov  3 03:23:09 PM SAST 2026
+=== BOOT health=1 15:24:06 ===
+[15:24:49] prewarm-ds4: page cache re-warmed in 43s
+Traceback (most recent call last):
+  File "<stdin>", line 4, in <module>
+TypeError: 'NoneType' object is not subscriptable
+200
+200
+200
+[15:25:00] prewarm-ds4: replay done in 54s total
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+[PASS] math               pred=A gold=A
+[PASS] math               pred=H gold=H
+[PASS] math               pred=E gold=E
+[PASS] math               pred=I gold=I
+[PASS] math               pred=B gold=B
+[PASS] health             pred=J gold=J
+[FAIL] health             pred=D gold=G
+[PASS] health             pred=F gold=F
+[FAIL] health             pred=I gold=F
+[FAIL] health             pred=E gold=D
+[FAIL] physics            pred=H gold=E
+[PASS] physics            pred=A gold=A
+[FAIL] physics            pred=C gold=H
+[PASS] physics            pred=E gold=E
+[PASS] physics            pred=A gold=A
+[PASS] business           pred=F gold=F
+[PASS] business           pred=D gold=D
+[PASS] business           pred=A gold=A
+[FAIL] business           pred=A gold=G
+[PASS] business           pred=H gold=H
+[PASS] biology            pred=B gold=B
+[FAIL] biology            pred=F gold=D
+[FAIL] biology            pred=I gold=D
+[PASS] biology            pred=A gold=A
+[PASS] biology            pred=H gold=H
+[FAIL] chemistry          pred=H gold=B
+[PASS] chemistry          pred=J gold=J
+[PASS] chemistry          pred=E gold=E
+[FAIL] chemistry          pred=B gold=A
+[PASS] chemistry          pred=J gold=J
+[PASS] computer science   pred=B gold=B
+[PASS] computer science   pred=I gold=I
+[PASS] computer science   pred=C gold=C
+[PASS] computer science   pred=I gold=I
+[PASS] computer science   pred=A gold=A
+[PASS] economics          pred=F gold=F
+[PASS] economics          pred=H gold=H
+[PASS] economics          pred=C gold=C
+[PASS] economics          pred=G gold=G
+[PASS] economics          pred=F gold=F
+[PASS] engineering        pred=C gold=C
+[PASS] engineering        pred=A gold=A
+[PASS] engineering        pred=C gold=C
+[PASS] engineering        pred=I gold=I
+[FAIL] engineering        pred=F gold=A
+[PASS] philosophy         pred=B gold=B
+[PASS] philosophy         pred=J gold=J
+[PASS] philosophy         pred=B gold=B
+[PASS] philosophy         pred=I gold=I
+[PASS] philosophy         pred=D gold=D
+[PASS] other              pred=E gold=E
+[PASS] other              pred=B gold=B
+[PASS] other              pred=B gold=B
+[FAIL] other              pred=D gold=J
+[PASS] other              pred=J gold=J
+[PASS] history            pred=A gold=A
+[PASS] history            pred=C gold=C
+[FAIL] history            pred=D gold=E
+[PASS] history            pred=E gold=E
+[PASS] history            pred=G gold=G
+[PASS] psychology         pred=H gold=H
+[PASS] psychology         pred=H gold=H
+[PASS] psychology         pred=A gold=A
+[PASS] psychology         pred=J gold=J
+[FAIL] psychology         pred=F gold=E
+[PASS] law                pred=I gold=I
+[FAIL] law                pred=D gold=I
+[PASS] law                pred=J gold=J
+[PASS] law                pred=G gold=G
+[PASS] law                pred=F gold=F
+
+=== MMLU-Pro (70 Qs) [floor 0.933, t67-coder-mmlu-full]: 55/70 = 78.6%  (1-sigma = 4.90 pts) ===
+  biology            3/5
+  business           4/5
+  chemistry          3/5
+  computer science   5/5
+  economics          5/5
+  engineering        4/5
+  health             2/5
+  history            4/5
+  law                4/5
+  math               5/5
+  other              4/5
+  philosophy         5/5
+  physics            3/5
+  psychology         4/5
+WROTE /home/svg/LLM/strata-custom-2/campaign/results/mmlu-t67-coder-mmlu-full.json
+T67 MMLU rerun end Tue Nov  3 03:42:24 PM SAST 2026
