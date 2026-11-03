@@ -12012,3 +12012,9 @@ storage canon (reference updates in the same commit):
   the existing `GSQ-RCO/Deepseek-v4.1-Flash/Coder/` and the parked `UD3.1/`. References
   re-pointed (config, ds4.txt model_dir, prewarms, arms); both engines re-verified from the
   lineage paths.
+
+  Closure (operator, same day): the Coder is DELETED — model shards (68 GB), the masked-router
+  pack, coder-mask.bin, its config and launcher. The 14.3-point MMLU drop buys nothing the base
+  pack doesn't already give; if expert pruning is ever wanted again, the validated path is
+  REAP on the base pack (the masked-router technique and the builder stay in git history at
+  9e309adb, and the T67 measurement is the evidence that expert-count reduction moves this box).
