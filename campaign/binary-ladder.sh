@@ -16,7 +16,7 @@ CHAMP=${1:?champion binary path}
 CAND=${2:?candidate binary path}
 LABEL=${3:?label}
 cd "$REPO"
-. ./battery-lib.sh
+. "$REPO/campaign/battery-lib.sh"
 
 boot_and_probe() {   # $1 = binary, $2 = tag
   cp "$1" engine/strata

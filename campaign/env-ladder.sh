@@ -21,7 +21,7 @@ ON=${3:?on value}
 LABEL=${4:?label}
 BITS=${5:-yes}
 cd "$REPO"
-. ./battery-lib.sh
+. "$REPO/campaign/battery-lib.sh"
 
 cp engine/strata /tmp/env-ladder-pre-run.bin
 echo "lane binary saved: $(md5sum engine/strata | cut -c1-8)"
