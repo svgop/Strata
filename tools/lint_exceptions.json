@@ -1,0 +1,196 @@
+{
+ "exit": {
+  "src/dsv41/ds4_model.cu": {
+   "baseline": 2,
+   "reason": "the CK-family err-collect migration worklist - ROADMAP-architecture Layer 1 item 3; this baseline is the worklist size at arming (2026-11-04) and only shrinks"
+  },
+  "src/kernels/cpu/expert_layout.cpp": {
+   "baseline": 1,
+   "reason": "the CK-family err-collect migration worklist - ROADMAP-architecture Layer 1 item 3; this baseline is the worklist size at arming (2026-11-04) and only shrinks"
+  },
+  "src/kernels/cuda/bf16_gemv.cu": {
+   "baseline": 3,
+   "reason": "the CK-family err-collect migration worklist - ROADMAP-architecture Layer 1 item 3; this baseline is the worklist size at arming (2026-11-04) and only shrinks"
+  },
+  "src/kernels/cuda/dense_tc.cu": {
+   "baseline": 5,
+   "reason": "the CK-family err-collect migration worklist - ROADMAP-architecture Layer 1 item 3; this baseline is the worklist size at arming (2026-11-04) and only shrinks"
+  },
+  "src/kernels/cuda/dequant_bf16.cu": {
+   "baseline": 4,
+   "reason": "the CK-family err-collect migration worklist - ROADMAP-architecture Layer 1 item 3; this baseline is the worklist size at arming (2026-11-04) and only shrinks"
+  },
+  "src/kernels/cuda/dequant_s2.cu": {
+   "baseline": 1,
+   "reason": "the CK-family err-collect migration worklist - ROADMAP-architecture Layer 1 item 3; this baseline is the worklist size at arming (2026-11-04) and only shrinks"
+  },
+  "src/kernels/cuda/elementwise.cu": {
+   "baseline": 10,
+   "reason": "the CK-family err-collect migration worklist - ROADMAP-architecture Layer 1 item 3; this baseline is the worklist size at arming (2026-11-04) and only shrinks"
+  },
+  "src/kernels/cuda/fused_gdn.cu": {
+   "baseline": 6,
+   "reason": "the CK-family err-collect migration worklist - ROADMAP-architecture Layer 1 item 3; this baseline is the worklist size at arming (2026-11-04) and only shrinks"
+  },
+  "src/kernels/cuda/fused_gr.cu": {
+   "baseline": 8,
+   "reason": "the CK-family err-collect migration worklist - ROADMAP-architecture Layer 1 item 3; this baseline is the worklist size at arming (2026-11-04) and only shrinks"
+  },
+  "src/kernels/cuda/gdn.cu": {
+   "baseline": 7,
+   "reason": "the CK-family err-collect migration worklist - ROADMAP-architecture Layer 1 item 3; this baseline is the worklist size at arming (2026-11-04) and only shrinks"
+  },
+  "src/kernels/cuda/gr.cu": {
+   "baseline": 8,
+   "reason": "the CK-family err-collect migration worklist - ROADMAP-architecture Layer 1 item 3; this baseline is the worklist size at arming (2026-11-04) and only shrinks"
+  },
+  "src/kernels/cuda/iq_kernels.cu": {
+   "baseline": 11,
+   "reason": "the CK-family err-collect migration worklist - ROADMAP-architecture Layer 1 item 3; this baseline is the worklist size at arming (2026-11-04) and only shrinks"
+  },
+  "src/kernels/cuda/kv_q4.cu": {
+   "baseline": 2,
+   "reason": "the CK-family err-collect migration worklist - ROADMAP-architecture Layer 1 item 3; this baseline is the worklist size at arming (2026-11-04) and only shrinks"
+  },
+  "src/kernels/cuda/kv_q8.cu": {
+   "baseline": 2,
+   "reason": "the CK-family err-collect migration worklist - ROADMAP-architecture Layer 1 item 3; this baseline is the worklist size at arming (2026-11-04) and only shrinks"
+  },
+  "src/kernels/cuda/kv_stream.cu": {
+   "baseline": 3,
+   "reason": "the CK-family err-collect migration worklist - ROADMAP-architecture Layer 1 item 3; this baseline is the worklist size at arming (2026-11-04) and only shrinks"
+  },
+  "src/kernels/cuda/ple.cu": {
+   "baseline": 2,
+   "reason": "the CK-family err-collect migration worklist - ROADMAP-architecture Layer 1 item 3; this baseline is the worklist size at arming (2026-11-04) and only shrinks"
+  },
+  "src/kernels/cuda/qsa.cu": {
+   "baseline": 16,
+   "reason": "the CK-family err-collect migration worklist - ROADMAP-architecture Layer 1 item 3; this baseline is the worklist size at arming (2026-11-04) and only shrinks"
+  },
+  "src/kernels/cuda/qsa_decode_attn.cu": {
+   "baseline": 14,
+   "reason": "the CK-family err-collect migration worklist - ROADMAP-architecture Layer 1 item 3; this baseline is the worklist size at arming (2026-11-04) and only shrinks"
+  },
+  "src/kernels/cuda/qsa_prompt_attn.cu": {
+   "baseline": 5,
+   "reason": "the CK-family err-collect migration worklist - ROADMAP-architecture Layer 1 item 3; this baseline is the worklist size at arming (2026-11-04) and only shrinks"
+  },
+  "src/kernels/cuda/qsa_select.cu": {
+   "baseline": 21,
+   "reason": "the CK-family err-collect migration worklist - ROADMAP-architecture Layer 1 item 3; this baseline is the worklist size at arming (2026-11-04) and only shrinks"
+  },
+  "src/kernels/cuda/quantize_act.cu": {
+   "baseline": 17,
+   "reason": "the CK-family err-collect migration worklist - ROADMAP-architecture Layer 1 item 3; this baseline is the worklist size at arming (2026-11-04) and only shrinks"
+  },
+  "src/kernels/cuda/rope.cu": {
+   "baseline": 2,
+   "reason": "the CK-family err-collect migration worklist - ROADMAP-architecture Layer 1 item 3; this baseline is the worklist size at arming (2026-11-04) and only shrinks"
+  },
+  "src/kernels/cuda/router_top10.cu": {
+   "baseline": 8,
+   "reason": "the CK-family err-collect migration worklist - ROADMAP-architecture Layer 1 item 3; this baseline is the worklist size at arming (2026-11-04) and only shrinks"
+  },
+  "src/kernels/cuda/s2_expert_grouped.cu": {
+   "baseline": 6,
+   "reason": "the CK-family err-collect migration worklist - ROADMAP-architecture Layer 1 item 3; this baseline is the worklist size at arming (2026-11-04) and only shrinks"
+  },
+  "src/kernels/cuda/s2_gemv.cu": {
+   "baseline": 2,
+   "reason": "the CK-family err-collect migration worklist - ROADMAP-architecture Layer 1 item 3; this baseline is the worklist size at arming (2026-11-04) and only shrinks"
+  },
+  "src/kernels/cuda/s2_gemv_fast.cu": {
+   "baseline": 4,
+   "reason": "the CK-family err-collect migration worklist - ROADMAP-architecture Layer 1 item 3; this baseline is the worklist size at arming (2026-11-04) and only shrinks"
+  },
+  "src/kernels/cuda/s2_gemv_q8.cu": {
+   "baseline": 2,
+   "reason": "the CK-family err-collect migration worklist - ROADMAP-architecture Layer 1 item 3; this baseline is the worklist size at arming (2026-11-04) and only shrinks"
+  },
+  "src/kernels/cuda/s2_gemv_quads.cu": {
+   "baseline": 2,
+   "reason": "the CK-family err-collect migration worklist - ROADMAP-architecture Layer 1 item 3; this baseline is the worklist size at arming (2026-11-04) and only shrinks"
+  },
+  "src/kernels/cuda/s_gemv.cu": {
+   "baseline": 21,
+   "reason": "the CK-family err-collect migration worklist - ROADMAP-architecture Layer 1 item 3; this baseline is the worklist size at arming (2026-11-04) and only shrinks"
+  },
+  "src/kernels/cuda/s_gemv_pair.cu": {
+   "baseline": 1,
+   "reason": "the CK-family err-collect migration worklist - ROADMAP-architecture Layer 1 item 3; this baseline is the worklist size at arming (2026-11-04) and only shrinks"
+  },
+  "src/kernels/cuda/sampler.cu": {
+   "baseline": 7,
+   "reason": "the CK-family err-collect migration worklist - ROADMAP-architecture Layer 1 item 3; this baseline is the worklist size at arming (2026-11-04) and only shrinks"
+  },
+  "src/kernels/cuda/shared_expert.cu": {
+   "baseline": 8,
+   "reason": "the CK-family err-collect migration worklist - ROADMAP-architecture Layer 1 item 3; this baseline is the worklist size at arming (2026-11-04) and only shrinks"
+  },
+  "src/kernels/cuda/verify_kernels.cu": {
+   "baseline": 16,
+   "reason": "the CK-family err-collect migration worklist - ROADMAP-architecture Layer 1 item 3; this baseline is the worklist size at arming (2026-11-04) and only shrinks"
+  },
+  "src/prefill/gdn_chunk.cu": {
+   "baseline": 3,
+   "reason": "the CK-family err-collect migration worklist - ROADMAP-architecture Layer 1 item 3; this baseline is the worklist size at arming (2026-11-04) and only shrinks"
+  },
+  "src/prefill/gemm.cu": {
+   "baseline": 10,
+   "reason": "the CK-family err-collect migration worklist - ROADMAP-architecture Layer 1 item 3; this baseline is the worklist size at arming (2026-11-04) and only shrinks"
+  },
+  "src/prefill/kernels.cu": {
+   "baseline": 4,
+   "reason": "the CK-family err-collect migration worklist - ROADMAP-architecture Layer 1 item 3; this baseline is the worklist size at arming (2026-11-04) and only shrinks"
+  },
+  "src/prefill/moe_fused.cu": {
+   "baseline": 2,
+   "reason": "the CK-family err-collect migration worklist - ROADMAP-architecture Layer 1 item 3; this baseline is the worklist size at arming (2026-11-04) and only shrinks"
+  },
+  "src/prefill/moe_fused_iq.cu": {
+   "baseline": 3,
+   "reason": "the CK-family err-collect migration worklist - ROADMAP-architecture Layer 1 item 3; this baseline is the worklist size at arming (2026-11-04) and only shrinks"
+  },
+  "src/prefill/moe_mmq.cu": {
+   "baseline": 9,
+   "reason": "the CK-family err-collect migration worklist - ROADMAP-architecture Layer 1 item 3; this baseline is the worklist size at arming (2026-11-04) and only shrinks"
+  },
+  "src/qwen35/q36_engine.cu": {
+   "baseline": 12,
+   "reason": "the CK-family err-collect migration worklist - ROADMAP-architecture Layer 1 item 3; this baseline is the worklist size at arming (2026-11-04) and only shrinks"
+  }
+ },
+ "gguf": {
+  "tools/embd_bf16_pack.py": {
+   "baseline": 1,
+   "reason": "a pack writer hand-rolling the GGUF header; folds onto tools/gguf_writer.py - ROADMAP-architecture Layer 3, second wave"
+  },
+  "tools/lint_tree.py": {
+   "baseline": 2,
+   "reason": "the tripwire's own signature patterns and negative seeds (this file)"
+  },
+  "tools/nvfp4_local_pack.py": {
+   "baseline": 1,
+   "reason": "a pack writer hand-rolling the GGUF header; folds onto tools/gguf_writer.py - ROADMAP-architecture Layer 3, second wave"
+  },
+  "tools/ple_fp8_pack.py": {
+   "baseline": 1,
+   "reason": "a pack writer hand-rolling the GGUF header; folds onto tools/gguf_writer.py - ROADMAP-architecture Layer 3, second wave"
+  },
+  "tools/quantscope.py": {
+   "baseline": 1,
+   "reason": "the analysis reader's Source abstraction (file-like, subsections) needs the owner to accept file-likes before this folds - ROADMAP-architecture Layer 3 second wave, prerequisite: GGUFFile(path-or-filelike); folding it by forcing paths would be the rushed seam the program bans"
+  },
+  "tools/test_setup_shard_check.py": {
+   "baseline": 1,
+   "reason": "a pack writer hand-rolling the GGUF header; folds onto tools/gguf_writer.py - ROADMAP-architecture Layer 3, second wave"
+  }
+ },
+ "retired:prewarm2": {
+  "tools/lint_tree.py": {
+   "baseline": 1,
+   "reason": "unclassified at arming - triage or fix"
+  }
+ }
+}

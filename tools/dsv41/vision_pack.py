@@ -44,8 +44,10 @@ from __future__ import annotations
 import argparse
 import json
 import pathlib
-import struct
 import sys
+
+sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))   # tools/, the owner's home
+from gguf_reader import GGUFFile            # the format's one Python owner (the Owner law)
 
 # the engine's tensor names, by kind: (pack name, mmproj name, shape check as a function of D/I/P/M/layers)
 def block_map(d, i):
@@ -63,60 +65,11 @@ def block_map(d, i):
 
 
 def read_gguf(path: pathlib.Path):
-    """(kv dict of scalars/strings, {tensor name: (dtype, shape, data offset)}, data base, alignment)."""
-    buf = path.read_bytes()
-    if buf[:4] != b"GGUF":
-        raise SystemExit(f"{path}: not a GGUF")
-    p = 8
-    nt, nk = struct.unpack_from("<QQ", buf, p)
-    p += 16
-    sizes = {0: 1, 1: 1, 2: 2, 3: 2, 4: 4, 5: 4, 6: 4, 7: 1, 10: 8, 11: 8, 12: 8}
-
-    def value(t):
-        nonlocal p
-        if t == 8:
-            n = struct.unpack_from("<Q", buf, p)[0]
-            p += 8
-            s = buf[p:p + n].decode("utf-8", "replace")
-            p += n
-            return s
-        if t == 9:
-            at = struct.unpack_from("<I", buf, p)[0]
-            n = struct.unpack_from("<Q", buf, p + 4)[0]
-            p += 12
-            return [value(at) for _ in range(n)]
-        v = struct.unpack_from({0: "<B", 1: "<b", 2: "<H", 3: "<h", 4: "<I", 5: "<i", 6: "<f",
-                                7: "<?", 10: "<Q", 11: "<q", 12: "<d"}[t], buf, p)[0]
-        p += sizes[t]
-        return v
-
-    kv = {}
-    for _ in range(nk):
-        n = struct.unpack_from("<Q", buf, p)[0]
-        p += 8
-        key = buf[p:p + n].decode("utf-8", "replace")
-        p += n
-        t = struct.unpack_from("<I", buf, p)[0]
-        p += 4
-        kv[key] = value(t)
-    align = kv.get("general.alignment", 32)
-    tensors = {}
-    for _ in range(nt):
-        n = struct.unpack_from("<Q", buf, p)[0]
-        p += 8
-        name = buf[p:p + n].decode("utf-8", "replace")
-        p += n
-        nd = struct.unpack_from("<I", buf, p)[0]
-        p += 4
-        dims = struct.unpack_from("<" + "Q" * nd, buf, p)
-        p += 8 * nd
-        ty = struct.unpack_from("<I", buf, p)[0]
-        p += 4
-        off = struct.unpack_from("<Q", buf, p)[0]
-        p += 8
-        tensors[name] = (ty, dims, off)
-    base = (p + align - 1) & ~(align - 1)
-    return kv, tensors, base
+    """(kv dict, {tensor name: (type id, shape, data offset)}, data base) - the one Python owner's
+    parse behind the same triple this tool always consumed (gguf_reader.GGUFFile)."""
+    f = GGUFFile(path)
+    tensors = {t.name: (t.type_id, tuple(t.shape), t.offset) for t in f.tensors}
+    return dict(f.metadata), tensors, f.data_start
 
 
 def main():
