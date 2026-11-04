@@ -2,7 +2,7 @@
 #pragma once
 
 #include "strata/core/conversation_file.hpp"
-#include "strata/core/conversation_memory.hpp"
+#include "strata/core/host_mem.hpp"
 
 namespace strata::core {
 

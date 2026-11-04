@@ -1,4 +1,4 @@
-#include "strata/core/conversation_memory.hpp"
+#include "strata/core/host_mem.hpp"
 
 #include <algorithm>
 #include <atomic>
@@ -20,6 +20,10 @@
 #endif
 
 namespace strata::core {
+
+// host_mem: the substrate's host-memory sampler - MemAvailable, the cgroup limits, the operator cap.
+// Formerly conversation_memory.cpp (the name lied: nothing conversational lives here); both engines link it
+// (the Qwen path since ever, the DS path since the 2026-11-04 fold of its ram_avail() fork).
 
 namespace fs = std::filesystem;
 

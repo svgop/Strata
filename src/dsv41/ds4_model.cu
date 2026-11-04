@@ -28,6 +28,7 @@
 #include "strata/dsv41/exl3_cpu.hpp"
 #include "strata/dsv41/exl3.hpp"
 #include "strata/kernels/f16_bits.hpp"
+#include "strata/core/host_mem.hpp"   # the substrate sampler (the ram_avail fold)
 #include "strata/artifact/gguf_reader.hpp"
 #include "strata/dsv41/moe_win.hpp"
 #include "strata/dsv41/sampler.hpp"
@@ -173,47 +174,12 @@ std::vector<std::vector<int>> node_cores() {
 // anonymous memory on one NUMA node (node < 0: wherever the first touch puts it), transparent huge pages
 void* node_map(size_t bytes, int node, int n_nodes) { return os::anon_alloc(bytes, node, n_nodes); }
 void pin_self(int cpu) { os::pin_self(cpu); }
-// the RAM this process can still get: MemAvailable, and below it the tightest cgroup v2 limit on the way to the root
-// (its limit less what is charged, the page cache counted as free: the kernel takes it back); ~0: not known
+// the RAM this process can still get: the substrate's sampler (host_mem) - MemAvailable, the tightest cgroup
+// limit, the operator cap and the Windows path, one implementation for both engines.  The fork this replaces
+// walked cgroups itself but missed --memory-limit-mib and the warn-once; ~0: not known
 uint64_t ram_avail() {
-#if defined(_WIN32)
-    return os::ram_avail();
-#endif
-    uint64_t avail = ~uint64_t{0};
-    {
-        std::istringstream mi(read_file("/proc/meminfo"));
-        std::string k;
-        uint64_t kb = 0;
-        while (mi >> k >> kb) {
-            if (k == "MemAvailable:") avail = kb << 10;
-            mi.ignore(64, '\n');
-        }
-    }
-    std::string cg = read_file("/proc/self/cgroup");   // "0::/user.slice/..."
-    const size_t at = cg.find("0::");
-    if (at == std::string::npos) return avail;
-    cg = cg.substr(at + 3);
-    cg = cg.substr(0, cg.find('\n'));
-    for (;;) {
-        const std::string dir = "/sys/fs/cgroup" + (cg == "/" ? std::string() : cg);
-        const std::string mx = read_file(dir + "/memory.max");
-        if (!mx.empty() && mx.compare(0, 3, "max") != 0) {
-            const uint64_t lim = std::strtoull(mx.c_str(), nullptr, 10);
-            const uint64_t cur = std::strtoull(read_file(dir + "/memory.current").c_str(), nullptr, 10);
-            uint64_t file = 0;
-            std::istringstream st(read_file(dir + "/memory.stat"));
-            std::string k;
-            uint64_t v = 0;
-            while (st >> k >> v)
-                if (k == "file") file = v;
-            const uint64_t used = cur > file ? cur - file : 0;
-            avail = std::min(avail, lim > used ? lim - used : 0);
-        }
-        if (cg.empty() || cg == "/") break;
-        const size_t sl = cg.rfind('/');
-        cg = sl == 0 || sl == std::string::npos ? "/" : cg.substr(0, sl);
-    }
-    return avail;
+    const std::optional<uint64_t> avail = strata::core::available_host_bytes();
+    return avail ? *avail : ~uint64_t{0};
 }
 
 float bf16_to_f32(uint16_t b) {

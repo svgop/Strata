@@ -29,7 +29,7 @@
 #include "strata/core/conversation_snapshot.hpp"
 #include "strata/core/conversation_file.hpp"
 #include "strata/core/session_save_reclaim.hpp"
-#include "strata/core/conversation_memory.hpp"
+#include "strata/core/host_mem.hpp"
 #include "strata/core/coupled_draft.hpp"
 #include "strata/core/expert_source.hpp"
 #include "strata/core/foresight_swap.hpp"
@@ -1299,7 +1299,7 @@ struct GpuStage {
 };
 
 // what a refusal on the RAM guard says it had: "900 MiB available, source cgroup" (the smallest of MemAvailable, the
-// cgroup limits above the engine and --memory-limit-mib; see strata/core/conversation_memory.hpp)
+// cgroup limits above the engine and --memory-limit-mib; see strata/core/host_mem.hpp)
 static std::string ram_note(const std::optional<strata::core::HostMemoryReading>& mem) {
     if (!mem) return "RAM telemetry unavailable";
     return std::to_string(mem->available >> 20) + " MiB available, source " + strata::core::memory_source_name(mem->source);

@@ -135,9 +135,9 @@ if(STRATA_BUILD_CONVERSATION_TESTS)
   add_executable(conversation_split_failure_test src/core/conversation_split_failure_test.cpp)
   target_include_directories(conversation_split_failure_test PRIVATE include)
   add_test(NAME conversation_split_failure_test COMMAND conversation_split_failure_test)
-  add_executable(conversation_memory_test src/core/conversation_memory_test.cpp src/core/conversation_memory.cpp)
-  target_include_directories(conversation_memory_test PRIVATE include)
-  add_test(NAME conversation_memory_test COMMAND conversation_memory_test)
+  add_executable(host_mem_test src/core/host_mem_test.cpp src/core/host_mem.cpp)
+  target_include_directories(host_mem_test PRIVATE include)
+  add_test(NAME host_mem_test COMMAND host_mem_test)
   add_executable(conversation_file_test src/core/conversation_file_test.cpp src/core/conversation_file.cpp)
   target_include_directories(conversation_file_test PRIVATE include)
   add_test(NAME conversation_file_test COMMAND conversation_file_test)
@@ -625,7 +625,7 @@ if(STRATA_ENABLE_CUDA OR STRATA_ENABLE_HIP)
   add_library(strata_engine STATIC src/core/layer.cpp src/core/session.cpp src/core/expert_source.cpp src/core/remote_experts.cpp
     src/core/remote_expert_opt.cu
     src/core/expert_cache.cpp src/core/native_head.cpp src/core/native_dense.cpp src/core/verify.cpp src/core/mtp.cpp
-    src/core/conversation_snapshot.cpp src/core/conversation_state.cpp src/core/conversation_memory.cpp src/core/peer_experts.cpp
+    src/core/conversation_snapshot.cpp src/core/conversation_state.cpp src/core/host_mem.cpp src/core/peer_experts.cpp
     src/core/arch_defaults.cpp src/core/nv_defaults.cpp src/core/vmm.cpp src/core/conversation_file.cpp
     src/core/shadow_experts.cpp)
   target_include_directories(strata_engine PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
@@ -648,7 +648,7 @@ if(STRATA_ENABLE_CUDA OR STRATA_ENABLE_HIP)
   # available_host_bytes(): MemAvailable, cgroup limits and the operator's --memory-limit-mib cap on fixture directories
   # - no GPU, no CUDA
   if(STRATA_BUILD_TESTS AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/tests/core/memory_guard_test.cpp")
-    add_executable(memory_guard_test tests/core/memory_guard_test.cpp src/core/conversation_memory.cpp)
+    add_executable(memory_guard_test tests/core/memory_guard_test.cpp src/core/host_mem.cpp)
     target_include_directories(memory_guard_test PRIVATE include)
     add_test(NAME memory_guard_test COMMAND memory_guard_test)
     set_tests_properties(memory_guard_test PROPERTIES TIMEOUT 60)
@@ -2271,7 +2271,8 @@ endif()
     target_link_libraries(strata_dsv41_kernels PUBLIC ${_strata_gpu_runtime_target})
     add_executable(strata-dsv41 src/dsv41/ds4_main.cpp src/dsv41/ds4_model.cu src/dsv41/ds4_kernels.cu src/dsv41/ds4_vision.cu
                    src/dsv41/ds4_gguf.cu src/dsv41/ds4_gguf_cpu.cpp src/dsv41/ds4_iq.cu src/dsv41/ds4_iq_cpu.cpp
-                   src/dsv41/ds4_tq.cu src/dsv41/ds4_tq_cpu.cpp src/dsv41/ds4_gg_cpu.cpp src/dsv41/ds4_packinfo.cpp)
+                   src/dsv41/ds4_tq.cu src/dsv41/ds4_tq_cpu.cpp src/dsv41/ds4_gg_cpu.cpp src/dsv41/ds4_packinfo.cpp
+                   src/core/host_mem.cpp)   # the substrate: the one host-memory sampler, DS's ram_avail() fold
     if(NOT STRATA_BUILD_ID)
       execute_process(COMMAND git -C ${CMAKE_CURRENT_SOURCE_DIR} rev-parse --short=9 HEAD OUTPUT_VARIABLE STRATA_BUILD_ID
                       OUTPUT_STRIP_TRAILING_WHITESPACE ERROR_QUIET)
