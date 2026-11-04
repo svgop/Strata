@@ -1890,3 +1890,22 @@ objective question feeds it); T14B retrain → 262k.
   + drafter forward in mtp.cpp + block-verify path = a full T-lane, NOT a quick test.
 - Strategic: no recursion at all = sidesteps the exposure-bias failure phase-1 hit; 0.6B fwd ≈ 9.7 GFLOP
   per draft round (trivial vs our window cost). Price as the bigger swing if recursive rollouts stall.
+
+
+**CRASH WATCH UPDATE (2026-11-04 evening, P1 - recurring): THREE SIGSEGVs, not one isolated.**
+16:46 (during bit-check), 18:59 (idle), 19:40 (idle) - all on the assert-wall binary (md5
+8222dcecee47), roughly hourly, crash-then-auto-restart cycles; lanes were IN BAND all day
+(215.5/198.8/260.9 + T69 legs), so the corruptor passes load and strikes idle/late. The
+"first boot after DS teardown" theory is DEAD (18:59+19:40 were consecutive on one server
+boot). PRIME SUSPECT: the rebuild itself leapt the lane binary from the last-DEPLOYED source
+(the W1-era binary) to current HEAD - days of engine-code commits that had never been
+booted, plus the assert commit. CORE PRESERVED (truncated, 28.8 GB):
+/var/lib/systemd/coredump/core.strata.1000.da7a3548711f483dbd7e46e45268ac6d.2272434.*.zst,
+PID 2272434, crash 19:40:36. Faulting thread's frame symbolizes as main lambda#65 at
+engine+0x4636b50 but addr2line lands that address in fatbinData (the embedded CUDA blob) -
+control-flow corruption or truncated-core artifact; second thread at an anonymous mapping.
+NEXT SESSION P0: (1) gdb the decompressed core (/usr/sbin/gdb, --batch bt + info registers);
+(2) the bisect leg - build c216f423~1 (pre-assert source) vs the last-deployed-era source,
+boot each for an hour idle; (3) valgrind/ASan leg if the bisect is clean. The server's
+auto-restart + native prewarm hold the lane meanwhile (observed: 2-3 min to full service,
+221.9 tok/s after recovery).
