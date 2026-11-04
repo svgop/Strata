@@ -28,6 +28,7 @@
 #include "strata/dsv41/exl3_cpu.hpp"
 #include "strata/dsv41/exl3.hpp"
 #include "strata/kernels/f16_bits.hpp"
+#include "strata/artifact/gguf_reader.hpp"
 #include "strata/dsv41/moe_win.hpp"
 #include "strata/dsv41/sampler.hpp"
 #include "wmma_gemm.h"   // strata_pf_gemm_f16_ld: the RDNA3 WMMA dense GEMM (gemm() prefers it over hipBLAS on gfx11; -Isrc/prefill)
@@ -3076,89 +3077,35 @@ struct Model::Impl {
         bool on(int il) const { return il >= first && il <= last && il >= 0 && il < (int) s.size() && s[il] != 0.0f; }
     } cv_;
     bool cvec_load(const std::string& path, double scale, int first, int last, std::string& err) {
-        std::FILE* f = std::fopen(path.c_str(), "rb");
-        if (f == nullptr) {
-            err = path + ": cannot open";
-            return false;
-        }
-        std::fseek(f, 0, SEEK_END);
-        std::vector<uint8_t> buf((size_t) std::ftell(f));
-        std::rewind(f);
-        if (std::fread(buf.data(), 1, buf.size(), f) != buf.size()) {
-            std::fclose(f);
-            err = path + ": short read";
-            return false;
-        }
-        std::fclose(f);
-        struct CvParse {
-            const std::vector<uint8_t>& buf;
-            size_t p = 0;
-            size_t rd(size_t n) {
-                if (p + n > buf.size()) throw std::runtime_error("cvec: past the end");
-                const size_t at = p;
-                p += n;
-                return at;
-            }
-            void skip_val(uint32_t ty) {
-                if (ty == 8) {
-                    const uint64_t n = *reinterpret_cast<const uint64_t*>(buf.data() + rd(8));
-                    rd((size_t) n);
-                } else if (ty == 9) {
-                    const uint32_t at = *reinterpret_cast<const uint32_t*>(buf.data() + rd(4));
-                    const uint64_t n = *reinterpret_cast<const uint64_t*>(buf.data() + rd(8));
-                    for (uint64_t i = 0; i < n; ++i) skip_val(at);
-                } else {
-                    rd(ty == 0 || ty == 1 || ty == 7 ? 1 : ty == 2 || ty == 3 || ty == 4 || ty == 5 || ty == 6 ? 4
-                                                     : ty == 10 || ty == 11 || ty == 12 ? 8 : 0);
-                }
-            }
-        } ps{buf};
+        // the tree's own GGUF reader (the main engine's load_control_vectors has used it for years): mmap'd,
+        // and it honors the file's own general.alignment - the hand parser this replaces rounded the payload
+        // start to 32 bytes unconditionally, which reads garbage out of any cvec written at another alignment.
         try {
-            if (std::memcmp(buf.data(), "GGUF", 4) != 0) throw std::runtime_error("cvec: not a GGUF");
-            ps.p = 4;
-            (void) ps.rd(4);                                     // version
-            const uint64_t nt = *reinterpret_cast<const uint64_t*>(buf.data() + ps.rd(8));
-            const uint64_t nk = *reinterpret_cast<const uint64_t*>(buf.data() + ps.rd(8));
-            for (uint64_t i = 0; i < nk; ++i) {
-                const uint64_t nl = *reinterpret_cast<const uint64_t*>(buf.data() + ps.rd(8));
-                ps.rd((size_t) nl);
-                ps.skip_val(*reinterpret_cast<const uint32_t*>(buf.data() + ps.rd(4)));
-            }
-            // the tensor headers; the payload follows them, 32-byte aligned (gguf's general.alignment default)
-            struct Ent { std::string name; uint32_t type; uint64_t off; size_t bytes; };
-            std::vector<Ent> ents;
-            ents.reserve((size_t) nt);
-            for (uint64_t i = 0; i < nt; ++i) {
-                const uint64_t nl = *reinterpret_cast<const uint64_t*>(buf.data() + ps.rd(8));
-                Ent e;
-                e.name.assign(reinterpret_cast<const char*>(buf.data() + ps.rd((size_t) nl)), (size_t) nl);
-                const uint32_t nd = *reinterpret_cast<const uint32_t*>(buf.data() + ps.rd(4));
-                size_t elems = 1;
-                for (uint32_t dq = 0; dq < nd; ++dq) {
-                    const uint64_t dm = *reinterpret_cast<const uint64_t*>(buf.data() + ps.rd(8));
-                    elems *= (size_t) dm;
-                }
-                e.type = *reinterpret_cast<const uint32_t*>(buf.data() + ps.rd(4));
-                e.off = *reinterpret_cast<const uint64_t*>(buf.data() + ps.rd(8));
-                e.bytes = elems * (e.type == 0 ? 4 : 2);
-                if (e.type != 0 && e.type != 1) continue;      // F32 (and F16, widened below) only
-                ents.push_back(std::move(e));
-            }
-            const size_t base = (ps.p + 31u) & ~size_t(31u);
+            const strata::GgufFile f(path);
             cv_ = Cvec{};
             cv_.dir.assign((size_t) g.nl * g.dim, 0.0f);
             cv_.s.assign((size_t) g.nl, 0.0f);
             cv_.dim = g.dim;
-            for (const Ent& e : ents) {
-                if (e.name.rfind("direction.", 0) != 0 || e.bytes != (size_t) g.dim * 4) continue;
-                const int il = std::atoi(e.name.c_str() + 10);
+            for (const auto& t : f.tensors()) {
+                if (t.name.rfind("direction.", 0) != 0 || (t.type != 0 && t.type != 1)) continue;  // F32/F16
+                size_t elems = 1;
+                for (uint64_t dm : t.shape) elems *= (size_t) dm;
+                if (elems != (size_t) g.dim) continue;
+                const int il = std::atoi(t.name.c_str() + 10);
                 if (il <= 0 || il >= g.nl) continue;
-                const float* src = reinterpret_cast<const float*>(buf.data() + base + (size_t) e.off);
+                const uint8_t* src = f.tensor_data(t);
+                float v;
                 double n = 0.0;
-                for (int q = 0; q < g.dim; ++q) n += (double) src[q] * src[q];
+                for (int q = 0; q < g.dim; ++q) {
+                    // F16 arrives as its exact f32 (f16_bits.hpp) - the old parser read the raw bits as F32
+                    v = t.type == 0 ? reinterpret_cast<const float*>(src)[q]
+                                    : strata::kernels::f32_from_f16(reinterpret_cast<const uint16_t*>(src)[q]);
+                    n += (double) v * v;
+                    cv_.dir[(size_t) il * g.dim + q] = v;          // normalized in place below
+                }
                 const float len = (float) std::sqrt(n);
                 if (!(len > 0.0f)) continue;
-                for (int q = 0; q < g.dim; ++q) cv_.dir[(size_t) il * g.dim + q] = src[q] / len;
+                for (int q = 0; q < g.dim; ++q) cv_.dir[(size_t) il * g.dim + q] /= len;
                 cv_.s[(size_t) il] = len * (float) scale;
             }
             cv_.first = first;
