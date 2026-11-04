@@ -1095,8 +1095,17 @@ class StrataEngine:
             pin["preexec_fn"] = lambda: os.sched_setaffinity(0, cpus)
         end_leftover_engines(exe)                        # one an earlier run lost still holds the GPU and the memory
         spawned_at = time.monotonic()
-        self.proc = popen("the Strata engine", [exe, "--serve", *args], cwd=cwd, stdin=subprocess.PIPE,
-                          stdout=subprocess.PIPE, stderr=self.log, text=True, encoding="utf-8", bufsize=1, env=env, **pin)
+        try:
+            self.proc = popen("the Strata engine", [exe, "--serve", *args], cwd=cwd, stdin=subprocess.PIPE,
+                              stdout=subprocess.PIPE, stderr=self.log, text=True, encoding="utf-8", bufsize=1, env=env,
+                              **pin)
+        except BaseException:
+            if self.log not in (subprocess.DEVNULL, None):
+                try:
+                    self.log.close()                     # the handle opened above this point is ours to release
+                except OSError:
+                    pass
+            raise
         # the READY read has a timeout (#1317): the lines come from a thread, up to READY, so the rest of the stream
         # stays for _pump (one reader at a time)
         ready_q: queue.Queue = queue.Queue()
@@ -1380,7 +1389,7 @@ class StrataEngine:
                 try:
                     self.__init__(*self.spawn)
                     break
-                except RuntimeError:
+                except (RuntimeError, OSError):
                     try:
                         self.proc.wait(timeout=60)
                     except (subprocess.TimeoutExpired, OSError):
@@ -1427,8 +1436,12 @@ class StrataEngine:
         with the engine's reason (e.g. it was not started with --vram-elastic), EngineDied when it ended."""
         if not self.alive():
             raise EngineDied("the engine is not running")
-        self.proc.stdin.write("VRAM" + ("" if reserve_mib is None else f" {int(reserve_mib)}") + "\n")
-        self.proc.stdin.flush()
+        try:
+            with self.wlock:
+                self.proc.stdin.write("VRAM" + ("" if reserve_mib is None else f" {int(reserve_mib)}") + "\n")
+                self.proc.stdin.flush()
+        except (OSError, AttributeError):                 # the engine ended between the alive() check and the write
+            raise EngineDied(f"the engine stopped unexpectedly (exit code {self.exit_code()})") from None
         deadline = time.time() + timeout
         while True:
             try:
@@ -1548,12 +1561,15 @@ class StrataEngine:
         stopped = False
         beat = time.monotonic()
         last_tok = None                                  # T35 A6: the previous token's arrival, for the true gap
+        lines, born = self.lines, self.gen               # this process's queue: a restart swaps it under us
         while True:
             try:
                 # A client can leave before the first PP/token.  Poll its Event as often as _take_control does;
                 # the ten-second HTTP heartbeat is independent of how promptly STOP reaches the engine.
-                line = self.lines.get(timeout=0.5)
+                line = lines.get(timeout=0.5)
             except queue.Empty:
+                if self.gen != born:
+                    raise EngineDied("the engine restarted during the request")   # never read the new queue as ours
                 if cancel.is_set() and not stopped:
                     self._send("STOP")
                     stopped = True
@@ -1671,8 +1687,8 @@ class StrataEngine:
         except EngineDied:
             pass
         q, busy, held = self.slot_q[slot], self.slot_busy, self.slot_held   # this process's: restart() replaces them
-        releasing = self.slot_releasing
-        releasing.add(slot)
+        with self.slot_cv:                       # readers iterate the set under the lock (#9)
+            self.slot_releasing.add(slot)
 
         def wait():
             end = time.monotonic() + 600.0
@@ -2248,12 +2264,12 @@ class StrataEngine:
             if admit_wait:
                 with self.slot_cv:
                     self.admitting = max(0, self.admitting - 1)
-            if reserved is not None:
+            if reserved is not None and reserved < len(self.slot_busy):   # a restart rebuilt the lists
                 with self.slot_cv:
                     self.slot_busy[reserved] = False
                     self.slot_claims.discard(reserved)
                     self.slot_cv.notify_all()
-            if slot is not None:
+            if slot is not None and slot < len(self.slot_live):   # a restart rebuilt the lists (fewer slots)
                 self.slot_live[slot] = None
                 self.slot_used[slot] = time.time()
                 if phase == "slot" and bdone_in:
@@ -2937,8 +2953,14 @@ class Vision:
             img, out = self.dir / f"{key}.img", self.dir / f"{key}.sve"
             img.write_bytes(data)
             try:
-                self.proc.stdin.write(f"ENC {img.name} {out.name}\n")      # relative to the encoder's cwd (#480)
-                self.proc.stdin.flush()
+                if self.proc is None:                                       # idle-stopped (elastic) or never started
+                    raise ValueError("the vision encoder stopped")
+                try:
+                    self.proc.stdin.write(f"ENC {img.name} {out.name}\n")   # relative to the encoder's cwd (#480)
+                    self.proc.stdin.flush()
+                except (OSError, AttributeError):                            # the encoder ended between turns
+                    self.stopped = True                                      # alive() is False, so the next request starts it again
+                    raise ValueError("the vision encoder stopped") from None
                 try:
                     line = self._readline(VISION_ENCODE_S, "the image could not be read").strip()
                 except RuntimeError as e:                 # silent for VISION_ENCODE_S: the encoder was ended (#1317)
@@ -4073,11 +4095,15 @@ class Service:
         try:
             v.unload()
             if self.vision_held and hasattr(self.engine, "vram") and self.loaded():
-                out = self.engine.vram(self._engine_reserve())
-                print(f"[strata] images: the image encoder stopped after {v.elastic_idle_s:g} s without a picture; "
-                      f"the expert cache took its VRAM back ({out.get('expert_cache_mib')} of "
-                      f"{out.get('expert_cache_full_mib')} MiB)", flush=True)
-            self.vision_held = False
+                try:
+                    out = self.engine.vram(self._engine_reserve())
+                    print(f"[strata] images: the image encoder stopped after {v.elastic_idle_s:g} s without a picture; "
+                          f"the expert cache took its VRAM back ({out.get('expert_cache_mib')} of "
+                          f"{out.get('expert_cache_full_mib')} MiB)", flush=True)
+                except (ValueError, EngineDied, OSError) as e:
+                    print(f"[strata] images: the encoder stopped; the expert cache's VRAM returns on its own ({e})",
+                          flush=True)
+            self.vision_held = False     # cleared whatever the restore did: the encoder is down either way
             return "down"
         finally:
             self.fifo.release()
@@ -4320,6 +4346,8 @@ class Service:
                     self.unload(idle_for=self.idle_unload_s)
                 except EngineStuck as e:                # tried again at the next turn; the thread keeps running
                     print(f"[strata] idle unload: {e}", flush=True)
+                except Exception as e:  # noqa: BLE001 - a dead watchdog would silently end idle-unload for good
+                    print(f"[strata] idle unload: {type(e).__name__}: {e}", flush=True)
         threading.Thread(target=loop, daemon=True).start()
 
     def set_shared(self, defaults) -> dict:
@@ -4658,6 +4686,7 @@ class Service:
                         if src.startswith(("http://", "https://")):
                             src = fetched[item["source"]] = Vision.download(src)   # outside the FIFO, as in prepare()
                         with self._turn(cancel):  # the encoder takes its turn with the requests (see below)
+                            self._vision_up()    # an elastic encoder was idle-stopped: start it, as the user-image path does
                             self.vision.encode(src)
                     except (ValueError, OSError) as e:
                         why = str(e)
@@ -8508,14 +8537,17 @@ def main(argv=None, *, lifecycle_event=None, interrupt_exit_code: int = 0) -> in
             for close in filter(None, closers):
                 try:
                     close()
-                except KeyboardInterrupt:               # a second Ctrl+C: don't wait for the engine to free its memory
-                    if getattr(engine, "proc", None):
-                        engine.proc.kill()
-                        try:
-                            from serve import cache_drop
-                            cache_drop.drop_after_exit(engine)       # opt-in (STRATA_DROP_CACHE_ON_EXIT=1), default unchanged
-                        except Exception as e:  # noqa: BLE001 - never block the exit
-                            print(f"[strata] could not release the model files' cache: {e}", flush=True)
+                except Exception as e:  # noqa: BLE001 - one stuck closer must not skip vision/MCP teardown
+                    if isinstance(e, KeyboardInterrupt):            # a second Ctrl+C: don't wait for the memory
+                        if getattr(engine, "proc", None):
+                            engine.proc.kill()
+                            try:
+                                from serve import cache_drop
+                                cache_drop.drop_after_exit(engine)   # opt-in (STRATA_DROP_CACHE_ON_EXIT=1)
+                            except Exception as e2:  # noqa: BLE001 - never block the exit
+                                print(f"[strata] could not release the model files' cache: {e2}", flush=True)
+                    else:
+                        print(f"[strata] shutdown: {getattr(close, '__qualname__', 'closer')}: {e}", flush=True)
         finally:
             if ready_path is not None:
                 ready_file.remove_if_owned(ready_path, svc.instance_id)
