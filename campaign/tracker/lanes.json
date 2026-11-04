@@ -1,6 +1,6 @@
 {
  "type": "strata-lane-trend",
- "updated": "2026-11-02",
+ "updated": "2026-11-04",
  "unit": "tok/s",
  "engines": {
   "qwen": {
@@ -233,6 +233,32 @@
       "pair": "mean",
       "conc": "mean"
      }
+    },
+    {
+     "date": "2026-11-04",
+     "commit": "5710d0e4",
+     "label": "serve-fix regression check A/B OLD server (2v2 same-hour)",
+     "solo": 207.5,
+     "pair": 206.7,
+     "conc": 277.7,
+     "kinds": {
+      "solo": "mean",
+      "pair": "mean",
+      "conc": "mean"
+     }
+    },
+    {
+     "date": "2026-11-04",
+     "commit": "5710d0e4",
+     "label": "serve-fix regression check A/B NEW server (2v2 same-hour)",
+     "solo": 215.7,
+     "pair": 201.5,
+     "conc": 259.3,
+     "kinds": {
+      "solo": "mean",
+      "pair": "mean",
+      "conc": "mean"
+     }
     }
    ],
    "prefill": [
@@ -315,6 +341,14 @@
      "tps": 2423.0,
      "ctx": 3292,
      "kind": "single"
+    },
+    {
+     "date": "2026-11-04",
+     "commit": "5710d0e4",
+     "label": "fresh 167K cold-read probe (serve-fix check)",
+     "tps": 7344.0,
+     "ctx": 166854,
+     "kind": "mean"
     }
    ]
   },
@@ -544,6 +578,14 @@
      "tps": 2072.0,
      "ctx": 50434,
      "kind": "single"
+    },
+    {
+     "date": "2026-11-04",
+     "commit": "5710d0e4",
+     "label": "fresh 21K read probe (serve-fix check; box -10-20pct on DS all day)",
+     "tps": 1311.0,
+     "ctx": 20712,
+     "kind": "mean"
     }
    ]
   }

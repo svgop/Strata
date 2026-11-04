@@ -94,3 +94,11 @@ qwen,2026-11-02,30a7ef7b,T63 tail-skip rank 7 ADOPTED (+10.2 solo +4.4 pair -0.6
 deepseek,2026-11-02,30a7ef7b,T64 A2 baseline (adaptive-k arm off; top-4 routing flat per the 400K-sample histogram),solo,65.3,0,mean
 deepseek,2026-11-02,30a7ef7b,T64 A2 baseline (adaptive-k arm off; top-4 routing flat per the 400K-sample histogram),pair,62.05,0,mean
 deepseek,2026-11-02,30a7ef7b,T64 A2 baseline (adaptive-k arm off; top-4 routing flat per the 400K-sample histogram),conc,70.45,0,mean
+qwen,2026-11-04,5710d0e4,serve-fix regression check A/B OLD server (2v2 same-hour),solo,207.5,0,mean
+qwen,2026-11-04,5710d0e4,serve-fix regression check A/B OLD server (2v2 same-hour),pair,206.7,0,mean
+qwen,2026-11-04,5710d0e4,serve-fix regression check A/B OLD server (2v2 same-hour),conc,277.7,0,mean
+qwen,2026-11-04,5710d0e4,serve-fix regression check A/B NEW server (2v2 same-hour),solo,215.7,0,mean
+qwen,2026-11-04,5710d0e4,serve-fix regression check A/B NEW server (2v2 same-hour),pair,201.5,0,mean
+qwen,2026-11-04,5710d0e4,serve-fix regression check A/B NEW server (2v2 same-hour),conc,259.3,0,mean
+qwen,2026-11-04,5710d0e4,fresh 167K cold-read probe (serve-fix check),prefill,7344,166854,mean
+deepseek,2026-11-04,5710d0e4,fresh 21K read probe (serve-fix check; box -10-20pct on DS all day),prefill,1311,20712,mean
