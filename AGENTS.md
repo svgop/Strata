@@ -448,3 +448,46 @@ port, merge:
     recorded. Regressions are forbidden: no adopted change may leave a lane or latency metric
     worse beyond noise (laws 2, 4, 12), and a regression that ships is remediated under law 13
     (scoped, composed, or rebuilt) — containment alone never closes it.
+
+16. **THE GRADE OF THE WORK (user law, 2026-11-04).** Every change is principal-grade: the design
+    is the strongest the constraints admit, and the implementation is permanent architecture —
+    config surface, observable state, verified rollback, committed tooling, a named owner. A
+    symptomatic patch that leaves its defect class alive is itself a defect, whatever it fixes:
+    a hand-rolled parser beside a canonical reader, a script where a server lifecycle belongs, a
+    literal where a constant owns the invariant, a retry where the failure mode needs a design.
+    Expedience is never the binding constraint; correctness, structure, and reversibility are.
+    There is no grade of work reserved for "small" changes — the floor is the same at every
+    size. *(Earned by: the estate's own record on both sides — F-220's pre-boot warm defeated by
+    the boot pin until it became a server lifecycle; the cvec port built as engine architecture
+    where a flag-splice would have "worked"; conversely the 21 batteries that silently
+    no-oped on a deleted script, and the dead `engine_ready_s` key a config carried for weeks.)*
+
+17. **BETTER THAN FOUND, ALWAYS (user law, 2026-11-04).** Every landed change leaves the system
+    measurably better than the commit it started from — in capability, in structure, or in
+    legibility, and the improvement is named in the commit message. "No worse" is the floor for
+    pure verification work and nothing else; a change that only moves code sideways does not
+    land. Proof obligations travel with the change (law 15's pricing, laws 1-2's interleave,
+    and the operator's 2026-11-04 rule: before/after evidence of improvement ON THE MEAN, no
+    exceptions — an unverifiable "should be fine" is a refusal to publish, not a pass). A
+    tie is not a win; a win that regresses any lane is a loss (law 2).
+
+18. **ONE CAPABILITY, ONE OWNER (user law, 2026-11-04).** A second implementation of an existing
+    capability is a defect, not a shortcut. Consumers import the canonical owner — `GgufFile`
+    for GGUF in C++, `tools/gguf_reader.py` in Python, `sample_host_memory` for host-RAM
+    sampling, `battery-lib.sh` for battery machinery, the pack-manifest loader for tensors.txt
+    — and formats are read and written only through their owning module. Invariants are
+    executable, never conventions in prose: cross-file constants are tied by `static_assert`,
+    armed geometry is validated at the boot handshake, deliberate isolation is declared at the
+    site and pinned by a parity test. Undeclared duplication is drift, and drift is removed on
+    touch, not documented for later. *(Earned by: the window-width wall — three silent
+    corruption classes retired by nine asserts; the `*strata*` kill substring that could end
+    both engines, alive in 27 sites until the lib absorbed it.)*
+
+19. **THE REGISTER (user law, 2026-11-04).** Every artifact — code, comments, commit messages,
+    documentation, doctrine, and every AGENTS.md — is written in the register of a principal
+    engineer: exact domain terms, declarative density, mechanism and rationale stated once.
+    No filler, no colloquialisms, no invented vocabulary, no hedging, no filler adjectives
+    standing in for evidence. Calibration is part of the skill: the strongest design the
+    constraints admit and nothing ornamental beyond purpose — over-engineering and
+    under-engineering are the same failure at opposite ends. The test of the register: a
+    principal at another firm reads any artifact cold and finds nothing to forgive.
