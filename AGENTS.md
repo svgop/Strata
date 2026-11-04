@@ -155,6 +155,40 @@ in the tree behind one flag — each was a ceiling until someone stated it preci
 variable the statement left movable. Do not worship a ceiling and do not declare one: price it. That
 is the whole doctrine.
 
+## The Architecture Doctrine (how this fork is built — binding on every change)
+
+The campaign law governs optimization; this governs construction. Correctness that lives in
+convention and duplicated code is correctness on loan: two engine trees that can drift, a text
+protocol with no schema, formats parsed wherever they are met, laws enforced by whoever remembers
+them. The destination is four layers — **shared substrate, typed contracts, owned formats,
+executable invariants** — after which hand-rolling is not forbidden, it is unreachable. The full
+program with owner paths and exit criteria is `campaign/ROADMAP-architecture.md`; the law, in
+brief:
+
+1. **THE OWNER LAW.** A new consumer imports the owner; a second implementation is the defect.
+   GGUF is read by `strata::GgufFile` (C++) and `tools/gguf_reader.py` (Python) — nowhere else.
+   Battery infrastructure lives in `campaign/battery-lib.sh` — nowhere else. A tool that edits a
+   load-bearing format textually (a pack manifest, a config the engine parses) is the defect this
+   law exists to make impossible.
+2. **THE STRANGLER LAW.** Migration is strangler-fig, never a rewrite: each fold links the
+   substrate into the consumer, holds the banks and floors, and lands with a hazard-specific
+   before/after proof (the alignment-64 vector that garbles before and parses after; the refused
+   boot; the failed compile). At no step is the system worse than the moment before it.
+3. **DECLARED ISOLATION, TESTED.** Isolation is architecture when declared and pinned by a
+   parity test (the vendor sampler; Qwen's doorbell/graph pipeline vs DS's serial rounds —
+   different design points, not drift). Undeclared duplication is deleted on sight.
+4. **LAWS BECOME STRUCTURE.** Every invariant that today depends on memory — window-width arrays
+   and their literal sizes, kill patterns, the armed cvec geometry a boot reports — becomes a
+   compile error, a test failure, or a refused boot. An agent who forgets the doctrine is
+   stopped by the tree, not by memory.
+5. **THE STANDARD OF WORK.** Nothing hand-rolled, rushed, or improvised as a gap-filler: no
+   band-aids, no cork, no side patches that could be forgotten. Every pass leaves the
+   architecture better than it was found — cleaner, more robust, more performant — and carries
+   the proof that it did. Write, in code, comments and documents, at the standard of a principal
+   engineer: the domain-native term, the exact number, the named mechanism — no filler, no
+   invented vocabulary, no approximations posing as decisions. Overqualified always;
+   over-engineered never.
+
 ## Installing Strata for a user
 
 Follow **[docs/AI_SETUP.md](docs/AI_SETUP.md)**. For an agent that has a shell, the short version is:
