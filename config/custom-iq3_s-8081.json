@@ -77,6 +77,7 @@
   "vision": {
     "exe": "/home/svg/LLM/strata-custom-2/engine/strata-vision",
     "mmproj": "/home/svg/LLM/data/models/GSQ-RCO/Qwen3.8-Flash-Next/mmproj-Qwen3.8-Flash-Next-BF16.gguf",
-    "model": "/home/svg/LLM/data/models/GSQ-RCO/Qwen3.8-Flash-Next/Qwen3.8-Flash-Next-GSQ-RCO-IQ3_S-00001-of-00002.gguf"
+    "model": "/home/svg/LLM/data/models/GSQ-RCO/Qwen3.8-Flash-Next/Qwen3.8-Flash-Next-GSQ-RCO-IQ3_S-00001-of-00002.gguf",
+    "elastic": true
   }
 }

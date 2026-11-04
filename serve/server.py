@@ -4031,14 +4031,15 @@ class Service:
         return self.vram_reserve if self.vram_reserve_asked else 0
 
     def _vision_up(self):
-        """The image turn's start for an elastic encoder that is not running (the caller holds self.fifo): the expert
-        cache first keeps the encoder's elastic_mib of VRAM free on top of the reserve, then the encoder starts (load and
-        warm-up, a few seconds).  If the cache cannot shrink (an engine without --vram-elastic, the resident low-RAM mode)
-        the encoder starts anyway, as a non-elastic one would."""
+        """The image turn's start for an elastic encoder that is not running (the caller holds self.fifo): a GPU
+        encoder first asks the expert cache to keep its elastic_mib of VRAM free on top of the reserve, then starts
+        (load and warm-up, a few seconds).  A CPU encoder asks nothing of the engine.  If the cache cannot shrink
+        (an engine without --vram-elastic, the resident low-RAM mode) the encoder starts anyway, as a non-elastic
+        one would; if it does not start, the request gets a clean error - it is never dropped."""
         v = self.vision
         if not getattr(v, "elastic", False) or v.alive():
             return
-        if hasattr(self.engine, "vram") and self.loaded():
+        if "--gpu" in v.spawn[0] and hasattr(self.engine, "vram") and self.loaded():
             try:
                 out = self.engine.vram((self._engine_reserve() or 0) + v.elastic_mib)
                 self.vision_held = True
@@ -4050,7 +4051,10 @@ class Service:
         if self.vision_held:
             time.sleep(0.2)          # the driver's free-VRAM counter shows the cache's release a moment later
         free0, t0 = self.free_vram_mib(), time.time()
-        v.restart()
+        try:
+            v.restart()
+        except (RuntimeError, OSError) as e:
+            raise ValueError(f"the image encoder did not start: {' '.join(str(e).split())[:240]}") from None
         free1 = self.free_vram_mib()
         took = f", {free0 - free1} MiB of VRAM" if free0 is not None and free1 is not None else ""
         print(f"[strata] images: the image encoder started in {time.time() - t0:.1f} s{took}", flush=True)
@@ -8158,20 +8162,27 @@ def main(argv=None, *, lifecycle_event=None, interrupt_exit_code: int = 0) -> in
             print(f"[strata] sampling defaults from the config: {pretty}", flush=True)
         lazy = a.lazy or cfg.get("lazy_load") is True
         if cfg.get("vision"):
-            elastic = cfg["vision"].get("elastic") is True and cfg.get("vram_elastic") is True
-            print("the vision encoder starts with the first picture (elastic) ..." if elastic else
-                  "loading the vision encoder ..." if not lazy else
-                  "vision encoder unloaded; it starts with the model ...", flush=True)
+            # "elastic": the encoder starts with the first picture and stops after elastic_idle_s without one.  It
+            # stands alone: "vram_elastic" only adds that the ENGINE's expert cache is asked to free VRAM for the
+            # encoder's turn (a GPU encoder on a full card); a CPU encoder, or one that fits the card's room, needs
+            # nothing of the sort - so the flag no longer requires it.
+            elastic = cfg["vision"].get("elastic") is True
+            if elastic:
+                print("the vision encoder starts with the first picture (elastic"
+                      + (", the engine frees VRAM for it ..." if cfg.get("vram_elastic") is True else ") ..."),
+                      flush=True)
+            else:
+                print("loading the vision encoder ..." if not lazy else
+                      "vision encoder unloaded; it starts with the model ...", flush=True)
             # relative paths are the config's cwd's, as for the engine below
             vcfg = {k: (os.path.abspath(os.path.join(cfg.get("cwd") or ".", v))
                         if k in ("exe", "mmproj", "model") and isinstance(v, str) and not os.path.isabs(v) else v)
                     for k, v in cfg["vision"].items() if not (k == "exe" and engine_component.is_reference(v))}
             if engine_component.is_reference(cfg["vision"].get("exe")):     # the engine from the component folder
                 vcfg["exe"] = _component_exe(cfg["vision"]["exe"], cfg)
-            if vcfg.get("elastic") is True and cfg.get("vram_elastic") is not True:
-                print('[strata] the vision section\'s "elastic" needs "vram_elastic": true (the expert cache gives the '
-                      "encoder its VRAM): the encoder starts with the model instead", flush=True)
-                vcfg["elastic"] = False
+            if vcfg.get("elastic") is True and cfg.get("vram_elastic") is not True and vcfg.get("gpu"):
+                print('[strata] the vision section\'s "elastic" GPU encoder has no "vram_elastic": true (the expert '
+                      "cache would free its VRAM): the engine is not asked to make room", flush=True)
             vision = Vision(vcfg, log=open(cfg["log"], "a", encoding="utf-8") if cfg.get("log") else None,
                             env=vision_env(cfg, env), lazy=lazy)
         print("model unloaded; the first request loads it ..." if lazy else
