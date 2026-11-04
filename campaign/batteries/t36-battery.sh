@@ -6,22 +6,12 @@
 #     the F-271 question re-asked on the elastic substrate.
 # Single-engine law on every boot (verified per leg: exactly one new engine-started line).
 set -u
+. "$(dirname "$0")/../battery-lib.sh"
 REPO=/home/svg/LLM/strata-custom-2
 PORT=8081
 RES=$REPO/campaign/results
 OUT=$RES/t36-lifestic.log
 echo "T36 BATTERY start $(date)" > "$OUT"
-port_pid() { ss -ltnp 2>/dev/null | grep ":$PORT " | grep -oP 'pid=\K[0-9]+' | head -1; }
-cleanup_engine() {
-  local p pid c
-  p=$(port_pid); [ -n "$p" ] && kill -TERM "$p" 2>/dev/null
-  sleep 4
-  for pid in $(nvidia-smi --query-compute-apps=pid --format=csv,noheader 2>/dev/null); do
-    c=$(tr '\0' ' ' < /proc/"$pid"/cmdline 2>/dev/null)
-    case "$c" in *strata*) kill -TERM "$pid" 2>/dev/null ;; esac
-  done
-  sleep 2
-}
 [ -n "$(port_pid)" ] && { echo "ABORT: port $PORT busy" >> "$OUT"; exit 1; }
 
 run_leg() {  # run_leg <tag> <round> <env-pass> [launcher] [conc-n] [config]
@@ -40,7 +30,7 @@ run_leg() {  # run_leg <tag> <round> <env-pass> [launcher] [conc-n] [config]
   local e1; e1=$(grep -ac "engine started" "$REPO/logs/custom-iq3_s.log" 2>/dev/null || echo 0)
   echo "=== LEG $lbl health=$ok engines_delta=$((e1-e0)) $(date +%H:%M:%S) env='$envp' ===" >> "$OUT"
   [ "$ok" = 1 ] || { cleanup_engine; return; }
-  ( cd "$REPO" && bash campaign/prewarm2.sh "$REPO/logs/custom-iq3_s.log" >> "$OUT" 2>&1 )
+  wait_prewarm
   ( cd "$REPO" && python3 campaign/probe-lane.py --port "$PORT" --label "$lbl" --short-n 6 --conc-n "$conc" >> "$OUT" 2>&1 )
   ( cd "$REPO" && .venv/bin/python campaign/probe-metrics.py --port "$PORT" --label "$lbl" 2>&1 | tee -a "$OUT" )
   grep -a "ELASTIC_SESSIONS on\|materialized\|demoted\|below 512" "$REPO/logs/custom-iq3_s.log" | tail -2 >> "$OUT" 2>/dev/null

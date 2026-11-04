@@ -7,6 +7,7 @@
 # The engine is RESTORED to the new binary at the end no matter what (no early exit
 # between the swap and the restore).
 set -u
+. "$(dirname "$0")/../battery-lib.sh"
 REPO=/home/svg/LLM/strata-custom-2
 LAUNCH=$REPO/launch-custom-iq3s-8081.sh
 PORT=8081
@@ -14,17 +15,6 @@ RES=$REPO/campaign/results
 OUT=$RES/t38-bincf.log
 echo "T38 BINARY COUNTERFACTUAL start $(date)" > "$OUT"
 
-port_pid() { ss -ltnp 2>/dev/null | grep ":$PORT " | grep -oP 'pid=\K[0-9]+' | head -1; }
-cleanup_engine() {
-  local p pid c
-  p=$(port_pid); [ -n "$p" ] && kill -TERM "$p" 2>/dev/null
-  sleep 4
-  for pid in $(nvidia-smi --query-compute-apps=pid --format=csv,noheader 2>/dev/null); do
-    c=$(tr '\0' ' ' < /proc/"$pid"/cmdline 2>/dev/null)
-    case "$c" in *strata*) kill -TERM "$pid" 2>/dev/null ;; esac
-  done
-  sleep 2
-}
 
 cleanup_engine; sleep 2
 [ -n "$(port_pid)" ] && { echo "ABORT: port $PORT busy" >> "$OUT"; exit 1; }
@@ -40,7 +30,7 @@ for t in $(seq 1 100); do
 done
 echo "=== BOOT t38-bincf (pre-t38 binary, dm launcher) health=$ok $(date +%H:%M:%S) ===" >> "$OUT"
 if [ "$ok" = 1 ]; then
-  ( cd "$REPO" && bash campaign/prewarm2.sh "$REPO/logs/custom-iq3_s.log" >> "$OUT" 2>&1 )
+  wait_prewarm
   ( cd "$REPO" && python3 campaign/probe-lane.py --port "$PORT" --label "t38-bincf" --short-n 6 >> "$OUT" 2>&1 )
 fi
 cleanup_engine

@@ -7,6 +7,7 @@
 # Judge: new within the old band (±2 weighted items) = adopt; persistent gap = hold.
 # Ends with the NEW files in place and the server LEFT RUNNING on them.
 set -u
+. "$(dirname "$0")/../battery-lib.sh"
 REPO=/home/svg/LLM/strata-custom-2
 LAUNCH=$REPO/launch-custom-iq3s-8081.sh
 PORT=8081
@@ -15,17 +16,6 @@ OUT=$RES/t39-tpl-mimpair.log
 KEEP=/tmp/t39-tpl-new
 echo "T39 TPL MIMPAIR start $(date)" > "$OUT"
 
-port_pid() { ss -ltnp 2>/dev/null | grep ":$PORT " | grep -oP 'pid=\K[0-9]+' | head -1; }
-cleanup_engine() {
-  local p pid c
-  p=$(port_pid); [ -n "$p" ] && kill -TERM "$p" 2>/dev/null
-  sleep 4
-  for pid in $(nvidia-smi --query-compute-apps=pid --format=csv,noheader 2>/dev/null); do
-    c=$(tr '\0' ' ' < /proc/"$pid"/cmdline 2>/dev/null)
-    case "$c" in *strata*) kill -TERM "$pid" 2>/dev/null ;; esac
-  done
-  sleep 2
-}
 
 # save the NEW (fixed) files once
 mkdir -p "$KEEP"

@@ -6,6 +6,7 @@
 # Judge: M1/pair/conc vs the prewarmed anchor band (215.2/206.4/323.0) and the t32b ctl
 # pool (217.1/208.1/315.5); M3b in-band; no WSTAT null after a conc leg.
 set -u
+. "$(dirname "$0")/../battery-lib.sh"
 REPO=/home/svg/LLM/strata-custom-2
 LAUNCH=$REPO/launch-custom-iq3s-8081.sh
 PORT=8081
@@ -13,17 +14,6 @@ RES=$REPO/campaign/results
 OUT=$RES/t38-sanity.log
 echo "T38 SANITY start $(date)" > "$OUT"
 
-port_pid() { ss -ltnp 2>/dev/null | grep ":$PORT " | grep -oP 'pid=\K[0-9]+' | head -1; }
-cleanup_engine() {
-  local p pid c
-  p=$(port_pid); [ -n "$p" ] && kill -TERM "$p" 2>/dev/null
-  sleep 4
-  for pid in $(nvidia-smi --query-compute-apps=pid --format=csv,noheader 2>/dev/null); do
-    c=$(tr '\0' ' ' < /proc/"$pid"/cmdline 2>/dev/null)
-    case "$c" in *strata*) kill -TERM "$pid" 2>/dev/null ;; esac
-  done
-  sleep 2
-}
 
 cleanup_engine; sleep 2
 [ -n "$(port_pid)" ] && { echo "ABORT: port $PORT busy" >> "$OUT"; exit 1; }
@@ -36,7 +26,7 @@ done
 echo "=== BOOT t38-sanity health=$ok $(date +%H:%M:%S) ===" >> "$OUT"
 if [ "$ok" = 1 ]; then
   grep -a "STRATA_DM armed\|engine started" "$REPO/logs/custom-iq3_s.log" | tail -2 >> "$OUT"
-  ( cd "$REPO" && bash campaign/prewarm2.sh "$REPO/logs/custom-iq3_s.log" >> "$OUT" 2>&1 )
+  wait_prewarm
   ( cd "$REPO" && python3 campaign/probe-lane.py --port "$PORT" --label "t38-sanity" --short-n 6 >> "$OUT" 2>&1 )
   ( cd "$REPO" && .venv/bin/python campaign/probe-metrics.py --port "$PORT" --label "t38-sanity" 2>&1 | tail -4 >> "$OUT" )
   echo "--- /metrics window histogram after conc leg (C5 live check):" >> "$OUT"

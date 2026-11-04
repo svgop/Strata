@@ -21,27 +21,10 @@ ON=${3:?on value}
 LABEL=${4:?label}
 BITS=${5:-yes}
 cd "$REPO"
-
-wait_prewarm() {   # the server's own warm-in (the config's "prewarm" section) - wait for its terminal state
-  for i in $(seq 1 240); do
-    s=$(curl -s -m 3 http://127.0.0.1:8081/health 2>/dev/null | sed -n 's/.*"prewarm": "\([a-z]*\)".*/\1/p')
-    case "$s" in done|failed|yielded|"") return 0 ;; esac
-    sleep 5
-  done
-  echo "wait_prewarm: the warm-in did not report done in 20 min (continuing)"
-}
+. ./battery-lib.sh
 
 cp engine/strata /tmp/env-ladder-pre-run.bin
 echo "lane binary saved: $(md5sum engine/strata | cut -c1-8)"
-
-stop_server() {
-  local p; p=$(ps aux | grep "serve/server\.py --engine" | grep -v grep | awk '{print $2}' | head -1)
-  [ -n "$p" ] && kill "$p"
-  for i in $(seq 1 30); do
-    [ "$(ps aux | grep -E 'serve/server\.py --engine|engine/strata --serve' | grep -v grep | wc -l)" -eq 0 ] && break
-    sleep 2
-  done
-}
 
 boot_and_probe() {   # $1 = on|off, $2 = tag
   if [ "$1" = on ]; then
@@ -69,13 +52,13 @@ boot_and_probe() {   # $1 = on|off, $2 = tag
 }
 
 for round in 1 2; do
-  echo "=== round $round: OFF ==="; stop_server; boot_and_probe off "off$round"
+  echo "=== round $round: OFF ==="; cleanup_engine; boot_and_probe off "off$round"
   [ "$round" = 1 ] && [ "$BITS" = yes ] && .venv/bin/python campaign/bit-check.py "$LABEL-off"
-  echo "=== round $round: ON ==="; stop_server; boot_and_probe on "on$round"
+  echo "=== round $round: ON ==="; cleanup_engine; boot_and_probe on "on$round"
   [ "$round" = 1 ] && [ "$BITS" = yes ] && .venv/bin/python campaign/bit-check.py "$LABEL-on"
 done
 
-stop_server; cp /tmp/env-ladder-pre-run.bin engine/strata; nohup ./launch-custom-iq3s-8081.sh > /tmp/envl-restore.out 2>&1 &
+cleanup_engine; cp /tmp/env-ladder-pre-run.bin engine/strata; nohup ./launch-custom-iq3s-8081.sh > /tmp/envl-restore.out 2>&1 &
 for i in $(seq 1 100); do curl -s -m 3 http://127.0.0.1:8081/health 2>/dev/null | grep -q '"status": "ok"' && break; sleep 5; done
 wait_prewarm
 

@@ -2,6 +2,7 @@
 # campaign/t20-gates.sh — the two law items for the merged binary: 2x MMLU (+mimic) and a
 # five-boot re-bank. Runs the merged binary in the ORIGINAL harness (launcher unchanged).
 set -u
+. "$(dirname "$0")/../battery-lib.sh"
 REPO=/home/svg/LLM/strata-custom-2
 LAUNCH=$REPO/launch-custom-iq3s-8081.sh
 MERGED=/home/svg/LLM/strata-custom-2-merge/campaign/results/strata.t20-merged
@@ -11,16 +12,6 @@ RES=$REPO/campaign/results
 mkdir -p "$RES"
 echo "T20 GATES start $(date)" > "$OUT"
 
-port_pid() { ss -ltnp 2>/dev/null | grep ":$PORT " | grep -oP 'pid=\K[0-9]+' | head -1; }
-cleanup_engine() {
-  local p pid c
-  p=$(port_pid); [ -n "$p" ] && kill -TERM "$p" 2>/dev/null
-  sleep 4
-  for pid in $(nvidia-smi --query-compute-apps=pid --format=csv,noheader 2>/dev/null); do
-    c=$(tr '\0' ' ' < /proc/"$pid"/cmdline 2>/dev/null)
-    case "$c" in *strata*) kill -TERM "$pid" 2>/dev/null ;; esac
-  done
-}
 boot() {  # $1 label
   cleanup_engine; sleep 2
   [ -n "$(port_pid)" ] && { echo "=== $1 ABORT port busy ===" >> "$OUT"; return 1; }

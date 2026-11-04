@@ -4,6 +4,7 @@
 # A/B/A/B across boots settles template-vs-drift on the known style-defer risk lane
 # (F-279 lesson: "clear natural prose" fights mimicry without a style-defer clause).
 set -u
+. "$(dirname "$0")/../battery-lib.sh"
 REPO=/home/svg/LLM/strata-custom-2
 LAUNCH=$REPO/launch-custom-iq3s-8081.sh
 PORT=8081
@@ -11,17 +12,6 @@ RES=$REPO/campaign/results
 OUT=$RES/tpl-user-mimpair.log
 echo "TPL-USER MIMPAIR legs B-D start $(date)" > "$OUT"
 
-port_pid() { ss -ltnp 2>/dev/null | grep ":$PORT " | grep -oP 'pid=\K[0-9]+' | head -1; }
-cleanup_engine() {
-  local p pid c
-  p=$(port_pid); [ -n "$p" ] && kill -TERM "$p" 2>/dev/null
-  sleep 4
-  for pid in $(nvidia-smi --query-compute-apps=pid --format=csv,noheader 2>/dev/null); do
-    c=$(tr '\0' ' ' < /proc/"$pid"/cmdline 2>/dev/null)
-    case "$c" in *strata*) kill -TERM "$pid" 2>/dev/null ;; esac
-  done
-  sleep 2
-}
 
 boot_leg() {  # $1 = leg tag, $2 = user|standing
   cleanup_engine; sleep 2
@@ -40,7 +30,7 @@ boot_leg() {  # $1 = leg tag, $2 = user|standing
   done
   echo "boot $1 health=$ok" >> "$OUT"
   if [ "$ok" = 1 ]; then
-    ( cd "$REPO" && bash campaign/prewarm2.sh "$REPO/logs/custom-iq3_s.log" >> "$OUT" 2>&1 )
+  wait_prewarm
     ( cd "$REPO" && timeout 900 .venv/bin/python campaign/mimicbench2.py 8081 tpl-mp-$1 >> "$OUT" 2>&1 ) \
       || echo "MIMIC $1 failed" >> "$OUT"
   fi

@@ -23,6 +23,7 @@
 #include "strata/core/pinned_ring.hpp"
 #include "strata/core/session.hpp"
 #include "strata/kernels/sampler.hpp"
+#include "strata/kernels/verify_kernels.hpp"
 
 #include <cuda_runtime.h>
 
@@ -196,11 +197,16 @@ private:
     bool capture_round(int T, bool coupled, std::string& err);
     bool capture_step(int j, bool coupled, std::string& err);
     cudaGraphExec_t step_exec_[9] = {};
+    static_assert(sizeof(step_exec_) == (strata::kernels::kVerifyMaxT + 1) * sizeof(step_exec_[0]),
+                  "the MTP graph arrays are indexed by T: widen them with kVerifyMaxT (T65)");
     // coupled draft sampling: its own round/step graphs (the argmax ones stay as they were), the request's
     // parameters and the penalty ring (mapped staging + device copies), the split scratch, token id -> subset index
     bool setup_coupled(std::string& err);
     cudaGraphExec_t round_exec_c_[9] = {};
     cudaGraphExec_t step_exec_c_[9] = {};
+    static_assert(sizeof(round_exec_c_) == (strata::kernels::kVerifyMaxT + 1) * sizeof(round_exec_c_[0]) &&
+                  sizeof(step_exec_c_) == (strata::kernels::kVerifyMaxT + 1) * sizeof(step_exec_c_[0]),
+                  "the MTP graph arrays are indexed by T: widen them with kVerifyMaxT (T65)");
     bool coupled_ok_ = false, coupled_active_ = false;
     bool coupled_rec_ = false;   ///< record_forward: the full layer ends in the coupled sampler (draft coupled_j_)
     int coupled_j_ = 0;
@@ -252,6 +258,10 @@ private:
     int steps_seen_ = 0, chain_n_ = 0, chain_early_ = 0;
     int32_t chain_tok_[8] = {};
     float chain_prob_[8] = {};
+    static_assert(sizeof(ev_step_) == strata::kernels::kVerifyMaxT * sizeof(ev_step_[0]) &&
+                  sizeof(chain_tok_) == strata::kernels::kVerifyMaxT * sizeof(chain_tok_[0]) &&
+                  sizeof(chain_prob_) == strata::kernels::kVerifyMaxT * sizeof(chain_prob_[0]),
+                  "the early-exit chain holds one slot per window row: widen with kVerifyMaxT (T65)");
     int64_t n_vocab_ = 0;
     uint64_t vram_ = 0;
     cudaStream_t cs_ = nullptr;
@@ -263,6 +273,10 @@ private:
     cudaStream_t side_ = nullptr;                    // the shared expert's branch of the draft graphs (CUDA)
     cudaEvent_t sh_fork_ = nullptr, sh_join_ = nullptr;
     cudaGraphExec_t round_exec_[9] = {};
+    static_assert(sizeof(prefill_exec_) == (strata::kernels::kVerifyMaxT + 1) * sizeof(prefill_exec_[0]) &&
+                  sizeof(prefill_dev_exec_) == (strata::kernels::kVerifyMaxT + 1) * sizeof(prefill_dev_exec_[0]) &&
+                  sizeof(round_exec_) == (strata::kernels::kVerifyMaxT + 1) * sizeof(round_exec_[0]),
+                  "the MTP graph arrays are indexed by T: widen them with kVerifyMaxT (T65)");
 
     struct Tensor { std::string name, kind; int64_t rows = 0, cols = 0; uint64_t off = 0, bytes = 0; };
     std::vector<Tensor> tensors_;

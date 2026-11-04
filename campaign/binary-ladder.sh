@@ -16,15 +16,7 @@ CHAMP=${1:?champion binary path}
 CAND=${2:?candidate binary path}
 LABEL=${3:?label}
 cd "$REPO"
-
-wait_prewarm() {   # the server's own warm-in (the config's "prewarm" section) - wait for its terminal state
-  for i in $(seq 1 240); do
-    s=$(curl -s -m 3 http://127.0.0.1:8081/health 2>/dev/null | sed -n 's/.*"prewarm": "\([a-z]*\)".*/\1/p')
-    case "$s" in done|failed|yielded|"") return 0 ;; esac
-    sleep 5
-  done
-  echo "wait_prewarm: the warm-in did not report done in 20 min (continuing)"
-}
+. ./battery-lib.sh
 
 boot_and_probe() {   # $1 = binary, $2 = tag
   cp "$1" engine/strata
@@ -47,18 +39,9 @@ boot_and_probe() {   # $1 = binary, $2 = tag
 cp engine/strata /tmp/ladder-pre-run.bin   # the lane's own binary, restored at the end
 echo "lane binary saved: $(md5sum engine/strata | cut -c1-8)"
 
-stop_server() {
-  local p; p=$(ps aux | grep "serve/server\.py --engine" | grep -v grep | awk '{print $2}' | head -1)
-  [ -n "$p" ] && kill "$p"
-  for i in $(seq 1 30); do
-    [ "$(ps aux | grep -E 'serve/server\.py --engine|engine/strata --serve' | grep -v grep | wc -l)" -eq 0 ] && break
-    sleep 2
-  done
-}
-
 for round in 1 2; do
-  echo "=== round $round: champion ==="; stop_server; boot_and_probe "$CHAMP" "champ$round"
-  echo "=== round $round: candidate ==="; stop_server; boot_and_probe "$CAND" "cand$round"
+  echo "=== round $round: champion ==="; cleanup_engine; boot_and_probe "$CHAMP" "champ$round"
+  echo "=== round $round: candidate ==="; cleanup_engine; boot_and_probe "$CAND" "cand$round"
 done
 # campaign law 10/11: restore the binary the lane was RUNNING when the gauntlet started, never the
 # (possibly older) champion argument - a held candidate must not silently downgrade the lane.

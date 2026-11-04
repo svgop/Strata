@@ -4,6 +4,10 @@ One home per kind of artifact. Anything deleted from here lives in git history a
 its old path — the journal (SVG-CUSTOM.md) is the index of what ran and why.
 
 ## Top level — LIVING instruments (paths are referenced by batteries; do not move)
+- `battery-lib.sh`    — the shared battery infrastructure (port_pid / cleanup_engine with the
+  repo-path-scoped GPU kill / wait_health / wait_prewarm / final_serve). Every battery and both
+  ladders source it; the fleet's ~1,040 copy-pasted lines and the `*strata*` kill substring
+  (which killed BOTH engines) lived in the per-script copies until 2026-11-04
 - `probe-lane.py`     — the Proof-Law lane probe (M1/pair/conc/M3b/accept/ms-window)
 - `probe-metrics.py`  — stability capture (TTFT/ITL/E2E p50-p99, clock/temp/power, golden hash) → results/metrics.jsonl
 - `binary-ladder.sh`, `env-ladder.sh` — the promotion gauntlets (they wait for the server's own

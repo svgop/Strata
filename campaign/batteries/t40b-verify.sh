@@ -5,6 +5,7 @@
 # window must not crash, commit guards must hold; first p50 reading vs OFF via the
 # phase-correct WSTAT histogram). Ends with the server UP on the deployed binary (OFF).
 set -u
+. "$(dirname "$0")/../battery-lib.sh"
 REPO=/home/svg/LLM/strata-custom-2
 LAUNCH=$REPO/launch-custom-iq3s-8081.sh
 PORT=8081
@@ -13,17 +14,6 @@ OUT=$RES/t40b-verify.log
 KEY="3f0940df8efb9c363e4189956ae907d3e4acac221aab39f44804fe0b0df1b8"
 echo "T40B VERIFY start $(date)" > "$OUT"
 
-port_pid() { ss -ltnp 2>/dev/null | grep ":$PORT " | grep -oP 'pid=\K[0-9]+' | head -1; }
-cleanup_engine() {
-  local p pid c
-  p=$(port_pid); [ -n "$p" ] && kill -TERM "$p" 2>/dev/null
-  sleep 4
-  for pid in $(nvidia-smi --query-compute-apps=pid --format=csv,noheader 2>/dev/null); do
-    c=$(tr '\0' ' ' < /proc/"$pid"/cmdline 2>/dev/null)
-    case "$c" in *strata*) kill -TERM "$pid" 2>/dev/null ;; esac
-  done
-  sleep 2
-}
 
 cp "$REPO/build/strata" "$REPO/engine/strata" && echo "deployed C2a-lite binary (default-off)" >> "$OUT"
 

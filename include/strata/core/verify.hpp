@@ -27,6 +27,7 @@
 #include "strata/core/layer.hpp"
 #include "strata/core/session.hpp"
 #include "strata/kernels/sampler.hpp"
+#include "strata/kernels/verify_kernels.hpp"
 
 #include <cuda_runtime.h>
 
@@ -572,6 +573,12 @@ private:
     cudaEvent_t df_join_[2] = {};
     cudaGraphExec_t exec_[9] = {};
     cudaGraphExec_t exec_nr_[9] = {};   // #871: the doorbell variant of a stage that is all-resident otherwise
+    // T65's silent class, now loud: indexed by T in 0..kVerifyMaxT - widening the window without widening
+    // these is graph-handle corruption that only shows at runtime, until right here
+    static_assert(sizeof(exec_) == (strata::kernels::kVerifyMaxT + 1) * sizeof(exec_[0]),
+                  "exec_/exec_nr_ are indexed by T: widen them with kVerifyMaxT");
+    static_assert(sizeof(exec_nr_) == (strata::kernels::kVerifyMaxT + 1) * sizeof(exec_nr_[0]),
+                  "exec_/exec_nr_ are indexed by T: widen them with kVerifyMaxT");
     // fork 34a35db (STRATA_SIDE_MIXER=1): the GDN gates and the QSA indexer on a branch of the window's graph beside the
     // mixer's projections, joined before the recurrence / the attention
     cudaStream_t side_ = nullptr;
@@ -626,6 +633,8 @@ private:
     bool split_ = false;   // opt-in (--spec-split): exact but slower, see the overlap study
     std::function<bool(cudaStream_t, std::string&)> pre_launch_;   // set_pre_launch
     int groups_[9] = {};
+    static_assert(sizeof(groups_) == (strata::kernels::kVerifyMaxT + 1) * sizeof(groups_[0]),
+                  "groups_ is indexed by T like exec_: widen it with kVerifyMaxT");
     int batch_groups_ = 1;   // STRATA_BATCH_G2: the captured batch window's group count (the service loops read it)
     float* h_ymiss_ = nullptr;   float* m_ymiss_ = nullptr;     // T * k * n_embd
 

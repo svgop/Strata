@@ -27,6 +27,7 @@
 #include "strata/kernels/dp4a.hpp"
 #include "strata/kernels/q8_1_finite.hpp"
 #include "strata/kernels/iq_kernels.hpp"
+#include "strata/kernels/verify_kernels.hpp"
 #include "strata/kernels/gfx_arch.hpp"
 #include "strata/core/sm75_series.hpp"
 #include "s26_tsum.cuh"
@@ -827,6 +828,10 @@ __global__ void native_small_mmvq_kernel(const Weight* __restrict__ w,
 // the same warp tree as the ncols = 1 kernel, so every column is BITWISE equal to a single-column call on that
 // column (checked by bench/micro/native_mmvq_multi.cpp). The ncols = 1 kernels are untouched.
 constexpr int MAX_NCOLS = 8;
+// T65: this family is 8-column BY DESIGN - it exists to carry one verify window's activation rows.  A
+// kVerifyMaxT wider than this is not a slow path, it is a graph-capture throw on the first wide window.
+static_assert(MAX_NCOLS >= strata::kernels::kVerifyMaxT,
+              "the native MMVQ family must cover the verify window (widen MAX_NCOLS with kVerifyMaxT)");
 
 // Each format splits its dot product into `load` (everything that depends only on the weight block: codes,
 // unpacked scales, block scale) and `apply` (the activation loads and the original *_impl expression). `load` runs
@@ -1516,7 +1521,7 @@ void launch_multi(const void* weights, const void* x_q8_1, float* y, int n_in, i
         case 6: launch_multi_n<F, 6>(weights, x_q8_1, y, n_in, n_out, s); break;
         case 7: launch_multi_n<F, 7>(weights, x_q8_1, y, n_in, n_out, s); break;
         case 8: launch_multi_n<F, 8>(weights, x_q8_1, y, n_in, n_out, s); break;
-        default: throw std::invalid_argument("native MMVQ multi-column launch requires 2 <= ncols <= 8");
+        default: throw std::invalid_argument("native MMVQ multi-column launch requires 2 <= ncols <= " + std::to_string(MAX_NCOLS));
     }
 }
 
@@ -1736,7 +1741,7 @@ void launch_il(const void* weights, const void* x_il, float* y, int n_in, int n_
 #define STRATA_IL_CASE(N) case N: if constexpr (R <= 2) native_mmvq_il_kernel<I, N, R><<<blocks, 4 * WARP, 0, s>>>(w, xq, xd, y, n_in, n_out); break;
         STRATA_IL_CASE(5) STRATA_IL_CASE(6) STRATA_IL_CASE(7) STRATA_IL_CASE(8)
 #undef STRATA_IL_CASE
-        default: throw std::invalid_argument("native_mmvq_il requires 1 <= ncols <= 8");
+        default: throw std::invalid_argument("native_mmvq_il requires 1 <= ncols <= " + std::to_string(MAX_NCOLS));
     }
 }
 
@@ -1797,7 +1802,7 @@ void validate_shape(int n_in, int ncols, int block_elems = Q8K) {
     if (n_in <= 0 || n_in % block_elems != 0) {
         throw std::invalid_argument("native MMVQ requires n_in > 0 and divisible by its block element count");
     }
-    if (ncols < 1 || ncols > MAX_NCOLS) throw std::invalid_argument("native MMVQ requires 1 <= ncols <= 8");
+    if (ncols < 1 || ncols > MAX_NCOLS) throw std::invalid_argument("native MMVQ requires 1 <= ncols <= " + std::to_string(MAX_NCOLS));
 }
 void validate_pointer(const void* p) {
     if (!p || reinterpret_cast<std::uintptr_t>(p) % 4 != 0) {

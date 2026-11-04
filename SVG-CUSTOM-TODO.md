@@ -1364,6 +1364,19 @@ light|probe), campaign/t18-ab.sh (3v3 binary A/B). Revert: cp engine/strata.pre-
 (+ git revert). CLOSED as a stability fix; watch for the trigger surfacing as one-window request
 errors ("the expert source could not produce a blob" / nt-capacity refusal) instead of crashes.
 
+**CRASH WATCH, P2 (2026-11-04, unreproduced): SIGSEGV (-11) on the first Qwen boot after a DS
+engine teardown** (the assert-wall binary, md5 8222dcecee47 — a compile-time-only hardening build:
+static asserts + equal-value constant swaps, no runtime-path change by construction). Context:
+boot after DS was stopped, prewarm replay clean (12 s), bit-check p1 read an 88-token prompt at
+~4 tok/s for 20+ s (p2/p3 fast), the SECOND bit-check's p1 read 29 s then the engine exited -11
+mid-prompt-read. The server survived (fail-open; `loaded:false` until the next request). Three
+full replays of the exact sequence on the same binary: clean (9 prompts, lanes 215.5/198.8/260.9
+in band). No core captured (coredumpctl empty for it). Smell: T18's cousin class (slow degrade
+then die) but in the PREFILL phase, not the pool dispatch T18 fixed — or a one-off RAM/VRAM
+handoff state after the DS teardown. ON ANY RECURRENCE: record the boot context (which engine ran
+before, how long since teardown), grab `coredumpctl` immediately, and note whether a slow prompt
+read preceded it.
+
 ## T15C — HC-KERNEL TRANCHE RESULTS (2026-10-20 04:30-07:00; batteries campaign/results/t15c-*.log + per-leg t15c-*-*.out; scorer campaign/t15c-score.py; harness campaign/t15c-battery.sh)
 Method: every stage proof-first on the card (gr_parity --selftest byte-equality, multi-vs-single + QFUSE,
 at the exact env state), THEN one 3v3 ABAB interleaved battery per stage (fresh boot per leg, probe
