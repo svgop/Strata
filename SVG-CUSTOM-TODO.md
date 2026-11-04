@@ -1892,6 +1892,21 @@ objective question feeds it); T14B retrain → 262k.
   per draft round (trivial vs our window cost). Price as the bigger swing if recursive rollouts stall.
 
 
+**CRASH WATCH P1 CLOSED (2026-11-04, root-caused + fixed same day): the idle SIGSEGV was
+generate.cpp:12771 reading per-stage telemetry baselines the COHORT path never armed.**
+The idle stats flush (`!batch_on() && bt_windows > 0`) indexes bt_stage_wait0/bt_stage_pool0[k];
+only the single-verifier first-window block (12568) assigned them - the cohort block (12244)
+armed every OTHER baseline; an empty vector's data() is nullptr -> `subsd (%0+0*8)` at 12771,
+the deterministic NULL read. Proven: kernel log (all three crashes the SAME instruction, CPU 0),
+eu-stack + gdb on the decompressed core (rdi=rcx=rbx=0), and a same-layout -g twin resolving
+0x4a36b50 -> generate.cpp:12771. Explained: the crash code is newer telemetry that never
+deployed until the assert-era rebuild leapt the lane binary forward - the asserts were never
+the cause. Fix (structural + correct): the vectors are sized at declaration (a flush without
+its arming path is a wrong number, never a fault) and the cohort block arms its baselines like
+the batch one. Verified: the previously-fatal idle flush line printed clean with correct
+per-stage numbers after traffic->idle (the exact fatal sequence); lanes 208.6/212.6/251.2 in
+band; bit-check clean; no new core since. The pre-fix binary: /tmp/strata-crasher-pre-fix.
+
 **CRASH WATCH UPDATE (2026-11-04 evening, P1 - recurring): THREE SIGSEGVs, not one isolated.**
 16:46 (during bit-check), 18:59 (idle), 19:40 (idle) - all on the assert-wall binary (md5
 8222dcecee47), roughly hourly, crash-then-auto-restart cycles; lanes were IN BAND all day

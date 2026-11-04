@@ -1,0 +1,17 @@
+{
+ "p1": {
+  "tok": 320,
+  "sha": "c6aa224920acbfb625ce3da5634683a8d2ce553f4e0232518358beb4d57c6db6",
+  "secs": 1.84
+ },
+ "p2": {
+  "tok": 320,
+  "sha": "5231f4a8c1163297b132d7298bb9e6129145af7a9675dd6ab9f49e3262374bd4",
+  "secs": 2.17
+ },
+ "p3": {
+  "tok": 320,
+  "sha": "9ffbd1752a4d82904e1e5638e3a44cc91ace3b4e4d4be9757b69333d2eb3c977",
+  "secs": 1.89
+ }
+}

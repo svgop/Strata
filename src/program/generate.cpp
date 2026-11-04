@@ -11904,8 +11904,12 @@ int main(int argc, char** argv) {
         int64_t bt_windows = 0, bt_rows = 0, bt_tokens = 0, bt_accepted = 0;   // bt_accepted: --batch-mtp proposals taken
         int64_t pipe_rows = 0;   // the pipelined groups' rows, never reset (bt_rows restarts when the slots go idle)
         // per stage (0 = CUDA0's verifier): the GPU-reach wait and pool time when the timed windows began; and the routed
-        // (token, expert) entries the CPU and the PCIe share had served by then (bt_hits0 holds the VRAM entries)
-        std::vector<double> bt_stage_wait0, bt_stage_pool0;
+        // (token, expert) entries the CPU and the PCIe share had served by then (bt_hits0 holds the VRAM entries).
+        // Sized here and never empty: the idle stats flush reads them per stage (generate.cpp:12771), and the COHORT
+        // path's first window (below) arms every OTHER baseline but not these - an unsized vector indexed at [k] was
+        // the idle SIGSEGV of 2026-11-04 (three crashes, one instruction: subsd on a null data(); eu-stack + a -g twin
+        // resolved it to this line).  A flush that runs without its arming path is now a wrong number, never a fault.
+        std::vector<double> bt_stage_wait0(stages.size() + 1, 0.0), bt_stage_pool0(stages.size() + 1, 0.0);
         int64_t bt_cpu_ent0 = 0, bt_off_ent0 = 0;
         // the adaptive VRAM tier in batch windows: windows seen since the engine started (--adapt-every counts them), and,
         // since the last timing line, its rounds, the experts it swapped in and the ms a window waited for it
@@ -12247,6 +12251,14 @@ int main(int argc, char** argv) {
                     bt_miss0 = drive.d.multi_misses; bt_hits0 = drive.d.cache_hits; bt_pcie0 = drive.d.pcie_experts;
                     bt_cpu_ent0 = drive.d.multi_entries; bt_off_ent0 = drive.d.offload_entries;
                     bt_a_rounds0 = a_rounds; bt_a_swapped0 = a_swapped;
+                    // the cohort path arms the stage baselines too: the idle flush reads them per stage, and a
+                    // baseline left at its declaration zeros reports cumulative-since-boot values as per-window ones
+                    bt_stage_wait0.assign(stages.size() + 1, 0.0);
+                    bt_stage_pool0.assign(stages.size() + 1, 0.0);
+                    for (size_t k = 0; k <= stages.size(); ++k) {
+                        bt_stage_wait0[k] = stage_verifier((int) k).ms_wait;
+                        bt_stage_pool0[k] = stage_verifier((int) k).ms_pool;
+                    }
                 }
                 auto msd2 = [](Clock::time_point a0, Clock::time_point b0) {
                     return std::chrono::duration<double, std::milli>(b0 - a0).count();
