@@ -153,7 +153,7 @@ era's negative results (E1, SMT, X1, X2, W9-composite, W12) are banked in the sa
 future session re-pays for them.
 
 **The shadow store (F-359/F-360/F-367).** A second, deliberately lighter quantization (Q2_0) whose
-only consumer is the byte-bound CPU lane: the artifact of record ships in `data/packs/q2_0`, a
+only consumer is the byte-bound CPU lane: the artifact of record lives in the estate at `/home/svg/LLM/data/packs/q2_0`, a
 tmpfs placement cache is re-established by the launcher on every boot (a silent reboot-time loss
 was found and normalized), and the lane pays 75 µs/entry instead of 152. Clean A/B:
 **+2.9/+3.8/+20.8%** (solo/pair/conc).

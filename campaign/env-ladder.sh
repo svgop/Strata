@@ -49,7 +49,7 @@ boot_and_probe() {   # $1 = on|off, $2 = tag
   # the arm's own banner/decline line, from the engine's environment as the process sees it
   local ep; ep=$(pgrep -x strata | head -1)
   echo "[$2] env $VAR=$(tr '\0' '\n' < /proc/$ep/environ | sed -n "s/^$VAR=//p" | head -1)"
-  grep -h "STRATA_SHARED_HOIST" /tmp/envl-$2.out custom-iq3_s.log 2>/dev/null | tail -2
+  grep -E ".{0,60}STRATA_SHARED_HOIST.{0,40}" $REPO/logs/custom-iq3_s.log 2>/dev/null | tail -2
   .venv/bin/python campaign/probe-lane.py --port 8081 --label "$LABEL-$2-warm" 2>&1 \
     | tee "campaign/results/$LABEL-$2-warm.txt" | grep -E "^M1|^M2" | sed 's/^/[warm-discard] /'
   for l in 1 2 3; do

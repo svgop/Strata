@@ -134,7 +134,7 @@ VRAM hit rate pinned 100%" on Qwen3.8-Flash Q6-KXL via `--pcie-frac`, `layer_spl
 
 Our status, verified in-tree 2026-10-16:
 - `--pcie-frac`: we run it daily — standing config `--pcie-frac 0.35 --pcie-mode dma`
-  (custom-iq3_s-8081.json; readers at include/strata/core/expert_source.hpp:468,
+  (config/custom-iq3_s-8081.json; readers at include/strata/core/expert_source.hpp:468,
   verify.hpp:317/:541).
 - `--layer-split` + `--trim-stage-weights`: exist in our tree (src/program/generate.cpp:653/
   896/2162; :3165 notes PR #559 = STRATA_STAGE_TRIM=1 of PR #639). They are MULTI-GPU

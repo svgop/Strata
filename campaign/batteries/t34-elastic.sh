@@ -58,7 +58,7 @@ python3 - <<'PY'
 import json
 cfg = json.load(open('/home/svg/LLM/strata-custom-2/config/custom-iq3_s-8081.json'))
 cfg['parallel'] = 9
-json.dump(cfg, open('/home/svg/LLM/strata-custom-2/custom-iq3s-b9.json', 'w'), indent=2)
+json.dump(cfg, open('/home/svg/LLM/strata-custom-2/config/custom-iq3s-b9.json', 'w'), indent=2)
 PY
 sed 's|custom-iq3_s-8081.json|custom-iq3s-b9.json|' "$REPO/launch-custom-iq3s-8081.sh" > "$REPO/launch-custom-iq3s-8081-b9.sh"
 chmod +x "$REPO/launch-custom-iq3s-8081-b9.sh"

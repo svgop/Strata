@@ -38,7 +38,7 @@
     "--conversation-cache-min-tokens",
     "200",
     "--control-vector-scaled",
-    "refusal-r.gguf:1.0",
+    "/home/svg/LLM/data/vectors/qwen3.8-flash-next-refusal-r.gguf:1.0",
     "--control-vector-layer-range",
     "4",
     "24",

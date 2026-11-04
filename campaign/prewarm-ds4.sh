@@ -16,7 +16,7 @@ T0=$(date +%s)
 for f in /home/svg/LLM/data/packs/deepseek-v4.1-flash-ist-das-2.00bpw/* \
          /home/svg/LLM/data/models/GSQ-RCO/Deepseek-v4.1-Flash/IQ2-XXS/DeepSeek-V4.1-Flash-1017-GSQ-RCO-IQ2_XXS-0000*-of-00004.gguf \
          /home/svg/LLM/data/models/GSQ-RCO/Deepseek-v4.1-Flash/IQ2-XXS/DeepSeek-V4.1-Flash-Engram-IQ4_NL.gguf \
-         /home/svg/LLM/data/models/deepseek-v4.1-flash-shared/*; do
+         /home/svg/LLM/data/models/GSQ-RCO/Deepseek-v4.1-Flash/IQ2-XXS/deepseek-v4.1-flash-shared/*; do
   [ -f "$f" ] || continue
   dd if="$f" of=/dev/null bs=8M status=none 2>/dev/null || true
 done

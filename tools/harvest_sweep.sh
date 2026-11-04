@@ -16,8 +16,8 @@ for f in "$CORPUS"/stream-*.ids; do
   echo "=== harvest $name ($(wc -c < "$f") bytes of ids) $(date +%H:%M:%S) ==="
   timeout 1800 "$REPO/engine/strata" \
     --pack /home/svg/LLM/data/packs/iq3_s \
-    --native /home/svg/LLM/data/models/Qwen3.8-Flash-Next-GSQ-RCO-IQ3_S-00001-of-00002.gguf \
-    --ple-gguf /home/svg/LLM/data/models/Qwen3.8-Flash-Next-GSQ-RCO-IQ3_S-00002-of-00002.gguf \
+    --native /home/svg/LLM/data/models/GSQ-RCO/Qwen3.8-Flash-Next/Qwen3.8-Flash-Next-GSQ-RCO-IQ3_S-00001-of-00002.gguf \
+    --ple-gguf /home/svg/LLM/data/models/GSQ-RCO/Qwen3.8-Flash-Next/Qwen3.8-Flash-Next-GSQ-RCO-IQ3_S-00002-of-00002.gguf \
     --expert-cache auto --spec 6 --max-context 131072 --kv int8 --kv-resident 32768 \
     --spec-min-p 0.5 --prefill auto:32768 --mtp-q4 all --mtp-hnorm stream \
     --pcie-frac 0.35 --pcie-mode dma --vram-reserve-mib 2000 \

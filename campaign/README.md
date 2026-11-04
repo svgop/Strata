@@ -28,7 +28,9 @@ its old path — the journal (SVG-CUSTOM.md) is the index of what ran and why.
 ## T14B-specs/ — retrain/re-quant execution specs
 
 ## Standing boot pair lives at REPO ROOT (do not move — LAUNCH LAW + F-249 .venv resolution):
-`launch-custom-iq3s-8081.sh` + `custom-iq3_s-8081.json` + `refusal-r.gguf` (config-referenced asset).
+`launch-custom-iq3s-8081.sh` (the launcher resolves `.venv` from its own dir).  The config it
+starts is `config/custom-iq3_s-8081.json`; the steering vector lives in the estate at
+`/home/svg/LLM/data/vectors/qwen3.8-flash-next-refusal-r.gguf`; the log at `logs/custom-iq3_s.log`.
 
 ## Policy (F-267/F-268)
 - A battery's `.out` boot logs commit WITH their battery's `.log` summary; no drift.

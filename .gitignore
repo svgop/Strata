@@ -105,3 +105,4 @@ campaign/retrain/*.npy
 campaign/shadow-bench/shadow_bench
 ds4-slots/
 # engine logs (runtime)
+data/expert-profile-learned.bin

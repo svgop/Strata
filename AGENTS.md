@@ -276,7 +276,7 @@ builds, and test binaries live at `~/LLM/strata` (the stock tree), and derived t
 **Prohibitions:** durable scripts never live in `/tmp` (scratch only, cleared at consolidation);
 build artifacts (binaries, *.npy fixtures) never enter git (.gitignore patterns own them — git
 history is the archive); run-once harnesses for closed questions are deleted when the question
-closes; engine logs at repo root (custom-iq3_s.log) are ephemeral and may be deleted between boots.
+closes; engine logs at `logs/` (logs/custom-iq3_s.log) are ephemeral and may be deleted between boots.
 Every new artifact class gets a named directory or convention BEFORE the first file lands. Leave
 the tree more ordered than you found it.
 
@@ -322,7 +322,7 @@ port, merge:
 7. **Revert cleanly on failure:** restore from git or `~/LLM/backup/`, re-boot, and VERIFY the
    restored state (env on the engine process + /health) before declaring the round closed.
 8. **The Launch Law:** never run `setup.py`/`setup.sh` on this lane (it rewrites config args);
-   start via the launchers. Engine rebuilds deploy by `cp build/strata engine/strata` with a
+   start via the launchers. Engine rebuilds deploy by `cp build-fresh/strata engine/strata` (the LIVE tree; `build/` is stale and gone) with a
    rollback copy kept alongside.
 9. **PATHWAY MINDFULNESS (user doctrine, 2026-10-23 — an ultimatum, not a suggestion).** Every
    mechanism is studied as a PATHWAY before it is extended, and re-studied periodically while it

@@ -132,8 +132,8 @@ void shadow_entry(const uint8_t* blob, Buf& b, int nt) {
 
 struct Args {
     const char* txt = "/home/svg/LLM/data/packs/iq3_s/native_experts.txt";
-    const char* gguf[2] = {"/home/svg/LLM/data/models/Qwen3.8-Flash-Next-GSQ-RCO-IQ3_S-00001-of-00002.gguf",
-                           "/home/svg/LLM/data/models/Qwen3.8-Flash-Next-GSQ-RCO-IQ3_S-00002-of-00002.gguf"};
+    const char* gguf[2] = {"/home/svg/LLM/data/models/GSQ-RCO/Qwen3.8-Flash-Next/Qwen3.8-Flash-Next-GSQ-RCO-IQ3_S-00001-of-00002.gguf",
+                           "/home/svg/LLM/data/models/GSQ-RCO/Qwen3.8-Flash-Next/Qwen3.8-Flash-Next-GSQ-RCO-IQ3_S-00002-of-00002.gguf"};
     const char* shadow = "/home/svg/LLM/data/packs/q2_0/experts.bin";
     int experts = 64;
     int reps = 3;

@@ -28,7 +28,7 @@ with the quality gate clean, floors (MMLU-Pro 95.0 mean, mimic 87.9) never trade
 - **Coupled MTP exact-match speculation** with device-side typical rescue, a suffix drafter with
   economics arbitration, and a trace-calibrated draft keep rule (74–87% acceptance held throughout).
 - **The shadow store** — a second, deliberately lighter quantization whose *only* consumer is the
-  byte-bound CPU lane: Q2_0 blobs live as an artifact of record in `data/packs` (shipped, versioned)
+  byte-bound CPU lane: Q2_0 blobs live as an artifact of record in `/home/svg/LLM/data/packs` (the estate, on disk)
   with a tmpfs placement cache that the launcher resolves on every start, so a cold boot can never
   silently lose it. The lane pays 75 µs per entry instead of 152 — the same token stream on a
   different byte diet. The canonical-vs-placement split is the pattern worth stealing: facts live in

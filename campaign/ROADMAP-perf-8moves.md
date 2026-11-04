@@ -28,10 +28,10 @@ Tracker board: `/home/svg/LLM/.zcode/rich-tracking/strata-perf-roadmap.board.jso
 Capture commands (all from repo root):
 - `campaign/probe-lane.py` — the standing 3v3 same-hour M1/pair/conc battery.
 - `campaign/t42-prefill-ladder.py` — prefill ladder (8K/32K/64K).
-- Telemetry: `grep -a "strata decode timing" custom-iq3_s.log | tail` (solo/pair) and
-  `grep -a "strata batch:" custom-iq3_s.log | tail` (conc; contains `run/CUDA0 wait/CPU experts/
+- Telemetry: `grep -a "strata decode timing" $REPO/logs/custom-iq3_s.log | tail` (solo/pair) and
+  `grep -a "strata batch:" $REPO/logs/custom-iq3_s.log | tail` (conc; contains `run/CUDA0 wait/CPU experts/
   commit/emit/adapt wait` split + `routed entries per window` + acceptance).
-- `grep -a "GPU stages" custom-iq3_s.log | tail` — per-stage GPU profile
+- `grep -a "GPU stages" $REPO/logs/custom-iq3_s.log | tail` — per-stage GPU profile
   (GDN/QSA kernel-class ms per window; batch sums both cohorts, divide ~1.9 for wall).
 - Snapshot before ANY change: `cp engine/strata engine/strata.pre-<tag>` (existing convention,
   see engine/ dir). Git: repo is `main`; 2026-10-27 baseline head `50684ddd`, clean.
