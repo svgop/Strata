@@ -230,8 +230,10 @@ follow it whether a person or an agent writes the text. The short version:
 ## Repo layout for campaign artifacts (svg's fork — F-268 restructure)
 
 `campaign/README.md` is the authoritative map. Short version: living instruments (probe-lane,
-probe-metrics, prewarm2, gates, ctx/depth probes) sit at `campaign/` top level — batteries reference
-those paths, do not move them. The lane-trend tracker (the incline chart's data + builder) is
+probe-metrics, gates, ctx/depth probes) sit at `campaign/` top level — batteries reference
+those paths, do not move them. The boot warm-in is NOT a campaign artifact anymore: it is the
+server's own `prewarm` lifecycle (the config's `"prewarm"` section, serve/server.py's `Prewarm`,
+observable as /health's `"prewarm"` word). The lane-trend tracker (the incline chart's data + builder) is
 `campaign/tracker/` (law 12 below). Reusable harnesses live in `campaign/batteries/` (abab-run, t20-gates,
 t22-custom-vs-stock, t31-rebank + summary). Parked future work in `campaign/arms/` (the 262k pair,
 refresh owed at GO). Dossiers/specs in `campaign/research/`, evidence in `campaign/results/`,
@@ -352,13 +354,16 @@ port, merge:
     of the served model) are NOT promotions — they are shelf variants, labeled, never silent.
 
 11. **WARMUP IS PART OF THE BENCH (user law, 2026-10-26).** No measured leg runs on a cold process.
-    Every boot in a battery pays, IN THIS ORDER: engine health → `prewarm2` (page-cache re-warm of
-    every store the run will read, replay-shaped requests, graph captures) → ONE FULL DISCARDED
+    Every boot in a battery pays, IN THIS ORDER: engine health → the server's own warm-in (the
+    config's `"prewarm"` section, `serve/server.py`'s `Prewarm`: page-cache re-warm of every store
+    the engine reads — derived from its args and pack manifest — plus replay-shaped requests; wait
+    for /health's `"prewarm"` word to reach `done`, `failed` or `yielded`) → ONE FULL DISCARDED
     PROBE LEG. The discard is not ceremony: it absorbs first-touch page faults from mappings the
     replay does not reach (F-360: the shadow store's 31.64 GiB mapping turned leg 1 into 184.8 t/s
     against 205-226 warm — a ~15% error on any mean built from leg 1). Means are computed over the
     measured legs only (2..N), and every new mapping a candidate adds gets its own warmup coverage
-    in `prewarm2.sh` in the same commit that adds the mapping. A benchmark whose first leg is
+    — a file the derivation cannot see goes into that config's `prewarm.extra_files` in the same
+    commit that adds the mapping. A benchmark whose first leg is
     counted is a wrong benchmark, regardless of how many legs follow it.
 
 12. **THE INCLINE LAW (user law, 2026-10-28 — the tracker is the state of record).** Every lane

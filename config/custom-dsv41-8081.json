@@ -29,6 +29,7 @@
   ],
   "port": 8081,
   "engine_ready_s": 3600,
+  "prewarm": {},
   "gpu": 0,
   "gpus_asked": true,
   "api_key": "3f0940df8efb9c363e4189956ae907d3e4acac221aab39f44804fe0b0df1b8"

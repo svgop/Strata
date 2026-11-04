@@ -6,7 +6,8 @@ its old path — the journal (SVG-CUSTOM.md) is the index of what ran and why.
 ## Top level — LIVING instruments (paths are referenced by batteries; do not move)
 - `probe-lane.py`     — the Proof-Law lane probe (M1/pair/conc/M3b/accept/ms-window)
 - `probe-metrics.py`  — stability capture (TTFT/ITL/E2E p50-p99, clock/temp/power, golden hash) → results/metrics.jsonl
-- `prewarm2.sh`       — the ADOPTED post-boot warm package (run after /health, before probing; F-266)
+- `binary-ladder.sh`, `env-ladder.sh` — the promotion gauntlets (they wait for the server's own
+  warm-in, the config's "prewarm" section, before their discarded leg)
 - `mmlu-pro-gate.py`, `mimicbench2.py` — quality gates (2x MMLU + mimic on adoptions)
 - `bit-check.py`      — F-209 bit-identity check (temp-0 fixed prompts → results/f209-bit-*.json)
 - `ctx-probe.py`, `depth-lane.py`, `depth-lane-real.py` — context/depth probes (post-retrain relevant)

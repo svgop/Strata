@@ -5,8 +5,9 @@
 # environments on the same binary, which is the honest test for a flag-gated optimization:
 # nothing differs between the boots except the flag, so the pair deltas are the flag's effect.
 #
-# Law 11 (warmup is part of the bench): every boot pays health -> prewarm2 -> one full DISCARDED
-# probe leg -> measured legs 1..3. Means are over the measured legs only.
+# Law 11 (warmup is part of the bench): every boot pays health -> the server's own warm-in (the
+# config's "prewarm" section) -> one full DISCARDED probe leg -> measured legs 1..3. Means are over
+# the measured legs only.
 # Optional bit identity: round 1 also runs campaign/bit-check.py on both arms; the shas must match
 # (the change is a recompute of the same math, so a sha difference is a correctness failure).
 #
@@ -20,6 +21,15 @@ ON=${3:?on value}
 LABEL=${4:?label}
 BITS=${5:-yes}
 cd "$REPO"
+
+wait_prewarm() {   # the server's own warm-in (the config's "prewarm" section) - wait for its terminal state
+  for i in $(seq 1 240); do
+    s=$(curl -s -m 3 http://127.0.0.1:8081/health 2>/dev/null | sed -n 's/.*"prewarm": "\([a-z]*\)".*/\1/p')
+    case "$s" in done|failed|yielded|"") return 0 ;; esac
+    sleep 5
+  done
+  echo "wait_prewarm: the warm-in did not report done in 20 min (continuing)"
+}
 
 cp engine/strata /tmp/env-ladder-pre-run.bin
 echo "lane binary saved: $(md5sum engine/strata | cut -c1-8)"
@@ -45,7 +55,7 @@ boot_and_probe() {   # $1 = on|off, $2 = tag
     curl -s -m 3 http://127.0.0.1:8081/health 2>/dev/null | grep -q '"status": "ok"' && break
     sleep 5
   done
-  bash campaign/prewarm2.sh > /dev/null 2>&1
+  wait_prewarm
   # the arm's own banner/decline line, from the engine's environment as the process sees it
   local ep; ep=$(pgrep -x strata | head -1)
   echo "[$2] env $VAR=$(tr '\0' '\n' < /proc/$ep/environ | sed -n "s/^$VAR=//p" | head -1)"
@@ -67,7 +77,7 @@ done
 
 stop_server; cp /tmp/env-ladder-pre-run.bin engine/strata; nohup ./launch-custom-iq3s-8081.sh > /tmp/envl-restore.out 2>&1 &
 for i in $(seq 1 100); do curl -s -m 3 http://127.0.0.1:8081/health 2>/dev/null | grep -q '"status": "ok"' && break; sleep 5; done
-bash campaign/prewarm2.sh > /dev/null 2>&1
+wait_prewarm
 
 .venv/bin/python - "$LABEL" << 'PY'
 import re, statistics as st, sys

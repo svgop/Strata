@@ -34,6 +34,7 @@ import hashlib
 import hmac
 import codecs
 import ctypes
+import glob
 import json
 import math
 import os
@@ -3687,6 +3688,292 @@ def slot_save_dir(value, base: str | None = None) -> str:
         raise ValueError(f"slot_save_path {path} is not a directory")
     return path
 
+# ------------------------------------------------------------------------------------------------ prewarm
+PREWARM_ASK_S = 600.0        # one warm-in request's patience: a cold mid prefill is slow, and warming it is the point
+# The warm-in texts: deliberately unlike any probe or battery prompt - a warm-in that shares a prefix with a probe
+# serves the probe from the conversation cache, and the probe stops measuring (the campaign's law).
+PREWARM_SHORT = ("Sketch the lifecycle of a container image from build to retirement, naming the layers, registries "
+                 "and failure points you would instrument along the way.")
+PREWARM_MID = ("Review note: the serving fabric moved its queues into the NICs, telemetry is sampled per rail "
+               "rather than per port, and the unit of capacity planning became the rack, not the switch. ") * 90
+PREWARM_BURST = ("Two engineers disagree about whether to shard a database by tenant or by region. Draft the "
+                 "one-paragraph decision memo you would send them.")
+
+
+class Prewarm:
+    """The boot warm-in, as a server feature (the config's "prewarm" section).
+
+    Every boot leaves the engine cold three ways: the model files are read from NVMe again on the first request
+    (the Qwen boot's cache-complement pin drops the page cache on purpose - FileExpertSource's madvise(DONTNEED),
+    F-220 - so anything warmed before the pin is discarded), the lazy per-shape graph captures are paid by the
+    first request of each cohort shape, and the expert tier starts empty (a DS first leg measured 16.6 tok/s
+    against 36.8 warm on the same boot).  The campaign carried this in two shell scripts that had to be
+    remembered and run by hand after every boot; this runs it at every engine start, by itself, once the engine
+    reports READY - never before, so the pin and the engine's own warmup pass have finished and the order is
+    safe by construction.
+
+    files:  re-populate the page cache over exactly what the engine reads, derived, never spelled out here: the
+            config's file-valued arguments (a --pack directory is walked), a pack manifest's own file table
+            (its "model_dir" key and "file N <name>" lines - the truth about what the store reads, where a glob
+            once warmed nothing for weeks), the shadow store named in the engine's environment (skipped on
+            tmpfs: RAM already), and the section's "extra_files" globs.  posix_fadvise(WILLNEED) asks first -
+            the kernel throttles its readahead under memory pressure, so a 100 GB sweep cannot push the engine's
+            own mappings out - and the read that follows is what makes "warm" mean the bytes are in the cache.
+    replay: a few real-shaped requests through the server's own door (loopback /v1/chat/completions), text only
+            - a picture would start the elastic encoder - and any request that is not ours ends the warm-in:
+            live traffic pre-empts it.  Re-armed after every engine restart (the pin drops the cache again).
+
+    It fails open: a warm-in that cannot finish leaves one line here and its state in /health and /v1/status,
+    and the server serves cold, exactly as it did without the section."""
+
+    def __init__(self, cfg: dict, env: dict, arch: str, api_key: str, port: int):
+        p = cfg.get("prewarm")
+        p = p if isinstance(p, dict) else {}
+        self.cfg, self.env, self.arch = cfg, env or {}, arch
+        self.url = f"http://127.0.0.1:{port}/v1/chat/completions"
+        self.api_key = (api_key or "").split(",")[0].strip()
+        self.files_on = p.get("files") is not False
+        shape = p.get("replay")
+        shape = shape if isinstance(shape, dict) else {}
+        # the DeepSeek lane has no lazy cohort graphs to force: the concurrent burst is the other engine's shape
+        self.shorts = max(0, int(shape.get("shorts", 2)))
+        self.mid = max(0, int(shape.get("mid", 1)))
+        self.burst = max(0, int(shape.get("burst", 0 if arch == "deepseek41" else 6)))
+        self.replay_on = p.get("replay") is not False and bool(self.shorts or self.mid or self.burst)
+        self.timeout_s = float(p.get("timeout_s") or 1800.0)
+        self.extra = [g for g in p.get("extra_files", ()) if isinstance(g, str)]
+        self.stop = threading.Event()
+        self.lock = threading.Lock()
+        self.state = {"phase": "idle", "note": "", "files_gib": 0.0, "files_s": 0.0, "replay_s": 0.0, "at": 0.0}
+        self.svc = None                  # set by start(): the live-traffic counter, the loaded() gate
+        self._own = 0                    # warm-in requests of ours that finished (any answer)
+        self._base = 0                   # the service's request total when this warm-in's replay began
+
+    # -- lifecycle ---------------------------------------------------------------------------------------------
+    def start(self, svc) -> "Prewarm":
+        self.svc = svc
+        svc.prewarm = self
+        what = " + ".join(name for name, on in (("files", self.files_on), ("replay", self.replay_on)) if on)
+        print(f"[strata] prewarm: on ({what}); the warm-in starts when the engine is up and yields to live traffic",
+              flush=True)
+        threading.Thread(target=self._run, daemon=True, name="strata-prewarm").start()
+        return self
+
+    def snapshot(self) -> dict:
+        with self.lock:
+            return dict(self.state)
+
+    def _note(self, phase: str, note: str = "", **kv) -> None:
+        with self.lock:
+            self.state.update(kv, phase=phase, note=note, at=time.time())
+
+    def _run(self) -> None:
+        """One warm-in per engine process: the first when the engine is up, another after every restart (an idle
+        unload and reload pays the pin's cache drop again).  `gen` is the engine's own process counter."""
+        seen, last_done = None, 0.0
+        while not self.stop.is_set():
+            e = getattr(self.svc, "engine", None)
+            gen = getattr(e, "gen", None)
+            if gen is None:
+                seen = 0                                  # an engine without a process counter: nothing to warm
+            elif self.svc.loaded() and (seen is None or gen != seen) and time.monotonic() - last_done >= 30:
+                seen = gen
+                self._cycle()
+                last_done = time.monotonic()
+            self.stop.wait(2.0)
+
+    # -- the warm-in --------------------------------------------------------------------------------------------
+    def _cycle(self) -> None:
+        t_all = time.monotonic()
+        try:
+            if self.files_on:
+                targets = self._file_targets()
+                gib = sum(sz for _, sz in targets) / 2 ** 30
+                self._note("files", files_gib=gib)
+                print(f"[strata] prewarm: {len(targets)} files, {gib:.1f} GiB into the page cache "
+                      "(the boot's pin dropped it)", flush=True)
+                t0 = time.monotonic()
+                full = self._warm_files(targets, t_all + self.timeout_s)
+                self._note("replay" if self.replay_on else "done", files_gib=gib,
+                           files_s=time.monotonic() - t0)
+                print(f"[strata] prewarm: page cache {'warm' if full else 'partial (its own timeout)'} in "
+                      f"{time.monotonic() - t0:.0f} s", flush=True)
+            if self.replay_on:
+                try:
+                    with self.svc.status_lock:
+                        self._base = self.svc.totals["requests"]
+                except (AttributeError, KeyError):
+                    return                                # no counter to stay aside by: skip the replay, not the traffic
+                self._own = 0
+                self._note("replay")
+                t0 = time.monotonic()
+                why = self._replay(t_all + self.timeout_s)
+                self._note("failed" if why not in ("", "traffic") else ("yielded" if why else "done"),
+                           replay_s=time.monotonic() - t0)
+                if why == "traffic":
+                    print("[strata] prewarm: live traffic arrived; the rest of the warm-in is skipped", flush=True)
+                elif why:
+                    print(f"[strata] prewarm: the replay did not finish ({why}); serving continues cold", flush=True)
+                else:
+                    print(f"[strata] prewarm: replay done in {time.monotonic() - t0:.0f} s "
+                          "- the first real request is warm", flush=True)
+        except Exception as e:                            # the server serves on; the state says what happened
+            self._note("failed", note=f"{type(e).__name__}: {e}")
+            print(f"[strata] prewarm: the warm-in did not finish ({type(e).__name__}: {e}); serving continues "
+                  "cold", flush=True)
+
+    # -- files ---------------------------------------------------------------------------------------------------
+    def _file_targets(self) -> list[tuple[Path, int]]:
+        """(path, size) of everything the engine reads.  Derived: the config's file-valued arguments (a pack
+        directory is walked, and its manifest's file table warmed from the dir its own "model_dir" key names),
+        the shadow store from the engine's environment, and the section's "extra_files" globs."""
+        out: list[tuple[Path, int]] = []
+        seen: set[Path] = set()
+
+        def add(p: Path) -> None:
+            try:
+                if p.is_file():
+                    if p not in seen:
+                        seen.add(p)
+                        out.append((p, p.stat().st_size))
+                elif p.is_dir():
+                    for q in sorted(p.iterdir()):
+                        add(q)
+            except OSError:
+                pass
+
+        cwd = self.cfg.get("cwd") or "."
+        for flag, value in zip(self.cfg.get("args", ()), self.cfg.get("args", ())[1:]):
+            if not flag.startswith("-") or value.startswith("-"):
+                continue
+            p = Path(value) if os.path.isabs(value) else Path(os.path.join(cwd, value))
+            add(p)
+            manifest = p / "tensors.txt"                 # a pack: the store's own table is the file list
+            if p.is_dir() and manifest.is_file():
+                names, model_dir = [], None
+                for line in manifest.read_text(encoding="utf-8", errors="replace").splitlines():
+                    w = line.split()
+                    if w and w[0] == "file" and len(w) > 2:
+                        names.append(w[2])
+                kv = p / "ds4.txt"                       # the manifest's key-value side file names the files' home
+                if kv.is_file():
+                    for line in kv.read_text(encoding="utf-8", errors="replace").splitlines():
+                        w = line.split()
+                        if w and w[0] == "model_dir" and len(w) > 1:
+                            model_dir = w[1]
+                root = Path(model_dir) if model_dir and Path(model_dir).is_dir() else p
+                for n in names:
+                    add(root / n)
+                    add(p / n)                           # a pack that keeps its own files wins by existing
+        shadow = self.env.get("STRATA_SHADOW_EXPERTS")
+        if shadow and not str(shadow).startswith("/dev/shm"):   # tmpfs is RAM already (F-367)
+            add(Path(shadow) / "experts.bin")
+        for pattern in self.extra:
+            for hit in glob.glob(pattern):
+                add(Path(hit))
+        return out
+
+    def _warm_files(self, targets: list[tuple[Path, int]], stop_at: float) -> bool:
+        """Ask first, read second (see the class docstring); four readers keep the NVMe's queue deep where one
+        dd could not (the readahead studies' 2.3x from depth alone).  -> True when every byte was read."""
+        if hasattr(os, "posix_fadvise"):
+            for p, _ in targets:
+                try:
+                    fd = os.open(p, os.O_RDONLY)
+                    try:
+                        os.posix_fadvise(fd, 0, 0, os.POSIX_FADV_WILLNEED)
+                    finally:
+                        os.close(fd)
+                except OSError:
+                    pass
+        work: queue.Queue = queue.Queue()
+        for item in targets:
+            work.put(item)
+
+        def sweep() -> None:
+            buf = bytearray(8 << 20)
+            while time.monotonic() < stop_at:
+                try:
+                    p, size = work.get_nowait()
+                except queue.Empty:
+                    return
+                try:
+                    with open(p, "rb", buffering=0) as f:
+                        while f.readinto(buf):
+                            if time.monotonic() >= stop_at:
+                                return
+                except OSError:
+                    pass
+
+        threads = [threading.Thread(target=sweep, daemon=True, name=f"strata-prewarm-{i}") for i in range(4)]
+        for t in threads:
+            t.start()
+        for t in threads:
+            t.join()
+        return work.empty()
+
+    # -- replay --------------------------------------------------------------------------------------------------
+    def _replay(self, stop_at: float) -> str:
+        """The warm-in requests, in the shapes the cold costs live: shorts, one mid prefill, then one concurrent
+        burst (the lazy cohort graph captures are per batch shape - a lone request never forces them).
+        -> "" when they all ran, "traffic" when live traffic pre-empted the rest, else the reason it stopped."""
+        temp = 1.0 if self.arch == "deepseek41" else 0.7  # each model's own sampling; the words are thrown away
+        why = ""
+        for i in range(self.shorts):
+            if self._external():
+                return "traffic"
+            if time.monotonic() >= stop_at:
+                return "the warm-in's own timeout"
+            ok = self._ask(f"{PREWARM_SHORT} (warm pass {i + 1})", 200, temp)
+            self._own += 1
+            if not ok:
+                why = "a warm-in request was refused"
+                break
+        if not why and self.mid and not self._external() and time.monotonic() < stop_at:
+            ok = self._ask(PREWARM_MID[:11000], 260, temp)
+            self._own += 1
+            if not ok:
+                why = "the warm prefill was refused"
+        if not why and self.burst and not self._external() and time.monotonic() < stop_at:
+            results: list[bool] = []
+
+            def one(i: int) -> None:
+                results.append(self._ask(f"{PREWARM_BURST} (warm pass {i + 1})", 200, temp))
+
+            threads = [threading.Thread(target=one, args=(i,), daemon=True) for i in range(self.burst)]
+            for t in threads:
+                t.start()
+            for t in threads:
+                t.join()
+            self._own += self.burst
+            if not any(results):
+                why = "the concurrent warm burst was refused"
+        return why
+
+    def _ask(self, prompt: str, max_tokens: int, temp: float) -> bool:
+        body = json.dumps({"messages": [{"role": "user", "content": prompt}],
+                           "max_tokens": max_tokens, "temperature": temp}).encode()
+        headers = {"Content-Type": "application/json"}
+        if self.api_key:
+            headers["Authorization"] = f"Bearer {self.api_key}"
+        try:
+            req = urllib.request.Request(self.url, data=body, headers=headers, method="POST")
+            with urllib.request.urlopen(req, timeout=PREWARM_ASK_S) as r:
+                return r.status == 200
+        except Exception:
+            return False
+
+    def _external(self) -> bool:
+        """Did a request that is not ours finish since this replay began?  Every finished request counts the
+        service's total up by one, ours included; anything above our own is live traffic, and we stand aside."""
+        try:
+            with self.svc.status_lock:
+                total = self.svc.totals["requests"]
+        except (AttributeError, KeyError):
+            return True                                 # cannot tell: do not get in the way
+        return total > self._base + self._own
+
+
 class Service:
     def __init__(self, engine: Engine, tokenizer, template: ChatTemplate, model_name: str = "qwen3.8-flash-next",
                  vision: Vision | None = None, sampling_defaults: dict | None = None,
@@ -4597,6 +4884,8 @@ class Service:
                             "requested": getattr(self, "requested_slots", max(1, int(getattr(self.engine, "batch", 0) or 0)))},
             "dialects": ["/v1/chat/completions", "/v1/messages", "/v1/responses"],
             "vision": {"enabled": images, "available": images, "error": None},
+            # the boot warm-in's own state (no serving-stack peer exposes this; /health carries the word only)
+            "prewarm": self.prewarm.snapshot() if getattr(self, "prewarm", None) else None,
             "image_generation": self.images.status() if self.images is not None else {"enabled": False},
             "activity": {"requests": totals["requests"] + running,
                          "in_flight": running + int(s.get("queued") or 0),
@@ -6509,10 +6798,13 @@ def make_handler(svc: Service):
                 self.end_headers()
                 self.wfile.write(body)
             elif path in ("/health", "/api/health"):
+                pw = getattr(svc, "prewarm", None)
                 self._json(200, {"status": "ok", "max_context": svc.reported_ctx(), "model": svc.model,
                                  "images": svc.vision is not None, "api_key": bool(svc.api_key),
                                  "image_generation": svc.images is not None,
-                                 "loaded": svc.loaded(), "service": "strata"})
+                                 "loaded": svc.loaded(), "service": "strata",
+                                 # liveness only; this one word is the warm-in's phase (detail: /v1/status)
+                                 "prewarm": pw.snapshot()["phase"] if pw is not None else None})
             elif path.startswith("/v1/images/files/"):
                 # response_format url: the name (32 random hex digits) is the access, as an OpenAI image URL is
                 f = svc.images.file(path[len("/v1/images/files/"):]) if svc.images is not None else None
@@ -8084,6 +8376,13 @@ def main(argv=None, *, lifecycle_event=None, interrupt_exit_code: int = 0) -> in
     config_bytes = Path(a.config).read_bytes() if a.config else b""
     cfg = parse_config_text(config_bytes.decode("utf-8-sig"), a.config) if a.config else {}   # Notepad adds a BOM
     split_joined_args(cfg)
+    if a.engine == "strata" and "STRATA_ENGINE_READY_S" not in os.environ and \
+            isinstance(cfg.get("engine_ready_s"), (int, float)) and not isinstance(cfg.get("engine_ready_s"), bool):
+        # the config's ready-wait, dead until now (the DS config already said 3600: its 109.5 GB load can outlast
+        # the 900 s default and the engine died mid-load); $STRATA_ENGINE_READY_S still wins, 0 = wait for ever
+        global ENGINE_READY_S
+        v = float(cfg["engine_ready_s"])
+        ENGINE_READY_S = None if v <= 0 else v
     if a.config and a.engine == "strata":
         cfg = apply_saved_tuning(cfg)
     attestation_key = os.environ.pop("STRATA_OWNER_ATTEST_KEY", None)
@@ -8462,6 +8761,15 @@ def main(argv=None, *, lifecycle_event=None, interrupt_exit_code: int = 0) -> in
     bound_port = httpd.server_address[1]               # --port 0: report the port the OS actually assigned
     svc.start_idle_unload()
     svc.start_vision_idle()
+    if a.engine == "strata" and cfg.get("prewarm") is not None:
+        # the boot warm-in as a lifecycle of its own (see Prewarm): one pass per engine process, started here
+        # where the engine is READY and the port is bound, so the pin's page-cache drop has already happened.
+        # It fails open by contract: a warm-in that cannot even start leaves one line, never a dead server.
+        try:
+            Prewarm(cfg, env, cfg.get("arch") or "", svc.api_key, bound_port).start(svc)
+        except Exception as e:
+            print(f"[strata] prewarm: it could not start ({type(e).__name__}: {e}); serving continues cold",
+                  flush=True)
     here = "127.0.0.1" if a.host in ("0.0.0.0", "", "::") else a.host
     print(f"ready: http://{here}:{bound_port}/v1  (OpenAI: /v1/chat/completions, Anthropic: /v1/messages, "
           f"context {engine.max_context} tokens{', images on' if vision else ''}"

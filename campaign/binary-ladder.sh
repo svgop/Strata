@@ -9,13 +9,22 @@
 #   HOLD     = candidate regresses any lane beyond the bound, or wins nothing (champion stays)
 # Usage: bash campaign/binary-ladder.sh <champion-binary> <candidate-binary> <label>
 #   (server must be RUNNING on the standing recipe from the root launcher; the script swaps
-#    engine/strata itself: kill -> cp -> boot -> health -> prewarm -> 3 legs; ~30-40 min)
+#    engine/strata itself: kill -> cp -> boot -> health -> the server's own warm-in -> 3 legs; ~30-40 min)
 set -u
 REPO=/home/svg/LLM/strata-custom-2
 CHAMP=${1:?champion binary path}
 CAND=${2:?candidate binary path}
 LABEL=${3:?label}
 cd "$REPO"
+
+wait_prewarm() {   # the server's own warm-in (the config's "prewarm" section) - wait for its terminal state
+  for i in $(seq 1 240); do
+    s=$(curl -s -m 3 http://127.0.0.1:8081/health 2>/dev/null | sed -n 's/.*"prewarm": "\([a-z]*\)".*/\1/p')
+    case "$s" in done|failed|yielded|"") return 0 ;; esac
+    sleep 5
+  done
+  echo "wait_prewarm: the warm-in did not report done in 20 min (continuing)"
+}
 
 boot_and_probe() {   # $1 = binary, $2 = tag
   cp "$1" engine/strata
@@ -24,7 +33,7 @@ boot_and_probe() {   # $1 = binary, $2 = tag
     curl -s -m 3 http://127.0.0.1:8081/health 2>/dev/null | grep -q '"status": "ok"' && break
     sleep 5
   done
-  bash campaign/prewarm2.sh > /dev/null 2>&1
+  wait_prewarm
   # campaign law 11: the first full leg is WARMUP, never measured (first-touch faults on any new
   # mapping - the shadow store cost leg 1 ~15% in F-360).  It is still written, tagged warm, for audit.
   .venv/bin/python campaign/probe-lane.py --port 8081 --label "$LABEL-$2-warm" 2>&1 \
@@ -55,7 +64,7 @@ done
 # (possibly older) champion argument - a held candidate must not silently downgrade the lane.
 stop_server; cp /tmp/ladder-pre-run.bin engine/strata; nohup ./launch-custom-iq3s-8081.sh > /tmp/ladder-restore.out 2>&1 &
 for i in $(seq 1 100); do curl -s -m 3 http://127.0.0.1:8081/health 2>/dev/null | grep -q '"status": "ok"' && break; sleep 5; done
-bash campaign/prewarm2.sh > /dev/null 2>&1
+wait_prewarm
 
 .venv/bin/python - "$LABEL" << 'PY'
 import re, statistics as st, sys
