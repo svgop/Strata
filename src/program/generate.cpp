@@ -1932,7 +1932,8 @@ private:
 // direction and its norm as the scale), into the tables `cvec_upload` takes.  `summary` is what INFO reports;
 // `digest` identifies the uploaded tables, mode and range exactly (a session file is bound to it).
 bool load_control_vectors(const Options& o, const strata::core::ModelGeometry& g, std::string& summary,
-                          uint64_t& digest, std::string& err, int* steered_layers = nullptr) {
+                          uint64_t& digest, std::string& err, int* steered_layers = nullptr,
+                          int* range_first = nullptr, int* range_last = nullptr) {
     const int64_t L = g.n_layers, N = g.n_embd;
     std::vector<float> data((size_t) (L * N), 0.0f);
     std::vector<bool> have((size_t) L, false);
@@ -2009,6 +2010,8 @@ bool load_control_vectors(const Options& o, const strata::core::ModelGeometry& g
     summary = std::string(o.cvec_mode == 0 ? "project" : "add") + ":" + std::to_string(first) + "-" + std::to_string(last) +
               (single >= 0 ? ":single" + std::to_string(single) : "");
     if (steered_layers != nullptr) *steered_layers = steered;
+    if (range_first != nullptr) *range_first = first;   // the armed range, for the IDENT handshake (Layer 2)
+    if (range_last != nullptr) *range_last = last;
     // the line llama.cpp's patched build prints, so a log shows the same thing
     std::fprintf(stderr, "strata generate: control vector mode = %s, dir = %s, layers %d..%d (%d steered)\n",
                  o.cvec_mode == 0 ? "project" : "add", single >= 0 ? "single" : "per-layer", first, last, steered);
@@ -4021,10 +4024,11 @@ int main(int argc, char** argv) {
     // before session_init: every graph captured from here on has the vector's kernels where it applies
     std::string cvec_summary = "0";
     int cvec_steered = 0;                       // what INFO reports as cvec_steered=S/N (the Layer-2 truth)
+    int cvec_first = 0, cvec_last = -1;         // the armed range, what the IDENT handshake reports as first/last
     uint64_t cvec_digest = 0;   // a session file is bound to the loaded vector (0: none)
     if (!o.cvec_files.empty()) {
         std::string ce;
-        if (!load_control_vectors(o, g, cvec_summary, cvec_digest, ce, &cvec_steered)) {
+        if (!load_control_vectors(o, g, cvec_summary, cvec_digest, ce, &cvec_steered, &cvec_first, &cvec_last)) {
             std::fprintf(stderr, "strata generate: control vector: %s\n", ce.c_str());
             return 2;
         }
@@ -11450,6 +11454,16 @@ int main(int argc, char** argv) {
                         o.batch > 0 ? (" batch_slots=" + std::to_string(o.batch) +
                                        " slot_cache=" + std::to_string(o.prompt_cache > 0 ? 1 : 0) +
                                        " batch_groups=" + std::to_string(o.batch_groups)).c_str() : "");
+            // Layer 2's handshake: ONE structured line the server parses with a schema (serve/handshake.py),
+            // instead of regexing the INFO keys above.  Those stay on the wire during the migration, so an
+            // older server still reads this engine.  cvec rides only when a vector armed (absence = none).
+            std::printf("IDENT {\"v\":1,\"engine\":\"strata\",\"version\":\"" STRATA_VERSION "\",\"ctx\":%lld,\"layers\":%d,%s"
+                        "\"caps\":[\"cvec\",\"batch\",\"spec\"]}\n",
+                        (long long) o.max_context, (int) g.n_layers,
+                        cvec_steered > 0 ? ("\"cvec\":{\"mode\":\"" + std::string(o.cvec_mode == 0 ? "project" : "add") +
+                                            "\",\"first\":" + std::to_string(cvec_first) +
+                                            ",\"last\":" + std::to_string(cvec_last) +
+                                            ",\"steered\":" + std::to_string(cvec_steered) + "},").c_str() : "");
         }
         // issue #29: a request whose heartbeat (tokens, prompt chunks, verify windows) stops for this long is stuck on
         // a flag nobody will raise - end the engine with where it was, so the server starts it again instead of the

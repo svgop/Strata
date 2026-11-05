@@ -9998,6 +9998,16 @@ struct Model::Impl {
         if (cv_.steered > 0)
             v.push_back("INFO cvec=project:" + std::to_string(cv_.first) + "-" + std::to_string(cv_.last) +
                         " cvec_steered=" + std::to_string(cv_.steered) + "/" + std::to_string(g.nl));
+        // Layer 2's handshake: ONE structured line the server parses with a schema (serve/handshake.py)
+        // instead of regexing the INFO lines above, which stay on the wire for older servers during the
+        // migration.  cvec rides only when a vector armed (absence = none); project is the only mode here
+        // (h - s (h . v) v, the subtraction semantics - there is no add mode to misreport).
+        v.push_back("IDENT {\"v\":1,\"engine\":\"ds4\",\"version\":\"ds4-0.1\",\"ctx\":" + std::to_string(o.max_context) +
+                    ",\"layers\":" + std::to_string(g.nl) + "," +
+                    (cv_.steered > 0 ? "\"cvec\":{\"mode\":\"project\",\"first\":" + std::to_string(cv_.first) +
+                     ",\"last\":" + std::to_string(cv_.last) +
+                     ",\"steered\":" + std::to_string(cv_.steered) + "}," : "") +
+                    "\"caps\":[\"cvec\"]}");
         if (commit_kept > 0) {   // (Windows, an integrated GPU: the commit kept experts off the GPU - the server says so)
             std::snprintf(b, sizeof b,
                           "NOTE experts: %.0f GB stay off the GPU - Windows' page file is too small to hold them there; "

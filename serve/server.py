@@ -75,6 +75,7 @@ from strata_control import user_args  # noqa: E402
 from serve import ready as ready_file  # noqa: E402
 from serve import owner_guard  # noqa: E402
 from serve import launch_identity  # noqa: E402
+from serve import handshake  # noqa: E402  (Layer 2: the versioned engine handshake, serve/handshake.py)
 from serve import logit_bias as bias_api  # noqa: E402
 from serve import lifeline  # noqa: E402
 from serve.structured import StructuredOutputError, prepare_format, validated_json  # noqa: E402
@@ -1053,6 +1054,9 @@ class StrataEngine:
         self.can_stop = False            # the engine honours a STOP line mid-request (READY <ctx> stop)
         self.last = {}
         self.info = {}                   # INFO key=value facts (engine 0.1.8+): kv, expert slots, ... (Monitor tab)
+        self.ident = None                # the Layer-2 handshake (IDENT {json}, serve/handshake.py): identity +
+        #                                      armed geometry, parsed with a schema instead of regexed; None = an
+        #                                      engine from before the handshake (the INFO protocol still serves it)
         self.terminal_stages: list[dict] = []  # final layer ranges from this engine start's bounded stderr log
         self.terminal_batch_sample: dict | None = None
         self.terminal_stage_sample: dict | None = None
@@ -1124,7 +1128,14 @@ class StrataEngine:
                 continue
             if line is None:
                 break
-            if line.startswith("INFO "):
+            if line.startswith("IDENT "):
+                # Layer 2's handshake: the engine's structured boot report, parsed by its schema owner.  An
+                # unparsable line is a warning, never a lost boot - the INFO lines below still carry the facts.
+                self.ident = handshake.parse_ident(line)
+                if self.ident is None:
+                    print("[strata] WARNING: the engine's IDENT handshake line is not valid JSON - "
+                          "using the INFO line protocol", flush=True)
+            elif line.startswith("INFO "):
                 for kv in line.split()[1:]:
                     k, _, v = kv.partition("=")
                     self.info[k] = int(v) if v.lstrip("-").isdigit() else v
@@ -4897,6 +4908,9 @@ class Service:
             "vision": {"enabled": images, "available": images, "error": None},
             # the boot warm-in's own state (no serving-stack peer exposes this; /health carries the word only)
             "prewarm": self.prewarm.snapshot() if getattr(self, "prewarm", None) else None,
+            # the Layer-2 handshake, as the engine reported it (None = an engine from before it; the
+            # gate still validated its steering through the INFO line protocol)
+            "handshake": getattr(self.engine, "ident", None),
             "image_generation": self.images.status() if self.images is not None else {"enabled": False},
             "activity": {"requests": totals["requests"] + running,
                          "in_flight": running + int(s.get("queued") or 0),
@@ -7954,56 +7968,14 @@ def clean_shared_defaults(d) -> dict:
 
 
 def armed_geometry_problem(engine, cfg: dict) -> str | None:
-    """Layer 2 of the architecture elevation: the engine's INFO line reports the control vector it ARMED
-    (`cvec=<mode>:<first>-<last>`, `0` = none); this checks it against what the config ASKED for
-    (--control-vector-scaled + --control-vector-layer-range + --cvec-mode).  An engine that silently armed
+    """Layer 2's gate: the geometry the engine ARMED must equal the geometry the config ASKED for
+    (--control-vector-scaled + --control-vector-layer-range + --cvec-mode); an engine that silently armed
     its own default range - or armed nothing where steering was asked - is the inert-vector class (the 4..24
-    war story): a refused boot with the reason, never a silent no-op.  -> None when consistent, else the why."""
-    args = engine_args(cfg) if "args" in cfg else []
-    asks = "--control-vector-scaled" in args
-    reported = getattr(engine, "info", {}).get("cvec")
-    if not asks:
-        if reported and reported != "0":
-            print(f"[strata] WARNING: the engine armed a control vector the config did not ask for ({reported})", flush=True)
-        return None                                   # an old engine without the INFO key: nothing to check
-    if reported in (None, "0"):
-        return ("the config asks for a control vector (--control-vector-scaled) but the engine armed none - "
-                "the vector file failed to load, or the engine ignored the flag")
-    m = re.fullmatch(r"(\w+):(\d+)-(\d+)", str(reported))
-    if m is None:
-        return f"the engine reported a control vector shape it cannot have armed: {reported!r}"
-    want_mode = "project"
-    if "--cvec-mode" in args and args.index("--cvec-mode") + 1 < len(args):
-        want_mode = args[args.index("--cvec-mode") + 1]
-    mode, first, last = m.group(1), int(m.group(2)), int(m.group(3))
-    if mode != want_mode:
-        return (f"the engine armed {mode}:{first}-{last} but the config asked for mode {want_mode} - "
-                "steering is NOT what was requested; refusing to serve")
-    if "--control-vector-layer-range" in args and args.index("--control-vector-layer-range") + 2 < len(args):
-        try:
-            want_first = int(args[args.index("--control-vector-layer-range") + 1])
-            want_last = int(args[args.index("--control-vector-layer-range") + 2])
-        except ValueError:
-            want_first = want_last = None                  # unparsable: leave the range unchecked, modes still held
-        if want_first is not None and (first != want_first or last != want_last):
-            return (f"the engine armed {mode}:{first}-{last} but the config asked for "
-                    f"{want_mode}:{want_first}-{want_last} - steering is NOT what was requested; refusing to serve")
-    # the engine's MEASURED truth (newer engines): S of N layers actually steered.  A range running past the
-    # model's layers steers nothing there (the engine reports the asked range unclamped); zero steered with a
-    # vector asked is the inert load.  Both are refused on the engine's own numbers, not on its parroting.
-    st = getattr(engine, "info", {}).get("cvec_steered")
-    if isinstance(st, str) and st.count("/") == 1:
-        try:
-            n_steered, n_layers = (int(x) for x in st.split("/"))
-        except ValueError:
-            return f"the engine reported cvec_steered={st!r}, which is not a count"
-        if last >= n_layers:
-            return (f"the control-vector range {mode}:{first}-{last} runs past the model's {n_layers} layers - "
-                    f"layers {n_layers}..{last} steer nothing; refusing to serve a misconfigured range")
-        if n_steered <= 0:
-            return ("the control vector loaded but steers 0 layers (cvec_steered=0) - it is inert; "
-                    "refusing to serve steering that does nothing")
-    return None                                          # no range given: the engine's default is accepted
+    war story): a refused boot with the reason, never a silent no-op.  The verdict logic lives once, in its
+    schema owner (serve/handshake.py: the versioned IDENT handshake, with the INFO line protocol as the
+    legacy path); this name stays so callers and tools/test_geometry_gate.py are unchanged.  -> None when
+    consistent, else the why."""
+    return handshake.armed_geometry_problem(engine, engine_args(cfg) if "args" in cfg else [])
 
 
 def split_joined_args(cfg: dict) -> None:
