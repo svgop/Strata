@@ -102,3 +102,12 @@ qwen,2026-11-04,5710d0e4,serve-fix regression check A/B NEW server (2v2 same-hou
 qwen,2026-11-04,5710d0e4,serve-fix regression check A/B NEW server (2v2 same-hour),conc,259.3,0,mean
 qwen,2026-11-04,5710d0e4,fresh 167K cold-read probe (serve-fix check),prefill,7344,166854,mean
 deepseek,2026-11-04,5710d0e4,fresh 21K read probe (serve-fix check; box -10-20pct on DS all day),prefill,1311,20712,mean
+qwen,2026-11-04,c45eeb2a,crash-fix spot (idle-SIGSEGV fix deployed - the fatal sequence re-run clean),solo,208.6,0,mean
+qwen,2026-11-04,c45eeb2a,crash-fix spot (idle-SIGSEGV fix deployed - the fatal sequence re-run clean),pair,212.6,0,mean
+qwen,2026-11-04,c45eeb2a,crash-fix spot (idle-SIGSEGV fix deployed - the fatal sequence re-run clean),conc,251.2,0,mean
+qwen,2026-11-05,1fd5ded1,geometry-gate spot (Layer-2 live - armed steering validated at boot),solo,205.2,0,mean
+qwen,2026-11-05,1fd5ded1,geometry-gate spot (Layer-2 live - armed steering validated at boot),pair,197.8,0,mean
+qwen,2026-11-05,1fd5ded1,geometry-gate spot (Layer-2 live - armed steering validated at boot),conc,260.6,0,mean
+deepseek,2026-11-05,1fd5ded1,geometry-gate DS spot (validated project:1-32; misconfig 1-999 refused end-to-end),solo,56.8,0,mean
+deepseek,2026-11-05,1fd5ded1,geometry-gate DS spot (validated project:1-32; misconfig 1-999 refused end-to-end),pair,57.2,0,mean
+deepseek,2026-11-05,1fd5ded1,geometry-gate DS spot (validated project:1-32; misconfig 1-999 refused end-to-end),conc,64.4,0,mean

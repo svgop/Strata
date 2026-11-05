@@ -1,6 +1,6 @@
 {
  "type": "strata-lane-trend",
- "updated": "2026-11-04",
+ "updated": "2026-11-05",
  "unit": "tok/s",
  "engines": {
   "qwen": {
@@ -254,6 +254,32 @@
      "solo": 215.7,
      "pair": 201.5,
      "conc": 259.3,
+     "kinds": {
+      "solo": "mean",
+      "pair": "mean",
+      "conc": "mean"
+     }
+    },
+    {
+     "date": "2026-11-04",
+     "commit": "c45eeb2a",
+     "label": "crash-fix spot (idle-SIGSEGV fix deployed - the fatal sequence re-run clean)",
+     "solo": 208.6,
+     "pair": 212.6,
+     "conc": 251.2,
+     "kinds": {
+      "solo": "mean",
+      "pair": "mean",
+      "conc": "mean"
+     }
+    },
+    {
+     "date": "2026-11-05",
+     "commit": "1fd5ded1",
+     "label": "geometry-gate spot (Layer-2 live - armed steering validated at boot)",
+     "solo": 205.2,
+     "pair": 197.8,
+     "conc": 260.6,
      "kinds": {
       "solo": "mean",
       "pair": "mean",
@@ -531,6 +557,19 @@
      "solo": 65.3,
      "pair": 62.05,
      "conc": 70.45,
+     "kinds": {
+      "solo": "mean",
+      "pair": "mean",
+      "conc": "mean"
+     }
+    },
+    {
+     "date": "2026-11-05",
+     "commit": "1fd5ded1",
+     "label": "geometry-gate DS spot (validated project:1-32; misconfig 1-999 refused end-to-end)",
+     "solo": 56.8,
+     "pair": 57.2,
+     "conc": 64.4,
      "kinds": {
       "solo": "mean",
       "pair": "mean",
