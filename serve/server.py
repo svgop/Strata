@@ -3769,7 +3769,9 @@ class Prewarm:
 
     def _run(self) -> None:
         """One warm-in per engine process: the first when the engine is up, another after every restart (an idle
-        unload and reload pays the pin's cache drop again).  `gen` is the engine's own process counter."""
+        unload and reload pays the pin's cache drop again).  `gen` is the engine's own process counter.  Each
+        engine-ready transition also re-runs the Layer-2 gate: a restarted engine that armed different steering
+        than the config asked for is unloaded and flagged, exactly like a first boot."""
         seen, last_done = None, 0.0
         while not self.stop.is_set():
             e = getattr(self.svc, "engine", None)
@@ -3778,6 +3780,15 @@ class Prewarm:
                 seen = 0                                  # an engine without a process counter: nothing to warm
             elif self.svc.loaded() and (seen is None or gen != seen) and time.monotonic() - last_done >= 30:
                 seen = gen
+                why = armed_geometry_problem(e, self.cfg)
+                if why and getattr(self.svc, "prewarm", None) is self:
+                    print(f"[strata] REFUSING TO SERVE the restarted engine: {why}", flush=True)
+                    self._note("refused", note=why)
+                    try:
+                        self.svc.unload()                 # it does not serve steering it was not asked for
+                    except Exception:
+                        pass
+                    continue
                 self._cycle()
                 last_done = time.monotonic()
             self.stop.wait(2.0)
@@ -7942,6 +7953,59 @@ def clean_shared_defaults(d) -> dict:
     return out
 
 
+def armed_geometry_problem(engine, cfg: dict) -> str | None:
+    """Layer 2 of the architecture elevation: the engine's INFO line reports the control vector it ARMED
+    (`cvec=<mode>:<first>-<last>`, `0` = none); this checks it against what the config ASKED for
+    (--control-vector-scaled + --control-vector-layer-range + --cvec-mode).  An engine that silently armed
+    its own default range - or armed nothing where steering was asked - is the inert-vector class (the 4..24
+    war story): a refused boot with the reason, never a silent no-op.  -> None when consistent, else the why."""
+    args = engine_args(cfg) if "args" in cfg else []
+    asks = "--control-vector-scaled" in args
+    reported = getattr(engine, "info", {}).get("cvec")
+    if not asks:
+        if reported and reported != "0":
+            print(f"[strata] WARNING: the engine armed a control vector the config did not ask for ({reported})", flush=True)
+        return None                                   # an old engine without the INFO key: nothing to check
+    if reported in (None, "0"):
+        return ("the config asks for a control vector (--control-vector-scaled) but the engine armed none - "
+                "the vector file failed to load, or the engine ignored the flag")
+    m = re.fullmatch(r"(\w+):(\d+)-(\d+)", str(reported))
+    if m is None:
+        return f"the engine reported a control vector shape it cannot have armed: {reported!r}"
+    want_mode = "project"
+    if "--cvec-mode" in args and args.index("--cvec-mode") + 1 < len(args):
+        want_mode = args[args.index("--cvec-mode") + 1]
+    mode, first, last = m.group(1), int(m.group(2)), int(m.group(3))
+    if mode != want_mode:
+        return (f"the engine armed {mode}:{first}-{last} but the config asked for mode {want_mode} - "
+                "steering is NOT what was requested; refusing to serve")
+    if "--control-vector-layer-range" in args and args.index("--control-vector-layer-range") + 2 < len(args):
+        try:
+            want_first = int(args[args.index("--control-vector-layer-range") + 1])
+            want_last = int(args[args.index("--control-vector-layer-range") + 2])
+        except ValueError:
+            want_first = want_last = None                  # unparsable: leave the range unchecked, modes still held
+        if want_first is not None and (first != want_first or last != want_last):
+            return (f"the engine armed {mode}:{first}-{last} but the config asked for "
+                    f"{want_mode}:{want_first}-{want_last} - steering is NOT what was requested; refusing to serve")
+    # the engine's MEASURED truth (newer engines): S of N layers actually steered.  A range running past the
+    # model's layers steers nothing there (the engine reports the asked range unclamped); zero steered with a
+    # vector asked is the inert load.  Both are refused on the engine's own numbers, not on its parroting.
+    st = getattr(engine, "info", {}).get("cvec_steered")
+    if isinstance(st, str) and st.count("/") == 1:
+        try:
+            n_steered, n_layers = (int(x) for x in st.split("/"))
+        except ValueError:
+            return f"the engine reported cvec_steered={st!r}, which is not a count"
+        if last >= n_layers:
+            return (f"the control-vector range {mode}:{first}-{last} runs past the model's {n_layers} layers - "
+                    f"layers {n_layers}..{last} steer nothing; refusing to serve a misconfigured range")
+        if n_steered <= 0:
+            return ("the control vector loaded but steers 0 layers (cvec_steered=0) - it is inert; "
+                    "refusing to serve steering that does nothing")
+    return None                                          # no range given: the engine's default is accepted
+
+
 def split_joined_args(cfg: dict) -> None:
     """#2267: an engine option written as ONE element of the config's "args" - "--ple-io mmap" or "--ple-io=mmap" - reaches
     the engine as a single argument ("unknown argument: --ple-io mmap"; the usual form is two elements, "--ple-io",
@@ -8550,6 +8614,18 @@ def main(argv=None, *, lifecycle_event=None, interrupt_exit_code: int = 0) -> in
             engine = StrataEngine(exe, engine_args(cfg) + (effort_end or []), cwd=cfg.get("cwd"), log=cfg.get("log"),
                                   env=env, lazy=lazy)
         engine.silence_s = silence                      # an attribute of its own: restart() keeps it
+        why = armed_geometry_problem(engine, cfg)       # the Layer-2 gate: armed geometry must equal the asked
+        if why:                                         # for - the inert-vector class is a refused boot
+            print(f"[strata] REFUSING TO SERVE: {why}", flush=True)
+            for close in (engine.close, vision.shutdown if vision else None):
+                try:
+                    if close:
+                        close()
+                except Exception:
+                    pass
+            raise SystemExit(7)
+        if (cv := getattr(engine, "info", {}).get("cvec")) and cv != "0":
+            print(f"[strata] control vector: armed {cv} (validated against the config)", flush=True)
         warn_tight_ram(engine.info.get("arena_mib"))
         note = desktop_vram_note(cfg.get("backend"), engine.info.get("vram_free_mib"), engine.spawn[1],
                                  linux_desktop()) if not groups else None

@@ -1932,7 +1932,7 @@ private:
 // direction and its norm as the scale), into the tables `cvec_upload` takes.  `summary` is what INFO reports;
 // `digest` identifies the uploaded tables, mode and range exactly (a session file is bound to it).
 bool load_control_vectors(const Options& o, const strata::core::ModelGeometry& g, std::string& summary,
-                          uint64_t& digest, std::string& err) {
+                          uint64_t& digest, std::string& err, int* steered_layers = nullptr) {
     const int64_t L = g.n_layers, N = g.n_embd;
     std::vector<float> data((size_t) (L * N), 0.0f);
     std::vector<bool> have((size_t) L, false);
@@ -2008,6 +2008,7 @@ bool load_control_vectors(const Options& o, const strata::core::ModelGeometry& g
     }
     summary = std::string(o.cvec_mode == 0 ? "project" : "add") + ":" + std::to_string(first) + "-" + std::to_string(last) +
               (single >= 0 ? ":single" + std::to_string(single) : "");
+    if (steered_layers != nullptr) *steered_layers = steered;
     // the line llama.cpp's patched build prints, so a log shows the same thing
     std::fprintf(stderr, "strata generate: control vector mode = %s, dir = %s, layers %d..%d (%d steered)\n",
                  o.cvec_mode == 0 ? "project" : "add", single >= 0 ? "single" : "per-layer", first, last, steered);
@@ -4019,10 +4020,11 @@ int main(int argc, char** argv) {
     strata::kernels::ple_set_native_postops(o.native_ple_postops);
     // before session_init: every graph captured from here on has the vector's kernels where it applies
     std::string cvec_summary = "0";
+    int cvec_steered = 0;                       // what INFO reports as cvec_steered=S/N (the Layer-2 truth)
     uint64_t cvec_digest = 0;   // a session file is bound to the loaded vector (0: none)
     if (!o.cvec_files.empty()) {
         std::string ce;
-        if (!load_control_vectors(o, g, cvec_summary, cvec_digest, ce)) {
+        if (!load_control_vectors(o, g, cvec_summary, cvec_digest, ce, &cvec_steered)) {
             std::fprintf(stderr, "strata generate: control vector: %s\n", ce.c_str());
             return 2;
         }
@@ -11422,7 +11424,8 @@ int main(int argc, char** argv) {
                 }
             std::printf("INFO logit_bias=1 context=%lld kv=%s kv_resident=%lld expert_slots=%lld expert_cache_mib=%lld "
                         "expert_slots_primary=%lld expert_cache_primary_mib=%lld spec=%d "
-                        "mtp_max=%d lookup=%d vram_free_mib=%lld cvec=%s arena_mib=%lld pool_workers=%d pcie_frac=%.2f "
+                        "mtp_max=%d lookup=%d vram_free_mib=%lld cvec=%s cvec_steered=%d/%d "
+                        "arena_mib=%lld pool_workers=%d pcie_frac=%.2f "
                         "spec_min_p=%.2f conversation_cache_mib=%lld conversation_cache_slots=%d "
                         "conversation_cache_min_free_mib=%lld conversation_cache_min_tokens=%lld "
                         "tail_role_token=%lld vram_elastic=%d "
@@ -11433,7 +11436,7 @@ int main(int argc, char** argv) {
                         (long long) slots_all, (long long) mib_all,
                         (long long) slots_primary, (long long) mib_primary,
                         o.spec, o.mtp_max_t,
-                        o.suffix_draft, (long long) (free_b >> 20), cvec_summary.c_str(),
+                        o.suffix_draft, (long long) (free_b >> 20), cvec_summary.c_str(), cvec_steered, (int) g.n_layers,
                         (long long) ((o.mmap_experts ? src.resident_bytes() : strata::kernels::cpu::expert_layout().total) >> 20),
                         pool.workers(), o.pcie_frac,
                         o.spec_min_p, (long long) o.conversation_cache_mib, o.conversation_cache_slots,

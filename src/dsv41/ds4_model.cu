@@ -9992,6 +9992,12 @@ struct Model::Impl {
                                    "cpu_experts=%d ram_experts=%d engine=ds4-0.1",
                       (long long) o.max_context, (long long) o.max_context, g.nl * g.n_exp - nh, nh, ram_held);
         v.push_back(b);
+        // the armed control-vector geometry, in the main engine's INFO shape (cvec=<mode>:<first>-<last>): the
+        // server checks what the engine ARMED against what the config ASKED for and refuses a boot that armed
+        // something else - a vector that silently loaded its own default range is the 4..24 inert-vector class
+        if (cv_.steered > 0)
+            v.push_back("INFO cvec=project:" + std::to_string(cv_.first) + "-" + std::to_string(cv_.last) +
+                        " cvec_steered=" + std::to_string(cv_.steered) + "/" + std::to_string(g.nl));
         if (commit_kept > 0) {   // (Windows, an integrated GPU: the commit kept experts off the GPU - the server says so)
             std::snprintf(b, sizeof b,
                           "NOTE experts: %.0f GB stay off the GPU - Windows' page file is too small to hold them there; "
