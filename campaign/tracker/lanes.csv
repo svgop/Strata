@@ -117,3 +117,6 @@ qwen,2026-11-05,5d17b967,handshake spot (Layer-2 IDENT live - typed boot contrac
 deepseek,2026-11-05,5d17b967,handshake DS spot (IDENT ds4 v1 live - validated project:1-32; tampered 1-999 refused on armed-vs-asked),solo,60.0,0,mean
 deepseek,2026-11-05,5d17b967,handshake DS spot (IDENT ds4 v1 live - validated project:1-32; tampered 1-999 refused on armed-vs-asked),pair,57.7,0,mean
 deepseek,2026-11-05,5d17b967,handshake DS spot (IDENT ds4 v1 live - validated project:1-32; tampered 1-999 refused on armed-vs-asked),conc,65.2,0,mean
+qwen,2026-11-05,7010d352,bw-dense port spot (swiglu fusion + GDN fast + share rule; 2-leg means vs this mornings same-box pre-port 210.5/192.7/250.9 = +6.4/+12.4/+17.7),solo,224.0,0,mean
+qwen,2026-11-05,7010d352,bw-dense port spot (swiglu fusion + GDN fast + share rule; 2-leg means vs this mornings same-box pre-port 210.5/192.7/250.9 = +6.4/+12.4/+17.7),pair,216.7,0,mean
+qwen,2026-11-05,7010d352,bw-dense port spot (swiglu fusion + GDN fast + share rule; 2-leg means vs this mornings same-box pre-port 210.5/192.7/250.9 = +6.4/+12.4/+17.7),conc,295.3,0,mean

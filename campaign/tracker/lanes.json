@@ -298,6 +298,19 @@
       "pair": "mean",
       "conc": "mean"
      }
+    },
+    {
+     "date": "2026-11-05",
+     "commit": "7010d352",
+     "label": "bw-dense port spot (swiglu fusion + GDN fast + share rule; 2-leg means vs this mornings same-box pre-port 210.5/192.7/250.9 = +6.4/+12.4/+17.7)",
+     "solo": 224.0,
+     "pair": 216.7,
+     "conc": 295.3,
+     "kinds": {
+      "solo": "mean",
+      "pair": "mean",
+      "conc": "mean"
+     }
     }
    ],
    "prefill": [
