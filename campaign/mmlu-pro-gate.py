@@ -13,7 +13,7 @@ Writes campaign/results/mmlu-<label>.json and prints the score.
 import json, os, re, sys, urllib.request
 from datasets import load_dataset
 
-API = "http://127.0.0.1:8081/v1/chat/completions"
+API = f"http://127.0.0.1:{os.environ.get('STRATA_GATE_PORT', '8081')}/v1/chat/completions"
 FLOOR = float(sys.argv[1]) if len(sys.argv) > 1 else 0.7
 LABEL = sys.argv[2] if len(sys.argv) > 2 else f"floor{FLOOR}"
 OUT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "results", f"mmlu-{LABEL}.json")
