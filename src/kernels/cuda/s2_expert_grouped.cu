@@ -614,6 +614,18 @@ uint64_t moe_hit_grouped_scratch_bytes(int64_t n_hits, int64_t n_embd, int64_t n
            ((xh + 15) & ~15ull);
 }
 
+// The doorbell hit path's SwiGLU + Q8_0 quantization in ONE kernel (upstream 0.2.10's launch_hit_swiglu_q8,
+// ported): the 0.2.9-era code ran swiglu_kernel and then quantize_q8_0 - two passes over the FF-sized
+// intermediate, per layer, per window.  The fused kernel (already proven on the resident path) does both in
+// one pass, one warp a 32-value block.  STRATA_S2_SWIGLU_Q8=0 restores the two-launch form.
+bool swiglu_q8_on() {
+    static const bool on = [] {
+        const char* e = std::getenv("STRATA_S2_SWIGLU_Q8");
+        return e == nullptr || e[0] != '0';
+    }();
+    return on;
+}
+
 void moe_hit_grouped_s2(const uint8_t* blob_base, const int32_t* slot_index, const int32_t* dst_index,
                         int64_t n_hits, int64_t blob_bytes, const uint8_t* x_q8_0, void* scratch, float* out,
                         void* stream, const float* x_scales) {
@@ -641,6 +653,14 @@ void moe_hit_grouped_s2(const uint8_t* blob_base, const int32_t* slot_index, con
     //    `x_scales` the intermediate takes the CPU's contract (`quantize_q8_0_scaled`), R4.2h.
     {
         const long long pairs = n_hits * (long long) FF;
+        if (fast && x_scales != nullptr && swiglu_q8_on()) {
+            // one pass, one warp a block (the ported fusion; same bytes the two launches produced)
+            const long long n_blocks = pairs >> 5;
+            const int warps = THREADS / 32;
+            swiglu_quantize_q8_0_scaled_kernel<<<(unsigned) ((n_blocks + warps - 1) / warps), THREADS, 0, cs>>>(
+                gate_up, pairs, h_q8_0, h_scales);
+            check("moe_hit_grouped_s2/swiglu_q8", stream);
+        } else
 #if defined(STRATA_EXPERIMENTAL_SM60)
         if (strata::kernels::fuse_decode()) {
         if (x_scales != nullptr)
@@ -748,6 +768,13 @@ void moe_hit_grouped_s2_dev(const uint8_t* blob_base, const int32_t* slot_index,
     // sentinel rows included - the parity test compares that scratch).
     {
         const long long pairs = cap * (long long) FF;
+        if (fast && x_scales != nullptr && swiglu_q8_on()) {
+            const long long n_blocks = pairs >> 5;
+            const int warps = THREADS / 32;
+            swiglu_quantize_q8_0_scaled_kernel<<<(unsigned) ((n_blocks + warps - 1) / warps), THREADS, 0, cs>>>(
+                gate_up, pairs, h_q8_0, h_scales);
+            check("moe_hit_grouped_s2_dev/swiglu_q8", stream);
+        } else
 #if defined(STRATA_EXPERIMENTAL_SM60)
         if (strata::kernels::fuse_decode()) {
         if (x_scales != nullptr)

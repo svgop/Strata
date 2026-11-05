@@ -92,6 +92,21 @@ __global__ void gdn_conv_commit_kernel(float* __restrict__ hist, const float* __
     hist[c * 3 + 2] = seq[2];
 }
 
+// BW-DENSE (upstream 0.2.10's STRATA_SMALL_UNR bit 1, ported): the a/b projection's ten passes as a
+// constant-trip loop, so the compiler issues several passes' loads before the first FMA chain.  The same
+// FMAs in the same order (pass ascending, token inside): bitwise the loop it guards.  Default on (this
+// engine builds for this cc-12.0 card); STRATA_SMALL_UNR=0 restores the dependent-load loop everywhere.
+__constant__ int c_gdn_ab_fast = 0;
+static void gdn_ab_fast_init() {
+    static const bool done = [] {
+        const char* e = std::getenv("STRATA_SMALL_UNR");
+        const int v = ((e == nullptr ? 3 : std::atoi(e)) & 2) != 0 ? 1 : 0;
+        (void) cudaMemcpyToSymbol(c_gdn_ab_fast, &v, sizeof v);
+        return true;
+    }();
+    (void) done;
+}
+
 template <int MAX_T = kVerifyMaxT, bool EXACT_T = false>
 __device__ __forceinline__ void gdn_ab_body(const int bx, const float* __restrict__ x, const uint16_t* __restrict__ wa,
                                                           const uint16_t* __restrict__ wb,
@@ -106,6 +121,32 @@ __device__ __forceinline__ void gdn_ab_body(const int bx, const float* __restric
     float acc[MAX_T];
 #pragma unroll
     for (int t = 0; t < MAX_T; ++t) acc[t] = 0.0f;
+    if (c_gdn_ab_fast != 0 && n == 2560) {
+        // the same ten passes (j = lane + 32 jj, all < n / 8 = 320) with a constant trip count; the same
+        // FMAs in the same order (pass ascending, token inside): bitwise the loop below
+#pragma unroll
+        for (int jj = 0; jj < 10; ++jj) {
+            const int j = lane + 32 * jj;
+            const uint4 wv = __ldg(w4 + j);
+            const float w0 = __uint_as_float(wv.x << 16), w1 = __uint_as_float(wv.x & 0xffff0000u);
+            const float w2 = __uint_as_float(wv.y << 16), w3 = __uint_as_float(wv.y & 0xffff0000u);
+            const float w4f = __uint_as_float(wv.z << 16), w5 = __uint_as_float(wv.z & 0xffff0000u);
+            const float w6 = __uint_as_float(wv.w << 16), w7 = __uint_as_float(wv.w & 0xffff0000u);
+#pragma unroll
+            for (int t = 0; t < MAX_T; ++t) {
+                if (!EXACT_T && t >= T) break;
+                const float* xt = x + (size_t) t * n;
+                const float4 xa = __ldg(reinterpret_cast<const float4*>(xt + j * 8));
+                const float4 xb = __ldg(reinterpret_cast<const float4*>(xt + j * 8 + 4));
+                float a = acc[t];
+                a = fmaf(w0, xa.x, a); a = fmaf(w1, xa.y, a);
+                a = fmaf(w2, xa.z, a); a = fmaf(w3, xa.w, a);
+                a = fmaf(w4f, xb.x, a); a = fmaf(w5, xb.y, a);
+                a = fmaf(w6, xb.z, a); a = fmaf(w7, xb.w, a);
+                acc[t] = a;
+            }
+        }
+    } else
     for (int j = lane; j < n / 8; j += 32) {
         const uint4 wv = __ldg(w4 + j);
         const float w0 = __uint_as_float(wv.x << 16), w1 = __uint_as_float(wv.x & 0xffff0000u);
@@ -1079,6 +1120,7 @@ void gdn_conv_ab_multi(const float* history, const float* qkv, const float* conv
     const dim3 grid((unsigned) (conv_blocks + ab_blocks), (unsigned) n_tok);
     cudaStream_t st = (cudaStream_t) stream;
     float* hist = const_cast<float*>(history);
+    gdn_ab_fast_init();
     switch (n_tok) {
         case 1: gdn_conv_ab_kernel<1, true><<<grid, S, 0, st>>>(conv_blocks, hist, qkv, conv_w, h, channels, qk_heads, eps, t_begin, commit, x, w_alpha, w_beta, dt, ssm_a, gate, beta, n_embd, h_v, n_tok); break;
         case 2: gdn_conv_ab_kernel<2, true><<<grid, S, 0, st>>>(conv_blocks, hist, qkv, conv_w, h, channels, qk_heads, eps, t_begin, commit, x, w_alpha, w_beta, dt, ssm_a, gate, beta, n_embd, h_v, n_tok); break;
@@ -1128,6 +1170,7 @@ void gdn_ab_multi(const float* x, const uint16_t* w_alpha, const uint16_t* w_bet
     }
     const unsigned blocks = (unsigned) ((2 * h_v + 1) / 2);
     cudaStream_t st = (cudaStream_t) stream;
+    gdn_ab_fast_init();
     switch (n_tok) {
         case 1: gdn_ab_multi_kernel<1, true><<<blocks, 64, 0, st>>>(x, w_alpha, w_beta, dt, ssm_a, gate, beta, n_embd, h_v, n_tok); break;
         case 2: gdn_ab_multi_kernel<2, true><<<blocks, 64, 0, st>>>(x, w_alpha, w_beta, dt, ssm_a, gate, beta, n_embd, h_v, n_tok); break;

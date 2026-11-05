@@ -18,6 +18,7 @@
 #include "strata/platform/memory.hpp"
 #include "strata/core/arch_defaults.hpp"
 #include "strata/core/nv_defaults.hpp"
+#include "strata/core/pcie_share_rule.hpp"
 #include "strata/kernels/gfx_arch.hpp"
 #include <random>   // savage-custom F-27: the ratio test's dedicated RNG stream
 #include "strata/core/batch_telemetry.hpp"
@@ -2249,6 +2250,27 @@ struct WarmJoin { ~WarmJoin() { if (g_warm_thr.joinable()) g_warm_thr.join(); } 
 // A4000 flat from 0.15 to 0.40; the 0.1.41 rule gave 0.55, 0.29, 0.30) lie within one 0.05 step of link / (link + 1.85 x pool rate).
 // Three updates at most (after 48, then 96 and 96 more windows), each rounded to 0.05, so a noisy window cannot move
 // the share by less than a step and it stops moving after the third.  STRATA_PCIE_FRAC_DEFAULT=old keeps the 0.1.41 rule.
+// The miss-share rule's callers (the substrate leaf include/strata/core/pcie_share_rule.hpp, ported from upstream 0.2.10.1): on a
+// discrete card the ceiling follows the pool (0.95) and k falls with the pool rate, so a weak pool's misses ride the link; a strong
+// pool (>= 30 GB/s of expert bytes) keeps the 0.1.42 shares (k 1.85, under 0.60) - the standing configs sit there and do not move.
+// STRATA_PCIE_SHARE_MAX / STRATA_PCIE_K_RULE set either by hand.  This fork has no 026 master mode; that arm is constant false.
+static bool pcie_rule_discrete() {
+    static const bool v = [] {
+        int dev = 0;
+        cudaDeviceProp p{};
+        return cudaGetDevice(&dev) == cudaSuccess && cudaGetDeviceProperties(&p, dev) == cudaSuccess && !p.integrated;
+    }();
+    return v;
+}
+static double pcie_share_max() {
+    static const double v = strata::pcie_share_ceiling(pcie_rule_discrete(), false, std::getenv("STRATA_PCIE_SHARE_MAX"));
+    return v;
+}
+static double pcie_pool_k_for(double r) {
+    static const bool on = strata::pcie_k_rule_default(pcie_rule_discrete(), false, std::getenv("STRATA_PCIE_K_RULE"));
+    return strata::pcie_pool_k(r, on);
+}
+
 struct PcieAuto {
     static constexpr double kPoolFactor = 1.85;
     bool on = false;
@@ -2278,7 +2300,8 @@ struct PcieAuto {
         if (++updates >= 3) on = false;
         if (!(tc > 1.0) || !(blob_bytes > 0.0) || !(link_gbps > 0.0)) return -1.0;
         const double r = blob_bytes / (tc * 1e-6) / 1e9;
-        const double f = std::min(0.60, std::max(0.10, std::round(link_gbps / (link_gbps + kPoolFactor * r) * 20.0) / 20.0));
+        const double f = std::min(pcie_share_max(), std::max(0.10, std::round(link_gbps /
+                                   (link_gbps + pcie_pool_k_for(r) * r) * 20.0) / 20.0));   // the ported rule: 0.2.10.1 ceiling + falling k
         *tc_us = tc;
         *rate = r;
         return std::fabs(f - cur) < 0.025 ? -1.0 : f;
@@ -10296,8 +10319,8 @@ int main(int argc, char** argv) {
             for (int st = 1; st < n_stages; ++st) {
                 GpuStage& gs = *stages[(size_t) st - 1];
                 if (!(gs.link_gbps > 0.0)) continue;
-                gs.pcie_frac = std::min(0.60, std::max(0.10, std::round(gs.link_gbps / (gs.link_gbps +
-                                   PcieAuto::kPoolFactor * rate) * 20.0) / 20.0));
+                gs.pcie_frac = std::min(pcie_share_max(), std::max(0.10, std::round(gs.link_gbps / (gs.link_gbps +
+                                   pcie_pool_k_for(rate) * rate) * 20.0) / 20.0));   // the ported rule, the split stages too
                 split_drive.pcie_num[st] = num_of(gs.pcie_frac);
                 split_drive_b.pcie_num[st] = split_drive.pcie_num[st];
                 std::fprintf(stderr, "strata serve: PCIe share: stage %d (link %.1f GB/s) -> pcie_frac %.2f\n", st + 1,
