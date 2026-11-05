@@ -22,16 +22,31 @@ cleanup() {
 boot() {  # $1 dir $2 script $3 port $4 label
   cleanup; sleep 2
   ( cd "$1" && nohup "$2" >"$RES/t22-$4.out" 2>&1 & )
-  local ok=0 t
+  local ok=0 t pw=""
   for t in $(seq 1 90); do
     if [ -n "$(curl -s -m 3 http://127.0.0.1:$3/health 2>/dev/null)" ]; then ok=1; break; fi
     sleep 3
   done
+  # 2026-11-05: the custom server prewarms at boot (a standing feature); a probe fired mid-warm-in
+  # reads the warm-in, not the engine.  Wait for its terminal word on 8081.  Stock has no prewarm -
+  # its legs take the one warm request in leg() below instead, so neither side is probed cold.
+  if [ "$ok" = 1 ] && [ "$3" = 8081 ]; then
+    for t in $(seq 1 60); do
+      pw=$(curl -s -m 3 http://127.0.0.1:$3/health 2>/dev/null | grep -o '"prewarm":"[^"]*"' | cut -d'"' -f4)
+      [ -n "$pw" ] && break
+      sleep 3
+    done
+    echo "  prewarm=$pw" >> "$OUT"
+  fi
   echo "=== LEG $4 health=$ok $(date +%H:%M:%S) ===" >> "$OUT"
   [ "$ok" = 1 ]
 }
 leg() {  # $1 dir $2 script $3 port $4 label
   boot "$1" "$2" "$3" "$4" || return
+  curl -s -m 120 -X POST http://127.0.0.1:$3/v1/chat/completions \
+    -H "Authorization: Bearer 3f0940df8efb9c363e4189956ae907d3e4acac221aab39f44804fe0b0df1b8" \
+    -H "Content-Type: application/json" \
+    -d '{"messages":[{"role":"user","content":"Reply with the single word: ready"}],"max_tokens":200}' >/dev/null
   cd "$CUST" && python3 campaign/probe-lane.py --port "$3" --label "t22-$4" --short-n 6 >> "$OUT" 2>&1
   cleanup
 }
