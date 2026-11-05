@@ -50,8 +50,8 @@ wrong layer range or a dead parser is a **refused boot, not a silent no-op**. (P
 
 | Step | Owner path | Exit criteria |
 |---|---|---|
+| [x] armed-geometry validation (2026-11-05) | `serve/server.py` `armed_geometry_problem` + both engines' INFO banners (`cvec=`, `cvec_steered=S/N`) | unit proof (tools/test_geometry_gate.py: 10 cases + both standing configs, ALL PASS) + LIVE: DS standing validated 1-32 (lanes in band), a misconfigured 1-999 boot REFUSED end-to-end (exit 7, port released), Qwen validated 1-47 with the truth key; the gate re-runs on every engine restart (the prewarm ready-hook unloads a wrongly-armed engine). The 4..24 inert-vector class is structurally dead |
 | [ ] schema module + engine `IDENT` emission | `serve/handshake.py` (new) + both engines' serve banners | the server parses the handshake or refuses with the reason; old engines degrade to the line protocol with one warning |
-| [ ] armed-geometry validation | same | negative test: an injected mismatched cvec range refuses the boot; the standing configs boot clean |
 | [ ] prewarm state joins the handshake | `serve/server.py` `Prewarm` | /health's word derives from the engine's own report, not from the server's inference |
 
 ## Layer 3 — Owned formats (one owner module and one validation gate per format)
