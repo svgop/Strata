@@ -285,6 +285,19 @@
       "pair": "mean",
       "conc": "mean"
      }
+    },
+    {
+     "date": "2026-11-05",
+     "commit": "5d17b967",
+     "label": "handshake spot (Layer-2 IDENT live - typed boot contract; 3-leg means; interleaved old-binary A/B no lane separates beyond conc day-noise)",
+     "solo": 210.5,
+     "pair": 192.7,
+     "conc": 250.9,
+     "kinds": {
+      "solo": "mean",
+      "pair": "mean",
+      "conc": "mean"
+     }
     }
    ],
    "prefill": [
@@ -570,6 +583,19 @@
      "solo": 56.8,
      "pair": 57.2,
      "conc": 64.4,
+     "kinds": {
+      "solo": "mean",
+      "pair": "mean",
+      "conc": "mean"
+     }
+    },
+    {
+     "date": "2026-11-05",
+     "commit": "5d17b967",
+     "label": "handshake DS spot (IDENT ds4 v1 live - validated project:1-32; tampered 1-999 refused on armed-vs-asked)",
+     "solo": 60.0,
+     "pair": 57.7,
+     "conc": 65.2,
      "kinds": {
       "solo": "mean",
       "pair": "mean",

@@ -111,3 +111,9 @@ qwen,2026-11-05,1fd5ded1,geometry-gate spot (Layer-2 live - armed steering valid
 deepseek,2026-11-05,1fd5ded1,geometry-gate DS spot (validated project:1-32; misconfig 1-999 refused end-to-end),solo,56.8,0,mean
 deepseek,2026-11-05,1fd5ded1,geometry-gate DS spot (validated project:1-32; misconfig 1-999 refused end-to-end),pair,57.2,0,mean
 deepseek,2026-11-05,1fd5ded1,geometry-gate DS spot (validated project:1-32; misconfig 1-999 refused end-to-end),conc,64.4,0,mean
+qwen,2026-11-05,5d17b967,handshake spot (Layer-2 IDENT live - typed boot contract; 3-leg means; interleaved old-binary A/B no lane separates beyond conc day-noise),solo,210.5,0,mean
+qwen,2026-11-05,5d17b967,handshake spot (Layer-2 IDENT live - typed boot contract; 3-leg means; interleaved old-binary A/B no lane separates beyond conc day-noise),pair,192.7,0,mean
+qwen,2026-11-05,5d17b967,handshake spot (Layer-2 IDENT live - typed boot contract; 3-leg means; interleaved old-binary A/B no lane separates beyond conc day-noise),conc,250.9,0,mean
+deepseek,2026-11-05,5d17b967,handshake DS spot (IDENT ds4 v1 live - validated project:1-32; tampered 1-999 refused on armed-vs-asked),solo,60.0,0,mean
+deepseek,2026-11-05,5d17b967,handshake DS spot (IDENT ds4 v1 live - validated project:1-32; tampered 1-999 refused on armed-vs-asked),pair,57.7,0,mean
+deepseek,2026-11-05,5d17b967,handshake DS spot (IDENT ds4 v1 live - validated project:1-32; tampered 1-999 refused on armed-vs-asked),conc,65.2,0,mean
