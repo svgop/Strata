@@ -1,6 +1,6 @@
 {
  "type": "strata-lane-trend",
- "updated": "2026-11-05",
+ "updated": "2026-11-06",
  "unit": "tok/s",
  "engines": {
   "qwen": {
@@ -306,6 +306,19 @@
      "solo": 224.0,
      "pair": 216.7,
      "conc": 295.3,
+     "kinds": {
+      "solo": "mean",
+      "pair": "mean",
+      "conc": "mean"
+     }
+    },
+    {
+     "date": "2026-11-06",
+     "commit": "1553a614",
+     "label": "grv3+ud-ports spot (mask 133 on: 2-leg means; off-control conc 283.6 = +6.3%; every lane at-or-above the prior means - GSQ not slower)",
+     "solo": 229.1,
+     "pair": 220.7,
+     "conc": 301.6,
      "kinds": {
       "solo": "mean",
       "pair": "mean",

@@ -120,3 +120,6 @@ deepseek,2026-11-05,5d17b967,handshake DS spot (IDENT ds4 v1 live - validated pr
 qwen,2026-11-05,7010d352,bw-dense port spot (swiglu fusion + GDN fast + share rule; 2-leg means vs this mornings same-box pre-port 210.5/192.7/250.9 = +6.4/+12.4/+17.7),solo,224.0,0,mean
 qwen,2026-11-05,7010d352,bw-dense port spot (swiglu fusion + GDN fast + share rule; 2-leg means vs this mornings same-box pre-port 210.5/192.7/250.9 = +6.4/+12.4/+17.7),pair,216.7,0,mean
 qwen,2026-11-05,7010d352,bw-dense port spot (swiglu fusion + GDN fast + share rule; 2-leg means vs this mornings same-box pre-port 210.5/192.7/250.9 = +6.4/+12.4/+17.7),conc,295.3,0,mean
+qwen,2026-11-06,1553a614,grv3+ud-ports spot (mask 133 on: 2-leg means; off-control conc 283.6 = +6.3%; every lane at-or-above the prior means - GSQ not slower),solo,229.1,0,mean
+qwen,2026-11-06,1553a614,grv3+ud-ports spot (mask 133 on: 2-leg means; off-control conc 283.6 = +6.3%; every lane at-or-above the prior means - GSQ not slower),pair,220.7,0,mean
+qwen,2026-11-06,1553a614,grv3+ud-ports spot (mask 133 on: 2-leg means; off-control conc 283.6 = +6.3%; every lane at-or-above the prior means - GSQ not slower),conc,301.6,0,mean
