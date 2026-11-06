@@ -363,6 +363,19 @@
       "pair": "mean",
       "conc": "mean"
      }
+    },
+    {
+     "date": "2026-11-06",
+     "commit": "dc3cee74",
+     "label": "UD-IQ4_XS armed spot (the quality set: MMLU 95.71 the best measured on any set here; 2-leg means - slower lanes as physics expects at 4.25 bpw)",
+     "solo": 176.8,
+     "pair": 196.5,
+     "conc": 238.5,
+     "kinds": {
+      "solo": "mean",
+      "pair": "mean",
+      "conc": "mean"
+     }
     }
    ],
    "prefill": [

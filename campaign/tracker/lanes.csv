@@ -132,3 +132,6 @@ qwen,2026-11-06,HEAD,smalls+conversion GSQ spot (mmvf router fast + grid-stride 
 qwen,2026-11-06,HEAD,UD-IQ2_XS armed+smalls spot (42 GB pack; pair +6.8% and conc +8.6% OVER GSQ at half the bytes; solo at parity inside noise),solo,226.5,0,mean
 qwen,2026-11-06,HEAD,UD-IQ2_XS armed+smalls spot (42 GB pack; pair +6.8% and conc +8.6% OVER GSQ at half the bytes; solo at parity inside noise),pair,240.0,0,mean
 qwen,2026-11-06,HEAD,UD-IQ2_XS armed+smalls spot (42 GB pack; pair +6.8% and conc +8.6% OVER GSQ at half the bytes; solo at parity inside noise),conc,329.7,0,mean
+qwen,2026-11-06,dc3cee74,UD-IQ4_XS armed spot (the quality set: MMLU 95.71 the best measured on any set here; 2-leg means - slower lanes as physics expects at 4.25 bpw),solo,176.8,0,mean
+qwen,2026-11-06,dc3cee74,UD-IQ4_XS armed spot (the quality set: MMLU 95.71 the best measured on any set here; 2-leg means - slower lanes as physics expects at 4.25 bpw),pair,196.5,0,mean
+qwen,2026-11-06,dc3cee74,UD-IQ4_XS armed spot (the quality set: MMLU 95.71 the best measured on any set here; 2-leg means - slower lanes as physics expects at 4.25 bpw),conc,238.5,0,mean
