@@ -1427,6 +1427,17 @@ if(STRATA_ENABLE_CUDA OR STRATA_ENABLE_HIP)
     add_test(NAME pinned_capture COMMAND pinned_capture)
   endif()
 
+  # ---- STRATA_WINDOW_GRAPH's falsifier bench (digest 2026-11-05-condgraph-zero-host, section 3.5) ---------------
+  # The mapped-flag visibility gate, the conditional-WHILE machinery (one pass per launch / re-arm over 10k
+  # launches / a live iterating WHILE) and the node-dispatch pricing.  GPU, synthetic, no model; cudart only.
+  if(STRATA_ENABLE_CUDA AND STRATA_BUILD_TESTS AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/bench/micro/cond_node.cu")
+    add_executable(cond_node bench/micro/cond_node.cu)
+    target_include_directories(cond_node PRIVATE ${_strata_gpu_include_directories})
+    target_link_libraries(cond_node PRIVATE ${_strata_gpu_runtime_target})
+    add_test(NAME cond_node COMMAND cond_node)
+    set_tests_properties(cond_node PROPERTIES SKIP_RETURN_CODE 77 TIMEOUT 120)
+  endif()
+
   # Tells tests/CMakeLists.txt to add the CUDA-dependent Catch2 target.  It cannot be declared there
   # unconditionally: tests/ is added at the end of this file, but the flag has to be known before it runs.
   if(STRATA_ENABLE_CUDA)

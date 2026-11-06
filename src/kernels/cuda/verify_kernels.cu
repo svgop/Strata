@@ -1913,6 +1913,25 @@ void wait_flag_ge(const uint32_t* flag, uint32_t value, void* stream) {
     check("wait_flag_ge");
 }
 
+#if !defined(STRATA_USE_HIP) && !defined(STRATA_HIP_GFX906) && CUDART_VERSION >= 12040
+// STRATA_WINDOW_GRAPH: the conditional body's tail (see include/strata/kernels/verify_kernels.hpp).  One thread,
+// one device-side graph-API write: the WHILE condition drops to 0 and the captured body has run exactly once.
+// The handle reaches the kernel as a captured ARGUMENT - a graph never re-reads kernel arguments (graph.hpp
+// NOTE 2) - but the handle never changes for the graph's lifetime (NVIDIA: "handles cannot be destroyed"), so
+// the baked value stays the right one for every replay.  One thread, not one per block: the runtime docs flag
+// racing / concurrent cudaGraphSetConditional calls as undefined, and one caller is the whole contract.
+namespace {
+__global__ void win_cond_tail_kernel(cudaGraphConditionalHandle handle) {
+    cudaGraphSetConditional(handle, 0u);
+}
+}  // namespace
+
+void win_cond_tail(unsigned long long handle, void* stream) {
+    win_cond_tail_kernel<<<1, 1, 0, (cudaStream_t) stream>>>((cudaGraphConditionalHandle) handle);
+    check("win_cond_tail");
+}
+#endif
+
 void wait_flag_ge_stamped(const uint32_t* flag, uint32_t value, unsigned long long* t_in, unsigned long long* t_out,
                           void* stream) {
     wait_flag_ge_stamped_kernel<<<1, 1, 0, (cudaStream_t) stream>>>(flag, value, t_in, t_out);

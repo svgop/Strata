@@ -89,6 +89,15 @@ void wait_flag_ge(const uint32_t* flag, uint32_t value, void* stream);
 void wait_copy_i32_from_mapped(const uint32_t* flag, uint32_t value, int32_t* dst, const int32_t* src, int64_t n,
                                void* stream);
 
+/// STRATA_WINDOW_GRAPH=1 (CUDA only, CUDA >= 12.4): the captured window body's conditional tail.  Sets the
+/// WHILE handle's condition to 0, so the conditional body - the straight-line layer sequence captured by
+/// Verifier::record_window - runs EXACTLY ONCE per graph launch; the handle's cudaGraphCondAssignDefault
+/// initializer re-arms it on the next launch, with no host call and no reset kernel.  The handle is the only
+/// word the kernel writes, so the wrapped window's output state is the unwrapped capture's, bit for bit.
+/// The handle value is `cudaGraphConditionalHandle` (an unsigned long long) so this header stays free of
+/// CUDA includes; the device-side cudaGraphSetConditional is what makes the write land in the graph.
+void win_cond_tail(unsigned long long handle, void* stream);
+
 /// Layer split, overlapped hand-off (STRATA_SPLIT_OVERLAP): dst (mapped) = [a (na) | b (nb) | c (nc)] with volatile
 /// stores, then the LAST block to finish raises *flag = 1 (mapped) after a system fence, so the next stage's GPU can
 /// start (wait_flag_ge(flag, 1)) without the host syncing this stage first.  `counter` is one device word, 0 between

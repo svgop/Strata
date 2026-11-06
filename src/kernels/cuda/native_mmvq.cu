@@ -3135,10 +3135,11 @@ bool il_env_on(const char* name) {
 }
 bool il_t1_on() { static const bool on = il_env_on("STRATA_MMVQ_IL_T1"); return on; }
 bool il_q3k_on() { static const bool on = il_env_on("STRATA_MMVQ_IL_Q3K"); return on; }
-// IL-Q8 (default on): STRATA_MMVQ_IL_Q8=0 keeps every Q8_0 call on native_mmvq's kernels - the master switch for
-// the type 8 rows below, authoritative over the table AND over STRATA_MMVQ_IL_ROWS overrides (the bench legs are
-// armed vs =0; the operator's emitted table lands in the marked slot in kIlRows_120 / kIlRows58_120).
-bool il_q8_on() { static const bool on = il_env_on("STRATA_MMVQ_IL_Q8"); return on; }
+// IL-Q8 (default OFF per law 17's 3+3 interleave, 2026-11-06: solo -1.0 / pair +3.7 / conc +1.6% - inside the
+// load-5 noise envelope, the +4% bar not cleared; the kernel is bitwise-proven and the mirror table carries no
+// quality risk, so STRATA_MMVQ_IL_Q8=1 re-arms for a quiet-window verdict; the tuned emitted table is the other
+// path to revisit - the micro shows real cell wins the mirror does not capture).
+bool il_q8_on() { static const bool on = [] { const char* v = std::getenv("STRATA_MMVQ_IL_Q8"); return v != nullptr && v[0] == '1'; }(); return on; }
 struct IlArch { int cc; const IlRows* t; size_t n; };
 constexpr IlArch kIlArch[] = {
     {60, kIlRows_60, sizeof(kIlRows_60) / sizeof(IlRows)},   // Pascal GP100: measured on a Tesla P100

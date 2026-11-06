@@ -241,6 +241,23 @@ const bool g_batch_self_commit = env_on("STRATA_BATCH_SELF_COMMIT");
 // streamed KV cache (a row's block resolve could evict the blocks an earlier row of the same slot selected).
 const bool g_qsa_slots = env_on("STRATA_QSA_SLOTS");
 
+// STRATA_WINDOW_GRAPH=1 (opt-in, CUDA 12.4+ only, zero-doorbell windows): the window graph is captured as ONE
+// host-launched conditional WHILE node (cudaGraphNodeTypeConditional) whose body is the straight-line layer
+// sequence record_window always captured, and whose tail kernel (win_cond_tail) drops the handle to 0 - the body
+// runs exactly once per replay, the cudaGraphCondAssignDefault initializer re-arms it on the next launch.  One
+// cudaGraphLaunch per window was already the standing shape; what the wrapper buys is the in-graph control-flow
+// machinery LIVE on sm_120 (the campaign's untested-support risk, exercised by every window instead of a
+// microbench alone), with the window-level mode/retry arm as the named next step.  Default OFF = the standing
+// straight-line capture, bit-identical.
+#if !defined(STRATA_USE_HIP) && !defined(STRATA_HIP_GFX906) && !defined(STRATA_GPU_METAL)
+const bool g_window_graph = [] {
+    const char* v = std::getenv("STRATA_WINDOW_GRAPH");
+    return v != nullptr && v[0] == '1';
+}();
+#else
+constexpr bool g_window_graph = false;   // conditional nodes: CUDA-only (ROCm/hip#3905 is still an open request)
+#endif
+
 // every row of a batch window is another slot's (no slot has proposal rows)
 bool one_row_per_slot(const int* rows, int S) {
     for (int i = 0; i < S; ++i)
@@ -2531,6 +2548,53 @@ bool Verifier::capture(int T, std::string& err) {
         else
             (void) cudaGetLastError();
     }
+#if !defined(STRATA_USE_HIP) && !defined(STRATA_HIP_GFX906) && !defined(STRATA_GPU_METAL) && CUDART_VERSION >= 12040
+    cudaGraph_t root = nullptr, body = nullptr;   // STRATA_WINDOW_GRAPH: the conditional wrapper around the body
+    cudaGraphConditionalHandle h_win = 0;   // an unsigned long long, not a pointer: no nullptr here
+    const bool wrap = g_window_graph && ar_on();   // true only when exec_t above is the zero-doorbell variant
+    if (wrap) {
+        // The wrapper (digest 2026-11-05-condgraph-zero-host, section 3.2): the root graph is ONE conditional
+        // WHILE node whose body is the straight-line layer sequence the capture below always produced, streamed
+        // into the node's own graph by cudaStreamBeginCaptureToGraph.  The handle starts each launch at 1
+        // (cudaGraphCondAssignDefault); win_cond_tail drops it to 0 at the body's tail, so the body runs exactly
+        // once per replay - the conditional's dispatch and the tail are the only nodes the wrapped graph adds,
+        // and neither writes a model buffer.  The body whitelist (kernel/empty/memcpy/memset/child/conditional)
+        // is met by construction; event and host nodes cannot appear in it, and conditional nodes are excluded
+        // from device-launched graphs, so the window stays HOST-launched: one doorbell per window is the design.
+        if (cudaGraphCreate(&root, 0) != cudaSuccess) {
+            (void) cudaGetLastError();
+            err = "verify: the window-graph root could not be created";
+            return false;
+        }
+        if (cudaGraphConditionalHandleCreate(&h_win, root, /*defaultLaunchValue=*/1, cudaGraphCondAssignDefault) !=
+            cudaSuccess) {
+            (void) cudaGetLastError();
+            cudaGraphDestroy(root);
+            err = "verify: the window-graph handle could not be created";
+            return false;
+        }
+        cudaGraphNodeParams p{};   // reserved bytes must be zero: value-init, then set the conditional
+        p.type = cudaGraphNodeTypeConditional;
+        p.conditional.handle = h_win;
+        p.conditional.type = cudaGraphCondTypeWhile;
+        p.conditional.size = 1;
+        cudaGraphNode_t cond_node = nullptr;
+        if (cudaGraphAddNode(&cond_node, root, nullptr, nullptr, 0, &p) != cudaSuccess ||
+            p.conditional.phGraph_out == nullptr) {
+            (void) cudaGetLastError();
+            cudaGraphDestroy(root);
+            err = "verify: the window-graph conditional node could not be added";
+            return false;
+        }
+        body = p.conditional.phGraph_out[0];   // CUDA-owned for the node's lifetime: populated next, never destroyed here
+        if (cudaStreamBeginCaptureToGraph(cs_, body, nullptr, nullptr, 0, cudaStreamCaptureModeThreadLocal) != cudaSuccess) {
+            (void) cudaGetLastError();
+            cudaGraphDestroy(root);
+            err = "verify: begin window-graph body capture failed";
+            return false;
+        }
+    } else
+#endif
     if (cudaStreamBeginCapture(cs_, cudaStreamCaptureModeThreadLocal) != cudaSuccess) {
         err = "verify: begin capture failed";
         return false;
@@ -2538,15 +2602,35 @@ bool Verifier::capture(int T, std::string& err) {
     std::string rerr;
     const bool ok = record_window(T, cs_, rerr);
     cudaGraph_t graph = nullptr;
-    const cudaError_t ce = cudaStreamEndCapture(cs_, &graph);
-    if (!ok) {
-        if (graph) cudaGraphDestroy(graph);
-        err = rerr;
-        return false;
-    }
-    if (ce != cudaSuccess) {
-        err = std::string("verify: end capture: ") + cudaGetErrorString(ce);
-        return false;
+#if !defined(STRATA_USE_HIP) && !defined(STRATA_HIP_GFX906) && !defined(STRATA_GPU_METAL) && CUDART_VERSION >= 12040
+    if (wrap) {
+        if (ok) strata::kernels::win_cond_tail(h_win, cs_);   // the body's last node: one pass per replay (see the wrapper comment)
+        const cudaError_t ce = cudaStreamEndCapture(cs_, nullptr);   // capturing INTO the body: nothing is returned
+        if (!ok) {
+            cudaGraphDestroy(root);
+            err = rerr;
+            return false;
+        }
+        if (ce != cudaSuccess) {
+            (void) cudaGetLastError();
+            cudaGraphDestroy(root);
+            err = std::string("verify: end window-graph capture: ") + cudaGetErrorString(ce);
+            return false;
+        }
+        graph = root;   // the ROOT instantiates; the body rides inside the conditional node (destroyed with it)
+    } else
+#endif
+    {
+        const cudaError_t ce = cudaStreamEndCapture(cs_, &graph);
+        if (!ok) {
+            if (graph) cudaGraphDestroy(graph);
+            err = rerr;
+            return false;
+        }
+        if (ce != cudaSuccess) {
+            err = std::string("verify: end capture: ") + cudaGetErrorString(ce);
+            return false;
+        }
     }
 #if defined(STRATA_USE_HIP)   // 143-amdk: the same listing on HIP (kernel names by hipKernelNameRefByPtr); STRATA_VERIFY_NODES=2 also lists the first nodes in graph order
     if (std::getenv("STRATA_VERIFY_NODES") != nullptr) {
@@ -2589,10 +2673,14 @@ bool Verifier::capture(int T, std::string& err) {
 #endif
 #if !defined(STRATA_USE_HIP) && !defined(STRATA_GPU_METAL)   // a CUDA debug listing (node types, kernel names)
     if (std::getenv("STRATA_VERIFY_NODES") != nullptr) {   // what the window graph holds
+        cudaGraph_t graph_shown = graph;   // a wrapped window lists its BODY: the root is one conditional node
+#if !defined(STRATA_USE_HIP) && !defined(STRATA_HIP_GFX906) && !defined(STRATA_GPU_METAL) && CUDART_VERSION >= 12040
+        if (wrap) graph_shown = body;
+#endif
         size_t nn = 0;
-        cudaGraphGetNodes(graph, nullptr, &nn);
+        cudaGraphGetNodes(graph_shown, nullptr, &nn);
         std::vector<cudaGraphNode_t> nodes(nn);
-        cudaGraphGetNodes(graph, nodes.data(), &nn);
+        cudaGraphGetNodes(graph_shown, nodes.data(), &nn);
         std::map<std::string, int> kinds;
         for (cudaGraphNode_t nd : nodes) {
             cudaGraphNodeType ty;
@@ -2619,16 +2707,16 @@ bool Verifier::capture(int T, std::string& err) {
 #if CUDART_VERSION >= 12030   // the programmatic (PDL) edges: CUDA allows them only from a kernel node to a kernel node
         size_t ne = 0;
 #if CUDART_VERSION >= 13000
-        cudaGraphGetEdges(graph, nullptr, nullptr, nullptr, &ne);
+        cudaGraphGetEdges(graph_shown, nullptr, nullptr, nullptr, &ne);
 #else
-        cudaGraphGetEdges_v2(graph, nullptr, nullptr, nullptr, &ne);
+        cudaGraphGetEdges_v2(graph_shown, nullptr, nullptr, nullptr, &ne);
 #endif
         std::vector<cudaGraphNode_t> from(ne), to(ne);
         std::vector<cudaGraphEdgeData> ed(ne);
 #if CUDART_VERSION >= 13000
-        const cudaError_t ge = cudaGraphGetEdges(graph, from.data(), to.data(), ed.data(), &ne);
+        const cudaError_t ge = cudaGraphGetEdges(graph_shown, from.data(), to.data(), ed.data(), &ne);
 #else
-        const cudaError_t ge = cudaGraphGetEdges_v2(graph, from.data(), to.data(), ed.data(), &ne);
+        const cudaError_t ge = cudaGraphGetEdges_v2(graph_shown, from.data(), to.data(), ed.data(), &ne);
 #endif
         size_t prog = 0, bad = 0;
         for (size_t i = 0; ge == cudaSuccess && i < ne; ++i) {

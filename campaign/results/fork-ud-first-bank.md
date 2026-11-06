@@ -42,3 +42,19 @@ predicted +8-15% conc did NOT materialize (SURVTOPK's conc-kill condition trendi
 ARMS PARKED default-off (zero standing cost; the observe() extrapolation deletion is the
 only unswitched change - zero engine call sites, bit-identical). A quiet-window attribution
 ladder (L2-L4) remains priced if wanted.
+
+## The IL-Q8 verdict + law 17's first case (2026-11-06 night)
+
+The 3+3 interleaved A/B (law 17, loads recorded per leg, box at load ~4-7 through the
+window): armed 195.0/214.3/281.6 vs control 197.0/206.6/277.2 = -1.0/+3.7/+1.6% - inside
+the noise envelope, the +4% bar not cleared. DEFAULT FLIPPED OFF (bitwise kernels, zero
+quality risk; STRATA_MMVQ_IL_Q8=1 re-arms; the tuned emitted table - the micro's real cell
+wins vs the mirror - is the revisit path). The full arc is the law's named case: the first
+armed leg read 92.6 t/s (a Chrome session at load 19 through the leg) - a fake -55%
+"regression" that would have killed a bitwise win without the operator's catch.
+
+The window-graph package: landed sound (compile + on-card legality probe) but INERT here -
+the wrap gates on ar_on() (all-resident), which no 42-81-GB pack can reach on 32 GB; banked
+as the enabler, with the doorbell-family flag-wait conversion named as the local path.
+cond_node's micro deadlocks on its own protocol (spins on a flag the host sets later) -
+tool bug, parked.
