@@ -18,8 +18,9 @@ LANES = os.path.join(HERE, 'lanes.csv')
 
 ENGINES = {
     'qwen': {'label': 'Qwen3.8 GSQ IQ3_S (custom engine, standing)', 'css': 'var(--purple)'},
-    'qwen-ud-iq2xs': {'label': 'Qwen3.8 UD-IQ2_XS (42 GB, speed+economy set)', 'css': 'var(--orange)'},
-    'qwen-ud-iq4xs': {'label': 'Qwen3.8 UD-IQ4_XS (94 GB, quality set)', 'css': 'var(--green)'},
+    'qwen-ud-iq2xs': {'label': 'Qwen3.8 UD-IQ2_XS (42 GB, speed+economy set)', 'css': 'var(--green)'},
+    'qwen-ud-iq4xs': {'label': 'Qwen3.8 UD-IQ4_XS (94 GB, quality set)',
+                      'css': 'color-mix(in srgb, var(--green) 55%, var(--background))'},
     'deepseek': {'label': 'DeepSeek-V4.1-Flash 2.00bpw (dsv41)', 'css': 'var(--blue)'},
 }
 LANE_ORDER = ['solo', 'pair', 'conc']

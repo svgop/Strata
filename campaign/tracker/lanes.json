@@ -466,9 +466,44 @@
       "pair": "mean",
       "conc": "mean"
      }
+    },
+    {
+     "date": "2026-11-06",
+     "commit": "3b56b58c",
+     "label": "UD-IQ2_XS range spot (the series fill - leg 1 of 2 same boot)",
+     "solo": 218.1,
+     "pair": 228.5,
+     "conc": 295.5,
+     "kinds": {
+      "solo": "mean",
+      "pair": "mean",
+      "conc": "mean"
+     }
+    },
+    {
+     "date": "2026-11-06",
+     "commit": "3b56b58c",
+     "label": "UD-IQ2_XS range spot (the series fill - leg 2 of 2 same boot)",
+     "solo": 225.2,
+     "pair": 229.8,
+     "conc": 311.3,
+     "kinds": {
+      "solo": "mean",
+      "pair": "mean",
+      "conc": "mean"
+     }
     }
    ],
-   "prefill": []
+   "prefill": [
+    {
+     "date": "2026-11-06",
+     "commit": "3b56b58c",
+     "label": "UD-IQ2_XS prefill (the series fill - cold 24K TTFT probe)",
+     "tps": 5909.0,
+     "ctx": 24000,
+     "kind": "mean"
+    }
+   ]
   },
   "qwen-ud-iq4xs": {
    "label": "Qwen3.8 UD-IQ4_XS (94 GB, quality set)",
@@ -485,9 +520,44 @@
       "pair": "mean",
       "conc": "mean"
      }
+    },
+    {
+     "date": "2026-11-06",
+     "commit": "3b56b58c",
+     "label": "UD-IQ4_XS range spot (the series fill - leg 1 of 2 same boot)",
+     "solo": 164.3,
+     "pair": 183.1,
+     "conc": 246.2,
+     "kinds": {
+      "solo": "mean",
+      "pair": "mean",
+      "conc": "mean"
+     }
+    },
+    {
+     "date": "2026-11-06",
+     "commit": "3b56b58c",
+     "label": "UD-IQ4_XS range spot (the series fill - leg 2 of 2 same boot)",
+     "solo": 176.9,
+     "pair": 188.5,
+     "conc": 227.7,
+     "kinds": {
+      "solo": "mean",
+      "pair": "mean",
+      "conc": "mean"
+     }
     }
    ],
-   "prefill": []
+   "prefill": [
+    {
+     "date": "2026-11-06",
+     "commit": "3b56b58c",
+     "label": "UD-IQ4_XS prefill (the series fill - cold 24K TTFT probe)",
+     "tps": 5437.0,
+     "ctx": 24000,
+     "kind": "mean"
+    }
+   ]
   },
   "deepseek": {
    "label": "DeepSeek-V4.1-Flash 2.00bpw (dsv41)",
