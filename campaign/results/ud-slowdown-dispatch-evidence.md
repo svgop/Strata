@@ -19,3 +19,17 @@ most of the solo deficit). The fix class: make the UD forms capturable (capture-
 kernels) or convert at LOAD into the graph-friendly forms (Q6_K dense -> bf16 rows so
 the HC read takes copies=0; preconvert the head) - load-time architecture support, the
 thing GSQ has had for years.
+
+## CORRECTION (same day, the kernel-study agent's counter reading, accepted)
+
+The "windows run EAGER" line above misreads the counter: graph_launch(T, kind) fires only
+on CAPTURED-graph paths - the 2,262 launches are 2,262 captured window GRAPHS, and the
+T1/T2/T3 dominance means the UD run's windows averaged T ~1.96 ROWS (acceptance collapse),
+not per-kernel launches. The mechanism the histogram actually names: the stock setup's UD
+config drafts with the FULL 106,299-token vocabulary (--mtp data/mtp/rt) while every GSQ
+config drafts the "en" 40,525-token subset (mtp-en/rt) - acceptance collapsed, the
+~3.5 GB dense+HC fixed traffic amortized over ~2 rows instead of ~4.5 (~2.45 GB/token vs
+1.57), which is the measured ~45%. The eager-vs-captured framing below is wrong; the
+vocabulary finding is stronger AND config-only to fix. The HC Q8_0-copies and Q8-head
+observations stand as secondary kernel-form deficits (see
+.docs/research/digest/2026-11-06-ud-slowdown-kernels.md).
