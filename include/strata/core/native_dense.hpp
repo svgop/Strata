@@ -43,6 +43,15 @@ public:
     /// STRATA_HC_Q8=1: the hyper-connection down / up projections of the layers live only as Q8_0 (the bf16 copy is not
     /// loaded: `add_hc_skip` puts their rows in the arena's skip set, `load` quantizes them from the pack file).
     static bool hc_q8_requested();
+    /// STRATA_UD_BF16_DENSE (default 1): a UD pack's GGUF carries its hyper-connection down / up projections as Q8_0
+    /// (`blk.*.hc_*`, `output_hc_down/up`).  `load` dequantizes them to bf16 rows once, at load, so the HC read - the
+    /// verify windows, the prefill path and the final mixer alike - takes the copies=0 bf16-rows form (no per-window
+    /// Q8_0 dequant copy).  =0 keeps the GGUF's Q8_0 bytes as the read's form (the S23 copies=1 read, 0.63 GiB not
+    /// 1.25 GiB on this model).  `add_hc_skip` puts the pack's bf16 rows in the arena's skip set either way.
+    static bool ud_bf16_dense_requested();
+    /// True when the GGUF carries the hyper-connection projections as Q8_0 (the UD packs' layout): the
+    /// conversion and the arena's HC skip engage only for such packs - a bf16-HC pack (GSQ) loads unchanged.
+    static bool gguf_hc_is_q8(const std::string& gguf_path);
     static bool add_hc_skip(const std::string& pack_dir, std::set<std::string>& skip);
     /// A projection's bf16 values for a path that has no Q8 kernel (the prompt path's GEMMs, the single-token read): the
     /// resident copy, or - when the row was skipped - the Q8_0 copy dequantized into a per-stream scratch (`slot` 0 / 1:

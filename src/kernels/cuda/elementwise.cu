@@ -390,8 +390,12 @@ void doorbell_publish_res(const float* x, const int32_t* ids, const int32_t* d_r
     check_launch("doorbell_publish_res");
 }
 
-__global__ void copy_i32_from_mapped_kernel(int32_t* __restrict__ dst, const volatile int32_t* src, int n) {
-    for (int i = threadIdx.x; i < n; i += blockDim.x) dst[i] = src[i];
+// one block before (upstream 0.2.10): a single 128-thread block walked the whole mapped buffer.  A grid-stride
+// loop now (64 blocks cap) - the device-plan copy inside every doorbell expert group.
+__global__ void copy_i32_from_mapped_kernel(int32_t* __restrict__ dst, const volatile int32_t* src, int64_t n) {
+    for (int64_t i = (int64_t) blockIdx.x * blockDim.x + threadIdx.x; i < n;
+         i += (int64_t) gridDim.x * blockDim.x)
+        dst[i] = src[i];
 }
 
 #if !defined(__HIPCC__)
@@ -429,7 +433,9 @@ void copy_from_mapped_multi(const MappedCopy* copies, int n, void* stream) {
 
 void copy_i32_from_mapped(int32_t* dst, const int32_t* src, int64_t n, void* stream) {
     if (n <= 0) return;
-    copy_i32_from_mapped_kernel<<<1, 128, 0, (cudaStream_t) stream>>>(dst, (const volatile int32_t*) src, (int) n);
+    const unsigned bx = (unsigned) std::min<int64_t>((n + 127) / 128, 64);
+    copy_i32_from_mapped_kernel<<<bx < 1 ? 1 : bx, 128, 0, (cudaStream_t) stream>>>(
+        dst, (const volatile int32_t*) src, n);
     check_launch("copy_i32_from_mapped");
 }
 

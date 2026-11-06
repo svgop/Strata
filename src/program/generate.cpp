@@ -3877,8 +3877,15 @@ int main(int argc, char** argv) {
         }
         if (native_pack) skip.insert("token_embd.weight");
         // STRATA_HC_Q8=1 (single GPU): the layers' hyper-connection down / up projections live only as Q8_0 (NativeDense
-        // quantizes them from the pack file), so their bf16 copy is not loaded
-        if (!o.native_dense_gguf.empty() && !multi_gpu && strata::core::NativeDense::hc_q8_requested())
+        // quantizes them from the pack file), so their bf16 copy is not loaded.
+        // STRATA_UD_BF16_DENSE=1 (default; a UD pack's GGUF carries these projections as Q8_0): the rows the read uses
+        // are dequantized at load from the GGUF's Q8_0, so the pack's bf16 copy is not loaded either.  Either way the
+        // arena skips the rows and the read's form owns one copy of the weights.
+        const bool ud_hc_q8_pack = !o.native_dense_gguf.empty() && strata::core::NativeDense::ud_bf16_dense_requested() &&
+            std::any_of(o.native_dense_gguf.begin(), o.native_dense_gguf.end(),
+                        [](const std::string& p) { return strata::core::NativeDense::gguf_hc_is_q8(p); });
+        if (!o.native_dense_gguf.empty() && !multi_gpu &&
+            (strata::core::NativeDense::hc_q8_requested() || ud_hc_q8_pack))
             strata::core::NativeDense::add_hc_skip(o.pack, skip);
     }
     // Layer split: every GPU holds only the dense weights of ITS layers (the PLE tensors stay everywhere).

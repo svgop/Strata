@@ -126,3 +126,9 @@ qwen,2026-11-06,1553a614,grv3+ud-ports spot (mask 133 on: 2-leg means; off-contr
 qwen,2026-11-06,1553a614,armed-ud spot (UD-IQ2_XS with the full adopted env battery - the bare-boot 171.8/185.1/292.3 was engine-recipe-unarmed; 2-leg means),solo,209.7,0,mean
 qwen,2026-11-06,1553a614,armed-ud spot (UD-IQ2_XS with the full adopted env battery - the bare-boot 171.8/185.1/292.3 was engine-recipe-unarmed; 2-leg means),pair,214.0,0,mean
 qwen,2026-11-06,1553a614,armed-ud spot (UD-IQ2_XS with the full adopted env battery - the bare-boot 171.8/185.1/292.3 was engine-recipe-unarmed; 2-leg means),conc,290.1,0,mean
+qwen,2026-11-06,HEAD,smalls+conversion GSQ spot (mmvf router fast + grid-stride copy + the UD bf16-dense gate fix; quiet box; 2-leg means vs the prior 229.1/220.7/301.6 = +1.7/+1.9/+0.6),solo,233.1,0,mean
+qwen,2026-11-06,HEAD,smalls+conversion GSQ spot (mmvf router fast + grid-stride copy + the UD bf16-dense gate fix; quiet box; 2-leg means vs the prior 229.1/220.7/301.6 = +1.7/+1.9/+0.6),pair,224.8,0,mean
+qwen,2026-11-06,HEAD,smalls+conversion GSQ spot (mmvf router fast + grid-stride copy + the UD bf16-dense gate fix; quiet box; 2-leg means vs the prior 229.1/220.7/301.6 = +1.7/+1.9/+0.6),conc,303.5,0,mean
+qwen,2026-11-06,HEAD,UD-IQ2_XS armed+smalls spot (42 GB pack; pair +6.8% and conc +8.6% OVER GSQ at half the bytes; solo at parity inside noise),solo,226.5,0,mean
+qwen,2026-11-06,HEAD,UD-IQ2_XS armed+smalls spot (42 GB pack; pair +6.8% and conc +8.6% OVER GSQ at half the bytes; solo at parity inside noise),pair,240.0,0,mean
+qwen,2026-11-06,HEAD,UD-IQ2_XS armed+smalls spot (42 GB pack; pair +6.8% and conc +8.6% OVER GSQ at half the bytes; solo at parity inside noise),conc,329.7,0,mean

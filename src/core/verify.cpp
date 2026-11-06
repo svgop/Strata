@@ -776,6 +776,18 @@ bool Verifier::init(const WeightTable& wt, const ModelGeometry& g, SessionState&
     ss_ = &ss;
     hits_ = hits;
     head_ = head;
+    {   // the boot-check line for the HC read's form (the same two facts upstream's dispatch capture prints per
+        // window as "hc read: weights Q8_0 copies=" and "head: final mixer q8="): layer 0 stands for every layer -
+        // NativeDense loads one form for all of them or fails the load.
+        const WeightRef* w0d = wt.find("blk.0.hc_attn_down.weight");
+        const WeightRef* ohd = wt.find("output_hc_down.weight"), *ohu = wt.find("output_hc_up.weight");
+        const bool copies = w0d != nullptr && w0d->hc_q8 != nullptr;
+        const bool mix_q8 = ohd != nullptr && ohu != nullptr && ohd->hc_q8 != nullptr && ohu->hc_q8 != nullptr &&
+                            head_ != nullptr && head_->loaded();
+        std::fprintf(stderr, "strata verify: hc read weights %s copies=%d, final mixer q8=%d, native head=%d\n",
+                     copies ? "Q8_0" : "bf16 rows", copies ? 1 : 0, mix_q8 ? 1 : 0,
+                     head_ != nullptr && head_->loaded() ? 1 : 0);
+    }
     max_t_ = max_t;
     sampling_.greedy = true;      // a fresh verifier samples greedily until set_sampling says otherwise
     sampling_.temperature = 0.0f;

@@ -337,6 +337,32 @@
       "pair": "mean",
       "conc": "mean"
      }
+    },
+    {
+     "date": "2026-11-06",
+     "commit": "HEAD",
+     "label": "smalls+conversion GSQ spot (mmvf router fast + grid-stride copy + the UD bf16-dense gate fix; quiet box; 2-leg means vs the prior 229.1/220.7/301.6 = +1.7/+1.9/+0.6)",
+     "solo": 233.1,
+     "pair": 224.8,
+     "conc": 303.5,
+     "kinds": {
+      "solo": "mean",
+      "pair": "mean",
+      "conc": "mean"
+     }
+    },
+    {
+     "date": "2026-11-06",
+     "commit": "HEAD",
+     "label": "UD-IQ2_XS armed+smalls spot (42 GB pack; pair +6.8% and conc +8.6% OVER GSQ at half the bytes; solo at parity inside noise)",
+     "solo": 226.5,
+     "pair": 240.0,
+     "conc": 329.7,
+     "kinds": {
+      "solo": "mean",
+      "pair": "mean",
+      "conc": "mean"
+     }
     }
    ],
    "prefill": [

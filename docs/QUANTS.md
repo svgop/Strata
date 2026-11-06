@@ -166,6 +166,14 @@ budget mode (A4000, 1,500 GPU slots), for +4-10% decode in RAM and +26-67% in th
 A4000 UD-Q4_K_XL then comes closer to Q8_0 (yardstick KL 0.0562 -> 0.0526, p99 0.925 -> 0.716) and to the same file on
 AMD (KL 0.038 -> 0.033). Opt-in until decided.
 
+`STRATA_UD_BF16_DENSE` (default 1, single GPU) picks the read's *form* for a pack whose GGUF carries the HC
+projections as Q8_0 (the UD sets): at load the engine dequantizes the GGUF's Q8_0 once into bf16 rows, so every HC
+read - the verify windows, the prefill path and the final mixer - takes the copies=0 bf16-rows form instead of
+rereading the Q8_0 and converting it per window (`STRATA_HC_Q8=1`'s launch_q8 grid, and the prefill's `hc_bf16_view`
+copy). The rows cost 2 B/elem against the copies' 1.0625 (Qwen3.8-Flash-Next: 1.18 GiB against 0.63 GiB, +0.555 GiB;
+the boot line prints both). `STRATA_UD_BF16_DENSE=0` keeps the Q8_0 copies; when both switches are set, the BF16
+rows form wins (`fused_gr_read_multi` prefers `q8_down` when both are set, so the loader attaches only one).
+
 ## Images
 
 Every Unsloth file reads pictures with the model's own encoder: setup's `mmproj-Qwen3.8-Flash-Next-BF16.gguf` (from

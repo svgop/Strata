@@ -43,9 +43,14 @@ __device__ __forceinline__ float mmvf_warp_sum(float value) {
     return value;
 }
 
+// The router-shaped single-column read's constant-trip variant (upstream BW-DENSE's STRATA_SMALL_UNR bit 0,
+// ported): five passes of one weight pair each (n_in 2560 -> all pairs in range at BLOCK_SIZE 256), the loads
+// of the five passes in flight together.  The same FMAs in the same order - bitwise the loop below.
+// `fast` comes from mmvf_fast() below (STRATA_SMALL_UNR bit 0, default on, like the GDN a/b port).
+
 template <int BLOCK_SIZE>
 __global__ void bf16_f32_mmvf_kernel(const float* __restrict__ x, const uint16_t* __restrict__ w,
-                                    float* __restrict__ y, int n_in) {
+                                    float* __restrict__ y, int n_in, int fast) {
     const int t = threadIdx.x;
     const uint16_t* row = w + (size_t) blockIdx.x * n_in;
     const uint32_t* weights2 = reinterpret_cast<const uint32_t*>(row);
@@ -54,6 +59,15 @@ __global__ void bf16_f32_mmvf_kernel(const float* __restrict__ x, const uint16_t
     if (t < 32) partials[t] = 0.0f;
     __syncthreads();
     float acc = 0.0f;
+    if (BLOCK_SIZE == 256 && fast != 0 && n_in == 2560) {
+#pragma unroll
+        for (int qq = 0; qq < 5; ++qq) {
+            const uint32_t wv = weights2[t + qq * BLOCK_SIZE];
+            const float2 xv = inputs2[t + qq * BLOCK_SIZE];
+            acc = __fmaf_rn(f32_from_bf16((uint16_t) wv), xv.x, acc);
+            acc = __fmaf_rn(f32_from_bf16((uint16_t) (wv >> 16)), xv.y, acc);
+        }
+    } else
     for (int pair = t; pair < n_in / 2; pair += BLOCK_SIZE) {
         const uint32_t weight = weights2[pair];
         const float2 input = inputs2[pair];
@@ -337,6 +351,16 @@ void bf16_gemv_fp32_mmvf_multi(const float* x, int64_t ldx, const uint16_t* w, f
         throw std::runtime_error(std::string("bf16_gemv_fp32_mmvf_multi launch: ") + cudaGetErrorString(result));
 }
 
+// STRATA_SMALL_UNR bit 0 (default on, this cc-12.0 build; =0 restores the dependent-load loop) - the port of
+// upstream's mmvf_fast default, read once per process.
+static int mmvf_fast() {
+    static const int v = [] {
+        const char* e = std::getenv("STRATA_SMALL_UNR");
+        return ((e == nullptr ? 3 : std::atoi(e)) & 1) != 0 ? 1 : 0;
+    }();
+    return v;
+}
+
 void bf16_gemv_fp32_mmvf(const float* x, const uint16_t* w, float* y,
                          int64_t n_in, int64_t n_out, void* stream) {
     if (n_in <= 0 || (n_in & 1) != 0 || n_in > std::numeric_limits<int>::max() ||
@@ -348,8 +372,9 @@ void bf16_gemv_fp32_mmvf(const float* x, const uint16_t* w, float* y,
         (reinterpret_cast<uintptr_t>(y) & 3u) != 0)
         throw std::invalid_argument("bf16_gemv_fp32_mmvf: null or misaligned pointer");
     const cudaStream_t st = (cudaStream_t) stream;
+    const int fast = mmvf_fast();
 #define STRATA_MMVF_CASE(N) case N: \
-    bf16_f32_mmvf_kernel<N><<<(unsigned) n_out, N, 0, st>>>(x, w, y, (int) n_in); break
+    bf16_f32_mmvf_kernel<N><<<(unsigned) n_out, N, 0, st>>>(x, w, y, (int) n_in, fast); break
     switch (mmvf_block_size(n_in)) {
         STRATA_MMVF_CASE(32);
         STRATA_MMVF_CASE(64);

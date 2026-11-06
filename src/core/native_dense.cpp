@@ -76,6 +76,18 @@ bool hc_q8_name(const std::string& name) {
     for (const char* suffix : suffixes) if (name.ends_with(suffix)) return true;
     return false;
 }
+// STRATA_UD_BF16_DENSE (default 1): a UD GGUF stores its hyper-connection down / up projections as Q8_0 - not
+// directly readable as bf16 rows - so the read would take the Q8_0 copies form (launch_q8's per-window form, and
+// hc_bf16_view's dequant copy on the prefill path).  Instead the load dequantizes them to bf16 rows once, and every
+// read site takes the copies=0 bf16-rows form.  STRATA_UD_BF16_DENSE=0 falls back to the Q8_0 copies (the S23 read;
+// 0.63 GiB instead of 1.25 GiB on this model, the boot line names both).
+bool ud_bf16_dense_env() {
+    static const bool on = [] {
+        const char* v = std::getenv("STRATA_UD_BF16_DENSE");
+        return v == nullptr || v[0] == '\0' || v[0] != '0';
+    }();
+    return on;
+}
 // S25: the GGUF keeps the inject rows as F32 - quantized here to Q8_0 (ggml's reference rounding) so the Q8_0 read
 // covers every hc projection
 uint16_t half_bits(float f) {
@@ -261,7 +273,7 @@ bool NativeDense::load(const std::vector<std::string>& shards, WeightTable& tabl
         std::vector<Pending> pending;
         std::set<std::string> seen;
         int max_in = 0;
-        uint64_t total = 0, hc_q8_bytes = 0, allocated = 0;
+        uint64_t total = 0, hc_q8_bytes = 0, ud_rows_bytes = 0, allocated = 0;
         uint64_t split_count = 0, split_tensors = 0;
         std::set<uint64_t> split_numbers;
         bool have_architecture = false;
@@ -381,12 +393,20 @@ bool NativeDense::load(const std::vector<std::string>& shards, WeightTable& tabl
                 }
                 pending.push_back(Pending{&ref, (int) tensor.type, bytes, std::move(data), std::move(packed)});
             }
-            if (hc_q8_env())
+            // The HC projections' load form.  STRATA_UD_BF16_DENSE=1 (default): the GGUF's Q8_0 projection becomes
+            // bf16 rows once, here (gr_dequant_q8_0_kernel, the same dequant the =0 read redoes every window);
+            // every read site - the verify windows' fused_gr_read_multi, the prefill path's hc_bf16_view and the
+            // final mixer's mix_q8 gate - sees data != nullptr with hc_q8 == nullptr, the copies=0 bf16-rows form.
+            // STRATA_UD_BF16_DENSE=0 / STRATA_HC_Q8=1: the Q8_0 bytes are the read's form (hc_q8 attach below;
+            // fused_gr_read_multi prefers q8_down over w_down when both are set, so the two forms never mix).
+            const bool ud_rows = ud_bf16_dense_env();
+            if (hc_q8_env() || ud_rows)
                 for (const auto& tensor : gguf.tensors()) {
                     // S25: the F32 inject rows hold BF16-exact values: the read takes the pack's BF16 rows unless
-                    // STRATA_HC_Q8_INJECT=1 asks for a Q8_0 copy
+                    // STRATA_HC_Q8_INJECT=1 asks for a Q8_0 copy (the UD GGUF's inject rows ARE bf16; the rows form
+                    // keeps them there, and the arena holds them either way)
                     static const bool q8_inject = [] { const char* v = std::getenv("STRATA_HC_Q8_INJECT"); return v && v[0] == '1'; }();
-                    const bool f32_inject = q8_inject && tensor.type == 0 && tensor.name.ends_with("_inject.weight");
+                    const bool f32_inject = !ud_rows && q8_inject && tensor.type == 0 && tensor.name.ends_with("_inject.weight");
                     if ((tensor.type != 8 && !f32_inject) || !hc_q8_name(tensor.name) || tensor.shape.size() != 2) continue;
                     auto found = table.table_.find(tensor.name);
                     if (found == table.table_.end() || found->second.hc_q8 != nullptr) continue;
@@ -394,6 +414,40 @@ bool NativeDense::load(const std::vector<std::string>& shards, WeightTable& tabl
                     if (tensor.shape[0] != (uint64_t) ref.ne0 || tensor.shape[1] != (uint64_t) ref.ne1 || ref.ne0 % 32 != 0) {
                         err = "native dense (STRATA_HC_Q8): incompatible matrix " + tensor.name; return false;
                     }
+                    if (ud_rows && !f32_inject && ref.data == nullptr) {
+                        // the rows form.  The pack's bf16 row of this tensor was skipped (add_hc_skip), so the ref
+                        // has no data: build it from the GGUF's Q8_0 and own it like every other NativeDense buffer.
+                        if (ref.elements != (uint64_t) ref.ne0 * (uint64_t) ref.ne1) {
+                            err = "native dense (STRATA_UD_BF16_DENSE): bad element count " + tensor.name; return false;
+                        }
+                        const uint64_t blocks = (uint64_t) ref.ne0 / 32 * (uint64_t) ref.ne1;
+                        const uint64_t q8_bytes = blocks * 34, rows_bytes = (uint64_t) ref.elements * 2;
+                        void* rows = nullptr;
+                        DevicePtr stage;
+                        {
+                            void* s = nullptr;
+                            if (cudaMalloc(&rows, rows_bytes) != cudaSuccess || cudaMalloc(&s, q8_bytes) != cudaSuccess) {
+                                cudaFree(rows);
+                                err = "native dense (STRATA_UD_BF16_DENSE) alloc " + tensor.name; return false;
+                            }
+                            stage.reset(s);
+                        }
+                        weights_.push_back(rows);
+                        if (cudaMemcpy(stage.get(), gguf.tensor_data(tensor), q8_bytes, cudaMemcpyHostToDevice) != cudaSuccess) {
+                            err = "native dense (STRATA_UD_BF16_DENSE) upload " + tensor.name; return false;
+                        }
+                        strata::kernels::fused_gr_dequant_q8_0((const uint8_t*) stage.get(), (uint16_t*) rows,
+                                                               (int64_t) blocks, nullptr);
+                        if (cudaGetLastError() != cudaSuccess || cudaStreamSynchronize(nullptr) != cudaSuccess) {
+                            err = "native dense (STRATA_UD_BF16_DENSE): dequantizing " + tensor.name + " failed"; return false;
+                        }
+                        ref.data = rows;
+                        ref.resident = true;   // non-arena bytes this ref owns (load_hc_q8's convention)
+                        ref.bytes = rows_bytes;
+                        ud_rows_bytes += rows_bytes;
+                        continue;
+                    }
+                    if (!hc_q8_env()) continue;
                     const uint64_t bytes = (uint64_t) ref.ne0 / 32 * 34 * (uint64_t) ref.ne1;
                     void* p = nullptr;
                     std::vector<uint8_t> q8;
@@ -408,11 +462,13 @@ bool NativeDense::load(const std::vector<std::string>& shards, WeightTable& tabl
                     hc_q8_bytes += bytes;
                 }
         }
-        if (hc_q8_env()) {
+        if (hc_q8_env() && !ud_bf16_dense_env()) {
             // a bf16 pack stores no Q8_0 copy: quantize the layers' down / up projections. A row the arena kept
             // (--keep-canonical, a layer split) is quantized on the GPU from the arena's bf16; a skipped row (the
             // single-GPU default: add_hc_skip) from the pack file on the host, and has no bf16 copy at all. The
             // inject rows stay bf16 (82 KB), the final mixer stays bf16 (it runs once a window).
+            // STRATA_UD_BF16_DENSE=1 with rows made above never gets here: the read already has its bf16 rows, and
+            // an hc_q8 attach would flip fused_gr_read_multi back to the Q8_0 copies (launch_q8 wins when both).
             uint64_t made = 0;
             for (auto& [name, ref] : table.table_) {
                 if (ref.hc_q8 != nullptr || name.rfind("blk.", 0) != 0 || !in_range(name) ||
@@ -491,11 +547,16 @@ bool NativeDense::load(const std::vector<std::string>& shards, WeightTable& tabl
             std::fprintf(stderr, "native dense: STRATA_Q8_PACKED=1 packed %zu Q8_0 matrices for decode (+%.1f MiB)\n",
                          packed_count, packed_bytes / 1048576.0);
         scratch_ = scratch.release();
-        bytes_ = total + hc_q8_bytes;
+        bytes_ = total + hc_q8_bytes + ud_rows_bytes;
         allocated_ = allocated;
-        if (hc_q8_env())
+        if (hc_q8_env() && hc_q8_bytes)
             std::fprintf(stderr, "strata: STRATA_HC_Q8=1: %.2f GiB of Q8_0 hyper-connection projections for the verify read\n",
                          (double) hc_q8_bytes / 1073741824.0);
+        if (ud_rows_bytes)
+            std::fprintf(stderr, "strata: STRATA_UD_BF16_DENSE=1: %.2f GiB of the GGUF's Q8_0 hyper-connection projections "
+                                 "dequantized to bf16 rows at load: the HC read and the final mixer take the copies=0 form "
+                                 "(STRATA_UD_BF16_DENSE=0 keeps the Q8_0 copies, 0.555 GiB less VRAM on this model)\n",
+                         (double) ud_rows_bytes / 1073741824.0);
         return true;
     } catch (const std::exception& error) {
         err = std::string("native dense: ") + error.what();
@@ -503,6 +564,20 @@ bool NativeDense::load(const std::vector<std::string>& shards, WeightTable& tabl
     }
 }
 bool NativeDense::hc_q8_requested() { return hc_q8_env(); }
+bool NativeDense::ud_bf16_dense_requested() { return ud_bf16_dense_env(); }
+
+bool NativeDense::gguf_hc_is_q8(const std::string& gguf_path) {
+    // Does this GGUF carry the hyper-connection projections as Q8_0 (the UD packs' layout)?  The bf16-rows
+    // conversion (STRATA_UD_BF16_DENSE) and the arena's HC skip engage only when this is true - a pack whose
+    // HC tensors are already bf16 (GSQ) loads unchanged and the request is inert.
+    try {
+        const strata::GgufFile gguf(gguf_path);
+        for (const auto& t : gguf.tensors())
+            if (t.type == 8 && t.shape.size() == 2 && hc_q8_name(t.name)) return true;
+    } catch (const std::exception&) {
+    }
+    return false;
+}
 
 bool NativeDense::add_hc_skip(const std::string& pack_dir, std::set<std::string>& skip) {
     std::FILE* f = std::fopen((pack_dir + "/index.txt").c_str(), "rb");
