@@ -1124,6 +1124,57 @@ template<> struct Split<20> {   // IQ4_NL
         return d * sumi;
     }
 };
+// Q5_0 (type 6): the decode-once Split of Fmt<6>'s chain - the same vi0/vi1 bit construction, the same dp4a order
+// (i then the high half), and the -16 offset's sumu carried exactly as vec_dot_q5_0_q8_1 computes it (integer adds
+// are exact, so the interleaved-vs-grouped sumu order is identical in value).  33 of the UD-IQ4_XS pack's 48 layers
+// carry Q5_0 downs (72% of its pool bytes).  kSplit<6> STAYS FALSE: the 3+3 law-17 interleave (2026-11-06, loads
+// 3.5-8.2) read solo +4.8 / pair +2.9 / conc -11.2 - the decode-once form wins serial windows and loses the
+// 6-column case, and law 13 forbids adopting a lane loss.  The traits stay for the follow-up: a per-NC dispatch
+// (multi for the small-column windows, per-entry for conc) is the design that keeps both sides' wins.
+template<> inline constexpr bool kSplit<6> = false;
+template<> struct Split<6> {   // Q5_0
+    struct W { int v[4]; float dw; };   // per iqs step: vi0/vi1 of i=0, then of i=1
+    template<bool STAGE_GRID = false>
+    __device__ static W load(const void* __restrict__ vbq, int kbx, int iqs, const uint32_t* __restrict__ = nullptr) {
+        const block_q5_0* bq5_0 = (const block_q5_0*) vbq + kbx;
+        W r;
+#pragma unroll
+        for (int i = 0; i < VDR_Q5_0; ++i) {
+            const int vl = get_int_b2(bq5_0->qs, iqs + i);
+            const int vh = get_int_b2(bq5_0->qh, 0) >> (4 * (iqs + i));
+            int vi0 = (vl >> 0) & 0x0F0F0F0F;
+            vi0 |= (vh << 4) & 0x00000010;
+            vi0 |= (vh << 11) & 0x00001000;
+            vi0 |= (vh << 18) & 0x00100000;
+            vi0 |= (vh << 25) & 0x10000000;
+            int vi1 = (vl >> 4) & 0x0F0F0F0F;
+            vi1 |= (vh >> 12) & 0x00000010;
+            vi1 |= (vh >> 5) & 0x00001000;
+            vi1 |= (vh << 2) & 0x00100000;
+            vi1 |= (vh << 9) & 0x10000000;
+            r.v[2 * i] = vi0;
+            r.v[2 * i + 1] = vi1;
+        }
+        r.dw = __half2float(bq5_0->d);
+        return r;
+    }
+    __device__ static float apply(const W& r, const block_q8_1* __restrict__ bq8_1, int iqs) {
+        const int u0_0 = get_int_b4(bq8_1->qs, iqs + 0);
+        const int u1_0 = get_int_b4(bq8_1->qs, iqs + 0 + QI5_0);
+        const int u0_1 = get_int_b4(bq8_1->qs, iqs + 1);
+        const int u1_1 = get_int_b4(bq8_1->qs, iqs + 1 + QI5_0);
+        int sumi = ggml_cuda_dp4a(r.v[0], u0_0, 0);
+        sumi = ggml_cuda_dp4a(r.v[1], u1_0, sumi);
+        sumi = ggml_cuda_dp4a(r.v[2], u0_1, sumi);
+        sumi = ggml_cuda_dp4a(r.v[3], u1_1, sumi);
+        int sumu = ggml_cuda_dp4a(0x01010101, u0_0, 0);
+        sumu = ggml_cuda_dp4a(0x01010101, u1_0, sumu);
+        sumu = ggml_cuda_dp4a(0x01010101, u0_1, sumu);
+        sumu = ggml_cuda_dp4a(0x01010101, u1_1, sumu);
+        const float d = r.dw * __low2float(bq8_1->ds);
+        return d * (float) (sumi - 16 * sumu);
+    }
+};
 template<> inline constexpr bool kSplit<23> = true;
 template<> struct Split<23> {   // IQ4_XS
     struct W { int2 v[4]; int ls; float dw; };

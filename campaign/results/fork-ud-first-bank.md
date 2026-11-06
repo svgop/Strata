@@ -68,3 +68,16 @@ gap is GPU compute per hit (+21%/hit). The lever is the mixed-type expert kernel
 (gu 18/23 x down 6/20/42), not routing, not tiers, not the miss path. The blob sizes are
 2.38 MB (IQ4_XS layer 0) vs GSQ's 2.66 - per-expert bytes are SMALLER; the deficit is
 kernel-form quality, not bytes. Deep study in flight (digest owed).
+
+## P1 (Split<6>, the Q5_0 decode-once down) - verdict by law-17 interleave, NOT adopted (2026-11-06 night)
+
+Parity: 0 failures, bitwise (the exact Q5_0 chain mirrored into load/apply). The 3+3
+interleave on IQ4_XS (loads 3.5-8.2 recorded; NOTE the box was degraded - BOTH sides read
+20-30% under the banked values, so only the RELATIVE deltas carry): solo +4.8 / pair +2.9 /
+conc -11.2. The decode-once form wins serial windows and loses the 6-column case; law 13
+forbids the lane loss. kSplit<6> back to false; the traits stay in-tree for the follow-up
+design: a per-NC dispatch (multi for small-column windows, per-entry for conc) keeps both
+sides' wins. The digest's P1 estimate (+4-7 all lanes) was half right - the serial half.
+The quiet-box re-run of BOTH P1 forms + the per-NC dispatch is the next kernel window's
+first item; P4 (config pins: --pcie-frac/--pcie-mode/--resident-experts parity with GSQ)
+is config-only and rides the same window.
