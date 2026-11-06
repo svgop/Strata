@@ -123,3 +123,6 @@ qwen,2026-11-05,7010d352,bw-dense port spot (swiglu fusion + GDN fast + share ru
 qwen,2026-11-06,1553a614,grv3+ud-ports spot (mask 133 on: 2-leg means; off-control conc 283.6 = +6.3%; every lane at-or-above the prior means - GSQ not slower),solo,229.1,0,mean
 qwen,2026-11-06,1553a614,grv3+ud-ports spot (mask 133 on: 2-leg means; off-control conc 283.6 = +6.3%; every lane at-or-above the prior means - GSQ not slower),pair,220.7,0,mean
 qwen,2026-11-06,1553a614,grv3+ud-ports spot (mask 133 on: 2-leg means; off-control conc 283.6 = +6.3%; every lane at-or-above the prior means - GSQ not slower),conc,301.6,0,mean
+qwen,2026-11-06,1553a614,armed-ud spot (UD-IQ2_XS with the full adopted env battery - the bare-boot 171.8/185.1/292.3 was engine-recipe-unarmed; 2-leg means),solo,209.7,0,mean
+qwen,2026-11-06,1553a614,armed-ud spot (UD-IQ2_XS with the full adopted env battery - the bare-boot 171.8/185.1/292.3 was engine-recipe-unarmed; 2-leg means),pair,214.0,0,mean
+qwen,2026-11-06,1553a614,armed-ud spot (UD-IQ2_XS with the full adopted env battery - the bare-boot 171.8/185.1/292.3 was engine-recipe-unarmed; 2-leg means),conc,290.1,0,mean

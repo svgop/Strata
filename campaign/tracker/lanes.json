@@ -324,6 +324,19 @@
       "pair": "mean",
       "conc": "mean"
      }
+    },
+    {
+     "date": "2026-11-06",
+     "commit": "1553a614",
+     "label": "armed-ud spot (UD-IQ2_XS with the full adopted env battery - the bare-boot 171.8/185.1/292.3 was engine-recipe-unarmed; 2-leg means)",
+     "solo": 209.7,
+     "pair": 214.0,
+     "conc": 290.1,
+     "kinds": {
+      "solo": "mean",
+      "pair": "mean",
+      "conc": "mean"
+     }
     }
    ],
    "prefill": [
