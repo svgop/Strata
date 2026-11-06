@@ -491,6 +491,15 @@ port, merge:
     conversation cache). Any comparison between configurations must hold the envelope equal
     or NAME the axis that differs (e.g., KV form) with its price measured on the record.
     Improvements come from inference, kernel, and engine engineering only.
+
+17. **BEFORE AND AFTER, SAME BOX STATE — ALWAYS (user doctrine, 2026-11-06).** An "after"
+    leg is never compared against a banked "before" from another window: boxes drift (load,
+    thermals, background work — a Chrome session once faked a −55% regression and back). The
+    proof of improvement is an INTERLEAVED same-hour sequence — before-leg, after-leg,
+    before-leg, after-leg, alternating — on the current box state, with the load average
+    recorded per leg; verdicts come from the two sides' means, never from a single leg
+    against history. Banked numbers describe their own window; only interleaves claim
+    causation.
     (scoped, composed, or rebuilt) — containment alone never closes it.
 
 16. **THE GRADE OF THE WORK (user law, 2026-11-04).** Every change is principal-grade: the design
