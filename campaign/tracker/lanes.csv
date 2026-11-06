@@ -135,18 +135,18 @@ qwen-ud-iq2xs,2026-11-06,HEAD,UD-IQ2_XS armed+smalls spot (42 GB pack; pair +6.8
 qwen-ud-iq4xs,2026-11-06,dc3cee74,UD-IQ4_XS armed spot (the quality set: MMLU 95.71 the best measured on any set here; 2-leg means - slower lanes as physics expects at 4.25 bpw),solo,176.8,0,mean
 qwen-ud-iq4xs,2026-11-06,dc3cee74,UD-IQ4_XS armed spot (the quality set: MMLU 95.71 the best measured on any set here; 2-leg means - slower lanes as physics expects at 4.25 bpw),pair,196.5,0,mean
 qwen-ud-iq4xs,2026-11-06,dc3cee74,UD-IQ4_XS armed spot (the quality set: MMLU 95.71 the best measured on any set here; 2-leg means - slower lanes as physics expects at 4.25 bpw),conc,238.5,0,mean
-qwen,2026-11-06,HEAD,standing-path prefill observation 24K (the PA_TRIM/RPF trio is CUDA-inert - gfx-only kernel; the law-17 A/B was A/A and its +4.7% claim is VOID),prefill,5436,24000,mean
+qwen,2026-11-06,HEAD,GSQ prefill engine-side (the log's read-rate; 6 legs 6237-6582; the earlier 5436 wall row mismeasured - mislabeled count + tokenize overhead),prefill,6424,28262,mean
 qwen-ud-iq2xs,2026-11-06,3b56b58c,UD-IQ2_XS range spot (the series fill - leg 1 of 2 same boot),solo,218.1,0,mean
 qwen-ud-iq2xs,2026-11-06,3b56b58c,UD-IQ2_XS range spot (the series fill - leg 1 of 2 same boot),pair,228.5,0,mean
 qwen-ud-iq2xs,2026-11-06,3b56b58c,UD-IQ2_XS range spot (the series fill - leg 1 of 2 same boot),conc,295.5,0,mean
 qwen-ud-iq2xs,2026-11-06,3b56b58c,UD-IQ2_XS range spot (the series fill - leg 2 of 2 same boot),solo,225.2,0,mean
 qwen-ud-iq2xs,2026-11-06,3b56b58c,UD-IQ2_XS range spot (the series fill - leg 2 of 2 same boot),pair,229.8,0,mean
 qwen-ud-iq2xs,2026-11-06,3b56b58c,UD-IQ2_XS range spot (the series fill - leg 2 of 2 same boot),conc,311.3,0,mean
-qwen-ud-iq2xs,2026-11-06,3b56b58c,UD-IQ2_XS prefill (the series fill - cold 24K TTFT probe),prefill,5909,24000,mean
+qwen-ud-iq2xs,2026-11-06,3b56b58c,UD-IQ2_XS prefill engine-side (the log's read-rate; 6980-7031; the fastest prefill measured here - half the expert bytes),prefill,7005,28262,mean
 qwen-ud-iq4xs,2026-11-06,3b56b58c,UD-IQ4_XS range spot (the series fill - leg 1 of 2 same boot),solo,164.3,0,mean
 qwen-ud-iq4xs,2026-11-06,3b56b58c,UD-IQ4_XS range spot (the series fill - leg 1 of 2 same boot),pair,183.1,0,mean
 qwen-ud-iq4xs,2026-11-06,3b56b58c,UD-IQ4_XS range spot (the series fill - leg 1 of 2 same boot),conc,246.2,0,mean
 qwen-ud-iq4xs,2026-11-06,3b56b58c,UD-IQ4_XS range spot (the series fill - leg 2 of 2 same boot),solo,176.9,0,mean
 qwen-ud-iq4xs,2026-11-06,3b56b58c,UD-IQ4_XS range spot (the series fill - leg 2 of 2 same boot),pair,188.5,0,mean
 qwen-ud-iq4xs,2026-11-06,3b56b58c,UD-IQ4_XS range spot (the series fill - leg 2 of 2 same boot),conc,227.7,0,mean
-qwen-ud-iq4xs,2026-11-06,3b56b58c,UD-IQ4_XS prefill (the series fill - cold 24K TTFT probe),prefill,5437,24000,mean
+qwen-ud-iq4xs,2026-11-06,3b56b58c,UD-IQ4_XS prefill engine-side (the log's read-rate; 6428-6467; GSQ-class as physics expects),prefill,6447,28262,mean

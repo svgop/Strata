@@ -431,9 +431,9 @@
     {
      "date": "2026-11-06",
      "commit": "HEAD",
-     "label": "standing-path prefill observation 24K (the PA_TRIM/RPF trio is CUDA-inert - gfx-only kernel; the law-17 A/B was A/A and its +4.7% claim is VOID)",
-     "tps": 5436.0,
-     "ctx": 24000,
+     "label": "GSQ prefill engine-side (the log's read-rate; 6 legs 6237-6582; the earlier 5436 wall row mismeasured - mislabeled count + tokenize overhead)",
+     "tps": 6424.0,
+     "ctx": 28262,
      "kind": "mean"
     }
    ]
@@ -498,9 +498,9 @@
     {
      "date": "2026-11-06",
      "commit": "3b56b58c",
-     "label": "UD-IQ2_XS prefill (the series fill - cold 24K TTFT probe)",
-     "tps": 5909.0,
-     "ctx": 24000,
+     "label": "UD-IQ2_XS prefill engine-side (the log's read-rate; 6980-7031; the fastest prefill measured here - half the expert bytes)",
+     "tps": 7005.0,
+     "ctx": 28262,
      "kind": "mean"
     }
    ]
@@ -552,9 +552,9 @@
     {
      "date": "2026-11-06",
      "commit": "3b56b58c",
-     "label": "UD-IQ4_XS prefill (the series fill - cold 24K TTFT probe)",
-     "tps": 5437.0,
-     "ctx": 24000,
+     "label": "UD-IQ4_XS prefill engine-side (the log's read-rate; 6428-6467; GSQ-class as physics expects)",
+     "tps": 6447.0,
+     "ctx": 28262,
      "kind": "mean"
     }
    ]
