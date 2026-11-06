@@ -466,6 +466,14 @@
      "tps": 7344.0,
      "ctx": 166854,
      "kind": "mean"
+    },
+    {
+     "date": "2026-11-06",
+     "commit": "HEAD",
+     "label": "prefill trio spot (PA_TRIM=2 + PA_RPF hand-port from upstream 2970fe74; law-17 interleave 2+2 armed 5436 vs before 5191 tok/s at 24K = +4.7%; decode-inert by construction; loads 4.8-6.0 recorded)",
+     "tps": 5436.0,
+     "ctx": 24000,
+     "kind": "mean"
     }
    ]
   },

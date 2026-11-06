@@ -135,3 +135,4 @@ qwen,2026-11-06,HEAD,UD-IQ2_XS armed+smalls spot (42 GB pack; pair +6.8% and con
 qwen,2026-11-06,dc3cee74,UD-IQ4_XS armed spot (the quality set: MMLU 95.71 the best measured on any set here; 2-leg means - slower lanes as physics expects at 4.25 bpw),solo,176.8,0,mean
 qwen,2026-11-06,dc3cee74,UD-IQ4_XS armed spot (the quality set: MMLU 95.71 the best measured on any set here; 2-leg means - slower lanes as physics expects at 4.25 bpw),pair,196.5,0,mean
 qwen,2026-11-06,dc3cee74,UD-IQ4_XS armed spot (the quality set: MMLU 95.71 the best measured on any set here; 2-leg means - slower lanes as physics expects at 4.25 bpw),conc,238.5,0,mean
+qwen,2026-11-06,HEAD,prefill trio spot (PA_TRIM=2 + PA_RPF hand-port from upstream 2970fe74; law-17 interleave 2+2 armed 5436 vs before 5191 tok/s at 24K = +4.7%; decode-inert by construction; loads 4.8-6.0 recorded),prefill,5436,24000,mean
