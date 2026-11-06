@@ -23,3 +23,10 @@ is the solo/pair conversion tax, named by the kernel study + dispatch counters:
    whitelisted in native_mmvq_il_supported).
 Those three are the "UD much faster than GSQ" levers; until then UD-IQ2_XS on the fork
 is the memory-economy play at conc-parity, not the speed win.
+
+## The smalls' attribution (2026-11-06, quiet-box interleave, same binary)
+
+STRATA_SMALL_UNR=0 control (both constant-trip arms off): 206.1/182.9/269.5 vs the armed
+means 233.1/224.8/303.5 -> the mmvf router fast path + the GDN a/b constant-trip passes
+are worth +13.1% solo / +22.9% pair / +12.6% conc ON GSQ - the largest single GSQ lane win
+since W1, from two bitwise kernel-form changes ported from upstream's BW-DENSE line.
