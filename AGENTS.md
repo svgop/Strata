@@ -481,6 +481,16 @@ port, merge:
     every latency term is NOT RUN — it is composed (law 4b) or dropped with the pricing
     recorded. Regressions are forbidden: no adopted change may leave a lane or latency metric
     worse beyond noise (laws 2, 4, 12), and a regression that ships is remediated under law 13
+
+16. **NO ILLUSION WINS (user doctrine, 2026-11-06, verbatim intent).** Performance claims are
+    NEVER manufactured by shrinking capability: no reduced context windows, no dropped
+    features (vision, conversation persistence, drafting, concurrency), no cheaper quality
+    settings presented as speed — "reducing the context to 32K and then claiming better
+    benchmarks is ultimately cheating and dishonest." Every banked number carries its FULL
+    standing capability envelope (262144 context, vision on, spec drafting, batch slots,
+    conversation cache). Any comparison between configurations must hold the envelope equal
+    or NAME the axis that differs (e.g., KV form) with its price measured on the record.
+    Improvements come from inference, kernel, and engine engineering only.
     (scoped, composed, or rebuilt) — containment alone never closes it.
 
 16. **THE GRADE OF THE WORK (user law, 2026-11-04).** Every change is principal-grade: the design
