@@ -4,7 +4,7 @@
  "unit": "tok/s",
  "engines": {
   "qwen": {
-   "label": "Qwen3.8 IQ3_S (custom engine)",
+   "label": "Qwen3.8 GSQ IQ3_S (custom engine, standing)",
    "points": [
     {
      "date": "2026-10-17",
@@ -327,50 +327,11 @@
     },
     {
      "date": "2026-11-06",
-     "commit": "1553a614",
-     "label": "armed-ud spot (UD-IQ2_XS with the full adopted env battery - the bare-boot 171.8/185.1/292.3 was engine-recipe-unarmed; 2-leg means)",
-     "solo": 209.7,
-     "pair": 214.0,
-     "conc": 290.1,
-     "kinds": {
-      "solo": "mean",
-      "pair": "mean",
-      "conc": "mean"
-     }
-    },
-    {
-     "date": "2026-11-06",
      "commit": "HEAD",
      "label": "smalls+conversion GSQ spot (mmvf router fast + grid-stride copy + the UD bf16-dense gate fix; quiet box; 2-leg means vs the prior 229.1/220.7/301.6 = +1.7/+1.9/+0.6)",
      "solo": 233.1,
      "pair": 224.8,
      "conc": 303.5,
-     "kinds": {
-      "solo": "mean",
-      "pair": "mean",
-      "conc": "mean"
-     }
-    },
-    {
-     "date": "2026-11-06",
-     "commit": "HEAD",
-     "label": "UD-IQ2_XS armed+smalls spot (42 GB pack; pair +6.8% and conc +8.6% OVER GSQ at half the bytes; solo at parity inside noise)",
-     "solo": 226.5,
-     "pair": 240.0,
-     "conc": 329.7,
-     "kinds": {
-      "solo": "mean",
-      "pair": "mean",
-      "conc": "mean"
-     }
-    },
-    {
-     "date": "2026-11-06",
-     "commit": "dc3cee74",
-     "label": "UD-IQ4_XS armed spot (the quality set: MMLU 95.71 the best measured on any set here; 2-leg means - slower lanes as physics expects at 4.25 bpw)",
-     "solo": 176.8,
-     "pair": 196.5,
-     "conc": 238.5,
      "kinds": {
       "solo": "mean",
       "pair": "mean",
@@ -470,12 +431,63 @@
     {
      "date": "2026-11-06",
      "commit": "HEAD",
-     "label": "prefill trio spot (PA_TRIM=2 + PA_RPF hand-port from upstream 2970fe74; law-17 interleave 2+2 armed 5436 vs before 5191 tok/s at 24K = +4.7%; decode-inert by construction; loads 4.8-6.0 recorded)",
+     "label": "standing-path prefill observation 24K (the PA_TRIM/RPF trio is CUDA-inert - gfx-only kernel; the law-17 A/B was A/A and its +4.7% claim is VOID)",
      "tps": 5436.0,
      "ctx": 24000,
      "kind": "mean"
     }
    ]
+  },
+  "qwen-ud-iq2xs": {
+   "label": "Qwen3.8 UD-IQ2_XS (42 GB, speed+economy set)",
+   "points": [
+    {
+     "date": "2026-11-06",
+     "commit": "1553a614",
+     "label": "armed-ud spot (UD-IQ2_XS with the full adopted env battery - the bare-boot 171.8/185.1/292.3 was engine-recipe-unarmed; 2-leg means)",
+     "solo": 209.7,
+     "pair": 214.0,
+     "conc": 290.1,
+     "kinds": {
+      "solo": "mean",
+      "pair": "mean",
+      "conc": "mean"
+     }
+    },
+    {
+     "date": "2026-11-06",
+     "commit": "HEAD",
+     "label": "UD-IQ2_XS armed+smalls spot (42 GB pack; pair +6.8% and conc +8.6% OVER GSQ at half the bytes; solo at parity inside noise)",
+     "solo": 226.5,
+     "pair": 240.0,
+     "conc": 329.7,
+     "kinds": {
+      "solo": "mean",
+      "pair": "mean",
+      "conc": "mean"
+     }
+    }
+   ],
+   "prefill": []
+  },
+  "qwen-ud-iq4xs": {
+   "label": "Qwen3.8 UD-IQ4_XS (94 GB, quality set)",
+   "points": [
+    {
+     "date": "2026-11-06",
+     "commit": "dc3cee74",
+     "label": "UD-IQ4_XS armed spot (the quality set: MMLU 95.71 the best measured on any set here; 2-leg means - slower lanes as physics expects at 4.25 bpw)",
+     "solo": 176.8,
+     "pair": 196.5,
+     "conc": 238.5,
+     "kinds": {
+      "solo": "mean",
+      "pair": "mean",
+      "conc": "mean"
+     }
+    }
+   ],
+   "prefill": []
   },
   "deepseek": {
    "label": "DeepSeek-V4.1-Flash 2.00bpw (dsv41)",
