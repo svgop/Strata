@@ -58,3 +58,13 @@ the wrap gates on ar_on() (all-resident), which no 42-81-GB pack can reach on 32
 as the enabler, with the doorbell-family flag-wait conversion named as the local path.
 cond_node's micro deadlocks on its own protocol (spins on a flag the host sets later) -
 tool bug, parked.
+
+## The IQ4_XS gap, decomposed (2026-11-06, same-hour logs)
+
+Conc-class windows (4.76 vs 4.70 rows): IQ4_XS 15.89 ms vs GSQ 13.59 ms (+17%). The
+routing union is IDENTICAL (28.55 vs 28.81 VRAM hits/layer-window), the CPU-expert term
+is identical (2.15 vs 2.05), the GPU-reach wait is identical (0.46 vs 0.42) - the entire
+gap is GPU compute per hit (+21%/hit). The lever is the mixed-type expert kernel forms
+(gu 18/23 x down 6/20/42), not routing, not tiers, not the miss path. The blob sizes are
+2.38 MB (IQ4_XS layer 0) vs GSQ's 2.66 - per-expert bytes are SMALLER; the deficit is
+kernel-form quality, not bytes. Deep study in flight (digest owed).
