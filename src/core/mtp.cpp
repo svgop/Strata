@@ -192,7 +192,7 @@ MtpDrafter::~MtpDrafter() {
     if (owns_draft_head_ && dvocab_) cudaFree(dvocab_);
     if (ev_chain_) cudaEventDestroy(ev_chain_);
     for (cudaEvent_t e : ev_step_) if (e) cudaEventDestroy(e);
-    void* hosts[] = {h_tok_, h_step_, h_pos_, h_row_, h_out_, h_prob_, h_force_};
+    void* hosts[] = {h_tok_, h_step_, h_pos_, h_row_, h_out_, h_prob_, h_force_, h_stat_};
     for (void* h : hosts) if (h) cudaFreeHost(h);
 }
 
@@ -670,6 +670,23 @@ void MtpDrafter::set_draft_history(const int32_t* tail, int64_t n_tail, int32_t 
     if (!coupled_active_) return;
     const int h = coupled_hist_len(h_cparams_->penalty_last_n, kCoupledHistCap);
     coupled_hist_base(tail, n_tail, next, h, h_chist_ + (kCoupledHistCap - h));
+}
+
+// STRATA_SPEC_ENTABORT: see mtp.hpp.  The first arm maps the stats staging; every later call only refreshes
+// the inputs (cheap, per draft round).  Armed-ness is sticky: a graph captured without the stats nodes must
+// not later be read through a predicate that expects them.
+bool MtpDrafter::set_draft_abort(const strata::spec::DraftAbort& da) {
+    abort_ = da;
+    if (!da.on) return true;
+    abort_stats_ = true;
+    if (h_stat_ != nullptr) return true;
+    if (!mapped(strata::spec::DraftAbort::kFloats * sizeof(float), (void**) &h_stat_, (void**) &m_stat_)) {
+        std::fprintf(stderr, "strata mtp: STRATA_SPEC_ENTABORT: the stats staging did not map; the abort stays off\n");
+        abort_ = strata::spec::DraftAbort{};
+        abort_stats_ = false;
+        return false;
+    }
+    return true;
 }
 
 namespace {
@@ -1253,6 +1270,11 @@ bool MtpDrafter::record_rest(int step_row, cudaStream_t cs, std::string& err) {
         native_mmvq(sub ? dhead_type_ : head_->type(), sub ? dhead_ : head_->weights(), xq_, head_logits_, (int) N,
                     (int) nv, T, cs);
         g_mp.stamp(14, cs);
+        // STRATA_SPEC_ENTABORT: this step's draft-distribution stats (entropy of softmax(head logits); out[0]
+        // is p(draft) with draft = -1 and stays 0 - the trim reads the prob from h_prob_) into the mapped
+        // staging, one 1-block kernel.  Captured only when the abort was armed before the first capture.
+        if (abort_stats_ && m_stat_ != nullptr && stats_j_ >= 0)
+            row_typical_stats(head_logits_, nv, 1.0f, -1, m_stat_ + (size_t) stats_j_ * 2, cs);
         // G0 value-parity tap (F-86): STRATA_MTP_TAP=<prefix> dumps the first draft window's
         // R_ (the residual the final mixer reads), sample_ (post-mixer) and head_logits_
         // (raw logits) for the torch stage-diff. One window only, diagnostic boots.
@@ -1376,6 +1398,7 @@ bool MtpDrafter::capture_round(int T, bool coupled, std::string& err) {
         }
         coupled_rec_ = coupled;
         coupled_j_ = 0;
+        stats_j_ = 0;   // the round graph's own pick: draft position 0
         ok = record_rest(ra, cs_, err);
         coupled_rec_ = false;
     }
@@ -1406,6 +1429,7 @@ bool MtpDrafter::capture_step(int j, bool coupled, std::string& err) {
 #endif
     coupled_rec_ = coupled;
     coupled_j_ = j;
+    stats_j_ = j;   // the abort's stats slot for this step's pick
     g_mp.base = j < kMpGraphs ? j : -1;
     bool ok = record_forward(1, row, cs_, err);
     coupled_rec_ = false;
@@ -1679,6 +1703,27 @@ bool MtpDrafter::draft(int T, const int32_t* tokens, int64_t p, int a, int32_t* 
     int32_t ple_prev[2] = {do_ple ? pss->ple_prev[0] : 0, do_ple ? pss->ple_prev[1] : 0};
     const bool dth = g_dt.on;
     auto hms = [](Clock::time_point a0) { return std::chrono::duration<double, std::milli>(Clock::now() - a0).count(); };
+    // STRATA_SPEC_ENTABORT (digest decode-control2 §3.3 rule 3): stop the chain after position `pos` when its
+    // modulated survival sigma(omega * logit(q) + beta) falls below the floor, or when the entropy gate fires
+    // (1 - gamma * H < lambda; H the step graph's captured reduction in h_stat_).  Host-only: q is the prob
+    // the trim loop already reads, H lands with the same step's outputs.  Disarmed, this is false - the
+    // launch/trim sequence is bit-identical to stock.
+    auto abort_after = [&](int pos, float q) {
+        if (!abort_.on || pos < 0 || pos >= strata::spec::DraftAbort::kSlots) return false;
+        const float f = strata::spec::SurvivalEstimator::logit((double) q);
+        const float s = strata::spec::SurvivalEstimator::sigmoid((float) abort_.omega * f + abort_.beta[(size_t) pos]);
+        if (s < abort_.s_min) {
+            ++n_aborts;
+            return true;
+        }
+        if (h_stat_ == nullptr) return false;
+        const float h = ((volatile float*) h_stat_)[2 * pos + 1];
+        if (1.0f - abort_.gamma * h < abort_.lambda) {
+            ++n_aborts;
+            return true;
+        }
+        return false;
+    };
     auto prefetch_ple = [&](int32_t tok) {
         if (!do_ple || tok < 0) return;
         const Clock::time_point tp = Clock::now();
@@ -1705,6 +1750,9 @@ bool MtpDrafter::draft(int T, const int32_t* tokens, int64_t p, int a, int32_t* 
         (void) cudaStreamQuery(cs_);
         prefetch_ple(tokens[a]);
         progress_at("mtp draft: waiting for the GPU");   // #2065
+        int abort_at = max_steps;   // STRATA_SPEC_ENTABORT: every step was enqueued, so the trim is readout
+                                    // only (the stale-signal pre-launch shape: this window's rows are already
+                                    // paid; the NEXT window sizes from the shorter chain)
         for (int j = 0; j + 1 < max_steps; ++j) {
             uint32_t spins = 0;
             while (((volatile int32_t*) h_out_)[j] < 0) {
@@ -1716,6 +1764,7 @@ bool MtpDrafter::draft(int T, const int32_t* tokens, int64_t p, int a, int32_t* 
             drafts[j] = ((volatile int32_t*) h_out_)[j];
             if (probs) probs[j] = ((volatile float*) h_prob_)[j];
             prefetch_ple(drafts[j]);
+            if (abort_after(j, ((volatile float*) h_prob_)[j])) { abort_at = j + 1; break; }
         }
         if (cudaStreamSynchronize(cs_) != cudaSuccess) {
             err = std::string("mtp draft: ") + cudaGetErrorString(cudaGetLastError());
@@ -1725,7 +1774,7 @@ bool MtpDrafter::draft(int T, const int32_t* tokens, int64_t p, int a, int32_t* 
         drafts[last] = ((volatile int32_t*) h_out_)[last];
         if (probs) probs[last] = ((volatile float*) h_prob_)[last];
         prefetch_ple(drafts[last]);
-        n = max_steps;
+        n = abort_at;
     } else if (max_steps > 0) {
         g_dt.init();
         const bool dt = g_dt.on;
@@ -1769,13 +1818,16 @@ bool MtpDrafter::draft(int T, const int32_t* tokens, int64_t p, int a, int32_t* 
         tl = Clock::now();
         if (ungated) {
             // the chain is already enqueued: readout only, trimming exactly where the gated loop
-            // would have stopped launching (draft j is kept iff prob[j-1] >= min_p)
+            // would have stopped launching (draft j is kept iff prob[j-1] >= min_p and the abort holds)
             for (n = 0; n < max_steps; ++n) {
                 wait_step(n);
                 drafts[n] = ((volatile int32_t*) h_out_)[n];
                 if (probs) probs[n] = ((volatile float*) h_prob_)[n];
                 prefetch_ple(drafts[n]);
-                if (((volatile float*) h_prob_)[n] < min_p) { ++n; break; }
+                if (((volatile float*) h_prob_)[n] < min_p || abort_after(n, ((volatile float*) h_prob_)[n])) {
+                    ++n;
+                    break;
+                }
             }
             if (dt) g_dt.wait0_ms += hms(tl);
         } else {
@@ -1785,7 +1837,9 @@ bool MtpDrafter::draft(int T, const int32_t* tokens, int64_t p, int a, int32_t* 
         float pj = ((volatile float*) h_prob_)[0];
         if (probs) probs[0] = pj;
         n = 1;
-        for (int j = 1; j < max_steps && pj >= min_p; ++j) {
+        // the abort rides this loop's gate: position j-1's evidence (its prob, its stats) decides whether
+        // step j launches at all - the saved steps are the serial window's own draft tax (digest §3.5)
+        for (int j = 1; j < max_steps && pj >= min_p && !abort_after(j - 1, pj); ++j) {
             if (dt) cudaEventRecord(g_dt.eb[j], cs_);
             tl = Clock::now();
             if (cudaGraphLaunch(cp ? step_exec_c_[j] : step_exec_[j], cs_) != cudaSuccess) {

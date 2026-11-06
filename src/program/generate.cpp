@@ -11567,6 +11567,9 @@ int main(int argc, char** argv) {
         else if (use_mtp && mtp.max_t() > S_mtp) mtp.set_max_drafts(S_mtp - 1);
         strata::spec::SuffixDrafter sfx(std::max(1, o.suffix_draft), 64, (size_t) o.max_context + 4096);
         strata::spec::DraftPolicy policy(S);   // MTP or lookup window, learned over the whole process
+        // STRATA_SPEC_LOGISTIC: the tables' logistic form (the digest's feature-modulated survival control on
+        // the W1 controller) - a process-wide fit, refilled every 100 windows like the policy above
+        strata::spec::SurvivalEstimator spec_est;
         // The vision path (--vision): GENI <max_new> <embeddings file> <id,id,...> carries images.  The file is one
         // or more strata-vision records (int32 'SVE1', n, nx, ny, n_embd, then n x n_embd floats) in prompt order;
         // each image's rows go to its run of <|image_pad|> tokens, whose M-RoPE positions are mtmd's: t = p,
@@ -11726,6 +11729,78 @@ int main(int argc, char** argv) {
             ConvCheckpoint::PromptPlan partial_plan;   ///< --prefill-pipe: the segment it stopped in, read on in its chunks
         };
         std::vector<BSlot> bs((size_t) std::max(o.batch, 0));
+        // STRATA_SPEC_SURVTOPK (decode-control2 §3.3 rule 4, default OFF): the batch lane's verify rows
+        // admit by global survival top-K over (slot, position) instead of the rotation's fixed shares - the
+        // D-cut shape.  The 8-row cap is untouched: survival only allocates it across slots (the bonus row
+        // rides with its slot's first admitted draft, so each admitted slot keeps one contiguous prefix and
+        // the window's row COUNT stays the cap's fill, never a new budget).  Draftless slots rank last, in
+        // rotation order, and get a row only when rows remain - today's overflow deferral.
+        static const bool spec_survtopk = [] {
+            const char* v = std::getenv("STRATA_SPEC_SURVTOPK");
+            return v != nullptr && v[0] != '\0' && v[0] != '0';
+        }();
+        // Rank, admit, and lay out one window's rows: the D-cut admission over the slot span [lo, hi).
+        // Returns the row count; *a_out = the admitted slot count; *last_out = the last admitted slot's
+        // global id (-1 = none), from which each caller keeps its own rotation advance.  Every slot's rows
+        // are its base token plus drafts [0, depth): a contiguous prefix, monotone survival, so ranking by
+        // the product admits prefixes whole - the KV reads stay per-slot contiguous (D-cut's invariant).
+        auto survtopk_pack = [&](bool mtp_use, size_t next_cur, int lo, int hi, int* first, int* active,
+                                 int* nrows, int* rows, int32_t* tok, int64_t* pos, int* a_out,
+                                 int* last_out) -> int {
+            struct Cand { float s; int b, d; };   // d = the slot's admitted draft depth; d = 0: draftless base
+            const size_t span = (size_t) (hi - lo);
+            std::vector<Cand> cand;
+            cand.reserve(span * (size_t) batch_draft_depth + span);
+            for (size_t off = 0; off < span; ++off) {
+                const int b = lo + (int) ((next_cur + off) % span);
+                const BSlot& sl = bs[(size_t) b];
+                if (!sl.active) continue;
+                if (mtp_use && sl.draft_ready && sl.n_draft > 0) {
+                    float s = 1.0f;
+                    const int dmax = std::min(sl.n_draft, batch_draft_depth);
+                    for (int d = 1; d <= dmax; ++d) {
+                        s *= std::clamp(sl.dprob[(size_t) (d - 1)], 0.0f, 1.0f);
+                        cand.push_back({s, b, d});   // per-slot shallow-first: s is non-increasing in d
+                    }
+                } else {
+                    cand.push_back({-1.0f, b, 0});
+                }
+            }
+            std::stable_sort(cand.begin(), cand.end(),
+                             [](const Cand& x, const Cand& y) { return x.s > y.s; });
+            int S = 0, A = 0, last = -1;
+            std::vector<int> admit(bs.size(), 0);   // each slot's admitted depth so far
+            for (const Cand& c : cand) {
+                if (S >= strata::kernels::kVerifyMaxT) break;
+                const BSlot& sl = bs[(size_t) c.b];
+                const int prev = admit[(size_t) c.b];
+                if (c.d <= prev) continue;   // already admitted at least this deep (its shallower candidate)
+                const int cost = c.d - prev + (prev == 0 ? 1 : 0);   // the deeper drafts, plus the base once
+                if (S + cost > strata::kernels::kVerifyMaxT) continue;   // doesn't fit: a deeper run would not either
+                admit[(size_t) c.b] = c.d;
+                last = c.b;
+                if (prev == 0) {   // the base row: the slot's bonus token (D-cut's per-request floor)
+                    first[A] = S;
+                    active[A] = c.b;
+                    nrows[A] = 1;
+                    ++A;
+                    rows[S] = c.b;
+                    tok[S] = sl.x;
+                    pos[S] = sl.p;
+                    ++S;
+                }
+                for (int j = prev; j < c.d; ++j) {
+                    rows[S] = c.b;
+                    tok[S] = sl.draft[(size_t) j];
+                    pos[S] = sl.p + 1 + j;
+                    ++S;
+                    ++nrows[(size_t) A - 1];
+                }
+            }
+            *a_out = A;
+            *last_out = last;
+            return S;
+        };
         // ---- T33 elastic sessions: the runtime lifecycle.  A promote may run on a background thread when the
         // spare pool already holds a demoted slot's chunks (mapping memory nothing references cannot disturb a
         // running window); when the pool is empty the chunks must first come out of the expert cache, which
@@ -12233,6 +12308,13 @@ int main(int argc, char** argv) {
                 static size_t next_a = 0, next_b = 0, next_c = 0;   // each cohort rotates within its own slot span
                 auto collect = [&](int lo, int hi, CohortWin& w, size_t& next_cur) {
                     const size_t span = (size_t) (hi - lo);
+                    if (spec_survtopk) {
+                        int last = -1;
+                        w.S = survtopk_pack(mtp_use, next_cur, lo, hi, w.first, w.active, w.nrows, w.rows, w.tok,
+                                            w.pos, &w.A, &last);
+                        if (mtp_use && last >= 0) next_cur = ((size_t) (last - lo) + 1) % span;
+                        return;
+                    }
                     for (size_t offset = 0; offset < span && w.S + (mtp_use ? 2 : 1) <= strata::kernels::kVerifyMaxT; ++offset) {
                         const int b = lo + (int) ((next_cur + offset) % span);
                         if (!bs[(size_t) b].active) continue;
@@ -12577,7 +12659,14 @@ int main(int argc, char** argv) {
             cohort_prev_round = false;
             // Each MTP slot uses 1 + (up to D) rows; rotate slots when more than four are active.
             int A = 0;
-            for (size_t offset = 0; offset < bs.size() && S + (mtp_use ? 2 : 1) <= strata::kernels::kVerifyMaxT; ++offset) {
+            if (spec_survtopk) {
+                int last = -1;
+                S = survtopk_pack(mtp_use, next_slot, 0, (int) bs.size(), first, active, nrows, rows, tok, pos,
+                                  &A, &last);
+                if (mtp_use && last >= 0) next_slot = ((size_t) last + 1) % bs.size();
+            }
+            for (size_t offset = 0; !spec_survtopk && offset < bs.size() &&
+                                    S + (mtp_use ? 2 : 1) <= strata::kernels::kVerifyMaxT; ++offset) {
                 const int b = (int) ((next_slot + offset) % bs.size());
                 if (bs[(size_t) b].active) {
                     // a stale draft (a slot that ran draftless windows) takes one row this window;
@@ -12604,7 +12693,7 @@ int main(int argc, char** argv) {
                     }
                 }
             }
-            if (mtp_use && A > 0) next_slot = ((size_t) active[A - 1] + 1) % bs.size();
+            if (mtp_use && A > 0 && !spec_survtopk) next_slot = ((size_t) active[A - 1] + 1) % bs.size();
             if (S == 0) return true;
             const bool was_busy = strata::core::progress().busy.load();
             strata::core::progress().busy.store(true);
@@ -15554,13 +15643,29 @@ int main(int argc, char** argv) {
             int64_t produced_n = 0, sfx_windows = 0, sfx_drafts = 0, sfx_ok = 0;
             int64_t chain_windows = 0, chain_drafts = 0, chain_ok = 0;   // --lookup-chain's own counts
             int64_t t2_rej[8] = {}, t2_hit[8] = {};   // STRATA_MTP_TOP2: rejections inside the MTP drafts by depth, runner-up hits
-            int64_t dp_tested[8] = {}, dp_ok[8] = {};   // STRATA_SPEC_DEPTH=1: MTP drafts tested / accepted by depth
+            int64_t dp_tested[strata::kernels::kVerifyMaxT] = {}, dp_ok[strata::kernels::kVerifyMaxT] = {};   // STRATA_SPEC_DEPTH=1: MTP drafts tested / accepted by depth
+            static_assert(sizeof(dp_tested) / sizeof(dp_tested[0]) == strata::spec::K_MAX,
+                          "the depth EMAs hold one slot per drafted position (T65)");
             // W1 (ROADMAP W1, STRATA_ADAPTIVE_SPEC=1): the cost-model controller sizes the serial window -
             // argmax_T E[tokens] / step_ms(T) from this session's own per-depth acceptance EMAs (dp_ok/dp_tested
             // by position) and the measured window wall (M15: 8.4 + 1.57 x rows ms, R^2 = 0.99 over 450 samples;
             // solo depth-8 windows run 30-41% row-efficient, so trimming pays ~+35%).  Cut-only: it never raises T
             // above what the min_p walk and the keep rule would allow.
             const bool adaptive_spec = std::getenv("STRATA_ADAPTIVE_SPEC") != nullptr;
+            // decode-control2 §3 arms, each independently gated, ALL OFF by default (the No-Regression Law):
+            //   STRATA_SPEC_LOGISTIC - the depth tables become logistic priors, sigma(omega*logit(q_max)+beta),
+            //     refit by damped IRLS (the estimator also feeds STRATA_SPEC_ENTABORT's beta/omega);
+            //   STRATA_SPEC_ENTABORT - the serial draft chain stops at the decay knee (survival floor /
+            //     entropy gate; the estimator's parameters ride on the drafter each round);
+            //   STRATA_SPEC_SURVTOPK - the batch lane's verify rows admit by global survival top-K over
+            //     (slot, position) under the untouched 8-row cap.
+            const bool spec_logistic = [] { const char* v = std::getenv("STRATA_SPEC_LOGISTIC");
+                                            return v != nullptr && v[0] != '\0' && v[0] != '0'; }();
+            const bool spec_entabort = [] { const char* v = std::getenv("STRATA_SPEC_ENTABORT");
+                                            return v != nullptr && v[0] != '\0' && v[0] != '0'; }();
+            int64_t ab_windows = 0;   // ENTABORT telemetry: windows drafted (the cut count rides on mtp.n_aborts)
+            const int64_t ab_aborts0 = mtp.n_aborts;
+            double ab_lambda = 0.70, ab_ema_acc = 0.86;   // AdaEDL's gate: the EMA of realized acceptance, clamped
             const int64_t adaptive_warm = [] {
                 const char* v = std::getenv("STRATA_ADAPTIVE_WARM");
                 return v ? (int64_t) std::atoll(v) : 100;
@@ -16288,13 +16393,28 @@ int main(int argc, char** argv) {
                     // depth EMAs must have `adaptive_warm` tested drafts before the controller speaks;
                     // until then (and whenever no window beats plain decoding by min_gain) stock behavior.
                     int64_t tested_n = 0;
-                    for (int d = 0; d < 8; ++d) tested_n += dp_tested[d];
+                    for (int d = 0; d < strata::kernels::kVerifyMaxT; ++d) tested_n += dp_tested[d];
                     if (tested_n >= adaptive_warm) {
                         strata::spec::Controller ctrl(adaptive_cost, 0.05);
                         double p[strata::spec::K_MAX];
                         for (int d = 0; d < strata::spec::K_MAX; ++d)
                             p[d] = dp_tested[d] >= 8 ? (double) dp_ok[d] / (double) dp_tested[d] : -1.0;
                         ctrl.set_mtp_accept(p, strata::spec::K_MAX);
+                        if (spec_logistic) {
+                            // STRATA_SPEC_LOGISTIC (decode-control2 §3.3 rule 2): the W1 math is unchanged;
+                            // the tables it reads are the estimator's modulated survivals - this window's own
+                            // drafts enter as f = logit(q_max) (greedy argmax drafts: dprob IS q_max; a
+                            // coupled-sampled window has no prefix-only feature on the host and keeps the
+                            // bare prior, f = 0, as does a position with no draft left).  Still cut-only.
+                            double s[strata::spec::K_MAX];
+                            for (int d = 0; d < strata::spec::K_MAX; ++d) {
+                                const double q = dprob[(size_t) d];
+                                const double f = q > 0.0 && !mtp.coupled()
+                                                     ? strata::spec::SurvivalEstimator::logit(q) : 0.0;
+                                s[d] = spec_est.survival(d, f);
+                            }
+                            ctrl.set_mtp_accept(s, strata::spec::K_MAX);
+                        }
                         const strata::spec::Choice ch = ctrl.choose(0, 0, true);   // Mtp sizing only
                         const int want = ch.source == strata::spec::Source::Mtp ? ch.k + 1 : 1;
                         if (want < T) T = want;   // cut-only; the keep rule still trims after
@@ -16551,8 +16671,41 @@ int main(int argc, char** argv) {
                 }
                 if (from_sfx) { ++sfx_windows; sfx_drafts += T - 1; sfx_ok += a; }
                 if (chain_n > 0) { ++chain_windows; chain_drafts += chain_n; chain_ok += std::max(0, a - (T_mtp - 1)); }
-                if (!from_sfx && !first_window)
-                    for (int d = 0; d < T_mtp - 1 && d < 8 && d <= a; ++d) { ++dp_tested[d]; dp_ok[d] += d < a; }
+                if (!from_sfx && !first_window) {
+                    for (int d = 0; d < T_mtp - 1 && d < strata::kernels::kVerifyMaxT && d <= a; ++d) {
+                        ++dp_tested[d];
+                        dp_ok[d] += d < a;
+                    }
+                    if ((spec_logistic || spec_entabort) && T_mtp > 1 && !mtp.coupled()) {
+                        // the same censoring rule the depth EMAs use (positions <= accepted + 1), folded
+                        // with the window's own features; the estimator refits every 100 folded windows.
+                        // Seeded once, from the depth EMAs' own evidence: after that the IRLS fit owns beta
+                        // (re-seeding per window would clobber every refit).
+                        static bool est_seeded = false;
+                        if (!est_seeded) {
+                            est_seeded = true;
+                            double p[strata::spec::K_MAX];
+                            for (int d = 0; d < strata::spec::K_MAX; ++d)
+                                p[d] = dp_tested[d] >= 8 ? (double) dp_ok[d] / (double) dp_tested[d] : -1.0;
+                            spec_est.set_prior(p, strata::spec::K_MAX);
+                        }
+                        double f[strata::spec::K_MAX];
+                        int y[strata::spec::K_MAX];
+                        const int seen = std::min(T_mtp - 1, a + 1);
+                        for (int d = 0; d < seen && d < strata::spec::K_MAX; ++d) {
+                            const double q = dprob[(size_t) d];
+                            f[d] = q > 0.0 ? strata::spec::SurvivalEstimator::logit(q) : 0.0;
+                            y[d] = d < a ? 1 : 0;
+                        }
+                        spec_est.observe(f, y, seen);
+                    }
+                    if (spec_entabort && T_mtp > 1) {
+                        // AdaEDL's law: lambda is the EMA of realized acceptance (clamped 0.3..0.9)
+                        ab_ema_acc = 0.9 * ab_ema_acc + 0.1 * (double) a / (double) std::max(1, T_mtp - 1);
+                        ab_lambda = std::clamp(ab_ema_acc, 0.3, 0.9);
+                        ++ab_windows;
+                    }
+                }
                 // T26-2/T27-2 STRATA_SPEC_TRACE=<path>: per-window keep-rule telemetry (offered T,
                 // accepted a, cumulative rescues for delta-detection, per-position dprob) - the
                 // offline draft_cum refit input; default off, no math touched. Solo-lane boot only
@@ -16560,7 +16713,7 @@ int main(int argc, char** argv) {
                 static FILE* spec_trace_f = [] { const char* p = std::getenv("STRATA_SPEC_TRACE"); return (p && p[0]) ? std::fopen(p, "a") : nullptr; }();
                 if (spec_trace_f && !from_sfx && !first_window) {
                     std::fprintf(spec_trace_f, "w T=%d a=%d resc=%lld d=", T, a, (long long) typical_rescues);
-                    for (int i = 0; i + 1 < T && i < 8; ++i)
+                    for (int i = 0; i + 1 < T && i < strata::kernels::kVerifyMaxT; ++i)
                         std::fprintf(spec_trace_f, "%s%.4f", i ? "," : "", (double) dprob[(size_t) i]);
                     std::fputc('\n', spec_trace_f);
                     if (((chain_windows + sfx_windows) & 63) == 0) std::fflush(spec_trace_f);
@@ -16636,6 +16789,16 @@ int main(int argc, char** argv) {
                 // commit, outv[a] is its row 0) - the drafts extend it on the device as the verify rows will
                 if (use_mtp && hist_n > 0 && mtp.coupled() && !eos && produced_n < max_new)
                     mtp.set_draft_history(consumed.data(), (int64_t) consumed.size(), outv[(size_t) a]);
+                if (spec_entabort && use_mtp) {
+                    // the abort rides on the drafter with the estimator's current parameters (and the
+                    // entropy gate's EMA); armed-ness is sticky, so the first call also arms the captures
+                    strata::spec::DraftAbort da;
+                    da.on = true;
+                    da.omega = (float) spec_est.omega();
+                    da.lambda = (float) ab_lambda;
+                    for (int d = 0; d < strata::spec::K_MAX; ++d) da.beta[d] = (float) spec_est.beta(d);
+                    mtp.set_draft_abort(da);
+                }
                 const bool drafted = !use_mtp || eos || produced_n >= max_new ||
                                      mtp.draft(T, outv.data(), p, a, drafts.data(), err, dprob.data(), (float) req_spec_min_p);
                 {
@@ -16670,6 +16833,12 @@ int main(int argc, char** argv) {
                 p += a + 1;
             }
             const double decode_ms = std::chrono::duration<double, std::milli>(Clock::now() - d0).count();
+            if (spec_logistic || spec_entabort)
+                std::fprintf(stderr, "strata spec-ctrl: logistic %d, abort %d - omega %.3f, refits %d, folds %d, "
+                                     "windows %lld, chains cut %lld, lambda %.2f\n",
+                             spec_logistic ? 1 : 0, spec_entabort ? 1 : 0, spec_est.omega(), spec_est.refits(),
+                             spec_est.folds(), (long long) ab_windows, (long long) (mtp.n_aborts - ab_aborts0),
+                             ab_lambda);
             // the last commit (set_commit_async): the session is complete before anything reads or copies it
             if (!ver.wait_commit(err)) {
                 std::printf("ERR %s\n", err.c_str());

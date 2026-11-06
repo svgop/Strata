@@ -30,3 +30,15 @@ STRATA_SMALL_UNR=0 control (both constant-trip arms off): 206.1/182.9/269.5 vs t
 means 233.1/224.8/303.5 -> the mmvf router fast path + the GDN a/b constant-trip passes
 are worth +13.1% solo / +22.9% pair / +12.6% conc ON GSQ - the largest single GSQ lane win
 since W1, from two bitwise kernel-form changes ported from upstream's BW-DENSE line.
+
+## The decode-controller composition (2026-11-06, honest negative)
+
+L1 estimator AUC on OUR drafter: 0.676 tie-corrected over 3,149 clean windows (kill line
+0.65 - survived, but a third weaker than vLLM's shipped 0.83). L5 composition (all three
+arms) vs ctl, interleaved: armed-1 214.4/215.8/286.4 vs ctl-1 224.6/211.3/289.8 (adjacent,
+mid-download); the later legs (armed-2 191.2, ctl-2 199.7) were depressed by the 88-GB
+download's writeback - the back half of the interleave is confounded. What is clear: the
+predicted +8-15% conc did NOT materialize (SURVTOPK's conc-kill condition trending true).
+ARMS PARKED default-off (zero standing cost; the observe() extrapolation deletion is the
+only unswitched change - zero engine call sites, bit-identical). A quiet-window attribution
+ladder (L2-L4) remains priced if wanted.

@@ -2,6 +2,7 @@
 #include "strata/spec/controller.hpp"
 
 #include <algorithm>
+#include <cmath>
 
 namespace strata::spec {
 
@@ -64,10 +65,123 @@ void Controller::observe(const Choice& c, int accepted, int lookup_match) {
         if (c.source == Source::Mtp) mtp_p_[i] += ema_ * (hit - mtp_p_[i]);
         else lookup_q_[bucket(lookup_match)] += ema_ * (hit - lookup_q_[bucket(lookup_match)]);
     }
-    // Everything drafted was accepted: the positions beyond the window were never tested, so without this they
-    // keep their prior forever and the window can never grow. Pull them toward the deepest observed rate.
-    if (c.source == Source::Mtp && accepted == c.k && c.k < K_MAX)
-        for (int i = c.k; i < K_MAX; ++i) mtp_p_[i] += ema_ * (mtp_p_[c.k - 1] - mtp_p_[i]);
+    // Positions the window never tested keep their own evidence's estimate: no extrapolation.  The old law
+    // pulled every unobserved deep position toward the deepest observed rate, so one lucky deep window
+    // over-extended the whole table (digest decode-control2 §1, §3.4).  The window now grows only as the
+    // damped IRLS refit lands evidence per position - SurvivalEstimator below (STRATA_SPEC_LOGISTIC).
+}
+
+// ---- SurvivalEstimator (STRATA_SPEC_LOGISTIC): see controller.hpp for the model and the constants' provenance.
+
+double SurvivalEstimator::logit(double q) {
+    q = std::clamp(q, 1e-4, 1.0 - 1e-4);
+    return std::log(q / (1.0 - q));
+}
+
+double SurvivalEstimator::sigmoid(double z) {
+    return 1.0 / (1.0 + std::exp(-std::clamp(z, -40.0, 40.0)));
+}
+
+SurvivalEstimator::SurvivalEstimator() {
+    // beta from the house prior (Controller's 0.86 per draft): the tables are the prior, not a parallel system.
+    beta_.fill(logit(0.86));
+}
+
+void SurvivalEstimator::set_prior(const double* p, int n) {
+    for (int i = 0; i < n && i < K_MAX; ++i)
+        if (p[i] >= 0.0) beta_[(size_t) i] = logit(p[i]);
+}
+
+void SurvivalEstimator::observe(const double* f, const int* y, int seen) {
+    for (int i = 0; i < seen && i < K_MAX; ++i)
+        events_.push_back({(float) f[i], (float) (y[i] != 0), i});
+    ++folds_;
+    if (++since_refit_ >= REFIT_INTERVAL) refit();
+}
+
+double SurvivalEstimator::survival(int k, double f) const {
+    if (k < 0 || k >= K_MAX) return 0.0;
+    return sigmoid(omega_ * f + beta_[(size_t) k]);
+}
+
+void SurvivalEstimator::refit() {
+    const int n = (int) events_.size();
+    since_refit_ = 0;
+    if (n < 2 * K_MAX) {   // too little evidence since the last refit: the prior stands (and stays damped)
+        events_.clear();
+        return;
+    }
+    // Evidence damping (vLLM's shipped law): the slope moves on the session's whole evidence, each intercept
+    // only on its own position's.  The cross terms take the slope's damping (any consistent positive scaling
+    // only slows the step; this one is the slope block's view of the shared column).
+    std::array<double, K_MAX> n_k{};
+    for (const Event& e : events_) n_k[(size_t) e.k] += 1.0;
+    const double d_w = (double) n / ((double) n + DAMPING);
+    std::array<double, K_MAX> d_k{};
+    for (int k = 0; k < K_MAX; ++k) d_k[(size_t) k] = n_k[(size_t) k] / (n_k[(size_t) k] + DAMPING);
+    double w = omega_, b[K_MAX];
+    for (int k = 0; k < K_MAX; ++k) b[k] = beta_[(size_t) k];
+    constexpr int P = K_MAX + 1;   // (omega, beta_0..beta_K-1): the arrowhead system
+    for (int it = 0; it < 8; ++it) {
+        double H[P][P] = {}, g[P] = {};
+        for (const Event& e : events_) {
+            const double p = sigmoid(w * (double) e.f + b[e.k]);
+            const double wt = p * (1.0 - p);
+            const double r = (double) e.y - p;
+            g[0] += wt * d_w * (double) e.f * r;
+            g[1 + e.k] += wt * d_k[(size_t) e.k] * r;
+            H[0][0] += wt * d_w * (double) e.f * (double) e.f;
+            H[0][1 + e.k] += wt * d_w * (double) e.f;
+            H[1 + e.k][1 + e.k] += wt * d_k[(size_t) e.k];
+        }
+        // The ridge is NOT damped: a position with no evidence keeps its full prior pull (a damped ridge
+        // would zero its diagonal and make the system singular - the refit would silently stop moving).
+        H[0][0] += L2;
+        for (int k = 0; k < K_MAX; ++k) {
+            H[1 + k][0] = H[0][1 + k];
+            H[1 + k][1 + k] += L2;
+        }
+        // Gauss with partial pivots, then a damped step (the trust region keeps one wild window from moving
+        // the fit the extrapolation law's distance)
+        double a[P][P + 1];
+        for (int r = 0; r < P; ++r) {
+            for (int c = 0; c < P; ++c) a[r][c] = H[r][c];
+            a[r][P] = g[r];
+        }
+        double dx[P] = {};
+        bool ok = true;
+        for (int col = 0; col < P && ok; ++col) {
+            int piv = col;
+            for (int r = col + 1; r < P; ++r) if (std::fabs(a[r][col]) > std::fabs(a[piv][col])) piv = r;
+            if (std::fabs(a[piv][col]) < 1e-12) { ok = false; break; }
+            if (piv != col)
+                for (int c = col; c <= P; ++c) std::swap(a[col][c], a[piv][c]);
+            for (int r = col + 1; r < P; ++r) {
+                const double m = a[r][col] / a[col][col];
+                for (int c = col; c <= P; ++c) a[r][c] -= m * a[col][c];
+            }
+        }
+        if (ok) {
+            for (int r = P - 1; r >= 0; --r) {
+                double s = a[r][P];
+                for (int c = r + 1; c < P; ++c) s -= a[r][c] * dx[c];
+                dx[r] = s / a[r][r];
+            }
+        }
+        if (!ok) break;
+        // The step is damped by the same evidence factors as the system (vLLM's law: a data-poor position
+        // keeps learning, just slowly), and the slope stays a positive correction on the prior - the
+        // production slopes measured 0.51-0.55; omega <= 0 inverts confidence, omega -> 0 degrades safely
+        // to the bare tables.  (Without this, a narrow-feature session - deep positions only ever see
+        // low-confidence drafts - walks the fit's near-collinear valley to a nonsense corner.)
+        w = std::clamp(w + std::clamp(dx[0] * d_w, -0.25, 0.25), 0.05, 4.0);
+        for (int k = 0; k < K_MAX; ++k)
+            b[k] = std::clamp(b[k] + std::clamp(dx[1 + k] * d_k[(size_t) k], -0.5, 0.5), -20.0, 20.0);
+    }
+    omega_ = w;
+    for (int k = 0; k < K_MAX; ++k) beta_[(size_t) k] = b[k];
+    ++refits_;
+    events_.clear();
 }
 
 }  // namespace strata::spec

@@ -24,6 +24,7 @@
 #include "strata/core/session.hpp"
 #include "strata/kernels/sampler.hpp"
 #include "strata/kernels/verify_kernels.hpp"
+#include "strata/spec/controller.hpp"
 
 #include <cuda_runtime.h>
 
@@ -134,6 +135,16 @@ public:
     void set_draft_history(const int32_t* tail, int64_t n_tail, int32_t next);
     void set_ple_session(SessionState* s) { ple_ss_ = s; }
     bool coupled() const { return coupled_active_; }
+
+    /// STRATA_SPEC_ENTABORT (serial draft() only; the digest's mid-flight abort, decode-control2 §3.3 rule 3).
+    /// Call before the first draft() when armed: it also arms the step graphs' capture - each step then runs
+    /// one 1-block reduction over the draft head's logits (p(draft), entropy) into the mapped staging the
+    /// trim loop reads.  `on = false` disarms the trim's predicate; the capture flag stays (armed-ness is a
+    /// boot-time fact - STRATA_SPEC_LOGISTIC's estimator refreshes `beta`/`omega`/`lambda` every round).
+    bool set_draft_abort(const strata::spec::DraftAbort& da);
+    /// The last draft()'s per-position stats (p, entropy), valid once its chain returned; -1 = unknown.
+    const float* draft_stats() const { return h_stat_; }
+    bool draft_abort_armed() const { return abort_stats_; }
     /// PROBABILISTIC DRAFT ACCEPTANCE (core/spec_prob.hpp, STRATA_SPEC_PROB=1): this request's drafts are SAMPLED from
     /// q and each draft j's distribution is in spec_q() + j * kSpecQStride (ids, -1 terminated; then float bits),
     /// valid on the host once draft() has returned.  False for greedy requests and where the mode is off.
@@ -169,6 +180,7 @@ public:
     double ms_src = 0;      ///< the host time spent staging the source rows (a cross-card copy when the drafter is on another card)
     int64_t n_src = 0;
     int64_t rounds = 0;
+    int64_t n_aborts = 0;   ///< STRATA_SPEC_ENTABORT: positions whose evidence cut the draft chain (<= one per round)
 
     /// E-9: the prompt path computes this layer's prompt K/V in batches (Prefill::draft_kv): its tensors, its K/V
     /// state, the first cell a round can still read, its device, and a wait for its own stream.
@@ -262,6 +274,15 @@ private:
                   sizeof(chain_tok_) == strata::kernels::kVerifyMaxT * sizeof(chain_tok_[0]) &&
                   sizeof(chain_prob_) == strata::kernels::kVerifyMaxT * sizeof(chain_prob_[0]),
                   "the early-exit chain holds one slot per window row: widen with kVerifyMaxT (T65)");
+    // STRATA_SPEC_ENTABORT: the step graphs' stats staging (p, entropy per drafted position, the kernel writes
+    // the mapped device alias; the host trim loop reads the host side) and the abort's current inputs
+    strata::spec::DraftAbort abort_{};
+    bool abort_stats_ = false;                 // armed-ness: stats nodes belong to the captures (sticky, boot-time)
+    int stats_j_ = -1;                         // the capture writing now: the round's pick = 0, step j = j
+    float* h_stat_ = nullptr;                  // DraftAbort::kFloats floats, mapped (lazy at first arm)
+    float* m_stat_ = nullptr;                  // its device alias (what the captured kernel writes)
+    static_assert(strata::spec::DraftAbort::kFloats == 2 * strata::kernels::kVerifyMaxT,
+                  "the abort staging holds two floats per window row: widen with kVerifyMaxT (T65)");
     int64_t n_vocab_ = 0;
     uint64_t vram_ = 0;
     cudaStream_t cs_ = nullptr;
