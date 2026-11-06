@@ -1121,6 +1121,10 @@ if(STRATA_ENABLE_CUDA OR STRATA_ENABLE_HIP)
   add_executable(fused_gr_bench src/kernels/fused_gr_bench.cpp)
   target_include_directories(fused_gr_bench PRIVATE ${_strata_gpu_include_directories})
   target_link_libraries(fused_gr_bench PRIVATE strata_kernels ${_strata_gpu_runtime_target})
+  # BW-DENSE port: the v3 read's STRATA_GR_V3_PF variants against the plain v3 read, bit for bit, and their cold-weight time
+  add_executable(gr_v3_screen src/kernels/gr_v3_screen.cpp)
+  target_include_directories(gr_v3_screen PRIVATE ${_strata_gpu_include_directories})
+  target_link_libraries(gr_v3_screen PRIVATE strata_kernels ${_strata_gpu_runtime_target})
   add_executable(router_chain_bench src/kernels/router_chain_bench.cpp)
   target_include_directories(router_chain_bench PRIVATE ${_strata_gpu_include_directories})
   target_link_libraries(router_chain_bench PRIVATE strata_kernels ${_strata_gpu_runtime_target})
@@ -1897,6 +1901,12 @@ if(STRATA_NATIVE_EXPERTS)
       target_link_libraries(prefill_mmq_scatter_test PRIVATE strata_mmq ggml-base ${_strata_gpu_runtime_target})
       add_test(NAME prefill_mmq_scatter_test COMMAND prefill_mmq_scatter_test)
       set_tests_properties(prefill_mmq_scatter_test PROPERTIES TIMEOUT 120)
+      # the Unsloth v3.1 sets' expert formats through MMQ (upstream round 0214, ported 2026-11-06; Q5_0 down only in
+      # a STRATA_ORCA_Q4KS_MMQ build, skipped honestly otherwise), and --bench: Q5_0 MMQ against dequantize + cuBLAS
+      add_executable(prefill_mmq_v31_test tests/cuda/prefill_mmq_v31_test.cpp)
+      target_link_libraries(prefill_mmq_v31_test PRIVATE strata_mmq strata_kernels ggml-base ${_strata_gpu_blas_target} ${_strata_gpu_runtime_target})
+      add_test(NAME prefill_mmq_v31_test COMMAND prefill_mmq_v31_test)
+      set_tests_properties(prefill_mmq_v31_test PROPERTIES SKIP_RETURN_CODE 77 TIMEOUT 300)
     endif()
     if(STRATA_BUILD_TESTS AND _strata_mmq_tab_on)
       # STRATA_MMQ_DIRECT: the pointer-table MMQ bit for bit against the gathered MMQ (exit 77 below sm_80)
@@ -2068,6 +2078,31 @@ if(STRATA_NATIVE_EXPERTS)
         set_tests_properties(native_expert_parity_${_name} PROPERTIES TIMEOUT 120)
       endforeach()
       add_test(NAME native_expert_parity_q5_1_min COMMAND native_expert_parity --q5_1-min)
+      # Unsloth v3.1 Qwen3.8-Flash-Next sets (UD-IQ1_M .. UD-IQ4_XS, upstream round 0214, ported 2026-11-06): every
+      # gate/up x down pair their layers use, at the real shapes (hidden 2560, FF 640): gate/up IQ2_XXS IQ2_XS IQ2_S
+      # IQ3_XXS IQ4_XS (+ IQ1_M, the GSQ-RCO packs'), down Q2_0 IQ4_NL Q5_0 Q8_0.  Q5_0 down (UD-IQ4_XS / UD-Q3_K_XL,
+      # and one UD-IQ2_XS layer) had no test on this model before; its dot now takes the quantized-activation offset
+      # (owner commit aa678f10d), pinned by the tightened 1.8e-2 limit in native_expert_parity.cpp.
+      foreach(_gu iq1_m iq2_xxs iq2_xs iq2_s iq3_xxs iq4_xs)
+        foreach(_dn q2_0 iq4_nl q5_0 q8_0)
+          add_test(NAME native_expert_parity_v31_${_gu}_${_dn} COMMAND native_expert_parity --synthetic ${_gu}/${_dn})
+          set_tests_properties(native_expert_parity_v31_${_gu}_${_dn} PROPERTIES TIMEOUT 300)
+        endforeach()
+      endforeach()
+      # the dense projections of those sets (Q2_0, Q5_0, Q6_K, Q5_K, Q4_K, Q3_K, Q8_0, IQ4_NL, IQ4_XS): decode MMVQ
+      # at 1..8 columns against ggml's dequantized double product, and the prompt dequantizers (f32/f16/bf16)
+      add_executable(native_dense_parity src/kernels/native_dense_parity.cpp)
+      target_include_directories(native_dense_parity PRIVATE ${_strata_gpu_include_directories})
+      target_link_libraries(native_dense_parity PRIVATE strata_kernels ggml-base ${_strata_gpu_runtime_target})
+      add_test(NAME native_dense_parity COMMAND native_dense_parity)
+      set_tests_properties(native_dense_parity PROPERTIES SKIP_RETURN_CODE 77 TIMEOUT 300)
+      # round 0214: the same dense types through native_mmvq at the model's shapes with the exact multi-column
+      # layout (native_dense_types_parity), and the new expert pairs through the grouped kernel (native_grouped_parity)
+      add_executable(native_dense_types_parity src/kernels/native_dense_types_parity.cpp)
+      target_include_directories(native_dense_types_parity PRIVATE ${_strata_gpu_include_directories})
+      target_link_libraries(native_dense_types_parity PRIVATE strata_kernels strata_kernels_cpu ggml-base ${_strata_gpu_runtime_target})
+      add_test(NAME native_dense_types_parity COMMAND native_dense_types_parity)
+      set_tests_properties(native_dense_types_parity PROPERTIES SKIP_RETURN_CODE 77 TIMEOUT 300)
       # APR: the trellis expert types and the Hadamard activation rotation, when ggml comes from the agention fork
       # (the only tree with these types; marked by its ggml-cuda/tq.cuh)
       if(STRATA_GGML_DIR AND EXISTS "${STRATA_GGML_DIR}/ggml/src/ggml-cuda/tq.cuh")

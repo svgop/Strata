@@ -72,6 +72,15 @@ bool fused_gr_read_multi(const FusedGrArgs* a, int n_tok, float* xn_scratch, voi
 
 /// The bench only: the AMD latency-hidden kernels on (1) or off (0); -1 = STRATA_GR_FAST.
 void fused_gr_set_fast(int on);
+/// The bench only: the v3 read's load-ordering mask (STRATA_GR_V3_PF; BW-DENSE) for every read; -1 = the environment.
+/// Bits 0-1 gr_down (1 batched staging loads, 2 weight prefetch), bits 2-3 gr_up (1 batched partial/row loads,
+/// 2 weight prefetch), bits 4-5 gr_down rows a warp 2 / 4 (T <= 4), bit 7 gr_down 2 rows a warp with the register-blocked
+/// dot phase (windows of 5+ rows), bit 8 the same with 4 rows (any window).  Every variant is bitwise the kernel without
+/// it (gr_v3_screen).
+void fused_gr_v3_pf(int mask);
+/// The resources of the v3 read's variants (registers, local, shared memory, blocks per SM) on stdout; the screen's
+/// --resources leg.
+void fused_gr_v3_print_resources();
 /// The multi read's variants (#315; not main's opt-in STRATA_GR_V3 read, which sums in another order), all computing
 /// every output with the plain read's operations in its order, so bitwise the plain read's and the single-token
 /// read's: plain (0.1.31's default: the norm one block per token, the down projection on 41 blocks), split (the norm
