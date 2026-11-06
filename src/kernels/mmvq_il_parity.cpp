@@ -68,6 +68,15 @@ const Case CASES[] = {
     {"Q3_K 2560x640", 11, 2560, 640, 256, 110, {108, -1}},
     {"Q3_K 2560x512", 11, 2560, 512, 256, 110, {108, -1}},
     {"Q3_K 2560x2051 odd", 11, 2560, 2051, 256, 110, {108, -1}},
+    // Q8_0 (IL-Q8): the UD packs' dense projections (attn_qkv, ssm_out) are Q8_0 - the same five row classes, an
+    // odd-rows parity shape.  34-byte blocks, the fp16 scale at offset 0; n_in is a multiple of 256 like every IL type.
+    {"Q8_0 2560x12288", 8, 2560, 12288, 32, 34, {0, -1}},
+    {"Q8_0 2560x10240", 8, 2560, 10240, 32, 34, {0, -1}},
+    {"Q8_0 2560x6144", 8, 2560, 6144, 32, 34, {0, -1}},
+    {"Q8_0 6144x2560", 8, 6144, 2560, 32, 34, {0, -1}},
+    {"Q8_0 2560x640", 8, 2560, 640, 32, 34, {0, -1}},
+    {"Q8_0 2560x512", 8, 2560, 512, 32, 34, {0, -1}},
+    {"Q8_0 2560x2051 odd", 8, 2560, 2051, 32, 34, {0, -1}},
 };
 
 uint16_t sane_half(std::mt19937& rng) {
@@ -195,8 +204,8 @@ int run_case(const Case& c, bool bench, cudaStream_t s) {
 // A cell with several measured shapes takes the worst (smallest) gain of the best choice, as the shipped table does for
 // two cards; a class with no measured shape prints the value of its neighbour below it (or 0).
 void emit_table() {
-    const int types[] = {23, 12, 13, 14, 11};
-    const char* names[] = {"IQ4_XS", "Q4_K", "Q5_K", "Q6_K", "Q3_K"};
+    const int types[] = {23, 12, 13, 14, 11, 8};
+    const char* names[] = {"IQ4_XS", "Q4_K", "Q5_K", "Q6_K", "Q3_K", "Q8_0"};
     std::printf("// measured on this card by mmvq_il_parity --bench --emit-table\n");
     // per cell: the rows count whose WORST ratio to native_mmvq over the cell's measured shapes is the best, taken only
     // when that worst ratio is under 0.97 (else 0); a class with no measured shape takes its lower neighbour's value
@@ -300,6 +309,32 @@ int check_tables() {
             ++bad;
             std::printf("FAIL table: the 5-8 column table must answer sm_120 only\n");
         }
+    }
+    // IL-Q8: the type 8 rows live in the sm_120 tables only (the conservative Q6_K mirrors until the emitted table
+    // lands).  2-4 columns answer the 1201 table (a 12.0 card with 80+ SMs) and 0 everywhere else, including plain
+    // 120 (small Blackwell keeps kIlRowsShared, which has no type 8); 5-8 columns answer the wide sm_120 table;
+    // every answered cell is a legal rows count.  il_q8_on caches at first use, so this binary checks the
+    // default-on state (STRATA_MMVQ_IL_Q8=0 answers 0 in a fresh process, checked by the bench legs).
+    for (int cc : {60, 61, 70, 75, 86, 89})
+        for (int nc = 2; nc <= 8; ++nc)
+            for (int n_out : {512, 2560, 6144, 10240, 12288, 248320})
+                if (native_mmvq_il_rows_for(cc, 8, nc, n_out) != 0) {
+                    ++bad;
+                    std::printf("FAIL table: type 8 must be 0 on cc %d (ncols %d, n_out %d)\n", cc, nc, n_out);
+                }
+    for (int cc : {120, 1201})
+        for (int nc = 2; nc <= 8; ++nc)
+            for (int n_out : {512, 2560, 6144, 10240, 12288, 248320}) {
+                const int r = native_mmvq_il_rows_for(cc, 8, nc, n_out);
+                if (r != 0 && r != 1 && r != 2 && r != 4) {
+                    ++bad;
+                    std::printf("FAIL table: type 8 cc %d ncols %d n_out %d -> illegal rows %d\n", cc, nc, n_out, r);
+                }
+            }
+    if (native_mmvq_il_rows_for(1201, 8, 2, 6144) != 2 || native_mmvq_il_rows_for(1201, 8, 3, 6144) != 4 ||
+        native_mmvq_il_rows_for(1201, 8, 5, 2560) != 2 || native_mmvq_il_rows_for(120, 8, 2, 6144) != 0) {
+        ++bad;
+        std::printf("FAIL table: the type 8 mirror must answer 1201's tables, not plain 120, at 2-4 columns\n");
     }
     return bad;
 }

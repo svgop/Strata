@@ -13212,7 +13212,10 @@ int main(int argc, char** argv) {
             for (const auto& de : std::filesystem::directory_iterator(conv_slot_dir, ec)) {
                 const std::string fn = de.path().filename().string();
                 if (fn.rfind("slot-", 0) != 0 || fn.size() < 6 || fn.compare(fn.size() - 4, 4, ".bin") != 0) {
-                    if (fn.rfind("slot-", 0) == 0) std::filesystem::remove(de.path(), ec);   // an interrupted write's temp
+                    // an interrupted write's temp: the writer names them ".slot-<serial>.bin.<hash>.tmp" (dot-prefixed,
+                    // conversation_file.cpp) - both spellings are collected here; matching only "slot-" left the
+                    // dot-temps orphaned on disk (two ~240 MB strays observed in the slot dir)
+                    if (fn.rfind("slot-", 0) == 0 || fn.rfind(".slot-", 0) == 0) std::filesystem::remove(de.path(), ec);
                     continue;
                 }
                 uint64_t serial = 0;
@@ -13295,7 +13298,10 @@ int main(int argc, char** argv) {
             }
             for (const auto& de : std::filesystem::directory_iterator(conv_slot_dir, ec)) {
                 const std::string fn = de.path().filename().string();
-                if (fn.rfind("slot-", 0) == 0 && live_files.count(fn) == 0) std::filesystem::remove(de.path(), ec);
+                // the drain-side sweep: superseded slots AND the dot-prefixed interrupted-write temps (the same
+                // name-spelling gap as the boot-side scan above)
+                if ((fn.rfind("slot-", 0) == 0 && live_files.count(fn) == 0) || fn.rfind(".slot-", 0) == 0)
+                    std::filesystem::remove(de.path(), ec);
             }
             if (written)
                 std::fprintf(stderr, "strata serve: conversation cache drained %zu parked conversation%s to %s\n",

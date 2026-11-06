@@ -1533,7 +1533,9 @@ void launch_multi(const void* weights, const void* x_q8_1, float* y, int n_in, i
 // m is what thread 32 (m % 4) + l does in iteration m / 4 - with a sum per virtual warp, added in warp order before the
 // xor tree; each weight block is decoded once (the traits' `load`) and every column takes the single-column dot's own
 // expression (the same *_q8_dot_impl calls), so each value is bitwise the multi-column kernel's. K-quants read the
-// block-major copy; IQ4_XS, whose lanes read the same int of consecutive blocks, the position-major one.
+// block-major copy; IQ4_XS, whose lanes read the same int of consecutive blocks, the position-major one. Q8_0 reads
+// block-major too: its four lanes per block cover words 0..7 of that one block (T = 4, KBY = 1), which is contiguous
+// only in the block-major copy.  STRATA_MMVQ_IL_Q8=0 keeps Q8_0 on native_mmvq's kernels (il_q8_on).
 struct IlIQ4XS {
     using F = IQ4XSTraits;
     static constexpr bool PM = true;
@@ -1665,6 +1667,30 @@ struct IlQ6K {
             const int uc[2] = {u[0][c], u[1][c]};
             const float dc[2] = {d8[0][c], d8[1][c]};
             out[c] = q6_q8_dot_impl(r.vl, r.vh, uc, r.scales, r.d, dc);
+        }
+    }
+};
+// Q8_0 (the UD packs' dense projections: attn_qkv, ssm_out and friends): the plain kernel's lane covers two 32-bit
+// words of ONE 32-value block (SmallTraits<Q80Block, 8>: T = 4, KBY = 1, so kby is the activation block itself), so
+// `apply` reads the interleaved copy's words iqs and iqs + 1 of block kby per column and runs the plain apply's exact
+// DP4A chain and scale product (r.d0 * d8 * float(sumi), the same order).  No k-quant bit-twiddling: the block's
+// whole payload is two ints and an fp16 scale, all decoded once in `load` per (row, block).
+struct IlQ8_0 {
+    using F = SmallTraits<Q80Block, 8>;
+    static constexpr bool PM = false;
+    template <int NC, class X>
+    __device__ static void apply(const F::W& r, const X& x, int kby, int iqs, float (&out)[NC]) {
+        int u[2][NC];
+        float d8[NC];
+#pragma unroll
+        for (int i = 0; i < 2; ++i) x.u(kby, iqs + i, u[i]);
+        x.scales(kby, d8);
+#pragma unroll
+        for (int c = 0; c < NC; ++c) {
+            int sumi = 0;
+#pragma unroll
+            for (int i = 0; i < 2; ++i) sumi = STRATA_DP4A(r.v[i], u[i][c], sumi);
+            out[c] = r.d0 * d8[c] * float(sumi);
         }
     }
 };
@@ -3049,6 +3075,12 @@ constexpr IlRows kIlRows_120[] = {
     {13, {{0, 1, 2, 1, 1}, {0, 1, 4, 2, 4}, {0, 1, 2, 1, 2}}},   // Q5_K
     {14, {{0, 0, 2, 1, 1}, {0, 0, 4, 2, 4}, {0, 2, 2, 2, 2}}},   // Q6_K
     {11, {{0, 1, 2, 2, 2}, {0, 2, 4, 2, 2}, {0, 2, 2, 2, 2}}},   // Q3_K
+    // IL-Q8: UNMEASURED CONSERVATIVE DEFAULT - a cell-for-cell mirror of this table's Q6_K row (the closest simple
+    // k-quant: one float scale per subblock group, like Q8_0's one fp16 per block).  The operator's measured
+    // replacement goes here: run `mmvq_il_parity --bench --emit-table` on this card (docs/MMVQ_IL_TABLE.md) and
+    // paste the emitted `    {8, {...}},   // Q8_0` line over this one.  STRATA_MMVQ_IL_Q8=0 restores the plain
+    // kernels for the whole type regardless of what stands here.
+    {8, {{0, 0, 2, 1, 1}, {0, 0, 4, 2, 4}, {0, 2, 2, 2, 2}}},   // Q8_0 (conservative Q6_K mirror; replace with the measured row)
 };
 // Turing (sm_75): read off mmvq_il_parity --bench --emit-table on an RTX 2080 Ti 22 GB (SM 1650 MHz), the same 3% rule.
 // The plain multi-column kernels are bound by dp4a throughput on Turing from 2 columns on (IQ4_XS 2560x10240 at 4
@@ -3072,6 +3104,9 @@ constexpr IlRows58 kIlRows58_120[] = {   // 4 = 2 rows a warp here (launch_il_ro
     {13, {{0, 2, 2, 2, 4}, {0, 4, 2, 4, 2}, {0, 2, 4, 2, 2}, {0, 2, 4, 2, 2}}},   // Q5_K
     {14, {{0, 2, 4, 4, 4}, {0, 4, 2, 4, 2}, {0, 2, 4, 2, 2}, {0, 4, 4, 4, 2}}},   // Q6_K
     {11, {{0, 2, 4, 2, 4}, {0, 2, 2, 4, 4}, {0, 2, 2, 2, 4}, {0, 4, 2, 2, 2}}},   // Q3_K
+    // IL-Q8: UNMEASURED CONSERVATIVE DEFAULT - the Q6_K mirror (see kIlRows_120); replace with the emitted
+    // `    {8, {...}},   // Q8_0` line from mmvq_il_parity --bench --emit-table.  STRATA_MMVQ_IL_Q8=0 restores plain.
+    {8, {{0, 2, 4, 4, 4}, {0, 4, 2, 4, 2}, {0, 2, 4, 2, 2}, {0, 4, 4, 4, 2}}},   // Q8_0 (conservative Q6_K mirror; replace with the measured row)
 };
 struct Il58Arch { int cc; const IlRows58* t; size_t n; };
 constexpr Il58Arch kIl58Arch[] = {
@@ -3100,6 +3135,10 @@ bool il_env_on(const char* name) {
 }
 bool il_t1_on() { static const bool on = il_env_on("STRATA_MMVQ_IL_T1"); return on; }
 bool il_q3k_on() { static const bool on = il_env_on("STRATA_MMVQ_IL_Q3K"); return on; }
+// IL-Q8 (default on): STRATA_MMVQ_IL_Q8=0 keeps every Q8_0 call on native_mmvq's kernels - the master switch for
+// the type 8 rows below, authoritative over the table AND over STRATA_MMVQ_IL_ROWS overrides (the bench legs are
+// armed vs =0; the operator's emitted table lands in the marked slot in kIlRows_120 / kIlRows58_120).
+bool il_q8_on() { static const bool on = il_env_on("STRATA_MMVQ_IL_Q8"); return on; }
 struct IlArch { int cc; const IlRows* t; size_t n; };
 constexpr IlArch kIlArch[] = {
     {60, kIlRows_60, sizeof(kIlRows_60) / sizeof(IlRows)},   // Pascal GP100: measured on a Tesla P100
@@ -3112,7 +3151,7 @@ constexpr IlArch kIlArch[] = {
     {1201, kIlRows_120, sizeof(kIlRows_120) / sizeof(IlRows)},
 };
 // STRATA_MMVQ_IL_ROWS="type:ncols:r0,r1,r2,r3,r4;..." overrides single rows of the table for every card (type = ggml
-// type 23/12/13/14, ncols 2-4, r* = rows a warp 0/1/2/4 for the five n_out classes).  Parsed once.
+// type 23/12/13/14/8, ncols 2-4, r* = rows a warp 0/1/2/4 for the five n_out classes).  Parsed once.
 struct IlEnvRow { int type, ncols; uint8_t r[5]; };
 const std::vector<IlEnvRow>& il_env_rows() {
     static const std::vector<IlEnvRow> v = [] {
@@ -3152,12 +3191,14 @@ int native_mmvq_il_rows_for(int cc, int type, int ncols, int n_out) {
         static const bool wide = il_env_on("STRATA_MMVQ_IL_WIDE");
         if (!wide) return 0;
         if (type == 11 && !il_q3k_on()) return 0;
+        if (type == 8 && !il_q8_on()) return 0;   // STRATA_MMVQ_IL_Q8=0: Q8_0 keeps native_mmvq's kernels
         for (const Il58Arch& a : kIl58Arch)
             if (a.cc == cc)
                 for (size_t i = 0; i < a.n; ++i)
                     if (a.t[i].type == type) return a.t[i].r[ncols - 5][cls];
         return 0;
     }
+    if (type == 8 && !il_q8_on()) return 0;   // STRATA_MMVQ_IL_Q8=0, before STRATA_MMVQ_IL_ROWS: the master switch
     for (const IlEnvRow& e : il_env_rows())
         if (e.type == type && e.ncols == ncols) return e.r[cls];
     if (ncols == 1) {   // 143-dense: one column (the plain q8_1 blocks, no interleaved copy); STRATA_MMVQ_IL_T1=0 turns it off
@@ -3233,8 +3274,10 @@ bool il_arch_ok() {
 
 bool native_mmvq_il_supported(int ggml_type, int ncols, int n_out) {
     if (ncols < 1 || ncols > 8 || !g_multi_exact || !il_arch_ok()) return false;
+    if (ggml_type == 8 && !il_q8_on()) return false;   // STRATA_MMVQ_IL_Q8=0: the plain kernels, even under il_tune
     return (g_tune_rows ? g_tune_rows : il_rows(ggml_type, ncols, n_out)) != 0 &&
-           (ggml_type == 23 || ggml_type == 12 || ggml_type == 13 || ggml_type == 14 || ggml_type == 11);
+           (ggml_type == 23 || ggml_type == 12 || ggml_type == 13 || ggml_type == 14 || ggml_type == 11 ||
+            ggml_type == 8);
 }
 
 void native_mmvq_il(int ggml_type, const void* weights, const void* x_q8_1, const void* x_il, float* y, int n_in,
@@ -3257,6 +3300,7 @@ void native_mmvq_il(int ggml_type, const void* weights, const void* x_q8_1, cons
     case 13: launch_il_rows<IlQ5K>(r, weights, x_il, y, n_in, n_out, ncols, s); break;
     case 14: launch_il_rows<IlQ6K>(r, weights, x_il, y, n_in, n_out, ncols, s); break;
     case 11: launch_il_rows<IlQ3K>(r, weights, x_il, y, n_in, n_out, ncols, s); break;
+    case 8: launch_il_rows<IlQ8_0>(r, weights, x_il, y, n_in, n_out, ncols, s); break;
     }
     launch_check();
 }
