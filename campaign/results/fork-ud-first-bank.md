@@ -81,3 +81,24 @@ sides' wins. The digest's P1 estimate (+4-7 all lanes) was half right - the seri
 The quiet-box re-run of BOTH P1 forms + the per-NC dispatch is the next kernel window's
 first item; P4 (config pins: --pcie-frac/--pcie-mode/--resident-experts parity with GSQ)
 is config-only and rides the same window.
+
+## The regression hunt, complete (2026-11-07) - every factor run to ground
+
+The operator reported GSQ "regressed extremely hard". The full forensic arc:
+1. CHART ARTIFACT (real, caught by the operator): three packs in one series painted a fake
+   regression - fixed (3b56b58c).
+2. A REAL slow state also existed. Root-caused layers:
+   - ZRAM SWAP 100% FULL, live paging (si=452/s) - cleared by the operator. Partial fix.
+   - GPU CLOCK BOUNCE: the v2 service hard-locked MID after 30s quiet; bursts paid the ramp
+     at 1780 MHz under 98% load (the clockwatch proof) - a uniform ~30% class loss. v3
+     SHIPPED + INSTALLED + MECHANISM-PROVEN (range lock 1800-3135; bursts from a 45s gap
+     ride 2917-2955 MHz; lanes hold 2940-2955 through 37/40 samples).
+   - CODE EXONERATED: the banked-era binary (4152f114 rebuilt) reads the identical degraded
+     class on today's box (E1 134.6/187.0/220.5) - the engine commits are not the cause.
+   - VERIFIED CLEAN: swap 0, shadow store present+mapped, profile base unchanged, CPU
+     4.8-5.2 GHz through lanes, clocks 2950 through lanes.
+3. RESIDUAL vs the Nov-6 banks (~25% on solo/conc) PERSISTS across all of it - era binary
+   included. Leading remaining suspect: physical memory fragmentation (1.18M failed
+   compactions; AnonHugePages 120 MB of 103 GB) - a REBOOT is the clean eliminator and the
+   last unchecked state variable. The banks (one afternoon's 2-leg means) may also be a
+   favorable-window artifact; the law's re-bank discipline decides on the post-reboot box.
