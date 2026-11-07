@@ -401,6 +401,30 @@ std::vector<uint64_t> uniform_bounds(uint64_t bytes, uint64_t slice) {
 }
 }  // namespace
 
+namespace {
+// HOSTMEM-NO-REBOOT (campaign/HOSTMEM-NO-REBOOT.md) M3: the arena's page class is a first-class boot
+// fact, not a buried note - 4K on a DRAM-ceiling lane costs ~750 TLB misses per 3 MB expert (the
+// degradation class the #2126 guard falls into when the 2 MiB supply runs out).  Loud once per
+// >=1 GiB arena; STRATA_ARENA_PAGES=strict makes a bench refuse a silently 4K arena (exit 70)
+// instead of measuring one by accident.  Default stays serve-degraded.
+void announce_page_class(uint64_t bytes, PageBacking backing, const std::string& note) {
+    if (bytes < (1ull << 30)) return;
+    if (backing == PageBacking::LargePages) {
+        std::fprintf(stderr, "strata: ARENA PAGES: 2 MiB (%.1f GiB arena, large-page backed)\n",
+                     (double) bytes / (1ull << 30));
+        return;
+    }
+    std::fprintf(stderr, "strata: ARENA PAGES: 4K - DEGRADED CLASS (%.1f GiB arena): %s\n",
+                 (double) bytes / (1ull << 30), note.c_str());
+    const char* strict = std::getenv("STRATA_ARENA_PAGES");
+    if (strict != nullptr && std::string(strict) == "strict") {
+        std::fprintf(stderr, "strata: STRATA_ARENA_PAGES=strict: refusing to serve a 4K arena - "
+                             "arm the 2 MiB pool (vm.nr_hugepages) or drop the strict flag\n");
+        std::exit(70);
+    }
+}
+}  // namespace
+
 PinnedArena::PinnedArena(uint64_t bytes, uint64_t slice) : PinnedArena(bytes, uniform_bounds(bytes, slice)) {
     if (slice_bytes) slice_bytes = slice;   // sliced registration: record the uniform size
 }
@@ -414,6 +438,7 @@ PinnedArena::PinnedArena(uint64_t bytes, const std::vector<uint64_t>& bounds,
         mapping_base = base;
         mapping_bytes = bytes;
     }
+    announce_page_class(bytes, backing, note);
 
     // Register with CUDA BEFORE any page is touched: cudaHostRegister pins what is resident now, and a region
     // that has already been faulted in page by page is far more expensive to register and may fail outright.
@@ -533,6 +558,7 @@ PinnedArena::PinnedArena(uint64_t bytes, ByNeed, const std::vector<std::pair<uin
         mapping_base = base;
         mapping_bytes = bytes;
     }
+    announce_page_class(bytes, backing, note);
     if (base == nullptr) return;
     // Register BEFORE any page is touched (see the first constructor).  Same caps as there: the engine's
     // `max_pinned_bytes`, else STRATA_ARENA_PIN_GIB=N (> 0); "auto" (-2) is the sliced pin's and does not apply.
@@ -620,6 +646,7 @@ PinnedArena::PinnedArena(uint64_t bytes, const std::vector<uint64_t>& bounds, De
         mapping_base = base;
         mapping_bytes = bytes;
     }
+    announce_page_class(bytes, backing, note);
     slice_bytes = 1;   // sliced: one registration per layer
 }
 
