@@ -1,0 +1,80 @@
+HOSTMEM LEG0 iq2xs start Sat Nov  7 05:01:25 PM SAST 2026
+--- r1 gauge(engine-down): gauge: faulted-4K AnonHugePages 0 kB; collapse rc=0 errno=0 (ok) -> 262144 kB of 262144 kB (100%) | compact_fail=1180496
+=== LEG hm0-iq2xs-r1 health=1 17:01:56 compact_fail+6971 ===
+=== PROBE hm0-iq2xs-r1 | 2026-11-07 17:01:56 | log=/home/svg/LLM/strata-custom-2/logs/custom-iq3_s.log
+    warmup: 8 tok in 0.67s
+    A.short[1]: 220 tok in 3.17s = 69.4 t/s
+    A.short[2]: 220 tok in 1.29s = 170.3 t/s
+    A.short[3]: 220 tok in 1.10s = 200.4 t/s
+    A.short[4]: 220 tok in 1.10s = 199.3 t/s
+    A.short[5]: 220 tok in 1.10s = 199.1 t/s
+    A.short[6]: 220 tok in 1.00s = 220.0 t/s
+    fresh-long-prompt: 80 tok out in 1.60s
+    B.short[1]: 220 tok in 1.12s = 196.3 t/s
+    B.short[2]: 220 tok in 0.95s = 231.2 t/s
+    B.short[3]: 220 tok in 1.06s = 207.6 t/s
+    B.short[4]: 220 tok in 1.16s = 189.1 t/s
+    B.short[5]: 220 tok in 1.01s = 217.2 t/s
+    B.short[6]: 220 tok in 1.15s = 190.6 t/s
+SHORT-CLASS A/B   : before long prompt 176.4 t/s -> after 205.3 t/s (16%)
+M1 single-stream : 184.8 t/s (2000 tok in 10.82s)
+M2 pair          : 209.5 t/s aggregate (1800 tok in 8.59s)
+M2 6-conc        : 276.5 t/s aggregate (3600 tok in 13.02s)
+--- engine accounting, in order (ms/window is the degradation signal) ---
+M3d per-position : not printed (arm STRATA_SPEC_DEPTH=1 to publish accepted/tested by depth)
+=== PROBE END hm0-iq2xs-r1
+strata generate: expert arena read through the file cache (buffered (not Windows))
+strata generate: expert arena: cudaHostRegister PORTABLE ok; MAP_HUGETLB unavailable (needed 20164 2 MiB pages, vm.nr_hugepages=0); transparent huge pages NOT requested: only 1 GiB of free 2 MiB blocks for a 39 GiB arena, compaction would stall the load (STRATA_ARENA_THP=1 requests them anyway) (#2126)
+--- r2 gauge(engine-down): gauge: faulted-4K AnonHugePages 0 kB; collapse rc=0 errno=0 (ok) -> 262144 kB of 262144 kB (100%) | compact_fail=1187467
+=== LEG hm0-iq2xs-r2 health=1 17:03:18 compact_fail+13915 ===
+=== PROBE hm0-iq2xs-r2 | 2026-11-07 17:03:18 | log=/home/svg/LLM/strata-custom-2/logs/custom-iq3_s.log
+    warmup: 8 tok in 0.87s
+    A.short[1]: 220 tok in 2.13s = 103.3 t/s
+    A.short[2]: 220 tok in 1.15s = 190.8 t/s
+    A.short[3]: 220 tok in 1.11s = 198.6 t/s
+    A.short[4]: 220 tok in 1.02s = 214.8 t/s
+    A.short[5]: 220 tok in 1.01s = 217.9 t/s
+    A.short[6]: 220 tok in 1.09s = 201.3 t/s
+    fresh-long-prompt: 80 tok out in 0.51s
+    B.short[1]: 220 tok in 1.06s = 208.5 t/s
+    B.short[2]: 220 tok in 0.95s = 231.3 t/s
+    B.short[3]: 220 tok in 1.01s = 218.2 t/s
+    B.short[4]: 220 tok in 0.99s = 221.8 t/s
+    B.short[5]: 220 tok in 1.12s = 197.2 t/s
+    B.short[6]: 220 tok in 1.12s = 195.9 t/s
+SHORT-CLASS A/B   : before long prompt 187.8 t/s -> after 212.2 t/s (13%)
+M1 single-stream : 180.9 t/s (2000 tok in 11.06s)
+M2 pair          : 198.9 t/s aggregate (1800 tok in 9.05s)
+M2 6-conc        : 284.7 t/s aggregate (3600 tok in 12.65s)
+--- engine accounting, in order (ms/window is the degradation signal) ---
+M3d per-position : not printed (arm STRATA_SPEC_DEPTH=1 to publish accepted/tested by depth)
+=== PROBE END hm0-iq2xs-r2
+strata generate: expert arena read through the file cache (buffered (not Windows))
+strata generate: expert arena: cudaHostRegister PORTABLE ok; MAP_HUGETLB unavailable (needed 20164 2 MiB pages, vm.nr_hugepages=0); transparent huge pages NOT requested: only 2 GiB of free 2 MiB blocks for a 39 GiB arena, compaction would stall the load (STRATA_ARENA_THP=1 requests them anyway) (#2126)
+--- r3 gauge(engine-down): gauge: faulted-4K AnonHugePages 0 kB; collapse rc=0 errno=0 (ok) -> 262144 kB of 262144 kB (100%) | compact_fail=1201382
+=== LEG hm0-iq2xs-r3 health=1 17:04:37 compact_fail+8290 ===
+=== PROBE hm0-iq2xs-r3 | 2026-11-07 17:04:37 | log=/home/svg/LLM/strata-custom-2/logs/custom-iq3_s.log
+    warmup: 8 tok in 0.59s
+    A.short[1]: 220 tok in 1.91s = 115.4 t/s
+    A.short[2]: 220 tok in 1.06s = 207.3 t/s
+    A.short[3]: 220 tok in 1.09s = 201.7 t/s
+    A.short[4]: 220 tok in 1.00s = 221.0 t/s
+    A.short[5]: 220 tok in 1.22s = 180.2 t/s
+    A.short[6]: 220 tok in 1.10s = 200.2 t/s
+    fresh-long-prompt: 80 tok out in 0.47s
+    B.short[1]: 220 tok in 1.11s = 197.9 t/s
+    B.short[2]: 220 tok in 1.15s = 191.8 t/s
+    B.short[3]: 220 tok in 1.04s = 212.1 t/s
+    B.short[4]: 220 tok in 0.99s = 223.1 t/s
+    B.short[5]: 220 tok in 1.05s = 209.4 t/s
+    B.short[6]: 220 tok in 1.12s = 196.2 t/s
+SHORT-CLASS A/B   : before long prompt 187.6 t/s -> after 205.1 t/s (9%)
+M1 single-stream : 187.0 t/s (2000 tok in 10.69s)
+M2 pair          : 194.9 t/s aggregate (1800 tok in 9.23s)
+M2 6-conc        : 272.0 t/s aggregate (3600 tok in 13.23s)
+--- engine accounting, in order (ms/window is the degradation signal) ---
+M3d per-position : not printed (arm STRATA_SPEC_DEPTH=1 to publish accepted/tested by depth)
+=== PROBE END hm0-iq2xs-r3
+strata generate: expert arena read through the file cache (buffered (not Windows))
+strata generate: expert arena: cudaHostRegister PORTABLE ok; MAP_HUGETLB unavailable (needed 20164 2 MiB pages, vm.nr_hugepages=0); transparent huge pages NOT requested: only 5 GiB of free 2 MiB blocks for a 39 GiB arena, compaction would stall the load (STRATA_ARENA_THP=1 requests them anyway) (#2126)
+LEG0 iq2xs done Sat Nov  7 05:05:31 PM SAST 2026
