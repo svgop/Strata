@@ -51,11 +51,15 @@ A fresh boot wins by accident (pristine buddy lists). This architecture makes it
 
 Ordered by leverage-over-effort; every move independently reversible and law-17 gated.
 
-**M1 — the shadow store on huge folios (config-level, no engine change).**
-A dedicated tmpfs mounted `-o size=48G,huge=within_size` (unit: `campaign/strata-huge-tmpfs.service`, mount
-`/mnt/strata-huge`; `within_size` suits the written-once store). Owner: `campaign/shm-shadow.sh` (DST retarget)
-+ `launch-custom-iq3s-8081.sh` (+ UD launchers) tier-0 resolution + `STRATA_SHADOW_EXPERTS` env. Fallback tiers
-unchanged. Witness: `ShmemPmdMapped` ≈ 38 GiB in /proc/meminfo after the copy; store miss-path µs.
+**M1 — the shadow store on 2 MiB pages (config-level, no engine change).**
+Route settled by the root probe (2026-11-07): **shmem huge folios are dead on this kernel** — `huge=within_size`
+AND `huge=always`, write-fault AND `MADV_COLLAPSE`, all 0 kB promoted at root (the kernel docs grade shmem THP
+mature; the box voted no — evidence over docs). The store therefore lives on **hugetlbfs**
+(`campaign/strata-huge-store.service`, `/mnt/strata-huge`, uid/gid=svg, `size=40G`): 2 MiB pages **by
+construction** — no THP policy, no collapse, unswappable, unfragmentable. The copy
+(`shm-shadow.sh`, stat-based verify — du rounds hugetlbfs up and never matches) draws from the same
+reserved pool the engines' arenas draw from. Owners: the unit + `shm-shadow.sh` + the three launchers'
+tier-0 (file-presence guarded, unchanged). Witness: `HugePages_Free` delta across the copy; store miss-path µs.
 
 **M2 — supply-side sysctls (one line, root).** `vm.compaction_proactiveness=20→40` via
 `/etc/sysctl.d/90-strata-vm.conf` (digest-3 range 40-50; watch kcompactd CPU). This raises the free-2-MiB-block
@@ -82,13 +86,18 @@ box) and `MemorySwapMax=0` (hard-opt the engine out of zram while zram keeps ser
 zram-refill incident class at the source. Starting value `MemoryLow=120G`, tuned down if desktop pressure
 appears. Owner: the three launchers.
 
-**M5 — the endgame, decision-gated: a boot-reserved hugetlb core.** The engine's `MAP_HUGETLB` path is already
-written and engages alone once `nr_hugepages` covers the arena; `/dev/hugepages` is already mounted. Static
-cost (the standing lane's arena ~38-56 GiB + store 38 GiB ≈ the 56320-page class the DS-era sizing note
-already carried), armed at boot (never runtime on a fragmented box — silently partial per kernel docs, never
-surplus overcommit). Adopted **only if M1-M4 leave a measured residual** in the aging battery. Under the same
-gate: arm-or-delete the dead shared-arena machinery, and the mmap-not-anon direction for staging
-(digest-2's ollama invariant: file-backed beats anon for CPU offload).
+**M5 — the boot-reserved 2 MiB core (PROMOTED to primary after the probe killed the shmem route).**
+One pool serves both organs: the store (M1, hugetlbfs) and the engines' arenas — the tree's `MAP_HUGETLB`
+path engages alone once `nr_hugepages` covers the request. **45056 pages (88 GiB)** covers the standing
+rotation: store ~38 GiB + GSQ complement 37.6 GiB (T35 C2, M3-armed) or UD-IQ2_XS arena 39.4 GiB + KV shadow
+~3 GiB, with slack. Arming: `campaign/91-strata-hugepages.conf` in `/etc/sysctl.d/` — at boot the buddy is
+pristine and the reservation is whole; at **runtime** it can come up short (silently partial, kernel docs), so
+the runtime path is: engine down → `compact_memory` once → raise in steps → read the achieved count back.
+Engines stop/start return whole pages to the pool — restart is a perfect re-arm, forever, and nothing the box
+does can fragment the pool afterward. The 94 GiB UD-IQ4_XS config and DS boots need their own pool policy
+(release-for-DS / raise-to-49152 at boot) — decided at their ladder legs, named in the sizing table.
+Under the same M5 gate: arm-or-delete the dead shared-arena machinery, and the mmap-not-anon staging
+direction (digest-2's ollama invariant: file-backed beats anon for CPU offload).
 
 ## Sizing (184 GiB box)
 

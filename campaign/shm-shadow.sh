@@ -16,7 +16,8 @@ if mountpoint -q /mnt/strata-huge 2>/dev/null; then
   DST_ROOT=/mnt/strata-huge
 fi
 DST=$DST_ROOT/strata-shadow-q2_0
-echo "shm-shadow: tier $DST_ROOT$([ "$DST_ROOT" = /mnt/strata-huge ] && echo ' (huge=within_size)')"
+hp0=$(awk '/^HugePages_Free:/{print $2}' /proc/meminfo)
+echo "shm-shadow: tier $DST_ROOT ($(stat -f -c %T "$DST_ROOT" 2>/dev/null || echo fs))"
 
 need=$(du -sB1 "$SRC" | cut -f1)
 avail=$(df -B1 --output=avail "$DST_ROOT" | tail -1 | tr -dc '0-9')
@@ -31,7 +32,9 @@ fast_ok() {
   local a b
   a=$(find "$SRC" -type f | wc -l); b=$(find "$DST" -type f | wc -l)
   [ "$a" = "$b" ] || return 1
-  a=$(du -sB1 "$SRC" | cut -f1); b=$(du -sB1 "$DST" | cut -f1)
+  # stat-based (du rounds hugetlbfs allocation up to whole 2 MiB pages and would never match)
+  a=$(find "$SRC" -type f -printf '%s\n' | awk '{s+=$1} END{print s+0}')
+  b=$(find "$DST" -type f -printf '%s\n' | awk '{s+=$1} END{print s+0}')
   [ "$a" = "$b" ] || return 1
   return 0
 }
@@ -51,10 +54,15 @@ done < <(find "$SRC" -type f)
 [ "$(find "$SRC" -type f | wc -l)" = "$(find "$DST" -type f | wc -l)" ] || { echo "shm-shadow: FILE COUNT MISMATCH"; exit 1; }
 [ "$bad" = 0 ] || exit 1
 
-# M1: rsync's write() path faults 4K folios even on the huge mount; MADV_COLLAPSE (kernel 6.1+)
-# promotes them to 2 MiB where the box has supply.  Best-effort by design: a refusal leaves the
-# 4K store (exactly the old class) and the engine maps whatever is in the page cache either way.
-if [ "$DST_ROOT" = /mnt/strata-huge ]; then
+# The store's page class, by mount type.  hugetlbfs: pages are 2 MiB by construction - nothing to
+# promote; the witness is the pool draw (HugePages_Free delta across the copy).  tmpfs (the
+# /dev/shm tier, or a future kernel where shmem folios actually work): rsync's write() path
+# faults 4K folios; MADV_COLLAPSE promotes where the box has supply - best-effort by design, a
+# refusal leaves exactly the old 4K class.
+if [ "$DST_ROOT" = /mnt/strata-huge ] && [ "$(stat -f -c %T "$DST_ROOT" 2>/dev/null)" = hugetlbfs ]; then
+  hp1=$(awk '/^HugePages_Free:/{print $2}' /proc/meminfo)
+  echo "shm-shadow: store on hugetlbfs - 2 MiB by construction (pool draw $((hp0 - hp1)) pages, ${hp1} free)"
+elif [ "$DST_ROOT" = /mnt/strata-huge ]; then
   pmd0=$(awk '/^ShmemPmdMapped:/{print $2}' /proc/meminfo)
   rc=0
   python3 - "$DST/experts.bin" <<'PY' 2>/dev/null || rc=$?
