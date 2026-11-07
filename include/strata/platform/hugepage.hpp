@@ -68,13 +68,21 @@ struct HugeMapping {
 #if defined(__linux__)
 
 /// mmap a region for `bytes` on 2 MiB pages: the reserved pool first, the THP madvise fallback second.
+/// Pool priority mirrors pinned.cu: only >= 8 GiB streaming organs draw from the reserved pool by
+/// default (measured 2026-11-07: ~90 per-layer KV host shadows x 0.26 GiB drew 23.4 GiB in the first
+/// seconds of boot and starved the 37.6 GiB expert complement's whole-mapping cover check).
+/// STRATA_POOL_SMALL_ARENAS=1 opts small mappings in when the pool has slack;
 /// STRATA_NO_LARGEPAGES skips the pool attempt (the same-run A/B switch pinned.cu honors).
 inline HugeMapping huge_alloc(size_t bytes) {
     HugeMapping out;
     const size_t page = 2ull << 20;
     if (bytes == 0) return out;
     const size_t rounded = (bytes + page - 1) / page * page;
-    if (std::getenv("STRATA_NO_LARGEPAGES") == nullptr) {
+    static const bool pool_small = [] {
+        const char* v = std::getenv("STRATA_POOL_SMALL_ARENAS");
+        return v != nullptr && v[0] != '\0' && v[0] != '0';
+    }();
+    if (std::getenv("STRATA_NO_LARGEPAGES") == nullptr && (rounded >= (8ull << 30) || pool_small)) {
         void* p = mmap(nullptr, rounded, PROT_READ | PROT_WRITE,
                        MAP_PRIVATE | MAP_ANONYMOUS | MAP_HUGETLB | MAP_HUGE_2MB, -1, 0);
         if (p != MAP_FAILED) {   // 2 MiB-aligned and -sized by construction; no madvise needed
