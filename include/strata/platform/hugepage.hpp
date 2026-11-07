@@ -37,6 +37,28 @@ inline bool hugepage_arenas_enabled() {
     return on;
 }
 
+#if defined(__linux__)
+/// True when the reserved 2 MiB pool can cover `bytes` whole (MAP_HUGETLB is all-or-nothing per
+/// mapping).  Read from /proc/meminfo at call time - the pool shrinks as other organs draw it.
+inline bool huge_pool_covers(size_t bytes) {
+    const size_t page = 2ull << 20;
+    const size_t rounded = (bytes + page - 1) / page * page;
+    uint64_t free_kib = 0;
+    if (std::ifstream f("/proc/meminfo"); f) {
+        std::string line;
+        while (std::getline(f, line))
+            if (line.rfind("HugePages_Free:", 0) == 0) {
+                unsigned long n = 0;
+                if (std::sscanf(line.c_str(), "HugePages_Free: %lu", &n) == 1) free_kib = n;
+                break;
+            }
+    }
+    return free_kib * (page / 1024) >= rounded / 1024;
+}
+#else
+inline bool huge_pool_covers(size_t) { return false; }
+#endif
+
 struct HugeMapping {
     void* addr = nullptr;   ///< the 2 MiB-aligned mapping, null when the allocation failed
     size_t bytes = 0;       ///< its rounded size (a multiple of 2 MiB)

@@ -3533,15 +3533,20 @@ bool FileExpertSource::pin_cache_complement(
             }
         }
 #endif
+        // HOSTMEM-NO-REBOOT (2026-11-07): with the arenas armed AND the reserved pool able to cover the
+        // complement whole, take the PACED 2 MiB path even when one-shot cudaHostAlloc would succeed -
+        // cudaHostAlloc is 4 KiB page-locked memory, the degradation organ this campaign removes.  The
+        // original T35 C2 note kept the one-shot path because one cudaHostRegister over a THP mapping
+        // stalled boots for minutes (100% CPU spin); the pool route is different: 2 MiB pages fault
+        // BEFORE the registration, the composition the UD expert arena proves at 39.4 GiB scale.
+        if (pin && !paced && strata::platform::hugepage_arenas_enabled() &&
+            strata::platform::huge_pool_covers((size_t) bytes)) {
+            paced = true;
+            std::fprintf(stderr, "FileExpertSource: STRATA_HUGEPAGE_ARENAS=1: the complement takes the paced "
+                                 "2 MiB pool path (the reserved pool covers it whole)\n");
+        }
         if (pin && !paced) {
-            // T35 C2: the 2 MiB-page mapping is used on the PACED path below (the in-tree step-then-register path,
-            // whose one registration is already the cost this boot pays); the one-shot cudaHostAlloc path keeps the
-            // driver's allocation, because one cudaHostRegister of tens of GiB over an mmap was measured to stall
-            // the boot for minutes spinning at 100% CPU.  A one-line note, not a silent skip.
-            if (strata::platform::hugepage_arenas_enabled()) {
-                std::fprintf(stderr, "FileExpertSource: STRATA_HUGEPAGE_ARENAS=1: the complement keeps cudaHostAlloc "
-                                     "on the one-shot path (the paced path takes 2 MiB pages)\n");
-            }
+            // (one-shot cudaHostAlloc path - the pool could not cover it, or the arenas are off)
             if (arena == nullptr) {
             const cudaError_t allocated = cudaHostAlloc(&arena, (size_t) bytes,
                                                          cudaHostAllocMapped | cudaHostAllocPortable);
