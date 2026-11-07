@@ -234,10 +234,24 @@ void* reserve(uint64_t bytes, PageBacking& got, std::string& note, const std::st
         return (uint8_t*) map + kSharedArenaHeaderBytes;
     }
 
+    // Pool priority (HOSTMEM-NO-REBOOT, measured 2026-11-07): the reserved pool serves the BIG
+    // streaming organs first.  Without this gate, 24 sub-GiB convenience arenas (session and
+    // conversation slots, 0.97 GiB each) drew 23.3 GiB of the pool BEFORE the 37.6 GiB expert
+    // complement allocated, so its whole-mapping cover check failed and it stayed on 4 KB
+    // cudaHostAlloc - first-come-first-served with no priority starves the hot organ.  Default:
+    // arenas >= 8 GiB draw from the pool, smaller ones stay general/THP.  STRATA_POOL_SMALL_ARENAS=1
+    // opts the small arenas back in when the pool has slack.
+    static const bool pool_small = [] {
+        const char* v = std::getenv("STRATA_POOL_SMALL_ARENAS");
+        return v != nullptr && v[0] != '\0' && v[0] != '0';
+    }();
     // STRATA_NO_LARGEPAGES=1 is the same-run A/B switch the Windows branch documents; honor it
     // here too, so the large-page path can be compared without changing the pool or rebooting.
     if (std::getenv("STRATA_NO_LARGEPAGES") != nullptr) {
         note = "large pages skipped (STRATA_NO_LARGEPAGES); using 4 KB pages";
+    } else if (bytes < (8ull << 30) && !pool_small) {
+        note = "reserved pool skipped for a " + std::to_string(bytes >> 20) +
+               " MiB arena (pool priority: the big streaming organs draw first)";
     } else {
         void* p = mmap(nullptr, bytes, PROT_READ | PROT_WRITE,
                        MAP_PRIVATE | MAP_ANONYMOUS | MAP_HUGETLB | MAP_HUGE_2MB, -1, 0);
