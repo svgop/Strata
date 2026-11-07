@@ -1,0 +1,108 @@
+#!/usr/bin/bash
+# strata-gpu-lock v3 — floor-range clock management while a Strata engine runs.
+#
+# v2's failure (measured 2026-11-07): it HARD-locked mid (1800 = min AND max) after 30 s of
+# quiet, and the card cannot boost past a hard lock until the service's 3 s poll sees load —
+# every burst from a gap ran seconds at 1780 MHz under 94-98% utilization (the clockwatch
+# proof), the uniform ~30% lane inflation and the live first-token sluggishness.
+#
+# v3: two states, and the HARDWARE owns the boost decision.
+#   off:   no engine listening → clocks released (DVFS, lowest power).
+#   floor: engine listening → -lgc SM_FLOOR,SM_MAX  -lmc MEM_FLOOR,MEM_MAX
+# A RANGE lock: idle sits at the floor (never the lazy 210 MHz), boosting to max is a
+# microsecond DVFS step inside the silicon — no service latency in the boost path.  This is
+# NVIDIA's recommended pattern for latency-sensitive serving; a full pin (max = min) is for
+# determinism benchmarks only.  Average power is LOWER than v2's busy-max (idle stays at the
+# floor), and the thermal guard can shed the floor if the card runs hot.
+#
+# Engine absence stays the port contract (immune to cmdline matches).
+# Config: /etc/sysconfig/strata-gpu-lock (SIGHUP reload via systemctl reload).
+#   SM_FLOOR / SM_MAX / MEM_FLOOR / MEM_MAX / TEMP_SHED / TEMP_RESUME / PORTS / GRACE / POLL
+set -u
+PATH=/usr/bin:/bin:/usr/sbin:/sbin
+
+NSMI=/usr/bin/nvidia-smi
+PORTS="8080 8081"
+GRACE=45
+POLL=3
+SM_FLOOR=1800
+MEM_FLOOR=7001
+SM_MAX=3135
+MEM_MAX=14001
+TEMP_SHED=83      # C: shed the floor (release to DVFS) at or above this
+TEMP_RESUME=78    # C: re-apply the floor below this
+DRY=${DRY:-0}
+TAG=${TAG:-strata-gpu-lock}
+[ -r /etc/sysconfig/strata-gpu-lock ] && . /etc/sysconfig/strata-gpu-lock
+SM_MAX=${SM_CLOCK:-$SM_MAX}        # v1/v2 names still honored
+MEM_MAX=${MEM_CLOCK:-$MEM_MAX}
+SM_FLOOR=${SM_MID:-$SM_FLOOR}      # v2's "mid" becomes the floor
+
+log() { logger -t "$TAG" "$*"; }
+
+engine_running() {
+    local p
+    for p in $PORTS; do
+        ss -tlnH "sport = :$p" 2>/dev/null | grep -q . && return 0
+    done
+    return 1
+}
+
+gpu_temp() {
+    local t
+    t=$("$NSMI" --query-gpu=temperature.gpu --format=csv,noheader,nounits 2>/dev/null | head -1)
+    echo "${t:-0}"
+}
+
+apply() {   # floor | off
+    [ "$DRY" = 1 ] && return 0
+    [ -x "$NSMI" ] || return 1
+    case "$1" in
+        floor) "$NSMI" -pm 1 >/dev/null 2>&1 || return 1
+               "$NSMI" -lgc "$SM_FLOOR,$SM_MAX" >/dev/null 2>&1 || return 1
+               "$NSMI" -lmc "$MEM_FLOOR,$MEM_MAX" >/dev/null 2>&1 || return 1 ;;
+        off)   "$NSMI" -rgc >/dev/null 2>&1
+               "$NSMI" -rmc >/dev/null 2>&1 ;;
+    esac
+    return 0
+}
+
+trap 'apply off; log "service stopped — clocks released"; exit 0' TERM INT
+trap '
+      . /etc/sysconfig/strata-gpu-lock 2>/dev/null || true
+      SM_MAX=${SM_CLOCK:-3135}; MEM_MAX=${MEM_CLOCK:-14001}; SM_FLOOR=${SM_MID:-$SM_FLOOR}
+      if [ "$state" != off ]; then apply floor && log "reload — floor re-applied (${SM_FLOOR}-${SM_MAX} sm, ${MEM_FLOOR}-${MEM_MAX} mem)"; fi' HUP
+
+state=off
+gone=0
+shed=0
+log "watching v3 (floor ${SM_FLOOR}-${SM_MAX} sm / ${MEM_FLOOR}-${MEM_MAX} mem while an engine listens; boost is the hardware's; thermal shed ${TEMP_SHED}C, resume ${TEMP_RESUME}C, engine grace ${GRACE}s, poll ${POLL}s)"
+while :; do
+    if engine_running; then
+        gone=0
+        temp=$(gpu_temp)
+        if [ "$temp" -ge "$TEMP_SHED" ] && [ "$shed" -eq 0 ]; then
+            apply off; shed=1
+            log "thermal shed at ${temp}C — clocks released until ${TEMP_RESUME}C"
+        elif [ "$shed" -eq 1 ] && [ "$temp" -le "$TEMP_RESUME" ]; then
+            shed=0
+            if apply floor; then log "cooled to ${temp}C — floor re-applied (${SM_FLOOR}-${SM_MAX})"; fi
+        elif [ "$shed" -eq 0 ] && [ "$state" != floor ]; then
+            if apply floor; then
+                state=floor
+                log "engine listening — clock floor ${SM_FLOOR}-${SM_MAX} (boost is instant, the card decides)"
+            fi
+        fi
+    else
+        shed=0
+        if [ "$state" != off ]; then
+            gone=$((gone + POLL))
+            if [ "$gone" -ge "$GRACE" ]; then
+                apply off
+                state=off
+                log "engine gone ${GRACE}s — clocks released"
+            fi
+        fi
+    fi
+    sleep "$POLL"
+done
