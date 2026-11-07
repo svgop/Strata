@@ -1,0 +1,80 @@
+HOSTMEM LEG1 iq2xs start Sat Nov  7 07:33:48 PM SAST 2026
+--- r1 gauge(engine-down): gauge: faulted-4K AnonHugePages 0 kB; collapse rc=0 errno=0 (ok) -> 262144 kB of 262144 kB (100%) | compact_fail=1250023
+=== LEG hm1-iq2xs-r1 health=1 19:34:16 compact_fail+3748 ===
+=== PROBE hm1-iq2xs-r1 | 2026-11-07 19:34:16 | log=/home/svg/LLM/strata-custom-2/logs/custom-iq3_s.log
+    warmup: 8 tok in 0.52s
+    A.short[1]: 220 tok in 2.60s = 84.6 t/s
+    A.short[2]: 220 tok in 1.14s = 193.8 t/s
+    A.short[3]: 220 tok in 0.98s = 224.0 t/s
+    A.short[4]: 220 tok in 0.98s = 223.8 t/s
+    A.short[5]: 220 tok in 1.12s = 197.0 t/s
+    A.short[6]: 220 tok in 1.09s = 201.1 t/s
+    fresh-long-prompt: 80 tok out in 1.59s
+    B.short[1]: 220 tok in 1.07s = 205.7 t/s
+    B.short[2]: 220 tok in 1.10s = 200.6 t/s
+    B.short[3]: 220 tok in 1.04s = 210.9 t/s
+    B.short[4]: 220 tok in 1.25s = 175.6 t/s
+    B.short[5]: 220 tok in 1.00s = 220.8 t/s
+    B.short[6]: 220 tok in 1.00s = 219.0 t/s
+SHORT-CLASS A/B   : before long prompt 187.4 t/s -> after 205.4 t/s (10%)
+M1 single-stream : 189.2 t/s (2000 tok in 10.57s)
+M2 pair          : 200.2 t/s aggregate (1800 tok in 8.99s)
+M2 6-conc        : 274.8 t/s aggregate (3600 tok in 13.10s)
+--- engine accounting, in order (ms/window is the degradation signal) ---
+M3d per-position : not printed (arm STRATA_SPEC_DEPTH=1 to publish accepted/tested by depth)
+=== PROBE END hm1-iq2xs-r1
+strata generate: expert arena read through the file cache (buffered (not Windows))
+strata generate: expert arena: cudaHostRegister PORTABLE ok; hugetlb 2 MB pages
+--- r2 gauge(engine-down): gauge: faulted-4K AnonHugePages 0 kB; collapse rc=-1 errno=12 (Cannot allocate memory) -> 28672 kB of 262144 kB (11%) | compact_fail=1253771
+=== LEG hm1-iq2xs-r2 health=1 19:35:34 compact_fail+3148 ===
+=== PROBE hm1-iq2xs-r2 | 2026-11-07 19:35:34 | log=/home/svg/LLM/strata-custom-2/logs/custom-iq3_s.log
+    warmup: 8 tok in 0.57s
+    A.short[1]: 220 tok in 2.72s = 80.9 t/s
+    A.short[2]: 220 tok in 1.12s = 197.0 t/s
+    A.short[3]: 220 tok in 1.35s = 162.7 t/s
+    A.short[4]: 220 tok in 1.09s = 202.6 t/s
+    A.short[5]: 220 tok in 1.17s = 188.2 t/s
+    A.short[6]: 220 tok in 1.15s = 192.0 t/s
+    fresh-long-prompt: 80 tok out in 0.70s
+    B.short[1]: 220 tok in 1.22s = 180.0 t/s
+    B.short[2]: 220 tok in 1.16s = 188.9 t/s
+    B.short[3]: 220 tok in 1.03s = 212.7 t/s
+    B.short[4]: 220 tok in 1.13s = 194.0 t/s
+    B.short[5]: 220 tok in 1.03s = 214.1 t/s
+    B.short[6]: 220 tok in 1.03s = 214.3 t/s
+SHORT-CLASS A/B   : before long prompt 170.6 t/s -> after 200.7 t/s (18%)
+M1 single-stream : 196.2 t/s (2000 tok in 10.19s)
+M2 pair          : 201.4 t/s aggregate (1800 tok in 8.94s)
+M2 6-conc        : 280.3 t/s aggregate (3600 tok in 12.84s)
+--- engine accounting, in order (ms/window is the degradation signal) ---
+M3d per-position : not printed (arm STRATA_SPEC_DEPTH=1 to publish accepted/tested by depth)
+=== PROBE END hm1-iq2xs-r2
+strata generate: expert arena read through the file cache (buffered (not Windows))
+strata generate: expert arena: cudaHostRegister PORTABLE ok; hugetlb 2 MB pages
+--- r3 gauge(engine-down): gauge: faulted-4K AnonHugePages 0 kB; collapse rc=-1 errno=12 (Cannot allocate memory) -> 65536 kB of 262144 kB (25%) | compact_fail=1256919
+=== LEG hm1-iq2xs-r3 health=1 19:36:51 compact_fail+3682 ===
+=== PROBE hm1-iq2xs-r3 | 2026-11-07 19:36:51 | log=/home/svg/LLM/strata-custom-2/logs/custom-iq3_s.log
+    warmup: 8 tok in 1.00s
+    A.short[1]: 220 tok in 3.00s = 73.2 t/s
+    A.short[2]: 220 tok in 1.15s = 191.5 t/s
+    A.short[3]: 220 tok in 1.09s = 201.3 t/s
+    A.short[4]: 220 tok in 1.03s = 213.5 t/s
+    A.short[5]: 220 tok in 1.13s = 194.7 t/s
+    A.short[6]: 220 tok in 1.12s = 196.3 t/s
+    fresh-long-prompt: 80 tok out in 0.74s
+    B.short[1]: 220 tok in 1.17s = 188.1 t/s
+    B.short[2]: 220 tok in 1.05s = 209.4 t/s
+    B.short[3]: 220 tok in 1.13s = 194.2 t/s
+    B.short[4]: 220 tok in 1.21s = 181.5 t/s
+    B.short[5]: 220 tok in 1.04s = 211.2 t/s
+    B.short[6]: 220 tok in 1.01s = 218.2 t/s
+SHORT-CLASS A/B   : before long prompt 178.4 t/s -> after 200.4 t/s (12%)
+M1 single-stream : 194.3 t/s (2000 tok in 10.29s)
+M2 pair          : 202.0 t/s aggregate (1800 tok in 8.91s)
+M2 6-conc        : 267.0 t/s aggregate (3600 tok in 13.48s)
+--- engine accounting, in order (ms/window is the degradation signal) ---
+M3d per-position : not printed (arm STRATA_SPEC_DEPTH=1 to publish accepted/tested by depth)
+=== PROBE END hm1-iq2xs-r3
+strata generate: expert arena read through the file cache (buffered (not Windows))
+strata generate: expert arena: cudaHostRegister PORTABLE ok; hugetlb 2 MB pages
+LEG1 iq2xs done Sat Nov  7 07:37:46 PM SAST 2026
