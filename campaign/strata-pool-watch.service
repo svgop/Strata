@@ -1,0 +1,19 @@
+# strata-pool-watch.service - the boot-time pool assert (kernel-round2 digest, action 5).
+# The reservation is whole-or-silent-partial; silent partial is a MEASURED failure mode on this box
+# (24369 of 45056 at runtime, 2026-11-07).  A failed assert shows red in systemctl status - the
+# engines then degrade loudly per the ARENA PAGES banner, but the box tells you at boot, not in a
+# lane chart days later.  Threshold: 48000 pages (the UD-IQ4_XS line) fails; anything short of the
+# full 54272 warns.  Install:
+#   sudo cp campaign/strata-pool-watch.service /usr/lib/systemd/system/
+#   sudo systemctl daemon-reload && sudo systemctl enable strata-pool-watch
+[Unit]
+Description=Strata reserved-pool boot assert (the 2 MiB pool must be whole)
+After=multi-user.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/bin/bash -c 'n=$(cat /proc/sys/vm/nr_hugepages); if [ "$n" -lt 48000 ]; then echo "STRATA POOL SHORT: $n of 54272 2MiB pages armed - below the IQ4_XS line; engines degrade loudly (ARENA PAGES banner), investigate before serving"; exit 1; elif [ "$n" -lt 54272 ]; then echo "STRATA POOL PARTIAL: $n of 54272 pages - DS all-or-none (needs ~53900) may fall back, Qwen configs fit"; else echo "STRATA POOL OK: $n/54272 pages (106 GiB)"; fi'
+
+[Install]
+WantedBy=multi-user.target
