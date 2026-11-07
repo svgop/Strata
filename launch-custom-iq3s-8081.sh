@@ -59,9 +59,15 @@ export STRATA_ADAPT_EARLY="${STRATA_ADAPT_EARLY:-1}"  # F-332 ADOPTED (10-25): t
 # second artifact: RAM-resident pages are THP-eligible and never evicted, so the pool pays no page faults
 # (F-365: 2.6M minor faults per probe leg on the page-cached copy).  Rebuilt by campaign/shm-shadow.sh,
 # which this launcher calls below, and which is a no-op when the copy is intact.
+# M1 (campaign/HOSTMEM-NO-REBOOT.md, 2026-11-07): tier 0 is the huge-folio mount /mnt/strata-huge
+# (strata-huge-tmpfs.service, huge=within_size) - 2 MiB shmem folios; /dev/shm never had one on
+# this box (shmem_enabled=never).  Guarded by file presence: no mount, no behavior change.
 _SHADOW_CANON=/home/svg/LLM/data/packs/q2_0
+_SHADOW_HUGE=/mnt/strata-huge/strata-shadow-q2_0
 _SHADOW_TMPFS=/dev/shm/strata-shadow-q2_0
-if [ -f "$_SHADOW_TMPFS/experts.bin" ]; then
+if [ -f "$_SHADOW_HUGE/experts.bin" ]; then
+  _shadow="$_SHADOW_HUGE"           # M1 huge-folio placement cache: the fast one, 2 MiB folios
+elif [ -f "$_SHADOW_TMPFS/experts.bin" ]; then
   _shadow="$_SHADOW_TMPFS"          # placement cache present: the fast one
 elif [ -f "$_SHADOW_CANON/experts.bin" ]; then
   _shadow="$_SHADOW_CANON"          # canonical artifact, page-cached (works; slower misses)
