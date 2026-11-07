@@ -96,6 +96,7 @@ gone=0
 shed=0
 guard=0
 log "watching v4 (floor ${SM_FLOOR}-${SM_MAX} sm / ${MEM_FLOOR}-${MEM_MAX} mem while an engine listens; boost is the hardware's; thermal shed ${TEMP_SHED}C, resume ${TEMP_RESUME}C, engine grace ${GRACE}s, poll ${POLL}s, watchdog dead-man on)"
+systemd-notify --ready 2>/dev/null || true   # Type=notify: without READY=1 systemd times the start out
 while :; do
     wd_ping
     if engine_running; then
