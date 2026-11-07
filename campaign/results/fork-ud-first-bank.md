@@ -102,3 +102,13 @@ The operator reported GSQ "regressed extremely hard". The full forensic arc:
    compactions; AnonHugePages 120 MB of 103 GB) - a REBOOT is the clean eliminator and the
    last unchecked state variable. The banks (one afternoon's 2-leg means) may also be a
    favorable-window artifact; the law's re-bank discipline decides on the post-reboot box.
+
+## Corrections from the clock-governance research (2026-11-07 digest)
+
+- clocks_event_reasons 0x400 on this driver = nvmlClocksEventReasonReliability (the V/F
+  margin trim), NOT idle (GpuIdle is 0x1). Earlier readings attributed 0x400 to idle.
+- 3135 MHz is decorative: sustained decode boost is ~2830±30 (pviol=1, the 575W SW cap
+  trims the top bins). Banks should expect ~2850 as the ceiling.
+- v3's design validated against driver source; v4 deltas implemented (device scoping,
+  notify-watchdog dead-man, event-reason guardrail 0xC8, SUPPORTED_CLOCKS runtime ban,
+  -ac confirmed dead).

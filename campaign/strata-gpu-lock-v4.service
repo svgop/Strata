@@ -1,0 +1,26 @@
+# strata-gpu-lock.service v4 — Type=notify + WatchdogSec: a hung service is killed and its
+# ExecStopPost release always runs (the research digest's dead-man delta).  Install:
+#   sudo cp campaign/strata-gpu-lock-v4 /usr/libexec/strata-gpu-lock
+#   sudo cp campaign/strata-gpu-lock-v4.service /usr/lib/systemd/system/strata-gpu-lock.service
+#   sudo systemctl daemon-reload && sudo systemctl restart strata-gpu-lock
+[Unit]
+Description=Strata GPU clock lock (sustained clocks while a Strata engine runs)
+Documentation=man:nvidia-smi(1)
+After=multi-user.target
+Wants=nvidia-persistenced.service
+
+[Service]
+Type=notify
+NotifyAccess=main
+WatchdogSec=30
+ExecStartPre=-/usr/bin/nvidia-smi -i 0 -rgc
+ExecStartPre=-/usr/bin/nvidia-smi -i 0 -rmc
+ExecStart=/usr/libexec/strata-gpu-lock
+ExecReload=/bin/kill -HUP $MAINPID
+ExecStopPost=/usr/bin/nvidia-smi -i 0 -rgc
+ExecStopPost=/usr/bin/nvidia-smi -i 0 -rmc
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

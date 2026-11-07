@@ -1,0 +1,140 @@
+#!/usr/bin/bash
+# strata-gpu-lock v4 — floor-range clock management while a Strata engine runs.
+#
+# v2's failure (measured 2026-11-07): it HARD-locked mid (1800 = min AND max) after 30 s of
+# quiet, and the card cannot boost past a hard lock until the service's 3 s poll sees load —
+# every burst from a gap ran seconds at 1780 MHz under 94-98% utilization (the clockwatch
+# proof), a uniform ~30% lane loss. v3 fixed the architecture: a RANGE lock with the
+# hardware owning the boost decision; the research digest (2026-11-07-gpu-clock-governance)
+# validated the design against driver source and priced the deltas v4 now carries:
+#   - `-i 0` device scoping on every nvidia-smi call (v3's writes were global-scope)
+#   - WATCHDOG dead-man: Type=notify + systemd-notify WATCHDOG=1 each loop — a hung service
+#     is killed and restarted by systemd, and the ExecStopPost release always runs
+#   - clocks_event_reasons guardrail: 0x8 (sw power cap) | 0x40 (hw slowdown) | 0x80 (sync
+#     boost) => the card is protecting itself; log it, and the thermal shed path handles it
+#     (0x400 = the RELIABILITY derate (V/F trim), NOT a fault: quiet-with-floor reads exactly
+#     0x400 on this driver - it is normal and never shed)
+#   - SUPPORTED_CLOCKS is banned from the runtime loop (GSP hang vector on open-module 610.x
+#     GB203; this GB202/615 box ran it clean but the ban is cheap) — grid values are config
+#   - `-ac` application clocks stay unused: dead end, removed in CUDA 14
+# States (v3's, unchanged):
+#   off:   no engine listening → clocks released (DVFS, lowest power)
+#   floor: engine listening → -lgc SM_FLOOR,SM_MAX  -lmc MEM_FLOOR,MEM_MAX
+# A RANGE lock: idle sits at the floor (never the lazy 210 MHz), boosting to max is a
+# microsecond DVFS step inside the silicon — no service latency in the boost path.  The
+# card's sustained boost under decode is ~2830±30 MHz (pviol=1, the 575 W SW cap trims the
+# top bins) — the ceiling is a limit, not a promise; bank against ~2850.
+#
+# Engine absence stays the port contract (immune to cmdline matches).
+# Config: /etc/sysconfig/strata-gpu-lock (SIGHUP reload via systemctl reload).
+#   SM_FLOOR / SM_MAX / MEM_FLOOR / MEM_MAX / TEMP_SHED / TEMP_RESUME / PORTS / GRACE / POLL
+set -u
+PATH=/usr/bin:/bin:/usr/sbin:/sbin
+
+NSMI=/usr/bin/nvidia-smi
+DEV=0
+PORTS="8080 8081"
+GRACE=45
+POLL=3
+SM_FLOOR=1800
+MEM_FLOOR=7001
+SM_MAX=3135
+MEM_MAX=14001
+TEMP_SHED=83      # C: shed the floor (release to DVFS) at or above this
+TEMP_RESUME=78    # C: re-apply the floor below this
+DRY=${DRY:-0}
+TAG=${TAG:-strata-gpu-lock}
+[ -r /etc/sysconfig/strata-gpu-lock ] && . /etc/sysconfig/strata-gpu-lock
+SM_MAX=${SM_CLOCK:-$SM_MAX}        # v1/v2 names still honored
+MEM_MAX=${MEM_CLOCK:-$MEM_MAX}
+SM_FLOOR=${SM_MID:-$SM_FLOOR}      # v2's "mid" becomes the floor
+
+log() { logger -t "$TAG" "$*"; }
+
+# the watchdog dead-man: systemd kills a hung service (Type=notify, WatchdogSec in the unit)
+wd_ping() { systemd-notify WATCHDOG=1 2>/dev/null || true; }
+
+engine_running() {
+    local p
+    for p in $PORTS; do
+        ss -tlnH "sport = :$p" 2>/dev/null | grep -q . && return 0
+    done
+    return 1
+}
+
+# one batched read: temp + the event-reason guardrail bits (no SUPPORTED_CLOCKS ever)
+gpu_read() {   # sets gpu_temp / gpu_reason
+    local out
+    out=$("$NSMI" -i "$DEV" --query-gpu=temperature.gpu,clocks_event_reasons.active --format=csv,noheader,nounits 2>/dev/null | head -1)
+    gpu_temp=${out%%,*}
+    gpu_reason=${out#*,}
+    gpu_temp=${gpu_temp:-0}
+    gpu_reason=$(( gpu_reason + 0 ))   # hex mask in, integer out; empty -> 0
+}
+
+apply() {   # floor | off
+    [ "$DRY" = 1 ] && return 0
+    [ -x "$NSMI" ] || return 1
+    case "$1" in
+        floor) "$NSMI" -i "$DEV" -pm 1 >/dev/null 2>&1 || return 1
+               "$NSMI" -i "$DEV" -lgc "$SM_FLOOR,$SM_MAX" >/dev/null 2>&1 || return 1
+               "$NSMI" -i "$DEV" -lmc "$MEM_FLOOR,$MEM_MAX" >/dev/null 2>&1 || return 1 ;;
+        off)   "$NSMI" -i "$DEV" -rgc >/dev/null 2>&1
+               "$NSMI" -i "$DEV" -rmc >/dev/null 2>&1 ;;
+    esac
+    return 0
+}
+
+trap 'apply off; log "service stopped — clocks released"; exit 0' TERM INT
+trap '
+      . /etc/sysconfig/strata-gpu-lock 2>/dev/null || true
+      SM_MAX=${SM_CLOCK:-3135}; MEM_MAX=${MEM_CLOCK:-14001}; SM_FLOOR=${SM_MID:-$SM_FLOOR}
+      if [ "$state" != off ]; then apply floor && log "reload — floor re-applied (${SM_FLOOR}-${SM_MAX} sm, ${MEM_FLOOR}-${MEM_MAX} mem)"; fi' HUP
+
+state=off
+gone=0
+shed=0
+guard=0
+log "watching v4 (floor ${SM_FLOOR}-${SM_MAX} sm / ${MEM_FLOOR}-${MEM_MAX} mem while an engine listens; boost is the hardware's; thermal shed ${TEMP_SHED}C, resume ${TEMP_RESUME}C, engine grace ${GRACE}s, poll ${POLL}s, watchdog dead-man on)"
+while :; do
+    wd_ping
+    if engine_running; then
+        gone=0
+        gpu_read
+        if [ "$gpu_temp" -ge "$TEMP_SHED" ] && [ "$shed" -eq 0 ]; then
+            apply off; shed=1
+            log "thermal shed at ${gpu_temp}C — clocks released until ${TEMP_RESUME}C"
+        elif [ "$shed" -eq 1 ] && [ "$gpu_temp" -le "$TEMP_RESUME" ]; then
+            shed=0
+            if apply floor; then log "cooled to ${gpu_temp}C — floor re-applied (${SM_FLOOR}-${SM_MAX})"; fi
+        else
+            # the card's own protection bits (0x8 sw cap | 0x40 hw slowdown | 0x80 sync boost):
+            # never fight them - log once per transition, the floor stays (they cap ABOVE it)
+            if [ $(( gpu_reason & 0xC8 )) -ne 0 ] && [ "$guard" != 1 ]; then
+                guard=1
+                log "guardrail: clocks_event_reasons=0x$(printf '%x' "$gpu_reason") (power/hw cap active) — the card limits itself, the floor stays"
+            elif [ $(( gpu_reason & 0xC8 )) -eq 0 ] && [ "$guard" = 1 ]; then
+                guard=0
+                log "guardrail clear — the card's caps lifted"
+            fi
+            if [ "$shed" -eq 0 ] && [ "$state" != floor ]; then
+                if apply floor; then
+                    state=floor
+                    log "engine listening — clock floor ${SM_FLOOR}-${SM_MAX} (boost is instant, the card decides)"
+                fi
+            fi
+        fi
+    else
+        shed=0
+        guard=0
+        if [ "$state" != off ]; then
+            gone=$(( gone + POLL ))
+            if [ "$gone" -ge "$GRACE" ]; then
+                apply off
+                state=off
+                log "engine gone ${GRACE}s — clocks released"
+            fi
+        fi
+    fi
+    sleep "$POLL"
+done
