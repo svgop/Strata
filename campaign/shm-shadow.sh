@@ -46,10 +46,20 @@ fast_ok() {
   local a b
   a=$(find "$SRC" -type f | wc -l); b=$(find "$DST" -type f | wc -l)
   [ "$a" = "$b" ] || return 1
-  # stat-based (du rounds hugetlbfs allocation up to whole 2 MiB pages and would never match)
-  a=$(find "$SRC" -type f -printf '%s\n' | awk '{s+=$1} END{print s+0}')
-  b=$(find "$DST" -type f -printf '%s\n' | awk '{s+=$1} END{print s+0}')
-  [ "$a" = "$b" ] || return 1
+  # stat-based: identical on tmpfs; on hugetlbfs the dest rounds UP to whole 2 MiB pages
+  # (du misreports there, and exact-sum would never match) - accept src <= dest < src + one page
+  local hf=0
+  [ "$(stat -f -c %T "$DST_ROOT" 2>/dev/null)" = hugetlbfs ] && hf=1
+  local f rel s1 s2
+  while read -r f; do
+    rel="${f#"$SRC"/}"
+    s1=$(stat -c %s "$f"); s2=$(stat -c %s "$DST/$rel" 2>/dev/null || echo -1)
+    if [ "$hf" = 1 ]; then
+      { [ "$s2" -ge "$s1" ] && [ $((s2 - s1)) -lt $((2 * 1024 * 1024)) ]; } || return 1
+    else
+      [ "$s1" = "$s2" ] || return 1
+    fi
+  done < <(find "$SRC" -type f)
   return 0
 }
 if fast_ok; then
@@ -57,13 +67,54 @@ if fast_ok; then
   exit 0
 fi
 mkdir -p "$DST"
-rsync -a "$SRC/" "$DST/"
-# verify: every file in SRC exists in DST with identical size
+# hugetlbfs has NO write(2) path (no .write_iter in the kernel: cp/rsync/dd/sendfile/copy_file_range
+# all fail EINVAL/EXDEV - measured, references-round2 digest) and ftruncate demands 2 MiB alignment.
+# Population there is ftruncate+mmap+memcpy, measured 15.16 GiB/s (the 38 GiB store in ~2.5 s);
+# files round UP to whole 2 MiB pages (the tail padding is inert - the engine reads to blob offsets,
+# never past st_size of the source) and the verifier below accepts dest >= src on this tier.
+if [ "$(stat -f -c %T "$DST_ROOT" 2>/dev/null)" = hugetlbfs ]; then
+  python3 - "$SRC" "$DST" <<'PY'
+import mmap, os, sys
+src_root, dst_root = sys.argv[1], sys.argv[2]
+HP, CH = 2 << 20, 256 << 20
+copied = 0
+for dirpath, _dirs, files in os.walk(src_root):
+    rel = os.path.relpath(dirpath, src_root)
+    os.makedirs(os.path.join(dst_root, rel), exist_ok=True)
+    for f in sorted(files):
+        s, d = os.path.join(dirpath, f), os.path.join(dst_root, rel, f)
+        sz = os.path.getsize(s)
+        rounded = max(HP, (sz + HP - 1) // HP * HP)
+        with open(s, "rb") as fs, open(d, "wb+") as fd:
+            fd.truncate(rounded)
+            md = mmap.mmap(fd.fileno(), rounded)
+            if sz:
+                ms = mmap.mmap(fs.fileno(), sz, prot=mmap.PROT_READ)
+                for off in range(0, sz, CH):
+                    n = min(CH, sz - off)
+                    md[off:off + n] = ms[off:off + n]
+                ms.close()
+            md.flush()
+            md.close()
+        copied += sz
+print(f"shm-shadow: hugetlbfs populate {copied / 2**30:.1f} GiB by mmap+memcpy")
+PY
+else
+  rsync -a "$SRC/" "$DST/"
+fi
+# verify: every file in SRC exists in DST with the right size - identical on tmpfs, dest >= src
+# (2 MiB page rounding) on hugetlbfs
+hf=0
+[ "$(stat -f -c %T "$DST_ROOT" 2>/dev/null)" = hugetlbfs ] && hf=1
 bad=0
 while read -r f; do
   rel="${f#"$SRC"/}"
   s1=$(stat -c %s "$f"); s2=$(stat -c %s "$DST/$rel" 2>/dev/null || echo -1)
-  [ "$s1" = "$s2" ] || { echo "shm-shadow: SIZE MISMATCH $rel ($s1 vs $s2)"; bad=1; }
+  if [ "$hf" = 1 ]; then
+    { [ "$s2" -ge "$s1" ] && [ $(( (s2 - s1) < 2 * 1024 * 1024 )) = 1 ]; } || { echo "shm-shadow: SIZE MISMATCH $rel ($s1 vs $s2)"; bad=1; }
+  else
+    [ "$s1" = "$s2" ] || { echo "shm-shadow: SIZE MISMATCH $rel ($s1 vs $s2)"; bad=1; }
+  fi
 done < <(find "$SRC" -type f)
 [ "$(find "$SRC" -type f | wc -l)" = "$(find "$DST" -type f | wc -l)" ] || { echo "shm-shadow: FILE COUNT MISMATCH"; exit 1; }
 [ "$bad" = 0 ] || exit 1
