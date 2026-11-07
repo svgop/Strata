@@ -20,9 +20,23 @@ hp0=$(awk '/^HugePages_Free:/{print $2}' /proc/meminfo)
 echo "shm-shadow: tier $DST_ROOT ($(stat -f -c %T "$DST_ROOT" 2>/dev/null || echo fs))"
 
 need=$(du -sB1 "$SRC" | cut -f1)
+if [ "$(stat -f -c %T "$DST_ROOT" 2>/dev/null)" = hugetlbfs ]; then
+  # the dedicated mount: its size= cap is the bound (2 GiB headroom), and the copy runs only on
+  # the FULL boot-armed pool - a partial runtime reservation (24369 of 45056 on 2026-11-07) must
+  # stay free for the engine arena that shares the pool (store ~19000 + IQ2_XS arena 20164 + KV
+  # shadow > a partial pool).  Exit 0 = planned deferral, the launcher falls to the /dev/shm tier.
+  pool=$(awk '/^HugePages_Total:/{print $2}' /proc/meminfo)
+  if [ "$pool" -lt 40000 ]; then
+    echo "shm-shadow: pool ${pool} pages < 40000 (partial runtime reservation) - store stays on /dev/shm, the pool is the arena's; the boot-armed pool (sysctl.d 91-strata-hugepages) lifts this gate"
+    exit 0
+  fi
+  head=2
+else
+  head=8
+fi
 avail=$(df -B1 --output=avail "$DST_ROOT" | tail -1 | tr -dc '0-9')
-if [ "$avail" -lt "$((need + 8 * 1024 * 1024 * 1024))" ]; then
-  echo "shm-shadow: $DST_ROOT has $((avail / 2**30)) GiB free, need $((need / 2**30)) GiB + 8 GiB headroom - NOT copying"
+if [ "$avail" -lt "$((need + head * 1024 * 1024 * 1024))" ]; then
+  echo "shm-shadow: $DST_ROOT has $((avail / 2**30)) GiB free, need $((need / 2**30)) GiB + ${head} GiB headroom - NOT copying"
   exit 1
 fi
 # fast path (the launcher now calls this on every start): an already-restored store with the source's
