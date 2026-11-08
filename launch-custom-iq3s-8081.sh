@@ -79,6 +79,11 @@ export STRATA_SHADOW_EXPERTS="${STRATA_SHADOW_EXPERTS-$_shadow}"
                                   # champion: M1 -0.7 (noise), pair +7.7%, conc +8.4%; MMLU 95.71 >= 93.3; falsifier: 2.0x bytes, >=32% faster entries. Hits,
                                   # the PCIe share, the prompt path unchanged (bit-identical); only the ~3% missed routing computes at Q2_0.
 # F-331 ARMS (10-25, both never priced on this lane; see SVG-CUSTOM F-331):
+export STRATA_HUGEPAGE_ARENAS=1   # HOSTMEM-NO-REBOOT (2026-11-08, adopted): the complement draws the
+                                  # reserved 2 MiB pool (MAP_HUGETLB pool-first via huge_alloc; the paced flip
+                                  # in expert_source.cpp).  Leg-3: solo +7.2% vs 4K control; the boot banner
+                                  # reads "the expert complement: NN.N GiB of NN.N GiB in 2 MiB pages
+                                  # (HUGETLB POOL)".  =0 rolls back to one-shot cudaHostAlloc (4K).
 export STRATA_QSA_SPLIT_ATTN="${STRATA_QSA_SPLIT_ATTN:-1}"     # decode+drafter attention through the split int8-MMA kernel (verify.cpp:1973 + mtp.cpp:1088;
                                   # qsa_prompt_attn.cu:2271: each query's cells split over up to 20 blocks, LSE merge; int8-KV sm_80+;
                                   # fork Eddoursul fd23d91 idea; DETAILS vendor class +2.8/3.5% on other cards). =0 rolls back
