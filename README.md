@@ -18,6 +18,15 @@ with the quality gate clean, floors (MMLU-Pro 95.0 mean, mimic 87.9) never trade
 - **MAGMA memory architecture** — the pinned resident complement: the whole expert mass the GPU
   cannot hold stays page-locked and device-mapped in host RAM; the file tier never reads at serving
   time. Plus a 48 GiB conversation cache for prefix-resume.
+- **The reserved-page memory architecture** (`docs/HUGEPAGES.md`) — every large streaming organ
+  (expert arenas, the pinned complement, the shadow store) draws from a boot-armed pool of 2 MiB
+  pages: pool memory cannot fragment, swap, or age, engine restarts are a perfect re-arm, and the
+  week-long lane decay that once demanded reboots is gone by construction. The store lives as a
+  hugetlb-backed memfd owned by the process itself — no mounts, no services. Every ≥1 GiB arena
+  prints its page class at boot (`ARENA PAGES: 2 MiB` / `4K - DEGRADED CLASS`) and benches can
+  refuse degraded boots outright (`STRATA_ARENA_PAGES=strict`); measured +5–7% solo on
+  DRAM-ceiling lanes from the page class alone. The same reservation pattern PostgreSQL, Oracle,
+  DPDK, vLLM and SGLang run — arrived at by measurement, not fashion.
 - **Elastic VMM sessions** — session slots, KV, and the expert cache share one virtual-memory spare
   pool: slots map in ~15 ms when conversations arrive and demote back to cache when they leave.
   Nine concurrent clients at six-client throughput, zero single-stream tax.
