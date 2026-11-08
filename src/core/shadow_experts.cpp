@@ -4,6 +4,7 @@
 #include "strata/kernels/cpu/expert.hpp"
 #include "strata/kernels/cpu/hadamard.hpp"
 
+#include <algorithm>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
@@ -20,6 +21,14 @@
 #include <sys/mman.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#include <chrono>
+#if !defined(MFD_HUGETLB)
+#include <linux/memfd.h>
+#endif
+#if !defined(MFD_HUGE_2MB)
+#define MFD_HUGE_2MB (21 << 26)
+#endif
+#include "strata/platform/hugepage.hpp"
 #endif
 
 namespace strata::core::shadow {
@@ -136,8 +145,60 @@ bool arm(int64_t n_layers, int64_t n_expert) {
         ::close(fd);
         return refuse(buf);
     }
-    void* view = mmap(nullptr, (size_t) want, PROT_READ, MAP_SHARED, fd, 0);
-    if (view == MAP_FAILED) { ::close(fd); return refuse("mmap failed on " + st.dir + "/experts.bin"); }
+    // ENGINE-LEVEL 2 MiB backing (HOSTMEM-NO-REBOOT, engine-owned - no mount, no service, no root):
+    // when the reserved pool covers the store whole, populate a hugetlb-backed memfd from this file
+    // and serve the blobs from it - 2 MiB pages by construction, process-scoped, released with the
+    // process.  ~15 GiB/s memcpy (the references-round2 measured class) makes the populate a ~2 s
+    // boot step.  STRATA_SHADOW_MEMFD=0 keeps the plain file mapping; a short pool falls back to it
+    // (the F-367 tmpfs tier, when present, is that same file path).
+    void* view = MAP_FAILED;
+    const char* mfd_note = "";
+#if !defined(_WIN32) && defined(MFD_HUGETLB)
+    const char* mfd_off = std::getenv("STRATA_SHADOW_MEMFD");
+    if ((mfd_off == nullptr || mfd_off[0] != '0') && strata::platform::huge_pool_covers((size_t) want)) {
+        const auto t0 = std::chrono::steady_clock::now();
+        int mfd = ::memfd_create("strata-shadow-q2_0", MFD_HUGETLB | MFD_HUGE_2MB);
+        if (mfd >= 0) {
+            const size_t hp = 2ull << 20;
+            const size_t rounded = ((size_t) want + hp - 1) / hp * hp;   // hugetlb sizes are whole pages
+            if (::ftruncate(mfd, (off_t) rounded) == 0) {
+                void* src = mmap(nullptr, (size_t) want, PROT_READ, MAP_SHARED, fd, 0);
+                void* dst = src != MAP_FAILED
+                                ? mmap(nullptr, rounded, PROT_READ | PROT_WRITE, MAP_SHARED, mfd, 0)
+                                : MAP_FAILED;
+                if (src != MAP_FAILED && dst != MAP_FAILED) {
+                    uint8_t* d = (uint8_t*) dst;
+                    const uint8_t* s = (const uint8_t*) src;
+                    constexpr size_t kChunk = 256ull << 20;
+                    for (size_t o = 0; o < (size_t) want; o += kChunk) {
+                        const size_t n = std::min(kChunk, (size_t) want - o);
+                        std::memcpy(d + o, s + o, n);
+                    }
+                    ::munmap(src, (size_t) want);
+                    ::mprotect(dst, rounded, PROT_READ);   // the store is read-only from here on
+                    const double secs = std::chrono::duration<double>(std::chrono::steady_clock::now() - t0).count();
+                    char buf[128];
+                    std::snprintf(buf, sizeof buf, "; 2 MiB pool pages (memfd, populated in %.1f s)", secs);
+                    mfd_note = buf;
+                    view = dst;
+                } else {
+                    if (src != MAP_FAILED) ::munmap(src, (size_t) want);
+                    if (dst != MAP_FAILED) ::munmap(dst, rounded);
+                    mfd_note = "; memfd populate refused - file mapping";
+                }
+            } else {
+                mfd_note = "; memfd ftruncate refused - file mapping";
+            }
+            ::close(mfd);   // the MAP_SHARED view holds the memfd, as it does a file
+        } else {
+            mfd_note = "; memfd_create refused - file mapping";
+        }
+    }
+#endif
+    if (view == MAP_FAILED) {
+        view = mmap(nullptr, (size_t) want, PROT_READ, MAP_SHARED, fd, 0);
+        if (view == MAP_FAILED) { ::close(fd); return refuse("mmap failed on " + st.dir + "/experts.bin"); }
+    }
     ::close(fd);   // MAP_SHARED keeps the mapping valid after the fd closes
     st.base = (const uint8_t*) view;
 #endif
@@ -148,10 +209,10 @@ bool arm(int64_t n_layers, int64_t n_expert) {
     st.layer_off = std::move(off);
     std::fprintf(stderr,
                  "strata: STRATA_SHADOW_EXPERTS=%s: shadow Q2_0 expert store mapped - %lld layers x %lld experts x "
-                 "%llu B = %.2f GiB; decode CPU misses compute from it (hits, the PCIe share and the prompt path "
+                 "%llu B = %.2f GiB%s; decode CPU misses compute from it (hits, the PCIe share and the prompt path "
                  "do not change)\n",
                  st.dir.c_str(), (long long) n_layers, (long long) n_expert, (unsigned long long) BLOB,
-                 (double) want / (double) (1ull << 30));
+                 (double) want / (double) (1ull << 30), mfd_note);
     return true;
 }
 
