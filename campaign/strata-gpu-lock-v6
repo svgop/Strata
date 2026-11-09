@@ -1,0 +1,180 @@
+#!/usr/bin/bash
+# strata-gpu-lock v6 — v2-refined: HARD-PIN SM max + MEM max for the whole time an engine
+# LISTENS; release to DVFS when it exits. One serving state, zero tiers.
+#
+# What v2 was (the Nov-6 233.1/224.8/303.5 record ran under it): three-tier hard-pin —
+# engine resident + processing (util>=10% or power>=150W) -> pin SM 3135 / MEM 14001;
+# resident + quiet >30 s -> pin SM 1800 / MEM 7001; engine gone 45 s -> release.
+# v2's measured, banned defect: the 30 s-quiet DEMOTION while still serving. Bursts
+# entering from a gap ran at 1780 MHz on half mem bandwidth until the 3 s poll noticed
+# (~30% lane loss in continuous serving with pauses — the clockwatch proof). The plateau
+# lived in the demotion, not in the pin.
+# v6 keeps v2's processing-time pin and deletes the demotion: an engine listening IS the
+# serving state, so the ONLY pin state is at MAX (SM_PIN/MEM_PIN -> -lgc 3135,3135
+# -lmc 14001,14001). No quiet timeout, no mid tier, no util/power detection anywhere in
+# the serving path. The 1780 plateau is structurally absent: there is no pinned-LOW state
+# for a burst to enter from — the card is already at max (575 W cap trims sustained SM to
+# ~2830-2955 exactly as it did through the whole v2 era; Nov-7 dmon proof) when a burst
+# arrives. On engine exit (GRACE=45 s) clocks release to DVFS, as in every version.
+# The trade is named: quiet-listen now holds pinned max (~70-110 W vs 56-58 W under the
+# v4/v5 range). The thermal shed path (83C shed / 78C resume) covers the thermal tail.
+# History: v3/v4 replaced v2's tiers with a floor-RANGE (hardware owns boost); v5 added an
+# optional MEM hard-pin (MEM_PIN env). v5-range (MEM_PIN=0) is the standing regime as of
+# Nov-09; v6 is its successor candidate gated on the phased clock falsifier. SM_PIN=0
+# MEM_PIN=0 reverts this script to exact v4/v5-range behavior without a file swap.
+# Everything else is v4/v5 verbatim:
+#   - WATCHDOG dead-man: Type=notify + systemd-notify WATCHDOG=1 each loop — a hung service
+#     is killed and restarted by systemd, and the ExecStopPost release always runs
+#   - `-i 0` device scoping on every nvidia-smi call
+#   - clocks_event_reasons guardrail: 0x8 (sw power cap) | 0x40 (hw slowdown) | 0x80 (sync
+#     boost) => log only, the card is protecting itself; the thermal shed path handles it
+#     (0x400 = the RELIABILITY derate (V/F trim), NOT a fault: quiet reads exactly 0x400
+#     on this driver - it is normal and never shed)
+#   - SUPPORTED_CLOCKS stays banned from the runtime loop (GSP hang vector on open-module
+#     610.x GB203; grid values are config only)
+#   - port-contract engine detection, GRACE release, SIGHUP config reload
+# Arming gap: the pin lands within POLL (3 s) of the port binding — same window as every
+# version; model load runs BEFORE the port binds, so no measured window touches it.
+# Config: /etc/sysconfig/strata-gpu-lock (SIGHUP reload via systemctl reload).
+#   SM_PIN / MEM_PIN / SM_FLOOR / SM_MAX / MEM_FLOOR / MEM_MAX / TEMP_SHED / TEMP_RESUME /
+#   PORTS / GRACE / POLL  (v2 names SM_CLOCK/MEM_CLOCK/SM_MID still honored)
+# Smoke path (no GPU state written): bash -n; then
+#   DRY=1 TAG=v6-smoke PORTS=18099 ./strata-gpu-lock-v6 &   # with an nc fake listener
+#   nc -l 18099 >/dev/null 2>&1 &                           # one line, throwaway
+#   journalctl -t v6-smoke -n 2 --no-pager                  # expect "HARD PIN 3135 sm / HARD PIN 14001 mem"
+#   kill -TERM <pid>                                        # expect "clocks released"
+#   SM_PIN=0 MEM_PIN=0 DRY=1 ...                            # expect "range 1800-3135 sm / range 7001-14001 mem"
+set -u
+PATH=/usr/bin:/bin:/usr/sbin:/sbin
+
+NSMI=/usr/bin/nvidia-smi
+DEV=0
+PORTS="8080 8081"
+GRACE=45
+POLL=3
+SM_FLOOR=1800
+MEM_FLOOR=7001
+SM_MAX=3135
+MEM_MAX=14001
+SM_PIN=1         # 1 = hard-pin SM at SM_MAX while listening (v6); 0 = v4/v5 range behavior
+MEM_PIN=1        # 1 = hard-pin mem at MEM_MAX while listening (v5/v6); 0 = v4 range behavior
+TEMP_SHED=83      # C: shed the pin (release to DVFS) at or above this
+TEMP_RESUME=78    # C: re-apply the pin below this
+DRY=${DRY:-0}
+TAG=${TAG:-strata-gpu-lock}
+[ -r /etc/sysconfig/strata-gpu-lock ] && . /etc/sysconfig/strata-gpu-lock
+SM_MAX=${SM_CLOCK:-$SM_MAX}        # v1/v2 names still honored
+MEM_MAX=${MEM_CLOCK:-$MEM_MAX}
+SM_FLOOR=${SM_MID:-$SM_FLOOR}      # v2's "mid" becomes the floor (only used when SM_PIN=0)
+
+log() { logger -t "$TAG" "$*"; }
+
+clock_mode() {   # journal-facing description of the active clock regime
+    local sm mem
+    if [ "$SM_PIN" = 1 ]; then sm="HARD PIN $SM_MAX"; else sm="range $SM_FLOOR-$SM_MAX"; fi
+    if [ "$MEM_PIN" = 1 ]; then mem="HARD PIN $MEM_MAX"; else mem="range $MEM_FLOOR-$MEM_MAX"; fi
+    printf '%s sm / %s mem' "$sm" "$mem"
+}
+
+# the watchdog dead-man: systemd kills a hung service (Type=notify, WatchdogSec in the unit)
+wd_ping() { systemd-notify WATCHDOG=1 2>/dev/null || true; }
+
+engine_running() {
+    local p
+    for p in $PORTS; do
+        ss -tlnH "sport = :$p" 2>/dev/null | grep -q . && return 0
+    done
+    return 1
+}
+
+# one batched read: temp + the event-reason guardrail bits (no SUPPORTED_CLOCKS ever)
+gpu_read() {   # sets gpu_temp / gpu_reason
+    local out
+    out=$("$NSMI" -i "$DEV" --query-gpu=temperature.gpu,clocks_event_reasons.active --format=csv,noheader,nounits 2>/dev/null | head -1)
+    gpu_temp=${out%%,*}
+    gpu_reason=${out#*,}
+    gpu_temp=${gpu_temp:-0}
+    gpu_reason=$(( gpu_reason + 0 ))   # hex mask in, integer out; empty -> 0
+}
+
+apply() {   # pin | off
+    [ "$DRY" = 1 ] && return 0
+    [ -x "$NSMI" ] || return 1
+    case "$1" in
+        pin)   "$NSMI" -i "$DEV" -pm 1 >/dev/null 2>&1 || return 1
+               if [ "$SM_PIN" = 1 ]; then
+                   # v6: hard-pin SM at max — the residency has no quiet tier to demote to,
+                   # so no burst can ever enter from a pinned-LOW clock (v2's banned plateau)
+                   "$NSMI" -i "$DEV" -lgc "$SM_MAX,$SM_MAX" >/dev/null 2>&1 || return 1
+               else
+                   # v4/v5 behavior: range lock, the hardware owns the boost decision
+                   "$NSMI" -i "$DEV" -lgc "$SM_FLOOR,$SM_MAX" >/dev/null 2>&1 || return 1
+               fi
+               if [ "$MEM_PIN" = 1 ]; then
+                   # v5/v6: hard pin min=max — mem DVFS cannot downshift/ramp inside a burst
+                   "$NSMI" -i "$DEV" -lmc "$MEM_MAX,$MEM_MAX" >/dev/null 2>&1 || return 1
+               else
+                   # v4 behavior: range lock, DVFS owns the mem bin
+                   "$NSMI" -i "$DEV" -lmc "$MEM_FLOOR,$MEM_MAX" >/dev/null 2>&1 || return 1
+               fi ;;
+        off)   "$NSMI" -i "$DEV" -rgc >/dev/null 2>&1
+               "$NSMI" -i "$DEV" -rmc >/dev/null 2>&1 ;;
+    esac
+    return 0
+}
+
+trap 'apply off; log "service stopped — clocks released"; exit 0' TERM INT
+trap '
+      . /etc/sysconfig/strata-gpu-lock 2>/dev/null || true
+      SM_MAX=${SM_CLOCK:-3135}; MEM_MAX=${MEM_CLOCK:-14001}; SM_FLOOR=${SM_MID:-$SM_FLOOR}
+      SM_PIN=${SM_PIN:-1}; MEM_PIN=${MEM_PIN:-1}
+      if [ "$state" != off ]; then apply pin && log "reload — pin re-applied ($(clock_mode))"; fi' HUP
+
+state=off
+gone=0
+shed=0
+guard=0
+log "watching v6 ($(clock_mode) while an engine listens; no mid tier — v2's 30s-quiet demotion is removed; thermal shed ${TEMP_SHED}C, resume ${TEMP_RESUME}C, engine grace ${GRACE}s, poll ${POLL}s, watchdog dead-man on)"
+systemd-notify --ready 2>/dev/null || true   # Type=notify: without READY=1 systemd times the start out
+while :; do
+    wd_ping
+    if engine_running; then
+        gone=0
+        gpu_read
+        if [ "$gpu_temp" -ge "$TEMP_SHED" ] && [ "$shed" -eq 0 ]; then
+            apply off; shed=1
+            log "thermal shed at ${gpu_temp}C — clocks released until ${TEMP_RESUME}C"
+        elif [ "$shed" -eq 1 ] && [ "$gpu_temp" -le "$TEMP_RESUME" ]; then
+            shed=0
+            if apply pin; then log "cooled to ${gpu_temp}C — pin re-applied ($(clock_mode))"; fi
+        else
+            # the card's own protection bits (0x8 sw cap | 0x40 hw slowdown | 0x80 sync boost):
+            # never fight them - log once per transition, the pin stays (they cap ABOVE it)
+            if [ $(( gpu_reason & 0xC8 )) -ne 0 ] && [ "$guard" != 1 ]; then
+                guard=1
+                log "guardrail: clocks_event_reasons=0x$(printf '%x' "$gpu_reason") (power/hw cap active) — the card limits itself, the pin stays"
+            elif [ $(( gpu_reason & 0xC8 )) -eq 0 ] && [ "$guard" = 1 ]; then
+                guard=0
+                log "guardrail clear — the card's caps lifted"
+            fi
+            if [ "$shed" -eq 0 ] && [ "$state" != pin ]; then
+                if apply pin; then
+                    state=pin
+                    log "engine listening — $(clock_mode) (no mid tier: bursts enter at the pinned max)"
+                fi
+            fi
+        fi
+    else
+        shed=0
+        guard=0
+        if [ "$state" != off ]; then
+            gone=$(( gone + POLL ))
+            if [ "$gone" -ge "$GRACE" ]; then
+                apply off
+                state=off
+                log "engine gone ${GRACE}s — clocks released (DVFS)"
+            fi
+        fi
+    fi
+    sleep "$POLL"
+done
