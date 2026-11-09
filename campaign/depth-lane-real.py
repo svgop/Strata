@@ -13,6 +13,7 @@ delta is the content-driven share of F-181's deep-acceptance decay.
 Usage: python depth-lane-real.py --port 8081 --label real120k --depth 120000 --decode-tok 1500
 Writes campaign/results/depth-<label>.txt and prints headline lines.
 """
+import os
 import argparse, glob, json, os, re, time, urllib.request
 
 ap = argparse.ArgumentParser()
@@ -20,7 +21,7 @@ ap.add_argument('--port', type=int, default=8081)
 ap.add_argument('--label', default='real')
 ap.add_argument('--depth', type=int, default=120000, help='target prompt tokens')
 ap.add_argument('--decode-tok', type=int, default=1500)
-ap.add_argument('--key', default='3f0940df8efb9c363e4189956ae907d3e4acac221aab39f44804fe0b0df1b8')
+ap.add_argument('--key', default=os.environ.get("STRATA_API_KEY", '3f0940df8efb9c363e4189956ae907d3e4acac221aab39f44804fe0b0df1b8'))
 ap.add_argument('--temp', type=float, default=0.7)
 ap.add_argument('--log', default='/home/svg/LLM/strata-custom-2/logs/custom-iq3_s.log')
 a = ap.parse_args()

@@ -3,9 +3,10 @@
 # request) and steady decode t/s (token cadence after the first chunk) at increasing context
 # depths.  Unique seeded random-word prompts (no n-gram/cache reuse across runs).  Usage:
 #   python ctx-probe.py 4096 16384 32768 65536 98304 122880      (target prompt tokens)
+import os
 import json, random, string, sys, time, urllib.request
 
-KEY = "3f0940df8efb9c363e4189956ae907d3e4acac221aab39f44804fe0b0df1b8"
+KEY = os.environ.get("STRATA_API_KEY", "3f0940df8efb9c363e4189956ae907d3e4acac221aab39f44804fe0b0df1b8")
 URL = "http://127.0.0.1:8081/v1/chat/completions"
 GEN = 512
 

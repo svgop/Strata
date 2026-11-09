@@ -12,8 +12,8 @@ curl -s -m 3 http://127.0.0.1:8081/health >/dev/null || { echo "BOOT FAILED" >> 
 for t in $(seq 1 60); do grep -aq "page cache warm in" campaign/results/gsq-frac-boot.out && break; sleep 3; done
 sleep 45
 python3 - >> "$OUT" 2>&1 <<'PY'
-import json, statistics, time, urllib.request
-KEY = "3f0940df8efb9c363e4189956ae907d3e4acac221aab39f44804fe0b0df1b8"
+import json, os, statistics, time, urllib.request
+KEY = os.environ.get("STRATA_API_KEY", "3f0940df8efb9c363e4189956ae907d3e4acac221aab39f44804fe0b0df1b8")
 URL = "http://127.0.0.1:8081/v1/chat/completions"
 def rate(frac, max_new=512):
     body = json.dumps({"messages": [{"role": "user", "content": "Explain how a modern GPU scheduler arbitrates between graphics and compute queues. Be detailed and technical."}],

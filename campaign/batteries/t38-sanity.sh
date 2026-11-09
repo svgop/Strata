@@ -30,7 +30,7 @@ if [ "$ok" = 1 ]; then
   ( cd "$REPO" && python3 campaign/probe-lane.py --port "$PORT" --label "t38-sanity" --short-n 6 >> "$OUT" 2>&1 )
   ( cd "$REPO" && .venv/bin/python campaign/probe-metrics.py --port "$PORT" --label "t38-sanity" 2>&1 | tail -4 >> "$OUT" )
   echo "--- /metrics window histogram after conc leg (C5 live check):" >> "$OUT"
-  curl -s -m 5 -H "Authorization: Bearer 3f0940df8efb9c363e4189956ae907d3e4acac221aab39f44804fe0b0df1b8" \
+  curl -s -m 5 -H "Authorization: Bearer ${STRATA_API_KEY:-3f0940df8efb9c363e4189956ae907d3e4acac221aab39f44804fe0b0df1b8}" \
     "http://127.0.0.1:$PORT/metrics" 2>/dev/null | grep -a "window" | head -6 >> "$OUT"
   cleanup_engine
 fi

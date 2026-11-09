@@ -44,7 +44,7 @@ boot() {  # $1 dir $2 script $3 port $4 label
 leg() {  # $1 dir $2 script $3 port $4 label
   boot "$1" "$2" "$3" "$4" || return
   curl -s -m 120 -X POST http://127.0.0.1:$3/v1/chat/completions \
-    -H "Authorization: Bearer 3f0940df8efb9c363e4189956ae907d3e4acac221aab39f44804fe0b0df1b8" \
+    -H "Authorization: Bearer ${STRATA_API_KEY:-3f0940df8efb9c363e4189956ae907d3e4acac221aab39f44804fe0b0df1b8}" \
     -H "Content-Type: application/json" \
     -d '{"messages":[{"role":"user","content":"Reply with the single word: ready"}],"max_tokens":200}' >/dev/null
   cd "$CUST" && python3 campaign/probe-lane.py --port "$3" --label "t22-$4" --short-n 6 >> "$OUT" 2>&1

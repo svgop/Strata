@@ -2,11 +2,12 @@
 """campaign/t43-smoke.py — F-284 ternary SAFETY SMOKE: 12 concurrent deterministic
 known-answer requests (9 slots + 3 queued), every answer must contain its expected
 substring, zero server errors.  Prints PASS/FAIL."""
+import os
 import json, sys, time, urllib.request
 from concurrent.futures import ThreadPoolExecutor
 
 PORT = "8081"
-KEY = "3f0940df8efb9c363e4189956ae907d3e4acac221aab39f44804fe0b0df1b8"
+KEY = os.environ.get("STRATA_API_KEY", "3f0940df8efb9c363e4189956ae907d3e4acac221aab39f44804fe0b0df1b8")
 
 QA = [
     ("What is 6 times 7? Answer with just the number.", "42"),

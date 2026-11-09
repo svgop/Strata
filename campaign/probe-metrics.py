@@ -5,6 +5,7 @@
 # drift alarm. Zero server/engine change; CPU-side only. Usage:
 #   .venv/bin/python campaign/probe-metrics.py --port 8081 --label t26-share75-r1
 #   (append a JSONL record to campaign/results/metrics.jsonl and print one line)
+import os
 import argparse, hashlib, json, re, subprocess, time, urllib.request
 from datetime import datetime
 
@@ -96,7 +97,7 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('--port', type=int, default=8081)
     ap.add_argument('--label', default='leg')
-    ap.add_argument('--key', default='3f0940df8efb9c363e4189956ae907d3e4acac221aab39f44804fe0b0df1b8')
+    ap.add_argument('--key', default=os.environ.get("STRATA_API_KEY", '3f0940df8efb9c363e4189956ae907d3e4acac221aab39f44804fe0b0df1b8'))
     ap.add_argument('--out', default='/home/svg/LLM/strata-custom-2/campaign/results/metrics.jsonl')
     ap.add_argument('--no-golden', action='store_true')
     a = ap.parse_args()

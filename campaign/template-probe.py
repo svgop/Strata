@@ -4,12 +4,13 @@
 # (thinking rides inline), wall time, and visible-answer style. 6 fixed reasoning prompts
 # x N runs each against :8081. Run BEFORE a template change (live old-template server) and
 # AFTER (new-template boot); judge on completion_tokens + latency means and a style read.
+import os
 import json, sys, time, urllib.request
 
 PORT = sys.argv[1] if len(sys.argv) > 1 else "8081"
 LABEL = sys.argv[2] if len(sys.argv) > 2 else "probe"
 RUNS = int(sys.argv[3]) if len(sys.argv) > 3 else 2
-KEY = "3f0940df8efb9c363e4189956ae907d3e4acac221aab39f44804fe0b0df1b8"
+KEY = os.environ.get("STRATA_API_KEY", "3f0940df8efb9c363e4189956ae907d3e4acac221aab39f44804fe0b0df1b8")
 
 PROMPTS = [
     "A train leaves A at 60 km/h; another leaves B, 420 km away, toward it at 90 km/h. A bird flies between them at 120 km/h starting at A. How far has the bird flown when the trains meet? Show the key step.",

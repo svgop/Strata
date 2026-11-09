@@ -10,6 +10,7 @@ per-request key the campaign's sweep instrument uses (serve/server.py:1005 -> ge
 Usage: python mmlu-pro-gate.py <floor> <label>      e.g.  python mmlu-pro-gate.py 0.7 base07
 Writes campaign/results/mmlu-<label>.json and prints the score.
 """
+import os
 import json, os, re, sys, urllib.request
 from datasets import load_dataset
 
@@ -32,7 +33,7 @@ def ask(q, mt=4000):
                        # the per-request tuning key: this request's draft floor only
                        "strata_tune": {"spec_min_p": FLOOR},
                        "sampling": {"strata_tune": {"spec_min_p": FLOOR}}}).encode()
-    req = urllib.request.Request(API, body, {"Content-Type": "application/json", "Authorization": "Bearer 3f0940df8efb9c363e4189956ae907d3e4acac221aab39f44804fe0b0df1b8"})
+    req = urllib.request.Request(API, body, {"Content-Type": "application/json", "Authorization": "Bearer " + os.environ.get("STRATA_API_KEY", "3f0940df8efb9c363e4189956ae907d3e4acac221aab39f44804fe0b0df1b8")})
     r = json.loads(urllib.request.urlopen(req, timeout=3600).read())
     return (r["choices"][0]["message"].get("content") or "").strip()
 

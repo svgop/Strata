@@ -38,6 +38,7 @@ conversation history (server slot retains context; -np 1).
 
 Usage: python mimicbench2.py [port] [label]
 """
+import os
 import json, os, re, sys, time, urllib.request
 
 PORT = sys.argv[1] if len(sys.argv) > 1 else "8099"
@@ -52,7 +53,7 @@ def chat(messages, mt=2500):
     body = json.dumps({"messages": messages, "max_tokens": mt,
                        "temperature": TEMP}).encode()
     r = json.loads(urllib.request.urlopen(urllib.request.Request(
-        API, body, {"Content-Type": "application/json", "Authorization": "Bearer 3f0940df8efb9c363e4189956ae907d3e4acac221aab39f44804fe0b0df1b8"}), timeout=1800).read())
+        API, body, {"Content-Type": "application/json", "Authorization": "Bearer " + os.environ.get("STRATA_API_KEY", "3f0940df8efb9c363e4189956ae907d3e4acac221aab39f44804fe0b0df1b8")}), timeout=1800).read())
     o = (r["choices"][0]["message"].get("content") or "").strip()
     NOTE_OUT[0] = o   # MIMIC-D: the record() that follows always describes this output
     return o

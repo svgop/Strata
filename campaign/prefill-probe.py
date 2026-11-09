@@ -2,6 +2,7 @@
 """campaign/prefill-probe.py - the prefill-axis instrument (law 17's TTFT leg): N cold long prompts
 (unique content, no KV reuse), wall time to first token at max_tokens=1.  The mean is the leg's number.
 Usage: .venv/bin/python campaign/prefill-probe.py --port 8081 [--tok 24000] [--n 3]"""
+import os
 import argparse
 import json
 import random
@@ -9,7 +10,7 @@ import string
 import time
 import urllib.request
 
-KEY = "3f0940df8efb9c363e4189956ae907d3e4acac221aab39f44804fe0b0df1b8"
+KEY = os.environ.get("STRATA_API_KEY", "3f0940df8efb9c363e4189956ae907d3e4acac221aab39f44804fe0b0df1b8")
 
 
 def long_prompt(tok_target):

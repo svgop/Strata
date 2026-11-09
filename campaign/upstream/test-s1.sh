@@ -1,7 +1,7 @@
 #!/bin/bash
 set -u
 cd /home/svg/LLM/strata-custom-2
-KEY=3f0940df8efb9c363e4189956ae907d3e4acac221aab39f44804fe0b0df1b8
+KEY="${STRATA_API_KEY:-3f0940df8efb9c363e4189956ae907d3e4acac221aab39f44804fe0b0df1b8}"
 restore_custom() {
   (nohup bash launch-custom-iq3s-8081.sh > campaign/upstream/restore-custom2.out 2>&1 &)
   for i in $(seq 1 60); do sleep 10; curl -s -o /dev/null -w '%{http_code}' -H "Authorization: Bearer $KEY" http://127.0.0.1:8081/v1/models 2>/dev/null | grep -q 200 && { echo "CUSTOM SERVER RESTORED"; return 0; }; done

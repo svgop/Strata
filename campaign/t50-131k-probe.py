@@ -9,6 +9,7 @@ recovery, then steady decode at depth). Solo = 1 lane; conc = N lanes in paralle
 Usage: python t50-131k-probe.py --label base --lanes solo,conc --depth 131072 --decode 512
 Writes campaign/results/t50-131k-<label>.json and prints headline lines.
 """
+import os
 import argparse, json, random, threading, time, urllib.request, os
 
 ap = argparse.ArgumentParser()
@@ -18,7 +19,7 @@ ap.add_argument('--lanes', default='solo,conc')
 ap.add_argument('--depth', type=int, default=131072)
 ap.add_argument('--decode', type=int, default=512)
 ap.add_argument('--conc', type=int, default=6)
-ap.add_argument('--key', default='3f0940df8efb9c363e4189956ae907d3e4acac221aab39f44804fe0b0df1b8')
+ap.add_argument('--key', default=os.environ.get("STRATA_API_KEY", '3f0940df8efb9c363e4189956ae907d3e4acac221aab39f44804fe0b0df1b8'))
 ap.add_argument('--temp', type=float, default=0.7)
 a = ap.parse_args()
 

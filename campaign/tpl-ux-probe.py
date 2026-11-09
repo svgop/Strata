@@ -5,12 +5,13 @@ are daily-driver asks: explain, code review, capped writing, comparison, plannin
 wall seconds, completion tokens (thinking rides inline), reasoning/content chars — the honest
 'how long does an answer take' read.  max_tokens roomy on purpose: we want natural length.
 """
+import os
 import json, sys, time, urllib.request
 
 PORT = sys.argv[1] if len(sys.argv) > 1 else "8081"
 LABEL = sys.argv[2] if len(sys.argv) > 2 else "ux"
 RUNS = int(sys.argv[3]) if len(sys.argv) > 3 else 2
-KEY = "3f0940df8efb9c363e4189956ae907d3e4acac221aab39f44804fe0b0df1b8"
+KEY = os.environ.get("STRATA_API_KEY", "3f0940df8efb9c363e4189956ae907d3e4acac221aab39f44804fe0b0df1b8")
 
 PROMPTS = [
     "Explain how speculative decoding with a draft model speeds up LLM inference, and where its gains break down. For a senior engineer audience.",

@@ -8,10 +8,11 @@ ceiling >> MTP-acceptance on copy-heavy traffic = the splice has addressable hea
 no gap = the MTP drafter already covers copying and the candidate dies free.
 Part 1 (this script): fire the prompts, save responses + the log offset map.
 Part 2 (t48-ngram-analyze.py): tokenize and compute the ceiling."""
+import os
 import json, subprocess, sys, time, urllib.request
 
 PORT = "8081"
-KEY = "3f0940df8efb9c363e4189956ae907d3e4acac221aab39f44804fe0b0df1b8"
+KEY = os.environ.get("STRATA_API_KEY", "3f0940df8efb9c363e4189956ae907d3e4acac221aab39f44804fe0b0df1b8")
 LOG = "/home/svg/LLM/strata-custom-2/logs/custom-iq3_s.log"
 OUT = "/home/svg/LLM/strata-custom-2/campaign/results/t48-ngram-raw.json"
 

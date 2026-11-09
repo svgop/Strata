@@ -6,6 +6,7 @@ and decode t/s from the server's own timings, plus the depth actually reached.
 Usage: python depth-lane.py --port 8081 --label d262k --depth 240000 --decode-tok 1500
 Writes campaign/results/depth-<label>.txt and prints the headline lines.
 """
+import os
 import argparse, json, random, time, urllib.request, os
 
 ap = argparse.ArgumentParser()
@@ -13,7 +14,7 @@ ap.add_argument('--port', type=int, default=8081)
 ap.add_argument('--label', default='depth')
 ap.add_argument('--depth', type=int, default=240000, help='target prompt tokens')
 ap.add_argument('--decode-tok', type=int, default=1500)
-ap.add_argument('--key', default='3f0940df8efb9c363e4189956ae907d3e4acac221aab39f44804fe0b0df1b8')
+ap.add_argument('--key', default=os.environ.get("STRATA_API_KEY", '3f0940df8efb9c363e4189956ae907d3e4acac221aab39f44804fe0b0df1b8'))
 ap.add_argument('--temp', type=float, default=0.7)
 a = ap.parse_args()
 

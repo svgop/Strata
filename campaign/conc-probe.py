@@ -2,6 +2,7 @@
 """campaign/conc-probe.py - the fast conc-only instrument for the upstream bisection: N
 concurrent streams over the lane probe's CONC prompt, aggregate tokens/s, ~90 s a leg.
 Usage: .venv/bin/python campaign/conc-probe.py --port 8080 [--streams 6] [--tok 600] [--key K]"""
+import os
 import argparse
 import json
 import threading
@@ -34,7 +35,7 @@ def main():
     ap.add_argument("--port", type=int, default=8080)
     ap.add_argument("--streams", type=int, default=6)
     ap.add_argument("--tok", type=int, default=600)
-    ap.add_argument("--key", default="3f0940df8efb9c363e4189956ae907d3e4acac221aab39f44804fe0b0df1b8")
+    ap.add_argument("--key", default=os.environ.get("STRATA_API_KEY", "3f0940df8efb9c363e4189956ae907d3e4acac221aab39f44804fe0b0df1b8"))
     ap.add_argument("--rounds", type=int, default=2)
     a = ap.parse_args()
     for r in range(a.rounds):

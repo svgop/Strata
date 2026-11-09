@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 """F-209 bit-identity check: fixed prompts at temperature 0, full text saved.
 Usage: bit-check.py <label>  -> campaign/results/f209-bit-<label>.json"""
+import os
 import hashlib, json, sys, time, urllib.request
 
-KEY = "3f0940df8efb9c363e4189956ae907d3e4acac221aab39f44804fe0b0df1b8"
+KEY = os.environ.get("STRATA_API_KEY", "3f0940df8efb9c363e4189956ae907d3e4acac221aab39f44804fe0b0df1b8")
 API = "http://127.0.0.1:8081/v1/chat/completions"
 PROMPTS = [
     ("p1", "Explain, step by step, why a wider grid with one warp per row can keep "

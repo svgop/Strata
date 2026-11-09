@@ -11,7 +11,7 @@ LAUNCH=$REPO/launch-custom-iq3s-8081.sh
 PORT=8081
 RES=$REPO/campaign/results
 OUT=$RES/tpl-user-gates.log
-KEY=3f0940df8efb9c363e4189956ae907d3e4acac221aab39f44804fe0b0df1b8
+KEY="${STRATA_API_KEY:-3f0940df8efb9c363e4189956ae907d3e4acac221aab39f44804fe0b0df1b8}"
 echo "TPL-USER GATES leg1 start $(date)" > "$OUT"
 
 

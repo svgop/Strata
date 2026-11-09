@@ -2,6 +2,7 @@
 # campaign/probe-lane.py — Linux port of campaign/probe-lane.ps1 (the Proof Law instrument).
 # Same prompts, same sequence, same engine-log accounting. Usage:
 #   .venv/bin/python campaign/probe-lane.py --port 8081 --label linux-standing
+import os
 import argparse, json, re, threading, time, urllib.request
 from datetime import datetime
 
@@ -49,7 +50,7 @@ def main():
     ap.add_argument('--port', type=int, default=8081)
     ap.add_argument('--label', default='linux')
     ap.add_argument('--log', default='/home/svg/LLM/strata-custom-2/logs/custom-iq3_s.log')
-    ap.add_argument('--key', default='3f0940df8efb9c363e4189956ae907d3e4acac221aab39f44804fe0b0df1b8')
+    ap.add_argument('--key', default=os.environ.get("STRATA_API_KEY", '3f0940df8efb9c363e4189956ae907d3e4acac221aab39f44804fe0b0df1b8'))
     ap.add_argument('--short-n', type=int, default=6)
     ap.add_argument('--conc-n', type=int, default=6)
     ap.add_argument('--long-tok', type=int, default=2000)
