@@ -17,13 +17,25 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 LANES = os.path.join(HERE, 'lanes.csv')
 
 ENGINES = {
-    'qwen': {'label': 'Qwen3.8 GSQ IQ3_S (custom engine, standing)', 'css': 'var(--purple)'},
-    'qwen-ud-iq2xs': {'label': 'Qwen3.8 UD-IQ2_XS (42 GB, speed+economy set)', 'css': 'var(--green)'},
-    'qwen-ud-iq4xs': {'label': 'Qwen3.8 UD-IQ4_XS (94 GB, quality set)',
+    'qwen': {'label': 'Qwen3.8 GSQ IQ3_S (custom engine, standing)', 'short': 'Qwen GSQ', 'css': 'var(--purple)'},
+    'qwen-ud-iq2xs': {'label': 'Qwen3.8 UD-IQ2_XS (42 GB, speed+economy set)', 'short': 'Qwen UD-IQ2_XS', 'css': 'var(--green)'},
+    'qwen-ud-iq4xs': {'label': 'Qwen3.8 UD-IQ4_XS (94 GB, quality set)', 'short': 'Qwen UD-IQ4_XS',
                       'css': 'color-mix(in srgb, var(--green) 55%, var(--background))'},
-    'deepseek': {'label': 'DeepSeek-V4.1-Flash 2.00bpw (dsv41)', 'css': 'var(--blue)'},
+    'deepseek': {'label': 'DeepSeek-V4.1-Flash 2.00bpw (dsv41)', 'short': 'DeepSeek', 'css': 'var(--blue)'},
 }
 LANE_ORDER = ['solo', 'pair', 'conc']
+
+
+def read_lanes():
+    """Read lanes.csv. Skips `#` comment lines (the anchor-block convention) and blank
+    lines anywhere in the file; splits kind=note rows (adopted-change annotations, no
+    measurement) out of the measurement rows. Returns (measure_rows, note_rows)."""
+    with open(LANES) as f:
+        lines = [ln for ln in f if ln.strip() and not ln.lstrip().startswith('#')]
+    measures, notes = [], []
+    for r in csv.DictReader(lines):
+        (notes if r.get('kind') == 'note' else measures).append(r)
+    return measures, notes
 
 def d3_symbol(name):
     return {'circle': 'M0,3.2A3.2,3.2 0 1,1 0,-3.2A3.2,3.2 0 1,1 0,3.2Z',
@@ -38,9 +50,11 @@ LANE_STYLE = {
 
 def main():
     viz_dir = sys.argv[1] if len(sys.argv) > 1 else HERE
-    rows = list(csv.DictReader(open(LANES)))
+    rows, note_rows = read_lanes()
     for r in rows:
         r['tps'] = float(r['tps'])
+    notes = {eng: [{'date': r['date'], 'commit': r['commit'], 'label': r['label']}
+                   for r in note_rows if r['engine'] == eng] for eng in ENGINES}
     # group: engine -> ordered points -> lanes; prefill rows ride their own series (x = prompt size)
     pts, pf = {}, {eng: [] for eng in ENGINES}
     for eng in ENGINES:
@@ -63,7 +77,9 @@ def main():
                 p['kinds'][r['lane']] = r['kind']
         pts[eng] = [seen[k] | {'kinds': seen[k]['kinds']} for k in order]
     data = {'type': 'strata-lane-trend', 'updated': rows[-1]['date'], 'unit': 'tok/s',
-            'engines': {eng: {'label': ENGINES[eng]['label'], 'points': pts[eng], 'prefill': pf[eng]} for eng in ENGINES}}
+            'engines': {eng: {'label': ENGINES[eng]['label'], 'short': ENGINES[eng]['short'],
+                              'css': ENGINES[eng]['css'], 'points': pts[eng], 'prefill': pf[eng],
+                              'notes': notes[eng]} for eng in ENGINES}}
     with open(os.path.join(HERE, 'lanes.json'), 'w') as f:
         json.dump(data, f, indent=1)
     frag = TEMPLATE.replace('__DATA__', json.dumps(data['engines'])) \
@@ -90,12 +106,10 @@ TEMPLATE = r'''<div id="lane-trend-9f3" style="font:inherit">
   const ENGINES = __DATA__;
   const LANES = __LANES__;
   const LANE_NAMES = { solo: 'solo', pair: 'pair', conc: '6-lane conc' };
-  const COLORS = { qwen: 'var(--purple)', deepseek: 'var(--blue)' };
-  const ENAME = { qwen: 'Qwen', deepseek: 'DeepSeek' };
   const root = document.getElementById('lane-trend-9f3');
   const tip = document.getElementById('lt-tip-9f3');
-  const visible = { qwen: { solo: true, pair: true, conc: true },
-                    deepseek: { solo: true, pair: true, conc: true } };
+  const visible = {};
+  for (const eng of Object.keys(ENGINES)) visible[eng] = { solo: true, pair: true, conc: true };
 
   // legend: one borderless toggle per engine x lane
   const leg = document.getElementById('lt-legend-9f3');
@@ -108,11 +122,11 @@ TEMPLATE = r'''<div id="lane-trend-9f3" style="font:inherit">
     sw.setAttribute('width', 22); sw.setAttribute('height', 10); sw.setAttribute('aria-hidden', 'true');
     const ln = document.createElementNS('http://www.w3.org/2000/svg', 'line');
     ln.setAttribute('x1', 0); ln.setAttribute('x2', 22); ln.setAttribute('y1', 5); ln.setAttribute('y2', 5);
-    ln.setAttribute('stroke', COLORS[eng]); ln.setAttribute('stroke-width', 2);
+    ln.setAttribute('stroke', ENGINES[eng].css); ln.setAttribute('stroke-width', 2);
     if (LANES[lane].dash !== 'none') ln.setAttribute('stroke-dasharray', LANES[lane].dash);
     sw.appendChild(ln);
     const tx = document.createElement('span'); tx.className = 'text-small';
-    tx.textContent = ENAME[eng] + ' ' + LANE_NAMES[lane];
+    tx.textContent = ENGINES[eng].short + ' ' + LANE_NAMES[lane];
     b.append(sw, tx);
     b.addEventListener('click', () => {
       visible[eng][lane] = !visible[eng][lane];
@@ -137,18 +151,20 @@ TEMPLATE = r'''<div id="lane-trend-9f3" style="font:inherit">
 
   function draw(p) {
     const pts = ENGINES[p.eng].points;
+    if (!pts.length) return;
     const W = Math.max(320, p.holder.clientWidth || 320);
     const H = Math.max(150, Math.min(260, W * 0.38));
     const M = { t: 14, r: 118, b: 34, l: 46 };
     d3.select(p.holder).select('svg').remove();
     const svg = d3.select(p.holder).append('svg')
       .attr('viewBox', `0 0 ${W} ${H}`).attr('width', '100%').style('display', 'block')
-      .attr('role', 'img').attr('aria-label', ENAME[p.eng] + ' lane throughput trend by optimization');
+      .attr('role', 'img').attr('aria-label', ENGINES[p.eng].short + ' lane throughput trend by optimization');
     svg.append('rect').attr('data-chart-frame', true).attr('x', M.l).attr('y', M.t)
        .attr('width', Math.max(10, W - M.l - M.r)).attr('height', Math.max(10, H - M.t - M.b))
        .attr('fill', 'none').attr('stroke', 'var(--border)').attr('stroke-width', 1);
     const x = d3.scalePoint().domain(pts.map((_, i) => i)).range([M.l + 8, W - M.r - 8]).padding(0.5);
     const vals = pts.flatMap(d => ['solo', 'pair', 'conc'].map(l => d[l]).filter(v => v != null));
+    if (!vals.length) return;
     const y = d3.scaleLinear().domain(d3.extent(vals).map((v, i, a) => i === 0 ? v * 0.92 : v * 1.05)).nice().range([H - M.b, M.t]);
     const ya = d3.axisLeft(y).ticks(4).tickSize(0).tickPadding(6);
     const g = svg.append('g');
@@ -170,7 +186,7 @@ TEMPLATE = r'''<div id="lane-trend-9f3" style="font:inherit">
        .attr('fill', 'var(--muted-foreground)').style('font-size', '12px').text('tok/s');
 
     for (const lane of ['solo', 'pair', 'conc']) {
-      const col = COLORS[p.eng];
+      const col = ENGINES[p.eng].css;
       const all = pts.map((d, i) => ({ i, v: d[lane], d, k: d.kinds[lane] || 'mean' }));
       const isLine = q => q.v != null && (q.k === 'mean' || q.k === 'standing');
       const isDet = q => q.v != null && !isLine(q);
@@ -260,7 +276,7 @@ TEMPLATE = r'''<div id="lane-trend-9f3" style="font:inherit">
     svg.append('text').attr('x', M.l).attr('y', H - 6).attr('fill', 'var(--muted-foreground)').style('font-size', '12px').text('prompt tokens (log)');
     svg.append('text').attr('data-axis', 'y').attr('x', 14).attr('y', M.t + 2).attr('fill', 'var(--muted-foreground)').style('font-size', '12px').text('tok/s');
     for (const s of series) {
-      const col = COLORS[s.eng];
+      const col = ENGINES[s.eng].css;
       const line = d3.line().x(p => x(p.ctx)).y(p => y(p.tps));
       g.append('path').datum(s.pts).attr('d', line)
         .attr('fill', 'none').attr('stroke', col).attr('stroke-width', 1.4).attr('stroke-dasharray', '4 3').attr('opacity', 0.7);
@@ -271,8 +287,8 @@ TEMPLATE = r'''<div id="lane-trend-9f3" style="font:inherit">
     }
     const key = svg.append('g').attr('transform', `translate(${W - M.r + 12},${M.t + 2})`);
     series.forEach((s, i) => {
-      key.append('circle').attr('cx', 0).attr('cy', i * 15 + 3).attr('r', 3.6).attr('fill', COLORS[s.eng]);
-      key.append('text').attr('x', 8).attr('y', i * 15 + 7).attr('fill', 'var(--muted-foreground)').style('font-size', '11px').text(ENAME[s.eng]);
+      key.append('circle').attr('cx', 0).attr('cy', i * 15 + 3).attr('r', 3.6).attr('fill', ENGINES[s.eng].css);
+      key.append('text').attr('x', 8).attr('y', i * 15 + 7).attr('fill', 'var(--muted-foreground)').style('font-size', '11px').text(ENGINES[s.eng].short);
     });
   }
   function drawAll() { panels.forEach(draw); drawPrefill(); }

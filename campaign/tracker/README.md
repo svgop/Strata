@@ -10,7 +10,8 @@ qwen,2026-10-27,50684ddd,F-367 standing bank (shm shadow store; THE bank),solo,2
 - `engine` — `qwen` (custom engine, IQ3_S) or `deepseek` (dsv41).
 - `lane` — `solo` (M1), `pair` (M2 pair), `conc` (M2 6-lane aggregate). Same battery both engines: `campaign/probe-lane.py --port 8081 --log <engine log> --label <tag>`.
 - `ctx` — context depth in tokens the leg ran at (0 = the standard short battery).
-- `kind` — `mean` (multi-boot/leg banked mean, the preferred bank), `best` (a record leg), `single` (one boot, un-banked — read with the boot-variance law).
+- `kind` — `mean` (multi-boot/leg banked mean, the preferred bank), `best` (a record leg), `single` (one boot, un-banked — read with the boot-variance law), `note` (an adopted-change annotation with no measurement: engine bugfixes, armings, rule changes. `lane=note`, `tps=0`; the builders keep them out of the charts and carry them in `lanes.json` per engine).
+- Lines starting with `#` are comments, never data — the re-baseline anchor block (law 12: which numbers every re-bank reads against, and which retired trios must not be compared against) appends there; both builders skip them anywhere in the file.
 - One point (same date+commit+label) may carry several lane rows; missing lanes simply have no row.
 
 **Protocol:** every adoption, falsification battery, or standing re-bank appends its lane rows (commit first so the hash exists), then `python3 campaign/tracker/build-trend.py` regenerates `lanes.json` + the chart. The chart's contract: the line inclines. A lane that turns downward across two banks is a regression signal, not noise — five-boot means outrank single legs.

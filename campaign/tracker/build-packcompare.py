@@ -19,7 +19,9 @@ PACKS = [
 ]
 
 def main():
-    rows = list(csv.DictReader(open(LANES)))
+    with open(LANES) as f:   # `#` comment lines (anchor blocks) and kind=note rows are
+        lines = [ln for ln in f if ln.strip() and not ln.lstrip().startswith('#')]  # not data
+    rows = [r for r in csv.DictReader(lines) if r.get('kind') != 'note']
     for r in rows:
         r['tps'] = float(r['tps'])
     lanes, prefill = defaultdict(dict), {}

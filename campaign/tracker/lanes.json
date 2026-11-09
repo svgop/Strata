@@ -1,10 +1,12 @@
 {
  "type": "strata-lane-trend",
- "updated": "2026-11-06",
+ "updated": "2026-11-09",
  "unit": "tok/s",
  "engines": {
   "qwen": {
    "label": "Qwen3.8 GSQ IQ3_S (custom engine, standing)",
+   "short": "Qwen GSQ",
+   "css": "var(--purple)",
    "points": [
     {
      "date": "2026-10-17",
@@ -337,6 +339,65 @@
       "pair": "mean",
       "conc": "mean"
      }
+    },
+    {
+     "date": "2026-11-09",
+     "commit": "003d78d8",
+     "label": "note",
+     "solo": null,
+     "pair": null,
+     "conc": null,
+     "kinds": {}
+    },
+    {
+     "date": "2026-11-09",
+     "commit": "e8484c36",
+     "label": "note",
+     "solo": null,
+     "pair": null,
+     "conc": null,
+     "kinds": {}
+    },
+    {
+     "date": "2026-11-09",
+     "commit": "f95455a6",
+     "label": "note",
+     "solo": null,
+     "pair": null,
+     "conc": null,
+     "kinds": {}
+    },
+    {
+     "date": "2026-11-09",
+     "commit": "919b4db3",
+     "label": "note",
+     "solo": null,
+     "pair": null,
+     "conc": null,
+     "kinds": {}
+    },
+    {
+     "date": "2026-11-09",
+     "commit": "003d78d8",
+     "label": "GSQ warm-residency recovery bank (clean box 2 boots x 3 probes all shown; witnesses green: complement 37.8-37.9 GiB HUGETLB POOL + memfd store 31.64 GiB; means solo 181.0 pair 166.2 conc 237.3 bests 197.0/175.9/260.0 vs leg-0 anchor -12/-11/-8 pct on means; midday desktop load avg 3 present; remaining delta bound to pool-drained-vs-armed discriminator + mem-pin falsifier both sudo)",
+     "solo": 181.0,
+     "pair": null,
+     "conc": null,
+     "kinds": {
+      "solo": "mean"
+     }
+    },
+    {
+     "date": "2026-11-09",
+     "commit": "003d78d8",
+     "label": "GSQ warm-residency recovery bank (see solo row for witnesses and disclosure)",
+     "solo": null,
+     "pair": 166.2,
+     "conc": 237.3,
+     "kinds": {
+      "pair": "mean",
+      "conc": "mean"
+     }
     }
    ],
    "prefill": [
@@ -436,10 +497,13 @@
      "ctx": 28262,
      "kind": "mean"
     }
-   ]
+   ],
+   "notes": []
   },
   "qwen-ud-iq2xs": {
    "label": "Qwen3.8 UD-IQ2_XS (42 GB, speed+economy set)",
+   "short": "Qwen UD-IQ2_XS",
+   "css": "var(--green)",
    "points": [
     {
      "date": "2026-11-06",
@@ -503,10 +567,13 @@
      "ctx": 28262,
      "kind": "mean"
     }
-   ]
+   ],
+   "notes": []
   },
   "qwen-ud-iq4xs": {
    "label": "Qwen3.8 UD-IQ4_XS (94 GB, quality set)",
+   "short": "Qwen UD-IQ4_XS",
+   "css": "color-mix(in srgb, var(--green) 55%, var(--background))",
    "points": [
     {
      "date": "2026-11-06",
@@ -557,10 +624,13 @@
      "ctx": 28262,
      "kind": "mean"
     }
-   ]
+   ],
+   "notes": []
   },
   "deepseek": {
    "label": "DeepSeek-V4.1-Flash 2.00bpw (dsv41)",
+   "short": "DeepSeek",
+   "css": "var(--blue)",
    "points": [
     {
      "date": "2026-10-27",
@@ -820,7 +890,8 @@
      "ctx": 20712,
      "kind": "mean"
     }
-   ]
+   ],
+   "notes": []
   }
  }
 }
