@@ -7,6 +7,8 @@ cd /home/svg/LLM/strata-custom-2
 OUT=campaign/results/gsq-condring-ab.log
 echo "COND_RING ABAB start $(date)" > "$OUT"
 CR=/home/svg/LLM/condring-build/build/strata
+# ST binary removed 2026-11-09 cleanup (snapshot farm pruned): regen = apply
+# campaign/results/condring-parked.patch to the tree, build with the banked cmake recipe, cp to engine/strata.
 ST=/home/svg/LLM/strata-custom-2/engine/strata.pre-condring
 leg() {
   local tag=$1 bin=$2; shift 2

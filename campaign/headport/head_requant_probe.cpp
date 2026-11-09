@@ -5,6 +5,8 @@
 // vectors x: the exact (Q6_K) logits vs the Q4_0 logits — top-1 flip rate (the emitted-token
 // contract), KL(exact || requant), and the max logit delta.  CPU-only, zero boots.
 //   head_requant_probe [rows] [xsamples]
+// head_q6k.bin (498 MB) was pruned 2026-11-09 (concluded probe, regenerable): re-extract the
+// head tensor from the GSQ GGUF (data/packs estate) per the F-298 digest to re-run this.
 #include <cmath>
 #include <cstdio>
 #include <cstdlib>
