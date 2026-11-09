@@ -1698,7 +1698,7 @@ class StrataEngine:
             self._send(f"BSTOP {slot}")
         except EngineDied:
             pass
-        q, busy, held = self.slot_q[slot], self.slot_busy, self.slot_held   # this process's: restart() replaces them
+        q, busy, held, releasing = self.slot_q[slot], self.slot_busy, self.slot_held, self.slot_releasing   # this process's: restart() replaces them
         with self.slot_cv:                       # readers iterate the set under the lock (#9)
             self.slot_releasing.add(slot)
 
