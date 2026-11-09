@@ -59,6 +59,11 @@
 #include <cerrno>
 #include <linux/aio_abi.h>   // the kernel's own asynchronous reads (io_submit): no library, allowed by Docker's seccomp
 #include <sys/syscall.h>
+// 2026-11-09 bootstorm (F1): in-kernel prefault of a whole mapping (kernel 5.14+; this box 7.2.12 probed,
+// 24.5 GiB/s over reserved-pool 2 MiB pages).  Older glibc does not spell the constant - keep the number.
+#if !defined(MADV_POPULATE_WRITE)
+#define MADV_POPULATE_WRITE 20
+#endif
 #endif
 
 // a 64-bit seek (as in pinned.cu): the 32-bit `fseek` wraps past 4 GiB, and the spelling differs per platform
@@ -3644,6 +3649,23 @@ bool FileExpertSource::pin_cache_complement(
                     constexpr uint64_t kStep = 1ull << 30, kPage = 4096;
                     uint64_t got = 0;
                     const char* stop = nullptr;
+                    // 2026-11-09 bootstorm (F1): on the POOL-backed mapping the pages are faulted ONCE,
+                    // in-kernel, at the kernel's own huge-page granularity - MADV_POPULATE_WRITE replaces
+                    // the 4 KiB-stride walk below, which wrote ~9.9M cache lines to fault the same ~19k
+                    // pool pages one user-store at a time (probed on this box: 4 GiB of pool pages in
+                    // 0.163 s, 24.5 GiB/s).  The per-GiB availability gate stays off on THIS arm only
+                    // (huge_map.hugetlb, not the THP fallback): the pages come from the reserved pool -
+                    // never reclaimed, never compacted, the failure class #1250's pacing guards does not
+                    // exist there.  EINVAL (kernel < 5.14) and the THP arm take the paced stride walk.
+                    const bool populate_pass = [&] {
+                        if (huge_ok && huge_map.hugetlb && madvise(arena, (size_t) bytes, MADV_POPULATE_WRITE) == 0) {
+                            std::fprintf(stderr, "FileExpertSource: the complement's 2 MiB-backed pages were faulted in one "
+                                                 "MADV_POPULATE_WRITE pass\n");
+                            return true;
+                        }
+                        return false;
+                    }();
+                    if (populate_pass) got = bytes;
                     while (got < bytes) {
                         const uint64_t step = std::min<uint64_t>(kStep, bytes - got);
                         uint64_t avail_now = 0;
@@ -3686,8 +3708,9 @@ bool FileExpertSource::pin_cache_complement(
                                       "resident but pageable, so its copies to the GPU go through the CPU (#1250)",
                                       (double) partial_pin / 1073741824.0, (double) bytes / 1073741824.0, stop);
                     else
-                        std::snprintf(msg, sizeof msg, "%.2f GiB page-locked after taking the pages in steps",
-                                      (double) partial_pin / 1073741824.0);
+                        std::snprintf(msg, sizeof msg, "%.2f GiB page-locked (the pages were taken in %s)",
+                                      (double) partial_pin / 1073741824.0,
+                                      populate_pass ? "one MADV_POPULATE_WRITE pass" : "paced steps");
                     note += std::string(note.empty() ? "" : "; ") + msg;
                     if (stop != nullptr) std::fprintf(stderr, "FileExpertSource: %s\n", msg);
                 } else if (budget_bytes > 0 && partial_on) {

@@ -38,38 +38,47 @@ inline bool hugepage_arenas_enabled() {
 }
 
 #if defined(__linux__)
-/// Bytes free in the kernel's reserved 2 MiB pool (HugePages_Free x Hugepagesize); 0 when unreadable.
-/// MemAvailable does NOT count the reserved pool: any memory budget whose allocation can draw from
-/// the pool must add this (the same correction dsv41's copy budget carries, ds4_os.hpp).
+/// Bytes DRAWABLE from the kernel's reserved 2 MiB pool ((HugePages_Free - HugePages_Rsvd) x
+/// Hugepagesize); 0 when unreadable.  MemAvailable does NOT count the reserved pool: any memory budget
+/// whose allocation can draw from the pool must add this (the same correction dsv41's copy budget
+/// carries, ds4_os.hpp).  F4 (2026-11-09 bootstorm, probed on this box): HugePages_Free INCLUDES the
+/// reserved subset - a store's standing MAP_SHARED reservation leaves Free untouched while Rsvd counts
+/// against it, so Free alone overstates what the next mmap can draw; the honest free subtracts Rsvd.
 inline uint64_t huge_pool_free_bytes() {
     std::ifstream f("/proc/meminfo");
     if (!f) return 0;
-    uint64_t pages = 0, size_kb = 0;
+    uint64_t pages = 0, rsvd = 0, size_kb = 0;
     std::string line;
     while (std::getline(f, line)) {
         unsigned long long v = 0;
         if (std::sscanf(line.c_str(), "HugePages_Free: %llu", &v) == 1) pages = v;
+        else if (std::sscanf(line.c_str(), "HugePages_Rsvd: %llu", &v) == 1) rsvd = v;
         else if (std::sscanf(line.c_str(), "Hugepagesize: %llu", &v) == 1) size_kb = v;
     }
-    return pages * size_kb * 1024ull;
+    return (pages > rsvd ? pages - rsvd : 0) * size_kb * 1024ull;
 }
 
 /// True when the reserved 2 MiB pool can cover `bytes` whole (MAP_HUGETLB is all-or-nothing per
-/// mapping).  Read from /proc/meminfo at call time - the pool shrinks as other organs draw it.
+/// mapping).  Read from /proc/meminfo at call time - the pool shrinks as other organs draw it, and a
+/// standing reservation (the shadow store's MAP_SHARED reserve) counts against the cover (Free
+/// includes Rsvd; the honest cover test is Free - Rsvd, F4 2026-11-09 bootstorm).
 inline bool huge_pool_covers(size_t bytes) {
     const size_t page = 2ull << 20;
     const size_t rounded = (bytes + page - 1) / page * page;
-    uint64_t free_kib = 0;
+    uint64_t free_kib = 0, rsvd_kib = 0;
     if (std::ifstream f("/proc/meminfo"); f) {
         std::string line;
-        while (std::getline(f, line))
+        while (std::getline(f, line)) {
             if (line.rfind("HugePages_Free:", 0) == 0) {
                 unsigned long n = 0;
                 if (std::sscanf(line.c_str(), "HugePages_Free: %lu", &n) == 1) free_kib = n;
-                break;
+            } else if (line.rfind("HugePages_Rsvd:", 0) == 0) {
+                unsigned long n = 0;
+                if (std::sscanf(line.c_str(), "HugePages_Rsvd: %lu", &n) == 1) rsvd_kib = n;
             }
+        }
     }
-    return free_kib * (page / 1024) >= rounded / 1024;
+    return (free_kib > rsvd_kib ? free_kib - rsvd_kib : 0) * (page / 1024) >= rounded / 1024;
 }
 #else
 inline bool huge_pool_covers(size_t) { return false; }

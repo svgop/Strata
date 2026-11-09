@@ -3701,6 +3701,7 @@ def slot_save_dir(value, base: str | None = None) -> str:
 
 # ------------------------------------------------------------------------------------------------ prewarm
 PREWARM_ASK_S = 600.0        # one warm-in request's patience: a cold mid prefill is slow, and warming it is the point
+PREWARM_PREBOOT_MAX_S = 600.0   # the pre-boot files sweep's own cap (F3): it holds the load, never starve it
 # The warm-in texts: deliberately unlike any probe or battery prompt - a warm-in that shares a prefix with a probe
 # serves the probe from the conversation cache, and the probe stops measuring (the campaign's law).
 PREWARM_SHORT = ("Sketch the lifecycle of a container image from build to retirement, naming the layers, registries "
@@ -3769,6 +3770,27 @@ class Prewarm:
               flush=True)
         threading.Thread(target=self._run, daemon=True, name="strata-prewarm").start()
         return self
+
+    def warm_before_load(self) -> bool:
+        """The files sweep BEFORE the engine's heavy load (the 2026-11-09 bootstorm fix, F3).  The boot
+        minute otherwise overlaps two storms: kswapd reclaiming the previous engine's page cache (measured
+        +87.7 GiB pgsteal, +16k allocstalls in one load minute) and the new engine's own faulting.  Run
+        here - the old process is reaped, the new one not spawned - so the dead cache is recycled by our
+        own reads and the heavy load faults over a warm cache.  Files only (the replay needs the engine
+        up, and _cycle still runs it there); -> True when every byte was read."""
+        if not self.files_on:
+            return False
+        targets = self._file_targets()
+        if not targets:
+            return False
+        gib = sum(sz for _, sz in targets) / 2 ** 30
+        print(f"[strata] prewarm: pre-boot sweep: {len(targets)} files, {gib:.1f} GiB into the page cache "
+              "(before the engine's load, so the reclaim storm plays out here)", flush=True)
+        t0 = time.monotonic()
+        full = self._warm_files(targets, t0 + min(self.timeout_s, PREWARM_PREBOOT_MAX_S))
+        print(f"[strata] prewarm: pre-boot sweep {'warm' if full else 'partial'} in "
+              f"{time.monotonic() - t0:.0f} s", flush=True)
+        return full
 
     def snapshot(self) -> dict:
         with self.lock:
@@ -3994,6 +4016,82 @@ class Prewarm:
         except (AttributeError, KeyError):
             return True                                 # cannot tell: do not get in the way
         return total > self._base + self._own
+
+
+def prewarm_file_sweep_preboot(cfg: dict, env: dict, arch: str) -> None:
+    """The fresh-process boot's pre-boot files sweep (F3, 2026-11-09 bootstorm): a battery leg launches a
+    fresh server, so its FIRST boot has no Prewarm object yet when the engine constructor blocks on the
+    heavy load - this runs the same sweep before that constructor.  Reload boots go through
+    Service.ensure_loaded -> Prewarm.warm_before_load instead.  Fails open, always."""
+    try:
+        pw = Prewarm(cfg, env or {}, arch or "", "", 0)
+        if pw.files_on:
+            pw.warm_before_load()
+    except Exception as e:
+        print(f"[strata] prewarm: the pre-boot sweep did not finish ({type(e).__name__}: {e}); "
+              "the boot continues", flush=True)
+
+
+HUGEPAGE_POOL_WAIT_S = 20.0      # bounded wait for the dead engine's hugetlb pages to return (F4)
+
+
+def huge_pool_free_gib() -> float:
+    """Drawable pool (HugePages_Free - HugePages_Rsvd) x Hugepagesize, in GiB; 0.0 when unreadable.
+    Free includes Rsvd (probed 2026-11-09, bootstorm F4) - a standing reservation counts against it."""
+    free_pages = rsvd_pages = size_kib = None
+    try:
+        with open("/proc/meminfo") as f:
+            for line in f:
+                if line.startswith("HugePages_Free:") and free_pages is None:
+                    free_pages = int(line.split()[1])
+                elif line.startswith("HugePages_Rsvd:") and rsvd_pages is None:
+                    rsvd_pages = int(line.split()[1])
+                elif line.startswith("Hugepagesize:") and size_kib is None:
+                    size_kib = int(line.split()[1])
+    except (OSError, ValueError, IndexError):
+        return 0.0
+    if free_pages is None or size_kib is None:
+        return 0.0
+    drawable = max(0, free_pages - (rsvd_pages or 0))
+    return drawable * size_kib / (1024 * 1024)
+
+
+def wait_huge_pool_settle(need_gib: float = 0.0, wait_s: float = HUGEPAGE_POOL_WAIT_S) -> float:
+    """F4: the previous engine's reserved-pool pages return to HugePages_Free only at its exit; booting
+    before they land left HugePages_Free short at the store's arm and sent the expert store to the
+    swappable tmpfs tier (the 11:05 squeeze, log:667335).  Wait (bounded) until the pool stops growing
+    for 2 s, then one line with what the boot will draw against.  -> the settled free GiB."""
+    settled = huge_pool_free_gib()
+    if settled <= 0.0:
+        return settled
+    stable, deadline = 0, time.monotonic() + max(0.0, wait_s)
+    while time.monotonic() < deadline:
+        time.sleep(0.5)
+        now = huge_pool_free_gib()
+        if now > settled + 0.05:
+            settled, stable = now, 0
+        else:
+            stable += 1
+            if stable >= 4:                              # 2 s without growth: the pool has settled
+                break
+    note = f", the store needs {need_gib:.1f} GiB" if need_gib > 0 else ""
+    warn = "  WARNING: short - the expert store may land on the swappable tmpfs tier" \
+        if 0 < need_gib and settled < need_gib else ""
+    print(f"[strata] boot: hugetlb pool settled at {settled:.1f} GiB drawable{note}{warn}", flush=True)
+    return settled
+
+
+def shadow_store_gib(env: dict | None) -> float:
+    """STRATA_SHADOW_EXPERTS' experts.bin size, rounded up to whole 2 MiB pages; 0.0 when unset/unreadable."""
+    shadow = (env or {}).get("STRATA_SHADOW_EXPERTS") or ""
+    if not shadow:
+        return 0.0
+    try:
+        size = (Path(shadow) / "experts.bin").stat().st_size
+    except OSError:
+        return 0.0
+    page = 2 << 20
+    return (max(0, size) + page - 1) // page * page / (1 << 30)
 
 
 class Service:
@@ -4518,6 +4616,31 @@ class Service:
             code = self.engine.exit_code() if hasattr(self.engine, "exit_code") else None
             print(f"[strata] the engine had stopped (exit code {code}); starting it again "
                   "(a minute or two) ...", flush=True)
+        # 2026-11-09 bootstorm: three cheap steps BEFORE the heavy load, in this order.
+        # (1) The old process is reaped - give its dead pack cache back now (STRATA_DROP_CACHE_ON_EXIT),
+        #     so the boot minute's kswapd cannot reclaim it mid-load (measured: +87.7 GiB pgsteal,
+        #     +16k allocstalls in one load minute).  A no-op unless opted in.
+        try:
+            from serve import cache_drop
+            cache_drop.drop_after_exit(self.engine)
+        except Exception:
+            pass
+        # (2) The old engine's reserved-pool pages return only at its exit; booting before they land
+        #     sent the expert store to the swappable tmpfs tier (the 11:05 squeeze).  Wait, bounded.
+        engine_env = getattr(self.engine, "spawn", (None,) * 7)[4] or {}
+        try:
+            wait_huge_pool_settle(shadow_store_gib(engine_env))
+        except Exception:
+            pass
+        # (3) Warm the new pack's files into the cache the heavy load will read (Prewarm's machinery,
+        #     files only); the post-READY _cycle still runs its own sweep for what the pin may drop.
+        pw = getattr(self, "prewarm", None)
+        if pw is not None:
+            try:
+                pw.warm_before_load()
+            except Exception as e:
+                print(f"[strata] prewarm: the pre-boot sweep did not finish ({type(e).__name__}: {e}); "
+                      "the boot continues", flush=True)
         try:
             self.engine.restart()
         except Exception:
@@ -8575,6 +8698,12 @@ def main(argv=None, *, lifecycle_event=None, interrupt_exit_code: int = 0) -> in
             effort_end = effort_end_args(cfg, exe, tok)  # #458
         except ValueError as e:
             raise SystemExit(f"[strata] config {e}")
+        if a.engine == "strata" and not lazy and cfg.get("prewarm") is not None:
+            # F3 (2026-11-09 bootstorm): the FIRST boot of a fresh server has no Prewarm object yet when
+            # the engine constructor below blocks on the heavy load - sweep the pack's files into the
+            # page cache first, so the previous engine's dead cache is recycled here and the load faults
+            # over a warm cache.  Reload boots run the same sweep in Service.ensure_loaded.
+            prewarm_file_sweep_preboot(cfg, env, cfg.get("arch") or "")
         from serve import replicas as rp
         try:
             groups = rp.gpu_groups(cfg)
@@ -8908,6 +9037,15 @@ def main(argv=None, *, lifecycle_event=None, interrupt_exit_code: int = 0) -> in
             if ready_path is not None:
                 ready_file.remove_if_owned(ready_path, svc.instance_id)
             finished.set()
+        # 2026-11-09 bootstorm: the graceful close's engine process is gone - give its pack cache back
+        # here too (the pre-2026-11-09 wiring only fired on the kill path, so the opt-in was dead on
+        # every normal stop).  A no-op unless STRATA_DROP_CACHE_ON_EXIT is set (battery-lib.sh defaults
+        # it on for battery legs).
+        try:
+            from serve import cache_drop
+            cache_drop.drop_after_exit(engine)
+        except Exception as e2:  # noqa: BLE001 - never block the exit
+            print(f"[strata] could not release the model files' cache: {e2}", flush=True)
         if interrupted:
             print("[strata] stopped", flush=True)
     exit_code = (8 if not drained else

@@ -20,6 +20,13 @@
 REPO=${REPO:-/home/svg/LLM/strata-custom-2}
 PORT=${PORT:-8081}
 
+# 2026-11-09 bootstorm: a battery's next leg boots while THIS leg's pack still sits in the page cache -
+# the measured storm (kswapd +87.7 GiB pgsteal, +16k allocstalls in one load minute) is exactly that
+# dead cache being reclaimed mid-load.  Drop it at every server stop instead (the drop runs after the
+# engine process ends, where nothing latency-critical competes).  Off by default outside batteries: a
+# same-model restart wants the cache warm.  An explicit value always wins.
+export STRATA_DROP_CACHE_ON_EXIT=${STRATA_DROP_CACHE_ON_EXIT:-1}
+
 port_pid() { ss -ltnp 2>/dev/null | grep ":$PORT " | grep -oP 'pid=\K[0-9]+' | head -1; }
 
 cleanup_engine() {
