@@ -134,6 +134,24 @@ def main():
     if accs:
         print(f"M3b rate         : {sum(accs)/len(accs):.1f}% mean over {len(accs)} requests (diagnostic)")
 
+    # Attribution (2026-11-10): quote the engine's own per-flush anatomy for this probe's lanes -
+    # the variance instrument. The tail-3 flushes cover this probe's solo/pair/conc phases; the
+    # GPU-reach wait is the property that flips 0.5 <-> 12 ms between probes on an unchanged box.
+    batch = [l for l in lines if l.startswith('strata batch:')]
+    if batch:
+        print("--- engine batch anatomy (last 3 flushes) ---")
+        for l in batch[-3:]:
+            tw = re.search(r'avg ([\d.]+) rows, ([\d.]+) ms/window', l)
+            w = re.search(r'GPU-reach wait ([\d.]+)', l)
+            c = re.search(r'CPU experts ([\d.]+)', l)
+            hit = re.search(r'VRAM ([\d.]+) \(([\d.]+)%\)', l)
+            acc = re.search(r'slot drafts accepted (\d+) of (\d+) \(([\d.]+)%\)', l)
+            rps = re.search(r'([\d.]+) rows/s', l)
+            if tw and w:
+                print(f"    rows {tw.group(1)} | window {tw.group(2)} ms | gpu-wait {w.group(1)} | "
+                      f"cpu-exp {c.group(1) if c else '-'} | hit {hit.group(2) if hit else '-'}% | "
+                      f"accept {acc.group(3) if acc else '-'}% | {rps.group(1) if rps else '-'} rows/s")
+
     dt = []
     for l in lines:
         m = re.search(r'avg T ([\d.]+), ([\d.]+) tokens/window, ([\d.]+) ms/window', l)
