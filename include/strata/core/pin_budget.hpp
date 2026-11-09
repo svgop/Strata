@@ -177,7 +177,6 @@ inline void pin_note_arena(uint64_t pinned_bytes) {
         if (const char* e = std::getenv("STRATA_TEST_PIN_LEFT_KIB"); e != nullptr && *e != 0)
             s.sim_budget = s.sim_used + ((uint64_t) std::strtoull(e, nullptr, 10) << 10);
 }
-inline uint64_t pin_sim_peak() { return pin_detail::st().sim_peak; }
 /// Test knob only: one line with the simulated ceiling, what is pinned now and the peak.
 inline void pin_sim_report(const char* when) {
     auto& s = pin_detail::st();

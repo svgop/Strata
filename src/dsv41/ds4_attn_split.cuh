@@ -19,8 +19,6 @@ namespace strata::ds4 {
 namespace attnsplit {
 
 
-
-__device__ __forceinline__ float bf2f_(uint16_t b) { return __uint_as_float((uint32_t) b << 16); }
 __device__ __forceinline__ uint16_t f2bf_exact(float f) { return (uint16_t) (__float_as_uint(f) >> 16); }   // exact values only
 __device__ __forceinline__ float e2m1_x2p14(uint32_t c) {
     return __half2float(__ushort_as_half((unsigned short) (((c & 8u) << 12) | ((c & 7u) << 9))));

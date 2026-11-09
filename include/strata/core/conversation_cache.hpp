@@ -507,8 +507,7 @@ public:
         return true;
     }
 
-    // T66 (persistence): read-only access for the exit drain, oldest first.  entries_[i] pairs serials_[i].
-    const SavedConversation& entry_at(size_t i) const { return entries_.at(i); }
+    // T66 (persistence): read-only access for the exit drain, oldest first (serials_[i] pairs entries_[i]).
     uint64_t serial_at(size_t i) const { return serials_.at(i); }
 
 private:

@@ -40,8 +40,6 @@ typedef _Float16 half8_t __attribute__((ext_vector_type(8)));
 typedef float float8_t __attribute__((ext_vector_type(8)));
 #endif
 
-constexpr bool computed_code(int type) { return type == kTQK5X || type == kTQK4X; }
-
 // ---------------------------------------------------------------- the codebook and the stream
 // a step's 15-bit state -> the four weights as two words of two fp16 (lo, hi): w0 w1 | w2 w3
 template <bool COMPUTED>

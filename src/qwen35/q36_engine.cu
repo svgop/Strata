@@ -229,12 +229,6 @@ __global__ void k_gdn_gb(float* alpha, const float* dt, const float* ssm_a, floa
     alpha[i] = softplus(alpha[i] + dt[h]) * ssm_a[h];
     beta[i] = sigm(beta[i]);
 }
-/// sh[t] *= sigmoid(gate[t]) (the shared expert's scalar gate), rows of n.
-__global__ void k_gate_rows(float* sh, const float* gate, int n, int T) {
-    const int64_t i = (int64_t) blockIdx.x * blockDim.x + threadIdx.x;
-    if (i >= (int64_t) n * T) return;
-    sh[i] *= sigm(gate[i / n]);
-}
 
 /// Batch rows (several sessions decoded in one window, one token each): row t reads and writes the cache of session
 /// slot[t] at cell[t]; its rotary position is cell[t] + delta[t].  Every field null: one session, the rows are its

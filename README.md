@@ -24,8 +24,9 @@ with the quality gate clean, floors (MMLU-Pro 95.0 mean, mimic 87.9) never trade
   runtime** (a standing boot-armed pool was measured to tax every workload on the box −20–22% and
   was retired); released is the default state, and a reboot always lands clean. The store lives as
   an engine-owned memfd — no mounts, no services. Every ≥1 GiB arena prints its page class at
-  boot (`ARENA PAGES: 2 MiB` / `4K - DEGRADED CLASS`) and benches can refuse degraded boots
-  outright (`STRATA_ARENA_PAGES=strict`). The same reservation pattern PostgreSQL, Oracle, DPDK,
+  boot (`ARENA PAGES: 2 MiB` / `4K - POOL UNARMED` / `4K - DEGRADED CLASS` — unarmed is the
+  default state, degraded means a pool exists and an organ still fell to 4K) and benches can
+  refuse 4K boots outright (`STRATA_ARENA_PAGES=strict`). The same reservation pattern PostgreSQL, Oracle, DPDK,
   vLLM and SGLang run — arrived at by measurement, not fashion.
 - **Elastic VMM sessions** — session slots, KV, and the expert cache share one virtual-memory spare
   pool: slots map in ~15 ms when conversations arrive and demote back to cache when they leave.

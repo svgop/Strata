@@ -38,6 +38,26 @@ inline bool hugepage_arenas_enabled() {
 }
 
 #if defined(__linux__)
+/// Pages in the kernel's reserved 2 MiB pool, TOTAL (armed or not); 0 when unreadable.  The
+/// page-class banner's vocabulary key: a 4K arena with a pool present is DEGRADED (an organ
+/// failed to draw what exists); with no pool armed it is the UNARMED default (a released or
+/// never-configured device - doctrine-correct since 2026-11-09, not a fault).
+inline uint64_t huge_pool_total_pages() {
+    std::ifstream f("/proc/meminfo");
+    if (!f) return 0;
+    uint64_t pages = 0;
+    std::string line;
+    while (std::getline(f, line)) {
+        unsigned long long v = 0;
+        if (std::sscanf(line.c_str(), "HugePages_Total: %llu", &v) == 1) { pages = v; break; }
+    }
+    return pages;
+}
+#else
+inline uint64_t huge_pool_total_pages() { return 0; }
+#endif
+
+#if defined(__linux__)
 /// Bytes DRAWABLE from the kernel's reserved 2 MiB pool ((HugePages_Free - HugePages_Rsvd) x
 /// Hugepagesize); 0 when unreadable.  MemAvailable does NOT count the reserved pool: any memory budget
 /// whose allocation can draw from the pool must add this (the same correction dsv41's copy budget

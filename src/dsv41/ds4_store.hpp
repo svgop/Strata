@@ -319,14 +319,6 @@ public:
         if (s >= 0) slots_[(size_t) s].tick = ++clock_;
     }
     bool gpu_mapped() const { return !chunk_dev_.empty() && chunk_dev_[0] != nullptr; }
-    /// The arena's address range (the device sees its host pointers as they are when the mapping is the identity)
-    unsigned long long arena_lo() const { return (unsigned long long) (uintptr_t) arena_; }
-    unsigned long long arena_hi() const { return (unsigned long long) (uintptr_t) (arena_ + arena_bytes_); }
-    bool identity_mapped() const {
-        for (size_t i = 0; i < chunks_.size(); ++i)
-            if (chunk_dev_[i] != nullptr && chunk_dev_[i] != chunks_[i].first) return false;
-        return true;
-    }
     size_t max_blob() const { return slot_bytes_ - 2 * kSlack; }
 
     /// At a window boundary (nothing reading the slots; the caller applies `ev` to the device's table before the next window):

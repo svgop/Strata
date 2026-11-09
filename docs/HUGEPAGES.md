@@ -65,9 +65,12 @@ strata: hugepages: the expert complement: 37.59 GiB of 37.59 GiB in 2 MiB pages 
 strata: STRATA_SHADOW_EXPERTS=...: shadow Q2_0 expert store mapped - 31.64 GiB; 2 MiB pool pages (memfd, populated in 3.4 s)
 ```
 
-A degraded boot says so, in the same voice: `ARENA PAGES: 4K - DEGRADED CLASS (...)`. Benches can
-refuse to measure a silently-4K boot: `STRATA_ARENA_PAGES=strict` exits 70 instead of serving
-degraded. Silent fallbacks are the bug class this campaign killed; loudness is the invariant.
+A 4K boot says so, in the same voice, with the vocabulary matching the state:
+`ARENA PAGES: 4K - DEGRADED CLASS (...)` when a pool exists and this organ still fell to 4K
+(the disease signal), or `ARENA PAGES: 4K - POOL UNARMED (...)` when no pool is armed — the
+default on a released (doctrine-correct) or never-configured device, not a fault. Benches can
+refuse to measure a silently-4K boot either way: `STRATA_ARENA_PAGES=strict` exits 70 instead of
+serving 4K. Silent fallbacks are the bug class this campaign killed; loudness is the invariant.
 
 ## Sizing the pool
 

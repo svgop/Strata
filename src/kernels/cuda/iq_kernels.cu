@@ -5201,7 +5201,6 @@ __device__ __forceinline__ uint32_t w2_ld_b2(const uint8_t* p) {   // 4 bytes at
     const uint16_t* q = reinterpret_cast<const uint16_t*>(p);
     return (uint32_t) q[0] | ((uint32_t) q[1] << 16);
 }
-__device__ __forceinline__ half2 w2_h2(uint32_t v) { half2 h; memcpy(&h, &v, 4); return h; }
 __device__ __forceinline__ uint32_t w2_u32(half2 h) { uint32_t v; memcpy(&v, &h, 4); return v; }
 
 // the raw stage rs of the block's 128 rows: segw words per row from the 4-byte aligned start at or below rs * raw_b

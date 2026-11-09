@@ -1,6 +1,7 @@
 // src/core/pinned.cu - P2.S1: the pinned host arena and the parallel expert load.
 #include "strata/core/pinned.hpp"
 #include "strata/platform/memory.hpp"
+#include "strata/platform/hugepage.hpp"   // huge_pool_total_pages: the banner's unarmed/degraded key
 #include "strata/core/pin_budget.hpp"
 
 #include <cuda_runtime.h>
@@ -421,6 +422,10 @@ namespace {
 // degradation class the #2126 guard falls into when the 2 MiB supply runs out).  Loud once per
 // >=1 GiB arena; STRATA_ARENA_PAGES=strict makes a bench refuse a silently 4K arena (exit 70)
 // instead of measuring one by accident.  Default stays serve-degraded.
+// Vocabulary law (2026-11-09, same day the standing-pool doctrine flipped to released): 4K is
+// DEGRADED only when a pool exists and the organ still fell to 4K (the disease signal); with no
+// pool armed it is the UNARMED default - a released (doctrine-correct) or never-configured
+// device, the doctor's own vocabulary, not a fault.  The strict refusal fires either way.
 void announce_page_class(uint64_t bytes, PageBacking backing, const std::string& note) {
     if (bytes < (1ull << 30)) return;
     if (backing == PageBacking::LargePages) {
@@ -428,8 +433,15 @@ void announce_page_class(uint64_t bytes, PageBacking backing, const std::string&
                      (double) bytes / (1ull << 30));
         return;
     }
-    std::fprintf(stderr, "strata: ARENA PAGES: 4K - DEGRADED CLASS (%.1f GiB arena): %s\n",
-                 (double) bytes / (1ull << 30), note.c_str());
+    if (strata::platform::huge_pool_total_pages() > 0) {
+        std::fprintf(stderr, "strata: ARENA PAGES: 4K - DEGRADED CLASS (%.1f GiB arena): %s\n",
+                     (double) bytes / (1ull << 30), note.c_str());
+    } else {
+        std::fprintf(stderr, "strata: ARENA PAGES: 4K - POOL UNARMED (%.1f GiB arena): %s "
+                             "(no 2 MiB pool on this device - the default state; "
+                             "tools/strata-doctor.py explains the per-session arm)\n",
+                     (double) bytes / (1ull << 30), note.c_str());
+    }
     const char* strict = std::getenv("STRATA_ARENA_PAGES");
     if (strict != nullptr && std::string(strict) == "strict") {
         std::fprintf(stderr, "strata: STRATA_ARENA_PAGES=strict: refusing to serve a 4K arena - "

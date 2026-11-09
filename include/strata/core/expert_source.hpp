@@ -1292,12 +1292,9 @@ public:
     const std::string& ram_warning() const { return ram_warning_; }
     uint64_t pinned_arena_bytes() const { return pinned_bytes_; }   ///< what the driver registered (the pinned prefix, or the total by need)
     double load_gib_per_second() const { return gib_per_s_; }
-    // Loader fix: the load, split.  `load_seconds()` is the wall clock of the load loop; the other two are
-    // sums over the reader threads (see LoadStats), so on their own they say how much of that wall was spent
-    // waiting for the disk and how much in memcpy + FNV-1a.
+    // Loader fix: the load, split.  `load_seconds()` is the wall clock of the load loop; the reader-thread
+    // sums behind it live in LoadStats (load_read_s_/load_copy_s_: disk wait vs memcpy + FNV-1a).
     double load_seconds() const { return load_seconds_; }
-    double load_read_seconds() const { return load_read_s_; }
-    double load_copy_seconds() const { return load_copy_s_; }
 
 private:
     void* arena_ = nullptr;          ///< the PinnedArena, owned

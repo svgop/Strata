@@ -142,9 +142,6 @@ public:
     /// trim loop reads.  `on = false` disarms the trim's predicate; the capture flag stays (armed-ness is a
     /// boot-time fact - STRATA_SPEC_LOGISTIC's estimator refreshes `beta`/`omega`/`lambda` every round).
     bool set_draft_abort(const strata::spec::DraftAbort& da);
-    /// The last draft()'s per-position stats (p, entropy), valid once its chain returned; -1 = unknown.
-    const float* draft_stats() const { return h_stat_; }
-    bool draft_abort_armed() const { return abort_stats_; }
     /// PROBABILISTIC DRAFT ACCEPTANCE (core/spec_prob.hpp, STRATA_SPEC_PROB=1): this request's drafts are SAMPLED from
     /// q and each draft j's distribution is in spec_q() + j * kSpecQStride (ids, -1 terminated; then float bits),
     /// valid on the host once draft() has returned.  False for greedy requests and where the mode is off.

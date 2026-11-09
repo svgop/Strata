@@ -10,7 +10,7 @@ either installed by setup or detected and explained by `tools/strata-doctor.py`.
 |---|---|---|
 | **Swap guard**: the engine runs under a systemd user scope with `memory.swap.max=0` — its hot memory can never be zram-compressed (a swapped page is a decompression stall mid-window; measured: 299 MiB of the store swap-resident while decode read from storage) | every launcher (`STRATA_SWAP_GUARD=0` opts out; plain-exec fallback on non-systemd hosts) | `/proc/<engine-pid>/cgroup` shows `strata-engine-*.scope`; doctor **C7** |
 | **Store mlock**: the shadow store mapping is locked so it is never swap-eligible (`STRATA_SHADOW_MLOCK=0` opts out) | `src/core/shadow_experts.cpp` | boot line `mlock refused` only on failure; store page class line |
-| **Page-class truth**: every ≥1 GiB arena prints `ARENA PAGES: 2 MiB` / `4K - DEGRADED CLASS`; benches can refuse a degraded boot (`STRATA_ARENA_PAGES=strict`, exit 70) | `src/core/pinned.cu` | boot banner |
+| **Page-class truth**: every ≥1 GiB arena prints `ARENA PAGES: 2 MiB` / `4K - POOL UNARMED` (no pool = the default state) / `4K - DEGRADED CLASS` (a pool exists but this organ fell to 4K); benches can refuse a 4K boot (`STRATA_ARENA_PAGES=strict`, exit 70) | `src/core/pinned.cu` | boot banner |
 | **Boot-time geometry gate**: the served context must match the armed geometry or the server refuses (exit 7) | `serve/server.py` + handshake | boot INFO banner |
 | **CPU pinning** (optional): `STRATA_ENGINE_CPUS=8-15,24-31` pins the engine to one CCD on hybrid-cache CPUs; measured neutral on a quiet box — use it on contended machines | launchers, env-gated | `taskset` in the process cmdline |
 
