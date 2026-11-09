@@ -163,3 +163,6 @@ qwen,2026-11-09,003d78d8,GSQ warm-residency recovery bank (see solo row for witn
 qwen,2026-11-09,35653c90,GSQ RELEASED-STATE recovery bank (pool=0 fresh boot kernel 7.2.15; warm probes 2-3 mean; witnesses: complement one-shot cudaHostAlloc 4K + tmpfs store + full 184G general; vs leg-0 anchor +0.3/+7.1/+10.6 pct; armed-state comparison same day read -12-15 pct below this),solo,206.6,0,mean
 qwen,2026-11-09,35653c90,GSQ RELEASED-STATE recovery bank (see solo row for witnesses and disclosure),pair,199.0,0,mean
 qwen,2026-11-09,35653c90,GSQ RELEASED-STATE recovery bank (see solo row for witnesses and disclosure),conc,291.0,0,mean
+qwen,2026-11-09,current,GSQ evening 5-boot battery (load 3-4 NOT truly quiet - desktop active; last-3-boot means 210.7/189.6/276.1 with max 221.3 solo; true-quiet run auto-scheduled 02:00 at the record hour; COND_RING and doorbell arms screened and parked same evening),solo,210.7,0,mean
+qwen,2026-11-09,current,GSQ evening 5-boot battery (see solo row; load disclosed),pair,189.6,0,mean
+qwen,2026-11-09,current,GSQ evening 5-boot battery (see solo row; load disclosed),conc,276.1,0,mean

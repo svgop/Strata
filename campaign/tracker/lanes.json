@@ -421,6 +421,29 @@
       "pair": "mean",
       "conc": "mean"
      }
+    },
+    {
+     "date": "2026-11-09",
+     "commit": "current",
+     "label": "GSQ evening 5-boot battery (load 3-4 NOT truly quiet - desktop active; last-3-boot means 210.7/189.6/276.1 with max 221.3 solo; true-quiet run auto-scheduled 02:00 at the record hour; COND_RING and doorbell arms screened and parked same evening)",
+     "solo": 210.7,
+     "pair": null,
+     "conc": null,
+     "kinds": {
+      "solo": "mean"
+     }
+    },
+    {
+     "date": "2026-11-09",
+     "commit": "current",
+     "label": "GSQ evening 5-boot battery (see solo row; load disclosed)",
+     "solo": null,
+     "pair": 189.6,
+     "conc": 276.1,
+     "kinds": {
+      "pair": "mean",
+      "conc": "mean"
+     }
     }
    ],
    "prefill": [
