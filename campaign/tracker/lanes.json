@@ -448,8 +448,8 @@
     {
      "date": "2026-11-09",
      "commit": "v6",
-     "label": "GSQ v6 PINNED-REGIME bank (the record regime restored: SM 2962/MEM 13801 held through probes; means 217.5/210.9/291.0 with PEAKS 240.6 solo and 311.5 conc ABOVE the record at load 3-4; vs tonight range +3.2/+11.2/+5.4 no lane worse; ARENAS env also removed same run - the two unreverted window items both cleared)",
-     "solo": 217.5,
+     "label": "GSQ v6 PINNED-REGIME bank (the record regime restored: SM 2962/MEM 13801 held through probes; 3-boot means 216.3/208.2/290.1 with PEAKS 240.6 solo and 311.5 conc ABOVE the record at load 3-4; vs tonight range +3.2/+11.2/+5.4 no lane worse; ARENAS env also removed same run - the two unreverted window items both cleared)",
+     "solo": 216.3,
      "pair": null,
      "conc": null,
      "kinds": {
@@ -461,8 +461,8 @@
      "commit": "v6",
      "label": "GSQ v6 PINNED-REGIME bank (see solo row for witnesses)",
      "solo": null,
-     "pair": 210.9,
-     "conc": 291.0,
+     "pair": 208.2,
+     "conc": 290.1,
      "kinds": {
       "pair": "mean",
       "conc": "mean"
