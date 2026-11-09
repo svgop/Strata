@@ -169,3 +169,6 @@ qwen,2026-11-09,current,GSQ evening 5-boot battery (see solo row; load disclosed
 qwen,2026-11-09,v6,GSQ v6 PINNED-REGIME bank (the record regime restored: SM 2962/MEM 13801 held through probes; 3-boot means 216.3/208.2/290.1 with PEAKS 240.6 solo and 311.5 conc ABOVE the record at load 3-4; vs tonight range +3.2/+11.2/+5.4 no lane worse; ARENAS env also removed same run - the two unreverted window items both cleared),solo,216.3,0,mean
 qwen,2026-11-09,v6,GSQ v6 PINNED-REGIME bank (see solo row for witnesses),pair,208.2,0,mean
 qwen,2026-11-09,v6,GSQ v6 PINNED-REGIME bank (see solo row for witnesses),conc,290.1,0,mean
+qwen,2026-11-09,v6,GSQ RECORD-CLASS RESTORED (quiet-hour v6: controls 223.6/212.2/307.6 means with peaks 238-239 solo and 316-318 conc; GPU-reach wait collapsed 12.27 -> 0.98-1.55ms unpinned - the doorbell is load-dependent poller preemption confirmed by engine telemetry; record 233.1 solo vs tonight mean -4pct with peaks at record; taskset pinning neutral on a quiet box = parked env-gated),solo,223.6,0,mean
+qwen,2026-11-09,v6,GSQ RECORD-CLASS RESTORED (see solo row for witnesses),pair,212.2,0,mean
+qwen,2026-11-09,v6,GSQ RECORD-CLASS RESTORED (see solo row for witnesses),conc,307.6,0,mean

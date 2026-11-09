@@ -467,6 +467,29 @@
       "pair": "mean",
       "conc": "mean"
      }
+    },
+    {
+     "date": "2026-11-09",
+     "commit": "v6",
+     "label": "GSQ RECORD-CLASS RESTORED (quiet-hour v6: controls 223.6/212.2/307.6 means with peaks 238-239 solo and 316-318 conc; GPU-reach wait collapsed 12.27 -> 0.98-1.55ms unpinned - the doorbell is load-dependent poller preemption confirmed by engine telemetry; record 233.1 solo vs tonight mean -4pct with peaks at record; taskset pinning neutral on a quiet box = parked env-gated)",
+     "solo": 223.6,
+     "pair": null,
+     "conc": null,
+     "kinds": {
+      "solo": "mean"
+     }
+    },
+    {
+     "date": "2026-11-09",
+     "commit": "v6",
+     "label": "GSQ RECORD-CLASS RESTORED (see solo row for witnesses)",
+     "solo": null,
+     "pair": 212.2,
+     "conc": 307.6,
+     "kinds": {
+      "pair": "mean",
+      "conc": "mean"
+     }
     }
    ],
    "prefill": [
