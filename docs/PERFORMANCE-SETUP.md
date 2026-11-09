@@ -22,8 +22,8 @@ event-reason logging. This is the measured record regime (means 216.3/208.2/290.
 240.6/311.5 above the Nov-6 record; clocks 2962/13801 held 3/3 boots). MLPerf submissions pin both
 domains at max for the same reason.
 ```
-sudo cp campaign/strata-gpu-lock-v6 /usr/libexec/strata-gpu-lock
-sudo cp campaign/strata-gpu-lock-v4.service /usr/lib/systemd/system/strata-gpu-lock.service
+sudo cp campaign/gpu-lock/strata-gpu-lock-v6 /usr/libexec/strata-gpu-lock
+sudo cp campaign/gpu-lock/strata-gpu-lock-v4.service /usr/lib/systemd/system/strata-gpu-lock.service
 sudo systemctl daemon-reload && sudo systemctl enable --now strata-gpu-lock
 ```
 Doctor **C8** verifies it. Rollback: stop the unit (`ExecStopPost` releases clocks).

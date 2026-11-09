@@ -44,7 +44,7 @@
   "--resident-experts"
  ],
  "cwd": "/home/svg/LLM/strata-custom-2",
- "tokenizer": "/home/svg/LLM/data/packs/unsloth-ud-iq2_xs/tokenizer",
+ "tokenizer": "/home/svg/LLM/data/packs/unsloth-ud-iq4_xs-v31/tokenizer",
  "model_name": "qwen3.8-flash-next-ud-iq4_xs",
  "log": "/home/svg/LLM/strata-custom-2/logs/custom-ud-iq4xs.log",
  "lib_dirs": [

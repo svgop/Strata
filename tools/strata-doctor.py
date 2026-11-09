@@ -187,7 +187,7 @@ def run_checks(catalog: dict) -> list[dict]:
 
     # C8 governor: the GPU clock governor (dual hard-pin while an engine listens) is the measured
     # record regime; detect presence and mode.
-    gov_ok, gov_detail = False, "strata-gpu-lock not installed (campaign/strata-gpu-lock-v6 + .service; the measured record regime pins SM+MEM max while listening)"
+    gov_ok, gov_detail = False, "strata-gpu-lock not installed (campaign/gpu-lock/strata-gpu-lock-v6 + .service; the measured record regime pins SM+MEM max while listening)"
     try:
         import subprocess as _sp
         st = _sp.run(["systemctl", "is-active", "strata-gpu-lock"], capture_output=True, text=True).stdout.strip()
