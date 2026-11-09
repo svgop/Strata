@@ -57,7 +57,10 @@ class; an independent MoE deployment measured the same 0.966× tax with a 70 GiB
 genuinely needs a pool (DeepSeek's all-or-none 110.85 GB copy), arm it **per session**, sized to the
 measured worst draw + 2 GiB — never as a standing device state. The doctor's **C1** encodes the
 doctrine: released is correct for the Qwen rotation; arm only before a DS session
-(`campaign/results/ds-pool-topup-block.sh`), release after.
+(`campaign/results/ds-pool-topup-block.sh`), release after. The era's standing config
+(`campaign/91-strata-hugepages.conf`, deleted 2026-11-09) must not come back — if any boot entry
+still carries the args, strip them:
+`sudo grubby --update-kernel=ALL --remove-args="default_hugepagesz=2M hugepagesz=2M hugepages=54272 hugetlb_free_vmemmap=on"`.
 
 ## Diagnostics that stayed
 

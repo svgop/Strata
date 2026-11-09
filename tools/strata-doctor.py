@@ -210,10 +210,11 @@ def run_checks(catalog: dict) -> list[dict]:
 EXPLAINERS = {
     "C1": (
         "The reserved 2 MiB page pool is {state} on this device.\n"
-        "  The engine's streaming organs (expert arenas, the pinned complement, the shadow store)\n"
-        "  draw guaranteed 2 MiB pages from it: pool memory cannot fragment, swap, or age, and engine\n"
-        "  restarts re-arm perfectly - without it the hot pools silently fall to 4 KiB pages as the\n"
-        "  box ages (10-25% lane decay, reboot-cured; the disease this architecture removes).\n"
+        "  Doctrine (measured 2026-11-09): RELEASED is the correct standing state - a boot-armed\n"
+        "  pool at 50-60% of RAM taxes every workload on the box (-20-22% on a stock engine that\n"
+        "  never touched a hugepage; capacity loss, not page class). A pool is armed per-session,\n"
+        "  runtime-only, for a DeepSeek run (its all-or-none copy needs pool_free >= 110.85 GB);\n"
+        "  Qwen/UD rotations run released - the record class is a released-box number.\n"
         "  Fix for this device:\n{fix}"),
     "C4": (
         "Transparent huge pages are '{state}'.\n"
@@ -233,14 +234,15 @@ EXPLAINERS = {
 
 def fix_block(pages: int) -> str:
     return ("--------------------------- cut here ---------------------------\n"
-            f"sudo grubby --update-kernel=ALL --args=\"default_hugepagesz=2M hugepagesz=2M hugepages={pages} hugetlb_free_vmemmap=on\"\n"
-            f"printf 'vm.nr_hugepages={pages}\\n' | sudo tee /etc/sysctl.d/91-strata-hugepages.conf\n"
+            "# Doctrine 2026-11-09: NO standing pool (a boot-armed 106 GiB pool taxed every workload\n"
+            "# -20-22%); the standing conf is deleted. Strip legacy boot args, keep memlock free.\n"
+            f"sudo grubby --update-kernel=ALL --remove-args=\"default_hugepagesz=2M hugepagesz=2M hugepages={pages} hugetlb_free_vmemmap=on\"\n"
             "printf 'svg soft memlock unlimited\\nsvg hard memlock unlimited\\n' | sudo tee /etc/security/limits.d/90-strata.conf\n"
             "sudo mkdir -p /usr/lib/systemd/system/user@.service.d\n"
             "printf '[Service]\\nLimitMEMLOCK=infinity\\n' | sudo tee /usr/lib/systemd/system/user@.service.d/90-memlock.conf\n"
             "------------------------- end cut here -------------------------\n"
-            "Then reboot once. The pool re-arms itself at every future boot; engine restarts are the\n"
-            "only recycle the engine ever needs.")
+            "Reboots land RELEASED (correct). For a DeepSeek session, arm the pool at runtime:\n"
+            "  sudo bash campaign/results/ds-pool-topup-block.sh   (read-back-or-fail; release after)")
 
 
 def verdict_hash(checks: list[dict]) -> str:

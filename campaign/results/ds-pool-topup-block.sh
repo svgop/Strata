@@ -1,10 +1,13 @@
 #!/bin/bash
-# ds-pool-topup-block.sh — raise the huge-page pool 45076 -> 54272 WITHOUT a reboot (2026-11-09).
+# ds-pool-topup-block.sh — arm the DS session pool at runtime (no reboot, nothing standing).
 #
-# OWNER OF RECORD: campaign/91-strata-hugepages.conf (deployed as /etc/sysctl.d/91-strata-hugepages.conf)
+# OWNER OF RECORD: THIS SCRIPT.  The standing-sysctl era ended 2026-11-09: campaign/91-strata-hugepages.conf
+#                  was DELETED — its armed 106 GiB pool was the biggest proven tax of the regression era
+#                  (-20-22% on a stock engine that never touched a hugepage).  Arming is per-session,
+#                  runtime-only; a reboot lands RELEASED (the doctrine, not a gap).
 # SIZING LAW:      .docs/research/digest/2026-11-08-pool-sizing-tools.md  (54272 = DS all 110.85 GB
 #                  = 52,860 pages + 2 GiB slack, round up 512 -> 54,272 = 106 GiB)
-# REMEDY LAW:      .docs/research/digest/2026-11-07-preboot-ds-pool-sizing.md 5 + the sysctl conf header:
+# REMEDY LAW:      .docs/research/digest/2026-11-07-preboot-ds-pool-sizing.md 5:
 #                  engines down -> drop page cache -> compact_memory -> re-raise in steps -> READ BACK OR FAIL
 #                  (DPDK discipline: the kernel may silently grant fewer pages; declared != actual is a FAIL).
 #
@@ -42,9 +45,14 @@ if [ -n "${PIDS}" ]; then
 fi
 echo "engines: down (8081 free, no strata / serve/server.py processes)"
 
-# ---- Gate 2: declared target still stands (drift check: the sysctl file owns the number) ----
-grep -q "^vm.nr_hugepages=${TARGET}$" /etc/sysctl.d/91-strata-hugepages.conf \
-    || echo "WARN: /etc/sysctl.d/91-strata-hugepages.conf does not declare $TARGET — top-up will not survive a reboot without it." >&2
+# ---- Gate 2: NO standing arm may exist (the convicted state; runtime-only is the doctrine) ----
+if ls /etc/sysctl.d/*hugepage*.conf >/dev/null 2>&1; then
+    echo "WARN: a standing hugepages sysctl exists in /etc/sysctl.d/ — the retired tax era's footprint; remove it (sudo rm /etc/sysctl.d/*hugepage*.conf)." >&2
+fi
+if grep -q "hugepages=" /proc/cmdline 2>/dev/null; then
+    echo "WARN: this boot's cmdline carries hugepages= args — strip every entry so future boots stay released:" >&2
+    echo "      sudo grubby --update-kernel=ALL --remove-args=\"default_hugepagesz=2M hugepagesz=2M hugepages=54272 hugetlb_free_vmemmap=on\"" >&2
+fi
 
 BEFORE=$(count)
 AVAIL_KB=$(awk '/^MemAvailable:/{print $2}' /proc/meminfo)
@@ -76,8 +84,9 @@ if [ "$FINAL" -ge "$TARGET" ]; then
     echo "OK: HugePages_Total=$FINAL / Free=$FREE ($(page_gib $FINAL) GiB pool)."
     echo "OK: pool_free = $(awk -v p=$FINAL 'BEGIN{printf "%.2f", p*2097152/1e9}') GB >= DS all 110.85 GB -> huge_arena arms at the next DS boot; pin arms with it (arena_all_huge)."
     echo "next: bash campaign/batteries/ds-verify.sh   (2 boots + witness grep; NOT run by this block)"
+    echo "release after the session: echo 0 > /proc/sys/vm/nr_hugepages   (or just reboot - clean by default)"
     exit 0
 fi
 echo "FAIL: got $FINAL pages instead of $TARGET (best pass $BEST; short $((TARGET-FINAL)) pages = $(( (TARGET-FINAL)*2/1024 )) GiB)" >&2
-echo "FAIL: at $FINAL pages DS stays disarmed (pool_free < all 110.85 GB -> budget 0 -> no copy, no pin). The guaranteed arm is a REBOOT with the sysctl file in place (pristine buddy, M5 law)." >&2
+echo "FAIL: at $FINAL pages DS stays disarmed (pool_free < all 110.85 GB -> budget 0 -> no copy, no pin). Retry from a quieter box (close memory hogs first); a reboot does NOT help anymore - it disarms by doctrine." >&2
 exit 1

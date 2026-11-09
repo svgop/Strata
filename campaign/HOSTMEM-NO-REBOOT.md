@@ -1,6 +1,9 @@
 # The no-reboot host-memory architecture
 
-**Status:** design, research-validated 2026-11-07. Owner: this file + the move owners below.
+**Status:** SUPERSEDED in part 2026-11-09 — the engine organs shipped and stay, but the STANDING
+boot-armed pool this design taught was convicted (−20–22% tax on every workload; the sysctl conf
+deleted). Current doctrine: released standing state, per-session runtime arming for DS only — see
+`docs/HUGEPAGES.md` § Arming. This file remains as the design record. Owner: this file + the move owners below.
 Evidence: three digests at `.docs/research/digest/2026-11-07-hostmem-{inference-servers,kernel-state,no-reboot-precedents}.md`
 (verified against upstream source and kernel docs; every claim carries a citation and confidence grade there).
 Gates: law 17 on every move (before/after, same aged box, same-day interleave), law 13 (no lane worse),
@@ -61,7 +64,8 @@ construction** — no THP policy, no collapse, unswappable, unfragmentable. The 
 reserved pool the engines' arenas draw from. Owners: the unit + `shm-shadow.sh` + the three launchers'
 tier-0 (file-presence guarded, unchanged). Witness: `HugePages_Free` delta across the copy; store miss-path µs.
 
-**M2 — supply-side sysctls (one line, root).** `vm.compaction_proactiveness=20→40` via
+**M2 — supply-side sysctls (one line, root).** *(retired 2026-11-09 with the standing-pool era —
+the conf is deleted; reverted to kernel default 20.)* `vm.compaction_proactiveness=20→40` via
 `/etc/sysctl.d/90-strata-vm.conf` (digest-3 range 40-50; watch kcompactd CPU). This raises the free-2-MiB-block
 supply the #2126 guard checks, so fresh boots and restarts pass it more often. Witness: the guard's
 "NOT requested" banner disappearing from boots over time.
@@ -90,7 +94,8 @@ appears. Owner: the three launchers.
 One pool serves both organs: the store (M1, hugetlbfs) and the engines' arenas — the tree's `MAP_HUGETLB`
 path engages alone once `nr_hugepages` covers the request. **45056 pages (88 GiB)** covers the standing
 rotation: store ~38 GiB + GSQ complement 37.6 GiB (T35 C2, M3-armed) or UD-IQ2_XS arena 39.4 GiB + KV shadow
-~3 GiB, with slack. Arming: `campaign/91-strata-hugepages.conf` in `/etc/sysctl.d/` — at boot the buddy is
+~3 GiB, with slack. Arming: *(superseded — the conf is deleted; per-session runtime only, see
+`docs/HUGEPAGES.md` § Arming)* ~~`campaign/91-strata-hugepages.conf` in `/etc/sysctl.d/`~~ — at boot the buddy is
 pristine and the reservation is whole; at **runtime** it can come up short (silently partial, kernel docs), so
 the runtime path is: engine down → `compact_memory` once → raise in steps → read the achieved count back.
 Engines stop/start return whole pages to the pool — restart is a perfect re-arm, forever, and nothing the box

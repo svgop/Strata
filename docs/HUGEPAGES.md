@@ -1,6 +1,8 @@
 # The reserved-page memory architecture (hugepages)
 
-**Status:** shipped and standing on the svg line (2026-11-08). Owner: `src/core/pinned.cu`
+**Status:** engine capability shipped; the standing-pool era RETIRED 2026-11-09 — a 106 GiB pool
+armed at every boot was the biggest proven tax of the regression era (see *Arming*). The organs
+stay; the standing state is gone. Owner: `src/core/pinned.cu`
 (`reserve()`, `announce_page_class`), `include/strata/platform/hugepage.hpp` (`huge_alloc`,
 `huge_pool_covers`), `src/core/shadow_experts.cpp` (the memfd store), `src/core/expert_source.cpp`
 (the paced pool path). Research: `.docs/research/digest/2026-11-07-hostmem-*.md` (three digests)
@@ -26,8 +28,8 @@ disease: best-effort binding degrades exactly the same way on a fragmented box.
 
 ## The architecture, in one paragraph
 
-At boot the kernel carves a **reserved pool of 2 MiB pages** (a fixed count, armed from the kernel
-command line — the strongest, earliest, pre-fragmentation reservation). The engine draws its large
+The kernel carves a **reserved pool of 2 MiB pages** (a fixed count; armed per-session at runtime
+on this estate — see *Arming*). The engine draws its large
 streaming organs from that pool with `MAP_HUGETLB` — whole pages in, whole pages out. Pool pages
 cannot fragment (they are never split), cannot swap, and cannot age. Engine stop returns every page
 to the pool intact; engine start re-arms perfectly. Nothing accumulates across restarts, so nothing
@@ -82,21 +84,25 @@ All-or-none consumers (DS's `DS4_COPY_HUGETLB` arms only when `HugePages_Free �
 non-optional: a pool 124 pages short of the worst case silently disarms the whole mechanism for
 that model.
 
-## Arming (per device, once)
+## Arming (per DS session, runtime-only — the standing era is over)
 
-```
-sudo grubby --update-kernel=ALL --args="default_hugepagesz=2M hugepagesz=2M hugepages=54272 hugetlb_free_vmemmap=on"
-```
+The standing install this doc originally taught (grubby args + `/etc/sysctl.d/91`, armed at every
+boot) was **convicted 2026-11-09**: a 106 GiB pool at 50–60% of RAM taxes *every* workload on the
+box — measured −12–15% on this engine and −20–22% on a stock engine that never touched a hugepage
+(capacity loss, not page class). The conf was deleted. The doctrine since:
 
-plus `vm.nr_hugepages=<same>` in `/etc/sysctl.d/` as reconciliation, and `memlock unlimited`
-(`limits.d` + the user-service drop-in) so working-set locks on large mappings can never fail.
-Runtime reservation (writing `nr_hugepages` on a booted box) is **silently partial** when the buddy
-is fragmented — measured 24369 of 45056 and 45056 of 54272 — which is why boot-time arming is the
-supported path. `hugetlb_free_vmemmap=on` (HVO) refunds ~1.2 GiB of page-table memory and removes
-~360K unmovable pages from the general allocator.
-
-Release for an LLM-free period is one command (`echo 0 > /proc/sys/vm/nr_hugepages`); the next
-boot re-arms automatically.
+- **Standing state: RELEASED.** No hugepages kernel args, no sysctl.d file. Strip any legacy boot
+  entry: `sudo grubby --update-kernel=ALL --remove-args="default_hugepagesz=2M hugepagesz=2M hugepages=54272 hugetlb_free_vmemmap=on"`.
+  A reboot lands released — that is correct, not a gap.
+- **DS session arm: runtime-only** — `sudo bash campaign/results/ds-pool-topup-block.sh`
+  (engines down → drop cache → compact → raise in steps → **READ BACK OR FAIL**; runtime
+  reservation is silently partial on a fragmented buddy — measured 24369 of 45056 — which is what
+  the read-back law exists for).
+- **Release after the session:** `echo 0 > /proc/sys/vm/nr_hugepages`, or just reboot (clean by default).
+- Qwen/UD rotations run released by design — the record class (231/225/315) is a released-box
+  number; the organs fall back to THP-madvise/4K without the pool.
+- `memlock unlimited` (`limits.d` + the user-service drop-in) stays either way — the working-set
+  locks are engine-level, pool or no pool.
 
 ## Rollbacks (every one is a single switch)
 
