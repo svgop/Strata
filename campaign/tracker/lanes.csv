@@ -166,3 +166,6 @@ qwen,2026-11-09,35653c90,GSQ RELEASED-STATE recovery bank (see solo row for witn
 qwen,2026-11-09,current,GSQ evening 5-boot battery (load 3-4 NOT truly quiet - desktop active; last-3-boot means 210.7/189.6/276.1 with max 221.3 solo; true-quiet run auto-scheduled 02:00 at the record hour; COND_RING and doorbell arms screened and parked same evening),solo,210.7,0,mean
 qwen,2026-11-09,current,GSQ evening 5-boot battery (see solo row; load disclosed),pair,189.6,0,mean
 qwen,2026-11-09,current,GSQ evening 5-boot battery (see solo row; load disclosed),conc,276.1,0,mean
+qwen,2026-11-09,v6,GSQ v6 PINNED-REGIME bank (the record regime restored: SM 2962/MEM 13801 held through probes; means 217.5/210.9/291.0 with PEAKS 240.6 solo and 311.5 conc ABOVE the record at load 3-4; vs tonight range +3.2/+11.2/+5.4 no lane worse; ARENAS env also removed same run - the two unreverted window items both cleared),solo,217.5,0,mean
+qwen,2026-11-09,v6,GSQ v6 PINNED-REGIME bank (see solo row for witnesses),pair,210.9,0,mean
+qwen,2026-11-09,v6,GSQ v6 PINNED-REGIME bank (see solo row for witnesses),conc,291.0,0,mean
