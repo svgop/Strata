@@ -124,11 +124,16 @@ def run_checks(catalog: dict) -> list[dict]:
     size_kb = mi.get("Hugepagesize", 0) // 1024
     out = []
 
-    out.append({"id": "C1", "name": "pool", "ok": total >= want, "state":
-                "armed" if total >= want else ("partial" if total > 0 else "unarmed"),
-                "detail": f"{total} pages armed ({total * HP / GiB:.0f} GiB) vs {want} required "
-                          f"({want * HP / GiB:.0f} GiB; demand {math_['demand_pages']} pages from '{math_['binding_group']}' + 2 GiB slack)"
-                + (f"  [CAPPED by the general-RAM floor from {math_['want']}]" if math_["capped"] else "")})
+    # Doctrine (2026-11-09, measured): a standing pool at 50-60%% of RAM taxes EVERY workload on the
+    # box (stock -20%% without touching a hugepage).  The released state is correct for the Qwen
+    # rotation; a pool is armed per-session only for a DeepSeek run.  So unarmed is OK-by-doctrine,
+    # and the check reports what a future DS session would need.
+    out.append({"id": "C1", "name": "pool", "ok": total >= want or total == 0, "state":
+                "armed" if total >= want else ("partial" if total > 0 else "unarmed-by-doctrine"),
+                "detail": f"{total} pages armed ({total * HP / GiB:.0f} GiB) vs {want} for a DS session "
+                          f"({math_['demand_pages']} pages from '{math_['binding_group']}' + 2 GiB slack); "
+                          + ("released state = correct for the Qwen rotation (a standing pool taxes every workload)"
+                             if total == 0 else "arm per-session only for DS")})
 
     out.append({"id": "C2", "name": "page-class", "ok": size_kb == 2048, "state":
                 "ok" if size_kb == 2048 else "off",
@@ -150,6 +155,50 @@ def run_checks(catalog: dict) -> list[dict]:
                 "ok" if ml >= 64 * GiB or ml == -1 else "tight",
                 "detail": f"RLIMIT_MEMLOCK {ml / GiB:.1f} GiB in this shell (large working-set locks want unlimited; "
                           f"check the user-service drop-in for the engine's session)"})
+
+    # C7 swap guard: a serving engine must run under a scope with memory.swap.max=0 (the launcher
+    # arms it automatically); report the witness when an engine listens, else the launcher capability.
+    import glob as _glob
+    guard_ok, guard_detail = True, "launcher arms MemorySwapMax=0 automatically (systemd-run scope; plain exec fallback)"
+    try:
+        from pathlib import Path as _P
+        import os as _os
+        pid = None
+        for d in _glob.glob("/proc/[0-9]*"):
+            try:
+                if _P(d + "/comm").read_text().strip() == "strata":
+                    pid = _os.path.basename(d); break
+            except OSError:
+                pass
+        if pid:
+            cg = _P(f"/proc/{pid}/cgroup").read_text().strip()
+            unit = cg.rsplit("/", 1)[-1]
+            base = cg.split("::", 1)[-1].rsplit("/", 1)[0]
+            sw = _P(f"/sys/fs/cgroup{base}/{unit}/memory.swap.max")
+            if "strata-engine-" in unit and sw.exists() and sw.read_text().strip() == "0":
+                guard_detail = f"engine {pid} under {unit} with memory.swap.max=0"
+            elif sw.exists() and sw.read_text().strip() != "0":
+                guard_ok = False
+                guard_detail = f"engine {pid} in {unit} with memory.swap.max={sw.read_text().strip()} - swap-eligible hot pages (launch via the repo launcher)"
+    except Exception as e:
+        guard_detail += f" (probe error: {e})"
+    out.append({"id": "C7", "name": "swap-guard", "ok": guard_ok, "state": "ok" if guard_ok else "off",
+                "detail": guard_detail})
+
+    # C8 governor: the GPU clock governor (dual hard-pin while an engine listens) is the measured
+    # record regime; detect presence and mode.
+    gov_ok, gov_detail = False, "strata-gpu-lock not installed (campaign/strata-gpu-lock-v6 + .service; the measured record regime pins SM+MEM max while listening)"
+    try:
+        import subprocess as _sp
+        st = _sp.run(["systemctl", "is-active", "strata-gpu-lock"], capture_output=True, text=True).stdout.strip()
+        if st == "active":
+            j = _sp.run(["journalctl", "-t", "strata-gpu-lock", "-n", "1", "--no-pager"], capture_output=True, text=True).stdout
+            gov_ok = "HARD PIN" in j or "watching v" in j
+            gov_detail = ("strata-gpu-lock active: " + (j.strip().rsplit(": ", 1)[-1][:120] if j.strip() else "banner unread"))
+    except Exception as e:
+        gov_detail += f" (probe error: {e})"
+    out.append({"id": "C8", "name": "governor", "ok": gov_ok, "state": "ok" if gov_ok else "absent",
+                "detail": gov_detail})
 
     out.append({"id": "C6", "name": "ram", "ok": math_["want"] <= math_["cap"] or not math_["capped"], "state":
                 "ok" if not math_["capped"] else "capped",

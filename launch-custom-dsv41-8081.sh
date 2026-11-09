@@ -16,4 +16,11 @@ export DS4_ATTN_SPLIT=1
 export STRATA_DS4_SLOT_DIR="${STRATA_DS4_SLOT_DIR:-/home/svg/LLM/data/ds4-slots}"  # the runtime slot cache lives in the estate, not the repo (server.py:3413 otherwise derives it from the log path)
 
 cd "$(dirname "$0")"
+# Swap guard (ship-ready, 2026-11-09): the engine's memory must never be zram'd - a swapped hot
+# page is a decompression stall mid-window (measured: 299 MiB of the store swap-resident and decode
+# reading from storage).  A systemd user scope with MemorySwapMax=0 pins the whole engine; the plain
+# exec below stays as the fallback for containers / non-systemd hosts (guard absent there, serve works).
+if [ "${STRATA_SWAP_GUARD-1}" != "0" ] && command -v systemd-run >/dev/null 2>&1 && [ -n "${XDG_RUNTIME_DIR:-}" ]; then
+  exec systemd-run --user --scope --collect -q -p MemorySwapMax=0 --unit="strata-engine-$$" .venv/bin/python serve/server.py --engine strata --config "$PWD/config/custom-dsv41-8081.json" --port 8081 --host 0.0.0.0
+fi
 exec .venv/bin/python serve/server.py --engine strata --config "$PWD/config/custom-dsv41-8081.json" --port 8081 --host 0.0.0.0

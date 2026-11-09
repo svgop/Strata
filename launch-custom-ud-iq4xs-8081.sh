@@ -118,4 +118,11 @@ export STRATA_ROUTE_RESIDENT_MTP=1
 if [ "$(awk '/^HugePages_Free/{{print $2}}' /proc/meminfo)" -lt 17000 ]; then bash campaign/shm-shadow.sh >/dev/null 2>&1 || true; fi
 
 cd "$(dirname "$0")"
+# Swap guard (ship-ready, 2026-11-09): the engine's memory must never be zram'd - a swapped hot
+# page is a decompression stall mid-window (measured: 299 MiB of the store swap-resident and decode
+# reading from storage).  A systemd user scope with MemorySwapMax=0 pins the whole engine; the plain
+# exec below stays as the fallback for containers / non-systemd hosts (guard absent there, serve works).
+if [ "${STRATA_SWAP_GUARD-1}" != "0" ] && command -v systemd-run >/dev/null 2>&1 && [ -n "${XDG_RUNTIME_DIR:-}" ]; then
+  exec systemd-run --user --scope --collect -q -p MemorySwapMax=0 --unit="strata-engine-$$" .venv/bin/python serve/server.py --engine strata --config "$PWD/config/custom-ud-iq4xs-8081.json" --port 8081 --host 0.0.0.0
+fi
 exec .venv/bin/python serve/server.py --engine strata --config "$PWD/config/custom-ud-iq4xs-8081.json" --port 8081 --host 0.0.0.0
