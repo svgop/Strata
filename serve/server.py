@@ -1687,6 +1687,22 @@ class StrataEngine:
                 return line
         return None
 
+    def _claim_slot(self, slot: int) -> None:
+        """Mark `slot` taken by a request (the caller holds slot_cv).  The one write pair - its twin is
+        _free_slot; nothing else may touch slot_busy/slot_claims (the #1603 orphan reaper and
+        _park_slot's guard read both under the lock)."""
+        self.slot_busy[slot] = True
+        self.slot_claims.add(slot)
+
+    def _free_slot(self, slot: int) -> None:
+        """Give `slot` back and wake the waiters (the caller holds slot_cv).  One place: the idiom this
+        replaces was copy-pasted at nine sites, and its captured-vs-live drift was the `releasing`
+        NameError bug class (a free landing in a dead list under restart() leaves the slot stuck busy
+        in the live one - the #1603 reaper then fights a ghost)."""
+        self.slot_busy[slot] = False
+        self.slot_claims.discard(slot)
+        self.slot_cv.notify_all()
+
     def _release_slot_when_done(self, slot: int, stream: list[int] | None = None):
         """A slot whose consumer left (a stop token, a stop string, a disconnect): BSTOP it and free it once the engine
         says BDONE (in the background).  `stream`: the prompt and every token of it so far - with the tokens still to
@@ -1699,7 +1715,10 @@ class StrataEngine:
             pass
         q, busy, held, releasing = self.slot_q[slot], self.slot_busy, self.slot_held, self.slot_releasing   # this process's: restart() replaces them
         with self.slot_cv:                       # readers iterate the set under the lock (#9)
-            self.slot_releasing.add(slot)
+            releasing.add(slot)                  # the CAPTURED set - the same object wait() discards from below.
+                                                 # (add-on-live/discard-on-captured was a split brain: a restart in
+                                                 # between left the NEW set holding a ghost member that defeated the
+                                                 # #1603 reaper and _park_slot's guard for that slot, forever.)
 
         def wait():
             end = time.monotonic() + 600.0
@@ -1738,12 +1757,11 @@ class StrataEngine:
         with self.slot_cv:
             self.slot_claims.discard(slot)
             self.slot_busy[slot] = True
-        busy = self.slot_busy
 
         def free():
-            with self.slot_cv:
+            with self.slot_cv:                   # guard and write on the SAME (live) state
                 if slot not in self.slot_claims and slot not in self.slot_releasing:
-                    busy[slot] = False
+                    self.slot_busy[slot] = False
                 self.slot_cv.notify_all()
         t = threading.Timer(self.SLOT_PARK_S, free)
         t.daemon = True
@@ -1965,8 +1983,7 @@ class StrataEngine:
                             with self.slot_cv:          # the slot the part read will wait in
                                 reserved = self.pick_slot(prompt)
                                 if reserved is not None:
-                                    self.slot_busy[reserved] = True
-                                    self.slot_claims.add(reserved)
+                                    self._claim_slot(reserved)
                             if reserved is not None:
                                 self._send(f"BYIELD {reserved}")
                     for x in self._control(cancel, pending.append, stop_when=others, on_quiet=give_way):
@@ -1988,9 +2005,7 @@ class StrataEngine:
                         slot, reserved = reserved, None     # gave way: the read goes on in that slot (below)
                     elif reserved is not None:              # it did not give way: the slot is free again
                         with self.slot_cv:
-                            self.slot_busy[reserved] = False
-                            self.slot_claims.discard(reserved)
-                            self.slot_cv.notify_all()
+                            self._free_slot(reserved)
                         reserved = None
                     if slot is None:
                         finish = (self.last or {}).get("finish") if isinstance(self.last, dict) else None
@@ -2051,8 +2066,7 @@ class StrataEngine:
                             with self.slot_cv:
                                 slot = self.pick_slot(prompt)
                                 if slot is not None:
-                                    self.slot_busy[slot] = True
-                                    self.slot_claims.add(slot)
+                                    self._claim_slot(slot)
                                     if admit_wait:
                                         admit_wait = False
                                         self.admitting = max(0, self.admitting - 1)
@@ -2232,9 +2246,7 @@ class StrataEngine:
                             self.slot_live[slot] = None
                             self.slot_used[slot] = time.time()
                             with self.slot_cv:
-                                self.slot_busy[slot] = False
-                                self.slot_claims.discard(slot)
-                                self.slot_cv.notify_all()
+                                self._free_slot(slot)
                             slot, gen0 = None, None
                             if reused0 is None:
                                 reused0 = (self.last or {}).get("reused")
@@ -2277,9 +2289,7 @@ class StrataEngine:
                     self.admitting = max(0, self.admitting - 1)
             if reserved is not None and reserved < len(self.slot_busy):   # a restart rebuilt the lists
                 with self.slot_cv:
-                    self.slot_busy[reserved] = False
-                    self.slot_claims.discard(reserved)
-                    self.slot_cv.notify_all()
+                    self._free_slot(reserved)
             if slot is not None and slot < len(self.slot_live):   # a restart rebuilt the lists (fewer slots)
                 self.slot_live[slot] = None
                 self.slot_used[slot] = time.time()
@@ -2287,9 +2297,7 @@ class StrataEngine:
                     stream = list(prompt) + out[gen0:] if gen0 is not None and len(out) > gen0 else None
                     self.slot_held[slot] = stream[:-1] if stream else []     # as the BDONE wait leaves it
                     with self.slot_cv:
-                        self.slot_busy[slot] = False
-                        self.slot_claims.discard(slot)
-                        self.slot_cv.notify_all()
+                        self._free_slot(slot)
                 elif phase == "slot":
                     self.slot_held[slot] = []
                     stream = list(prompt) + out[gen0:] if gen0 is not None and len(out) > gen0 else None
@@ -2297,9 +2305,7 @@ class StrataEngine:
                     self.slot_claims.discard(slot)                # (the BDONE wait owns it now)
                 else:
                     with self.slot_cv:
-                        self.slot_busy[slot] = False
-                        self.slot_claims.discard(slot)
-                        self.slot_cv.notify_all()
+                        self._free_slot(slot)
 
     slot_groups = 1         # --batch-groups (set when the engine starts)
     SLOT_PREFIX_MIN = 512   # a held prefix shorter than this is not worth unbalancing the pipeline's groups

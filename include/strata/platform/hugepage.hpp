@@ -83,22 +83,26 @@ inline uint64_t huge_pool_free_bytes() {
 /// standing reservation (the shadow store's MAP_SHARED reserve) counts against the cover (Free
 /// includes Rsvd; the honest cover test is Free - Rsvd, F4 2026-11-09 bootstorm).
 inline bool huge_pool_covers(size_t bytes) {
-    const size_t page = 2ull << 20;
-    const size_t rounded = (bytes + page - 1) / page * page;
-    uint64_t free_kib = 0, rsvd_kib = 0;
+    uint64_t page_kib = 2048;   // Hugepagesize read, 2 MiB default
+    uint64_t free_pages = 0, rsvd_pages = 0;
     if (std::ifstream f("/proc/meminfo"); f) {
         std::string line;
         while (std::getline(f, line)) {
             if (line.rfind("HugePages_Free:", 0) == 0) {
                 unsigned long n = 0;
-                if (std::sscanf(line.c_str(), "HugePages_Free: %lu", &n) == 1) free_kib = n;
+                if (std::sscanf(line.c_str(), "HugePages_Free: %lu", &n) == 1) free_pages = n;
             } else if (line.rfind("HugePages_Rsvd:", 0) == 0) {
                 unsigned long n = 0;
-                if (std::sscanf(line.c_str(), "HugePages_Rsvd: %lu", &n) == 1) rsvd_kib = n;
+                if (std::sscanf(line.c_str(), "HugePages_Rsvd: %lu", &n) == 1) rsvd_pages = n;
+            } else if (line.rfind("Hugepagesize:", 0) == 0) {
+                unsigned long n = 0;
+                if (std::sscanf(line.c_str(), "Hugepagesize: %lu", &n) == 1 && n > 0) page_kib = n;
             }
         }
     }
-    return (free_kib > rsvd_kib ? free_kib - rsvd_kib : 0) * (page / 1024) >= rounded / 1024;
+    const uint64_t page_bytes = page_kib * 1024ull;
+    const uint64_t pages_needed = ((uint64_t) bytes + page_bytes - 1) / page_bytes;   // MAP_HUGETLB takes whole pages
+    return (free_pages > rsvd_pages ? free_pages - rsvd_pages : 0) >= pages_needed;
 }
 #else
 inline bool huge_pool_covers(size_t) { return false; }

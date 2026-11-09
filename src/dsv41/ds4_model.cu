@@ -27,6 +27,7 @@
 #include "ds4_vision.cuh"
 #include "strata/dsv41/exl3_cpu.hpp"
 #include "strata/dsv41/exl3.hpp"
+#include "strata/platform/hugepage.hpp"   // huge_pool_free_bytes: the Rsvd-honest pool probe (the DS-local twin is gone)
 #include "strata/kernels/f16_bits.hpp"
 #include "strata/core/host_mem.hpp"   # the substrate sampler (the ram_avail fold)
 #include "strata/artifact/gguf_reader.hpp"
@@ -4665,7 +4666,11 @@ struct Model::Impl {
         // its free bytes so the full copy is taken when the pool holds it.
         // 0.2.7: DS4_COPY_HUGETLB unset = ON when the reserved pool already holds the whole copy (HugePages_Free), else the
         // ordinary arena exactly as before; =0 is the off switch, =1 asks for it anyway (a smaller pool is used, the rest warns).
-        const uint64_t pool_free = os::huge_free_bytes();
+        // F4-class fix (2026-11-10, the RAM-budget audit): the probe now subtracts HugePages_Rsvd - Free INCLUDES the
+        // reserved subset, so a standing MAP_SHARED reservation (e.g. a co-resident Qwen shadow store) used to make this
+        // say "pool holds the whole copy", the all-or-none mmap then failed, and the copy silently degraded to the
+        // pinned-4K THP arena. Delegate to the one owner (hugepage.hpp), same correction the Qwen side carries.
+        const uint64_t pool_free = strata::platform::huge_pool_free_bytes();
         const bool huge_arena = strata::ds4::copy_hugetlb_default(env_tri("DS4_COPY_HUGETLB"), (double) pool_free, all, defaults_026());
         if (huge_arena && std::getenv("DS4_COPY_HUGETLB") == nullptr)
             std::fprintf(stderr, "ds4: the reserved huge-page pool (%.1f GB free) holds the whole copy (%.1f GB): the arena on 2 MB pages "

@@ -398,26 +398,10 @@ inline bool in_ram(const void* p, size_t n) {
 #endif
 }
 
-/// Bytes free in the kernel's explicit huge-page pool (HugePages_Free x Hugepagesize); 0 elsewhere or when unreadable.
-/// (MemAvailable does not count a reserved pool, so a budget that must see it - the copy arena on DS4_COPY_HUGETLB -
-/// adds this.)
-inline uint64_t huge_free_bytes() {
-#if defined(_WIN32)
-    return 0;
-#else
-    std::FILE* f = std::fopen("/proc/meminfo", "r");
-    if (f == nullptr) return 0;
-    char line[256];
-    uint64_t pages = 0, size_kb = 0;
-    while (std::fgets(line, sizeof line, f) != nullptr) {
-        unsigned long long v = 0;
-        if (std::sscanf(line, "HugePages_Free: %llu", &v) == 1) pages = v;
-        else if (std::sscanf(line, "Hugepagesize: %llu kB", &v) == 1) size_kb = v;
-    }
-    std::fclose(f);
-    return pages * size_kb * 1024ull;
-#endif
-}
+// huge_free_bytes() REMOVED (2026-11-10, the RAM-budget audit): its Free-only read overstated the pool by
+// exactly any standing MAP_SHARED reservation (HugePages_Free includes HugePages_Rsvd) - the F4 bug class,
+// fixed on the Qwen side only, until now. The one caller (the DS4_COPY_HUGETLB copy budget, ds4_model.cu)
+// delegates to the single owner: strata::platform::huge_pool_free_bytes() (hugepage.hpp, Rsvd-subtracted).
 
 /// Anonymous memory on explicit 2 MB huge pages (MAP_HUGETLB, from the kernel's pool - reserve it first, e.g.
 /// `sysctl vm.nr_hugepages=N`): rounded up to a whole number of huge pages, `*got` its size.  nullptr: the pool is empty
