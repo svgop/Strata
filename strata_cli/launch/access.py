@@ -263,10 +263,6 @@ def options(port: int, *, tunnel_url: str | None = None) -> list[AccessOption]:
     return out
 
 
-def option_for(kind: str, port: int) -> AccessOption:
-    return next(o for o in options(port) if o.kind == kind)
-
-
 def missing_helper(kind: str) -> str | None:
     """Plain words about what to install before this access kind works, or None when it is ready."""
     if kind == "cloudflare" and not find_cloudflared():

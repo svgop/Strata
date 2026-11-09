@@ -112,28 +112,6 @@ def main():
     hidden = (2 * len(dv) + 255) & ~255
 
     # ---- the acceptance evaluator (greedy per-chain-step match, position-bucketed) on torch windows
-    def eval_acceptance(wins_idx, shards, n=32):
-        # stock baseline = the current (untrained) params; returns match rates per depth 1..K
-        hits = np.zeros(K, dtype=np.int64); tries = np.zeros(K, dtype=np.int64)
-        rng = np.random.default_rng(99)
-        sel = rng.choice(len(wins_idx), size=min(n, len(wins_idx)), replace=False)
-        for wi in sel:
-            start, pmin, _ = wins_idx[wi]
-            for anchor in range(0, W - K, 64):
-                r0 = anchor
-                Rin = torch.from_numpy(shards[start + r0][2].copy()).float()
-                labels = shards[start + r0 + 1:start + r0 + 1 + K, 1]
-                # (the full recursion assembles on the G0 module's torch port; the first
-                # cycle prices depth-1: the mixer + head on the true Rin)
-                sample = Rin  # placeholder wiring: replaced by the module chain next
-                for d in range(1):
-                    sub = in_sub[labels[d]]
-                    if sub < 0: continue
-                    tries[d] += 1
-                    # argmax over the sub-vocab head on `sample` (head = the main model's, frozen)
-                    hits[d] += 0  # wired when the torch module chain lands
-        return hits, tries
-
     # ---- assemble shards in memory (first-cycle scale fits)
     shards = []
     for shard, pos, tok, R, seams in load_shards(Path(a.harvest)):

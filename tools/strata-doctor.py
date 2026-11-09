@@ -68,13 +68,6 @@ def meminfo() -> dict:
     return out
 
 
-def cmdline_args() -> str:
-    try:
-        return Path("/proc/cmdline").read_text()
-    except OSError:
-        return ""
-
-
 def thp_mode() -> str:
     try:
         m = re.search(r"\[(\w+)\]", Path("/sys/kernel/mm/transparent_hugepage/enabled").read_text())

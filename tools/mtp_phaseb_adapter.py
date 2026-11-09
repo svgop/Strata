@@ -67,13 +67,6 @@ gate = find("ffn_gate_exps.weight").astype(np.float32)   # (2560,640,512) rows=i
 up   = find("ffn_up_exps.weight").astype(np.float32)
 down = find("ffn_down_exps.weight").astype(np.float32)   # (640,2560,512)
 # canonical fused: gate_up (512, 1280, 2560): expert e rows [gate(640); up(640)] x in(2560)
-def as_out_major(t, n_out):  # gguf (n_out?, ..., ne) -> we trust ggml row-major: shape (in, out, e) or (out, in, e)?
-    # reference: ffn_gate_exps (2560,640,512): dim0=2560=in -> GGUF ne[0]=in. Per-expert matrix = (640_out, 2560_in) after T? ne order: ne0 fastest.
-    # We need per-expert (out, in): take t[:,:,e].T when shape==(in,out,e).
-    e_idx = t.shape[2]
-    assert t.shape[0] in (2560,) and t.shape[1] in (640,), t.shape
-    return np.ascontiguousarray(np.transpose(t[:, :, i]) for i in ()) if False else t  # placeholder
-
 # Simpler: build fused per expert directly with explicit transpose
 NE = 512
 # phaseB tensors are EXPERT-MAJOR: (512, out, in). Handle both layouts defensively.

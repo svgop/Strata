@@ -51,13 +51,6 @@ def remembered_installs() -> list[Path]:
     return discovery._installs_in(discovery._read_json(settings_path()))        # noqa: SLF001
 
 
-def _has_configs(directory: Path) -> bool:
-    try:
-        return directory.is_dir() and bool(_paths(directory))
-    except (ProfileError, OSError):
-        return False
-
-
 def resolve_install(override: str | None = None) -> tuple[Path, str]:
     """(the main install folder, how it was found): explicit (an argument or STRATA_INSTALL_DIR), here (this folder has run
     configs), remembered (an earlier install from the settings file), app (the desktop app's install folder, shared with the

@@ -71,9 +71,6 @@ class Arm:
     #: a dynamic value: name of a computed number ("workers-2" ...), filled from the base run's engine log
     dynamic: dict[str, str] = field(default_factory=dict)
 
-    def requires_flags(self) -> list[str]:
-        return [f for f in self.set_args if self.set_args[f] is not None]
-
 
 ARMS: tuple[Arm, ...] = (
     # --- long contexts (spec 4.3, 3.3): exact, measured +5.4% decode (5/5) at 128K on the R9700 --------------------------------
@@ -330,22 +327,6 @@ def check_setting(args: dict[str, Any], env: dict[str, str | None], ctx: Context
 
 def _flags_of(argv: Sequence[str]) -> set[str]:
     return {a for a in argv if isinstance(a, str) and a.startswith("--")}
-
-
-def answer_class(args: dict[str, Any], env: dict[str, str | None] | None = None,
-                 base_args: dict[str, Any] | None = None) -> tuple[str, list[str]]:
-    """The worst answer class among the settings that differ from the base, and which flags cause it."""
-    worst, fields = "exact", []
-    base_args = base_args or {}
-    for flag, value in args.items():
-        if base_args.get(flag) == value:
-            continue
-        cls = ANSWER_OF_FLAG.get(flag)
-        if cls:
-            fields.append(flag)
-            if ANSWER_ORDER.index(cls) > ANSWER_ORDER.index(worst):
-                worst = cls
-    return worst, fields
 
 
 def allowed(answer: str, ctx: Context) -> bool:

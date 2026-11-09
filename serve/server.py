@@ -33,7 +33,6 @@ import base64
 import hashlib
 import hmac
 import codecs
-import ctypes
 import glob
 import json
 import math
@@ -8045,10 +8044,6 @@ def origins_of(value, key: str, wildcard: bool) -> list[str]:
     return out
 
 
-SHARED_KEYS = ("reasoning_effort", "reasoning_budget_tokens", "temperature", "top_p", "top_k", "seed", "max_tokens",
-               "experimental_speed_projection")
-
-
 def clean_shared_defaults(d) -> dict:
     """The Chat settings other apps get (POST /settings): only known keys, each checked; ValueError names a bad one."""
     if d is None:
@@ -8361,7 +8356,6 @@ DS41_SLOT_GB_DEFAULT = "2"    # the folder's cap in GB (a 6.5K-token conversatio
 SMALL_CAP_MIN = 48            # T60: from this max_tokens up to ANSWER_ROOM_MIN_CAP, thinking is capped at
                               # half of it so the wrap-up and an answer fit (was DS41_SMALL_CAP_MIN, F-371;
                               # generalised to every family after the Qwen empty-answer measurement, F-376)
-DS41_SMALL_CAP_MIN = SMALL_CAP_MIN   # (the old name, kept for anything that still reads it)
 FAMILY_MODEL_NAMES = {"qwen4exp": "qwen3.8-flash-next", "qwen35moe": "qwen3.6-35b-a3b",
                       "deepseek41": "deepseek-v4.1-flash"}
 

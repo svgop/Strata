@@ -118,13 +118,6 @@ def own_settings_file(environ=None, *, windows: bool | None = None, home: Path |
     return Path(environ.get("XDG_CONFIG_HOME") or str(home / ".config")) / "strata" / "settings.json"
 
 
-def has_configs(directory: Path) -> bool:
-    try:
-        return directory.is_dir() and any(_is_config(p) for p in directory.iterdir())
-    except OSError:
-        return False
-
-
 def _is_config(path: Path) -> bool:
     n = path.name
     return n.startswith("strata-") and n.endswith(".json") and not n.endswith(".shared-settings.json") and len(n) > len("strata-.json")

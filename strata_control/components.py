@@ -83,21 +83,6 @@ class Artifact:
             raise ComponentError(
                 f"{self.name} is {len(payload)} bytes, the manifest declares {self.bytes}")
 
-    def verify_file(self, path: Path) -> None:
-        digest = hashlib.sha256()
-        size = 0
-        with Path(path).open("rb") as fh:
-            for block in iter(lambda: fh.read(1 << 20), b""):
-                digest.update(block)
-                size += len(block)
-        if digest.hexdigest() != self.sha256:
-            raise ComponentError(
-                f"{path.name} does not match its manifest: expected {self.sha256[:16]}…, "
-                f"got {digest.hexdigest()[:16]}…")
-        if self.bytes and size != self.bytes:
-            raise ComponentError(f"{path.name} is {size} bytes, the manifest declares {self.bytes}")
-
-
 @dataclass
 class Component:
     """A versioned, independently installable piece of the product."""

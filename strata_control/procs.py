@@ -100,35 +100,6 @@ def command_line(pid: int) -> list[str] | None:
     return None
 
 
-def parent_of(pid: int) -> int | None:
-    if sys.platform.startswith("linux"):
-        try:
-            raw = Path(f"/proc/{pid}/stat").read_text(encoding="utf-8", errors="replace")
-            return int(raw[raw.rindex(")") + 2:].split()[1])
-        except (OSError, ValueError, IndexError):
-            return None
-    if psutil is not None:
-        try:
-            return psutil.Process(pid).ppid()
-        except (psutil.Error, OSError):
-            return None
-    return None
-
-
-def exe_path(pid: int) -> str | None:
-    if sys.platform.startswith("linux"):
-        try:
-            return os.readlink(f"/proc/{pid}/exe")
-        except OSError:
-            return None
-    if psutil is not None:
-        try:
-            return psutil.Process(pid).exe() or None
-        except (psutil.Error, OSError):
-            return None
-    return None
-
-
 def same_file(a: str | None, b: str | None) -> bool:
     if not a or not b:
         return False

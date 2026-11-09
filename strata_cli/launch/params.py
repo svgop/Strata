@@ -195,17 +195,6 @@ def check_name(name: str, engine_flags: list[str] | None) -> str | None:
             + "It is kept as you typed it; a newer engine may know it, and this one may refuse to start with it.")
 
 
-def flag_list(engine: str | Path | None) -> list[str] | None:
-    """The engine's flags (the tuner's own read), or None when no engine can be run here."""
-    if not engine:
-        return None
-    try:
-        from strata_control import tuning
-        return tuning.engine_flag_inventory(Path(engine))
-    except Exception:                                        # noqa: BLE001
-        return None
-
-
 def engine_help_text(engine: str | Path | None) -> str | None:
     if not engine:
         return None

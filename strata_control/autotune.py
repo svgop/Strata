@@ -149,10 +149,6 @@ def metric(run: dict[str, Any] | RunResult, use: str) -> float | None:
     return float(d)
 
 
-def median_ratio(ratios: list[float]) -> float | None:
-    return statistics.median(ratios) if ratios else None
-
-
 def accept_threshold(margin: float, aa_gap: float, drift: float) -> float:
     """How far above 1.0 a median ratio has to be: the margin, or twice the noise the base runs showed (6.7 rule 3)."""
     return 1.0 + max(margin, 2.0 * aa_gap, 2.0 * drift)
