@@ -64,7 +64,12 @@ export STRATA_ADAPT_EARLY="${STRATA_ADAPT_EARLY:-1}"  # F-332 ADOPTED (10-25): t
 # The tiers below are the pool-short fallbacks (tmpfs placement cache, then the page-cached pack).
 _SHADOW_CANON=/home/svg/LLM/data/packs/q2_0
 _SHADOW_TMPFS=/dev/shm/strata-shadow-q2_0
-if [ -f "$_SHADOW_TMPFS/experts.bin" ]; then
+# SINGLE-OWNER store rule (2026-11-09): when the reserved pool covers the store, the ENGINE builds
+# its memfd straight from the canonical pack - the tmpfs copy is then dead weight (31.6 GiB resident
+# twice).  Skip the copy and point the arm at the pack; pool-short boots keep the old ladder.
+if [ "$(awk '/^HugePages_Free/{print $2}' /proc/meminfo)" -ge 17000 ]; then
+  _shadow="$_SHADOW_CANON"
+elif [ -f "$_SHADOW_TMPFS/experts.bin" ]; then
   _shadow="$_SHADOW_TMPFS"          # placement cache present: the fast one
 elif [ -f "$_SHADOW_CANON/experts.bin" ]; then
   _shadow="$_SHADOW_CANON"          # canonical artifact, page-cached (works; slower misses)
@@ -110,7 +115,7 @@ export STRATA_ROUTE_RESIDENT_MTP=1
 # NORMALIZED (2026-10-29, user law): the F-367 tmpfs shadow store is re-established on EVERY lane start -
 # the manual post-reboot step is gone.  Fast path inside the script: an intact store costs two `find`s.
 # Non-fatal by design: a failed copy leaves the launch-time guard above on the disk path (never a no-boot).
-bash campaign/shm-shadow.sh >/dev/null 2>&1 || true
+if [ "$(awk '/^HugePages_Free/{{print $2}}' /proc/meminfo)" -lt 17000 ]; then bash campaign/shm-shadow.sh >/dev/null 2>&1 || true; fi
 
 cd "$(dirname "$0")"
 exec .venv/bin/python serve/server.py --engine strata --config "$PWD/config/custom-ud-iq4xs-8081.json" --port 8081 --host 0.0.0.0
