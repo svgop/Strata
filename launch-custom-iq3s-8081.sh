@@ -111,7 +111,7 @@ export STRATA_ROUTE_RESIDENT_MTP=1
 # NORMALIZED (2026-10-29, user law): the F-367 tmpfs shadow store is re-established on EVERY lane start -
 # the manual post-reboot step is gone.  Fast path inside the script: an intact store costs two `find`s.
 # Non-fatal by design: a failed copy leaves the launch-time guard above on the disk path (never a no-boot).
-if [ "$(awk '/^HugePages_Free/{{print $2}}' /proc/meminfo)" -lt 17000 ]; then bash campaign/shm-shadow.sh >/dev/null 2>&1 || true; fi
+if [ "$(awk '/^HugePages_Free/{print $2}' /proc/meminfo)" -lt 17000 ]; then bash campaign/shm-shadow.sh >/dev/null 2>&1 || true; fi
 
 cd "$(dirname "$0")"
 # CPU pinning for the engine (2026-11-09, the serial-window research): the 9950X3D has two CCDs -

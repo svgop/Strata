@@ -1,5 +1,5 @@
 #!/bin/bash
-# savage-custom v2 launcher, Linux port (Qwen3.8 IQ3_S + r17 modded draft, port 8081).
+# savage-custom v2 launcher, Linux port (Qwen3.8 UD-IQ2_XS + r17 modded draft, port 8081).
 # LAUNCH LAW preserved: starts serve/server.py directly (setup.py rewrites the
 # "args" key on every setup run and would drop this recipe).
 # --- standing arms (each measured; see SVG-CUSTOM F-05/F-12/F-15b/F-16/F-64) ---
@@ -111,7 +111,7 @@ export STRATA_ROUTE_RESIDENT_MTP=1
 # NORMALIZED (2026-10-29, user law): the F-367 tmpfs shadow store is re-established on EVERY lane start -
 # the manual post-reboot step is gone.  Fast path inside the script: an intact store costs two `find`s.
 # Non-fatal by design: a failed copy leaves the launch-time guard above on the disk path (never a no-boot).
-if [ "$(awk '/^HugePages_Free/{{print $2}}' /proc/meminfo)" -lt 17000 ]; then bash campaign/shm-shadow.sh >/dev/null 2>&1 || true; fi
+if [ "$(awk '/^HugePages_Free/{print $2}' /proc/meminfo)" -lt 17000 ]; then bash campaign/shm-shadow.sh >/dev/null 2>&1 || true; fi
 
 cd "$(dirname "$0")"
 # Swap guard (ship-ready, 2026-11-09): the engine's memory must never be zram'd - a swapped hot
