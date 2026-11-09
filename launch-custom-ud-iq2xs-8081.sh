@@ -2,6 +2,9 @@
 # savage-custom v2 launcher, Linux port (Qwen3.8 UD-IQ2_XS + r17 modded draft, port 8081).
 # LAUNCH LAW preserved: starts serve/server.py directly (setup.py rewrites the
 # "args" key on every setup run and would drop this recipe).
+# The exec ladder + shadow-store ladder live in campaign/lib/launch-common.sh (one owner,
+# composed guard+pin - the 2026-11-09 fleet refactor killed the copy-paste drift class).
+source "$(dirname "$0")/campaign/lib/launch-common.sh"
 # --- standing arms (each measured; see SVG-CUSTOM F-05/F-12/F-15b/F-16/F-64) ---
 # F-221 ADOPTED (2026-10-16): PR#540 chunk kernel + bounded merge on sm_120.
 # ABAB 3v3: M1 +6.0 / pair +7.0 / conc +5.3; bit-identical (parity 1172/0 on this GPU).
@@ -67,19 +70,7 @@ _SHADOW_TMPFS=/dev/shm/strata-shadow-q2_0
 # SINGLE-OWNER store rule (2026-11-09): when the reserved pool covers the store, the ENGINE builds
 # its memfd straight from the canonical pack - the tmpfs copy is then dead weight (31.6 GiB resident
 # twice).  Skip the copy and point the arm at the pack; pool-short boots keep the old ladder.
-if [ "$(awk '/^HugePages_Free/{print $2}' /proc/meminfo)" -ge 17000 ]; then
-  _shadow="$_SHADOW_CANON"
-elif [ -f "$_SHADOW_TMPFS/experts.bin" ]; then
-  _shadow="$_SHADOW_TMPFS"          # placement cache present: the fast one
-elif [ -f "$_SHADOW_CANON/experts.bin" ]; then
-  _shadow="$_SHADOW_CANON"          # canonical artifact, page-cached (works; slower misses)
-else
-  _shadow=""                        # no shadow: the native store serves every miss (byte-identical outputs)
-fi
-# NOTE the `-` (not `:-`): an explicit empty STRATA_SHADOW_EXPERTS="" must survive as the rollback
-# (the engine treats unset and empty alike - shadow_experts.hpp), so only an UNSET variable takes the default.
-export STRATA_SHADOW_EXPERTS="${STRATA_SHADOW_EXPERTS-$_shadow}"
-[ -n "$STRATA_SHADOW_EXPERTS" ] && echo "launcher: shadow store $STRATA_SHADOW_EXPERTS" >&2
+launch::shadow_export
 # F-331 ARMS (10-25, both never priced on this lane; see SVG-CUSTOM F-331):
 export STRATA_QSA_SPLIT_ATTN="${STRATA_QSA_SPLIT_ATTN:-1}"     # decode+drafter attention through the split int8-MMA kernel (verify.cpp:1973 + mtp.cpp:1088;
                                   # qsa_prompt_attn.cu:2271: each query's cells split over up to 20 blocks, LSE merge; int8-KV sm_80+;
@@ -111,17 +102,13 @@ export STRATA_ROUTE_RESIDENT_MTP=1
 # NORMALIZED (2026-10-29, user law): the F-367 tmpfs shadow store is re-established on EVERY lane start -
 # the manual post-reboot step is gone.  Fast path inside the script: an intact store costs two `find`s.
 # Non-fatal by design: a failed copy leaves the launch-time guard above on the disk path (never a no-boot).
-if [ "$(awk '/^HugePages_Free/{print $2}' /proc/meminfo)" -lt 17000 ]; then bash campaign/shm-shadow.sh >/dev/null 2>&1 || true; fi
+launch::shadow_reestablish
 
 cd "$(dirname "$0")"
 # Swap guard (ship-ready, 2026-11-09): the engine's memory must never be zram'd - a swapped hot
 # page is a decompression stall mid-window (measured: 299 MiB of the store swap-resident and decode
 # reading from storage).  A systemd user scope with MemorySwapMax=0 pins the whole engine; the plain
 # exec below stays as the fallback for containers / non-systemd hosts (guard absent there, serve works).
-if [ "${STRATA_SWAP_GUARD-1}" != "0" ] && command -v systemd-run >/dev/null 2>&1 && [ -n "${XDG_RUNTIME_DIR:-}" ]; then
-  exec systemd-run --user --scope --collect -q -p MemorySwapMax=0 --unit="strata-engine-$$" .venv/bin/python serve/server.py --engine strata --config "$PWD/config/custom-ud-iq2_xs-8081.json" --port 8081 --host 0.0.0.0
-fi
-_CPUS="${STRATA_ENGINE_CPUS-}"   # default OFF (measured neutral on a quiet box; set 8-15,24-31 for contended hours)
-if [ -n "$_CPUS" ]; then exec taskset -c "$_CPUS" .venv/bin/python serve/server.py --engine strata --config "$PWD/config/custom-ud-iq2_xs-8081.json" --port 8081 --host 0.0.0.0
-fi
-exec .venv/bin/python serve/server.py --engine strata --config "$PWD/config/custom-ud-iq2_xs-8081.json" --port 8081 --host 0.0.0.0
+# ...but the guard and the STRATA_ENGINE_CPUS pin COMPOSE in the lib's one ladder now
+# (the old first-match-exec form raced them).  Plain-exec fallback for containers / non-systemd hosts.
+launch::exec_engine --config config/custom-ud-iq2_xs-8081.json --port 8081 --host 0.0.0.0

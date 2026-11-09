@@ -1,0 +1,91 @@
+launcher: shadow store /dev/shm/strata-shadow-q2_0
+[strata] WARNING: This session has a real-time CPU limit (RLIMIT_RTTIME hard limit 200000; the desktop's audio system sets it to 0 when rtkit is not installed). Linux can then end a program with signal 9 for no visible reason. Install rtkit, or start Strata outside the desktop session's limits, for example: systemd-run --user --collect -p LimitRTTIME=infinity -- strata serve ...
+the vision encoder starts with the first picture (elastic) ...
+loading the model (the first start takes a minute or two) ...
+[strata] the config has a "vision" section but no --vision in its args: added --vision (run setup again with --vision to write them)
+[strata] prewarm: pre-boot sweep: 16 files, 2.2 GiB into the page cache (before the engine's load, so the reclaim storm plays out here)
+[strata] prewarm: pre-boot sweep warm in 0 s
+[strata] the config has a "vision" section but no --vision in its args: added --vision (run setup again with --vision to write them)
+[strata] starting the engine: reading the model's weights ...
+[strata] loading the experts into RAM (tens of GB) and locking part of them for the GPU.
+         YOUR PC CAN BE SLOW OR STOP RESPONDING FOR 1-3 MINUTES NOW - this is normal.
+         Please wait and don't close this window; the server says when it is ready.
+[strata] experts loaded: 39.38 GiB at 4.33 GiB/s (28 s so far)
+[strata] filling the GPU's expert cache (11522 experts, 18.43 GiB of VRAM) ...
+[strata] almost ready ...
+[strata] the config has a "vision" section but no --vision in its args: added --vision (run setup again with --vision to write them)
+[strata] images: the image encoder starts with the first picture and stops after 120 s without one; while it runs the expert cache keeps 2048 MiB free for it
+[strata] prewarm: on (files + replay); the warm-in starts when the engine is up and yields to live traffic
+[strata] the config has a "vision" section but no --vision in its args: added --vision (run setup again with --vision to write them)
+ready: http://127.0.0.1:8081/v1  (OpenAI: /v1/chat/completions, Anthropic: /v1/messages, context 262144 tokens, images on, API key required)
+       open http://127.0.0.1:8081/ in a browser to chat; close this window to stop the model
+[strata] prewarm: 16 files, 2.2 GiB into the page cache (the boot's pin dropped it)
+       from other devices: http://192.168.0.22:8081/   (API: http://192.168.0.22:8081/v1)
+[strata] prewarm: page cache warm in 0 s
+[strata] thinking limited to 100 of max_tokens 200 so the answer has room ("answer_room": false in the config turns this off)
+[strata] thinking budget reached (100 tokens): wrapping up the thinking
+[strata] thinking: 118 of max 200 tokens, 170.8 tok/s, 1 s
+[strata] done: 200 tokens in 1 s (182.2 tok/s) (length, cancel=False), expert cache 97.5% hit (+1.1% of the routed experts over PCIe)
+[strata] thinking limited to 100 of max_tokens 200 so the answer has room ("answer_room": false in the config turns this off)
+[strata] thinking budget reached (100 tokens): wrapping up the thinking
+[strata] answering: 176 of max 200 tokens, 245.8 tok/s, 1 s
+[strata] done: 200 tokens in 1 s (245.5 tok/s) (length, cancel=False), expert cache 98.9% hit (+0.4% of the routed experts over PCIe)
+[strata] thinking limited to 130 of max_tokens 260 so the answer has room ("answer_room": false in the config turns this off)
+[strata] thinking: 56 of budget 130 (max 260) tokens, 204.8 tok/s, 1 s
+[strata] thinking budget reached (130 tokens): wrapping up the thinking
+[strata] answering: 259 of max 260 tokens, 201.9 tok/s, 2 s
+[strata] done: 260 tokens in 2 s (202.7 tok/s) (length, cancel=False), expert cache 98.2% hit (+0.7% of the routed experts over PCIe)
+[strata] thinking limited to 100 of max_tokens 200 so the answer has room ("answer_room": false in the config turns this off)
+[strata] thinking limited to 100 of max_tokens 200 so the answer has room ("answer_room": false in the config turns this off)
+[strata] thinking limited to 100 of max_tokens 200 so the answer has room ("answer_room": false in the config turns this off)
+[strata] thinking limited to 100 of max_tokens 200 so the answer has room ("answer_room": false in the config turns this off)
+[strata] thinking limited to 100 of max_tokens 200 so the answer has room ("answer_room": false in the config turns this off)
+[strata] thinking limited to 100 of max_tokens 200 so the answer has room ("answer_room": false in the config turns this off)
+[strata] reading the prompt: 84 of 85 tokens, 1 s so far
+[strata] thinking: 6 of budget 100 (max 200) tokens, 9.4 tok/s, 1 s
+[strata] thinking: 8 of budget 100 (max 200) tokens, 8.8 tok/s, 1 s
+[strata] thinking: 4 of budget 100 (max 200) tokens, 10.8 tok/s, 1 s
+[strata] reading the prompt: 80 of 85 tokens, 1 s so far
+[strata] reading the prompt: 80 of 85 tokens, 2 s so far
+[strata] thinking: 28 of budget 100 (max 200) tokens, 27.7 tok/s, 2 s
+[strata] thinking: 42 of budget 100 (max 200) tokens, 21.8 tok/s, 2 s
+[strata] thinking: 40 of budget 100 (max 200) tokens, 24.2 tok/s, 2 s
+[strata] thinking: 33 of budget 100 (max 200) tokens, 23.8 tok/s, 2 s
+[strata] thinking: 43 of budget 100 (max 200) tokens, 45.2 tok/s, 2 s
+[strata] thinking: 63 of budget 100 (max 200) tokens, 65.1 tok/s, 3 s
+[strata] thinking: 94 of budget 100 (max 200) tokens, 46.7 tok/s, 3 s
+[strata] thinking budget reached (100 tokens): wrapping up the thinking
+[strata] thinking budget reached (100 tokens): wrapping up the thinking
+[strata] thinking: 118 of max 200 tokens, 38.7 tok/s, 3 s
+[strata] thinking: 88 of budget 100 (max 200) tokens, 33.5 tok/s, 3 s
+[strata] thinking: 100 of budget 100 (max 200) tokens, 48.6 tok/s, 3 s
+[strata] thinking budget reached (100 tokens): wrapping up the thinking
+[strata] thinking budget reached (100 tokens): wrapping up the thinking
+[strata] thinking: 118 of max 200 tokens, 38.7 tok/s, 4 s
+[strata] thinking: 99 of budget 100 (max 200) tokens, 49.5 tok/s, 4 s
+[strata] thinking budget reached (100 tokens): wrapping up the thinking
+[strata] answering: 122 of max 200 tokens, 38.5 tok/s, 4 s
+[strata] answering: 127 of max 200 tokens, 30.1 tok/s, 4 s
+[strata] thinking: 95 of budget 100 (max 200) tokens, 25.8 tok/s, 4 s
+[strata] answering: 122 of max 200 tokens, 39.2 tok/s, 4 s
+[strata] answering: 132 of max 200 tokens, 32.6 tok/s, 5 s
+[strata] thinking budget reached (100 tokens): wrapping up the thinking
+[strata] answering: 129 of max 200 tokens, 40.6 tok/s, 5 s
+[strata] answering: 161 of max 200 tokens, 38.4 tok/s, 5 s
+[strata] answering: 177 of max 200 tokens, 33.8 tok/s, 5 s
+[strata] answering: 160 of max 200 tokens, 34.1 tok/s, 5 s
+[strata] answering: 175 of max 200 tokens, 42.5 tok/s, 5 s
+
+[strata] stopping (Ctrl+C again to end the engine at once) ...
+[strata] answering: 180 of max 200 tokens, 35.5 tok/s, 6 s
+[strata] answering: 187 of max 200 tokens, 44.7 tok/s, 6 s
+[strata] done: 200 tokens in 6 s (37.1 tok/s) (length, cancel=False), expert cache 99.1% hit
+[strata] done: 200 tokens in 6 s (35.3 tok/s) (length, cancel=False), expert cache 99.4% hit
+[strata] done: 200 tokens in 6 s (41.2 tok/s) (length, cancel=False), expert cache 99.5% hit
+[strata] done: 200 tokens in 6 s (43.6 tok/s) (length, cancel=False), expert cache 100.0% hit
+[strata] done: 200 tokens in 6 s (46.1 tok/s) (length, cancel=False), expert cache 99.2% hit (+0.1% of the routed experts over PCIe)
+[strata] the engine stopped unexpectedly (exit code 0). The usual cause is running out of RAM: Linux then ends the biggest program (check: sudo dmesg | grep -i -E 'killed process|out of memory'); Windows slows down instead. Close other programs or use a smaller model (Q2_0 / IQ2_XS). The next request starts the engine again. Its log: /home/svg/LLM/strata-custom-2/logs/custom-ud-iq2_xs.log
+[strata] done: 194 tokens in 11 s (19.2 tok/s) (error, cancel=False), expert cache 99.2% hit
+[strata] prewarm: replay done in 15 s - the first real request is warm
+[strata] STRATA_DROP_CACHE_ON_EXIT: released the page cache of 11 model files
+[strata] stopped

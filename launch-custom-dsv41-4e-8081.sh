@@ -15,15 +15,15 @@
 export DS4_ATTN_SPLIT=1
 export STRATA_DS4_SLOT_DIR="${STRATA_DS4_SLOT_DIR:-/home/svg/LLM/data/ds4-slots}"  # the runtime slot cache lives in the estate, not the repo (server.py:3413 otherwise derives it from the log path)
 
+# The exec ladder lives in campaign/lib/launch-common.sh (one owner, composed guard+pin -
+# the 2026-11-09 fleet refactor killed the copy-paste drift class).
+source "$(dirname "$0")/campaign/lib/launch-common.sh"
+
 cd "$(dirname "$0")"
 # Swap guard (ship-ready, 2026-11-09): the engine's memory must never be zram'd - a swapped hot
 # page is a decompression stall mid-window (measured: 299 MiB of the store swap-resident and decode
 # reading from storage).  A systemd user scope with MemorySwapMax=0 pins the whole engine; the plain
 # exec below stays as the fallback for containers / non-systemd hosts (guard absent there, serve works).
-if [ "${STRATA_SWAP_GUARD-1}" != "0" ] && command -v systemd-run >/dev/null 2>&1 && [ -n "${XDG_RUNTIME_DIR:-}" ]; then
-  exec systemd-run --user --scope --collect -q -p MemorySwapMax=0 --unit="strata-engine-$$" .venv/bin/python serve/server.py --engine strata --config "$PWD/config/custom-dsv41-4e-8081.json" --port 8081 --host 0.0.0.0
-fi
-_CPUS="${STRATA_ENGINE_CPUS-}"   # default OFF (measured neutral on a quiet box; set 8-15,24-31 for contended hours)
-if [ -n "$_CPUS" ]; then exec taskset -c "$_CPUS" .venv/bin/python serve/server.py --engine strata --config "$PWD/config/custom-dsv41-4e-8081.json" --port 8081 --host 0.0.0.0
-fi
-exec .venv/bin/python serve/server.py --engine strata --config "$PWD/config/custom-dsv41-4e-8081.json" --port 8081 --host 0.0.0.0
+# ...but the guard and the STRATA_ENGINE_CPUS pin COMPOSE in the lib's one ladder now
+# (the old first-match-exec form raced them).  Plain-exec fallback for containers / non-systemd hosts.
+launch::exec_engine --config config/custom-dsv41-4e-8081.json --port 8081 --host 0.0.0.0
