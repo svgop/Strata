@@ -160,3 +160,6 @@ qwen,2026-11-09,919b4db3,note,0,0,note
 qwen,2026-11-09,003d78d8,GSQ warm-residency recovery bank (clean box 2 boots x 3 probes all shown; witnesses green: complement 37.8-37.9 GiB HUGETLB POOL + memfd store 31.64 GiB; means solo 181.0 pair 166.2 conc 237.3 bests 197.0/175.9/260.0 vs leg-0 anchor -12/-11/-8 pct on means; midday desktop load avg 3 present; remaining delta bound to pool-drained-vs-armed discriminator + mem-pin falsifier both sudo),solo,181.0,0,mean
 qwen,2026-11-09,003d78d8,GSQ warm-residency recovery bank (see solo row for witnesses and disclosure),pair,166.2,0,mean
 qwen,2026-11-09,003d78d8,GSQ warm-residency recovery bank (see solo row for witnesses and disclosure),conc,237.3,0,mean
+qwen,2026-11-09,35653c90,GSQ RELEASED-STATE recovery bank (pool=0 fresh boot kernel 7.2.15; warm probes 2-3 mean; witnesses: complement one-shot cudaHostAlloc 4K + tmpfs store + full 184G general; vs leg-0 anchor +0.3/+7.1/+10.6 pct; armed-state comparison same day read -12-15 pct below this),solo,206.6,0,mean
+qwen,2026-11-09,35653c90,GSQ RELEASED-STATE recovery bank (see solo row for witnesses and disclosure),pair,199.0,0,mean
+qwen,2026-11-09,35653c90,GSQ RELEASED-STATE recovery bank (see solo row for witnesses and disclosure),conc,291.0,0,mean

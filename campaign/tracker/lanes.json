@@ -398,6 +398,29 @@
       "pair": "mean",
       "conc": "mean"
      }
+    },
+    {
+     "date": "2026-11-09",
+     "commit": "35653c90",
+     "label": "GSQ RELEASED-STATE recovery bank (pool=0 fresh boot kernel 7.2.15; warm probes 2-3 mean; witnesses: complement one-shot cudaHostAlloc 4K + tmpfs store + full 184G general; vs leg-0 anchor +0.3/+7.1/+10.6 pct; armed-state comparison same day read -12-15 pct below this)",
+     "solo": 206.6,
+     "pair": null,
+     "conc": null,
+     "kinds": {
+      "solo": "mean"
+     }
+    },
+    {
+     "date": "2026-11-09",
+     "commit": "35653c90",
+     "label": "GSQ RELEASED-STATE recovery bank (see solo row for witnesses and disclosure)",
+     "solo": null,
+     "pair": 199.0,
+     "conc": 291.0,
+     "kinds": {
+      "pair": "mean",
+      "conc": "mean"
+     }
     }
    ],
    "prefill": [
