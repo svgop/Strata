@@ -23,4 +23,7 @@ cd "$(dirname "$0")"
 if [ "${STRATA_SWAP_GUARD-1}" != "0" ] && command -v systemd-run >/dev/null 2>&1 && [ -n "${XDG_RUNTIME_DIR:-}" ]; then
   exec systemd-run --user --scope --collect -q -p MemorySwapMax=0 --unit="strata-engine-$$" .venv/bin/python serve/server.py --engine strata --config "$PWD/config/custom-dsv41-8081.json" --port 8081 --host 0.0.0.0
 fi
+_CPUS="${STRATA_ENGINE_CPUS-}"   # default OFF (measured neutral on a quiet box; set 8-15,24-31 for contended hours)
+if [ -n "$_CPUS" ]; then exec taskset -c "$_CPUS" .venv/bin/python serve/server.py --engine strata --config "$PWD/config/custom-dsv41-8081.json" --port 8081 --host 0.0.0.0
+fi
 exec .venv/bin/python serve/server.py --engine strata --config "$PWD/config/custom-dsv41-8081.json" --port 8081 --host 0.0.0.0

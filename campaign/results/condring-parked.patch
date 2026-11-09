@@ -1,0 +1,919 @@
+diff --git a/include/strata/core/verify.hpp b/include/strata/core/verify.hpp
+index 245ca994..3304c269 100755
+--- a/include/strata/core/verify.hpp
++++ b/include/strata/core/verify.hpp
+@@ -259,6 +259,10 @@ public:
+     /// for its doorbell, #31); batch_poll then makes no CUDA call before every layer is served.
+     int batch_serve(PoolMultiFn pool, void* user);
+     void set_external_serve(bool on) { ext_serve_.store(on, std::memory_order_release); }
++    /// STRATA_COND_RING C7: the routing-usage table the device histogram drains into once per window (the
++    /// pool's d.usage; null: the drained counts stay in this verifier's scratch).  Register before the first
++    /// window; inert on verifiers the mode refused.
++    void set_usage_sink(float* table) { usage_sink_ = table; }
+     /// A slot's sampling (temperature / top_p / top_k / min_p / seed; penalties are not applied in batch windows):
+     /// its row is drawn again on the last stage with Philox(seed, position), as a solo window draws it.  Greedy by
+     /// default.  Set on the first stage, it reaches the last.
+@@ -503,6 +507,19 @@ private:
+     bool ar_off_ = false;
+     bool ar_on() const { return all_resident_ && !ar_off_; }
+     void refresh_ar();
++    // STRATA_COND_RING (2026-11-09 digest): the conditional one-doorbell window - STRATA_COND_RING=1 arms a lane
++    // where the per-layer publish rings ONLY for the layer-groups whose routed experts actually miss VRAM, every
++    // group takes the T1.1 partial-plan route (resident entries device-planned, only the CPU rows waited) and the
++    // host serve loops key off the ABSOLUTE ring index (m_seq_ = the latest ringing group, monotone with gaps -
++    // NOT a ring count; see the reset in stage_inputs).  cond_ring_base_ carries the env and the init-time gates
++    // (resolved once, loudly); cond_ring() re-checks the gates a later setter can change, exactly as the dm_fold
++    // gate does.  Default off = the standing doorbell path, byte-identical.
++    bool cond_ring_base_ = false;
++    bool cond_ring() const { return cond_ring_base_ && remote_opt_ == nullptr && bal_ == nullptr && m_bal_ == nullptr; }
++    uint32_t* usage_d_ = nullptr;        ///< C7: device [le_-lb_, n_expert) histogram words, zero between windows
++    std::vector<uint32_t> usage_h_;      ///< its host drain scratch
++    float* usage_sink_ = nullptr;        ///< set_usage_sink's table (layer 0 at index 0)
++    void drain_usage_hist();             ///< C7: one D2H at window end; adds the miss-free groups' routings in
+     uint32_t* h_plan_err_ = nullptr; uint32_t* m_plan_err_ = nullptr;   // set by resident_plan on a -1 (all-resident graph)
+     const int32_t* h_res_ = nullptr;      ///< the host residency table (VerifyHits::h_res)
+     bool device_plan_ = false;            ///< E-6: resident-only layers planned on the device (STRATA_VERIFY_DEVICE_PLAN)
+diff --git a/include/strata/kernels/elementwise.hpp b/include/strata/kernels/elementwise.hpp
+index b78ed60f..1a126131 100755
+--- a/include/strata/kernels/elementwise.hpp
++++ b/include/strata/kernels/elementwise.hpp
+@@ -128,6 +128,14 @@ void doorbell_publish_value(const float* x, const int32_t* ids, const float* wei
+                             void* stream);
+ void doorbell_publish_res(const float* x, const int32_t* ids, const int32_t* d_res, int n_expert, int64_t n, int64_t k,
+                           float* x_out, int32_t* ids_out, uint32_t* d_seq, void* stream);
++/// STRATA_COND_RING (2026-11-09 digest, C1): doorbell_publish_res with the ring moved INSIDE the any_miss branch
++/// and STORED (`value`, the capture-known absolute group index) instead of read-modify-written.  A miss-free
++/// group writes no mapped word at all - no activation copy, no fence, no PCIe round trip, no host wake; a group
++/// with a miss (an invalid id counts) copies ids + the activation, fences and stores its index.  *seq therefore
++/// becomes "the latest ringing group" (monotone, with gaps at miss-free groups), not "how many groups rang";
++/// the host serve loops key off the absolute index.
++void doorbell_publish_cond(const float* x, const int32_t* ids, const int32_t* d_res, int n_expert, int64_t n,
++                           int64_t k, float* x_out, int32_t* ids_out, uint32_t* d_seq, uint32_t value, void* stream);
+ /// SYCL: publishes launched or recorded while `on` store the payload with plain stores instead of uncached ones, for
+ /// a caller that reads the payload only after the publishing kernel has ended (the stepped verify window).
+ void doorbell_plain_payload(bool on);
+diff --git a/include/strata/kernels/verify_kernels.hpp b/include/strata/kernels/verify_kernels.hpp
+index 7688800a..d2711420 100755
+--- a/include/strata/kernels/verify_kernels.hpp
++++ b/include/strata/kernels/verify_kernels.hpp
+@@ -157,10 +157,14 @@ void copy_rows_strided(float* dst, const float* src, int64_t rows, int64_t w, in
+ /// (outside [0, n_expert)) still fall back to the host plan as before.
+ /// #871: without `skip` (the all-resident graph) an entry whose expert is not in VRAM cannot be planned: the plan is
+ /// left empty and *plan_err (mapped host memory) is set to 1, so the host sees it instead of running a stale plan.
++/// STRATA_COND_RING C7: `usage_hist` (device, n_expert words, may be null) takes an atomicAdd +1 per valid routed id
++/// of a FULLY device-planned group only (a partial or host-fallback group's ids stay the host pool's to count, exactly
++/// as its per-ring call always did) - the routing histogram the placement machinery eats, kept alive on a lane whose
++/// miss-free groups never wake the host.  Null (the standing calls) = nothing changes.
+ void resident_plan(const int32_t* ids, int n_entries, int k, const int32_t* res_layer, int n_expert,
+                    const uint8_t* cache_base, const unsigned long long* slot_off, long long blob, int32_t* plan,
+                    long long capx, uint32_t* skip, uint32_t ring, void* stream, uint32_t* plan_err = nullptr,
+-                   uint32_t partial_skip = 0);
++                   uint32_t partial_skip = 0, uint32_t* usage_hist = nullptr);
+ /// The partial-plan skip value (see resident_plan): no legitimate ring reaches it (a window's groups stay in the
+ /// low hundreds).
+ constexpr uint32_t kPlanPartialSkip = 0x80000000u;
+diff --git a/src/core/expert_source.cpp b/src/core/expert_source.cpp
+index 94ed16b1..a082ae07 100755
+--- a/src/core/expert_source.cpp
++++ b/src/core/expert_source.cpp
+@@ -4765,7 +4765,15 @@ void expert_pool_dispatch_multi(ExpertDispatch& d, const float* x_f, const int32
+         // PCIe staging it cannot know about (its counts[2] is 0), so the pool must not route a miss to the copy
+         // engine under it - every miss runs on the CPU.  v1 keeps the A/B bit-identical at --pcie-frac 0; a
+         // device-side PCIe share is the v2.
+-        static const bool plan_partial = [] { const char* v = std::getenv("STRATA_PLAN_PARTIAL"); return v != nullptr && std::atoi(v) != 0; }();
++        // STRATA_COND_RING (2026-11-09 digest, C2): the mode's device plans are ALWAYS partial (their counts[2]
++        // is 0), so under its env every miss runs on the CPU exactly as under STRATA_PLAN_PARTIAL - a miss the
++        // pool routed to the copy engine would be computed by no one (the device plan never reads the staging).
++        static const bool plan_partial = [] {
++            const char* v = std::getenv("STRATA_PLAN_PARTIAL");
++            if (v != nullptr && std::atoi(v) != 0) return true;
++            const char* c = std::getenv("STRATA_COND_RING");
++            return c != nullptr && c[0] != 0 && c[0] != '0';
++        }();
+         // STRATA_PCIE_BALANCE (opt-in, #1548): the count comes from the measured CPU and GPU costs instead of the share
+         const bool pcie_ok = !plan_partial && (d.pcie_num > 0 || d.pcie_model.on) && d.src->pcie_layer(d.layers);
+         int m = pcie_ok ? d.pcie_model.pick(nmiss, (nmiss * d.pcie_num) >> 8) : 0;
+diff --git a/src/core/verify.cpp b/src/core/verify.cpp
+index 1341bc08..4c5cb0b7 100755
+--- a/src/core/verify.cpp
++++ b/src/core/verify.cpp
+@@ -226,6 +226,13 @@ bool env_on(const char* name) {
+ const bool g_coherent = env_on("STRATA_VERIFY_COHERENT");
+ #endif
+ const bool g_doorbell_store = env_on("STRATA_DOORBELL_STORE");   // F-203: un-gated from HIP (store-the-ring publish)
++// STRATA_COND_RING=1 (2026-11-09 digest "one-doorbell-conditional", default off = standing path byte-identical):
++// the conditional one-doorbell window - rings only for the layer-groups that actually miss VRAM (C1), every
++// group takes the T1.1 partial-plan route (C2), the serve loops key off the absolute ring index (C3), the
++// exit is graph-done + rings-served (C4), the PLE gather leaves the first ring's critical path (C5), the
++// conditional WHILE wrapper covers the doorbell graph too (C6), the usage histogram moves on device (C7) and
++// the mode refuses the instruments it deletes (C8, at init).
++const bool g_cond_ring = env_on("STRATA_COND_RING");
+ const bool g_trace = env_on("STRATA_VERIFY_TRACE");
+ const bool g_no_multi_gr = env_on("STRATA_NO_MULTI_GR");   // #783 PR-g: per-token GR reads/writes and generic-T kernels again
+ const bool g_no_batch_kv = env_on("STRATA_NO_BATCH_KV_STEP");   // #783 PR-d: per-token K/V and indexer appends again
+@@ -726,6 +733,7 @@ Verifier::~Verifier() {
+     if (gdn_snap_) cudaFree(gdn_snap_);   // F-216
+     if (audit_bad_) cudaFree(audit_bad_);
+     if (h_commitb_) cudaFreeHost(h_commitb_);
++    if (usage_d_) cudaFree(usage_d_);   // STRATA_COND_RING C7
+     if (qcnt_) cudaFree(qcnt_);
+     if (d_spec_) cudaFree(d_spec_);
+     if (logit_bias_device_) cudaFree(logit_bias_device_);
+@@ -1138,8 +1146,15 @@ bool Verifier::init(const WeightTable& wt, const ModelGeometry& g, SessionState&
+     // exact, but neutral on RIBPC 1-2 GPUs: off by default)
+     {
+         const char* v = std::getenv("STRATA_VERIFY_DEVICE_PLAN");
++        // STRATA_COND_RING (C8, the static half): the mode needs the device residency/slot tables the partial plan
++        // reads and can neither run beside the zero-doorbell graph (it subsumes nothing there) nor publish every
++        // activation; the instrument refusals print after their own arming below.  Resolved once, here, because it
++        // must force device_plan_ (the mode's every group runs resident_plan, STRATA_VERIFY_DEVICE_PLAN or not).
++        cond_ring_base_ = g_cond_ring && !all_resident_ && !always_publish_ && hits.d_res != nullptr &&
++                          hits.h_res != nullptr && hits.cache_base != nullptr && hits.slot_off != nullptr &&
++                          hits.n_slots > 0;
+         // (not with set_always_publish: the device table may lag the host's while windows are in flight)
+-        device_plan_ = !all_resident_ && !always_publish_ && (v != nullptr && std::atoi(v) != 0);
++        device_plan_ = cond_ring_base_ || (!all_resident_ && !always_publish_ && (v != nullptr && std::atoi(v) != 0));
+     }
+     // (halo's STRATA_VERIFY_RESIDENT=1 is this window's all_resident_ graph above, which 0.1.39 has on by default)
+     if (g_qfuse() || g_qfuse_hc()) {   // S26: the HC read's q8_1 group counters, zeroed once (each launch leaves them zero)
+@@ -1159,9 +1174,40 @@ bool Verifier::init(const WeightTable& wt, const ModelGeometry& g, SessionState&
+                   cudaMemcpy(slot_off_d_, hits.slot_off, (size_t) hits.n_slots * sizeof(unsigned long long),
+                              cudaMemcpyHostToDevice) == cudaSuccess;
+         }
+-        if (!ok2) { cudaGetLastError(); all_resident_ = false; device_plan_ = false; }
++        if (!ok2) { cudaGetLastError(); all_resident_ = false; device_plan_ = false; cond_ring_base_ = false; }
++    }
++    if (cond_ring_base_) {   // STRATA_COND_RING C7: the device usage histogram (one word per expert per layer of
++        // this stage's range); drained once per window at window end, off the critical path (see drain_usage_hist)
++        const int64_t hn = ((le_ < 0 ? g.n_layers : le_) - lb_) * g.n_expert;
++        if (cudaMalloc((void**) &usage_d_, (size_t) hn * 4) == cudaSuccess &&
++            cudaMemset(usage_d_, 0, (size_t) hn * 4) == cudaSuccess) {
++            usage_h_.assign((size_t) hn, 0);
++        } else {
++            cudaGetLastError();
++            usage_d_ = nullptr;
++            cond_ring_base_ = false;
++            std::fprintf(stderr, "strata verify: STRATA_COND_RING refused (the usage histogram buffer would not "
++                                 "allocate); the standing doorbell path\n");
++        }
+     }
+     if (g_dmws.on) g_dmws.arm((int) g.n_layers);   // T26-1: the MoE-tail wait counters (device words, see post())
++    {   // STRATA_COND_RING (C8, the instrument half - the same rule as the dm_fold gate): the mode deletes the
++        // sites these instruments stamp (the unconditional ring, the flagA/flagB waits of device-planned groups),
++        // so each of them refuses it, loudly, and the standing path runs.  test_stall needs the count-keyed loop.
++        const char* why = nullptr;
++        if (prof_on_) why = "STRATA_VERIFY_PROFILE stamps the sites the mode deletes";
++        else if (g_dmws.live()) why = "STRATA_DM_WAIT_STATS stamps the sites the mode deletes";
++        else if (remote_opt_ != nullptr) why = "--remote-expert-opt (the helper GPUs' share)";
++        else if (bal_ != nullptr || m_bal_ != nullptr) why = "the PCIe balance stamps";
++        else if (g_test_stall > 0) why = "STRATA_TEST_VERIFY_STALL";
++        if (why != nullptr) {
++            cond_ring_base_ = false;
++            std::fprintf(stderr, "strata verify: STRATA_COND_RING refused (%s); the standing doorbell path\n", why);
++        }
++    }
++    if (cond_ring_base_)   // the boot line the battery greps for
++        std::fprintf(stderr, "strata verify: STRATA_COND_RING armed: rings only for the layer-groups that miss "
++                             "VRAM; m_seq_ = the latest ringing group (absolute index), reset per window\n");
+     if (dm_fold_on())
+         std::fprintf(stderr, "strata verify: STRATA_DM %s\n", device_plan_
+                              ? "armed (dm_wait_combine: the CPU-rows wait, the pool rows' read and the combine in "
+@@ -2105,7 +2151,16 @@ bool Verifier::record_window(int T, cudaStream_t cs, std::string& err) {
+                               hits_.cache_base, slot_off_d_, (long long) hits_.blob,
+                               plan_ + (size_t) grp * (size_t) (plan_i32_ + 16), (long long) max_t_ * K, skip_ + grp,
+                               (uint32_t) ((l - lb_) * G + grp + 1), cs, nullptr,
+-                              plan_partial ? kPlanPartialSkip : 0u);
++                              cond_ring() ? kPlanPartialSkip : (plan_partial ? kPlanPartialSkip : 0u),
++                              cond_ring() ? usage_d_ + (size_t) (l - lb_) * g.n_expert : nullptr);
++            // STRATA_COND_RING (C1): the FIRST branch of the publish chain - the ring fires only when this
++            // group actually misses (d_res + ids_, the same stream-ordered reads resident_plan just made), and
++            // it STORES the capture-known absolute index, so a miss-free group publishes no mapped word at all.
++            if (cond_ring())
++                doorbell_publish_cond(xm, ids_ + tb * K, hits_.d_res + l * g.n_expert, (int) g.n_expert,
++                                      (int64_t) n * N, (int64_t) n * K, m_x_ + tb * N, m_ids_ + tb * K, m_seq_,
++                                      (uint32_t) ((l - lb_) * G + grp + 1), cs);
++            else
+             // savage-custom F-203: #649's store-the-ring publish un-gated from HIP - on CUDA the ring
+             // value is the same capture-known constant, and the store drops the GPU's read of host
+             // memory (one PCIe RTT per served layer-group) that doorbell_publish's RMW pays.
+@@ -2551,7 +2606,11 @@ bool Verifier::capture(int T, std::string& err) {
+ #if !defined(STRATA_USE_HIP) && !defined(STRATA_HIP_GFX906) && !defined(STRATA_GPU_METAL) && CUDART_VERSION >= 12040
+     cudaGraph_t root = nullptr, body = nullptr;   // STRATA_WINDOW_GRAPH: the conditional wrapper around the body
+     cudaGraphConditionalHandle h_win = 0;   // an unsigned long long, not a pointer: no nullptr here
+-    const bool wrap = g_window_graph && ar_on();   // true only when exec_t above is the zero-doorbell variant
++    // STRATA_COND_RING (C6): the doorbell family (exec_nr_[T], or exec_[T] on a stage that was never
++    // all-resident) gets the SAME one-pass WHILE wrapper the zero-doorbell graph has - its legality over the
++    // doorbell body is the 2026-11-06-condgraph-package probe's (kernel/empty/memcpy/memset nodes, the shared
++    // fork folded to edges); win_cond_tail still drops the handle after one pass per replay.
++    const bool wrap = g_window_graph && (ar_on() || cond_ring());
+     if (wrap) {
+         // The wrapper (digest 2026-11-05-condgraph-zero-host, section 3.2): the root graph is ONE conditional
+         // WHILE node whose body is the straight-line layer sequence the capture below always produced, streamed
+@@ -2896,6 +2955,9 @@ void Verifier::stage_inputs(int T, const int32_t* tokens, int64_t pos0) {
+         for (int64_t h = 0; h < g.n_head_kv; ++h) pk[t * g.n_head_kv + h] = pos_t;
+         for (int64_t h = 0; h < g.idx_q_heads; ++h) pi[t * g.idx_q_heads + h] = pos_t;
+     }
++    // m_seq_ contract: STANDING = the ring count (every layer-group rings, doorbell k = the k-th group); under
++    // STRATA_COND_RING = the ABSOLUTE index of the latest ringing group ((l-lb_)*G+grp+1, stored not RMW'd),
++    // monotone with gaps at miss-free groups.  Reset to 0 here per window under both contracts.
+     *(volatile uint32_t*) h_seq_ = 0;
+     *(volatile uint32_t*) h_flag_ = 0;
+     *(volatile uint32_t*) h_flagA_ = 0;
+@@ -3072,6 +3134,18 @@ bool Verifier::run(int T, const int32_t* tokens, int64_t pos0, PoolMultiFn pool,
+         VDBG("staged; launching\n");
+         if (h_bal_ != nullptr) std::memset(h_bal_, 0, (size_t) bal_p_.size() * 4 * 8);   // this window's stamps only
+         if (ar_on() && h_plan_err_ != nullptr) *(volatile uint32_t*) h_plan_err_ = 0;
++        // STRATA_COND_RING (C5): the PLE rows leave the first ring's critical path - layer 0 may not ring, and
++        // pre(1)'s copy of m_ple_ is unconditional on this lane, so the gather must land BEFORE the launch (the
++        // batch lane's shape, stage_batch).  No early *flag = 1: group (lb_, 0)'s CPU-rows wait value IS 1 (its
++        // ring), and a pre-raised 1 would release the partial plan's rows copy before the pool wrote them - a
++        // race the ar_on lane cannot have (it has no partial groups).  The serve loop below raises per ring.
++        if (cond_ring() && do_ple) {
++            const Clock::time_point tp = Clock::now();
++            if (!ss.ple.table->gather_batch(ple_rows, (size_t) T, h_ple_, err)) return false;
++            std::atomic_thread_fence(std::memory_order_seq_cst);
++            _mm_sfence();
++            ms_host += ms_since(tp);
++        }
+         // 0.1.43: with the all-resident graph the host serves no layer, so nothing can hold a layer back: every copy first
+         if (adapt_gate_ != nullptr && adapt_gate_->active.load(std::memory_order_acquire) && ar_on() &&
+             !adapt_gate_wait((int32_t) g.n_layers, err)) return false;
+@@ -3137,6 +3211,96 @@ bool Verifier::run(int T, const int32_t* tokens, int64_t pos0, PoolMultiFn pool,
+         } else {
+             *flag = 1;
+         }
++    } else if (cond_ring()) {
++        // STRATA_COND_RING (C3/C4): rings name the ABSOLUTE (layer, group) index and only miss groups ring, so
++        // the host serves whatever rang (the gaps are the device-planned groups) and the window exits on
++        // graph-done with every ring served.  never-rang = graph-done with a ring unserved (a real defect, not
++        // a miss-free tail); the 2 ms flush cadence and the 20 s no-progress watchdog key on `served`.
++        uint32_t served = 0;   // the highest absolute ring index served so far (0: nothing rang yet)
++        auto last_flush = Clock::now();
++        auto idle_since = Clock::now();   // watchdog anchor: reset whenever a ring is served
++        uint32_t spins = 0;
++        for (;;) {
++            const uint32_t s = *seq;
++            if (s > served) {
++                const int64_t k = (int64_t) s - 1;
++                const int64_t l = lb_ + k / G;
++                const int grp = (int) (k % G);
++                const uint32_t want = s;   // this group's own ring value: the flag its GPU waits compare against
++                const Clock::time_point b = Clock::now();
++                ms_wait += std::chrono::duration<double, std::milli>(b - idle_since).count();
++                trace_ev("RANG", k, l, (int64_t) std::chrono::duration_cast<std::chrono::microseconds>(b - idle_since).count());
++                if (adapt_gate_ != nullptr && adapt_gate_->active.load(std::memory_order_acquire) && l >= 0 &&
++                    (size_t) l < adapt_gate_->has.size() && adapt_gate_->has[(size_t) l] != 0 &&
++                    !adapt_gate_wait((int32_t) l, err)) return false;
++                cur_layer_ = want - 1;
++                set_plan_slot(grp);
++                const int tb = gtb[grp], n = gte[grp] - gtb[grp];
++                progress_at("verify window: the CPU experts of layer", l);
++                if (pool != nullptr)
++                    pool(user, h_x_ + (size_t) tb * g.n_embd, h_ids_ + (size_t) tb * ss.k, n, ss.k,
++                         h_ymiss_ + (size_t) tb * ss.k * g.n_embd, l);
++                progress_tick();
++                std::atomic_thread_fence(std::memory_order_seq_cst);
++                _mm_sfence();
++                if (*(volatile uint32_t*) h_flagA_ != want) {   // v1 keeps the empty-plan publish (harmless: the
++                    sink_.counts[0] = 0;                        // GPU's planned guards skip a device-planned
++                    sink_.counts[1] = 0;                        // group's flagA/flagB reads entirely)
++                    sink_.counts[2] = 0;
++                    sink_.start[0] = 0;
++                    sink_.start2[0] = 0;
++                    std::atomic_thread_fence(std::memory_order_seq_cst);
++                    *(volatile uint32_t*) h_flagA_ = want;
++                    raise_flag(h_flagB_, want);
++                }
++                *flag = want;
++                served = s;
++                idle_since = Clock::now();
++                ms_pool += ms_since(b);
++                continue;
++            }
++            _mm_pause();
++            if ((++spins & 1023u) != 0) continue;
++            const auto now = Clock::now();
++            if (now - last_flush > std::chrono::microseconds(2000)) {
++                last_flush = now;
++#if !defined(STRATA_USE_HIP) && !defined(STRATA_HIP_GFX906)
++                const cudaError_t q = launch_o ? launch_o->query() : cudaStreamQuery(cs_);
++#else
++                const cudaError_t q = cudaStreamQuery(cs_);
++#endif
++                if (q != cudaErrorNotReady) {
++                    if (*seq > served) {   // the graph is done and a ring landed the loop never served
++                        const int64_t bad_l = lb_ + (int64_t) (*seq - 1) / G;
++                        trace_ev("NEVER-RANG", (int64_t) *seq - 1, bad_l, (int64_t) q);
++                        trace_dump(stderr);
++                        err = "verify: layer " + std::to_string(bad_l) + " rang and was never served (" +
++                              (q == cudaSuccess ? std::string("graph finished") : std::string(cudaGetErrorString(q))) + ")";
++                        return false;
++                    }
++                    break;   // graph done, every ring served: the clean exit (a fully miss-free window = zero rings)
++                }
++            }
++            if (now - idle_since > std::chrono::seconds(20)) {
++                // #267: the caller ends the engine; no spin kernel may outlive it
++#if !defined(STRATA_USE_HIP) && !defined(STRATA_HIP_GFX906)
++                trace_ev("TIMEOUT", (int64_t) served, lb_ + (int64_t) (served - 1) / G,
++                         (int64_t) (launch_o ? launch_o->query() : cudaStreamQuery(cs_)));
++#else
++                trace_ev("TIMEOUT", (int64_t) served, lb_ + (int64_t) (served - 1) / G,
++                         (int64_t) cudaStreamQuery(cs_));
++#endif
++                if (g_trace) {
++                    diag(stderr);   // the words and the breadcrumbs before the release ...
++                    const bool drained = release_gpu_waits(5000);
++                    trace_dump(stderr);   // ... and after it: did the GPU move once its waits were raised?
++                    err = "verify: timed out at ring " + std::to_string(served) + released_note(drained);
++                    return false;
++                }
++                err = "verify: timed out at ring " + std::to_string(served) + released_note(release_gpu_waits(5000));
++                return false;
++            }
++        }
+     } else
+     for (int64_t k = 0; k < steps; ++k) {
+         const int64_t l = lb_ + k / G;
+@@ -3260,6 +3424,7 @@ bool Verifier::run(int T, const int32_t* tokens, int64_t pos0, PoolMultiFn pool,
+             return false;
+         }
+         commit_pending_ = false;
++        drain_usage_hist();   // STRATA_COND_RING C7: this stage's miss-free routings into the usage table
+         if (prof_on_ && G == 1) collect_profile();
+         if (g_dmws.on) g_dmws.maybe_report(cs_);   // the host-graph-launch path's own early return
+         return true;
+@@ -3293,6 +3458,7 @@ bool Verifier::run(int T, const int32_t* tokens, int64_t pos0, PoolMultiFn pool,
+         cudaStreamSynchronize(copy_);   // no host function of this window may raise flag B in the next one
+         copy_used_ = false;
+     }
++    drain_usage_hist();   // STRATA_COND_RING C7: this stage's miss-free routings into the usage table
+     if (h_bal_ != nullptr && !all_resident_ && !bal_paused_) pcie_balance_window(steps, G);
+     if (prof_on_ && G == 1) collect_profile();   // the window's GPU stage stamps
+     if (g_dmws.on) g_dmws.maybe_report(cs_);   // STRATA_DM_WAIT_STATS: a summary line every kDmWaitStats windows
+@@ -3394,6 +3560,32 @@ void Verifier::set_plan_slot(int grp) {
+     sink_.staging_cap = per;
+ }
+ 
++// STRATA_COND_RING (C7): the miss-free groups' routing histogram, drained once per window AFTER the window's
++// sync (off the critical path) and zeroed on cs_ stream-ordered before the next launch.  resident_plan counted
++// exactly the groups the pool's per-ring call did NOT (a partial or host-fallback group still wakes the host,
++// and its pool call feeds d.usage as always), so the sum of both feeds the placement machinery what the
++// standing lane fed it.  A failed drain disarms the mode loudly (the histogram starving silently is the
++// self-defeating failure the digest names) rather than failing the window.
++void Verifier::drain_usage_hist() {
++    if (!cond_ring() || usage_d_ == nullptr) return;
++    const int64_t ne = g_ != nullptr ? g_->n_expert : 0;
++    const int64_t le = (le_ < 0 || g_ == nullptr) ? (g_ != nullptr ? g_->n_layers : 0) : le_;
++    const size_t words = (size_t) ((le - lb_) * ne);
++    if (words == 0 || usage_h_.size() != words) return;
++    if (cudaMemcpy(usage_h_.data(), usage_d_, words * 4, cudaMemcpyDeviceToHost) != cudaSuccess) {
++        (void) cudaGetLastError();
++        cond_ring_base_ = false;
++        std::fprintf(stderr, "strata verify: STRATA_COND_RING disarmed (the usage histogram drain failed); the "
++                             "standing doorbell path from the next window\n");
++        return;
++    }
++    if (usage_sink_ != nullptr) {   // the pool's d.usage table, absolute layer indices
++        float* s = usage_sink_ + (size_t) lb_ * (size_t) ne;
++        for (size_t i = 0; i < words; ++i) s[i] += (float) usage_h_[i];
++    }
++    (void) cudaMemsetAsync(usage_d_, 0, words * 4, cs_);   // ordered before the next graph launch on cs_
++}
++
+ // Flag B only rises: a host function of an earlier layer may run after a later layer already raised it directly.
+ void Verifier::raise_flag(uint32_t* flag, uint32_t value) {
+     volatile long* f = (volatile long*) flag;
+@@ -3987,6 +4179,71 @@ bool Verifier::run_slot_rows(const int* rows, int S, const int32_t* tokens, cons
+     const int G = batch_groups_;
+     const int gtb[2] = {0, (S + 1) / 2}, gte[2] = {G == 2 ? (S + 1) / 2 : S, S};
+     const int64_t steps = (le_ - lb_) * G;
++    if (cond_ring()) {
++        // STRATA_COND_RING (C3/C4, the batch lane's run_slot_rows): as run()'s loop - absolute ring index, miss
++        // groups only, graph-done + rings-served as the exit; a fully miss-free window runs zero host serves.
++        uint32_t served = 0;
++        auto last_flush = Clock::now();
++        auto idle_since = Clock::now();
++        uint32_t spins = 0;
++        for (;;) {
++            const uint32_t s = *seq;
++            if (s > served) {
++                const int64_t k = (int64_t) s - 1;
++                const int64_t l = lb_ + k / G;
++                const int grp = (int) (k % G);
++                const uint32_t want = s;
++                const Clock::time_point b = Clock::now();
++                ms_wait += std::chrono::duration<double, std::milli>(b - idle_since).count();
++                cur_layer_ = want - 1;
++                set_plan_slot(grp);
++                const int tb = gtb[grp], n = gte[grp] - gtb[grp];
++                progress_at("verify batch: the CPU experts of layer", l);
++                if (pool != nullptr)
++                    pool(user, h_x_ + (size_t) tb * g_->n_embd, h_ids_ + (size_t) tb * ss_->k, n, ss_->k,
++                         h_ymiss_ + (size_t) tb * ss_->k * g_->n_embd, l);
++                progress_tick();
++                std::atomic_thread_fence(std::memory_order_seq_cst);
++                _mm_sfence();
++                if (*(volatile uint32_t*) h_flagA_ != want) {   // v1 keeps the empty-plan publish (harmless here)
++                    sink_.counts[0] = 0;
++                    sink_.counts[1] = 0;
++                    sink_.counts[2] = 0;
++                    sink_.start[0] = 0;
++                    sink_.start2[0] = 0;
++                    std::atomic_thread_fence(std::memory_order_seq_cst);
++                    *(volatile uint32_t*) h_flagA_ = want;
++                    raise_flag(h_flagB_, want);
++                }
++                *flag = want;
++                served = s;
++                idle_since = Clock::now();
++                ms_pool += ms_since(b);
++                continue;
++            }
++            _mm_pause();
++            if ((++spins & 1023u) != 0) continue;
++            const auto now = Clock::now();
++            if (now - last_flush > std::chrono::microseconds(2000)) {
++                last_flush = now;
++                const cudaError_t q = cudaStreamQuery(cs_);
++                if (q != cudaErrorNotReady) {
++                    if (*seq > served) {
++                        const int64_t bad_l = lb_ + (int64_t) (*seq - 1) / G;
++                        err = "verify batch: layer " + std::to_string(bad_l) + " rang and was never served (" +
++                              (q == cudaSuccess ? std::string("graph finished") : std::string(cudaGetErrorString(q))) + ")";
++                        return false;
++                    }
++                    break;   // graph done, every ring served
++                }
++            }
++            if (now - idle_since > std::chrono::seconds(20)) {
++                err = "verify batch: timed out at ring " + std::to_string(served) +
++                      released_note(release_gpu_waits(5000));
++                return false;
++            }
++        }
++    } else
+     for (int64_t k = 0; k < steps; ++k) {
+         const int64_t l = lb_ + k / G;
+         const int grp = (int) (k % G);
+@@ -4045,6 +4302,7 @@ bool Verifier::run_slot_rows(const int* rows, int S, const int32_t* tokens, cons
+     const cudaError_t se = cudaStreamSynchronize(cs_);
+     if (se != cudaSuccess) { err = std::string("verify batch: ") + cudaGetErrorString(se); return false; }
+     cudaStreamSynchronize(copy_);
++    drain_usage_hist();   // STRATA_COND_RING C7: this stage's miss-free routings into the usage table
+     if (prof_on_) collect_profile();
+     ++windows;
+     if (le_ < g.n_layers) return next_ == nullptr || next_->run_slot_rows(rows, S, tokens, pos, pool, next_user_, out, err);
+@@ -4195,6 +4453,43 @@ int Verifier::batch_serve(PoolMultiFn pool, void* user) {
+     }
+     const int G = batch_groups_;   // STRATA_BATCH_G2 (fork): doorbell k is layer lb_ + k/G, group k%G - the
+     const int gtb[2] = {0, (last_t_ + 1) / 2}, gte[2] = {G == 2 ? (last_t_ + 1) / 2 : last_t_, last_t_};
++    if (cond_ring()) {
++        // STRATA_COND_RING (C3): the external server's loop keys off the ABSOLUTE ring index; b_k_ carries the
++        // highest index served (0: none yet).  Returns 0 whenever nothing is pending - the pump's batch_poll
++        // notices the window's completion (graph-done + rings-served) and ends it.
++        for (;;) {
++            const uint32_t served = (uint32_t) b_k_.load(std::memory_order_acquire);
++            const uint32_t s = *seq;
++            if (s <= served) return 0;
++            const int64_t k = (int64_t) s - 1;
++            const int grp = (int) (k % G);
++            const uint32_t want = s;
++            const Clock::time_point b = Clock::now();
++            cur_layer_ = want - 1;
++            set_plan_slot(grp);
++            const int tb = gtb[grp], n = gte[grp] - gtb[grp];
++            if (pool != nullptr)
++                pool(user, h_x_ + (size_t) tb * g_->n_embd, h_ids_ + (size_t) tb * ss_->k, n, ss_->k,
++                     h_ymiss_ + (size_t) tb * ss_->k * g_->n_embd, lb_ + k / G);
++            progress_tick();
++            std::atomic_thread_fence(std::memory_order_seq_cst);
++            _mm_sfence();
++            if (*(volatile uint32_t*) h_flagA_ != want) {   // v1 keeps the empty-plan publish (harmless here)
++                sink_.counts[0] = 0;
++                sink_.counts[1] = 0;
++                sink_.counts[2] = 0;
++                sink_.start[0] = 0;
++                sink_.start2[0] = 0;
++                std::atomic_thread_fence(std::memory_order_seq_cst);
++                *(volatile uint32_t*) h_flagA_ = want;
++                raise_flag(h_flagB_, want);
++            }
++            *(volatile uint32_t*) h_flag_ = want;
++            ms_pool += ms_since(b);
++            ring_now();
++            b_k_.store(s, std::memory_order_release);
++        }
++    }
+     for (;;) {
+         // the window's row count is read after the served-layer count: with external serving the window this call
+         // began on can have finished and the next one been launched meanwhile, and batch_go writes its rows
+@@ -4241,6 +4536,32 @@ int Verifier::batch_poll(PoolMultiFn pool, void* user, std::string& err) {
+     // rang for 20 s.  The stream query can wait for the driver's lock while a read's call holds it; the doorbells
+     // go on meanwhile.  The served count is read before the query and the ring count after it: a layer served in
+     // between rang first.
++    if (ext_serve_.load(std::memory_order_acquire) && !ar_on() && cond_ring()) {
++        // STRATA_COND_RING (C3/C4): no step count to compare against - the window is outstanding until the
++        // graph is done AND every ring is served.  The served count is read before the ring count (a ring
++        // served in between rang first).  An unserved ring with the graph done is NOT yet an error here: the
++        // server thread may be mid-serve on it - only the 20 s watchdog condemns it.
++        const uint32_t served = (uint32_t) b_k_.load(std::memory_order_acquire);
++        if (*(volatile uint32_t*) h_seq_ > served) return 0;   // the server thread has a ring (or is on it)
++        const auto now = Clock::now();
++        if (now - last_ring() <= std::chrono::milliseconds(2) || now - ext_checked_ < std::chrono::milliseconds(1))
++            return 0;
++        ext_checked_ = now;   // (at most one query a millisecond: pump calls this in a loop)
++        const OnDevice on_device(device_);
++        const cudaError_t q = cudaStreamQuery(cs_);
++        if (q == cudaErrorNotReady) {
++            if (now - last_ring() > std::chrono::seconds(20)) {
++                err = "verify batch: timed out waiting for the GPU (STRATA_COND_RING)" +
++                      released_note(release_gpu_waits(5000));
++                b_running_ = false;
++                return -1;
++            }
++            return 0;
++        }
++        if (q != cudaSuccess) { err = std::string("verify batch: ") + cudaGetErrorString(q); b_running_ = false; return -1; }
++        // the graph is done and nothing is pending: fall through to the completion tail (the serve loop below
++        // is a no-op under the mode - no new ring can land on a completed graph)
++    } else
+     if (ext_serve_.load(std::memory_order_acquire) && !ar_on()) {
+         const int64_t k = b_k_.load(std::memory_order_acquire);
+         if (k < b_steps_) {
+@@ -4279,6 +4600,62 @@ int Verifier::batch_poll(PoolMultiFn pool, void* user, std::string& err) {
+     }
+     const int G = batch_groups_;   // STRATA_BATCH_G2: doorbell k is layer lb_ + k/G, group k%G
+     const int gtb[2] = {0, (S + 1) / 2}, gte[2] = {G == 2 ? (S + 1) / 2 : S, S};
++    if (cond_ring()) {
++        // STRATA_COND_RING (C3/C4): this thread serves the rings itself (no external server): absolute index,
++        // exit on graph-done with every ring served.  Reaching here with the external server armed happens
++        // only after its branch above fell through (graph done, nothing pending) - the first check below is
++        // then a no-op and the completion tail runs.
++        uint32_t spins = 0;
++        auto last_flush = Clock::now();
++        for (;;) {
++            const uint32_t served = (uint32_t) b_k_.load(std::memory_order_acquire);
++            const uint32_t s = *seq;
++            if (s > served) {
++                const int64_t k = (int64_t) s - 1;
++                const int grp = (int) (k % G);
++                const uint32_t want = s;
++                const Clock::time_point b = Clock::now();
++                cur_layer_ = want - 1;
++                set_plan_slot(grp);
++                const int tb = gtb[grp], n = gte[grp] - gtb[grp];
++                if (pool != nullptr)
++                    pool(user, h_x_ + (size_t) tb * g_->n_embd, h_ids_ + (size_t) tb * ss_->k, n, ss_->k,
++                         h_ymiss_ + (size_t) tb * ss_->k * g_->n_embd, lb_ + k / G);
++                progress_tick();
++                std::atomic_thread_fence(std::memory_order_seq_cst);
++                _mm_sfence();
++                if (*(volatile uint32_t*) h_flagA_ != want) {   // v1 keeps the empty-plan publish (harmless here)
++                    sink_.counts[0] = 0;
++                    sink_.counts[1] = 0;
++                    sink_.counts[2] = 0;
++                    sink_.start[0] = 0;
++                    sink_.start2[0] = 0;
++                    std::atomic_thread_fence(std::memory_order_seq_cst);
++                    *(volatile uint32_t*) h_flagA_ = want;
++                    raise_flag(h_flagB_, want);
++                }
++                *(volatile uint32_t*) h_flag_ = want;
++                ms_pool += ms_since(b);
++                ring_now();
++                b_k_.store(s, std::memory_order_release);
++                continue;
++            }
++            _mm_pause();
++            if ((++spins & 1023u) != 0) continue;
++            const auto now = Clock::now();
++            if (now - last_flush > std::chrono::milliseconds(2)) {
++                last_flush = now;
++                const cudaError_t q = cudaStreamQuery(cs_);
++                if (q != cudaErrorNotReady) break;   // done or failed (the tail reports): every ring served
++            }
++            if (now - last_ring() > std::chrono::seconds(20)) {
++                err = "verify batch: timed out at ring " + std::to_string(served) +
++                      released_note(release_gpu_waits(5000));
++                b_running_ = false;
++                return -1;
++            }
++        }
++    } else
+     while (!ar_on() && b_k_.load(std::memory_order_acquire) < b_steps_) {
+         const int64_t k = b_k_.load(std::memory_order_acquire);
+         const uint32_t want = (uint32_t) (k + 1);
+@@ -4334,6 +4711,7 @@ int Verifier::batch_poll(PoolMultiFn pool, void* user, std::string& err) {
+     if (q != cudaSuccess) { err = std::string("verify batch: ") + cudaGetErrorString(q); b_running_ = false; return -1; }
+     const cudaError_t qc = cudaStreamQuery(copy_);   // no host function of this window may raise flag B in the next
+     if (qc == cudaErrorNotReady) return 0;
++    drain_usage_hist();   // STRATA_COND_RING C7: this stage's miss-free routings into the usage table
+     if (prof_on_) collect_profile();
+     if (last_stage()) {
+         if (!sample_rows(S, err)) { b_running_ = false; return -1; }
+@@ -4519,6 +4897,15 @@ bool Verifier::pl_launch(int T, const int32_t* tokens, int64_t pos0, std::string
+         staged = pl_prev_[0] == ss.ple_prev[0] && pl_prev_[1] == ss.ple_prev[1];
+     pl_prestaged_ = false;
+     if (!staged) pl_stage(T, tokens, pos0, ss.ple_prev);
++    if (cond_ring() && fl_ple_) {
++        // STRATA_COND_RING (C5): layer 0 may not ring, and pre(1)'s m_ple_ copy is unconditional on this lane,
++        // so the gather lands BEFORE the launch (the batch lane's shape) instead of at the first serve.
++        const Clock::time_point tp = Clock::now();
++        if (!ss.ple.table->gather_batch(pl_ple_rows_.data(), (size_t) T, h_ple_, err)) return false;
++        std::atomic_thread_fence(std::memory_order_seq_cst);
++        _mm_sfence();
++        ms_host += ms_since(tp);
++    }
+     const int G = groups_[T] > 0 ? groups_[T] : 1;
+     fl_T_ = T;
+     fl_k_ = 0;
+@@ -4547,7 +4934,10 @@ int Verifier::service(PoolMultiFn pool, void* user, std::string& err) {
+     // and the device switch (OnDevice: cudaGetDevice and two cudaSetDevice) made that a few driver calls each time:
+     // 919 million passes before the host stalled inside one of those cudaSetDevice calls with both stages waiting
+     // on it (0.1.41, Windows, an RTX 3060 + RTX 5070 Ti split).  The same answer as the loop below gives.
+-    if (!ar_on() && *(volatile uint32_t*) h_seq_ < (uint32_t) (fl_k_ + 1)) {
++    // STRATA_COND_RING (C3): fl_k_ then carries the ABSOLUTE ring index served (0: none), so the idle test is
++    // "nothing beyond it" rather than "the next consecutive ring not yet there".
++    if (!ar_on() && (cond_ring() ? *(volatile uint32_t*) h_seq_ <= (uint32_t) fl_k_
++                                 : *(volatile uint32_t*) h_seq_ < (uint32_t) (fl_k_ + 1))) {
+         const double now = now_ms();
+         if (now - fl_flush_ms_ <= 2.0 && now - fl_since_ms_ <= 20000.0) return 0;
+     }
+@@ -4575,6 +4965,73 @@ int Verifier::service(PoolMultiFn pool, void* user, std::string& err) {
+     }
+     const int G = groups_[T] > 0 ? groups_[T] : 1;
+     const int gtb[2] = {0, (T + 1) / 2}, gte[2] = {G == 2 ? (T + 1) / 2 : T, T};
++    if (cond_ring()) {
++        // STRATA_COND_RING (C3/C4, the pipelined lane): absolute ring index off *seq; the PLE rows were
++        // gathered at launch (pl_launch, C5) - never at the first ring.  fl_k_ = the highest ring served
++        // (0: none) and jumps to fl_total_ on the clean exit, exactly as the ar_on arm arranges.
++        while (fl_k_ < fl_total_) {
++            const uint32_t s = *(volatile uint32_t*) h_seq_;
++            if (s > (uint32_t) fl_k_) {
++                const int64_t k = (int64_t) s - 1;
++                const int64_t l = lb_ + k / G;
++                const int grp = (int) (k % G);
++                const uint32_t want = s;
++                const Clock::time_point b = Clock::now();
++                ms_wait += now_ms() - fl_since_ms_;
++                cur_layer_ = want - 1;
++                set_plan_slot(grp);
++                const int tb = gtb[grp], n = gte[grp] - gtb[grp];
++                progress_at("verify window (pipelined): the CPU experts of layer", l);
++                if (pool != nullptr)
++                    pool(user, h_x_ + (size_t) tb * g.n_embd, h_ids_ + (size_t) tb * ss.k, n, ss.k,
++                         h_ymiss_ + (size_t) tb * ss.k * g.n_embd, l);
++                progress_tick();
++                std::atomic_thread_fence(std::memory_order_seq_cst);
++                _mm_sfence();
++                if (*(volatile uint32_t*) h_flagA_ != want) {   // v1 keeps the empty-plan publish (harmless)
++                    sink_.counts[0] = 0;
++                    sink_.counts[1] = 0;
++                    sink_.counts[2] = 0;
++                    sink_.start[0] = 0;
++                    sink_.start2[0] = 0;
++                    std::atomic_thread_fence(std::memory_order_seq_cst);
++                    *(volatile uint32_t*) h_flagA_ = want;
++                    raise_flag(h_flagB_, want);
++                }
++                *(volatile uint32_t*) h_flag_ = want;
++                fl_k_ = (int64_t) s;
++                ms_pool += ms_since(b);
++                fl_since_ms_ = fl_flush_ms_ = now_ms();
++                continue;
++            }
++            const double now = now_ms();
++            if (now - fl_flush_ms_ > 2.0) {   // flush WDDM and notice a dead graph, as the standing loop does
++                fl_flush_ms_ = now;
++                const cudaError_t q = cudaEventQuery(ev_done_);
++                if (q != cudaErrorNotReady) {
++                    if (*(volatile uint32_t*) h_seq_ > (uint32_t) fl_k_) {   // a ring the loop never served
++                        trace_ev("NEVER-RANG", (int64_t) *(volatile uint32_t*) h_seq_ - 1,
++                                 lb_ + (int64_t) (*(volatile uint32_t*) h_seq_ - 1) / G, (int64_t) q);
++                        err = "verify: ring " + std::to_string(*(volatile uint32_t*) h_seq_) +
++                              " was never served (" +
++                              (q == cudaSuccess ? std::string("graph finished") : std::string(cudaGetErrorString(q))) + ")";
++                        return -1;
++                    }
++                    fl_k_ = fl_total_;   // graph done, every ring served: the clean exit (zero rings allowed)
++                    progress_tick();
++                    return 1;
++                }
++                (void) cudaStreamQuery(cs_);
++            }
++            if (now - fl_since_ms_ > 20000.0) {   // #267: no spin kernel may outlive the engine
++                trace_ev("TIMEOUT", fl_k_, lb_ + (fl_k_ > 0 ? (fl_k_ - 1) / G : 0), 0);
++                err = "verify: timed out at ring " + std::to_string(fl_k_) + released_note(release_gpu_waits(5000));
++                return -1;
++            }
++            return 0;
++        }
++        return 1;
++    }
+     while (fl_k_ < fl_total_) {
+         const int64_t l = lb_ + fl_k_ / G;
+         const uint32_t want = (uint32_t) (fl_k_ + 1);
+diff --git a/src/kernels/cuda/elementwise.cu b/src/kernels/cuda/elementwise.cu
+index a6f85b5c..31fd1318 100755
+--- a/src/kernels/cuda/elementwise.cu
++++ b/src/kernels/cuda/elementwise.cu
+@@ -350,6 +350,34 @@ __global__ void doorbell_publish_res_kernel(const float* __restrict__ x, const i
+     }
+ }
+ 
++// STRATA_COND_RING (2026-11-09 digest, C1): doorbell_publish_res with the ring moved INSIDE the any_miss branch
++// and STORED (the capture-known absolute group index, exactly doorbell_publish_value_kernel's store) instead of
++// read-modify-written.  A miss-free group writes no mapped word at all - no activation copy, no fence, no PCIe
++// round trip, no host wake; a missing one (an invalid id counts, so the s_bad host fallback still rings) copies
++// ids + the activation, fences and stores its index: *seq becomes "the latest ringing group" (monotone, with
++// gaps at miss-free groups), which the host serve loops key off instead of the ring count.
++__global__ void doorbell_publish_cond_kernel(const float* __restrict__ x, const int32_t* __restrict__ ids,
++                                             const int32_t* __restrict__ d_res, int n_expert, int n, int k,
++                                             float* x_out, int32_t* ids_out, uint32_t* seq, uint32_t value) {
++    int any_miss = 0;
++    if ((int) threadIdx.x < k) {
++        const int32_t id = ids[threadIdx.x];
++        if (d_res == nullptr || id < 0 || id >= n_expert || d_res[id] < 0) any_miss = 1;
++    }
++    if (!__syncthreads_or(any_miss)) return;   // every routed expert resident: the host never wakes for this group
++    if ((int) threadIdx.x < k) ids_out[threadIdx.x] = ids[threadIdx.x];
++    for (int i = threadIdx.x; i < n; i += blockDim.x) x_out[i] = x[i];
++    __threadfence_system();
++    __syncthreads();
++    if (threadIdx.x == 0) {
++        __threadfence_system();
++        *(volatile uint32_t*) seq = value;
++#if defined(__HIPCC__)  // #697: HIP only; the volatile store alone can sit in L2 until the stream syncs
++        __threadfence_system();
++#endif
++    }
++}
++
+ // #649 (HIP, STRATA_DOORBELL_STORE=1): the same publish, but the ring is STORED (the step's own number, known at
+ // capture) instead of read-modify-written over PCIe - one store, no read of host memory from the GPU.
+ __global__ void doorbell_publish_value_kernel(const float* __restrict__ x, const int32_t* __restrict__ ids,
+@@ -390,6 +418,14 @@ void doorbell_publish_res(const float* x, const int32_t* ids, const int32_t* d_r
+     check_launch("doorbell_publish_res");
+ }
+ 
++void doorbell_publish_cond(const float* x, const int32_t* ids, const int32_t* d_res, int n_expert, int64_t n,
++                           int64_t k, float* x_out, int32_t* ids_out, uint32_t* d_seq, uint32_t value, void* stream) {
++    if (k > 1024) { std::fprintf(stderr, "doorbell_publish_cond: k too large\n"); std::exit(1); }
++    doorbell_publish_cond_kernel<<<1, 1024, 0, (cudaStream_t) stream>>>(x, ids, d_res, n_expert, (int) n, (int) k,
++                                                                        x_out, ids_out, d_seq, value);
++    check_launch("doorbell_publish_cond");
++}
++
+ // one block before (upstream 0.2.10): a single 128-thread block walked the whole mapped buffer.  A grid-stride
+ // loop now (64 blocks cap) - the device-plan copy inside every doorbell expert group.
+ __global__ void copy_i32_from_mapped_kernel(int32_t* __restrict__ dst, const volatile int32_t* src, int64_t n) {
+diff --git a/src/kernels/cuda/verify_kernels.cu b/src/kernels/cuda/verify_kernels.cu
+index d5f5081f..a08285f7 100755
+--- a/src/kernels/cuda/verify_kernels.cu
++++ b/src/kernels/cuda/verify_kernels.cu
+@@ -1511,7 +1511,8 @@ static_assert(kResidentPlanMax < 32768, "resident_plan: the packed entry count m
+ __global__ void __launch_bounds__(kResidentPlanMax) resident_plan_kernel(const int32_t* __restrict__ ids, int n, int k, const int32_t* __restrict__ res,
+                                      int n_expert, const uint8_t* cache_base, const unsigned long long* slot_off,
+                                      long long blob, int32_t* __restrict__ pl, long long capx, uint32_t* skip,
+-                                     uint32_t ring, volatile uint32_t* plan_err, uint32_t partial_skip) {
++                                     uint32_t ring, volatile uint32_t* plan_err, uint32_t partial_skip,
++                                     uint32_t* usage_hist) {
+     __shared__ int32_t s_ids[kResidentPlanMax];
+     __shared__ int32_t s_excl[kResidentPlanMax];
+     __shared__ int32_t s_wsum[4];
+@@ -1532,6 +1533,9 @@ __global__ void __launch_bounds__(kResidentPlanMax) resident_plan_kernel(const i
+         else if (slot < 0) atomicOr(&s_bad, 1);
+     }
+     __syncthreads();
++    if (usage_hist != nullptr && !s_bad && !s_partial && tid < n)
++        atomicAdd(&usage_hist[eid], 1u);   // STRATA_COND_RING C7: a fully device-planned group's routings; the
++                                           // partial/host ones stay the pool's per-ring call to count
+     if (s_bad) {
+         if (tid == 0 && skip != nullptr) *skip = 0;
+         if (tid == 0 && skip == nullptr) {   // #871: the all-resident graph has no host plan to fall back on
+@@ -1808,9 +1812,10 @@ __global__ void dm_wait_combine_kernel(const float4* __restrict__ hits4, const v
+ void resident_plan(const int32_t* ids, int n_entries, int k, const int32_t* res_layer, int n_expert,
+                    const uint8_t* cache_base, const unsigned long long* slot_off, long long blob, int32_t* plan,
+                    long long capx, uint32_t* skip, uint32_t ring, void* stream, uint32_t* plan_err,
+-                   uint32_t partial_skip) {
++                   uint32_t partial_skip, uint32_t* usage_hist) {
+     resident_plan_kernel<<<1, kResidentPlanMax, 0, (cudaStream_t) stream>>>(ids, n_entries, k, res_layer, n_expert, cache_base, slot_off,
+-                                                              blob, plan, capx, skip, ring, plan_err, partial_skip);
++                                                              blob, plan, capx, skip, ring, plan_err, partial_skip,
++                                                              usage_hist);
+     check("resident_plan");
+ }
+ void wait_flag_ge_or(const uint32_t* flag, uint32_t value, const uint32_t* skip, void* stream) {
+diff --git a/src/kernels/dm_plan_parity.cpp b/src/kernels/dm_plan_parity.cpp
+index 7ee87101..12faaea8 100644
+--- a/src/kernels/dm_plan_parity.cpp
++++ b/src/kernels/dm_plan_parity.cpp
+@@ -27,6 +27,7 @@
+ // distinct); an out-of-range id makes our kernel fall back to the host plan (skip = 0) while dm plans the
+ // rest into its VRAM tier.  Not covered here (needs the ported kernels): the expert row math itself - the
+ // donor's dm_test_kernel over the seven pairs runs after dec_moe.cuh/gu2.cuh land.
++#include "strata/kernels/elementwise.hpp"
+ #include "strata/kernels/native_moe.hpp"
+ #include "strata/kernels/verify_kernels.hpp"
+ 
+@@ -304,6 +305,7 @@ std::vector<int32_t> gen_res(double hit_rate, std::mt19937& rng) {
+ // ---------------------------------------------------------------- one plan case
+ int g_cases = 0;
+ long long g_field_checks = 0;
++int g_pub_checks = 0;   // STRATA_COND_RING leg-1 unit: doorbell_publish_cond's ring decision vs resident_plan's
+ 
+ bool plan_case(const char* name, int T, Regime rg, double hit_rate, bool with_slot_off, std::mt19937& rng,
+                cudaStream_t s, uint8_t* d_cache, bool partial_call) {
+@@ -423,6 +425,53 @@ bool plan_case(const char* name, int T, Regime rg, double hit_rate, bool with_sl
+         std::printf("      dup note: ours plans %d entries, dm plans %d (the in-token repeat goes to the CPU pool)\n",
+                     ref_group_nodup.counts[1], ref_group.counts[1]);
+     }
++    {   // STRATA_COND_RING (2026-11-09 digest, law-17 leg 1's unit): doorbell_publish_cond's any_miss against
++        // resident_plan's skip on the SAME (ids, d_res) - the two kernels pre(l) runs back to back under the
++        // mode, and they must agree: the publish rings exactly when the plan is not fully device-planned
++        // (skip != ring: a partial group's kPlanPartialSkip or the s_bad host fallback's 0), and a fully
++        // resident group writes no mapped word at all (the seq word stays 0 - no host wake).  The payload
++        // (ids) lands only on a ring, fenced before the store.
++        uint32_t* h_seq = nullptr;
++        int32_t* h_idsout = nullptr;
++        float* h_xout = nullptr;
++        uint32_t* d_seq = nullptr;
++        int32_t* d_idsout = nullptr;
++        float* d_xout = nullptr;
++        float* d_x = nullptr;
++        const int xn = T * 8;   // the activation width is arbitrary to the publish kernel
++        bool pok = ck(cudaHostAlloc((void**) &h_seq, 64, cudaHostAllocMapped), "pub seq host") &&
++                   ck(cudaHostAlloc((void**) &h_idsout, (size_t) n * 4, cudaHostAllocMapped), "pub ids host") &&
++                   ck(cudaHostAlloc((void**) &h_xout, (size_t) xn * 4, cudaHostAllocMapped), "pub x host") &&
++                   ck(cudaHostGetDevicePointer((void**) &d_seq, h_seq, 0), "pub seq dev") &&
++                   ck(cudaHostGetDevicePointer((void**) &d_idsout, h_idsout, 0), "pub ids dev") &&
++                   ck(cudaHostGetDevicePointer((void**) &d_xout, h_xout, 0), "pub x dev") &&
++                   ck(cudaMalloc((void**) &d_x, (size_t) xn * 4), "pub x malloc");
++        if (pok) {
++            *h_seq = 0;
++            std::vector<float> x((size_t) xn, 1.5f);
++            pok = ck(cudaMemcpy(d_x, x.data(), x.size() * 4, cudaMemcpyHostToDevice), "pub x H2D");
++        }
++        if (pok) {
++            strata::kernels::doorbell_publish_cond(d_x, d_ids, d_res, N_EXPERT, xn, n, d_xout, d_idsout, d_seq,
++                                                   ring, s);
++            pok = ck(cudaStreamSynchronize(s), "pub run");
++        }
++        if (!pok) return fail("the conditional publish did not run");
++        const uint32_t rang = *h_seq;
++        const bool expect_ring = hskip != ring;   // not fully device-planned: partial or host fallback
++        if (expect_ring) {
++            if (rang != ring) return fail("a group the plan did not fully cover did not ring");
++            for (int i = 0; i < n; ++i)
++                if (h_idsout[i] != ids[(size_t) i]) return fail("a ringing publish's ids payload is wrong");
++        } else if (rang != 0) {
++            return fail("a fully device-planned group rang (the host would wake for nothing)");
++        }
++        ++g_pub_checks;
++        if (h_xout) cudaFreeHost(h_xout);
++        if (h_idsout) cudaFreeHost(h_idsout);
++        if (h_seq) cudaFreeHost(h_seq);
++        if (d_x) cudaFree(d_x);
++    }
+     if (d_slot_off) ck(cudaFree(d_slot_off), "slot_off free");
+     ck(cudaFree(d_ids), "ids free");
+     ck(cudaFree(d_res), "res free");
+@@ -798,8 +847,9 @@ int main() {
+     std::printf("dm fold: dm_wait_combine (STRATA_DM, T32 phase-1b) vs the standing wait+copy+combine trio, bitwise\n");
+     ok = dm_fold_parity(s) && ok;
+ 
+-    std::printf("plan cases %d, plan fields compared >= %lld; fold cases %d, fold columns compared %lld\n", g_cases,
+-                g_field_checks, g_fold_cases, g_fold_columns);
++    std::printf("plan cases %d, plan fields compared >= %lld; fold cases %d, fold columns compared %lld; "
++                "publish-cond ring decisions %d\n",
++                g_cases, g_field_checks, g_fold_cases, g_fold_columns, g_pub_checks);
+     std::printf("%s\n", ok ? "PASS" : "FAIL");
+     ck(cudaFree(d_cache), "cache free");
+     return ok ? 0 : 1;
+diff --git a/src/program/generate.cpp b/src/program/generate.cpp
+index ce79db4c..788b4bf0 100755
+--- a/src/program/generate.cpp
++++ b/src/program/generate.cpp
+@@ -10294,6 +10294,21 @@ int main(int argc, char** argv) {
+         }
+         if (o.adapt_every > 0 && o.adapt_swaps > 0 && !all_experts_resident)
+             drive.d.usage.assign((size_t) (g.n_layers * g.n_expert), 0.0f);
++        // STRATA_COND_RING (C7, 2026-11-09 digest): the mode's miss-free layer-groups never wake the host, so
++        // their routings reach the placement machinery's usage table only through the verifier's device
++        // histogram, drained once per window into this table (the pool's per-ring += keeps feeding the rest).
++        // The table never resizes after this assign; the sink is inert on refusers (never drained).
++        if (!drive.d.usage.empty() && std::getenv("STRATA_COND_RING") != nullptr) {
++            float* const usink = drive.d.usage.data();
++            ver.set_usage_sink(usink);
++            ver_b.set_usage_sink(usink);
++            ver_c.set_usage_sink(usink);
++            if (split_same) ver_same.set_usage_sink(usink);
++            for (auto& st : stages) {
++                st->ver.set_usage_sink(usink);
++                st->ver_b.set_usage_sink(usink);
++            }
++        }
+         PcieAuto pcie_auto;
+         if (o.pcie_frac_auto && !all_experts_resident && o.batch == 0 && o.peer_device < 0 && (n_stages == 1 || pcie_auto_split_ok())) {
+             const auto& pl = strata::kernels::cpu::expert_layout();

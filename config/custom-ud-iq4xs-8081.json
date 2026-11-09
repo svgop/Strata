@@ -36,7 +36,12 @@
   "--vram-reserve-mib",
   "2000",
   "--mtp",
-  "/home/svg/LLM/data/mtp-en/rt"
+  "/home/svg/LLM/data/mtp-en/rt",
+  "--pcie-frac",
+  "0.35",
+  "--pcie-mode",
+  "dma",
+  "--resident-experts"
  ],
  "cwd": "/home/svg/LLM/strata-custom-2",
  "tokenizer": "/home/svg/LLM/data/packs/unsloth-ud-iq2_xs/tokenizer",

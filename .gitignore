@@ -106,3 +106,10 @@ campaign/shadow-bench/shadow_bench
 ds4-slots/
 # engine logs (runtime)
 data/expert-profile-learned.bin
+
+# tracked-artifact policy (2026-11-09): result .out files under campaign/results are the record
+# and stay committed; ad-hoc boot dumps elsewhere are not.
+campaign/*.out
+!campaign/results/*.out
+campaign/hostmem-anon-collapse
+campaign/l1_commit_falsifier

@@ -80,9 +80,6 @@ fi
 # (the engine treats unset and empty alike - shadow_experts.hpp), so only an UNSET variable takes the default.
 export STRATA_SHADOW_EXPERTS="${STRATA_SHADOW_EXPERTS-$_shadow}"
 [ -n "$STRATA_SHADOW_EXPERTS" ] && echo "launcher: shadow store $STRATA_SHADOW_EXPERTS" >&2
-                                  # store (31.64 GiB mapped, 1.38 MB blobs vs IQ3_S's 2.05 MB; the pool is byte-bound at ~150 us/entry). Warm legs vs the fresh
-                                  # champion: M1 -0.7 (noise), pair +7.7%, conc +8.4%; MMLU 95.71 >= 93.3; falsifier: 2.0x bytes, >=32% faster entries. Hits,
-                                  # the PCIe share, the prompt path unchanged (bit-identical); only the ~3% missed routing computes at Q2_0.
 # F-331 ARMS (10-25, both never priced on this lane; see SVG-CUSTOM F-331):
 export STRATA_QSA_SPLIT_ATTN="${STRATA_QSA_SPLIT_ATTN:-1}"     # decode+drafter attention through the split int8-MMA kernel (verify.cpp:1973 + mtp.cpp:1088;
                                   # qsa_prompt_attn.cu:2271: each query's cells split over up to 20 blocks, LSE merge; int8-KV sm_80+;
@@ -106,8 +103,7 @@ export STRATA_VERIFY_ASYNC_LAUNCH=1 # F-200 ADOPTED 2026-10-15: v0.1.44 HostGrap
 export STRATA_SPEC_DRAFT_TEMP=0.85  # F-201 ADOPTED 2026-10-15: coupled drafter samples at 0.85x temp (proposals-only; exact-match verify emits the target's picks). Sweep 0.45-0.90 peaked here: M1 +13.4/pair +9.8/conc +7.5%
 
 # (STRATA_ADAPT_OVERLAP / _RESIDENT removed F-187: the engine refuses them while DMA_BATCH=1 —
-#  "is off: not with STRATA_DMA_BATCH" boot line; KEEP_MAPPING removed: dead branch on Linux,
-#  expert_source.cpp:510-520. F-185 rejected the overlap trade anyway.)
+#  "is off: not with STRATA_DMA_BATCH" boot line. F-185 rejected the overlap trade anyway.)
 # F-72 battery arms (missing from the first port; measured acceptance points when experts swap)
 export STRATA_ROUTE_RESIDENT=0.75     # F-200 ADOPTED 2026-10-15: battery +14.9/+8.5/+12.2 M1/pair/conc vs interpolated control; routing-changing -> 2x MMLU gate PASSED (92.86/97.14, mean 95.00)
 export STRATA_ROUTE_RESIDENT_MTP=1
@@ -124,5 +120,8 @@ cd "$(dirname "$0")"
 # exec below stays as the fallback for containers / non-systemd hosts (guard absent there, serve works).
 if [ "${STRATA_SWAP_GUARD-1}" != "0" ] && command -v systemd-run >/dev/null 2>&1 && [ -n "${XDG_RUNTIME_DIR:-}" ]; then
   exec systemd-run --user --scope --collect -q -p MemorySwapMax=0 --unit="strata-engine-$$" .venv/bin/python serve/server.py --engine strata --config "$PWD/config/custom-ud-iq4xs-8081.json" --port 8081 --host 0.0.0.0
+fi
+_CPUS="${STRATA_ENGINE_CPUS-}"   # default OFF (measured neutral on a quiet box; set 8-15,24-31 for contended hours)
+if [ -n "$_CPUS" ]; then exec taskset -c "$_CPUS" .venv/bin/python serve/server.py --engine strata --config "$PWD/config/custom-ud-iq4xs-8081.json" --port 8081 --host 0.0.0.0
 fi
 exec .venv/bin/python serve/server.py --engine strata --config "$PWD/config/custom-ud-iq4xs-8081.json" --port 8081 --host 0.0.0.0

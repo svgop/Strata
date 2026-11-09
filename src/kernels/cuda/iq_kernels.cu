@@ -1131,7 +1131,6 @@ template<> struct Split<20> {   // IQ4_NL
 // 3.5-8.2) read solo +4.8 / pair +2.9 / conc -11.2 - the decode-once form wins serial windows and loses the
 // 6-column case, and law 13 forbids adopting a lane loss.  The traits stay for the follow-up: a per-NC dispatch
 // (multi for the small-column windows, per-entry for conc) is the design that keeps both sides' wins.
-template<> inline constexpr bool kSplit<6> = false;
 template<> struct Split<6> {   // Q5_0
     struct W { int v[4]; float dw; };   // per iqs step: vi0/vi1 of i=0, then of i=1
     template<bool STAGE_GRID = false>

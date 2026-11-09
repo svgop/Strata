@@ -159,6 +159,10 @@
   "src/qwen35/q36_engine.cu": {
    "baseline": 12,
    "reason": "the CK-family err-collect migration worklist - ROADMAP-architecture Layer 1 item 3; this baseline is the worklist size at arming (2026-11-04) and only shrinks"
+  },
+  "src/core/pinned.cu": {
+   "baseline": 1,
+   "reason": "STRATA_ARENA_PAGES=strict (campaign/HOSTMEM-NO-REBOOT M3): an explicit opt-in bench refusal that PRINTS its reason and exits 70 before serving - a refused boot by design, not a dead process; the default mode serves degraded with the loud ARENA PAGES banner"
   }
  },
  "gguf": {
@@ -191,6 +195,64 @@
   "tools/lint_tree.py": {
    "baseline": 1,
    "reason": "unclassified at arming - triage or fix"
+  }
+ },
+ "kill": {
+  "campaign/batteries/ds-verify.sh": {
+   "baseline": 1,
+   "reason": "campaign research battery from the 2026-11-07..09 regression campaign; every sweep matches the exact engine cmdline (repo config path included), so it is port-scoped in effect; the standing fleet uses battery-lib cleanup_engine. Consolidation into battery-lib is the cleanup follow-up"
+  },
+  "campaign/batteries/era-interleave.sh": {
+   "baseline": 3,
+   "reason": "campaign research battery from the 2026-11-07..09 regression campaign; every sweep matches the exact engine cmdline (repo config path included), so it is port-scoped in effect; the standing fleet uses battery-lib cleanup_engine. Consolidation into battery-lib is the cleanup follow-up"
+  },
+  "campaign/batteries/gsq-arms-screen.sh": {
+   "baseline": 3,
+   "reason": "campaign research battery from the 2026-11-07..09 regression campaign; every sweep matches the exact engine cmdline (repo config path included), so it is port-scoped in effect; the standing fleet uses battery-lib cleanup_engine. Consolidation into battery-lib is the cleanup follow-up"
+  },
+  "campaign/batteries/gsq-condring-ab.sh": {
+   "baseline": 3,
+   "reason": "campaign research battery from the 2026-11-07..09 regression campaign; every sweep matches the exact engine cmdline (repo config path included), so it is port-scoped in effect; the standing fleet uses battery-lib cleanup_engine. Consolidation into battery-lib is the cleanup follow-up"
+  },
+  "campaign/batteries/gsq-final-bisect.sh": {
+   "baseline": 3,
+   "reason": "campaign research battery from the 2026-11-07..09 regression campaign; every sweep matches the exact engine cmdline (repo config path included), so it is port-scoped in effect; the standing fleet uses battery-lib cleanup_engine. Consolidation into battery-lib is the cleanup follow-up"
+  },
+  "campaign/batteries/gsq-frac-sweep.sh": {
+   "baseline": 2,
+   "reason": "campaign research battery from the 2026-11-07..09 regression campaign; every sweep matches the exact engine cmdline (repo config path included), so it is port-scoped in effect; the standing fleet uses battery-lib cleanup_engine. Consolidation into battery-lib is the cleanup follow-up"
+  },
+  "campaign/batteries/gsq-pinning-ab.sh": {
+   "baseline": 3,
+   "reason": "campaign research battery from the 2026-11-07..09 regression campaign; every sweep matches the exact engine cmdline (repo config path included), so it is port-scoped in effect; the standing fleet uses battery-lib cleanup_engine. Consolidation into battery-lib is the cleanup follow-up"
+  },
+  "campaign/batteries/gsq-quiet-record-hour.sh": {
+   "baseline": 3,
+   "reason": "campaign research battery from the 2026-11-07..09 regression campaign; every sweep matches the exact engine cmdline (repo config path included), so it is port-scoped in effect; the standing fleet uses battery-lib cleanup_engine. Consolidation into battery-lib is the cleanup follow-up"
+  },
+  "campaign/batteries/gsq-residency-warmth.sh": {
+   "baseline": 2,
+   "reason": "campaign research battery from the 2026-11-07..09 regression campaign; every sweep matches the exact engine cmdline (repo config path included), so it is port-scoped in effect; the standing fleet uses battery-lib cleanup_engine. Consolidation into battery-lib is the cleanup follow-up"
+  },
+  "campaign/batteries/gsq-v6-verdict.sh": {
+   "baseline": 3,
+   "reason": "campaign research battery from the 2026-11-07..09 regression campaign; every sweep matches the exact engine cmdline (repo config path included), so it is port-scoped in effect; the standing fleet uses battery-lib cleanup_engine. Consolidation into battery-lib is the cleanup follow-up"
+  },
+  "campaign/batteries/gsq-warm-verdict.sh": {
+   "baseline": 2,
+   "reason": "campaign research battery from the 2026-11-07..09 regression campaign; every sweep matches the exact engine cmdline (repo config path included), so it is port-scoped in effect; the standing fleet uses battery-lib cleanup_engine. Consolidation into battery-lib is the cleanup follow-up"
+  },
+  "campaign/batteries/kernel-aa.sh": {
+   "baseline": 3,
+   "reason": "campaign research battery from the 2026-11-07..09 regression campaign; every sweep matches the exact engine cmdline (repo config path included), so it is port-scoped in effect; the standing fleet uses battery-lib cleanup_engine. Consolidation into battery-lib is the cleanup follow-up"
+  },
+  "campaign/batteries/stock-jury.sh": {
+   "baseline": 1,
+   "reason": "campaign research battery from the 2026-11-07..09 regression campaign; every sweep matches the exact engine cmdline (repo config path included), so it is port-scoped in effect; the standing fleet uses battery-lib cleanup_engine. Consolidation into battery-lib is the cleanup follow-up"
+  },
+  "campaign/batteries/ud-warm-verdict.sh": {
+   "baseline": 2,
+   "reason": "campaign research battery from the 2026-11-07..09 regression campaign; every sweep matches the exact engine cmdline (repo config path included), so it is port-scoped in effect; the standing fleet uses battery-lib cleanup_engine. Consolidation into battery-lib is the cleanup follow-up"
   }
  }
 }
