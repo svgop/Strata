@@ -38,6 +38,22 @@ inline bool hugepage_arenas_enabled() {
 }
 
 #if defined(__linux__)
+/// Bytes free in the kernel's reserved 2 MiB pool (HugePages_Free x Hugepagesize); 0 when unreadable.
+/// MemAvailable does NOT count the reserved pool: any memory budget whose allocation can draw from
+/// the pool must add this (the same correction dsv41's copy budget carries, ds4_os.hpp).
+inline uint64_t huge_pool_free_bytes() {
+    std::ifstream f("/proc/meminfo");
+    if (!f) return 0;
+    uint64_t pages = 0, size_kb = 0;
+    std::string line;
+    while (std::getline(f, line)) {
+        unsigned long long v = 0;
+        if (std::sscanf(line.c_str(), "HugePages_Free: %llu", &v) == 1) pages = v;
+        else if (std::sscanf(line.c_str(), "Hugepagesize: %llu", &v) == 1) size_kb = v;
+    }
+    return pages * size_kb * 1024ull;
+}
+
 /// True when the reserved 2 MiB pool can cover `bytes` whole (MAP_HUGETLB is all-or-nothing per
 /// mapping).  Read from /proc/meminfo at call time - the pool shrinks as other organs draw it.
 inline bool huge_pool_covers(size_t bytes) {

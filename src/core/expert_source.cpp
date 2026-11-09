@@ -3387,6 +3387,15 @@ bool FileExpertSource::pin_cache_complement(
             err = "FileExpertSource: cannot determine available memory for the resident-memory safety check";
             return false;
         }
+        // HOSTMEM-NO-REBOOT: the reserved 2 MiB pool is invisible to MemAvailable (the same blind
+        // spot dsv41's copy budget corrects for, ds4_os.hpp huge_free_bytes) - with the arenas
+        // armed the complement draws pool pages, so the pool's free bytes are available to it.
+        // Without this, a pool-equipped box READS as RAM-starved and caps the complement at a
+        // fraction (measured 2026-11-08: 19.80 of 37.97 GiB, the rest through the file cache).
+#if !defined(_WIN32)
+        if (strata::platform::hugepage_arenas_enabled())
+            physical += strata::platform::huge_pool_free_bytes();
+#endif
         const uint64_t available = std::min(physical, commit);
         budget = available > headroom_bytes ? available - headroom_bytes : 0;
         if (bytes > budget) {
