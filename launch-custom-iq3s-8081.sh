@@ -118,4 +118,12 @@ export STRATA_ROUTE_RESIDENT_MTP=1
 if [ "$(awk '/^HugePages_Free/{{print $2}}' /proc/meminfo)" -lt 17000 ]; then bash campaign/shm-shadow.sh >/dev/null 2>&1 || true; fi
 
 cd "$(dirname "$0")"
+# CPU pinning for the engine (2026-11-09, the serial-window research): the 9950X3D has two CCDs -
+# cores 0-7 (3D V-Cache) and 8-15 (frequency), SMT siblings +16.  Pinning the engine to one whole CCD
+# keeps it off the desktop's cores; the doorbell poller stops being preempted by normal tasks (the
+# measured 15.3 ms preemption penalty class).  STRATA_ENGINE_CPUS overrides; empty = no pinning.
+_CPUS="${STRATA_ENGINE_CPUS-8-15,24-31}"
+if [ -n "$_CPUS" ]; then
+  exec taskset -c "$_CPUS" .venv/bin/python serve/server.py --engine strata --config "$PWD/config/custom-iq3_s-8081.json" --port 8081 --host 0.0.0.0
+fi
 exec .venv/bin/python serve/server.py --engine strata --config "$PWD/config/custom-iq3_s-8081.json" --port 8081 --host 0.0.0.0

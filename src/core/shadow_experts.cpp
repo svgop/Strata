@@ -226,6 +226,18 @@ bool arm(int64_t n_layers, int64_t n_expert) {
         view = mmap(nullptr, (size_t) want, PROT_READ, MAP_SHARED, fd, 0);
         if (view == MAP_FAILED) { ::close(fd); return refuse("mmap failed on " + st.dir + "/experts.bin"); }
     }
+    // HOSTMEM (2026-11-09, the hardware dig): the store is read-only and hot - it must never be
+    // swap-eligible.  Measured live: a /dev/shm store mapping had 299 MiB in zram, and every miss-path
+    // read of a swapped page pays decompression.  Lock it (best-effort: a refusal leaves the store
+    // serviceable - locked pages that later get reclaimed are worse than an honest 4K stall).
+    // STRATA_SHADOW_MLOCK=0 disables.
+    {
+        const char* lock_off = std::getenv("STRATA_SHADOW_MLOCK");
+        if ((lock_off == nullptr || lock_off[0] != '0') && ::mlock(view, (size_t) want) != 0) {
+            std::fprintf(stderr, "strata: shadow store: mlock refused (%s) - the store stays reclaimable\n",
+                         std::strerror(errno));
+        }
+    }
     ::close(fd);   // MAP_SHARED keeps the mapping valid after the fd closes
     st.base = (const uint8_t*) view;
 #endif
