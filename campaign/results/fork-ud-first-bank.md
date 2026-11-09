@@ -112,3 +112,19 @@ The operator reported GSQ "regressed extremely hard". The full forensic arc:
 - v3's design validated against driver source; v4 deltas implemented (device scoping,
   notify-watchdog dead-man, event-reason guardrail 0xC8, SUPPORTED_CLOCKS runtime ban,
   -ac confirmed dead).
+
+## THE 2026-11-09 GROSS-DEGRADATION INCIDENT - closed (three faults, all named)
+
+1. ENGINE CRASH LOOP: SIGSEGV in libc every ~3 min (journal 11:12-11:45), entirely inside the
+   morning battery bootstorm; 0 crashes since the clean 12:50 boot. The memfd store arm is ON
+   (the fast path); if a segv ever appears under plain traffic, STRATA_SHADOW_MEMFD=0 is the
+   documented fallback (at the 24ms CPU-expert cost) until the teardown race is patched.
+2. STORE SLOW-MODE: the non-memfd fallback lost its RAM tier to the single-owner change -
+   24.4 ms/window CPU experts (10x) on the zram-full box. Avoided: memfd arm on; zram recycled
+   by the operator (0B held); the fallback tier's restoration is queued.
+3. THE CLOCK FAULT (the residual +28% GPU compute): the v5 governor's mem HARD-PIN (installed
+   this morning, landed "shelved pending falsifier evidence") held SM at ~2004 MHz during
+   decode at 61W - boost never engaged. MEM_PIN=0 (the script's own v4 revert switch) applied
+   by the operator 13:32; sampled live: SM 2876 mean / 2962 peak, mem ramping, 211W - the
+   banked class restored. THE FALSIFIER EVIDENCE v5 ASKED FOR IS IN: the mem hard-pin is
+   REJECTED; v4's range behavior stands.
