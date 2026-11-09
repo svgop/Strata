@@ -29,12 +29,18 @@ export STRATA_DROP_CACHE_ON_EXIT=${STRATA_DROP_CACHE_ON_EXIT:-1}
 
 port_pid() { ss -ltnp 2>/dev/null | grep ":$PORT " | grep -oP 'pid=\K[0-9]+' | head -1; }
 
+# STRATA_BATTERY_DRYRUN=1 — a battery's pre-flight: its gates and guards fire (kernel checks,
+# pool checks, engines-down refusals) but nothing boots, kills, or probes.  Every converted
+# battery validates this way before it is trusted with a real leg.
+battery_dryrun() { [ "${STRATA_BATTERY_DRYRUN:-0}" = "1" ]; }
+
 cleanup_engine() {
   # Port-scoped TERM first — the server owns its engine process and closes it in order.  The GPU
   # sweep that follows is scoped to THIS repo's engine binaries only: never a bare "strata"
   # substring (it matched both engines' cmdlines and any in-repo parity bench), but the actual
   # paths this checkout launches (engine/ for the Qwen lane, build-fresh/ for the DS lane).
   local p pid c
+  battery_dryrun && { echo "cleanup_engine: dry-run — would stop port $PORT (pid $(port_pid)) + this repo's GPU apps"; return 0; }
   p=$(port_pid); [ -n "$p" ] && kill -TERM "$p" 2>/dev/null
   sleep 4
   for pid in $(nvidia-smi --query-compute-apps=pid --format=csv,noheader 2>/dev/null); do

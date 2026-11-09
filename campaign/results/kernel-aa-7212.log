@@ -1,0 +1,2 @@
+KERNEL A/A start Mon Nov  9 11:21:15 PM SAST 2026 kernel=7.2.15-300.fc45.x86_64
+NOT on 7.2.12 (7.2.15-300.fc45.x86_64) - aborting; the A/A needs the record kernel

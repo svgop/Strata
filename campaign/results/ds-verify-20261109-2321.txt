@@ -1,0 +1,1 @@
+FAIL: pool is 0/54272 — run campaign/results/ds-pool-topup-block.sh (per-session runtime arm) first

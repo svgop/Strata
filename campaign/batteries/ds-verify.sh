@@ -15,6 +15,7 @@
 set -u
 
 REPO=/home/svg/LLM/strata-custom-2
+. "$(dirname "$0")/../battery-lib.sh"    # cleanup_engine / wait_health (port-scoped; never a repo+port-blind pattern kill)
 LAUNCH="$REPO/launch-custom-dsv41-8081.sh"
 LOG="$REPO/logs/custom-dsv41-8081.log"
 OUT="$REPO/campaign/results/ds-verify-$(date +%Y%m%d-%H%M).txt"
@@ -29,8 +30,9 @@ die() { echo "FAIL: $*" >&2; echo "FAIL: $*" >> "$OUT"; exit 1; }
 note() { echo "$*" | tee -a "$OUT"; }
 
 # ---- Guard: refuse to run while the pool is short (DS boots would land in-place and the bank lies) ----
-[ "$(total)" -ge "$TARGET" ] || die "pool is $(total)/$TARGET — run campaign/results/ds-pool-topup-block.sh (or reboot) first"
+[ "$(total)" -ge "$TARGET" ] || die "pool is $(total)/$TARGET — run campaign/results/ds-pool-topup-block.sh (per-session runtime arm) first"
 curl -s -m 2 http://127.0.0.1:8081/health >/dev/null 2>&1 && die "an engine answers on 8081 — stop it first (no DS+Qwen coexistence)"
+battery_dryrun && { note "DRYRUN: gates passed (pool $(total)/$TARGET, 8081 dark) — 2 DS boots would run now"; exit 0; }
 
 note "== ds-verify $(date): pool Total=$(total) Free=$(free_p) =="
 
@@ -41,11 +43,7 @@ boot_one() {
     off=$(( $(wc -l < "$LOG") ))
     note "--- boot $BOOT: launch (log offset $off, HugePages_Free before $fre_before) ---"
     ( cd "$REPO" && nohup "$LAUNCH" >> "$OUT" 2>&1 & )
-    local t=0
-    until curl -s -m 3 http://127.0.0.1:8081/health >/dev/null 2>&1; do
-        sleep 5; t=$((t+5))
-        [ "$t" -ge "$HEALTH_TIMEOUT" ] && die "boot $BOOT: no /health in ${HEALTH_TIMEOUT}s"
-    done
+    wait_health 300 || die "boot $BOOT: no /health in ${HEALTH_TIMEOUT}s"   # 300 x 3s = 900s
     fre_after=$(free_p)
     delta=$(( fre_before - fre_after ))
     note "boot $BOOT: HugePages_Free $fre_before -> $fre_after (delta $delta pages = $(awk -v d=$delta 'BEGIN{printf "%.1f", d*2097152/1e9}') GB)"
@@ -68,8 +66,7 @@ boot_one() {
     done
 
     note "--- boot $BOOT: stop, expect perfect re-arm (Free back to $(total)) ---"
-    pkill -f 'serve/server\.py' 2>/dev/null; pkill -x strata 2>/dev/null; pkill -f '/build-fresh/strata' 2>/dev/null
-    sleep 5
+    cleanup_engine   # port-scoped TERM + this-repo GPU sweep + port-free wait (battery-lib)
     local fre_stop
     fre_stop=$(free_p)
     [ "$fre_stop" -ge "$TARGET" ] || { FAILED=1; note "boot $BOOT RE-ARM FAIL: HugePages_Free $fre_stop < $TARGET after stop (pages not returned whole — investigate before boot 2)"; }

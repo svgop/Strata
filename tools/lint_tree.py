@@ -68,7 +68,7 @@ RETIRED = {"prewarm2": re.compile(r"bash\s+\S*prewarm2\.sh"),     # living scrip
            "prewarm-ds4": re.compile(r"bash\s+\S*prewarm-ds4\.sh")}   # warm-in scripts (no-ops since cc05319f)
 RETIRED_SCAN = ["campaign", "tools", "packaging"]
 
-RECORDS = re.compile(r"campaign/(results|research)/|SVG-CUSTOM|\.docs/|docs/|bench/results/")
+RECORDS = re.compile(r"campaign/(results|research|archive-[^/]+)/|SVG-CUSTOM|\.docs/|docs/|bench/results/")
 
 
 def lint() -> list[tuple[str, str, str]]:
