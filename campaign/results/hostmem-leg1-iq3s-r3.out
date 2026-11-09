@@ -1,0 +1,343 @@
+launcher: shadow store /dev/shm/strata-shadow-q2_0
+[strata] WARNING: This session has a real-time CPU limit (RLIMIT_RTTIME hard limit 200000; the desktop's audio system sets it to 0 when rtkit is not installed). Linux can then end a program with signal 9 for no visible reason. Install rtkit, or start Strata outside the desktop session's limits, for example: systemd-run --user --collect -p LimitRTTIME=infinity -- strata serve ...
+the vision encoder starts with the first picture (elastic) ...
+loading the model (the first start takes a minute or two) ...
+[strata] the config has a "vision" section but no --vision in its args: added --vision (run setup again with --vision to write them)
+[strata] the config has a "vision" section but no --vision in its args: added --vision (run setup again with --vision to write them)
+[strata] starting the engine: reading the model's weights ...
+[strata] loading the experts the GPU does not hold into RAM (of about 55 GB) and locking part of them for the GPU.
+         YOUR PC CAN BE SLOW OR STOP RESPONDING FOR 1-3 MINUTES NOW - this is normal.
+         Please wait and don't close this window; the server says when it is ready.
+[strata] filling the GPU's expert cache (9994 experts, 18.96 GiB of VRAM) ...
+[strata] almost ready ...
+[strata] still starting (33 s) - please wait ...
+[strata] the config has a "vision" section but no --vision in its args: added --vision (run setup again with --vision to write them)
+[strata] control vector: armed project:1-47 (validated against the config)
+[strata] images: the image encoder starts with the first picture and stops after 120 s without one; while it runs the expert cache keeps 2048 MiB free for it
+[strata] prewarm: on (files + replay); the warm-in starts when the engine is up and yields to live traffic
+[strata] the config has a "vision" section but no --vision in its args: added --vision (run setup again with --vision to write them)
+ready: http://127.0.0.1:8081/v1  (OpenAI: /v1/chat/completions, Anthropic: /v1/messages, context 262144 tokens, images on, API key required)
+       open http://127.0.0.1:8081/ in a browser to chat; close this window to stop the model
+       from other devices: http://192.168.0.22:8081/   (API: http://192.168.0.22:8081/v1)
+[strata] prewarm: 17 files, 80.1 GiB into the page cache (the boot's pin dropped it)
+[strata] reading the prompt: 50 of 55 tokens, 1 s so far
+[strata] done: 8 tokens in 1 s (116.6 tok/s) (length, cancel=False), expert cache 89.5% hit (+2.6% of the routed experts over PCIe)
+[strata] the reply reached max tokens while still thinking, so it has no answer: a thinking budget (reasoning_budget_tokens, in the request or in strata-<model>.json for every request) leaves room to answer
+[strata] thinking limited to 110 of max_tokens 220 so the answer has room ("answer_room": false in the config turns this off)
+[strata] thinking budget reached (110 tokens): wrapping up the thinking
+[strata] answering: 129 of max 220 tokens, 143.8 tok/s, 1 s
+[strata] done: 220 tokens in 2 s (137.0 tok/s) (length, cancel=False), expert cache 96.1% hit (+0.7% of the routed experts over PCIe)
+[strata] thinking limited to 110 of max_tokens 220 so the answer has room ("answer_room": false in the config turns this off)
+[strata] thinking budget reached (110 tokens): wrapping up the thinking
+[strata] thinking: 128 of max 220 tokens, 92.1 tok/s, 2 s
+[strata] answering: 186 of max 220 tokens, 77.6 tok/s, 3 s
+[strata] done: 220 tokens in 3 s (75.8 tok/s) (length, cancel=False), expert cache 98.1% hit (+0.3% of the routed experts over PCIe)
+[strata] thinking limited to 110 of max_tokens 220 so the answer has room ("answer_room": false in the config turns this off)
+[strata] thinking: 105 of budget 110 (max 220) tokens, 128.6 tok/s, 1 s
+[strata] thinking budget reached (110 tokens): wrapping up the thinking
+[strata] done: 220 tokens in 2 s (132.7 tok/s) (length, cancel=False), expert cache 98.9% hit (+0.1% of the routed experts over PCIe)
+[strata] thinking limited to 110 of max_tokens 220 so the answer has room ("answer_room": false in the config turns this off)
+[strata] thinking budget reached (110 tokens): wrapping up the thinking
+[strata] answering: 160 of max 220 tokens, 193.7 tok/s, 1 s
+[strata] done: 220 tokens in 1 s (178.7 tok/s) (length, cancel=False), expert cache 98.8% hit (+0.2% of the routed experts over PCIe)
+[strata] thinking limited to 110 of max_tokens 220 so the answer has room ("answer_room": false in the config turns this off)
+[strata] thinking budget reached (110 tokens): wrapping up the thinking
+[strata] answering: 161 of max 220 tokens, 196.0 tok/s, 1 s
+[strata] done: 220 tokens in 1 s (184.3 tok/s) (length, cancel=False), expert cache 98.2% hit (+0.4% of the routed experts over PCIe)
+[strata] thinking limited to 110 of max_tokens 220 so the answer has room ("answer_room": false in the config turns this off)
+[strata] thinking budget reached (110 tokens): wrapping up the thinking
+[strata] answering: 164 of max 220 tokens, 196.7 tok/s, 1 s
+[strata] done: 220 tokens in 1 s (187.4 tok/s) (length, cancel=False), expert cache 97.8% hit (+0.5% of the routed experts over PCIe)
+[strata] thinking limited to 40 of max_tokens 80 so the answer has room ("answer_room": false in the config turns this off)
+[strata] thinking budget reached (40 tokens): wrapping up the thinking
+[strata] done: 80 tokens in 1 s (150.8 tok/s) (length, cancel=False), expert cache 94.9% hit (+1.0% of the routed experts over PCIe)
+[strata] thinking limited to 110 of max_tokens 220 so the answer has room ("answer_room": false in the config turns this off)
+[strata] thinking budget reached (110 tokens): wrapping up the thinking
+[strata] answering: 155 of max 220 tokens, 180.9 tok/s, 1 s
+[strata] done: 220 tokens in 1 s (181.8 tok/s) (length, cancel=False), expert cache 98.3% hit (+0.3% of the routed experts over PCIe)
+[strata] thinking limited to 110 of max_tokens 220 so the answer has room ("answer_room": false in the config turns this off)
+[strata] thinking budget reached (110 tokens): wrapping up the thinking
+[strata] answering: 183 of max 220 tokens, 213.5 tok/s, 1 s
+[strata] done: 220 tokens in 1 s (213.5 tok/s) (length, cancel=False), expert cache 99.0% hit (+0.2% of the routed experts over PCIe)
+[strata] thinking limited to 110 of max_tokens 220 so the answer has room ("answer_room": false in the config turns this off)
+[strata] thinking budget reached (110 tokens): wrapping up the thinking
+[strata] answering: 146 of max 220 tokens, 168.2 tok/s, 1 s
+[strata] prewarm: page cache warm in 17 s
+[strata] thinking limited to 100 of max_tokens 200 so the answer has room ("answer_room": false in the config turns this off)
+[strata] done: 220 tokens in 2 s (123.3 tok/s) (length, cancel=False), expert cache 98.7% hit (+0.2% of the routed experts over PCIe)
+[strata] thinking limited to 110 of max_tokens 220 so the answer has room ("answer_room": false in the config turns this off)
+[strata] thinking: 58 of budget 100 (max 200) tokens, 59.3 tok/s, 1 s
+[strata] thinking budget reached (100 tokens): wrapping up the thinking
+[strata] thinking: 45 of budget 110 (max 220) tokens, 44.5 tok/s, 1 s
+Exception in thread Thread-21 (wait):
+Traceback (most recent call last):
+  File "/usr/lib64/python3.15/threading.py", line 1218, in _bootstrap_inner
+    self._context.run(self.run)
+    ~~~~~~~~~~~~~~~~~^^^^^^^^^^
+  File "/usr/lib64/python3.15/threading.py", line 1160, in run
+    self._target(*self._args, **self._kwargs)
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/svg/LLM/strata-custom-2/serve/server.py", line 1728, in wait
+    releasing.discard(slot)
+    ^^^^^^^^^
+NameError: name 'releasing' is not defined
+[strata] answering: 148 of max 200 tokens, 74.6 tok/s, 2 s
+[strata] thinking budget reached (110 tokens): wrapping up the thinking
+[strata] answering: 130 of max 220 tokens, 61.8 tok/s, 2 s
+Exception in thread Thread-22 (wait):
+Traceback (most recent call last):
+  File "/usr/lib64/python3.15/threading.py", line 1218, in _bootstrap_inner
+    self._context.run(self.run)
+    ~~~~~~~~~~~~~~~~~^^^^^^^^^^
+  File "/usr/lib64/python3.15/threading.py", line 1160, in run
+    self._target(*self._args, **self._kwargs)
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/svg/LLM/strata-custom-2/serve/server.py", line 1728, in wait
+    releasing.discard(slot)
+    ^^^^^^^^^
+NameError: name 'releasing' is not defined
+[strata] answering: 193 of max 200 tokens, 64.4 tok/s, 3 s
+[strata] done: 200 tokens in 3 s (62.3 tok/s) (length, cancel=False), expert cache 98.6% hit
+[strata] prewarm: live traffic arrived; the rest of the warm-in is skipped
+[strata] answering: 203 of max 220 tokens, 65.1 tok/s, 3 s
+[strata] done: 220 tokens in 3 s (68.4 tok/s) (length, cancel=False), expert cache 98.7% hit (+0.1% of the routed experts over PCIe)
+[strata] thinking limited to 110 of max_tokens 220 so the answer has room ("answer_room": false in the config turns this off)
+[strata] thinking budget reached (110 tokens): wrapping up the thinking
+[strata] answering: 191 of max 220 tokens, 214.3 tok/s, 1 s
+[strata] done: 220 tokens in 1 s (210.5 tok/s) (length, cancel=False), expert cache 98.9% hit (+0.1% of the routed experts over PCIe)
+[strata] thinking limited to 110 of max_tokens 220 so the answer has room ("answer_room": false in the config turns this off)
+[strata] thinking budget reached (110 tokens): wrapping up the thinking
+[strata] answering: 210 of max 220 tokens, 238.4 tok/s, 1 s
+[strata] done: 220 tokens in 1 s (229.0 tok/s) (length, cancel=False), expert cache 99.1% hit (+0.1% of the routed experts over PCIe)
+[strata] thinking limited to 1488 of max_tokens 2000 so the answer has room ("answer_room": false in the config turns this off)
+[strata] thinking: 174 of budget 1488 (max 2000) tokens, 199.3 tok/s, 1 s
+[strata] thinking: 368 of budget 1488 (max 2000) tokens, 195.4 tok/s, 2 s
+[strata] thinking: 606 of budget 1488 (max 2000) tokens, 209.0 tok/s, 3 s
+[strata] thinking: 811 of budget 1488 (max 2000) tokens, 207.6 tok/s, 4 s
+[strata] thinking: 976 of budget 1488 (max 2000) tokens, 198.6 tok/s, 5 s
+[strata] thinking: 1153 of budget 1488 (max 2000) tokens, 195.0 tok/s, 6 s
+[strata] thinking: 1367 of budget 1488 (max 2000) tokens, 197.5 tok/s, 7 s
+[strata] thinking budget reached (1488 tokens): wrapping up the thinking
+[strata] answering: 1553 of max 2000 tokens, 196.0 tok/s, 8 s
+[strata] answering: 1743 of max 2000 tokens, 195.2 tok/s, 9 s
+[strata] answering: 1949 of max 2000 tokens, 196.3 tok/s, 10 s
+[strata] done: 2000 tokens in 10 s (196.7 tok/s) (length, cancel=False), expert cache 97.5% hit (+0.4% of the routed experts over PCIe)
+[strata] thinking limited to 450 of max_tokens 900 so the answer has room ("answer_room": false in the config turns this off)
+[strata] thinking limited to 450 of max_tokens 900 so the answer has room ("answer_room": false in the config turns this off)
+[strata] thinking: 40 of budget 450 (max 900) tokens, 60.4 tok/s, 1 s
+[strata] thinking: 38 of budget 450 (max 900) tokens, 77.7 tok/s, 1 s
+[strata] thinking: 143 of budget 450 (max 900) tokens, 95.8 tok/s, 2 s
+[strata] thinking: 138 of budget 450 (max 900) tokens, 82.9 tok/s, 2 s
+[strata] thinking: 235 of budget 450 (max 900) tokens, 93.8 tok/s, 3 s
+[strata] thinking: 234 of budget 450 (max 900) tokens, 87.3 tok/s, 3 s
+[strata] thinking: 336 of budget 450 (max 900) tokens, 95.7 tok/s, 4 s
+[strata] thinking: 320 of budget 450 (max 900) tokens, 86.9 tok/s, 4 s
+[strata] thinking: 441 of budget 450 (max 900) tokens, 97.6 tok/s, 5 s
+[strata] thinking: 426 of budget 450 (max 900) tokens, 90.8 tok/s, 5 s
+[strata] thinking budget reached (450 tokens): wrapping up the thinking
+Exception in thread Thread-28 (wait):
+Traceback (most recent call last):
+  File "/usr/lib64/python3.15/threading.py", line 1218, in _bootstrap_inner
+    self._context.run(self.run)
+    ~~~~~~~~~~~~~~~~~^^^^^^^^^^
+  File "/usr/lib64/python3.15/threading.py", line 1160, in run
+    self._target(*self._args, **self._kwargs)
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/svg/LLM/strata-custom-2/serve/server.py", line 1728, in wait
+    releasing.discard(slot)
+    ^^^^^^^^^
+NameError: name 'releasing' is not defined
+[strata] thinking budget reached (450 tokens): wrapping up the thinking
+Exception in thread Thread-29 (wait):
+Traceback (most recent call last):
+  File "/usr/lib64/python3.15/threading.py", line 1218, in _bootstrap_inner
+    self._context.run(self.run)
+    ~~~~~~~~~~~~~~~~~^^^^^^^^^^
+  File "/usr/lib64/python3.15/threading.py", line 1160, in run
+    self._target(*self._args, **self._kwargs)
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/svg/LLM/strata-custom-2/serve/server.py", line 1728, in wait
+    releasing.discard(slot)
+    ^^^^^^^^^
+NameError: name 'releasing' is not defined
+[strata] thinking: 468 of max 900 tokens, 81.4 tok/s, 6 s
+[strata] answering: 488 of max 900 tokens, 85.3 tok/s, 6 s
+[strata] answering: 561 of max 900 tokens, 83.0 tok/s, 7 s
+[strata] answering: 595 of max 900 tokens, 88.5 tok/s, 7 s
+[strata] answering: 672 of max 900 tokens, 86.6 tok/s, 8 s
+[strata] answering: 704 of max 900 tokens, 91.1 tok/s, 8 s
+[strata] answering: 780 of max 900 tokens, 89.0 tok/s, 9 s
+[strata] answering: 815 of max 900 tokens, 93.3 tok/s, 9 s
+[strata] done: 900 tokens in 10 s (95.0 tok/s) (length, cancel=False), expert cache 86.1% hit (+2.1% of the routed experts over PCIe)
+[strata] done: 900 tokens in 10 s (92.2 tok/s) (length, cancel=False), expert cache 91.6% hit (+1.3% of the routed experts over PCIe)
+[strata] thinking limited to 300 of max_tokens 600 so the answer has room ("answer_room": false in the config turns this off)
+[strata] thinking limited to 300 of max_tokens 600 so the answer has room ("answer_room": false in the config turns this off)
+[strata] thinking limited to 300 of max_tokens 600 so the answer has room ("answer_room": false in the config turns this off)
+[strata] thinking limited to 300 of max_tokens 600 so the answer has room ("answer_room": false in the config turns this off)
+[strata] thinking limited to 300 of max_tokens 600 so the answer has room ("answer_room": false in the config turns this off)
+[strata] thinking limited to 300 of max_tokens 600 so the answer has room ("answer_room": false in the config turns this off)
+[strata] reading the prompt: 83 of 84 tokens, 1 s so far
+[strata] thinking: 2 of budget 300 (max 600) tokens, 5.0 tok/s, 1 s
+[strata] thinking: 11 of budget 300 (max 600) tokens, 10.0 tok/s, 1 s
+[strata] thinking: 2 of budget 300 (max 600) tokens, 7.7 tok/s, 1 s
+[strata] thinking: 4 of budget 300 (max 600) tokens, 4.7 tok/s, 1 s
+[strata] thinking: 2 of budget 300 (max 600) tokens, 3.3 tok/s, 1 s
+[strata] thinking: 40 of budget 300 (max 600) tokens, 39.6 tok/s, 2 s
+[strata] thinking: 47 of budget 300 (max 600) tokens, 33.4 tok/s, 2 s
+[strata] thinking: 48 of budget 300 (max 600) tokens, 37.9 tok/s, 2 s
+[strata] thinking: 53 of budget 300 (max 600) tokens, 25.2 tok/s, 2 s
+[strata] thinking: 46 of budget 300 (max 600) tokens, 28.5 tok/s, 2 s
+[strata] thinking: 49 of budget 300 (max 600) tokens, 26.5 tok/s, 2 s
+[strata] thinking: 96 of budget 300 (max 600) tokens, 47.6 tok/s, 3 s
+[strata] thinking: 97 of budget 300 (max 600) tokens, 40.0 tok/s, 3 s
+[strata] thinking: 98 of budget 300 (max 600) tokens, 31.4 tok/s, 3 s
+[strata] thinking: 100 of budget 300 (max 600) tokens, 43.9 tok/s, 3 s
+[strata] thinking: 102 of budget 300 (max 600) tokens, 35.6 tok/s, 3 s
+[strata] thinking: 100 of budget 300 (max 600) tokens, 38.0 tok/s, 3 s
+[strata] thinking: 158 of budget 300 (max 600) tokens, 52.0 tok/s, 4 s
+[strata] thinking: 154 of budget 300 (max 600) tokens, 44.9 tok/s, 4 s
+[strata] thinking: 155 of budget 300 (max 600) tokens, 37.6 tok/s, 4 s
+[strata] thinking: 149 of budget 300 (max 600) tokens, 45.3 tok/s, 4 s
+[strata] thinking: 161 of budget 300 (max 600) tokens, 41.6 tok/s, 4 s
+[strata] thinking: 158 of budget 300 (max 600) tokens, 43.5 tok/s, 4 s
+[strata] thinking: 215 of budget 300 (max 600) tokens, 53.2 tok/s, 5 s
+[strata] thinking: 208 of budget 300 (max 600) tokens, 46.7 tok/s, 5 s
+[strata] thinking: 205 of budget 300 (max 600) tokens, 39.8 tok/s, 5 s
+[strata] thinking: 201 of budget 300 (max 600) tokens, 46.6 tok/s, 5 s
+[strata] thinking: 209 of budget 300 (max 600) tokens, 42.7 tok/s, 5 s
+[strata] thinking: 210 of budget 300 (max 600) tokens, 45.1 tok/s, 5 s
+[strata] thinking: 273 of budget 300 (max 600) tokens, 53.9 tok/s, 6 s
+[strata] thinking: 260 of budget 300 (max 600) tokens, 47.6 tok/s, 6 s
+[strata] thinking: 262 of budget 300 (max 600) tokens, 42.5 tok/s, 6 s
+[strata] thinking: 255 of budget 300 (max 600) tokens, 47.9 tok/s, 6 s
+[strata] thinking: 272 of budget 300 (max 600) tokens, 46.1 tok/s, 6 s
+[strata] thinking: 265 of budget 300 (max 600) tokens, 46.7 tok/s, 6 s
+[strata] thinking budget reached (300 tokens): wrapping up the thinking
+Exception in thread Thread-36 (wait):
+Traceback (most recent call last):
+  File "/usr/lib64/python3.15/threading.py", line 1218, in _bootstrap_inner
+    self._context.run(self.run)
+    ~~~~~~~~~~~~~~~~~^^^^^^^^^^
+  File "/usr/lib64/python3.15/threading.py", line 1160, in run
+    self._target(*self._args, **self._kwargs)
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/svg/LLM/strata-custom-2/serve/server.py", line 1728, in wait
+    releasing.discard(slot)
+    ^^^^^^^^^
+NameError: name 'releasing' is not defined
+[strata] thinking budget reached (300 tokens): wrapping up the thinking
+[strata] thinking: 290 of budget 300 (max 600) tokens, 43.5 tok/s, 7 s
+[strata] thinking: 289 of budget 300 (max 600) tokens, 39.3 tok/s, 7 s
+[strata] thinking: 283 of budget 300 (max 600) tokens, 43.4 tok/s, 7 s
+[strata] answering: 320 of max 600 tokens, 45.1 tok/s, 7 s
+Exception in thread Thread-37 (wait):
+[strata] thinking: 296 of budget 300 (max 600) tokens, 43.1 tok/s, 7 s
+Traceback (most recent call last):
+  File "/usr/lib64/python3.15/threading.py", line 1218, in _bootstrap_inner
+    self._context.run(self.run)
+    ~~~~~~~~~~~~~~~~~^^^^^^^^^^
+  File "/usr/lib64/python3.15/threading.py", line 1160, in run
+    self._target(*self._args, **self._kwargs)
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/svg/LLM/strata-custom-2/serve/server.py", line 1728, in wait
+    releasing.discard(slot)
+    ^^^^^^^^^
+NameError: name 'releasing' is not defined
+[strata] thinking budget reached (300 tokens): wrapping up the thinking
+Exception in thread Thread-38 (wait):
+Traceback (most recent call last):
+  File "/usr/lib64/python3.15/threading.py", line 1218, in _bootstrap_inner
+    self._context.run(self.run)
+    ~~~~~~~~~~~~~~~~~^^^^^^^^^^
+  File "/usr/lib64/python3.15/threading.py", line 1160, in run
+    self._target(*self._args, **self._kwargs)
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/svg/LLM/strata-custom-2/serve/server.py", line 1728, in wait
+    releasing.discard(slot)
+    ^^^^^^^^^
+NameError: name 'releasing' is not defined
+[strata] thinking budget reached (300 tokens): wrapping up the thinking
+[strata] thinking: 318 of max 600 tokens, 36.8 tok/s, 9 s
+[strata] thinking: 300 of budget 300 (max 600) tokens, 36.6 tok/s, 9 s
+Exception in thread Thread-39 (wait):
+[strata] thinking: 296 of budget 300 (max 600) tokens, 36.7 tok/s, 9 s
+Traceback (most recent call last):
+  File "/usr/lib64/python3.15/threading.py", line 1218, in _bootstrap_inner
+    self._context.run(self.run)
+    ~~~~~~~~~~~~~~~~~^^^^^^^^^^
+  File "/usr/lib64/python3.15/threading.py", line 1160, in run
+    self._target(*self._args, **self._kwargs)
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/svg/LLM/strata-custom-2/serve/server.py", line 1728, in wait
+    releasing.discard(slot)
+    ^^^^^^^^^
+NameError: name 'releasing' is not defined
+[strata] answering: 335 of max 600 tokens, 38.8 tok/s, 9 s
+[strata] answering: 329 of max 600 tokens, 39.1 tok/s, 9 s
+[strata] thinking budget reached (300 tokens): wrapping up the thinking
+Exception in thread Thread-40 (wait):
+Traceback (most recent call last):
+  File "/usr/lib64/python3.15/threading.py", line 1218, in _bootstrap_inner
+    self._context.run(self.run)
+    ~~~~~~~~~~~~~~~~~^^^^^^^^^^
+  File "/usr/lib64/python3.15/threading.py", line 1160, in run
+    self._target(*self._args, **self._kwargs)
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/svg/LLM/strata-custom-2/serve/server.py", line 1728, in wait
+    releasing.discard(slot)
+    ^^^^^^^^^
+NameError: name 'releasing' is not defined
+[strata] thinking: 318 of max 600 tokens, 36.3 tok/s, 10 s
+[strata] thinking budget reached (300 tokens): wrapping up the thinking
+[strata] answering: 324 of max 600 tokens, 32.8 tok/s, 10 s
+[strata] answering: 322 of max 600 tokens, 34.9 tok/s, 10 s
+Exception in thread Thread-41 (wait):
+Traceback (most recent call last):
+[strata] answering: 340 of max 600 tokens, 35.2 tok/s, 10 s
+  File "/usr/lib64/python3.15/threading.py", line 1218, in _bootstrap_inner
+    self._context.run(self.run)
+    ~~~~~~~~~~~~~~~~~^^^^^^^^^^
+  File "/usr/lib64/python3.15/threading.py", line 1160, in run
+    self._target(*self._args, **self._kwargs)
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/svg/LLM/strata-custom-2/serve/server.py", line 1728, in wait
+    releasing.discard(slot)
+    ^^^^^^^^^
+NameError: name 'releasing' is not defined
+[strata] answering: 335 of max 600 tokens, 35.5 tok/s, 10 s
+[strata] answering: 371 of max 600 tokens, 37.9 tok/s, 11 s
+[strata] answering: 383 of max 600 tokens, 35.1 tok/s, 11 s
+[strata] thinking: 318 of max 600 tokens, 30.8 tok/s, 11 s
+[strata] answering: 384 of max 600 tokens, 36.2 tok/s, 11 s
+[strata] answering: 401 of max 600 tokens, 36.3 tok/s, 11 s
+[strata] answering: 396 of max 600 tokens, 36.7 tok/s, 11 s
+[strata] answering: 409 of max 600 tokens, 37.9 tok/s, 12 s
+[strata] answering: 421 of max 600 tokens, 35.3 tok/s, 12 s
+[strata] answering: 371 of max 600 tokens, 32.8 tok/s, 12 s
+[strata] answering: 441 of max 600 tokens, 38.0 tok/s, 12 s
+[strata] answering: 463 of max 600 tokens, 38.5 tok/s, 12 s
+[strata] answering: 457 of max 600 tokens, 38.7 tok/s, 12 s
+[strata] answering: 476 of max 600 tokens, 40.2 tok/s, 13 s
+[strata] answering: 485 of max 600 tokens, 37.5 tok/s, 13 s
+[strata] answering: 436 of max 600 tokens, 35.3 tok/s, 13 s
+[strata] answering: 506 of max 600 tokens, 40.1 tok/s, 13 s
+[strata] answering: 525 of max 600 tokens, 40.2 tok/s, 13 s
+[strata] answering: 525 of max 600 tokens, 40.9 tok/s, 13 s
+[strata] answering: 540 of max 600 tokens, 42.0 tok/s, 14 s
+[strata] answering: 543 of max 600 tokens, 39.0 tok/s, 14 s
+[strata] answering: 492 of max 600 tokens, 36.8 tok/s, 14 s
+[strata] answering: 562 of max 600 tokens, 41.2 tok/s, 14 s
+[strata] answering: 582 of max 600 tokens, 42.1 tok/s, 14 s
+[strata] answering: 579 of max 600 tokens, 41.2 tok/s, 14 s
+[strata] done: 600 tokens in 15 s (42.4 tok/s) (length, cancel=False), expert cache 91.4% hit (+0.8% of the routed experts over PCIe)
+[strata] done: 600 tokens in 15 s (41.4 tok/s) (length, cancel=False), expert cache 91.5% hit (+0.8% of the routed experts over PCIe)
+[strata] answering: 599 of max 600 tokens, 43.2 tok/s, 15 s
+[strata] done: 600 tokens in 15 s (43.3 tok/s) (length, cancel=False), expert cache 96.9% hit
+[strata] answering: 599 of max 600 tokens, 40.0 tok/s, 15 s
+[strata] done: 600 tokens in 15 s (40.1 tok/s) (length, cancel=False), expert cache 94.4% hit (+0.5% of the routed experts over PCIe)
+[strata] done: 600 tokens in 15 s (42.0 tok/s) (length, cancel=False), expert cache 96.8% hit
+[strata] answering: 537 of max 600 tokens, 36.8 tok/s, 16 s
+[strata] done: 600 tokens in 16 s (40.0 tok/s) (length, cancel=False), expert cache 96.1% hit (+0.7% of the routed experts over PCIe)
+
+[strata] stopping (Ctrl+C again to end the engine at once) ...
+[strata] stopped

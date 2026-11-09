@@ -1,0 +1,5 @@
+=== UD RESTORE iq2xs start Mon Nov  9 11:43:07 AM SAST 2026 ===
+instrument: reserved 2 MiB pool 28876/45076 pages free; corrected-instrument law: wait_prewarm BEFORE every probe
+anchors: Nov-6 spot 226.5 240.0 329.7 / Nov-8 pool-armed 193.2 201.2 274.0 (iq2xs gate); Nov-6 spot 176.8 196.5 238.5 (iq4xs, report-only)
+HOLD: gsq-final owns 8081 (DONE absent | battery alive | port busy) — re-check in 60 s at 11:43:07
+HOLD: gsq-final owns 8081 (DONE absent | battery alive | port busy) — re-check in 60 s at 11:48:07
