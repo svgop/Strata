@@ -19,7 +19,8 @@ climbed 198.5 → 212.5 (merge epoch) → elastic epoch, at 74–87% speculative
 
 **MAGMA — the pinned resident complement (the founding logic, v1's name).** The entire expert mass
 this GPU cannot hold lives as a page-locked, device-mapped host complement (~40–42 GiB) built at
-boot and re-warmed post-pin (prewarm2). The file tier NEVER reads at serving time — an expert the
+boot and re-warmed post-pin (prewarm is the server's own lifecycle since cc05319f — the old
+prewarm scripts are deleted). The file tier NEVER reads at serving time — an expert the
 cache misses arrives over pinned memory at PCIe speed, not from disk. This is the foundation every
 later win compounds on (F-0xx through F-64; the boot line: "mapped pinned cache complement ready,
 39.36 GiB in 18 s").

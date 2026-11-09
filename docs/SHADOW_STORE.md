@@ -2,6 +2,14 @@
 
 **Status:** architecture, shipped and standing on the Qwen lane.  Owner: `src/core/shadow_experts.cpp`,
 `include/strata/core/shadow_experts.hpp`.  Adopted F-359/F-360 (2026-10-27); placement normalized 2026-10-29 (F-374).
+**Corrected F4 (2026-11-09):** the store's fast path is the engine-owned **memfd** (`memfd_create(MFD_HUGETLB)`
+when the pool covers it — populated by mmap+memcpy from the canonical pack, `mprotect` READ, `mlock`'d,
+released with the process; `STRATA_SHADOW_MLOCK=0` opts out).  The tmpfs placement cache below is the
+**fallback tier**, built by `shm-shadow.sh` only when the single-owner rule leaves it the store
+(launchers skip the tmpfs copy when the pool covers the store — one owner, one copy).  The old
+"THP-eligible placement" claim is retired: shmem huge folios never materialize on this kernel
+(HOSTMEM-NO-REBOOT root probe), and the tmpfs tier is swap-eligible — which is exactly why the memfd
+and its mlock exist.
 
 ## What it is
 

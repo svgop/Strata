@@ -24,8 +24,11 @@ qwen,2026-10-27,50684ddd,F-367 standing bank (shm shadow store; THE bank),solo,2
 1. DS4_CACHE_THREADS=4 — VRAM swap-prep threads default 1; upstream's code note says try more on a PC; our swap-heavy single card is the case (T53).
 2. DS4_CACHE_MARGIN sweep — swap admission (1.25 default).
 3. dspark-conf sweep (0.65 standing).
-4. Boot-time hugepages (vm.nr_hugepages≈56320) for the 109.5 GB store — needs a reboot to reserve.
-5. Qwen side: the W-queue (campaign/ROADMAP-perf-8moves.md) — W1 adaptive spec and W9 S26 expert envs are the unexecuted high-ROI rows.
+4. DS 2-MiB arena: per-session runtime pool arm ONLY (`sudo bash campaign/results/ds-pool-topup-block.sh`,
+   54272 pages, read-back-or-fail, release after) — the standing/boot-armed pool era is closed (convicted
+   −20–22% tax on everything; see docs/HUGEPAGES.md § Arming). Never re-arm at boot.
+5. Qwen side: the W-queue (campaign/ROADMAP-perf-8moves.md) — W1 adaptive spec is ADOPTED and wired
+   (2026-11-02, battery-neutral, live-traffic +35% class); W9 S26 expert envs remain the unexecuted row.
 
 Depth probes (131K etc.) are a different axis than this chart's short-lane trend — record them in `results/` and reference from the ledger; only short-battery lanes go in `lanes.csv`.
 

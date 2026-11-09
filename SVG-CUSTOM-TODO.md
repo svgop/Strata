@@ -536,7 +536,9 @@ our ABAB same-window interleave (paired, sigma_d 2-3%) needs 2-5 rounds — the 
 quantitatively vindicated; CUPED on a prior-round covariate would cut unpaired needs ~2.5x.
 EXECUTED (no sudo needed): campaign/prewarm.sh — full sequential read of pack+shards into the
 page cache before every battery boot (7s warm, ~15-30s post-reboot), wired into battery-boot
-and battery-config. PENDING USER SUDO (paste block in F-220 journal): clock lock ~2700 MHz +
+and battery-config. [2026-11-04: the prewarm scripts are deleted — prewarm is now the server's own
+lifecycle (serve Prewarm, cc05319f); batteries wait on the /health word instead.] PENDING USER SUDO
+(paste block in F-220 journal): clock lock ~2700 MHz +
 memory clocks at max + verify. The remaining knob table (pinning/mlock under a systemd
 LimitMEMLOCK override only if pressure ever appears; CPU pinning to the V-Cache CCD cores 0-7
 + EPP performance; THP=skip; power limit=skip +0.1%) ranked in the agent report. Do-not-
@@ -1271,6 +1273,7 @@ restore >320-class means; supports M0). All legs campaign/results/t17*.txt + dep
    pair flat (203.0 both), conc +0.9% — INCONCLUSIVE: tonight's box was never truly cold (7+
    boots of page-cache warmth), so the +10-13% cold-leg claim was NOT isolated. prewarm2.sh
    (post-pin dd repopulate + anti-prefix warm requests) BANKED, untested vs true cold.
+   [2026-11-04: script deleted; the server lifecycle Prewarm owns this now.]
    Learned profile: NOT run as a separate arm — STILL OPEN (one config-copy boot + 2x MMLU).
 NET: two doors closed (SPEC_PROB, parallel-8), one settled (MTP-stays), one mechanism confirmed
 (node tax), one re-scope (content>position), two instruments need re-capture, two still open
@@ -1763,7 +1766,7 @@ and returned keep/amend/kill verdicts on the T25 items. PLAN HOLDS on the big ca
 | NEW: STRATA_BATCH_DECODE_SHARE raise | NEW (env, S) | admission overlap into the reactor, which currently stops during every read piece; +1-4% conc est. |
 | re-quant GO | CONFIRMED, AMENDED | 28 tensors ~11 GB in / ~7 GB out (not 36/~5 GB); arithmetic verified: 42.97 GiB (-8.26%), 10,129 slots = +792, direct M1 +1.90% -> band honest; 262k absorption 9,362 >= 9,337 |
 | KL yardstick | NEW, in-tree, fixture verified | set.ids.json byte-matches the tokenizer; thresholds top-1 >=97%, mean KL <=0.05, p99 <=1.0; ctl-vs-ctl self-noise first; fence vs the live 8081 (it launches its own engine) |
-| fast-warm package | AMENDED | learned-profile lever already dead (T18: MMLU 93.6 < floor); surviving package = campaign/prewarm2.sh post-boot, zero code, +3-5% five-boot means (est.) |
+| fast-warm package | AMENDED | learned-profile lever already dead (T18: MMLU 93.6 < floor); surviving package = campaign/prewarm2.sh post-boot, zero code, +3-5% five-boot means (est.) [2026-11-04: script deleted; server lifecycle Prewarm owns it] |
 | cold-start law | NEW | back-to-back-boot conditional (pin_depends_on_reclaim -> drop_file_cache); lone restarts do not pay it |
 | gpu-unlock | CONFIRMED watch / KILLED action | Blackwell whitepaper documents the 5090 at 209.5/419 = the same 2:1 as GA102; module is GA102/104 PCI-ID-gated |
 | 262k VRAM plan | CONFIRMED | the +792 slots absorb the ~-724 slot move; deep KV tail lives in pinned host RAM |

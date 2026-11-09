@@ -19,10 +19,11 @@ its old path — the journal (SVG-CUSTOM.md) is the index of what ran and why.
 - `t31-keeprefit.py`  — keep-rule simulator (agent deliverable, F-268)
 
 ## batteries/ — reusable harnesses
-- `abab-run.sh`            — the generic ABAB interleave battery runner
 - `t20-gates.sh`           — MMLU + mimic gate pair for any adoption
 - `t22-custom-vs-stock.sh` — binary-swap fair-baseline A/B (custom vs stock)
 - `t31-rebank.sh` + `t31-summary.py` — the quiet-window re-bank instrument (F-263 law; F-266 anchor)
+- `battery-lib.sh`         — shared engine up/down/witness helpers every standing battery sources
+- the era runners (`t38-abab-b.sh`, `era-interleave.sh`) carry the ABAB interleave loop
 
 ## arms/ — parked future work (not dead, not standing)
 - `launch-custom-iq3s-262k.sh` + `custom-iq3s-262k.json` — the 262k-context pair; refresh owed at GO time

@@ -271,8 +271,8 @@ observable as /health's `"prewarm"` word). The lane-trend tracker (the incline c
 `campaign/tracker/` (law 12 below). Reusable harnesses live in `campaign/batteries/` (abab-run, t20-gates,
 t22-custom-vs-stock, t31-rebank + summary). Parked future work in `campaign/arms/` (the 262k pair,
 refresh owed at GO). Dossiers/specs in `campaign/research/`, evidence in `campaign/results/`,
-execution specs in `campaign/T14B-specs/`. The standing boot pair (`launch-custom-iq3s-8081.sh`,
-`custom-iq3_s-8081.json`, `refusal-r.gguf`) stays at REPO ROOT — the launcher resolves `.venv` and
+execution specs in `campaign/T14B-specs/`. The standing boot pair (`launch-custom-iq3s-8081.sh` at
+REPO ROOT + `config/custom-iq3_s-8081.json`) — the launcher resolves `.venv` and
 the config relative to itself (LAUNCH LAW + F-249). Run-once harnesses for closed questions are
 DELETED when the question closes; git history is the archive. Historical journal references to
 pre-F-268 paths (e.g. `campaign/t27-baseline.sh`) resolve in git history, not the working tree.
@@ -431,8 +431,8 @@ port, merge:
       one promotion so each plotted step clears the noise band.
     - **Both engines, one instrument.** Qwen (purple) and DeepSeek (blue) run the same
       `probe-lane.py` battery; the DeepSeek lever queue (T53+: DS4_CACHE_THREADS, CACHE_MARGIN,
-      dspark-conf, hugepages) is maintained in the tracker README so the next point always has a
-      named source.
+      dspark-conf, per-session DS pool top-up) is maintained in the tracker README so the next
+      point always has a named source.
 
 14. **NOTHING SHIPS HALF-DONE (user law, 2026-10-28).** A port, integration, or feature is
     COMPLETE or it is not shipped as done. The priced precedent: F-370 shipped the DeepSeek

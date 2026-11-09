@@ -54,7 +54,10 @@ A fresh boot wins by accident (pristine buddy lists). This architecture makes it
 
 Ordered by leverage-over-effort; every move independently reversible and law-17 gated.
 
-**M1 — the shadow store on 2 MiB pages (config-level, no engine change).**
+**M1 — the shadow store on 2 MiB pages (config-level, no engine change).** *(retired 2026-11-08 —
+the hugetlbfs mount + `strata-huge-store.service` route was replaced by the ENGINE-OWNED memfd
+store, `memfd_create(MFD_HUGETLB)`, per the operator's engine-level-not-services correction; the
+unit file no longer exists anywhere. The paragraphs below are the design record.)*
 Route settled by the root probe (2026-11-07): **shmem huge folios are dead on this kernel** — `huge=within_size`
 AND `huge=always`, write-fault AND `MADV_COLLAPSE`, all 0 kB promoted at root (the kernel docs grade shmem THP
 mature; the box voted no — evidence over docs). The store therefore lives on **hugetlbfs**
