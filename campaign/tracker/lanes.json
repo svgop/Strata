@@ -964,6 +964,39 @@
       "pair": "mean",
       "conc": "mean"
      }
+    },
+    {
+     "date": "2026-11-10",
+     "commit": "912b4069",
+     "label": "DS POST-REBOOT WARM BENCH (isolation stack live; pinned 8-15+24-31 under swap scope swap.max=0+current=0; clocks 2955/13801; ordinary-arena all-or-none copy 111 GiB anon - pool released by doctrine; Rsvd-fixed dsv41 binary; 3 probes booked; at-or-above every Nov-5 bank: geometry 56.8/57.2/64.4 - handshake 60.0/57.7/65.2 - T61 4e 59.3/57.9/65.3; solo rising 57.6-59.4-62.8 = still warming)",
+     "solo": 59.9,
+     "pair": null,
+     "conc": null,
+     "kinds": {
+      "solo": "mean"
+     }
+    },
+    {
+     "date": "2026-11-10",
+     "commit": "912b4069",
+     "label": "DS POST-REBOOT WARM BENCH (see solo row for witnesses)",
+     "solo": null,
+     "pair": 59.4,
+     "conc": null,
+     "kinds": {
+      "pair": "mean"
+     }
+    },
+    {
+     "date": "2026-11-10",
+     "commit": "912b4069",
+     "label": "DS POST-REBOOT WARM BENCH (see solo row for witnesses; conc peak 69.4)",
+     "solo": null,
+     "pair": null,
+     "conc": 67.6,
+     "kinds": {
+      "conc": "mean"
+     }
     }
    ],
    "prefill": [
