@@ -1,6 +1,6 @@
 {
  "type": "strata-lane-trend",
- "updated": "2026-11-09",
+ "updated": "2026-11-10",
  "unit": "tok/s",
  "engines": {
   "qwen": {
@@ -488,6 +488,39 @@
      "conc": 307.6,
      "kinds": {
       "pair": "mean",
+      "conc": "mean"
+     }
+    },
+    {
+     "date": "2026-11-10",
+     "commit": "712f1981",
+     "label": "GSQ POST-REBOOT WARM BENCH (isolation stack LIVE: isolcpus/nohz_full/rcu_nocbs 8-15+24-31 + irqaffinity 0-7+16-23; engine pinned 8-15+24-31 under swap scope; clocks 2962/13801 held; 5 probes; last-3 booked; solo peak 240.0 = best since F-357's 241.8 and +3.8pct over the 231.2 recent-era best; GPU-reach wait 0.40-0.63ms in ALL FIVE probes = the structural quiet class with zero 12ms flushes; pool released 0)",
+     "solo": 0.0,
+     "pair": null,
+     "conc": null,
+     "kinds": {
+      "solo": "mean"
+     }
+    },
+    {
+     "date": "2026-11-10",
+     "commit": "712f1981",
+     "label": "GSQ POST-REBOOT WARM BENCH (see solo row for witnesses; peak 216.5)",
+     "solo": null,
+     "pair": 0.0,
+     "conc": null,
+     "kinds": {
+      "pair": "mean"
+     }
+    },
+    {
+     "date": "2026-11-10",
+     "commit": "712f1981",
+     "label": "GSQ POST-REBOOT WARM BENCH (see solo row for witnesses; peak 303.5)",
+     "solo": null,
+     "pair": null,
+     "conc": 0.0,
+     "kinds": {
       "conc": "mean"
      }
     }
