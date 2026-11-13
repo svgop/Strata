@@ -8619,7 +8619,13 @@ def main(argv=None, *, lifecycle_event=None, interrupt_exit_code: int = 0) -> in
             tokens[i] = t
         merges = (tpath / "merges.txt").read_text(encoding="utf-8").split("\n")
         types = json.loads((tpath / "token_type.json").read_text())
-        tok = ST.Tokenizer(tokens, merges, types)
+        # The stub's declared `pre` (and shipped pattern, when the pack carries one) select the pretokenizer:
+        # the pattern is family-specific and the wrong one silently re-segments text (the DeepSeek
+        # single-digit bug - Qwen's \p{N} served to a \p{N}{1,3} model, 2026-11-13).
+        stub = json.loads((tpath / "tokenizer.json").read_text(encoding="utf-8")) \
+            if (tpath / "tokenizer.json").exists() else {}
+        tok = ST.Tokenizer(tokens, merges, types,
+                           pre=stub.get("pre", "qwen35"), pre_pattern=stub.get("pre_pattern"))
     hub = hub_from_config(cfg, a.mcp_config)            # before the minutes of loading: a bad entry stops here
     if a.offline and (hub is not None or cfg.get("before_load") or a.before_load):
         ap.error("--offline requires MCP servers and before_load commands to be disabled in this profile")

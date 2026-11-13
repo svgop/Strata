@@ -65,10 +65,39 @@ QWEN35_PATTERN = (
     r"|\s+"
 )
 
+# llama.cpp's DEEPSEEK3_LLM case (src/llama-vocab.cpp; also selected for JOYAI_LLM - the GGUF pre tag
+# DeepSeek-V4.1-Flash carries), its three Split regexes joined in order.  THE DIGIT RULE IS THE LOAD-BEARING
+# DIFFERENCE: \p{N}{1,3} groups numbers into 1-3 digit runs (the official tokenizer.json's first pre_tokenizer
+# Split; the vocab holds all 100 two-digit and all 1000 three-digit tokens), where Qwen's \p{N} splits every
+# digit singly.  Serving a DeepSeek pack on the Qwen pattern fragments every number in every prompt into
+# single-digit tokens - off-distribution input the model answers in kind ('4 0 9 6' in its output); found
+# 2026-11-13, verified against the official tokenizer and llama.cpp master.
+DEEPSEEK3_PATTERN = (
+    r"\p{N}{1,3}"
+    r"|[一-龥぀-ゟ゠-ヿ]+"
+    r"|[!\"#$%&'()*+,\-./:;<=>?@\[\\\]^_`{|}~][A-Za-z]+"
+    r"|[^\r\n\p{L}\p{P}\p{S}]?[\p{L}\p{M}]+"
+    r"| ?[\p{P}\p{S}]+[\r\n]*"
+    r"|\s*[\r\n]+"
+    r"|\s+(?!\S)"
+    r"|\s+"
+)
+
+# The reader's registry: `pre` -> the transcribed pattern.  A pre outside it REFUSES rather than silently
+# falling back to Qwen's - the silent fallback WAS the DeepSeek bug (one family's digit rule served to
+# another family's model).
+PRE_PATTERNS = {
+    "qwen35": QWEN35_PATTERN,
+    "deepseek3": DEEPSEEK3_PATTERN,
+    "deepseek3-llm": DEEPSEEK3_PATTERN,
+    "joyai-llm": DEEPSEEK3_PATTERN,
+}
+
 
 class Tokenizer:
     def __init__(self, tokens: list[str], merges: list[str], token_types: list[int] | None = None,
-                 pre: str = "qwen35", special_ids: dict[str, int] | None = None):
+                 pre: str = "qwen35", special_ids: dict[str, int] | None = None,
+                 pre_pattern: str | None = None):
         self.tokens = tokens
         self.pre = pre
         self.token_types = token_types
@@ -88,7 +117,16 @@ class Tokenizer:
             if parts[0] not in self.ids or parts[1] not in self.ids:
                 raise ValueError("merge %d names a token outside the vocabulary: %r" % (i, m))
             self.ranks[(parts[0], parts[1])] = i
-        self._re = regex.compile(QWEN35_PATTERN)
+        # The pattern is SHIPPED in the pack stub when it has one (the transcription of record); the
+        # registry otherwise.  An unknown `pre` with no shipped pattern refuses: serving text on the wrong
+        # family's pattern is a silent behavior change (the DeepSeek single-digit bug was exactly that).
+        if pre_pattern is not None:
+            self._re = regex.compile(pre_pattern)
+        elif pre in PRE_PATTERNS:
+            self._re = regex.compile(PRE_PATTERNS[pre])
+        else:
+            raise ValueError("unknown tokenizer pre type %r and no pre_pattern shipped; known: %s"
+                             % (pre, ", ".join(sorted(PRE_PATTERNS))))
 
         # The literals matched directly instead of being run through BPE.  GGUF token types: 3 = CONTROL,
         # 4 = USER_DEFINED.  The two classes behave DIFFERENTLY and llama.cpp's own tokenizer settled which:
@@ -443,8 +481,14 @@ def extract(gguf_path, out_dir) -> dict:
         "add_bos_token": False,
         # The pattern is SHIPPED, not recomputed by the reader: it is transcribed from llama.cpp for the
         # declared `pre` type, and a C++ port that re-derived it would be free to get `\p{M}` wrong again.
-        "pre_pattern": QWEN35_PATTERN,
-        "pre_pattern_source": ".ref/llama.cpp src/llama-vocab.cpp L396 (LLAMA_VOCAB_PRE_TYPE_QWEN35)",
+        # Per-family since 2026-11-13: a DeepSeek pack used to ship (and the reader used to run) the Qwen
+        # pattern, whose \p{N} splits every digit singly - the '4 0 9 6' input bug.
+        "pre_pattern": PRE_PATTERNS.get(tk.pre, QWEN35_PATTERN) if tk.pre in PRE_PATTERNS else None,
+        "pre_pattern_source": {
+            "qwen35": ".ref/llama.cpp src/llama-vocab.cpp L396 (LLAMA_VOCAB_PRE_TYPE_QWEN35)",
+            "deepseek3": ".ref/llama.cpp src/llama-vocab.cpp L327-335 (LLAMA_VOCAB_PRE_TYPE_DEEPSEEK3_LLM/JOYAI_LLM)",
+            "joyai-llm": ".ref/llama.cpp src/llama-vocab.cpp L327-335 (LLAMA_VOCAB_PRE_TYPE_DEEPSEEK3_LLM/JOYAI_LLM)",
+        }.get(tk.pre),
     }
     (out / "vocab.json").write_text(json.dumps(tk.ids, ensure_ascii=False), encoding="utf-8")
     (out / "merges.txt").write_text("\n".join("%s %s" % k for k, _ in
