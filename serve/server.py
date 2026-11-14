@@ -8625,7 +8625,8 @@ def main(argv=None, *, lifecycle_event=None, interrupt_exit_code: int = 0) -> in
         stub = json.loads((tpath / "tokenizer.json").read_text(encoding="utf-8")) \
             if (tpath / "tokenizer.json").exists() else {}
         tok = ST.Tokenizer(tokens, merges, types,
-                           pre=stub.get("pre", "qwen35"), pre_pattern=stub.get("pre_pattern"))
+                           pre=stub.get("pre", "qwen35"), pre_pattern=stub.get("pre_pattern"),
+                           normalizer=stub.get("normalizer"))
     hub = hub_from_config(cfg, a.mcp_config)            # before the minutes of loading: a bad entry stops here
     if a.offline and (hub is not None or cfg.get("before_load") or a.before_load):
         ap.error("--offline requires MCP servers and before_load commands to be disabled in this profile")

@@ -20,6 +20,7 @@ import json
 import pathlib
 import sys
 import threading
+import unicodedata
 
 import regex
 
@@ -83,6 +84,24 @@ DEEPSEEK3_PATTERN = (
     r"|\s+"
 )
 
+# llama.cpp's MINIMAX_M2 case (src/llama-vocab.cpp L439-444), selected for the MiniMax M2/M3 lineage:
+# GGUF pre "minimax-m2" (M3.1-Flash's tokenizer.json carries the identical first-Split regex).  This is
+# the ORIGINAL tokenizer.json regex, not llama.cpp's re-spelled contraction form - they are behaviourally
+# the same, and the file's own copy is the transcription of record.  The GPT-4-class word alternation
+# (case-split letter runs with an optional leading non-letter, contraction suffixes) instead of Qwen's
+# plain `[\p{L}\p{M}]+`, the `[\r\n/]*` tail on punctuation runs, and `\p{N}{1,3}` - the SAME digit rule
+# as deepseek3: 1-3 digit groups, not Qwen's single digits.  The family also normalizes NFC first (see
+# NORMALIZERS below); serving M3.1 on the Qwen pattern would re-run the '4 0 9 6' bug.
+MINIMAX_M3_PATTERN = (
+    r"[^\r\n\p{L}\p{N}]?[\p{Lu}\p{Lt}\p{Lm}\p{Lo}\p{M}]*[\p{Ll}\p{Lm}\p{Lo}\p{M}]+(?i:'s|'t|'re|'ve|'m|'ll|'d)?"
+    r"|[^\r\n\p{L}\p{N}]?[\p{Lu}\p{Lt}\p{Lm}\p{Lo}\p{M}]+[\p{Ll}\p{Lm}\p{Lo}\p{M}]*(?i:'s|'t|'re|'ve|'m|'ll|'d)?"
+    r"|\p{N}{1,3}"
+    r"| ?[^\s\p{L}\p{N}]+[\r\n/]*"
+    r"|\s*[\r\n]+"
+    r"|\s+(?!\S)"
+    r"|\s+"
+)
+
 # The reader's registry: `pre` -> the transcribed pattern.  A pre outside it REFUSES rather than silently
 # falling back to Qwen's - the silent fallback WAS the DeepSeek bug (one family's digit rule served to
 # another family's model).
@@ -91,13 +110,25 @@ PRE_PATTERNS = {
     "deepseek3": DEEPSEEK3_PATTERN,
     "deepseek3-llm": DEEPSEEK3_PATTERN,
     "joyai-llm": DEEPSEEK3_PATTERN,
+    "minimax-m2": MINIMAX_M3_PATTERN,
+    "minimax-m3": MINIMAX_M3_PATTERN,
+}
+
+# Per-family text normalization applied before the split (what the family's tokenizer.json carries as its
+# `normalizer`; Qwen's is null, MiniMax M3.1's is NFC).  Keyed by `pre` like PRE_PATTERNS: the stub ships
+# the value alongside the pattern so the reader never guesses.  With a normalizer armed, encode()'s
+# `plain` spans and encode_marked()'s offsets are in NORMALIZED coordinates - every family that uses
+# spans today (qwen35) normalizes nothing, so the contract is unchanged where it is exercised.
+NORMALIZERS = {
+    "minimax-m2": "nfc",
+    "minimax-m3": "nfc",
 }
 
 
 class Tokenizer:
     def __init__(self, tokens: list[str], merges: list[str], token_types: list[int] | None = None,
                  pre: str = "qwen35", special_ids: dict[str, int] | None = None,
-                 pre_pattern: str | None = None):
+                 pre_pattern: str | None = None, normalizer: str | None = None):
         self.tokens = tokens
         self.pre = pre
         self.token_types = token_types
@@ -127,6 +158,13 @@ class Tokenizer:
         else:
             raise ValueError("unknown tokenizer pre type %r and no pre_pattern shipped; known: %s"
                              % (pre, ", ".join(sorted(PRE_PATTERNS))))
+        # The family's own normalization (NORMALIZERS above): applied once at the public encode entries,
+        # before the split, exactly where the reference tokenizer's pipeline applies it.  An unknown
+        # name refuses like an unknown pre does - guessing a normalization is the same class of silent
+        # behavior change as guessing a pattern.
+        if normalizer not in (None, "nfc"):
+            raise ValueError("unknown tokenizer normalizer %r; known: nfc" % (normalizer,))
+        self.normalizer = normalizer
 
         # The literals matched directly instead of being run through BPE.  GGUF token types: 3 = CONTROL,
         # 4 = USER_DEFINED.  The two classes behave DIFFERENTLY and llama.cpp's own tokenizer settled which:
@@ -179,9 +217,10 @@ class Tokenizer:
             raise ValueError("expected a byte-level BPE tokenizer (model 'gpt2'), got %r" % model)
         special = {k: int(md[k]) for k in md
                    if k.startswith("tokenizer.ggml.") and k.endswith("_token_id")}
+        pre = md.get("tokenizer.ggml.pre", "qwen35")
         return cls(list(md["tokenizer.ggml.tokens"]), list(md["tokenizer.ggml.merges"]),
                    list(md.get("tokenizer.ggml.token_type") or []) or None,
-                   md.get("tokenizer.ggml.pre", "qwen35"), special)
+                   pre, special, normalizer=NORMALIZERS.get(pre))
 
     # -------------------------------------------------------------- the algorithm
     def _bpe(self, word: str) -> list[str]:
@@ -327,11 +366,19 @@ class Tokenizer:
         USER_DEFINED ones such as `<think>` are matched either way.  See the note in `__init__`.
         `plain`: (start, end) spans of `text` that are ordinary text even where they spell a literal - a
         `</think>` quoted in a message (#537) - and are tokenized with the text around them.
+        With a family normalizer armed, `text` is normalized first and the spans are read in normalized
+        coordinates.
         """
+        if self.normalizer:
+            text = unicodedata.normalize("NFC", text)
         return self._encode_matching(text, self._special_re if parse_special else self._always_re, plain)
 
     def encode_marked(self, text: str, parse_special: bool = False, plain=()) -> tuple[list[int], list[tuple[int, int]]]:
-        """encode() and its resume points: (end offset in `text`, ids so far) after every special-token match."""
+        """encode() and its resume points: (end offset in `text`, ids so far) after every special-token match.
+
+        Offsets are into the normalized text when a family normalizer is armed."""
+        if self.normalizer:
+            text = unicodedata.normalize("NFC", text)
         marks: list[tuple[int, int]] = []
         return self._encode_matching(text, self._special_re if parse_special else self._always_re, plain, marks), marks
 
@@ -488,7 +535,14 @@ def extract(gguf_path, out_dir) -> dict:
             "qwen35": ".ref/llama.cpp src/llama-vocab.cpp L396 (LLAMA_VOCAB_PRE_TYPE_QWEN35)",
             "deepseek3": ".ref/llama.cpp src/llama-vocab.cpp L327-335 (LLAMA_VOCAB_PRE_TYPE_DEEPSEEK3_LLM/JOYAI_LLM)",
             "joyai-llm": ".ref/llama.cpp src/llama-vocab.cpp L327-335 (LLAMA_VOCAB_PRE_TYPE_DEEPSEEK3_LLM/JOYAI_LLM)",
+            "minimax-m2": ".ref/llama.cpp src/llama-vocab.cpp L439-444 (LLAMA_VOCAB_PRE_TYPE_MINIMAX_M2); "
+                          "identical to M3.1-Flash tokenizer.json's first Split regex",
+            "minimax-m3": ".ref/llama.cpp src/llama-vocab.cpp L439-444 (LLAMA_VOCAB_PRE_TYPE_MINIMAX_M2); "
+                          "identical to M3.1-Flash tokenizer.json's first Split regex",
         }.get(tk.pre),
+        # The family's own pre-split normalization (M3.1-Flash: NFC; Qwen: none).  Shipped like the
+        # pattern so the reader runs what the family declared, not what it guesses.
+        "normalizer": NORMALIZERS.get(tk.pre),
     }
     (out / "vocab.json").write_text(json.dumps(tk.ids, ensure_ascii=False), encoding="utf-8")
     (out / "merges.txt").write_text("\n".join("%s %s" % k for k, _ in

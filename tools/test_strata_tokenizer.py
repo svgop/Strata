@@ -158,6 +158,112 @@ class Oracle(unittest.TestCase):
         self.assertGreater(n, 40)
 
 
+def mm31_tokenizer():
+    """The MiniMax M3.1-Flash tokenizer from its tokenizer.json ($STRATA_MM31_JSON), as ST.Tokenizer.
+
+    The 61 added tokens map to USER_DEFINED (matched always), which is how the reference `tokenizers`
+    library treats them; the pack stub settles the final types from llama.cpp's own conversion.
+    """
+    import unicodedata as _u
+    path = Path(os.environ["STRATA_MM31_JSON"])
+    j = json.loads(path.read_text(encoding="utf-8"))
+    vocab = j["model"]["vocab"]                       # token -> id, contiguous from 0
+    n = len(vocab)
+    tokens = [None] * n
+    for s, i in vocab.items():
+        tokens[i] = s
+    added = j.get("added_tokens", [])
+    for a in added:                                   # ids continue past the base vocabulary
+        if a["id"] >= n:
+            tokens += [None] * (a["id"] + 1 - n)
+            n = a["id"] + 1
+        tokens[a["id"]] = a["content"]
+    merges = ["%s %s" % tuple(m) if isinstance(m, list) else m for m in j["model"]["merges"]]
+    types = [1] * n
+    for a in added:
+        types[a["id"]] = 4
+    return ST.Tokenizer(tokens, merges, types, pre="minimax-m3", special_ids=None,
+                        normalizer=ST.NORMALIZERS["minimax-m3"])
+
+
+MM31_TEXTS = [
+    # the digit rule: 1-3 digit groups, never Qwen's single digits
+    "4096", "12345678901", "3.14159", "v2.1.0", "1 22 333 4444 55555",
+    # GPT-4-class word alternation and contractions
+    "Don't stop; I'm sure we'll win, you've earned it. He's said they're going.",
+    "UPPER lower MiXeD Apple banana CHERRY", "'s 't 're standalone",
+    # punctuation runs with the [\r\n/]* tail and leading-space forms
+    "path/to/file\n\nother;;;\r\nthird", " (parenthetical) [bracketed] {braced}",
+    "x = a/b//c;\ty\tz", "trailing spaces   ", "  leading",
+    # CJK (the pattern has no CJK alternation - it rides the letter classes) and unicode
+    "你好世界迷你最大模型", "café naïve Réponds en français", "emoji \U0001f600 tail",
+    # code shape
+    "def f(x):\n    return x*2 if x > 0 else -x\n",
+    # added tokens as input text (always matched)
+    "<fim_prefix>def g():<fim_suffix> rest", "<filename>main.py</filename>",
+    # whitespace law: \s+(?!\S) keeps the run before a word's space
+    "a  b   c    d", "line1 \n line2  \n\n  line3",
+]
+
+
+class OracleMiniMaxM3(unittest.TestCase):
+    """M3.1-Flash against the reference `tokenizers` pipeline (NFC normalizer + Split + ByteLevel + BPE).
+
+    Run with the real file: STRATA_MM31_JSON=.../tokenizer.json.  Every disagreement is a bug - the
+    pattern, the NFC step, or the byte-level/BPE core.
+    """
+
+    @classmethod
+    def setUpClass(cls):
+        if not os.environ.get("STRATA_MM31_JSON"):
+            raise unittest.SkipTest("STRATA_MM31_JSON not set (path to MiniMax M3.1 tokenizer.json)")
+        try:
+            from tokenizers import Tokenizer as HF
+        except ImportError:
+            raise unittest.SkipTest("the tokenizers package is not installed")
+        cls.hf = HF.from_file(os.environ["STRATA_MM31_JSON"])
+        cls.tk = mm31_tokenizer()
+
+    def test_battery(self):
+        bad = []
+        for text in MM31_TEXTS:
+            want = self.hf.encode(text).ids
+            got = self.tk.encode(text, parse_special=True)
+            if got != want:
+                bad.append((text, want, got))
+        for text, want, got in bad[:5]:
+            print("MISMATCH %r\n  want %r\n  got  %r" % (text[:60], want[:24], got[:24]))
+        self.assertEqual(bad, [], "%d/%d texts disagree" % (len(bad), len(MM31_TEXTS)))
+
+    def test_nfd_input_is_normalized_like_the_reference(self):
+        # "café" in NFD (e + combining acute) must tokenize exactly like NFC: the family normalizer
+        # composes it before the split, as the reference pipeline does.
+        nfc = "café naïve"
+        nfd = "cafe\u0301 nai\u0308ve"
+        self.assertNotEqual(nfc, nfd)
+        want = self.hf.encode(nfd).ids
+        self.assertEqual(self.tk.encode(nfd, parse_special=True), want)
+        self.assertEqual(self.tk.encode(nfd, parse_special=True),
+                         self.tk.encode(nfc, parse_special=True))
+
+    def test_digits_group_1_to_3(self):
+        # the load-bearing family difference (the '4 0 9 6' class): ids for multi-digit runs must
+        # decode back as grouped text, and the count of tokens for "4096" is 2 ('409','6')-class,
+        # never 4 single digits.
+        ids = self.tk.encode("4096")
+        self.assertEqual(len(ids), 2)
+        self.assertEqual(self.tk.decode(ids), "4096")
+
+    def test_unknown_pre_still_refuses(self):
+        with self.assertRaises(ValueError):
+            ST.Tokenizer(["a"], [], [1], pre="minimax-m4")
+
+    def test_decode_round_trip(self):
+        for text in MM31_TEXTS:
+            ids = self.tk.encode(text, parse_special=True)
+            self.assertEqual(self.tk.decode(ids), text, repr(text[:40]))
+
+
 class Marks(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
