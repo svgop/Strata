@@ -334,6 +334,9 @@ __global__ void moe_gu_kernel(const unsigned long long* plan_ptr, const float* x
     const int cols = (int) hg.vecs();   // the wire's cols is k; the streams are per vector
     const Views vg = views(o.w1, o.r1), vu = views(o.w3, o.r3);
 #ifdef MM3_VQ_KERNEL_DEBUG
+    if (i == 2 && blockIdx.y % 256 == 0 && threadIdx.x == 0)   // (expert 2's blobs: the fault's home)
+        printf("[gu2] y%d blob %llu w1 %p w2 %p r1 %p cb %p cols %d\n", (int) blockIdx.y,
+               (unsigned long long) plan_ptr[i], (void*) o.w1, (void*) o.w2, (void*) o.r1, (void*) o.cb, cols);
     if (o.r1 != nullptr && threadIdx.x == 0)   // (a residual layout in play: the class the fault rides)
         printf("[gu] blk(%d,%d,%d) i %d row %d cols %d w1 %p w3 %p w2 %p r1 %p cb %p hg{%u,%u} vu.gain %p vu.low %p\n",
                (int) blockIdx.x, (int) blockIdx.y, (int) blockIdx.z, i,
@@ -408,7 +411,10 @@ __global__ void combine_kernel(const unsigned long long* plan_ptr, const float* 
 }
 }   // namespace
 
-void moe_gate_up(const MoeArgs& a, const float* x, float* h, cudaStream_t s) {
+void moe_gate_up(const MoeArgs& a_in, const float* x, float* h, cudaStream_t s) {
+    static const bool no_res = ::mm3::env("MM3_VQ_NO_RES") != nullptr;   // (diagnostic: residuals as absent)
+    MoeArgs a = a_in;
+    if (no_res) a.lay.vq_res[0] = a.lay.vq_res[1] = a.lay.vq_res[2] = 0;
     if (!geometry("moe_gate_up", a.k, a.n_embd, a.n_ff)) return;
     Scratch* sc = scratch(s);
     if (sc == nullptr || a.lay.fmt != kFmtVQ) {
@@ -416,7 +422,21 @@ void moe_gate_up(const MoeArgs& a, const float* x, float* h, cudaStream_t s) {
         return;
     }
     float* hh = h != nullptr ? h : sc->h;
-    static int dbg_n = ::mm3::env("MM3_VQ_DEBUG") ? 3 : 0;   // (the first three calls' plans + layouts)
+    static int dbg_n = ::mm3::env("MM3_VQ_DEBUG") ? 3 : 0;
+    {   // (always on: a plan entry outside every blob region names the fault - runaway j is its signature)
+        unsigned long long pl[8];
+        if (cudaMemcpy(pl, a.plan_ptr, sizeof(pl), cudaMemcpyDeviceToHost) == cudaSuccess) {
+            for (int i = 0; i < a.k; ++i) {
+                const unsigned long long pb = pl[i];
+                if (pb == 0) continue;
+                const unsigned long long mod = pb % 256;
+                if (mod != 0 && pb % 4096 != 0)   // every real blob base is at least 256-aligned
+                    std::fprintf(stderr, "vq BAD PLAN i%d ptr %llu (mod256 %llu) t{%zu,%zu,%zu} res{%zu,%zu,%zu}\n",
+                                 i, pb, mod, a.lay.trellis[0], a.lay.trellis[1], a.lay.trellis[2],
+                                 (size_t) a.lay.vq_res[0], (size_t) a.lay.vq_res[1], (size_t) a.lay.vq_res[2]);
+            }
+        }
+    }
     if (dbg_n >= 0) {
         // the served blob's OWN headers, staged out: the assembled pool's truth (magic/rows/cols/offsets)
         unsigned long long pb = 0;
@@ -449,7 +469,10 @@ void moe_gate_up(const MoeArgs& a, const float* x, float* h, cudaStream_t s) {
     check("moe_gate_up");
 }
 
-void moe_down(const MoeArgs& a, const float* h, const float* sh_out, float* out, cudaStream_t s) {
+void moe_down(const MoeArgs& a_in, const float* h, const float* sh_out, float* out, cudaStream_t s) {
+    static const bool no_res = ::mm3::env("MM3_VQ_NO_RES") != nullptr;
+    MoeArgs a = a_in;
+    if (no_res) a.lay.vq_res[0] = a.lay.vq_res[1] = a.lay.vq_res[2] = 0;
     if (!geometry("moe_down", a.k, a.n_embd, a.n_ff)) return;
     Scratch* sc = scratch(s);
     if (sc == nullptr || a.lay.fmt != kFmtVQ) {

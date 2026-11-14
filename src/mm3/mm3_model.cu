@@ -1721,7 +1721,11 @@ struct Model::Impl {
             double budget = avail > 0 ? avail - ram_headroom() : (double) total;
             if (::mm3::env("MM3_POOL_FORCE")) {   // (a box that holds the whole expert set: the heat-profile trim's
                 budget = (double) total;          // trimmed tiers predate the VQ lane - pin everything, the alloc
-            }                                    // retry ladder below is the safety, not the trim)
+                for (const Layer& l : L)          // retry ladder below is the safety, not the trim.  The mapped
+                    for (const Src& s : l.src)    // release's pages first: the 115 GB of mapped release files hold
+                        for (int i = 0; i < 11; ++i)   // ~100 GB of page cache at this point, and ram_avail() counts
+                            if (s.n[i] > 0) os::drop_mapped(s.p[i], s.n[i]);   // it - the budget would trim again
+            }
             size_t want = 0, nw = 0;
             for (; nw < cand.size(); ++nw) {
                 const size_t b = L[(size_t) cand[nw].li].blob;
@@ -1782,7 +1786,8 @@ struct Model::Impl {
         // host as before (the same plan values, so the same tokens either way)
         {
             const char* hv = ::mm3::env("MM3_HOST_FREE");
-            const bool on = hv == nullptr || std::atoi(hv) != 0;
+            const bool on = hv != nullptr && std::atoi(hv) != 0 && !vq;   // (VQ: off until its slot/plan paths
+                                                                          // are proven; on is an optimization)
             int nhf = 0, nmoe = 0;
             for (Layer& l : L) {
                 if (!l.moe) continue;
@@ -1916,6 +1921,12 @@ struct Model::Impl {
         }
         CK(cudaMemcpyAsync(d.stg + (size_t) s * d.slot_bytes, src, l.blob, cudaMemcpyHostToDevice, d.s));
         ++st.staged;
+        static int sn = ::mm3::env("MM3_VQ_DEBUG") ? 500 : 0;   // (every stage: the copy trace - the faulting
+        if (sn-- > 0) {                                         // slot's writer and source name themselves)
+            const bool pin = src == d.pin;
+            std::fprintf(stderr, "vq stage: L%d e%d slot %d blob %zu src %s %p\n", l.idx, e, s, l.blob,
+                         pin ? "PIN" : "POOL", (void*) src);
+        }
         return true;
     }
 
@@ -1925,6 +1936,10 @@ struct Model::Impl {
         const int rs = l.res_slot[(size_t) e];
         if (rs >= 0) {
             ptr = (unsigned long long) (l.res_base + (size_t) rs * l.blob);
+            static int rn = ::mm3::env("MM3_VQ_DEBUG") ? 400 : 0;   // (the resident locates too)
+            if (rn-- > 0)
+                std::fprintf(stderr, "vq locate(res): L%d e%d ptr %llu (blob %zu res %zu)\n", l.idx, e, ptr,
+                             l.blob, (size_t) l.lay.vq_res[0]);
             return true;
         }
         const long long key = (long long) (&l - L.data()) * 1024 + e;
@@ -1947,6 +1962,10 @@ struct Model::Impl {
         busy[(size_t) at] = 1;
         d.slot_used[(size_t) at] = fwd;
         ptr = (unsigned long long) (d.stg + (size_t) at * d.slot_bytes);
+        static int ln = ::mm3::env("MM3_VQ_DEBUG") ? 4000 : 0;   // (the first locates: which (layer, expert) each
+        if (ln-- > 0)                                          // staged slot serves - the fault's owner)
+            std::fprintf(stderr, "vq locate: L%d e%d slot %d ptr %llu (blob %zu res %zu)\n", l.idx, e, at, ptr,
+                         l.blob, (size_t) l.lay.vq_res[0]);
         return true;
     }
 
@@ -2049,6 +2068,7 @@ struct Model::Impl {
                 return false;
             }
             k::swigluoai(d.g, d.u, (size_t) T * g.ff_dense, g.alpha, g.limit, d.g, nullptr, d.s);
+            if (::mm3::env("MM3_VQ_DEBUG")) std::fprintf(stderr, "vq swig dense xT @%d: g %p u %p s %p\n", 2062, (void*) d.g, (void*) d.u, (void*) d.s);
             const x3::MvJob dj = job(l.md, d.g, g.ff_dense, d.ao, g.dim);
             if (!x3::mv(&dj, 1, d.s)) {
                 err = "mv dense down (window)";
@@ -2071,6 +2091,7 @@ struct Model::Impl {
             return false;
         }
         k::swigluoai(d.g, d.u, (size_t) T * g.ff_shared, g.alpha, g.limit, d.g, nullptr, d.s);
+        if (::mm3::env("MM3_VQ_DEBUG")) std::fprintf(stderr, "vq swig shared xT @%d: g %p u %p s %p\n", 2084, (void*) d.g, (void*) d.u, (void*) d.s);
         const x3::MvJob sdj = job(l.sd, d.g, g.ff_shared, d.sh, g.dim);
         if (!x3::mv(&sdj, 1, d.s)) {
             join(d);
@@ -2343,6 +2364,8 @@ struct Model::Impl {
     // expert e of layer l ran on the CPU lane: when it keeps coming back, copied into a staging slot meanwhile (the
     // slot whose expert scores least, not used in this forward nor pending)
     void consider_promotion(const Layer& l, Dev& d, int e) {
+        if (vq) return;   // (the VQ lane: no CPU lane, so nothing to promote; and the d.cs promote copy would
+                          // race the decode's slot reads - the mid-copy garbage the fault rode)
         const long long key = (long long) (&l - L.data()) * 1024 + e;
         const float sc = score(key, true);
         if (!o.promote || l.host_blob.empty() || l.host_blob[(size_t) e] == nullptr || sc < kPromote ||
@@ -2383,6 +2406,8 @@ struct Model::Impl {
 
     // whether expert e of layer l is the CPU lane's this token: neither in VRAM nor in one of d's staging slots
     bool on_cpu(const Layer& l, const Dev& d, int e) const {
+        if (vq) return false;   // (the VQ lane has no CPU kernels: resident or staged, never the lane - which
+                                // also keeps the promote copies (d.cs) from racing the decode's slot reads)
         if (l.res_slot[(size_t) e] >= 0) return false;
         const long long key = (long long) (&l - L.data()) * 1024 + e;
         for (int s = 0; s < d.n_slots; ++s)
@@ -2468,6 +2493,7 @@ struct Model::Impl {
                 return false;
             }
             k::swigluoai(d.g, d.u, (size_t) g.ff_dense, g.alpha, g.limit, d.g, nullptr, d.s);
+            if (::mm3::env("MM3_VQ_DEBUG")) std::fprintf(stderr, "vq swig dense x1 @%d: g %p u %p s %p\n", 2481, (void*) d.g, (void*) d.u, (void*) d.s);
             const x3::MvJob dj = job(l.md, d.g, d.ao);
             if (!x3::mv(&dj, 1, d.s)) {
                 err = "mv dense down";
@@ -2491,6 +2517,7 @@ struct Model::Impl {
             return false;
         }
         k::swigluoai(d.g, d.u, (size_t) g.ff_shared, g.alpha, g.limit, d.g, nullptr, d.s);
+        if (::mm3::env("MM3_VQ_DEBUG")) std::fprintf(stderr, "vq swig shared x1 @%d: g %p u %p s %p\n", 2504, (void*) d.g, (void*) d.u, (void*) d.s);
         const x3::MvJob sdj = job(l.sd, d.g, d.sh);
         if (!x3::mv(&sdj, 1, d.s)) {
             join(d, !l.hf);
