@@ -487,7 +487,10 @@ void moe_down(const MoeArgs& a_in, const float* h, const float* sh_out, float* o
     check("moe_down");
 }
 
-bool win_experts(const WinArgs& a, cudaStream_t s) {
+bool win_experts(const WinArgs& a_in, cudaStream_t s) {
+    static const bool no_res = ::mm3::env("MM3_VQ_NO_RES") != nullptr;   // (diagnostic: covers the win path too)
+    WinArgs a = a_in;
+    if (no_res) a.lay.vq_res[0] = a.lay.vq_res[1] = a.lay.vq_res[2] = 0;
     if (a.T < 1 || !geometry("win_experts", a.k, a.n_embd, a.n_ff) || a.h == nullptr || a.out == nullptr) {
         fail("win_experts: not covered");
         return false;
