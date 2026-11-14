@@ -22,6 +22,8 @@
 #include "mm3_exl3.hpp"
 #include "mm3_env.hpp"
 #include "mm3_gguf.cuh"   // (a GGUF's matrices and experts - fmt kFmtGG: the entry points hand them to mm3_gguf.cu)
+#include "mm3_nvfp4.cuh"  // (an NVFP4's - fmt mm3::nf::kFmtNVFP4: handed to mm3_nvfp4.cu)
+#include "mm3_vq.cuh"     // (the Baekpica VQ's - fmt mm3::vq::kFmtVQ: handed to mm3_vq.cu)
 
 #include <cuda_fp16.h>
 #include <cuda_runtime.h>
@@ -2120,7 +2122,9 @@ bool supported(const Mat& m) {
 void set_skip(const int* flag) { g_skip = flag; }
 
 int mv_splits(const Mat& m) {
+    if (m.fmt == ::mm3::nf::kFmtNVFP4) return 1;   // (mm3_nvfp4.cu's mv: the same, whole matrices only)
     if (m.fmt == ::mm3::gg::kFmtGG) return 1;   // (a GGUF matrix: a warp a row, every column's sum the same)
+    if (m.fmt == ::mm3::vq::kFmtVQ) return 1;   // (mm3_vq.cu's mv: a warp a row, every column's sum the same)
     if (!supported(m)) return 0;
     int S = 1, kr = 0;
     mv_split(m, sm_count(), mv_occ(m.k2), S, kr);
@@ -2128,7 +2132,9 @@ int mv_splits(const Mat& m) {
 }
 
 int mv_cols(const Mat& m) {
+    if (m.fmt == ::mm3::nf::kFmtNVFP4) return kMaxMvCols;   // (mm3_nvfp4.cu's mv: the same)
     if (m.fmt == ::mm3::gg::kFmtGG) return kMaxMvCols;   // (mm3_gguf.cu's mv: up to 16 activations a job)
+    if (m.fmt == ::mm3::vq::kFmtVQ) return kMaxMvCols;   // (mm3_vq.cu's mv: the same)
     if (!supported(m)) return 0;
     const int S = mv_splits(m);
     if (S <= 0) return 0;
@@ -2140,13 +2146,13 @@ unsigned wait_timeouts() {
     unsigned n = 0;
     if (cudaMemcpyFromSymbol(&n, g_win_timeouts, sizeof n) != cudaSuccess) {
         cudaGetLastError();
-        return ::mm3::gg::wait_timeouts();
+        return ::mm3::gg::wait_timeouts() + ::mm3::nf::wait_timeouts();
     }
-    return n + ::mm3::gg::wait_timeouts();
+    return n + ::mm3::gg::wait_timeouts() + ::mm3::nf::wait_timeouts();
 }
 
 int launch_errors() {
-    return g_launch_errors.load(std::memory_order_relaxed) + ::mm3::gg::launch_errors();
+    return g_launch_errors.load(std::memory_order_relaxed) + ::mm3::gg::launch_errors() + ::mm3::nf::launch_errors();
 }
 
 bool prepare(cudaStream_t s) {
@@ -2162,14 +2168,17 @@ bool several_ok() {
 bool mv(const MvJob* jobs, int n, cudaStream_t s) {
     EXL3_LEGACY(mv(jobs, n, s));
     if (n <= 0 || n > kMaxMvJobs) return false;
-    {   // a GGUF's matrices among them: mm3_gguf.cu's GEMVs, the EXL3 ones here
-        MvJob gj[kMaxMvJobs], ej[kMaxMvJobs];
-        int ng = 0, ne = 0;
+    {   // a GGUF's and an NVFP4's matrices among them: mm3_gguf.cu's and mm3_nvfp4.cu's GEMVs, the EXL3 ones here
+        MvJob gj[kMaxMvJobs], fj[kMaxMvJobs], ej[kMaxMvJobs];
+        int ng = 0, nfj = 0, ne = 0;
         for (int i = 0; i < n; ++i) {
-            if (jobs[i].m != nullptr && jobs[i].m->fmt == ::mm3::gg::kFmtGG) gj[ng++] = jobs[i];
+            if (jobs[i].m == nullptr) ej[ne++] = jobs[i];
+            else if (jobs[i].m->fmt == ::mm3::gg::kFmtGG) gj[ng++] = jobs[i];
+            else if (jobs[i].m->fmt == ::mm3::nf::kFmtNVFP4) fj[nfj++] = jobs[i];
             else ej[ne++] = jobs[i];
         }
-        if (ng > 0) return ::mm3::gg::mv(gj, ng, s) && (ne == 0 || mv(ej, ne, s));
+        const bool ok = (ng == 0 || ::mm3::gg::mv(gj, ng, s)) && (nfj == 0 || ::mm3::nf::mv(fj, nfj, s));
+        if (ng > 0 || nfj > 0) return ok && (ne == 0 || mv(ej, ne, s));
     }
     Scratch* sc = scratch(s);
     if (sc == nullptr) return false;
@@ -2317,7 +2326,9 @@ static bool mixed_ok(const MixedLayouts& mx, const char* what) {
 }
 
 void moe_gate_up(const MoeArgs& a, const float* x, float* h, cudaStream_t s) {
+    if (a.lay.fmt == ::mm3::nf::kFmtNVFP4) return ::mm3::nf::moe_gate_up(a, x, h, s);
     if (a.lay.fmt == ::mm3::gg::kFmtGG) return ::mm3::gg::moe_gate_up(a, x, h, s);
+    if (a.lay.fmt == ::mm3::vq::kFmtVQ) return ::mm3::vq::moe_gate_up(a, x, h, s);
     if (a.mix.n > 0) {   // (a mixed layer: the same arithmetic on every GPU, no legacy kernels)
         KMoe m;
         if (!mixed_ok(a.mix, "moe_gate_up") || !moe_args(a, m, s)) return;
@@ -2345,7 +2356,9 @@ void moe_gate_up(const MoeArgs& a, const float* x, float* h, cudaStream_t s) {
 }
 
 void moe_down(const MoeArgs& a, const float* h, const float* sh_out, float* out, cudaStream_t s) {
+    if (a.lay.fmt == ::mm3::nf::kFmtNVFP4) return ::mm3::nf::moe_down(a, h, sh_out, out, s);
     if (a.lay.fmt == ::mm3::gg::kFmtGG) return ::mm3::gg::moe_down(a, h, sh_out, out, s);
+    if (a.lay.fmt == ::mm3::vq::kFmtVQ) return ::mm3::vq::moe_down(a, h, sh_out, out, s);
     if (a.mix.n > 0) {
         KMoe m;
         if (!mixed_ok(a.mix, "moe_down") || !moe_args(a, m, s)) return;
@@ -2371,7 +2384,9 @@ void moe_down(const MoeArgs& a, const float* h, const float* sh_out, float* out,
 }
 
 bool win_experts(const WinArgs& a, cudaStream_t s) {
+    if (a.lay.fmt == ::mm3::nf::kFmtNVFP4) return ::mm3::nf::win_experts(a, s);
     if (a.lay.fmt == ::mm3::gg::kFmtGG) return ::mm3::gg::win_experts(a, s);
+    if (a.lay.fmt == ::mm3::vq::kFmtVQ) return ::mm3::vq::win_experts(a, s);
     if (a.mix.n == 0) EXL3_LEGACY_MOE(a, win_experts(a, s));
     if (a.mix.n > 0 && !mixed_ok(a.mix, "win_experts")) return false;
     if (a.T < 1 || a.k < 1 || a.k > 8 || a.n_embd % kCols != 0 || a.n_ff % kCols != 0 || a.n_embd > kMaxMoeK ||
@@ -2665,7 +2680,9 @@ bool mma_supported() {
 
 void set_gate_up(const SetArgs& sa, const float* x, int ldx, const int* row_idx, uint16_t* h16, int ldh,
                  cudaStream_t s) {
+    if (sa.lay.fmt == ::mm3::nf::kFmtNVFP4) return ::mm3::nf::set_gate_up(sa, x, ldx, row_idx, h16, ldh, s);
     if (sa.lay.fmt == ::mm3::gg::kFmtGG) return ::mm3::gg::set_gate_up(sa, x, ldx, row_idx, h16, ldh, s);
+    if (sa.lay.fmt == ::mm3::vq::kFmtVQ) { ::mm3::vq::set_gate_up(sa, x, ldx, row_idx, h16, ldh, s); return; }
     if (sa.mix.n > 0) {   // (a mixed layer: every expert's own address and class, the portable kernels everywhere)
         if (sa.n_exp <= 0 || sa.max_rows <= 0) return;
         if (sa.eptr == nullptr || !mixed_ok(sa.mix, "set_gate_up")) return;
@@ -2771,7 +2788,9 @@ void set_gate_up(const SetArgs& sa, const float* x, int ldx, const int* row_idx,
 }
 
 void set_down(const SetArgs& sa, const uint16_t* h16, int ldh, float* y, int ldy, cudaStream_t s) {
+    if (sa.lay.fmt == ::mm3::nf::kFmtNVFP4) return ::mm3::nf::set_down(sa, h16, ldh, y, ldy, s);
     if (sa.lay.fmt == ::mm3::gg::kFmtGG) return ::mm3::gg::set_down(sa, h16, ldh, y, ldy, s);
+    if (sa.lay.fmt == ::mm3::vq::kFmtVQ) { ::mm3::vq::set_down(sa, h16, ldh, y, ldy, s); return; }
     if (sa.mix.n > 0) {
         if (sa.n_exp <= 0 || sa.max_rows <= 0) return;
         if (sa.eptr == nullptr || !mixed_ok(sa.mix, "set_down")) return;
@@ -2861,7 +2880,9 @@ void set_down(const SetArgs& sa, const uint16_t* h16, int ldh, float* y, int ldy
 }
 
 void gemm_rows(const Mat& m, const uint16_t* x16, int ldx, int rows, float* y, int ldy, float beta, cudaStream_t s) {
+    if (m.fmt == ::mm3::nf::kFmtNVFP4) return ::mm3::nf::gemm_rows(m, x16, ldx, rows, y, ldy, beta, s);
     if (m.fmt == ::mm3::gg::kFmtGG) return ::mm3::gg::gemm_rows(m, x16, ldx, rows, y, ldy, beta, s);
+    if (m.fmt == ::mm3::vq::kFmtVQ) return ::mm3::vq::gemm_rows(m, x16, ldx, rows, y, ldy, beta, s);
 #if !defined(STRATA_USE_HIP)
     if (rows <= 0) return;
     if (!mma_now()) {   // (before sm_80: the FP16 GEMM for many rows, Volta / Turing's tiles, the portable kernels)

@@ -2355,7 +2355,7 @@ endif()
   option(STRATA_BUILD_MM3 "Build the MiniMax-M3.1 engine path (strata-mm3)" OFF)
   if(STRATA_BUILD_MM3 AND NOT STRATA_HIP_GFX906)
     add_library(strata_mm3_kernels STATIC src/mm3/mm3_exl3.cu src/mm3/mm3_gv.cu src/mm3/mm3_gguf.cu
-                src/mm3/mm3_vq.cu src/mm3/vendor/ds4_iq.cu src/mm3/vendor/ds4_lt.cu)
+                src/mm3/mm3_vq.cu src/mm3/mm3_nvfp4.cu src/mm3/vendor/ds4_iq.cu src/mm3/vendor/ds4_lt.cu)
     set_target_properties(strata_mm3_kernels PROPERTIES LINKER_LANGUAGE CXX)   # archive the .cu objects like dsv41's
                                                                                  # kernels lib does (device linking happens
                                                                                  # at the executable, not the archive)
@@ -2363,6 +2363,7 @@ endif()
                                ${CMAKE_CURRENT_SOURCE_DIR}/src/mm3 ${_strata_gpu_include_directories}
                                ${CMAKE_CURRENT_SOURCE_DIR}/third_party/ggml)   # ggml-common.h (the iq grids)
     target_compile_definitions(strata_mm3_kernels PUBLIC MAYA_DS4_IQ_ONLY=1)
+    target_compile_options(strata_mm3_kernels PRIVATE $<$<COMPILE_LANGUAGE:CUDA>:-lineinfo>)   # NCU/sanitizer line truth
     target_link_libraries(strata_mm3_kernels PUBLIC ${_strata_gpu_runtime_target})
         # maya compiles its expert.cpp with the full AVX512 set (VBMI included; the runtime gate cpu_avx512_ok
     # picks the kernels); the Zen 5 target has VNNI so the DPBUSD-BW fallback define is not needed
@@ -2404,7 +2405,7 @@ add_executable(strata-mm3 src/mm3/mm3_main.cpp src/mm3/mm3_model.cu src/mm3/mm3_
       # dequantize_row_* and a double reference.  The vendored ds4_iq fork compiles into each test exactly
       # as into the engine (MAYA_DS4_IQ_ONLY).
       add_executable(mm3_exl3_test tests/mm3/mm3_exl3_test.cu src/mm3/mm3_exl3.cu src/mm3/mm3_gv.cu
-                                   src/mm3/mm3_gguf.cu src/mm3/vendor/ds4_iq.cu src/mm3/vendor/ds4_lt.cu
+                                   src/mm3/mm3_gguf.cu src/mm3/mm3_vq.cu src/mm3/vendor/ds4_iq.cu src/mm3/vendor/ds4_lt.cu
                                    src/mm3/vendor/exl3_ref.cpp src/mm3/vendor/exl3_cpu.cpp
                                    src/mm3/vendor/expert_layout.cpp src/mm3/vendor/expert.cpp
                                    src/mm3/vendor/iq_avx2.cpp src/mm3/vendor/iq_avx512.cpp
@@ -2421,7 +2422,7 @@ add_executable(strata-mm3 src/mm3/mm3_main.cpp src/mm3/mm3_model.cu src/mm3/mm3_
       add_test(NAME mm3_exl3_test COMMAND mm3_exl3_test)
       set_tests_properties(mm3_exl3_test PROPERTIES TIMEOUT 300)
       add_executable(mm3_gguf_test tests/mm3/mm3_gguf_test.cu src/mm3/mm3_exl3.cu src/mm3/mm3_cpu.cpp src/mm3/mm3_cpu_gg.cpp
-                                   src/mm3/mm3_gv.cu src/mm3/mm3_gguf.cu src/mm3/vendor/ds4_iq.cu
+                                   src/mm3/mm3_gv.cu src/mm3/mm3_gguf.cu src/mm3/mm3_vq.cu src/mm3/vendor/ds4_iq.cu
                                    src/mm3/vendor/ds4_lt.cu src/mm3/vendor/ds4_iq_cpu.cpp
                                    src/mm3/vendor/ds4_gguf_cpu.cpp src/mm3/vendor/exl3_cpu.cpp
                                    src/mm3/vendor/native_expert.cpp src/mm3/vendor/glm_lane_row4.cpp src/mm3/vendor/glm_lane_row4_avx2.cpp
@@ -2462,7 +2463,9 @@ add_executable(strata-mm3 src/mm3/mm3_main.cpp src/mm3/mm3_model.cu src/mm3/mm3_
       # combine) on the token and window paths, the prompt sets.
       add_executable(mm3_nvfp4_test tests/mm3/mm3_nvfp4_test.cu src/mm3/mm3_exl3.cu src/mm3/mm3_cpu.cpp
                                     src/mm3/mm3_cpu_gg.cpp src/mm3/mm3_gv.cu src/mm3/mm3_gguf.cu
-                                    src/mm3/mm3_nvfp4.cu src/mm3/vendor/ds4_iq.cu src/mm3/vendor/ds4_lt.cu
+                                    # (mm3_exl3.cu dispatches the vq fmt too: mm3_vq.cu links in beside it)
+                                    src/mm3/mm3_nvfp4.cu src/mm3/mm3_vq.cu src/mm3/vendor/ds4_iq.cu
+                                    src/mm3/vendor/ds4_lt.cu
                                     src/mm3/vendor/ds4_iq_cpu.cpp src/mm3/vendor/ds4_gguf_cpu.cpp
                                     src/mm3/vendor/exl3_cpu.cpp src/mm3/vendor/expert_layout.cpp
                                     src/mm3/vendor/expert.cpp src/mm3/vendor/iq_avx2.cpp
@@ -2475,6 +2478,7 @@ add_executable(strata-mm3 src/mm3/mm3_main.cpp src/mm3/mm3_model.cu src/mm3/mm3_
       target_link_libraries(mm3_nvfp4_test PRIVATE strata_kernels_cpu ${_strata_gpu_runtime_target}
                             ${_strata_gpu_blas_target})
       target_compile_definitions(mm3_nvfp4_test PRIVATE MAYA_DS4_IQ_ONLY=1)
+      #  until the include lands there)
       target_compile_options(mm3_nvfp4_test PRIVATE $<$<COMPILE_LANGUAGE:CXX>:-mavx2 -mfma -mf16c>)
       add_test(NAME mm3_nvfp4_test COMMAND mm3_nvfp4_test)
       set_tests_properties(mm3_nvfp4_test PROPERTIES TIMEOUT 300)
