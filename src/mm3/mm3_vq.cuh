@@ -129,6 +129,8 @@ size_t scratch_bytes();
 int launch_errors();
 unsigned wait_timeouts();
 
+/// (diagnostics) the layer id the next win/moe call serves (window_post tags it; the content law prints it)
+void trace_layer(int li);
 /// (tests) rows of k values rounded as the routed experts' activations (gg's act_quant contract - shared with the
 /// GGUF lane so a CPU lane gives the same sums).
 void act_quant(const float* x, int rows, int k, int8_t* q, float* d, cudaStream_t s);

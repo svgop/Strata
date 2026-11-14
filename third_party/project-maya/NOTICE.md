@@ -15,9 +15,11 @@ This directory carries the license and this notice for code vendored into the st
     ds4_ablate.hpp, ds4_iq1_codes.hpp, ds4_iq512_kern.inc, ds4_mx_kern.inc, ds4_pdl.cuh,
     ds4_par_exp.h, ds4_cpu_prepare_rows.hpp (built with MAYA_DS4_IQ_ONLY so dsv41's diverged
     ds4_iq stays untouched — the two forks must never share a namespace or a build)
-  - from maya `include/strata/kernels/cpu/` + `src/kernels/cpu/`: exl3_cpu.{hpp,cpp} +
-    exl3_cpu_avx512.inc (ours' dsv41 copy diverged under `strata::dsv41k`; this one keeps
-    `strata::kernels::cpu`, which our tree otherwise does not define for exl3 — no collision)
+  - from maya `include/strata/kernels/cpu/` + `src/kernels/cpu/`: the native-expert CPU lattice —
+    exl3_cpu.{hpp,cpp} + exl3_cpu_avx512.inc, exl3_ref, expert.{hpp,cpp}, expert_layout,
+    iq_avx2/512/512_one, q2_avx2, glm_lane_row4 (+x86/avx2), native_expert — all under the
+    `strata::mm3k` namespace cut (ours' dsv41 copy diverged under `strata::dsv41k`; the two
+    forks must never meet — see src/mm3/vendor/README.md)
   - from maya `include/strata/spec/` + `src/spec/`: draft_policy.{hpp,cpp} + suffix_drafter.{hpp,cpp}
     (maya's DraftPolicy has kMaxT=16, context bands and trust(), which mm3_main needs and our
     spec's kMaxT=8 policy lacks; vendoring keeps `strata-spec` untouched)

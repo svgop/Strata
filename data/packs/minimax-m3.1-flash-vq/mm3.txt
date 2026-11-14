@@ -26,3 +26,4 @@ sparse_attention_config.sparse_init_block 0
 bos_token_id 200019
 eos_token_id 200020
 model_dir /home/svg/LLM/data/models/VQ/MiniMax-M3.1-Flash
+format vq

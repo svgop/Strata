@@ -10,10 +10,11 @@
 // device geometry comes from the data, not a second copy of it.
 #include "mm3_vq.cuh"
 
-#include "mm3_env.hpp"   # (the debug gates read MM3_VQ_DEBUG)
+#include "mm3_env.hpp"   // (the debug gates read MM3_VQ_DEBUG)
 
-#include "mm3_gguf.cuh"   # act_quant forwards to the GGUF lane's shared rounding
+#include "mm3_gguf.cuh"   // act_quant forwards to the GGUF lane's shared rounding
 
+#include <assert.h>
 #include <cublas_v2.h>
 #include <cuda_fp16.h>
 
@@ -92,6 +93,8 @@ Scratch* scratch(cudaStream_t s) {
 bool prepare(cudaStream_t s) { return scratch(s) != nullptr; }
 size_t scratch_bytes() { return sizeof(float) * kMaxK * (kMaxFf + kMaxEmbd) + kBand; }
 int launch_errors() { return g_launch_errors.load(std::memory_order_relaxed); }
+namespace { int g_trace_layer = -1; }
+void trace_layer(int li) { g_trace_layer = li; }
 unsigned wait_timeouts() { return g_wait_timeouts.load(std::memory_order_relaxed); }
 
 
@@ -331,6 +334,17 @@ __global__ void moe_gu_kernel(const unsigned long long* plan_ptr, const float* x
     if (i >= k || plan_ptr[i] == 0) return;
     const Blob o = blob_of(lay, (const void*) plan_ptr[i]);
     const GvH hg = gv_header(o.w1);
+#ifdef MM3_VQ_KERNEL_DEBUG
+    if (threadIdx.x == 0 && (hg.rows != (uint32_t) n_ff || hg.cols != (uint32_t) n_embd ||
+                             hg.high_off != 3545216ull || hg.index_off != 6272ull)) {
+        printf("[gu-geo] i %d z%d y%d w1 %p rows %u (want %d) cols %u (want %d) hi %llu (want 3545216) "
+               "idx %llu (want 6272) plan %llu t0 %zu -> pb %llu\n",
+               i, (int) blockIdx.z, (int) blockIdx.y, (void*) o.w1, hg.rows, n_ff, hg.cols, n_embd,
+               (unsigned long long) hg.high_off, (unsigned long long) hg.index_off, plan_ptr[i],
+               lay.trellis[0], plan_ptr[i]);
+        assert(false && "w1 header law");
+    }
+#endif
     const int cols = (int) hg.vecs();   // the wire's cols is k; the streams are per vector
     const Views vg = views(o.w1, o.r1), vu = views(o.w3, o.r3);
 #ifdef MM3_VQ_KERNEL_DEBUG
@@ -376,6 +390,19 @@ __global__ void moe_down_kernel(const unsigned long long* plan_ptr, const float*
     if (i >= k || plan_ptr[i] == 0) return;
     const Blob o = blob_of(lay, (const void*) plan_ptr[i]);
     const GvH hd = gv_header(o.w2);
+#ifdef MM3_VQ_KERNEL_DEBUG
+    if (threadIdx.x == 0 && blockIdx.y % 1477 == 0)
+        printf("[dn2] z%d y%d i %d plan %llu w2 %p rows %u cols %u\n", (int) blockIdx.z, (int) blockIdx.y,
+               i, plan_ptr[i], (void*) o.w2, hd.rows, hd.cols);
+    if (threadIdx.x == 0 &&
+        (hd.rows != (uint32_t) n_embd || hd.cols != (uint32_t) n_ff ||
+         hd.high_off != 3551360ull || hd.index_off != 12416ull))
+        printf("[dn-geo] i %d z%d y%d w2 %p rows %u (want %d) cols %u (want %d) hi %llu (want 3551360) "
+               "idx %llu (want 12416) plan %llu t2 %zu -> pb %llu\n",
+               i, (int) blockIdx.z, (int) blockIdx.y, (void*) o.w2, hd.rows, n_embd, hd.cols, n_ff,
+               (unsigned long long) hd.high_off, (unsigned long long) hd.index_off, plan_ptr[i],
+               lay.trellis[2], plan_ptr[i]);
+#endif
     const int cols = (int) hd.vecs();
     const Views vd = views(o.w2, o.r2);
     const int row = blockIdx.y * 4 + (threadIdx.x >> 5);
@@ -411,6 +438,56 @@ __global__ void combine_kernel(const unsigned long long* plan_ptr, const float* 
 }
 }   // namespace
 
+namespace {
+// (always on until first tokens: every blob a launch will touch must open GVQ1 - the win path's direct
+// launches bypass moe_gate_up's law, so the check lives here for them too)
+void check_blobs(const char* who, const unsigned long long* plan_d, int n, const ExpertLayout& lay) {
+    const int tl = g_trace_layer;
+    cudaStreamSynchronize((cudaStream_t) nullptr);   // (read what the KERNELS will see, not a stale copy)
+    if (lay.vq_res[0] != 0) {   // (an R13+8 layout: every blob must carry GVR1 at +vq_res[0]; a plain blob
+        unsigned long long pl2[8 * 16];   // mispaired here reads garbage-index header -> the idx8 read flies)
+        if (cudaMemcpy(pl2, plan_d, sizeof(unsigned long long) * (size_t) n, cudaMemcpyDeviceToHost) == cudaSuccess)
+            for (int i = 0; i < n; ++i) {
+                if (pl2[i] == 0) continue;
+                uint8_t rm[4] = {0, 0, 0, 0};
+                const unsigned long long rp = pl2[i] + (unsigned long long) lay.vq_res[0];
+                if (cudaMemcpy(rm, (const void*) rp, 4, cudaMemcpyDeviceToHost) != cudaSuccess ||
+                    !(rm[0] == 'G' && rm[1] == 'V' && rm[2] == 'R' && rm[3] == '1')) {
+                    std::fprintf(stderr, "vq BAD RESIDUAL(%s) i%d ptr %llu res %llu magic %02x%02x%02x%02x\n",
+                                 who, i, pl2[i], rp, rm[0], rm[1], rm[2], rm[3]);
+                    std::fflush(stderr);
+                    abort();
+                }
+            }
+    }
+    unsigned long long pl[8 * 16];   // (a win's [T][8] - the call passes T*k entries)
+    if (cudaMemcpy(pl, plan_d, sizeof(unsigned long long) * (size_t) n, cudaMemcpyDeviceToHost) != cudaSuccess) {
+        std::fprintf(stderr, "vq DEAD PLAN %s n %d\n", who, n);
+        abort();
+    }
+    for (int i = 0; i < n; ++i) {
+        const unsigned long long pb = pl[i];
+        if (pb == 0) continue;
+        uint8_t magic[4] = {0, 0, 0, 0};
+        const unsigned long long w1p = pb + (unsigned long long) lay.trellis[0];   // (blob base = the codebook; GVQ1 sits at trellis[0])
+        if (cudaMemcpy(magic, (const void*) w1p, 4, cudaMemcpyDeviceToHost) != cudaSuccess ||
+            !(magic[0] == 'G' && magic[1] == 'V' && magic[2] == 'Q' && magic[3] == '1')) {
+            std::fprintf(stderr, "vq BAD BLOB(%s) L%d i%d ptr %llu magic %02x%02x%02x%02x "
+                                 "t{%zu,%zu,%zu} res{%zu,%zu,%zu}\n",
+                         who, tl, i, pb, magic[0], magic[1], magic[2], magic[3],
+                         lay.trellis[0], lay.trellis[1], lay.trellis[2],
+                         (size_t) lay.vq_res[0], (size_t) lay.vq_res[1], (size_t) lay.vq_res[2]);
+            uint8_t dump[64] = {0};
+            cudaMemcpy(dump, (const void*) pb, 64, cudaMemcpyDeviceToHost);
+            for (int b = 0; b < 64; ++b) std::fprintf(stderr, "%02x", dump[b]);
+            std::fprintf(stderr, "\n");
+            std::fflush(stderr);
+            abort();
+        }
+    }
+}
+}   // namespace
+
 void moe_gate_up(const MoeArgs& a_in, const float* x, float* h, cudaStream_t s) {
     static const bool no_res = ::mm3::env("MM3_VQ_NO_RES") != nullptr;   // (diagnostic: residuals as absent)
     MoeArgs a = a_in;
@@ -422,47 +499,8 @@ void moe_gate_up(const MoeArgs& a_in, const float* x, float* h, cudaStream_t s) 
         return;
     }
     float* hh = h != nullptr ? h : sc->h;
-    static int dbg_n = ::mm3::env("MM3_VQ_DEBUG") ? 3 : 0;
-    {   // (always on: a plan entry outside every blob region names the fault - runaway j is its signature)
-        unsigned long long pl[8];
-        if (cudaMemcpy(pl, a.plan_ptr, sizeof(pl), cudaMemcpyDeviceToHost) == cudaSuccess) {
-            for (int i = 0; i < a.k; ++i) {
-                const unsigned long long pb = pl[i];
-                if (pb == 0) continue;
-                const unsigned long long mod = pb % 256;
-                if (mod != 0 && pb % 4096 != 0)   // every real blob base is at least 256-aligned
-                    std::fprintf(stderr, "vq BAD PLAN i%d ptr %llu (mod256 %llu) t{%zu,%zu,%zu} res{%zu,%zu,%zu}\n",
-                                 i, pb, mod, a.lay.trellis[0], a.lay.trellis[1], a.lay.trellis[2],
-                                 (size_t) a.lay.vq_res[0], (size_t) a.lay.vq_res[1], (size_t) a.lay.vq_res[2]);
-            }
-        }
-    }
-    if (dbg_n >= 0) {
-        // the served blob's OWN headers, staged out: the assembled pool's truth (magic/rows/cols/offsets)
-        unsigned long long pb = 0;
-        cudaMemcpy(&pb, a.plan_ptr, 8, cudaMemcpyDeviceToHost);
-        if (pb != 0) {
-            uint8_t h1[64], h3[64], h2[64];
-            cudaMemcpy(h1, (const void*) (pb + a.lay.trellis[0]), 64, cudaMemcpyDeviceToHost);
-            cudaMemcpy(h3, (const void*) (pb + a.lay.trellis[1]), 64, cudaMemcpyDeviceToHost);
-            cudaMemcpy(h2, (const void*) (pb + a.lay.trellis[2]), 64, cudaMemcpyDeviceToHost);
-            auto fld = [](const uint8_t* h, int o) { uint64_t v = 0; memcpy(&v, h + o, 8); return v; };
-            std::fprintf(stderr, "vq blob %llu: w1 %c%c%c%c r%u c%u hi %llu | w3 %c%c%c%c r%u c%u hi %llu |"
-                                 " w2 %c%c%c%c r%u c%u hi %llu\n",
-                         pb, h1[0], h1[1], h1[2], h1[3], *(unsigned*)(h1+8), *(unsigned*)(h1+12), fld(h1,48),
-                         h3[0], h3[1], h3[2], h3[3], *(unsigned*)(h3+8), *(unsigned*)(h3+12), fld(h3,48),
-                         h2[0], h2[1], h2[2], h2[3], *(unsigned*)(h2+8), *(unsigned*)(h2+12), fld(h2,48));
-        }
-    }
-    if (dbg_n-- > 0) {
-        unsigned long long pl[8];
-        cudaMemcpy(pl, a.plan_ptr, sizeof(pl), cudaMemcpyDeviceToHost);
-        for (int i = 0; i < a.k; ++i)
-            std::fprintf(stderr, "vq moe_gu//%d i%d blob %llu (mod %zu) t {%zu,%zu,%zu} res {%zu,%zu,%zu}\n",
-                         3 - dbg_n - 1, i, pl[i], (size_t) 18673152, a.lay.trellis[0], a.lay.trellis[1],
-                         a.lay.trellis[2], (size_t) a.lay.vq_res[0], (size_t) a.lay.vq_res[1],
-                         (size_t) a.lay.vq_res[2]);
-    }
+    check_blobs("gate_up", a.plan_ptr, a.k, a.lay);   // (w1 + residual magic at every served blob)
+
     dim3 grid(1, (a.n_ff + 3) / 4, a.k);
     moe_gu_kernel<<<grid, kMvThreads, 0, s>>>(a.plan_ptr, x, hh, a.k, a.n_embd, a.n_ff, x3::kSwigluAlpha,
                                               a.limit, a.lay);
@@ -479,6 +517,7 @@ void moe_down(const MoeArgs& a_in, const float* h, const float* sh_out, float* o
         fail("moe_down: not covered");
         return;
     }
+    check_blobs("down", a.plan_ptr, a.k, a.lay);
     const float* hh = h != nullptr ? h : sc->h;
     dim3 grid(1, (a.n_embd + 3) / 4, a.k);
     moe_down_kernel<<<grid, kMvThreads, 0, s>>>(a.plan_ptr, hh, sc->part, a.k, a.n_embd, a.n_ff, a.lay);
@@ -486,6 +525,8 @@ void moe_down(const MoeArgs& a_in, const float* h, const float* sh_out, float* o
         a.plan_ptr, a.plan_w, sc->part, a.cpu_part, a.cpu_flag, sh_out, out, a.k, a.n_embd);
     check("moe_down");
 }
+
+
 
 bool win_experts(const WinArgs& a_in, cudaStream_t s) {
     static const bool no_res = ::mm3::env("MM3_VQ_NO_RES") != nullptr;   // (diagnostic: covers the win path too)
@@ -495,6 +536,7 @@ bool win_experts(const WinArgs& a_in, cudaStream_t s) {
         fail("win_experts: not covered");
         return false;
     }
+    check_blobs("win", a.plan_ptr, a.T * a.k, a.lay);
     Scratch* sc = scratch(s);
     if (sc == nullptr || a.lay.fmt != kFmtVQ) return false;
     static bool dbg = ::mm3::env("MM3_VQ_DEBUG") != nullptr;

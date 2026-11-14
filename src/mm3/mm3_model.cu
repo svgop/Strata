@@ -364,6 +364,7 @@ struct Model::Impl {
     Stats st;
     bool gguf = false;   // (the pack's format: a GGUF's - tools/mm3/pack_gguf.py - else EXL3)
     bool vq = false;     // (the Baekpica VQ release - tools/mm3/vq_pack.py: GVQ1 experts + standard-type dense)
+    unsigned long long pool_lo = 0, pool_hi = 0;   // (the pinned pool's UVA span: the diagnostics' legal set)
     // the RMSNorm weights' Gemma offset: the checkpoint stores w (the engine multiplies by 1 + w); llama.cpp's
     // converter writes w + 1 into a GGUF already - added once either way
     float norm_add() const { return gguf ? 0.0f : 1.0f; }
@@ -1772,6 +1773,8 @@ struct Model::Impl {
                         }
                     });
                 for (auto& t : th) t.join();
+                pool_lo = (unsigned long long) pool;
+                pool_hi = (unsigned long long) (pool + want);
                 st.pinned_gb = (double) want / (1u << 30);
                 st.pooled = (long) todo.size();
                 if (nw < cand.size())
@@ -1934,12 +1937,26 @@ struct Model::Impl {
     // call already took)
     bool locate(Layer& l, Dev& d, int e, std::vector<char>& busy, unsigned long long& ptr, std::string& err) {
         const int rs = l.res_slot[(size_t) e];
+        const unsigned long long rptr = (l.res_base != nullptr && rs >= 0)
+                                            ? (unsigned long long) (l.res_base + (size_t) rs * l.blob) : 0;
+        const unsigned long long sptr = d.stg != nullptr ? (unsigned long long) (d.stg + (size_t) (d.n_slots ? 0 : 0))
+                                                         : 0;   // (sptr recomputed per slot below; the legal
+                                                               // region is [stg, stg + n_slots*slot_bytes))
         if (rs >= 0) {
             ptr = (unsigned long long) (l.res_base + (size_t) rs * l.blob);
-            static int rn = ::mm3::env("MM3_VQ_DEBUG") ? 400 : 0;   // (the resident locates too)
-            if (rn-- > 0)
-                std::fprintf(stderr, "vq locate(res): L%d e%d ptr %llu (blob %zu res %zu)\n", l.idx, e, ptr,
-                             l.blob, (size_t) l.lay.vq_res[0]);
+            if (l.idx >= 0 && l.idx < 60) {
+                static int rn[64] = {};
+                if (rn[l.idx]++ < 24)
+                    std::fprintf(stderr, "vq locate(res): L%d e%d ptr %llu (blob %zu res %zu)\n", l.idx, e, ptr,
+                                 l.blob, (size_t) l.lay.vq_res[0]);
+            }
+            return true;
+        }
+        static const bool zero_stage = ::mm3::env("MM3_VQ_ZERO_STAGE") != nullptr;
+        if (zero_stage && !l.host_blob.empty() && l.host_blob[(size_t) e] != nullptr) {
+            // (UVA: the pinned pool is device-readable in place - serve the pool pointer directly, no staging
+            // copy at all.  The correctness-first VQ mode; the zero-copy/BAR optimization is the roadmap's.)
+            ptr = (unsigned long long) l.host_blob[(size_t) e];
             return true;
         }
         const long long key = (long long) (&l - L.data()) * 1024 + e;
@@ -1962,10 +1979,17 @@ struct Model::Impl {
         busy[(size_t) at] = 1;
         d.slot_used[(size_t) at] = fwd;
         ptr = (unsigned long long) (d.stg + (size_t) at * d.slot_bytes);
-        static int ln = ::mm3::env("MM3_VQ_DEBUG") ? 4000 : 0;   // (the first locates: which (layer, expert) each
-        if (ln-- > 0)                                          // staged slot serves - the fault's owner)
-            std::fprintf(stderr, "vq locate: L%d e%d slot %d ptr %llu (blob %zu res %zu)\n", l.idx, e, at, ptr,
-                         l.blob, (size_t) l.lay.vq_res[0]);
+        static const bool law = ::mm3::env("MM3_VQ_DEBUG") != nullptr;
+        if (law && ptr == 140558173470720ULL)   // (the exact pointer the win content law caught: name everything)
+            std::fprintf(stderr, "vq FAULT-PTR produced: L%d e%d rs %d at %d stg %p slot_bytes %zu "
+                                 "res_base %p blob %zu n_slots %d\n",
+                         l.idx, e, rs, at, (void*) d.stg, d.slot_bytes, (void*) l.res_base, l.blob, d.n_slots);
+        if (l.idx >= 0 && l.idx < 60) {   // (per-layer locate trace: the first 24 of every layer - no global
+            static int ln[64] = {};      // budget, so the faulting layer's own locates are always captured)
+            if (ln[l.idx]++ < 24)
+                std::fprintf(stderr, "vq locate: L%d e%d slot %d ptr %llu (blob %zu res %zu)\n", l.idx, e, at,
+                             ptr, l.blob, (size_t) l.lay.vq_res[0]);
+        }
         return true;
     }
 
@@ -2246,6 +2270,41 @@ struct Model::Impl {
             a.cpu_flag = cpu_flags;
             a.wait_ptr = wait_word;
             a.wait_val = ++d.win_wait;
+        }
+        vq::trace_layer(l.idx);
+        if (vq && l.lay.fmt == vq::kFmtVQ && l.lay.vq_res[0] != 0 && l.lay.vq_res[0] != 11594496ull) {
+            // (the load-time layout law: an R13+8 layer's residual offsets are constants - any drift is the
+            // corruption class the kernel-side r1 pointer already showed; print who owns l now)
+            std::fprintf(stderr, "vq LAYOUT DRIFT L%d: vq_res {%zu,%zu,%zu} (want 11594496...) t {%zu,%zu,%zu}\n",
+                         l.idx, (size_t) l.lay.vq_res[0], (size_t) l.lay.vq_res[1], (size_t) l.lay.vq_res[2],
+                         l.lay.trellis[0], l.lay.trellis[1], l.lay.trellis[2]);
+        }
+        {   // (the content law, authoritative copy: the HOST plan against the host-known legal regions -
+            // res regions + staging - then the device copy after a sync; splits locate-vs-transport exactly)
+            const unsigned long long* hq = (const unsigned long long*) d.win_plan_h;
+            const int n = T * g.k_exp;
+            for (int i = 0; i < n; ++i) {
+                const unsigned long long pb = hq[i];
+                if (pb == 0) continue;
+                bool legal = false;
+                for (const Layer& lr : L)
+                    if (lr.res_base != nullptr && pb >= (unsigned long long) lr.res_base &&
+                        pb < (unsigned long long) (lr.res_base + (size_t) g.n_exp * lr.blob))
+                        legal = true;
+                if (d.stg != nullptr && pb >= (unsigned long long) d.stg &&
+                    pb < (unsigned long long) (d.stg + (size_t) d.n_slots * d.slot_bytes))
+                    legal = true;
+                if (pool_lo != 0 && pb >= pool_lo && pb < pool_hi)
+                    legal = true;   // (zero-stage: the pool's UVA pointers are served in place)
+                if (!legal) {
+                    std::fprintf(stderr, "vq HOST-ILLEGAL plan L%d entry %d ptr %llu (locate never produced this)"
+                                         " - res/stg regions checked, aborting before the launch\n",
+                                 l.idx, i, pb);
+                    std::fflush(stderr);
+                    abort();
+                }
+            }
+            CK(cudaStreamSynchronize(d.s));
         }
         if (!x3::win_experts(a, d.s)) {
             if (with_cpu) *(volatile unsigned*) wait_word = d.win_wait;   // (never leave the device waiting)
