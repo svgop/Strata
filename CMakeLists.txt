@@ -2355,7 +2355,7 @@ endif()
   option(STRATA_BUILD_MM3 "Build the MiniMax-M3.1 engine path (strata-mm3)" OFF)
   if(STRATA_BUILD_MM3 AND NOT STRATA_HIP_GFX906)
     add_library(strata_mm3_kernels STATIC src/mm3/mm3_exl3.cu src/mm3/mm3_gv.cu src/mm3/mm3_gguf.cu
-                src/mm3/vendor/ds4_iq.cu src/mm3/vendor/ds4_lt.cu)
+                src/mm3/mm3_vq.cu src/mm3/vendor/ds4_iq.cu src/mm3/vendor/ds4_lt.cu)
     set_target_properties(strata_mm3_kernels PROPERTIES LINKER_LANGUAGE CXX)   # archive the .cu objects like dsv41's
                                                                                  # kernels lib does (device linking happens
                                                                                  # at the executable, not the archive)
@@ -2438,6 +2438,47 @@ add_executable(strata-mm3 src/mm3/mm3_main.cpp src/mm3/mm3_model.cu src/mm3/mm3_
       target_compile_options(mm3_gguf_test PRIVATE $<$<COMPILE_LANGUAGE:CXX>:-mavx2 -mfma -mf16c>)
       add_test(NAME mm3_gguf_test COMMAND mm3_gguf_test)
       set_tests_properties(mm3_gguf_test PROPERTIES TIMEOUT 600)
+      # the Baekpica VQ weights (GVQ1/GVR8) against a scalar double reference: the packing law, mv, the FP16
+      # bands + cuBLAS GEMM, the routed experts (swigluoai, the plan combine) on the token and window paths.
+      add_executable(mm3_vq_test tests/mm3/mm3_vq_test.cu src/mm3/mm3_vq.cu src/mm3/mm3_gguf.cu
+                                  src/mm3/mm3_gv.cu src/mm3/vendor/ds4_iq.cu src/mm3/vendor/ds4_lt.cu
+                                  src/mm3/vendor/ds4_iq_cpu.cpp src/mm3/vendor/ds4_gguf_cpu.cpp
+                                  src/mm3/vendor/exl3_cpu.cpp src/mm3/vendor/expert_layout.cpp
+                                  src/mm3/vendor/expert.cpp src/mm3/vendor/iq_avx2.cpp
+                                  src/mm3/vendor/iq_avx512.cpp src/mm3/vendor/iq_avx512_one.cpp
+                                  src/mm3/vendor/q2_avx2.cpp src/mm3/vendor/native_expert.cpp
+                                  src/mm3/vendor/glm_lane_row4.cpp src/mm3/vendor/glm_lane_row4_avx2.cpp)
+      target_include_directories(mm3_vq_test PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include
+                                  ${CMAKE_CURRENT_SOURCE_DIR}/src/mm3 ${_strata_gpu_include_directories}
+                                  ${CMAKE_CURRENT_SOURCE_DIR}/third_party/ggml)
+      target_link_libraries(mm3_vq_test PRIVATE strata_kernels_cpu ${_strata_gpu_runtime_target}
+                            ${_strata_gpu_blas_target})
+      target_compile_definitions(mm3_vq_test PRIVATE MAYA_DS4_IQ_ONLY=1)
+      target_compile_options(mm3_vq_test PRIVATE $<$<COMPILE_LANGUAGE:CXX>:-mavx2 -mfma -mf16c>)
+      add_test(NAME mm3_vq_test COMMAND mm3_vq_test)
+      set_tests_properties(mm3_vq_test PROPERTIES TIMEOUT 300)
+      # the NVFP4 expert weights (mm3_nvfp4.cu over mm3_gguf.cu's activation rounding) against a host reference:
+      # the E2M1/E4M3 decode, the GEMVs, the FP16 bands + cuBLAS GEMM, the routed experts (swigluoai, the plan
+      # combine) on the token and window paths, the prompt sets.
+      add_executable(mm3_nvfp4_test tests/mm3/mm3_nvfp4_test.cu src/mm3/mm3_exl3.cu src/mm3/mm3_cpu.cpp
+                                    src/mm3/mm3_cpu_gg.cpp src/mm3/mm3_gv.cu src/mm3/mm3_gguf.cu
+                                    src/mm3/mm3_nvfp4.cu src/mm3/vendor/ds4_iq.cu src/mm3/vendor/ds4_lt.cu
+                                    src/mm3/vendor/ds4_iq_cpu.cpp src/mm3/vendor/ds4_gguf_cpu.cpp
+                                    src/mm3/vendor/exl3_cpu.cpp src/mm3/vendor/expert_layout.cpp
+                                    src/mm3/vendor/expert.cpp src/mm3/vendor/iq_avx2.cpp
+                                    src/mm3/vendor/iq_avx512.cpp src/mm3/vendor/iq_avx512_one.cpp
+                                    src/mm3/vendor/q2_avx2.cpp src/mm3/vendor/native_expert.cpp
+                                    src/mm3/vendor/glm_lane_row4.cpp src/mm3/vendor/glm_lane_row4_avx2.cpp)
+      target_include_directories(mm3_nvfp4_test PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include
+                                  ${CMAKE_CURRENT_SOURCE_DIR}/src/mm3 ${_strata_gpu_include_directories}
+                                  ${CMAKE_CURRENT_SOURCE_DIR}/third_party/ggml)
+      target_link_libraries(mm3_nvfp4_test PRIVATE strata_kernels_cpu ${_strata_gpu_runtime_target}
+                            ${_strata_gpu_blas_target})
+      target_compile_definitions(mm3_nvfp4_test PRIVATE MAYA_DS4_IQ_ONLY=1)
+      target_compile_options(mm3_nvfp4_test PRIVATE $<$<COMPILE_LANGUAGE:CXX>:-mavx2 -mfma -mf16c>)
+      add_test(NAME mm3_nvfp4_test COMMAND mm3_nvfp4_test)
+      set_tests_properties(mm3_nvfp4_test PROPERTIES TIMEOUT 300)
+
     endif()
     install(TARGETS strata-mm3 RUNTIME DESTINATION .)
   endif()

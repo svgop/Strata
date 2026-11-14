@@ -56,6 +56,10 @@ struct Mat {
     int fmt = 0;
     const void* raw = nullptr;
     int gg_type = 0;   // fmt 4: the ggml block type
+    // fmt 5 (mm3_vq.cuh's kFmtVQ, the Baekpica VQ release): raw is the GVQ1 payload (its own 128-byte header
+    // carries the geometry), vq_cb the 8192-entry E4M3 codebook, vq_res the GVR8 payload (null: no residual)
+    // and vq_cb2 its 256-entry codebook - both device pointers, both resident.
+    const void* vq_cb = nullptr, * vq_res = nullptr, * vq_cb2 = nullptr;
 };
 
 /// Trellis bytes of a k x n matrix at k2 / 2 bits: 16 k2 bytes a 16x16 tile.
@@ -110,6 +114,10 @@ struct ExpertLayout {
     int cb = 2;
     int fmt = 0;   // 4: a GGUF's expert (mm3_gguf.cuh's kFmtGG): trellis[r] = matrix r's offset, [out][blocks]
     int gg_type[3] = {0, 0, 0};   // fmt 4: each role's ggml type (gate, up and down may differ)
+    // fmt 5 (mm3_vq.cuh's kFmtVQ): the blob is [cb 64 KiB][cb2 2 KiB when R13+8][w1][w3][w2][r1][r3][r2],
+    // trellis[r] the GVQ1 offsets, vq_res[r] the GVR8 ones (0: this layer has none) - the codebooks resident
+    // (the EXL3 `cb` above is that format's codebook selector; the VQ fields carry the vq_ prefix).
+    size_t vq_res[3] = {0, 0, 0}, vq_cb = 0, vq_cb2 = 0;
 };
 /// The routed experts of one token (the engine's device plan: plan_ptr[i] = the blob in VRAM, 0 = not on the device;
 /// plan_w[i] its weight).  gate/up over x (n_embd F32) -> swigluoai -> h (F32 [k][n_ff], scratch the caller
