@@ -2346,3 +2346,98 @@ endif()
     endif()
     install(TARGETS strata-dsv41 RUNTIME DESTINATION .)
   endif()
+
+  # MiniMax-M3.1-Flash: the fourth engine path (src/mm3, from Project Maya v1.1.63, MIT), per the import map
+  # (.docs/research/digest/2026-11-14-mm3-import-map.md).  Own executable (strata-mm3); OFF by default: it changes
+  # no existing target (the vendored kernels live in strata_mm3_kernels, so no symbol is shared with strata_kernels,
+  # and the vendored ds4_iq fork never meets dsv41's diverged copy - MAYA_DS4_IQ_ONLY, see
+  # third_party/project-maya/NOTICE.md).
+  option(STRATA_BUILD_MM3 "Build the MiniMax-M3.1 engine path (strata-mm3)" OFF)
+  if(STRATA_BUILD_MM3 AND NOT STRATA_HIP_GFX906)
+    add_library(strata_mm3_kernels STATIC src/mm3/mm3_exl3.cu src/mm3/mm3_gv.cu src/mm3/mm3_gguf.cu
+                src/mm3/vendor/ds4_iq.cu src/mm3/vendor/ds4_lt.cu)
+    set_target_properties(strata_mm3_kernels PROPERTIES LINKER_LANGUAGE CXX)   # archive the .cu objects like dsv41's
+                                                                                 # kernels lib does (device linking happens
+                                                                                 # at the executable, not the archive)
+    target_include_directories(strata_mm3_kernels PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include
+                               ${CMAKE_CURRENT_SOURCE_DIR}/src/mm3 ${_strata_gpu_include_directories}
+                               ${CMAKE_CURRENT_SOURCE_DIR}/third_party/ggml)   # ggml-common.h (the iq grids)
+    target_compile_definitions(strata_mm3_kernels PUBLIC MAYA_DS4_IQ_ONLY=1)
+    target_link_libraries(strata_mm3_kernels PUBLIC ${_strata_gpu_runtime_target})
+        # maya compiles its expert.cpp with the full AVX512 set (VBMI included; the runtime gate cpu_avx512_ok
+    # picks the kernels); the Zen 5 target has VNNI so the DPBUSD-BW fallback define is not needed
+    set_source_files_properties(src/mm3/vendor/expert.cpp src/mm3/vendor/iq_avx512.cpp
+                                src/mm3/vendor/iq_avx512_one.cpp src/mm3/vendor/exl3_cpu.cpp
+                                PROPERTIES COMPILE_OPTIONS "-mavx512f;-mavx512bw;-mavx512vl;-mavx512dq;-mavx512vnni;-mavx512vbmi;-mbmi2;-mf16c;-mfma")
+    set_source_files_properties(src/mm3/vendor/q2_avx2.cpp
+                                PROPERTIES COMPILE_OPTIONS "-mavx2;-mfma;-mf16c;-mbmi2")
+add_executable(strata-mm3 src/mm3/mm3_main.cpp src/mm3/mm3_model.cu src/mm3/mm3_kernels.cu
+                   src/mm3/mm3_cpu.cpp src/mm3/mm3_host.cpp src/mm3/mm3_cpu_gg.cpp src/mm3/mm3_dspark.cu
+                   src/mm3/mm3_vision.cu src/mm3/mm3_tp.cu
+                   src/mm3/vendor/ds4_iq_cpu.cpp src/mm3/vendor/ds4_gguf_cpu.cpp
+                   src/mm3/vendor/exl3_cpu.cpp src/mm3/vendor/draft_policy.cpp src/mm3/vendor/suffix_drafter.cpp
+                   src/mm3/vendor/native_expert.cpp src/mm3/vendor/glm_lane_row4.cpp src/mm3/vendor/glm_lane_row4_avx2.cpp
+                   src/mm3/vendor/iq_avx2.cpp src/mm3/vendor/iq_avx512.cpp src/mm3/vendor/expert_layout.cpp
+                   src/mm3/vendor/expert.cpp src/mm3/vendor/iq_avx512_one.cpp src/mm3/vendor/q2_avx2.cpp
+                   src/core/host_mem.cpp)   # the substrate: the host-memory sampler (the dsv41 precedent)
+    if(NOT STRATA_BUILD_ID)
+      execute_process(COMMAND git -C ${CMAKE_CURRENT_SOURCE_DIR} rev-parse --short=9 HEAD OUTPUT_VARIABLE STRATA_BUILD_ID
+                      OUTPUT_STRIP_TRAILING_WHITESPACE ERROR_QUIET)
+    endif()
+    if(NOT STRATA_BUILD_ID)
+      set(STRATA_BUILD_ID unknown)
+    endif()
+    set_source_files_properties(src/mm3/mm3_main.cpp PROPERTIES COMPILE_DEFINITIONS "MM3_BUILD_ID=\"${STRATA_BUILD_ID}\"")
+    target_include_directories(strata-mm3 PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include ${CMAKE_CURRENT_SOURCE_DIR}/src/mm3
+                               ${_strata_gpu_include_directories} ${CMAKE_CURRENT_SOURCE_DIR}/third_party/ggml
+                               ${CMAKE_CURRENT_SOURCE_DIR}/src/prefill)
+    target_link_libraries(strata-mm3 PRIVATE strata_prefill strata_mm3_kernels strata_kernels_cpu
+                          ${_strata_gpu_runtime_target} ${_strata_gpu_blas_target})
+    find_package(Threads REQUIRED)
+    target_link_libraries(strata-mm3 PRIVATE Threads::Threads)
+    # the CPU lane's AVX2/F16C kernels (maya builds exl3_cpu.cpp with the same; the dsv41 precedent's
+    # strata_kernels_cpu carries its own flags for its own sources)
+    target_compile_options(strata-mm3 PRIVATE $<$<COMPILE_LANGUAGE:CXX>:-mavx2 -mfma -mf16c>)
+    if(STRATA_BUILD_TESTS)
+      # maya-mm3's phase-1 parity tests (random matrices, no model): the EXL3 kernels against the scalar
+      # CPU reference, and the GGUF weights' values/rows/GEMVs/experts (swigluoai included) against ggml's
+      # dequantize_row_* and a double reference.  The vendored ds4_iq fork compiles into each test exactly
+      # as into the engine (MAYA_DS4_IQ_ONLY).
+      add_executable(mm3_exl3_test tests/mm3/mm3_exl3_test.cu src/mm3/mm3_exl3.cu src/mm3/mm3_gv.cu
+                                   src/mm3/mm3_gguf.cu src/mm3/vendor/ds4_iq.cu src/mm3/vendor/ds4_lt.cu
+                                   src/mm3/vendor/exl3_ref.cpp src/mm3/vendor/exl3_cpu.cpp
+                                   src/mm3/vendor/expert_layout.cpp src/mm3/vendor/expert.cpp
+                                   src/mm3/vendor/iq_avx2.cpp src/mm3/vendor/iq_avx512.cpp
+                                   src/mm3/vendor/iq_avx512_one.cpp src/mm3/vendor/q2_avx2.cpp
+                                   src/mm3/vendor/native_expert.cpp src/mm3/vendor/glm_lane_row4.cpp
+                                   src/mm3/vendor/glm_lane_row4_avx2.cpp)
+      target_include_directories(mm3_exl3_test PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include
+                                  ${CMAKE_CURRENT_SOURCE_DIR}/src/mm3 ${_strata_gpu_include_directories}
+                                  ${CMAKE_CURRENT_SOURCE_DIR}/third_party/ggml)
+      target_link_libraries(mm3_exl3_test PRIVATE strata_kernels_cpu ${_strata_gpu_runtime_target}
+                            ${_strata_gpu_blas_target})
+      target_compile_definitions(mm3_exl3_test PRIVATE MAYA_DS4_IQ_ONLY=1)
+      target_compile_options(mm3_exl3_test PRIVATE $<$<COMPILE_LANGUAGE:CXX>:-mavx2 -mfma -mf16c>)
+      add_test(NAME mm3_exl3_test COMMAND mm3_exl3_test)
+      set_tests_properties(mm3_exl3_test PROPERTIES TIMEOUT 300)
+      add_executable(mm3_gguf_test tests/mm3/mm3_gguf_test.cu src/mm3/mm3_exl3.cu src/mm3/mm3_cpu.cpp src/mm3/mm3_cpu_gg.cpp
+                                   src/mm3/mm3_gv.cu src/mm3/mm3_gguf.cu src/mm3/vendor/ds4_iq.cu
+                                   src/mm3/vendor/ds4_lt.cu src/mm3/vendor/ds4_iq_cpu.cpp
+                                   src/mm3/vendor/ds4_gguf_cpu.cpp src/mm3/vendor/exl3_cpu.cpp
+                                   src/mm3/vendor/native_expert.cpp src/mm3/vendor/glm_lane_row4.cpp src/mm3/vendor/glm_lane_row4_avx2.cpp
+                                   src/mm3/vendor/iq_avx2.cpp src/mm3/vendor/iq_avx512.cpp src/mm3/vendor/expert_layout.cpp
+                                   src/mm3/vendor/expert.cpp src/mm3/vendor/iq_avx512_one.cpp src/mm3/vendor/q2_avx2.cpp
+                                   src/mm3/vendor/exl3_ref.cpp
+                                   src/mm3/vendor/draft_policy.cpp src/mm3/vendor/suffix_drafter.cpp)
+      target_include_directories(mm3_gguf_test PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include
+                                  ${CMAKE_CURRENT_SOURCE_DIR}/src/mm3 ${_strata_gpu_include_directories}
+                                  ${CMAKE_CURRENT_SOURCE_DIR}/third_party/ggml ${CMAKE_CURRENT_SOURCE_DIR}/src/prefill)
+      target_link_libraries(mm3_gguf_test PRIVATE strata_kernels_cpu ${_strata_gpu_runtime_target}
+                            ${_strata_gpu_blas_target})
+      target_compile_definitions(mm3_gguf_test PRIVATE MAYA_DS4_IQ_ONLY=1)
+      target_compile_options(mm3_gguf_test PRIVATE $<$<COMPILE_LANGUAGE:CXX>:-mavx2 -mfma -mf16c>)
+      add_test(NAME mm3_gguf_test COMMAND mm3_gguf_test)
+      set_tests_properties(mm3_gguf_test PROPERTIES TIMEOUT 600)
+    endif()
+    install(TARGETS strata-mm3 RUNTIME DESTINATION .)
+  endif()
