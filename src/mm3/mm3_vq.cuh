@@ -46,7 +46,8 @@ constexpr uint32_t kMagicGVR1 = 0x31525647;   // "GVR1" little endian
 /// The 128-byte GVQ1/GVR8 header as the device reads it (FORMAT.md's wire layout; the strict-reader law - canonical
 /// offsets, alignment, finite gains - is enforced by the host pass, read_gv_header in mm3_vq_host.hpp).
 struct GvH {
-    uint32_t rows, cols;          // R outputs, C vectors a row (k = C * 8)
+    uint32_t rows, cols;          // R outputs, C VALUES a row (the wire's k; vectors a row = C / 8)
+    __host__ __device__ __forceinline__ uint32_t vecs() const { return cols >> 3; }
     uint32_t entries;             // 8192 (13-bit) / 256 (GVR8)
     uint64_t gain_off, index_off, high_off, total;
 };

@@ -40,6 +40,7 @@
 #include "mm3_exl3.hpp"
 #include "mm3_geo.hpp"
 #include "mm3_gguf.cuh"
+#include "mm3_vq.cuh"   # (the Baekpica VQ experts - fmt kFmtVQ)
 #include "mm3_gguf_host.hpp"
 #include "mm3_kernels.cuh"
 #include "mm3_lane_plan.hpp"
@@ -79,14 +80,16 @@ double now() {
 
 const std::string P = "language_model.model.";
 
-struct Src {   // an expert's nine pieces in the mapped files: (w1, w3, w2) x (trellis, suh, svh) - a GGUF's: the three
-               // matrices' rows alone (pieces 0, 3, 6; the others empty)
-    const uint8_t* p[9];
-    size_t n[9];
+struct Src {   // an expert's pieces in the mapped files: (w1, w3, w2) x (trellis, suh, svh) - a GGUF's: the three
+               // matrices' rows alone (pieces 0, 3, 6; the others empty).  A VQ expert's: the GVQ1 payloads at
+               // 0/3/6, the GVR8 residuals at 1/4/7, the layer's codebooks at 9 (8192x8 E4M3) and 10 (256x8).
+    const uint8_t* p[11];
+    size_t n[11];
 };
 
 struct Layer {
     int dev = 0;
+    int idx = -1;   // (the layer's own index: L[idx] is this - diagnostics and pool bookkeeping)
     bool moe = false;
     float *in1 = nullptr, *post1 = nullptr, *qn1 = nullptr, *kn1 = nullptr, *iqn1 = nullptr, *ikn1 = nullptr;
     x3::Mat q, k, v, o, mg, mu, md, sg, su, sd;
@@ -360,6 +363,7 @@ struct Model::Impl {
     Geo g;
     Stats st;
     bool gguf = false;   // (the pack's format: a GGUF's - tools/mm3/pack_gguf.py - else EXL3)
+    bool vq = false;     // (the Baekpica VQ release - tools/mm3/vq_pack.py: GVQ1 experts + standard-type dense)
     // the RMSNorm weights' Gemma offset: the checkpoint stores w (the engine multiplies by 1 + w); llama.cpp's
     // converter writes w + 1 into a GGUF already - added once either way
     float norm_add() const { return gguf ? 0.0f : 1.0f; }
@@ -639,7 +643,87 @@ struct Model::Impl {
         return true;
     }
 
+    // the Baekpica VQ release's experts (tools/mm3/vq_pack.py: HF names, GVQ1 13-bit codebook VQ + the R13+8
+    // layers' GVR8 residuals): one blob a layer's experts share the codebooks of - [cb 64 KiB][cb2 2 KiB][w1][w3]
+    // [w2][r1][r3][r2], each expert's own copy assembled into the pool (phase A: the codebooks ride every blob;
+    // a layer-resident single copy is the optimization pass).  No CPU lane yet - the VQ math is F32-exact on the
+    // GPU, and every expert outside VRAM reaches it through a staging slot.
+    bool expert_layout_vq(Layer& l, int li, std::string& err) {
+        const std::string B = P + "layers." + std::to_string(li) + ".block_sparse_moe.";
+        const std::string E = B + "experts.";
+        const char* parts[3] = {"w1", "w3", "w2"};
+        const Tensor* cb = pk.get(B + "vq_codebook");
+        const Tensor* cb2 = pk.get(B + "vq_codebook_residual");
+        if (cb == nullptr || cb->bytes != 8192 * 8) {
+            err = B + "vq_codebook: missing or not [8192][8] E4M3";
+            return false;
+        }
+        const bool res = cb2 != nullptr;
+        if (!res && li >= 3) { /* a plain layer: legal (37 of the 57) */ }
+        l.src.assign((size_t) g.n_exp, {});
+        size_t off = 65536 + 2048;   // the codebook block every blob starts with
+        for (int r = 0; r < 3; ++r) {
+            const int n = r < 2 ? g.ff : g.dim, k = r < 2 ? g.dim : g.ff;
+            for (int e = 0; e < g.n_exp; ++e) {
+                const Tensor* t = pk.get(E + std::to_string(e) + "." + parts[r] + ".weight");
+                const Tensor* tr = pk.get(E + std::to_string(e) + "." + parts[r] + ".weight_residual");
+                // the tool emits the source PyTorch shape [out, in] = [n, k] (vq_pack.py's stored_shape)
+                    if (t == nullptr || t->dtype != "VQ13" || (int) t->shape[0] != n || (int) t->shape[1] != k) {
+                    err = E + std::to_string(e) + "." + parts[r] + ".weight: not a VQ13 [" + std::to_string(n) +
+                          "][" + std::to_string(k) + "] matrix";
+                    return false;
+                }
+                if (res != (tr != nullptr) || (tr != nullptr && tr->dtype != "VQ13R8")) {
+                    err = E + std::to_string(e) + "." + parts[r] + ".weight_residual: residual stage inconsistent";
+                    return false;
+                }
+                Src& s = l.src[(size_t) e];
+                if (e == 0) { l.lay.trellis[r] = off; l.lay.suh[r] = res ? 0 : 0; }
+                s.p[r * 3 + 0] = pk.data(*t);
+                s.n[r * 3 + 0] = t->bytes;
+                s.p[r * 3 + 1] = tr ? pk.data(*tr) : nullptr;
+                s.n[r * 3 + 1] = tr ? tr->bytes : 0;
+                s.p[r * 3 + 2] = nullptr;
+                s.n[r * 3 + 2] = 0;
+                s.p[9] = pk.data(*cb);
+                s.n[9] = cb->bytes;
+                s.p[10] = cb2 ? pk.data(*cb2) : nullptr;
+                s.n[10] = cb2 ? cb2->bytes : 0;
+            }
+            off += up(l.src[0].n[r * 3 + 0]);
+        }
+        // the residuals follow the three matrices, role-aligned
+        for (int r = 0; r < 3; ++r) {
+            if (res) {
+                l.lay.suh[r] = off;
+                off += up(l.src[0].n[r * 3 + 1]);
+            } else {
+                l.lay.suh[r] = 0;
+            }
+        }
+        l.lay.fmt = vq::kFmtVQ;
+        l.lay.vq_cb = 0;
+        l.lay.vq_cb2 = 65536;
+        l.lay.vq_res[0] = l.lay.suh[0];
+        l.lay.vq_res[1] = l.lay.suh[1];
+        l.lay.vq_res[2] = l.lay.suh[2];
+        l.lay.k2[0] = l.lay.k2[1] = l.lay.k2[2] = 0;
+        l.blob = off;
+        o.cpu_threads = -1;   // (no VQ CPU lane yet: staging serves the experts outside VRAM)
+        if (::mm3::env("MM3_VQ_DEBUG")) {
+            char buf[512];
+            std::snprintf(buf, sizeof buf, "vq layer %d: blob %zu cb %zu cb2 %zu t {%zu,%zu,%zu} res {%zu,%zu,%zu}"
+                                       " src-bytes {%zu,%zu,%zu}",
+                          li, off, l.lay.vq_cb, l.lay.vq_cb2, l.lay.trellis[0], l.lay.trellis[1], l.lay.trellis[2],
+                          l.lay.vq_res[0], l.lay.vq_res[1], l.lay.vq_res[2],
+                          l.src[0].n[0], l.src[0].n[3], l.src[0].n[6]);
+            std::fprintf(stderr, "maya-mm3: %s\n", buf);
+        }
+        return true;
+    }
+
     bool expert_layout(Layer& l, int li, std::string& err) {
+        if (vq) return expert_layout_vq(l, li, err);
         if (gguf) return expert_layout_gg(l, li, err);
         const std::string E = P + "layers." + std::to_string(li) + ".block_sparse_moe.experts.";
         const char* parts[3] = {"w1", "w3", "w2"};   // gate, up, down
@@ -696,6 +780,11 @@ struct Model::Impl {
             if (s.n[r * 3 + 1] > 0) std::memcpy(dst + l.lay.suh[r], s.p[r * 3 + 1], s.n[r * 3 + 1]);   // (a GGUF's: none)
             if (s.n[r * 3 + 2] > 0) std::memcpy(dst + l.lay.svh[r], s.p[r * 3 + 2], s.n[r * 3 + 2]);
         }
+        if (l.lay.fmt == vq::kFmtVQ) {   // the codebooks ride every expert's blob (the kernels read them at vq_cb)
+            std::memcpy(dst + l.lay.vq_cb, s.p[9], s.n[9]);
+            if (s.n[10] > 0) std::memcpy(dst + l.lay.vq_cb2, s.p[10], s.n[10]);
+            else std::memset(dst + l.lay.vq_cb2, 0, 2048);   // (the 37 plain layers: the slot kept, unused)
+        }
     }
 
     // expert e's pieces dropped from the mapped files' pages once copied (MM3_LOAD_DROP_PAGES=0: kept - a restart then
@@ -707,7 +796,7 @@ struct Model::Impl {
         }();
         if (!on) return;
         const Src& s = l.src[(size_t) e];
-        for (int i = 0; i < 9; ++i)
+        for (int i = 0; i < 11; ++i)
             if (s.n[i] > 0) os::drop_mapped(s.p[i], s.n[i]);
     }
 
@@ -764,6 +853,10 @@ struct Model::Impl {
             if (a.blob != b.blob) return false;
             for (int r = 0; r < 3; ++r)
                 if (a.lay.gg_type[r] != b.lay.gg_type[r] || a.lay.k2[r] != b.lay.k2[r]) return false;
+            // the VQ lane's two blob classes (GVQ1 alone vs GVQ1+GVR8): a residual layout on a plain
+            // blob reads past it - the calibration never mixes them
+            if (a.lay.fmt == vq::kFmtVQ && (a.lay.vq_res[0] != b.lay.vq_res[0] || a.lay.vq_res[2] != b.lay.vq_res[2]))
+                return false;
             return true;
         };
         for (Dev& d : D) {
@@ -1061,7 +1154,8 @@ struct Model::Impl {
             info.push_back(what);
             abl_on.assign((size_t) std::max(1, o.seqs), o.ablate_default ? 1 : 0);
         }
-        gguf = pk.str("format") == "gguf";
+        gguf = pk.str("format") == "gguf" || pk.str("format") == "vq";
+        vq = pk.str("format") == "vq";
         if (gguf) {   // (the prompt GEMMs' backend; hipBLASLt's measured kernels kept beside the pack)
             const char* ls = ::mm3::env("MM3_LT_STORE");
             gg::set_lt_store(ls != nullptr ? ls : (o.pack + "/lt-picks.txt").c_str());
@@ -1074,8 +1168,9 @@ struct Model::Impl {
                                                             : std::string("missing")) + ", not [vocab][dim] in a type read here";
                 return false;
             }
-            info.push_back("weights: GGUF " + pk.str("quant_name", "?") + " (dense " + pk.str("gguf.dense", "?") +
-                           ", experts " + pk.str("gguf.experts", "?") + ")");
+            info.push_back(vq ? "weights: Baekpica VQ (GVQ1 13-bit + GVR8 residual experts, dense Q4_K/Q8_0/BF16)"
+                              : "weights: GGUF " + pk.str("quant_name", "?") + " (dense " + pk.str("gguf.dense", "?") +
+                                    ", experts " + pk.str("gguf.experts", "?") + ")");
             if (o.dspark && !pk.has("dspark.num_hidden_layers")) {
                 // (the DSpark draft is the EXL3 repo's dspark/: tools/mm3/pack_gguf.py indexes it from --companions)
                 info.push_back("NOTE: DSpark drafting: this GGUF pack has no draft (tools/mm3/pack_gguf.py --companions) "
@@ -1139,6 +1234,7 @@ struct Model::Impl {
             double acc = 0, wacc = 0;
             size_t di = 0;
             L.assign((size_t) g.n_layers, {});
+            for (int i = 0; i < g.n_layers; ++i) L[(size_t) i].idx = i;
             const auto& sp = o.layer_split;
             if (!sp.empty() && (sp.size() + 1 != D.size() || !std::is_sorted(sp.begin(), sp.end()) || sp.front() < 1 ||
                                 sp.back() >= g.n_layers || std::adjacent_find(sp.begin(), sp.end()) != sp.end())) {
@@ -1623,6 +1719,9 @@ struct Model::Impl {
             std::stable_sort(cand.begin(), cand.end(), [](const Cand& a, const Cand& b) { return a.n > b.n; });
             const double avail = (double) os::ram_avail();   // (the page cache counts: the mapped files can be read again)
             double budget = avail > 0 ? avail - ram_headroom() : (double) total;
+            if (::mm3::env("MM3_POOL_FORCE")) {   // (a box that holds the whole expert set: the heat-profile trim's
+                budget = (double) total;          // trimmed tiers predate the VQ lane - pin everything, the alloc
+            }                                    // retry ladder below is the safety, not the trim)
             size_t want = 0, nw = 0;
             for (; nw < cand.size(); ++nw) {
                 const size_t b = L[(size_t) cand[nw].li].blob;
@@ -2412,6 +2511,9 @@ struct Model::Impl {
             a.plan_ptr = d.plan_d;
             a.plan_w = (const float*) (d.plan_d + 8);
             a.lay = l.lay;
+            if (vq && l.idx >= 0)
+                std::fprintf(stderr, "vq moe@%d blob %zu res %zu lay-t {%zu,%zu,%zu}\n", l.idx, l.blob,
+                             (size_t) l.lay.vq_res[0], l.lay.trellis[0], l.lay.trellis[1], l.lay.trellis[2]);
             a.k = g.k_exp;
             a.n_embd = g.dim;
             a.n_ff = g.ff;
@@ -2587,6 +2689,7 @@ struct Model::Impl {
             sa.wbase = p.wbase;
             sa.stride = p.stride;
             sa.lay = l.lay;
+            if (vq) std::fprintf(stderr, "vq set@%d blob %zu res %zu\\n", l.idx >= 0 ? l.idx : -1, l.blob, (size_t) l.lay.vq_res[0]);
             sa.n_exp = (int) p.slot_expert.size();
             sa.bounds = d.bounds;
             sa.row0 = p.row0;

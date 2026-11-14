@@ -256,6 +256,7 @@ def build(release: pathlib.Path, out: pathlib.Path) -> dict:
             v = geo[k]
             f.write("%s %s\n" % (k, ",".join(str(x) for x in v) if isinstance(v, list) else v))
         f.write("model_dir %s\n" % release)
+        f.write("format vq\n")   # the engine's loader switch: the VQ expert path + the standard-type dense path
     with (out / "tensors.txt").open("w", newline="\n") as f:
         for i, name in enumerate(files):
             f.write("file %d %s\n" % (i, name))

@@ -10,6 +10,8 @@
 // device geometry comes from the data, not a second copy of it.
 #include "mm3_vq.cuh"
 
+#include "mm3_env.hpp"   # (the debug gates read MM3_VQ_DEBUG)
+
 #include "mm3_gguf.cuh"   # act_quant forwards to the GGUF lane's shared rounding
 
 #include <cublas_v2.h>
@@ -148,7 +150,7 @@ __global__ void mv_kernel(const x3::MvJob* jobs, int n, int ncol) {
     if (job >= n) return;
     const Mat m = *jobs[job].m;   // one read per block
     const GvH h = gv_header(m.raw);
-    const int cols = (int) h.cols;
+    const int cols = (int) h.vecs();   // the wire's cols is k (values); the index streams are per VECTOR
     const int warp = threadIdx.x >> 5, lane = threadIdx.x & 31;
     const int row = blockIdx.y * 4 + warp;
     if (row >= (int) h.rows) return;
@@ -197,7 +199,7 @@ bool mv(const x3::MvJob* jobs, int n, cudaStream_t s) {
             return false;
         }
         GvH h;
-        if (!host_header(m.raw, h, s) || h.cols * 8 != (uint32_t) m.k || h.rows != (uint32_t) m.n) {
+        if (!host_header(m.raw, h, s) || h.cols != (uint32_t) m.k || h.rows != (uint32_t) m.n) {
             fail("mv: header/geometry mismatch");
             return false;
         }
@@ -258,8 +260,9 @@ void f16_rows(const Mat& m, int row0, int rows, uint16_t* dst, int ldx, cudaStre
         fail("f16_rows: header");
         return;
     }
+    const uint32_t vecs = h.vecs();
     f16_rows_kernel<<<rows, kF16Block, 0, s>>>(m.raw, m.vq_res, (const uint8_t*) m.vq_cb,
-                                               (const uint8_t*) m.vq_cb2, row0, rows, (int) h.cols, dst, ldx);
+                                               (const uint8_t*) m.vq_cb2, row0, rows, (int) vecs, dst, ldx);
     check("f16_rows");
 }
 
@@ -269,7 +272,7 @@ void gemm_rows(const Mat& m, const uint16_t* x16, int ldx, int rows, float* y, i
     Scratch* sc = scratch(s);
     GvH h;
     if (sc == nullptr || m.fmt != kFmtVQ || m.raw == nullptr || m.vq_cb == nullptr ||
-        !host_header(m.raw, h, s) || h.cols * 8 != (uint32_t) m.k) {
+        !host_header(m.raw, h, s) || h.cols != (uint32_t) m.k) {
         fail("gemm_rows: not a VQ matrix the kernels take");
         return;
     }
@@ -328,14 +331,22 @@ __global__ void moe_gu_kernel(const unsigned long long* plan_ptr, const float* x
     if (i >= k || plan_ptr[i] == 0) return;
     const Blob o = blob_of(lay, (const void*) plan_ptr[i]);
     const GvH hg = gv_header(o.w1);
+    const int cols = (int) hg.vecs();   // the wire's cols is k; the streams are per vector
     const Views vg = views(o.w1, o.r1), vu = views(o.w3, o.r3);
+#ifdef MM3_VQ_KERNEL_DEBUG
+    if (o.r1 != nullptr && threadIdx.x == 0)   // (a residual layout in play: the class the fault rides)
+        printf("[gu] blk(%d,%d,%d) i %d row %d cols %d w1 %p w3 %p w2 %p r1 %p cb %p hg{%u,%u} vu.gain %p vu.low %p\n",
+               (int) blockIdx.x, (int) blockIdx.y, (int) blockIdx.z, i,
+               (int) (blockIdx.y * 4 + (threadIdx.x >> 5)), cols, (void*) o.w1, (void*) o.w3, (void*) o.w2,
+               (void*) o.r1, (void*) o.cb, hg.rows, hg.cols, (void*) vu.gain, (void*) vu.low12);
+#endif
     const int row = blockIdx.y * 4 + (threadIdx.x >> 5);
     const int lane = threadIdx.x & 31;
     if (row >= n_ff) return;
     const float gg = __half2float(__ushort_as_half(vg.gain[row]));
     const float gu = __half2float(__ushort_as_half(vu.gain[row]));
     float ag = 0.0f, au = 0.0f;
-    for (int vv = lane; vv < (int) hg.cols; vv += 32) {
+    for (int vv = lane; vv < cols; vv += 32) {
         const uint64_t j = (uint64_t) row * hg.cols + vv;
         float wg[8], wu[8];
         w_vec(vg.low12, vg.high1, vg.idx8, o.cb, o.cb2, j, wg);
@@ -362,6 +373,7 @@ __global__ void moe_down_kernel(const unsigned long long* plan_ptr, const float*
     if (i >= k || plan_ptr[i] == 0) return;
     const Blob o = blob_of(lay, (const void*) plan_ptr[i]);
     const GvH hd = gv_header(o.w2);
+    const int cols = (int) hd.vecs();
     const Views vd = views(o.w2, o.r2);
     const int row = blockIdx.y * 4 + (threadIdx.x >> 5);
     const int lane = threadIdx.x & 31;
@@ -369,7 +381,7 @@ __global__ void moe_down_kernel(const unsigned long long* plan_ptr, const float*
     const float g = __half2float(__ushort_as_half(vd.gain[row]));
     const float* hi = h + (size_t) i * n_ff;
     float acc = 0.0f;
-    for (int vv = lane; vv < (int) hd.cols; vv += 32) {
+    for (int vv = lane; vv < cols; vv += 32) {
         const uint64_t j = (uint64_t) row * hd.cols + vv;
         float w[8];
         w_vec(vd.low12, vd.high1, vd.idx8, o.cb, o.cb2, j, w);
@@ -404,6 +416,33 @@ void moe_gate_up(const MoeArgs& a, const float* x, float* h, cudaStream_t s) {
         return;
     }
     float* hh = h != nullptr ? h : sc->h;
+    static int dbg_n = ::mm3::env("MM3_VQ_DEBUG") ? 3 : 0;   // (the first three calls' plans + layouts)
+    if (dbg_n >= 0) {
+        // the served blob's OWN headers, staged out: the assembled pool's truth (magic/rows/cols/offsets)
+        unsigned long long pb = 0;
+        cudaMemcpy(&pb, a.plan_ptr, 8, cudaMemcpyDeviceToHost);
+        if (pb != 0) {
+            uint8_t h1[64], h3[64], h2[64];
+            cudaMemcpy(h1, (const void*) (pb + a.lay.trellis[0]), 64, cudaMemcpyDeviceToHost);
+            cudaMemcpy(h3, (const void*) (pb + a.lay.trellis[1]), 64, cudaMemcpyDeviceToHost);
+            cudaMemcpy(h2, (const void*) (pb + a.lay.trellis[2]), 64, cudaMemcpyDeviceToHost);
+            auto fld = [](const uint8_t* h, int o) { uint64_t v = 0; memcpy(&v, h + o, 8); return v; };
+            std::fprintf(stderr, "vq blob %llu: w1 %c%c%c%c r%u c%u hi %llu | w3 %c%c%c%c r%u c%u hi %llu |"
+                                 " w2 %c%c%c%c r%u c%u hi %llu\n",
+                         pb, h1[0], h1[1], h1[2], h1[3], *(unsigned*)(h1+8), *(unsigned*)(h1+12), fld(h1,48),
+                         h3[0], h3[1], h3[2], h3[3], *(unsigned*)(h3+8), *(unsigned*)(h3+12), fld(h3,48),
+                         h2[0], h2[1], h2[2], h2[3], *(unsigned*)(h2+8), *(unsigned*)(h2+12), fld(h2,48));
+        }
+    }
+    if (dbg_n-- > 0) {
+        unsigned long long pl[8];
+        cudaMemcpy(pl, a.plan_ptr, sizeof(pl), cudaMemcpyDeviceToHost);
+        for (int i = 0; i < a.k; ++i)
+            std::fprintf(stderr, "vq moe_gu//%d i%d blob %llu (mod %zu) t {%zu,%zu,%zu} res {%zu,%zu,%zu}\n",
+                         3 - dbg_n - 1, i, pl[i], (size_t) 18673152, a.lay.trellis[0], a.lay.trellis[1],
+                         a.lay.trellis[2], (size_t) a.lay.vq_res[0], (size_t) a.lay.vq_res[1],
+                         (size_t) a.lay.vq_res[2]);
+    }
     dim3 grid(1, (a.n_ff + 3) / 4, a.k);
     moe_gu_kernel<<<grid, kMvThreads, 0, s>>>(a.plan_ptr, x, hh, a.k, a.n_embd, a.n_ff, x3::kSwigluAlpha,
                                               a.limit, a.lay);
@@ -432,18 +471,33 @@ bool win_experts(const WinArgs& a, cudaStream_t s) {
     }
     Scratch* sc = scratch(s);
     if (sc == nullptr || a.lay.fmt != kFmtVQ) return false;
+    static bool dbg = ::mm3::env("MM3_VQ_DEBUG") != nullptr;
+    if (dbg) {
+        unsigned long long pl[8];
+        cudaMemcpy(pl, a.plan_ptr, sizeof(pl), cudaMemcpyDeviceToHost);
+        std::fprintf(stderr, "vq win: T %d k %d plan {%llu,%llu,%llu,%llu,%llu,%llu,%llu,%llu}"
+                             " t {%zu,%zu,%zu} res {%zu,%zu,%zu} cb %zu/%zu grp %d\n",
+                     a.T, a.k, pl[0], pl[1], pl[2], pl[3], pl[4], pl[5], pl[6], pl[7],
+                     a.lay.trellis[0], a.lay.trellis[1], a.lay.trellis[2],
+                     (size_t) a.lay.vq_res[0], (size_t) a.lay.vq_res[1], (size_t) a.lay.vq_res[2],
+                     (size_t) a.lay.vq_cb, (size_t) a.lay.vq_cb2, (int) (a.n_groups != nullptr));
+        dbg = false;
+    }
     // Phase A: each (token, expert) pair computes from its own plan slot - the grouping's re-read savings land
     // with the optimized kernel; every token's output is the per-token path's, bit for bit.
     for (int t = 0; t < a.T; ++t) {
+        // WinArgs' plan is [T][8] (x3::kMaxMvCols' fixed width, whatever k is) - the stride is 8, not k
+        const unsigned long long* plan_t = a.plan_ptr + (size_t) t * 8;
+        const float* w_t = a.plan_w + (size_t) t * 8;
         dim3 gu(1, (a.n_ff + 3) / 4, a.k);
-        moe_gu_kernel<<<gu, kMvThreads, 0, s>>>(a.plan_ptr + (size_t) t * a.k, a.x + (size_t) t * (a.x_stride / 4),
+        moe_gu_kernel<<<gu, kMvThreads, 0, s>>>(plan_t, a.x + (size_t) t * (a.x_stride / 4),
                                                 a.h + (size_t) t * a.k * a.n_ff, a.k, a.n_embd, a.n_ff,
                                                 x3::kSwigluAlpha, a.limit, a.lay);
         dim3 dn(1, (a.n_embd + 3) / 4, a.k);
-        moe_down_kernel<<<dn, kMvThreads, 0, s>>>(a.plan_ptr + (size_t) t * a.k, a.h + (size_t) t * a.k * a.n_ff,
+        moe_down_kernel<<<dn, kMvThreads, 0, s>>>(plan_t, a.h + (size_t) t * a.k * a.n_ff,
                                                   sc->part, a.k, a.n_embd, a.n_ff, a.lay);
         combine_kernel<<<(a.n_embd + kF16Block - 1) / kF16Block, kF16Block, 0, s>>>(
-            a.plan_ptr + (size_t) t * a.k, a.plan_w + (size_t) t * a.k, sc->part,
+            plan_t, w_t, sc->part,
             a.cpu_part != nullptr ? a.cpu_part + (size_t) t * (a.cpu_stride / 4) : nullptr,
             a.cpu_flag != nullptr ? a.cpu_flag + t : nullptr,
             a.sh_out != nullptr ? a.sh_out + (size_t) t * a.n_embd : nullptr,

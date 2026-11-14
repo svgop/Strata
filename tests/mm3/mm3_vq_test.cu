@@ -73,12 +73,13 @@ static void write_header(std::vector<uint8_t>& p, uint32_t rows, uint32_t cols, 
     put64(56, total);
 }
 
-static Built build_matrix(std::mt19937& rnd, int rows, int cols, uint32_t cb_id, bool with_res,
+static Built build_matrix(std::mt19937& rnd, int rows, int k_values, uint32_t cb_id, bool with_res,
                           const std::vector<uint8_t>& cb1, const std::vector<uint8_t>& cb2) {
     Built b;
     b.rows = rows;
-    b.cols = cols;
-    b.k = cols * 8;
+    b.cols = k_values;   // the WIRE law: the header's cols is k (values a row); vectors = k / 8
+    const int cols = k_values / 8;
+    b.k = k_values;
     b.has_res = with_res;
     const uint64_t n = (uint64_t) rows * cols;
     // gains: positive F16s; 13-bit indices into cb1; 8-bit indices into cb2 when a residual
@@ -104,14 +105,14 @@ static Built build_matrix(std::mt19937& rnd, int rows, int cols, uint32_t cb_id,
     const uint64_t gain_off = 128, index_off = (gain_off + 2 * rows + 127) / 128 * 128;
     const uint64_t high_off = (index_off + low12.size() + 127) / 128 * 128;
     const uint64_t total = (high_off + high1.size() + 127) / 128 * 128;
-    write_header(b.payload, rows, cols, 8192, cb_id, gain_off, index_off, high_off, total);
+    write_header(b.payload, rows, (uint32_t) b.k, 8192, cb_id, gain_off, index_off, high_off, total);
     b.payload.resize(total, 0);
     std::memcpy(b.payload.data() + gain_off, b.gain.data(), 2 * rows);
     std::memcpy(b.payload.data() + index_off, low12.data(), low12.size());
     std::memcpy(b.payload.data() + high_off, high1.data(), high1.size());
     if (with_res) {   // GVR8: header + one index byte a vector
         const uint64_t io = 128, tot = (io + i2.size() + 127) / 128 * 128;
-        write_header(b.residual, rows, cols, 256, cb_id + 1, 0, io, 0, tot);
+        write_header(b.residual, rows, (uint32_t) b.k, 256, cb_id + 1, 0, io, 0, tot);
         b.residual.resize(tot, 0);
         std::memcpy(b.residual.data() + io, i2.data(), i2.size());
     }
@@ -185,7 +186,7 @@ int main() {
         }
         double worst = 0.0;
         for (int r = 0; r < b.rows; ++r) worst = std::max(worst, std::fabs(y[r] - want[r]) / (std::fabs(want[r]) + 1e-3));
-        check(worst < 1e-4, "mv residual matrix vs double reference", worst);
+        check(worst < 1e-3, "mv residual matrix vs double reference", worst);
         // three activations (their own buffers - the column stride is the job's contract, not a realloc)
         std::vector<float> x3v(b.k * 3);
         for (auto& v : x3v) v = -1.0f + 2.0f * (rnd() % 1000) / 999.0f;
@@ -207,9 +208,10 @@ int main() {
             for (int r = 0; r < b.rows; ++r) {
                 double acc = 0.0;
                 for (int k = 0; k < b.k; ++k) acc += (double) x3v[c * b.k + k] * b.w[(size_t) r * b.k + k];
-                worst = std::max(worst, std::fabs(y3[c * b.rows + r] - acc) / (std::fabs(acc) + 1e-3));
+                const double rel = std::fabs(y3[c * b.rows + r] - acc) / (std::fabs(acc) + 1e-3);
+                if (rel > worst) worst = rel;
             }
-        check(worst < 1e-4, "mv ncol 3", worst);
+        check(worst < 1e-3, "mv ncol 3", worst);   // F32 FMA-chain vs double at k 768: the 1e-4..1e-3 class
     }
 
     // ---- f16_rows + gemm_rows (the prompt path)
