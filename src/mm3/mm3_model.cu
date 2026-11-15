@@ -1300,7 +1300,9 @@ struct Model::Impl {
                 !A(d.xn16, (size_t) T * g.dim) || !A(d.att16, (size_t) T * g.n_head * g.hd) ||
                 !A(d.h16, (size_t) std::max((size_t) rows * g.ff, (size_t) T * ffmax)) || !A(d.pos, (size_t) T) ||
                 !A(d.kept, (size_t) g.ix_heads * T * g.topk) || !A(d.top, (size_t) T * g.k_exp) ||
-                !A(d.rowidx, (size_t) rows) || !A(d.invrow, (size_t) rows) || !A(d.bounds, (size_t) g.n_exp + 1) ||
+                !A(d.rowidx, (size_t) rows) || !A(d.invrow, (size_t) rows) ||
+                !A(d.bounds, (size_t) std::max(g.n_exp, o.staging) + 1) ||   // (a pass carries one bound a slot + 1:
+                                                                               // staging can exceed n_exp)
                 !A(inv_dev[di], inv_freq.size()))
                 return false;
             CK(cudaMemcpy(inv_dev[di], inv_freq.data(), inv_freq.size() * 4, cudaMemcpyHostToDevice));
@@ -1588,11 +1590,14 @@ struct Model::Impl {
                 }
                 if (!err.empty()) return false;
             }
-            // (the dense workspace (the prompt GEMM bands + activations, fixed at 8192 positions for M3.1:
-            // ~10.1 GB on this geometry) lives INSIDE this budget's remainder - without reserving it here the
-            // placement fills VRAM to the brim and the dense allocation fails after the load (0.117 free))
+            // (everything this lane allocates later is small: the chunk scratch, the FP16 GEMM bands and the
+            // head already sit in fr - they are allocated before this fill - so the resident budget is fr
+            // less the reserve and a 1 GB guard for the load's tail (cuBLAS workspace growth, allocator
+            // slack).  The old flat 10.15 GB subtraction was another geometry's 8192-position dense
+            // workspace this lane never allocates: it withheld ~9.6 GB from residency (604 residents
+            // instead of ~1250 on this card) and every withheld GB is decode PCIe traffic.)
             size_t budget = fr > reserve ? fr - reserve : 0;
-            budget = budget > 10150000000ull ? budget - 10150000000ull : 0ull;
+            budget = budget > (1u << 30) ? budget - (1u << 30) : 0ull;
             std::vector<int> nres(moe_layers.size(), 0);
             const int cap = o.resident_cap < 0 ? g.n_exp : std::min(o.resident_cap, g.n_exp);
             std::vector<std::vector<int>> chosen(moe_layers.size());

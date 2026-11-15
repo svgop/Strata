@@ -3,6 +3,8 @@
 // src/mm3/mm3_dspark.cu - maya-mm3's DSpark draft (mm3_dspark.hpp).
 #include "mm3_dspark.hpp"
 
+#include "mm3_gguf_host.hpp"
+
 #include <functional>
 
 #include <algorithm>
@@ -137,13 +139,29 @@ struct Draft::Impl {
     }
 
     bool bf16(const Pack& pk, const std::string& name, uint16_t*& out, size_t want, std::string& err) {
+        // (the VQ release's drafter part ships fc as Q8_0: dequantized to BF16 here, once at the load - the
+        //  same host dequant the trunk's upload_f32 runs for its Q8_0 tensors)
         const Tensor* t = pk.get(name);
-        if (!t || t->dtype != "BF16" || t->bytes != want * 2) {
-            err = "dspark: " + name + ": not the BF16 tensor of " + std::to_string(want) + " values";
+        const bool q8 = t && t->dtype == "Q8_0";
+        if (!t || (!q8 && (t->dtype != "BF16" || t->bytes != want * 2)) || (q8 && t->bytes != want / 32 * 34)) {
+            err = "dspark: " + name + ": not the BF16/Q8_0 tensor of " + std::to_string(want) + " values";
             return false;
         }
         if (!alloc(out, want, err)) return false;
-        DK(cudaMemcpy(out, pk.data(*t), t->bytes, cudaMemcpyHostToDevice));
+        if (!q8) {
+            DK(cudaMemcpy(out, pk.data(*t), t->bytes, cudaMemcpyHostToDevice));
+            return true;
+        }
+        std::vector<uint16_t> h(want);
+        const uint8_t* d = pk.data(*t);
+        for (size_t i = 0; i < want; ++i) {
+            const uint8_t* b = d + i / 32 * 34;
+            const float v = mm3::gg::host_f16((uint16_t) (b[0] | b[1] << 8)) * (float) (int8_t) b[2 + i % 32];
+            uint32_t u;
+            std::memcpy(&u, &v, 4);
+            h[i] = (uint16_t) ((u + 0x7fff + ((u >> 16) & 1)) >> 16);   // (f32 -> bf16, round to nearest even)
+        }
+        DK(cudaMemcpy(out, h.data(), want * 2, cudaMemcpyHostToDevice));
         return true;
     }
 
@@ -167,10 +185,75 @@ struct Draft::Impl {
         return true;
     }
 
+    // (f32 -> E4M3, round to nearest even, saturating at the format's 448: the VQ release's drafter
+    //  requant's encoder side; the decode side is mm3_vq.cuh's e4m3)
+    static uint8_t f32_e4m3(float v) {
+        const uint32_t sign = v < 0 ? 0x80u : 0u;
+        float a = std::fabs(v);
+        if (a >= 464.0f) return (uint8_t) (sign | 0x7e);            // (the max 448, saturated)
+        if (a < 1.953125e-3f) {                                      // (2^-9: the min subnormal step)
+            const int s = (int) std::lround(a * 512.0f);
+            return (uint8_t) (sign | (uint8_t) std::min(s, 1));
+        }
+        int e = 7;
+        while (a < 1.0f) {
+            a *= 2.0f;
+            --e;
+        }
+        while (a >= 2.0f) {
+            a *= 0.5f;
+            ++e;
+        }
+        int m = (int) std::lround((a - 1.0f) * 8.0f);
+        if (m == 8) {
+            m = 0;
+            ++e;
+        }
+        if (e > 14) return (uint8_t) (sign | 0x7e);                  // (saturated)
+        return (uint8_t) (sign | ((uint8_t) e << 3) | (uint8_t) m);
+    }
+
     // an MXFP8 matrix [N][K] on the device as it is stored (mx_rows reads it)
     bool mx(const Pack& pk, const std::string& pre, int N, int K, MX& m, std::string& err) {
         const Tensor* w = pk.get(pre + ".weight");
         const Tensor* sc = pk.get(pre + ".weight_scale_inv");
+        const bool q8 = w && w->dtype == "Q8_0" && w->bytes == (uint64_t) N * K / 32 * 34;
+        if (q8) {
+            // (the VQ release's drafter ships Q8_0 where the maya pack carries MXFP8: requantized here,
+            //  once at the load - groups of 32, a power-of-two scale a group (UE8M0 = 2^(e-127)), E4M3
+            //  codes; the draft proposes and the target verifies, so the requant's ~2^-4 tail costs
+            //  acceptance, never correctness)
+            const size_t ks = (size_t) K / 32;
+            std::vector<uint8_t> hw((size_t) N * K), hs((size_t) N * ks);
+            const uint8_t* d = pk.data(*w);
+            for (int n = 0; n < N; ++n) {
+                for (int g = 0; g < K / 32; ++g) {
+                    float vals[32], amax = 0.0f;
+                    for (int j = 0; j < 32; ++j) {
+                        const size_t i = (size_t) n * K + (size_t) g * 32 + j;
+                        const uint8_t* b = d + i / 32 * 34;
+                        vals[j] = mm3::gg::host_f16((uint16_t) (b[0] | b[1] << 8)) * (float) (int8_t) b[2 + i % 32];
+                        amax = std::max(amax, std::fabs(vals[j]));
+                    }
+                    int eb = 127;
+                    if (amax > 0.0f)
+                        eb = std::min(254, std::max(1, 127 + (int) std::ceil(std::log2(amax))));
+                    const float scale = std::ldexp(1.0f, eb - 127);
+                    hs[(size_t) n * ks + g] = (uint8_t) eb;
+                    for (int j = 0; j < 32; ++j)
+                        hw[(size_t) n * K + (size_t) g * 32 + j] = f32_e4m3(vals[j] / scale);
+                }
+            }
+            uint8_t *dw = nullptr, *ds = nullptr;
+            if (!alloc(dw, (size_t) N * K, err) || !alloc(ds, (size_t) N * ks, err)) return false;
+            DK(cudaMemcpy(dw, hw.data(), hw.size(), cudaMemcpyHostToDevice));
+            DK(cudaMemcpy(ds, hs.data(), hs.size(), cudaMemcpyHostToDevice));
+            m.w = dw;
+            m.s = ds;
+            m.N = N;
+            m.K = K;
+            return true;
+        }
         if (!w || !sc || w->dtype != "F8_E4M3" || w->bytes != (uint64_t) N * K || sc->bytes != (uint64_t) N * (K / 32) ||
             N % 32 || K % 512) {
             err = "dspark: " + pre + ": not the MXFP8 matrix [" + std::to_string(N) + "][" + std::to_string(K) + "]";

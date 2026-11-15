@@ -44,6 +44,7 @@ import mmap
 import os
 import pathlib
 import struct
+import struct
 import sys
 
 HERE = pathlib.Path(__file__).resolve().parent
@@ -431,6 +432,96 @@ def validate(built: dict, out: pathlib.Path) -> list:
     return checks
 
 
+def companions(release: pathlib.Path, out: pathlib.Path) -> str:
+    """The DSpark drafter's pack wiring.  The draft's tensors are already indexed by build() (the release
+    manifest carries the drafter part; its tensor names are the loader's own `dspark.` namespace) - what
+    the pack lacks is the geometry keys in mm3.txt (the loader refuses --dspark without
+    dspark.num_hidden_layers).  This step reads the drafter part's own dspark_config metadata and writes
+    those keys.  Idempotent.  Returns a report line."""
+    mm3 = out / "mm3.txt"
+    have = mm3.read_text(encoding="utf-8")
+    if "dspark.num_hidden_layers" in have:
+        return "companions: the pack already carries the draft geometry"
+    drafter = None
+    for p in sorted(release.glob("*.gguf")):
+        if not p.is_file():
+            continue
+        try:
+            with p.open("rb") as f:
+                magic, ver, nt, nkv = struct.unpack("<4sIQQ", f.read(24))
+                if magic != b"GGUF":
+                    continue
+                def rds():
+                    n = struct.unpack("<Q", f.read(8))[0]
+                    return f.read(n).decode("utf-8", "replace")
+                role = None
+                for _ in range(nkv):
+                    k = rds()
+                    t = struct.unpack("<I", f.read(4))[0]
+                    if t == 8:
+                        v = rds()
+                        if k == "minimax_m3_vq.part_role":
+                            role = v
+                    elif t == 9:
+                        et = struct.unpack("<I", f.read(4))[0]
+                        n = struct.unpack("<Q", f.read(8))[0]
+                        sz = {0: 1, 1: 1, 2: 2, 3: 2, 4: 4, 5: 4, 6: 4, 7: 1, 10: 8, 11: 8, 12: 8}.get(et)
+                        if sz is None:
+                            for _ in range(n):
+                                rds()
+                        else:
+                            f.seek(n * sz, 1)
+                    else:
+                        f.seek({0: 1, 1: 1, 2: 2, 3: 2, 4: 4, 5: 4, 6: 4, 7: 1, 10: 8, 11: 8, 12: 8}.get(t, 4), 1)
+                if role == "drafter":
+                    drafter = p
+                    break
+        except (OSError, struct.error):
+            continue
+    if drafter is None:
+        return "companions: no drafter part in the release (DSpark stays off)"
+    with drafter.open("rb") as f:
+        magic, ver, nt, nkv = struct.unpack("<4sIQQ", f.read(24))
+        def rds():
+            n = struct.unpack("<Q", f.read(8))[0]
+            return f.read(n).decode("utf-8", "replace")
+        SZ = {0: 1, 1: 1, 2: 2, 3: 2, 4: 4, 5: 4, 6: 4, 7: 1, 10: 8, 11: 8, 12: 8}
+        geo = {}
+        for _ in range(nkv):
+            k = rds()
+            t = struct.unpack("<I", f.read(4))[0]
+            if t == 8:
+                v = rds()
+                if k.endswith("dspark_config"):
+                    c = json.loads(v)
+                    geo = {"dspark.num_hidden_layers": c["num_hidden_layers"],
+                           "dspark.dspark_ffn_hidden_size": c["dspark_ffn_hidden_size"],
+                           "dspark.dspark_markov_rank": c["dspark_markov_rank"],
+                           "dspark.dspark_block_size": c["dspark_block_size"],
+                           "dspark.dspark_noise_token_id": c["dspark_noise_token_id"],
+                           "dspark.dspark_target_layer_ids": ",".join(str(x) for x in c["dspark_target_layer_ids"]),
+                           "dspark.dflash.sliding_window": c.get("dflash_config", {}).get("sliding_window", 4096)}
+            elif t == 9:
+                et = struct.unpack("<I", f.read(4))[0]
+                n = struct.unpack("<Q", f.read(8))[0]
+                sz = SZ.get(et)
+                if sz is None:
+                    for _ in range(n):
+                        rds()
+                else:
+                    f.seek(n * sz, 1)
+            else:
+                f.seek(SZ.get(t, 4), 1)
+    if not geo:
+        return "companions: %s carries no dspark config" % drafter.name
+    with mm3.open("a", encoding="utf-8") as f:
+        for k, v in geo.items():
+            f.write("%s %s\n" % (k, v))
+    return ("companions: the draft's geometry written from %s (%d layers, taps %s; its tensors were "
+            "already indexed by the build)" % (drafter.name, geo["dspark.num_hidden_layers"],
+                                               geo["dspark.dspark_target_layer_ids"]))
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--release", required=True, help="the VQ release's directory (release.json + tensor-manifest.json)")
@@ -443,6 +534,7 @@ def main() -> int:
     if out.resolve() == release:
         fail("--out inside the release would write into it; the pack references the release in place")
     built = build(release, out)
+    print(companions(release, out))
     print("%s -> %s: %d tensors in %d files (%s)" %
           (release.name, out, built["rows"], built["files"],
            ", ".join("%s %.2f GB" % (k, v / 1e9) for k, v in sorted(built["by_dtype"].items()))))
