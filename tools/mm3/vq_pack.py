@@ -74,7 +74,7 @@ GEO_KEYS = ("hidden_size", "num_hidden_layers", "num_attention_heads", "num_key_
             "sparse_attention_config.sparse_index_dim", "sparse_attention_config.sparse_block_size",
             "sparse_attention_config.sparse_topk_blocks", "sparse_attention_config.sparse_local_block",
             "sparse_attention_config.sparse_init_block", "bos_token_id", "eos_token_id")
-DEFAULT_OUT = REPO / "data" / "packs" / "minimax-m3.1-flash-vq"
+DEFAULT_OUT = pathlib.Path("/home/svg/LLM/data/packs/minimax-m3.1-flash-vq")   # the estate (storage canon: packs live in data/, not the repo)
 
 
 def fail(why: str):

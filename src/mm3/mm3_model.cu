@@ -367,7 +367,14 @@ struct Model::Impl {
     unsigned long long pool_lo = 0, pool_hi = 0;   // (the pinned pool's UVA span: the diagnostics' legal set)
     // the RMSNorm weights' Gemma offset: the checkpoint stores w (the engine multiplies by 1 + w); llama.cpp's
     // converter writes w + 1 into a GGUF already - added once either way
-    float norm_add() const { return gguf ? 0.0f : 1.0f; }
+    // Norm-weight convention per pack family: Maya's own GGUF packs BAKE 1+w at conversion (their
+    // pack tool stores the Gemma norm pre-added; the kernel multiplies plainly).  The Baekpica VQ
+    // release PRESERVES the source bytes - raw w (FORMAT.md: "the BF16 source bytes of input_layernorm")
+    // - so it needs the +1 applied here.  The convention, not the container, decides: the wrong one
+    // computes x*r*w instead of x*r*(1+w) in all 60 layers - a collapsed residual scale, and exactly
+    // the in-distribution word-salad the first serving showed.  (Found 2026-11-15, after the lane
+    // served but looped on word-suffix tokens; the M3.1 config's use_gemma_norm=true names the law.)
+    float norm_add() const { return vq ? 1.0f : (gguf ? 0.0f : 1.0f); }
     std::vector<Layer> L;
     std::vector<Dev> D;
     std::vector<void*> owned;   // (cudaFree at exit, by device)
@@ -1775,6 +1782,17 @@ struct Model::Impl {
                 for (auto& t : th) t.join();
                 pool_lo = (unsigned long long) pool;
                 pool_hi = (unsigned long long) (pool + want);
+                // (the assembly sweep: every pooled blob of an R13+8 layer must open GVR1 at its residual
+                // offset - zeros = the tail never landed, and every serve of it would read garbage indices)
+                for (const Layer& lr2 : L)
+                    if (lr2.moe && lr2.lay.fmt == vq::kFmtVQ && lr2.lay.vq_res[0] != 0)
+                        for (int e = 0; e < g.n_exp; ++e)
+                            if (lr2.host_blob[(size_t) e] != nullptr &&
+                                std::memcmp(lr2.host_blob[(size_t) e] + lr2.lay.vq_res[0], "GVR1", 4) != 0) {
+                                err = "pool: L" + std::to_string(lr2.idx >= 0 ? lr2.idx : -1) + " e" +
+                                      std::to_string(e) + ": the residual payload is not GVR1 (assembly gap)";
+                                return false;
+                            }
                 st.pinned_gb = (double) want / (1u << 30);
                 st.pooled = (long) todo.size();
                 if (nw < cand.size())

@@ -4224,7 +4224,14 @@ class Service:
         """A family whose text differs from the Qwen form this server was written for (DeepSeek-V4.1: its own end
         token, DSML tool calls, reasoning-effort words).  The others keep the defaults.  (F-371: ported in full.)"""
         self.family = family
-        if family == "deepseek41":
+        if family == "minimax-m3":
+            # MiniMax M3.1: the Qwen-form output parser holds (the pack's chat template ships the
+            # think/tool spellings the parser reads); the stop set is the family's own EOS (200020).
+            eos = (getattr(self.tok, "special_ids", None) or {}).get("eos", 200020)
+            self.stop_ids = {int(eos)}
+            self.parser_cls = OutputParser
+            self._force_text = None
+        elif family == "deepseek41":
             from serve import dsml
             eos = (getattr(self.tok, "special_ids", None) or {}).get("eos", 1)
             self.stop_ids = {int(eos)}
@@ -8363,7 +8370,7 @@ SMALL_CAP_MIN = 48            # T60: from this max_tokens up to ANSWER_ROOM_MIN_
                               # half of it so the wrap-up and an answer fit (was DS41_SMALL_CAP_MIN, F-371;
                               # generalised to every family after the Qwen empty-answer measurement, F-376)
 FAMILY_MODEL_NAMES = {"qwen4exp": "qwen3.8-flash-next", "qwen35moe": "qwen3.6-35b-a3b",
-                      "deepseek41": "deepseek-v4.1-flash"}
+                      "deepseek41": "deepseek-v4.1-flash", "minimax-m3": "minimax-m3.1-flash"}
 
 
 # The sampling each model card recommends ("Best Practices"), used when neither the request, the Chat settings nor the
@@ -8378,6 +8385,8 @@ MODEL_CARD_SAMPLING = {
                   "instruct": {"temperature": 0.7, "top_p": 0.8, "top_k": 20, "presence_penalty": 1.5}},
     # DeepSeek-V4.1-Flash: temperature 1.0, top_p 1.0 for local use (thinking or not), no penalties
     "deepseek41": {"thinking": {"temperature": 1.0, "top_p": 1.0}, "instruct": {"temperature": 1.0, "top_p": 1.0}},
+    # MiniMax-M3.1-Flash: the M-lineage card's local set (temperature 1.0, top_p 0.95), no penalties
+    "minimax-m3": {"thinking": {"temperature": 1.0, "top_p": 0.95}, "instruct": {"temperature": 1.0, "top_p": 0.95}},
 }
 
 
@@ -8763,7 +8772,7 @@ def main(argv=None, *, lifecycle_event=None, interrupt_exit_code: int = 0) -> in
     svc.queue_timeout_s = float(queue_timeout) if queue_timeout is not None else None
     if a.engine == "strata":                            # the model card's sampling when nothing else is said (see MODEL_CARD_SAMPLING)
         svc.model_arch = cfg.get("arch") or "qwen4exp"
-        svc.set_family(svc.model_arch if svc.model_arch == "deepseek41" else None)
+        svc.set_family(svc.model_arch if svc.model_arch in ("deepseek41", "minimax-m3") else None)
         if svc.model_arch == "deepseek41" and svc.vision is None:
             # DeepSeek-V4.1 reads pictures with the engine's own tower (--vision on): no separate reader process.
             # A pack without a tower leaves vision None: pictures are refused with a clear 400.
