@@ -129,15 +129,17 @@ def _text_of(content) -> str:
 
 IMAGE_PARTS = ("image_url", "input_image", "image")
 
-# Thinking levels.  The model's template knows low, medium and xhigh (its default; "high" means xhigh), and
-# enable_thinking=false for none.  Clients spell these many ways; everything maps onto those four.
+# Thinking levels.  The shared chat template's four tiers are low, medium, high (its default) and max
+# (F-283's vocabulary), and enable_thinking=false for none.  Clients spell these many ways; everything
+# maps onto those four.  (The pre-F-283 table sent "xhigh" for high/max - the template's raise made every
+# UI level above medium a 400.)
 EFFORT = {"none": None, "off": None, "minimal": None, "disabled": None, "false": None,
-          "low": "low", "medium": "medium", "high": "xhigh", "xhigh": "xhigh", "max": "xhigh", "maximum": "xhigh"}
+          "low": "low", "medium": "medium", "high": "high", "xhigh": "max", "max": "max", "maximum": "max"}
 
 
-# DeepSeek-V4.1's template takes low, medium, high (its default) and max, or a whole number 1..100 (the
-# "Reasoning Effort: N" line of its prompt).  use_family("deepseek41") switches the table; the other families
-# keep the one above.  (F-371: ported from upstream v0.2.7.)
+# DeepSeek-V4.1 keeps the same four words (its own template, dsml's swap) plus a whole number 1..100 (the
+# "Reasoning Effort: N" line of its prompt).  use_family("deepseek41") switches the table; the other
+# families keep the one above.  (F-371: ported from upstream v0.2.7.)
 EFFORT_DEEPSEEK = {"none": None, "off": None, "minimal": None, "disabled": None, "false": None,
                    "low": "low", "medium": "medium", "high": "high", "xhigh": "max", "max": "max", "maximum": "max"}
 _EFFORT_QWEN = dict(EFFORT)
@@ -145,11 +147,18 @@ _NUMERIC_EFFORT = False
 
 
 def use_family(family: str | None) -> None:
-    """The reasoning-effort words of the model family this server runs (module state)."""
-    global _NUMERIC_EFFORT
+    """The reasoning-effort words and the think-tag spelling of the model family this server runs (module
+    state).  MiniMax M3.1 thinks in <mm:think>...</mm:think> (its own template's tokens; the family's
+    template ships with the pack and the OutputParser reads THINK_END, so the switch moves the spelling
+    with the effort words)."""
+    global _NUMERIC_EFFORT, THINK_END, THINK_OPEN
     EFFORT.clear()
     EFFORT.update(EFFORT_DEEPSEEK if family == "deepseek41" else _EFFORT_QWEN)
     _NUMERIC_EFFORT = family == "deepseek41"
+    if family == "minimax-m3":
+        THINK_END, THINK_OPEN = "</mm:think>", "<mm:think>"
+    else:
+        THINK_END, THINK_OPEN = "</think>", "<think>"
 
 
 def effort_kwargs(value) -> dict:
@@ -696,7 +705,8 @@ class Event:
     call: ToolCall | None = None
 
 
-THINK_END = "</think>"
+THINK_END = "</think>"     # the family switch (use_family) rebinds both: minimax-m3 thinks in <mm:think>
+THINK_OPEN = "<think>"
 CALL_START = "<tool_call>"
 CALL_END = "</tool_call>"
 

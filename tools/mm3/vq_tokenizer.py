@@ -47,6 +47,12 @@ def main() -> int:
                                     encoding="utf-8")
     (out / "merges.txt").write_text("\n".join(merges), encoding="utf-8")
     (out / "token_type.json").write_text(json.dumps(types), encoding="utf-8")
+    # the family's own chat template rides the stub (serve/server.py resolves tpath / "chat_template.jinja"
+    # first): the release's <mm:think> tokens, its <effort> line, its tool spelling - the shared serve
+    # template is the fallback for families without one, not a substitute for the model's own format
+    src_tpl = rel / "chat_template.jinja"
+    if src_tpl.exists():
+        (out / "chat_template.jinja").write_text(src_tpl.read_text(encoding="utf-8"), encoding="utf-8")
     stub = {
         "model": "gpt2",
         "pre": "minimax-m3",

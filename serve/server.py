@@ -60,9 +60,10 @@ from urllib.parse import parse_qs, urlsplit
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "tools"))
 sys.path.insert(0, str(ROOT))   # run as a script (run-<model>.bat) as well as a module
-from serve.frontend import (THINK_END, ChatTemplate, Event, OutputParser, anthropic_to_messages,  # noqa: E402
-                            forced_call, images_of, literal_tags, mark_think_literals, openai_to_messages,
-                            tool_choice_of, unmark_think_literals)
+from serve.frontend import (THINK_END, THINK_OPEN, ChatTemplate, Event, OutputParser,  # noqa: E402
+                            anthropic_to_messages, forced_call, images_of, literal_tags,
+                            mark_think_literals, openai_to_messages, tool_choice_of,
+                            unmark_think_literals)
 from serve.mcp import McpCancelled, hub_from_config  # noqa: E402
 from serve.ds_pictures import DsPictures  # noqa: E402  (F-371: the engine's own vision tower path)
 from serve import runconfig  # noqa: E402
@@ -4208,6 +4209,10 @@ class Service:
         self.family = None        # the model family ("deepseek41"): set_family() below
         self.parser_cls = OutputParser   # reads the model's output (reasoning, content, tool calls); the family may swap it
         self._force_text = None
+        self.think_end = THINK_END         # the family's think-close spelling (set_family moves it with the family)
+        self.think_open = THINK_OPEN
+        self.reasoning_close = REASONING_CLOSE
+        self.reasoning_wrap_up = REASONING_WRAP_UP
         # #567: a prompt re-encodes only what follows the last special token it shares with a recent prompt (the
         # same ids as a full encode: tools/strata_tokenizer.py PromptEncoder).  Tokenizers without resume points
         # encode in full.
@@ -4243,6 +4248,13 @@ class Service:
         import serve.frontend as _frontend
         if hasattr(_frontend, "use_family"):
             _frontend.use_family(family)
+        # the family's think spelling (frontend.use_family moved it): the parser reads it through the
+        # module; the budget's close/wrap-up strings here must spell the tag the model itself writes
+        self.think_end = _frontend.THINK_END
+        self.think_open = _frontend.THINK_OPEN
+        self.reasoning_close = "\n" + self.think_end + "\n\n"
+        self.reasoning_wrap_up = ("\n\nI have thought about this long enough; time to give my answer.\n"
+                                  + self.think_end + "\n\n")
 
     def force_text(self, force):
         """forced_call's opening of the call the reply must make, in this model's spelling."""
@@ -5641,8 +5653,8 @@ class Service:
                                     with self.status_lock:
                                         trace["first_token_s"] = round(time.perf_counter() - trace["_clock"], 3)
                                 if t in self.stop_ids:
-                                    if force and parser.state == "reasoning" and parser.buf == THINK_END:
-                                        opens = True    # #537: the held </think> was the end: the call opens there
+                                    if force and parser.state == "reasoning" and parser.buf == self.think_end:
+                                        opens = True    # #537: the held think-end was the end: the call opens there
                                         break
                                     finish = "stop"
                                     raw_ids.append(t)
@@ -5773,12 +5785,12 @@ class Service:
                             continue
                         if (self.reasoning_close_retry and thinking and finish == "stop" and not close_retried
                                 and not answered and not wrap and not opens and parser.state == "reasoning"
-                                and parser.buf != THINK_END         # #537: not after a held </think>, the end
+                                and parser.buf != self.think_end    # #537: not after a held think-end, the end
                                 and (stops is None or stops.hit is None) and not cancel.is_set()):
                             # #1053: the model wrote its reasoning and stopped before </think>: the client would get
                             # an empty answer.  Close the thinking once and let it answer.
                             close_retried = True
-                            extra = self.tok.encode(REASONING_CLOSE, parse_special=True)
+                            extra = self.tok.encode(self.reasoning_close, parse_special=True)
                             if max_new - n - len(extra) >= 1:
                                 print("[strata] the reply ended inside its thinking with no answer: closing the "
                                       "thinking once and continuing (reasoning_close_retry)", flush=True)
@@ -5802,7 +5814,7 @@ class Service:
                         # thinking ended, after the blank line the template puts before a call.
                         if wrap:
                             budget = st["thinking_budget"] = None
-                            text = REASONING_WRAP_UP + (force or "")
+                            text = self.reasoning_wrap_up + (force or "")
                         else:
                             text = "\n" * (2 - (len(tail) - len(tail.rstrip("\n")))) + force
                         force = None
@@ -6181,6 +6193,12 @@ def openai_chunks(svc: Service, req: dict, ids, thinking, tools, max_new, cancel
     calls = 0
     streamed = {}                                  # tool call id -> index, for calls sent piece by piece
     finished = set()                               # ... and the ones whose final tool_call came (#211)
+    # a model that opens its own think block (minimax's adaptive mode writes <mm:think> as text) puts the
+    # tag in the reasoning channel: the channel is the thinking's content, not its markup.  The tag can
+    # split across deltas, so the head is held until it can no longer become the tag.
+    mm_open = getattr(svc, "think_open", "")
+    mm_hold = ""                                   # the held head (a strict prefix of mm_open, or settled)
+    mm_done = not mm_open
     for kind, x in run if run is not None else svc.run(ids, thinking, tools, max_new, req, cancel, force=force):
         if kind == "ping":
             # a PP line: the prompt is being read and there is nothing to say yet.  It used to be only the SSE comment;
@@ -6194,7 +6212,17 @@ def openai_chunks(svc: Service, req: dict, ids, thinking, tools, max_new, cancel
         elif kind == "event":
             ev: Event = x
             if ev.kind == "reasoning" and ev.text:
-                yield chunk({"reasoning_content": ev.text})
+                text = ev.text
+                if not mm_done:
+                    mm_hold += text
+                    if mm_open.startswith(mm_hold):        # still possibly the tag: hold
+                        continue
+                    mm_done = True
+                    if mm_hold.startswith(mm_open):        # the tag: drop it (and the newline after it)
+                        mm_hold = mm_hold[len(mm_open):].lstrip("\n")
+                    text, mm_hold = mm_hold, ""
+                if text:
+                    yield chunk({"reasoning_content": text})
             elif ev.kind == "content" and ev.text:
                 yield chunk({"content": ev.text})
             elif ev.kind == "tool_start":
@@ -6215,6 +6243,9 @@ def openai_chunks(svc: Service, req: dict, ids, thinking, tools, max_new, cancel
             # a streamed call without its final tool_call is one the output ended inside: not "tool_calls" (#211)
             whole = calls and streamed.keys() <= finished
             finish = "tool_calls" if whole and x["finish"] == "stop" else {"cancel": "stop"}.get(x["finish"], x["finish"])
+            if not mm_done and mm_hold:                    # a reply that ended inside a would-be tag: it was text
+                yield chunk({"reasoning_content": mm_hold})
+                mm_hold, mm_done = "", True
             last = chunk({}, finish)
             pt = x.get("prompt_tokens", len(ids))     # after MCP rounds: the last round's prompt
             last["usage"] = {"prompt_tokens": pt, "completion_tokens": x["completion_tokens"],
