@@ -588,18 +588,116 @@ bool win_experts(const WinArgs& a_in, cudaStream_t s) {
     return true;
 }
 
+
+namespace {
+// ---- the set path (long prompts): a "row" = one (token, expert) pair; the pairs are grouped by
+// expert ([bounds[e], bounds[e + 1])), x gathered by row_idx (the engine's d.rowidx).  Exact F32
+// math - the token path's law (the GG path's FP16-tile form is the optimization pass).
+__device__ int pair_expert(const int* bounds, int n_exp, int lr) {
+    int lo = 0, hi = n_exp;   // bounds has n_exp + 1 entries
+    while (lo < hi) {
+        const int mid = (lo + hi) / 2;
+        if (bounds[mid + 1] <= lr) lo = mid + 1;
+        else hi = mid;
+    }
+    return lo;
+}
+
+// h16[lr * ldh + r] = oai(gate_r(x[token]), up_r(x[token])) - one warp one (pair, ff-row).
+__global__ void set_gu_kernel(const unsigned long long wbase, size_t stride, const int* bounds,
+                              const int* row_idx, const float* x, int ldx, uint16_t* h16, int ldh,
+                              int n_exp, int n_ff, int n_embd, float alpha, float limit, ExpertLayout lay) {
+    const int r = blockIdx.x * 4 + (threadIdx.x >> 5);
+    const int lr = blockIdx.y;
+    const int lane = threadIdx.x & 31;
+    if (r >= n_ff) return;
+    const int e = pair_expert(bounds, n_exp, lr);
+    if (e < 0 || e >= n_exp) return;
+    const Blob o = blob_of(lay, (const void*) (wbase + (unsigned long long) e * stride));
+    const GvH hg = gv_header(o.w1);
+    const int cols = (int) hg.vecs();
+    const Views vg = views(o.w1, o.r1), vu = views(o.w3, o.r3);
+    const float* xt = x + (size_t) row_idx[lr] * ldx;
+    float ag = 0.0f, au = 0.0f;
+    for (int vv = lane; vv < cols; vv += 32) {
+        const uint64_t j = (uint64_t) r * cols + vv;
+        float wg[8], wu[8];
+        w_vec(vg.low12, vg.high1, vg.idx8, o.cb, o.cb2, j, wg);
+        w_vec(vu.low12, vu.high1, vu.idx8, o.cb, o.cb2, j, wu);
+        const float* xc = xt + 8 * vv;
+        #pragma unroll
+        for (int d = 0; d < 8; ++d) {
+            ag = __fmaf_rn(wg[d], xc[d], ag);
+            au = __fmaf_rn(wu[d], xc[d], au);
+        }
+    }
+    #pragma unroll
+    for (int o16 = 16; o16 > 0; o16 >>= 1) {
+        ag += __shfl_down_sync(0xffffffffu, ag, o16);
+        au += __shfl_down_sync(0xffffffffu, au, o16);
+    }
+    if (lane == 0)
+        h16[(size_t) lr * ldh + r] = __half_as_ushort(__float2half_rn(oai(
+            __half2float(__ushort_as_half(vg.gain[r])) * ag,
+            __half2float(__ushort_as_half(vu.gain[r])) * au, alpha, limit)));
+}
+
+// y[(row0 + lr) * ldy + c] = down_c(h16[lr]) - one warp one (pair, dim-row).
+__global__ void set_down_kernel(const unsigned long long wbase, size_t stride, const int* bounds,
+                                const uint16_t* h16, int ldh, float* y, int ldy, int n_exp,
+                                int n_embd, int n_ff, ExpertLayout lay) {
+    const int c = blockIdx.x * 4 + (threadIdx.x >> 5);
+    const int lr = blockIdx.y;
+    const int lane = threadIdx.x & 31;
+    if (c >= n_embd) return;
+    const int e = pair_expert(bounds, n_exp, lr);
+    if (e < 0 || e >= n_exp) return;
+    const Blob o = blob_of(lay, (const void*) (wbase + (unsigned long long) e * stride));
+    const GvH hd = gv_header(o.w2);
+    const int cols = (int) hd.vecs();
+    const Views vd = views(o.w2, o.r2);
+    const uint16_t* hi = h16 + (size_t) lr * ldh;
+    float acc = 0.0f;
+    for (int vv = lane; vv < cols; vv += 32) {
+        const uint64_t j = (uint64_t) c * cols + vv;
+        float w[8];
+        w_vec(vd.low12, vd.high1, vd.idx8, o.cb, o.cb2, j, w);
+        const uint16_t* hc = hi + 8 * vv;   // (the set path's activations are FP16 rows - the caller's h16)
+        #pragma unroll
+        for (int d = 0; d < 8; ++d) acc = __fmaf_rn(w[d], __half2float(__ushort_as_half(hc[d])), acc);
+    }
+    #pragma unroll
+    for (int o16 = 16; o16 > 0; o16 >>= 1) acc += __shfl_down_sync(0xffffffffu, acc, o16);
+    if (lane == 0)
+        y[(size_t) lr * ldy + c] = __half2float(__ushort_as_half(vd.gain[c])) * acc;
+}
+}   // namespace
+
 void set_gate_up(const SetArgs& a, const float* x, int ldx, const int* row_idx, uint16_t* h16, int ldh,
                  cudaStream_t s) {
-    (void) a;
-    // Phase A: per expert, per sorted row, decode gate/up rows directly (the mma-tile kernels are the
-    // optimization pass; the outputs are the per-row law's).
-    (void) x; (void) ldx; (void) row_idx; (void) h16; (void) ldh;
-    fail("set_gate_up: phase B (the set kernels land with the prompt-path integration)");
+    Scratch* sc = scratch(s);
+    if (sc == nullptr || a.lay.fmt != kFmtVQ || a.wbase == nullptr || a.bounds == nullptr) {
+        fail("set_gate_up: not covered");
+        return;
+    }
+    const int pairs = a.hbounds ? a.hbounds[a.n_exp] : 0;   // (the host copy's last bound = the pass's row count)
+    dim3 grid((a.n_ff + 3) / 4, pairs);
+    set_gu_kernel<<<grid, kMvThreads, 0, s>>>((unsigned long long) (uintptr_t) a.wbase, a.stride, a.bounds, row_idx, x, ldx, h16, ldh,
+                                              a.n_exp, a.n_ff, a.n_embd, x3::kSwigluAlpha, a.limit, a.lay);
+    check("set_gate_up");
 }
 
 void set_down(const SetArgs& a, const uint16_t* h16, int ldh, float* y, int ldy, cudaStream_t s) {
-    (void) a;
-    fail("set_down: phase B");
+    Scratch* sc = scratch(s);
+    if (sc == nullptr || a.lay.fmt != kFmtVQ || a.wbase == nullptr || a.bounds == nullptr) {
+        fail("set_down: not covered");
+        return;
+    }
+    const int pairs = a.hbounds ? a.hbounds[a.n_exp] : 0;
+    dim3 grid((a.n_embd + 3) / 4, pairs);
+    set_down_kernel<<<grid, kMvThreads, 0, s>>>((unsigned long long) (uintptr_t) a.wbase, a.stride, a.bounds, h16, ldh, y, ldy,
+                                                a.n_exp, a.n_embd, a.n_ff, a.lay);
+    check("set_down");
 }
 
 void act_quant(const float* x, int rows, int k, int8_t* q, float* d, cudaStream_t s) {
