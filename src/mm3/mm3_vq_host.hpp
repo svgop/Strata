@@ -32,14 +32,16 @@ struct GvHeader {
     uint16_t version;         // 1
     uint8_t index_bits;       // 13 (GVQ1, container allows 12) / 8 (GVR8)
     uint8_t vec_dim;          // 8
-    uint32_t rows, cols;      // R x C vectors (a [3072,6144] w1 is 3072 rows x 768 vectors)
+    uint32_t rows, cols;      // R outputs x C VALUES a row (a [3072,6144] w1: 3072 rows, 768 vectors)
     uint32_t codebook_entries;// 8192 (13-bit) / 4096 (12-bit) / 256 (GVR8)
     uint32_t codebook_prec;   // 1 = E4M3FN
     uint32_t codebook_id;     // 4*layer (+1 for the residual codebook)
     uint32_t flags;           // 0
-    uint64_t gain_off;        // 128 (F16, one per row)
-    uint64_t index_off;       // align128(128 + 2*R)          - the low12 stream
-    uint64_t high_off;        // align128(low12 + R*C*3/16)   - the high1 plane; 0 when index_bits<13
+    uint64_t gain_off;        // GVQ1: 128 (F16, one per row).  GVR8: the residual's INDEX offset
+                              // (128 on the wire - no gains of its own, the row gain is shared)
+    uint64_t index_off;       // GVQ1: align128(128 + 2*R) - the low12 stream.  GVR8: 0
+    uint64_t high_off;        // GVQ1: align128(low12 + R*C*3/16) - the high1 plane; 0 when index_bits<13.
+                              // GVR8: 0
     uint64_t total_bytes;     // align128 of the last region's end
     uint8_t cb_sha[32];       // SHA-256 of the linked codebook bytes
     uint8_t body_sha[32];     // SHA-256 of every byte after this header

@@ -57,7 +57,10 @@ __host__ __device__ __forceinline__ GvH gv_header(const void* payload) {
     const uint8_t* p = (const uint8_t*) payload;
     GvH h;
     // '<4sHBBIIIIIIQQQQ32s32s': rows at 8, cols at 12, entries (K) at 16, gain at 32, index at 40, high at 48,
-    // total at 56 - fixed offsets of the 128-byte wire header.
+    // total at 56 - fixed offsets of the 128-byte wire header.  GVQ1 names the fields; a GVR8 residual
+    // re-uses the layout but not the roles: no gains of its own (the row gain is shared with its GVQ1
+    // matrix), so the u64 at 32 is the residual's INDEX offset (128 on the real wire - the proven
+    // reference gvq_link_res reads exactly this field and requires 128) and the u64s at 40/48 read 0.
     h.rows = *(const uint32_t*) (p + 8);
     h.cols = *(const uint32_t*) (p + 12);
     h.entries = *(const uint32_t*) (p + 16);

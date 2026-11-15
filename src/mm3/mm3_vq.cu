@@ -137,7 +137,13 @@ __device__ Views views(const void* payload, const void* res) {
     if (res != nullptr) {
         const uint8_t* r = (const uint8_t*) res;
         const GvH hr = gv_header(res);
-        v.idx8 = r + hr.index_off;   // (8-bit indices: the index region is the whole stream)
+        // The GVR8 wire re-uses the 128-byte layout but not the GVQ1 field roles: a residual carries no
+        // gains (the row gain is shared with its GVQ1 matrix), so the u64 at 32 is the INDEX offset -
+        // 128 on the real wire (verified: layer-16's three residuals read u64@32=128, u64@40=0,
+        // u64@48=0).  The proven reference reads exactly this field (ds4_glmvq_gpu.cuh gvq_link_res:
+        // index = gvq_u64(h, 32), required == 128, index bytes at data + index); the GVQ1-named
+        // index_off/high_off read 0 and are not the residual's law.
+        v.idx8 = r + hr.gain_off;
     }
     return v;
 }
@@ -364,7 +370,9 @@ __global__ void moe_gu_kernel(const unsigned long long* plan_ptr, const float* x
     const float gu = __half2float(__ushort_as_half(vu.gain[row]));
     float ag = 0.0f, au = 0.0f;
     for (int vv = lane; vv < cols; vv += 32) {
-        const uint64_t j = (uint64_t) row * hg.cols + vv;
+        // j is the flat VECTOR index: rows advance by `cols` vectors (hg.cols is VALUES, 8 a vector -
+        // scaling by it walks 8x past every stream, the OOB the compute-sanitizer fault rode).
+        const uint64_t j = (uint64_t) row * cols + vv;
         float wg[8], wu[8];
         w_vec(vg.low12, vg.high1, vg.idx8, o.cb, o.cb2, j, wg);
         w_vec(vu.low12, vu.high1, vu.idx8, o.cb, o.cb2, j, wu);
@@ -412,7 +420,8 @@ __global__ void moe_down_kernel(const unsigned long long* plan_ptr, const float*
     const float* hi = h + (size_t) i * n_ff;
     float acc = 0.0f;
     for (int vv = lane; vv < cols; vv += 32) {
-        const uint64_t j = (uint64_t) row * hd.cols + vv;
+        // the flat VECTOR index (see moe_gu_kernel - hd.cols is VALUES, not vectors)
+        const uint64_t j = (uint64_t) row * cols + vv;
         float w[8];
         w_vec(vd.low12, vd.high1, vd.idx8, o.cb, o.cb2, j, w);
         const float* hc = hi + 8 * vv;
@@ -441,9 +450,13 @@ __global__ void combine_kernel(const unsigned long long* plan_ptr, const float* 
 namespace {
 // (always on until first tokens: every blob a launch will touch must open GVQ1 - the win path's direct
 // launches bypass moe_gate_up's law, so the check lives here for them too)
-void check_blobs(const char* who, const unsigned long long* plan_d, int n, const ExpertLayout& lay) {
+void check_blobs(const char* who, const unsigned long long* plan_d, int n, const ExpertLayout& lay,
+                 cudaStream_t s) {
     const int tl = g_trace_layer;
-    cudaStreamSynchronize((cudaStream_t) nullptr);   // (read what the KERNELS will see, not a stale copy)
+    // the plan was written on the caller's stream (the same one the kernels run on) - syncing the default
+    // stream here races that write and reads the PREVIOUS layer's plan (its plain blobs pass the GVQ1 law
+    // by luck; the GVR1 law reads +vq_res[0], past a plain blob's end, and aborts on zeros)
+    cudaStreamSynchronize(s);
     if (lay.vq_res[0] != 0) {   // (an R13+8 layout: every blob must carry GVR1 at +vq_res[0]; a plain blob
         unsigned long long pl2[8 * 16];   // mispaired here reads garbage-index header -> the idx8 read flies)
         if (cudaMemcpy(pl2, plan_d, sizeof(unsigned long long) * (size_t) n, cudaMemcpyDeviceToHost) == cudaSuccess)
@@ -499,7 +512,7 @@ void moe_gate_up(const MoeArgs& a_in, const float* x, float* h, cudaStream_t s) 
         return;
     }
     float* hh = h != nullptr ? h : sc->h;
-    check_blobs("gate_up", a.plan_ptr, a.k, a.lay);   // (w1 + residual magic at every served blob)
+    check_blobs("gate_up", a.plan_ptr, a.k, a.lay, s);   // (w1 + residual magic at every served blob)
 
     dim3 grid(1, (a.n_ff + 3) / 4, a.k);
     moe_gu_kernel<<<grid, kMvThreads, 0, s>>>(a.plan_ptr, x, hh, a.k, a.n_embd, a.n_ff, x3::kSwigluAlpha,
@@ -517,7 +530,7 @@ void moe_down(const MoeArgs& a_in, const float* h, const float* sh_out, float* o
         fail("moe_down: not covered");
         return;
     }
-    check_blobs("down", a.plan_ptr, a.k, a.lay);
+    check_blobs("down", a.plan_ptr, a.k, a.lay, s);
     const float* hh = h != nullptr ? h : sc->h;
     dim3 grid(1, (a.n_embd + 3) / 4, a.k);
     moe_down_kernel<<<grid, kMvThreads, 0, s>>>(a.plan_ptr, hh, sc->part, a.k, a.n_embd, a.n_ff, a.lay);
@@ -536,7 +549,7 @@ bool win_experts(const WinArgs& a_in, cudaStream_t s) {
         fail("win_experts: not covered");
         return false;
     }
-    check_blobs("win", a.plan_ptr, a.T * a.k, a.lay);
+    check_blobs("win", a.plan_ptr, a.T * a.k, a.lay, s);
     Scratch* sc = scratch(s);
     if (sc == nullptr || a.lay.fmt != kFmtVQ) return false;
     static bool dbg = ::mm3::env("MM3_VQ_DEBUG") != nullptr;
