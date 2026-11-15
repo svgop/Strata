@@ -2714,6 +2714,14 @@ struct Model::Impl {
     // slot: an expert already in a slot keeps it, the others take the least recently used slots)
     bool experts(Layer& l, Dev& d, int T, const std::vector<int>& top, std::string& err) {
         const int K = g.k_exp;
+        // (the router's law - the upstream #672 class: a NaN score becomes a sentinel expert id; here it
+        //  dies on the host as a named error instead of indexing rows_of wild)
+        for (int i = 0; i < T * K; ++i)
+            if (top[(size_t) i] < 0 || top[(size_t) i] >= g.n_exp) {
+                err = "internal: layer " + std::to_string(l.idx >= 0 ? l.idx : -1) + " routed expert " +
+                      std::to_string(top[(size_t) i]) + " of " + std::to_string(g.n_exp);
+                return false;
+            }
         std::vector<std::vector<int>> rows_of((size_t) g.n_exp);   // expert -> its (t * K + slot) entries
         for (int t = 0; t < T; ++t)
             for (int i = 0; i < K; ++i) rows_of[(size_t) top[(size_t) t * K + i]].push_back(t * K + i);
@@ -2797,7 +2805,9 @@ struct Model::Impl {
             sa.wbase = p.wbase;
             sa.stride = p.stride;
             sa.lay = l.lay;
-            if (vq) std::fprintf(stderr, "vq set@%d blob %zu res %zu\\n", l.idx >= 0 ? l.idx : -1, l.blob, (size_t) l.lay.vq_res[0]);
+            if (vq && ::mm3::env("MM3_VQ_DEBUG"))
+                std::fprintf(stderr, "vq set@%d blob %zu res %zu rows %d row0 %d\n", l.idx >= 0 ? l.idx : -1,
+                             l.blob, (size_t) l.lay.vq_res[0], p.rows, p.row0);
             sa.n_exp = (int) p.slot_expert.size();
             sa.bounds = d.bounds;
             sa.row0 = p.row0;

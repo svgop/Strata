@@ -608,20 +608,30 @@ __device__ int pair_expert(const int* bounds, int n_exp, int lr) {
 }
 
 // h16[lr * ldh + r] = oai(gate_r(x[token]), up_r(x[token])) - one warp one (pair, ff-row).
+// lr is the pass's LOCAL pair (grid.y = the pass's own rows); the bounds are absolute (cumulative
+// across the prompt's passes - the SetArgs contract, row0 carries the pass's start) - the EXL3
+// kernels' law (bounds[e] - a.row0); row_idx / h16 / y are already pass-local (the caller offsets
+// d.rowidx and y, and h16 is rewritten per pass).
 __global__ void set_gu_kernel(const unsigned long long wbase, size_t stride, const int* bounds,
                               const int* row_idx, const float* x, int ldx, uint16_t* h16, int ldh,
-                              int n_exp, int n_ff, int n_embd, float alpha, float limit, ExpertLayout lay) {
+                              int n_exp, int n_ff, int n_embd, float alpha, float limit, ExpertLayout lay,
+                              int row0) {
     const int r = blockIdx.x * 4 + (threadIdx.x >> 5);
     const int lr = blockIdx.y;
     const int lane = threadIdx.x & 31;
     if (r >= n_ff) return;
-    const int e = pair_expert(bounds, n_exp, lr);
+    const int e = pair_expert(bounds, n_exp, lr + row0);
     if (e < 0 || e >= n_exp) return;
     const Blob o = blob_of(lay, (const void*) (wbase + (unsigned long long) e * stride));
     const GvH hg = gv_header(o.w1);
     const int cols = (int) hg.vecs();
     const Views vg = views(o.w1, o.r1), vu = views(o.w3, o.r3);
     const float* xt = x + (size_t) row_idx[lr] * ldx;
+#ifdef MM3_VQ_KERNEL_DEBUG
+    if (threadIdx.x == 0 && (lr & 127) == 0)
+        printf("vq setgu b(%d,%d) lr %d rid %d e %d cols %d x %p wbase %llu stride %zu n_exp %d ldx %d\n",
+               blockIdx.x, lr, lr, row_idx[lr], e, cols, (void*) x, wbase, stride, n_exp, ldx);
+#endif
     float ag = 0.0f, au = 0.0f;
     for (int vv = lane; vv < cols; vv += 32) {
         const uint64_t j = (uint64_t) r * cols + vv;
@@ -646,15 +656,15 @@ __global__ void set_gu_kernel(const unsigned long long wbase, size_t stride, con
             __half2float(__ushort_as_half(vu.gain[r])) * au, alpha, limit)));
 }
 
-// y[(row0 + lr) * ldy + c] = down_c(h16[lr]) - one warp one (pair, dim-row).
+// y[lr * ldy + c] = down_c(h16[lr]) - one warp one (pair, dim-row); lr local, bounds absolute (row0).
 __global__ void set_down_kernel(const unsigned long long wbase, size_t stride, const int* bounds,
                                 const uint16_t* h16, int ldh, float* y, int ldy, int n_exp,
-                                int n_embd, int n_ff, ExpertLayout lay) {
+                                int n_embd, int n_ff, ExpertLayout lay, int row0) {
     const int c = blockIdx.x * 4 + (threadIdx.x >> 5);
     const int lr = blockIdx.y;
     const int lane = threadIdx.x & 31;
     if (c >= n_embd) return;
-    const int e = pair_expert(bounds, n_exp, lr);
+    const int e = pair_expert(bounds, n_exp, lr + row0);
     if (e < 0 || e >= n_exp) return;
     const Blob o = blob_of(lay, (const void*) (wbase + (unsigned long long) e * stride));
     const GvH hd = gv_header(o.w2);
@@ -684,10 +694,13 @@ void set_gate_up(const SetArgs& a, const float* x, int ldx, const int* row_idx, 
         fail("set_gate_up: not covered");
         return;
     }
-    const int pairs = a.hbounds ? a.hbounds[a.n_exp] : 0;   // (the host copy's last bound = the pass's row count)
+    // the pass's OWN rows (the bounds are cumulative across the prompt's passes; this pass owns
+    // [row0, hbounds[n_exp]) - a launch of the whole cumulative span would read row_idx past its
+    // rows, into the other passes' (or stale) entries, and the wild token indices fault the gather)
+    const int pairs = a.hbounds ? a.hbounds[a.n_exp] - a.row0 : 0;
     dim3 grid((a.n_ff + 3) / 4, pairs);
     set_gu_kernel<<<grid, kMvThreads, 0, s>>>((unsigned long long) (uintptr_t) a.wbase, a.stride, a.bounds, row_idx, x, ldx, h16, ldh,
-                                              a.n_exp, a.n_ff, a.n_embd, x3::kSwigluAlpha, a.limit, a.lay);
+                                              a.n_exp, a.n_ff, a.n_embd, x3::kSwigluAlpha, a.limit, a.lay, a.row0);
     check("set_gate_up");
 }
 
@@ -697,10 +710,10 @@ void set_down(const SetArgs& a, const uint16_t* h16, int ldh, float* y, int ldy,
         fail("set_down: not covered");
         return;
     }
-    const int pairs = a.hbounds ? a.hbounds[a.n_exp] : 0;
+    const int pairs = a.hbounds ? a.hbounds[a.n_exp] - a.row0 : 0;
     dim3 grid((a.n_embd + 3) / 4, pairs);
     set_down_kernel<<<grid, kMvThreads, 0, s>>>((unsigned long long) (uintptr_t) a.wbase, a.stride, a.bounds, h16, ldh, y, ldy,
-                                                a.n_exp, a.n_embd, a.n_ff, a.lay);
+                                                a.n_exp, a.n_embd, a.n_ff, a.lay, a.row0);
     check("set_down");
 }
 
