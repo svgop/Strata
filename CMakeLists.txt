@@ -2363,7 +2363,7 @@ endif()
                                ${CMAKE_CURRENT_SOURCE_DIR}/src/mm3 ${_strata_gpu_include_directories}
                                ${CMAKE_CURRENT_SOURCE_DIR}/third_party/ggml)   # ggml-common.h (the iq grids)
     target_compile_definitions(strata_mm3_kernels PUBLIC MAYA_DS4_IQ_ONLY=1)
-    target_compile_options(strata_mm3_kernels PRIVATE $<$<COMPILE_LANGUAGE:CUDA>:-lineinfo -DMM3_VQ_KERNEL_DEBUG>)   # NCU/sanitizer line truth
+    target_compile_options(strata_mm3_kernels PRIVATE $<$<COMPILE_LANGUAGE:CUDA>:-lineinfo>)   # NCU/sanitizer line truth
     target_link_libraries(strata_mm3_kernels PUBLIC ${_strata_gpu_runtime_target})
         # maya compiles its expert.cpp with the full AVX512 set (VBMI included; the runtime gate cpu_avx512_ok
     # picks the kernels); the Zen 5 target has VNNI so the DPBUSD-BW fallback define is not needed

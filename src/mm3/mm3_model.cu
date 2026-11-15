@@ -1588,7 +1588,11 @@ struct Model::Impl {
                 }
                 if (!err.empty()) return false;
             }
+            // (the dense workspace (the prompt GEMM bands + activations, fixed at 8192 positions for M3.1:
+            // ~10.1 GB on this geometry) lives INSIDE this budget's remainder - without reserving it here the
+            // placement fills VRAM to the brim and the dense allocation fails after the load (0.117 free))
             size_t budget = fr > reserve ? fr - reserve : 0;
+            budget = budget > 10150000000ull ? budget - 10150000000ull : 0ull;
             std::vector<int> nres(moe_layers.size(), 0);
             const int cap = o.resident_cap < 0 ? g.n_exp : std::min(o.resident_cap, g.n_exp);
             std::vector<std::vector<int>> chosen(moe_layers.size());

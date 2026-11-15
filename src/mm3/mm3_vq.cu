@@ -466,17 +466,19 @@ void check_blobs(const char* who, const unsigned long long* plan_d, int n, const
                 const unsigned long long rp = pl2[i] + (unsigned long long) lay.vq_res[0];
                 if (cudaMemcpy(rm, (const void*) rp, 4, cudaMemcpyDeviceToHost) != cudaSuccess ||
                     !(rm[0] == 'G' && rm[1] == 'V' && rm[2] == 'R' && rm[3] == '1')) {
-                    std::fprintf(stderr, "vq BAD RESIDUAL(%s) i%d ptr %llu res %llu magic %02x%02x%02x%02x\n",
-                                 who, i, pl2[i], rp, rm[0], rm[1], rm[2], rm[3]);
-                    std::fflush(stderr);
-                    abort();
+                    // (report, don't abort: a kill hides the scope; the count tells the truth)
+                    static std::atomic<int> bad_res{0};
+                    if (bad_res.fetch_add(1) < 8)
+                        std::fprintf(stderr, "vq BAD RESIDUAL(%s) i%d ptr %llu res %llu magic %02x%02x%02x%02x\n",
+                                     who, i, pl2[i], rp, rm[0], rm[1], rm[2], rm[3]);
+                    continue;
                 }
             }
     }
     unsigned long long pl[8 * 16];   // (a win's [T][8] - the call passes T*k entries)
     if (cudaMemcpy(pl, plan_d, sizeof(unsigned long long) * (size_t) n, cudaMemcpyDeviceToHost) != cudaSuccess) {
-        std::fprintf(stderr, "vq DEAD PLAN %s n %d\n", who, n);
-        abort();
+        fail("check_blobs: the plan read failed");
+        return;
     }
     for (int i = 0; i < n; ++i) {
         const unsigned long long pb = pl[i];
@@ -490,12 +492,14 @@ void check_blobs(const char* who, const unsigned long long* plan_d, int n, const
                          who, tl, i, pb, magic[0], magic[1], magic[2], magic[3],
                          lay.trellis[0], lay.trellis[1], lay.trellis[2],
                          (size_t) lay.vq_res[0], (size_t) lay.vq_res[1], (size_t) lay.vq_res[2]);
-            uint8_t dump[64] = {0};
-            cudaMemcpy(dump, (const void*) pb, 64, cudaMemcpyDeviceToHost);
-            for (int b = 0; b < 64; ++b) std::fprintf(stderr, "%02x", dump[b]);
-            std::fprintf(stderr, "\n");
-            std::fflush(stderr);
-            abort();
+            static std::atomic<int> bad_blob{0};
+            if (bad_blob.fetch_add(1) < 8) {
+                uint8_t dump[64] = {0};
+                cudaMemcpy(dump, (const void*) pb, 64, cudaMemcpyDeviceToHost);
+                for (int b = 0; b < 64; ++b) std::fprintf(stderr, "%02x", dump[b]);
+                std::fprintf(stderr, "\n");
+                std::fflush(stderr);
+            }
         }
     }
 }

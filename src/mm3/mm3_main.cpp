@@ -407,6 +407,7 @@ int serve(mm3::Model& m, const std::vector<int>& eos, int chunk, bool spec_on, f
         Req r;
         if (!parse_gen(line, r) || (line.rfind("GENI ", 0) == 0 && r.file.empty())) {
             std::printf("ERR expected: GEN <max_new> [keys] <id,id,...> (GENI: the pictures' file before the ids)\n");
+            std::fprintf(stderr, "maya-mm3: the refused GEN line (first 240): '%.240s'\n", line.c_str());
             std::printf("DONE 0 %zu 0.0 0.0 cancel 0 0 0 0 0\n", r.ids.size());
             std::fflush(stdout);
             continue;
