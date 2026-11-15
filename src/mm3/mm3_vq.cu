@@ -64,12 +64,15 @@ struct Scratch {
     float* h = nullptr;        // [kMaxK][kMaxFf]: a token's experts' activations (moe_gate_up's out)
     float* part = nullptr;     // [kMaxK][kMaxEmbd]: the experts' down outputs before the combine
     uint16_t* wb = nullptr;    // the GEMM bands' decoded FP16 weights
+    uint16_t* xg = nullptr;    // [kSetCap][kMaxEmbd]: the set path's gathered FP16 x rows
+    float* gu = nullptr;       // [2][kSetCap][kMaxFf]: the set path's gate / up F32 sums
     cublasHandle_t blas = nullptr;
 };
 std::mutex g_mu;
 std::map<cudaStream_t, Scratch*> g_scratch;
 
 constexpr size_t kBand = 64u << 20;   // the FP16 band budget (gg's)
+constexpr int kSetCap = 512;          // the set path's GEMM pair chunk (MM3_VQ_SET_CHUNK is not wired: fixed)
 
 Scratch* scratch(cudaStream_t s) {
     std::lock_guard<std::mutex> lk(g_mu);
@@ -79,6 +82,8 @@ Scratch* scratch(cudaStream_t s) {
     if (cudaMalloc(&sc->h, sizeof(float) * kMaxK * kMaxFf) != cudaSuccess ||
         cudaMalloc(&sc->part, sizeof(float) * kMaxK * kMaxEmbd) != cudaSuccess ||
         cudaMalloc(&sc->wb, kBand) != cudaSuccess ||
+        cudaMalloc(&sc->xg, sizeof(uint16_t) * kSetCap * kMaxEmbd) != cudaSuccess ||
+        cudaMalloc(&sc->gu, sizeof(float) * 2 * kSetCap * kMaxFf) != cudaSuccess ||
         cublasCreate(&sc->blas) != CUBLAS_STATUS_SUCCESS || cublasSetStream(sc->blas, s) != CUBLAS_STATUS_SUCCESS) {
         std::fprintf(stderr, "mm3 vq: scratch allocation failed\n");
         delete sc;
@@ -91,7 +96,10 @@ Scratch* scratch(cudaStream_t s) {
 }   // namespace
 
 bool prepare(cudaStream_t s) { return scratch(s) != nullptr; }
-size_t scratch_bytes() { return sizeof(float) * kMaxK * (kMaxFf + kMaxEmbd) + kBand; }
+size_t scratch_bytes() {
+    return sizeof(float) * kMaxK * (kMaxFf + kMaxEmbd) + kBand + sizeof(uint16_t) * kSetCap * kMaxEmbd +
+           sizeof(float) * 2 * kSetCap * kMaxFf;
+}
 int launch_errors() { return g_launch_errors.load(std::memory_order_relaxed); }
 namespace { int g_trace_layer = -1; }
 void trace_layer(int li) { g_trace_layer = li; }
@@ -302,6 +310,45 @@ void gemm_rows(const Mat& m, const uint16_t* x16, int ldx, int rows, float* y, i
     check("gemm_rows");
 }
 
+// ---- the set path's GEMM form (mm3_vq.cuh's declared law): a payload's rows decoded to FP16 once, then the
+// GG lane's cuBLAS F32-accumulating GEMM - against the scalar gather's per-pair re-decode of the whole matrix.
+// The raw-pointer forms skip host_header's sync: the set path's geometry arrives from SetArgs (the load's
+// host pass validated the headers; GvH.cols is VALUES per row, the kernel takes VECTORS = k >> 3).
+// the set path's activation gather: the pass's x rows by row_idx (pair-indexed FP16, the GEMM's B operand)
+__global__ void set_gather_kernel(const float* __restrict__ x, int ldx, const int* __restrict__ idx, int ncols,
+                                  uint16_t* __restrict__ out) {
+    const int r = blockIdx.y;
+    const float* src = x + (size_t) idx[r] * ldx;
+    uint16_t* dst = out + (size_t) r * ncols;
+    for (int c = blockIdx.x * blockDim.x + threadIdx.x; c < ncols; c += gridDim.x * blockDim.x)
+        dst[c] = __half_as_ushort(__float2half_rn(src[c]));
+}
+
+void f16_rows_raw(const void* payload, const void* res, const uint8_t* cb, const uint8_t* cb2, int k, int row0,
+                  int rows, uint16_t* dst, int ldx, cudaStream_t s) {
+    f16_rows_kernel<<<rows, kF16Block, 0, s>>>(payload, res, cb, cb2, row0, rows, k >> 3, dst, ldx);
+    check("f16_rows_raw");
+}
+
+void set_gemm_rows(const void* payload, const void* res, const uint8_t* cb, const uint8_t* cb2, int k, int n,
+                   const uint16_t* x16, int ldx, int rows, float* y, int ldy, float beta, Scratch* sc,
+                   cudaStream_t s) {
+    if (rows <= 0) return;
+    const int band = (int) std::max<size_t>(256, kBand / ((size_t) k * 2) / 256 * 256);
+    const float one = 1.0f;
+    for (int c0 = 0; c0 < n; c0 += band) {
+        const int nc = std::min(band, n - c0);
+        f16_rows_raw(payload, res, cb, cb2, k, c0, nc, sc->wb, k, s);
+        if (cublasGemmEx(sc->blas, CUBLAS_OP_T, CUBLAS_OP_N, nc, rows, k, &one, sc->wb, CUDA_R_16F, k, x16,
+                         CUDA_R_16F, ldx, &beta, y + c0, CUDA_R_32F, ldy, CUBLAS_COMPUTE_32F,
+                         CUBLAS_GEMM_DEFAULT_TENSOR_OP) != CUBLAS_STATUS_SUCCESS) {
+            fail("set_gemm_rows: cublasGemmEx");
+            return;
+        }
+    }
+    check("set_gemm_rows");
+}
+
 // ------------------------------------------------------------------ the routed experts
 
 namespace {
@@ -313,6 +360,17 @@ __device__ __forceinline__ float oai(float g, float u, float alpha, float limit)
         u = fminf(fmaxf(u, -limit), limit);
     }
     return __fmul_rn(__fmul_rn(g, 1.0f / (1.0f + __expf(-__fmul_rn(alpha, g)))), u + 1.0f);
+}
+
+// the set path's GEMM form epilogue: h16[r * ldh + c] = oai(G[r * ff + c], U[r * ff + c]) - the same oai the
+// scalar kernel applies (bit-identical form; the GEMM produced the sums)
+__global__ void set_swig_kernel(const float* __restrict__ g, const float* __restrict__ u, uint16_t* __restrict__ h16,
+                                int ldh, int ff, float alpha, float limit) {
+    const int c = blockIdx.x * blockDim.x + threadIdx.x;
+    const int r = blockIdx.y;
+    if (c >= ff) return;
+    h16[(size_t) r * ldh + c] = __half_as_ushort(__float2half_rn(oai(g[(size_t) r * ff + c], u[(size_t) r * ff + c],
+                                                                     alpha, limit)));
 }
 
 // One expert's blob -> its three GVQ1 payloads (+ residuals) + codebooks.
@@ -615,13 +673,14 @@ __device__ int pair_expert(const int* bounds, int n_exp, int lr) {
 __global__ void set_gu_kernel(const unsigned long long wbase, size_t stride, const int* bounds,
                               const int* row_idx, const float* x, int ldx, uint16_t* h16, int ldh,
                               int n_exp, int n_ff, int n_embd, float alpha, float limit, ExpertLayout lay,
-                              int row0) {
+                              int row0, int skip) {
     const int r = blockIdx.x * 4 + (threadIdx.x >> 5);
     const int lr = blockIdx.y;
     const int lane = threadIdx.x & 31;
     if (r >= n_ff) return;
     const int e = pair_expert(bounds, n_exp, lr + row0);
     if (e < 0 || e >= n_exp) return;
+    if (skip > 0 && bounds[e + 1] - bounds[e] >= skip) return;   // (the GEMM form owns the busy experts)
     const Blob o = blob_of(lay, (const void*) (wbase + (unsigned long long) e * stride));
     const GvH hg = gv_header(o.w1);
     const int cols = (int) hg.vecs();
@@ -659,13 +718,14 @@ __global__ void set_gu_kernel(const unsigned long long wbase, size_t stride, con
 // y[lr * ldy + c] = down_c(h16[lr]) - one warp one (pair, dim-row); lr local, bounds absolute (row0).
 __global__ void set_down_kernel(const unsigned long long wbase, size_t stride, const int* bounds,
                                 const uint16_t* h16, int ldh, float* y, int ldy, int n_exp,
-                                int n_embd, int n_ff, ExpertLayout lay, int row0) {
+                                int n_embd, int n_ff, ExpertLayout lay, int row0, int skip) {
     const int c = blockIdx.x * 4 + (threadIdx.x >> 5);
     const int lr = blockIdx.y;
     const int lane = threadIdx.x & 31;
     if (c >= n_embd) return;
     const int e = pair_expert(bounds, n_exp, lr + row0);
     if (e < 0 || e >= n_exp) return;
+    if (skip > 0 && bounds[e + 1] - bounds[e] >= skip) return;   // (the GEMM form owns the busy experts)
     const Blob o = blob_of(lay, (const void*) (wbase + (unsigned long long) e * stride));
     const GvH hd = gv_header(o.w2);
     const int cols = (int) hd.vecs();
@@ -698,9 +758,46 @@ void set_gate_up(const SetArgs& a, const float* x, int ldx, const int* row_idx, 
     // [row0, hbounds[n_exp]) - a launch of the whole cumulative span would read row_idx past its
     // rows, into the other passes' (or stale) entries, and the wild token indices fault the gather)
     const int pairs = a.hbounds ? a.hbounds[a.n_exp] - a.row0 : 0;
+    // the GEMM form (mm3_vq.cuh's declared law): a busy expert's rows decode to FP16 once and the sums run
+    // on the tensor cores - against the scalar gather's re-decode of the whole matrix per pair.  MM3_VQ_SET_GEMM=0:
+    // today's exact scalar path; MM3_VQ_SET_GEMM_ROWS: the busy threshold (an expert from this many pairs up)
+    const bool gemm_on = [] {
+        const char* e = std::getenv("MM3_VQ_SET_GEMM");
+        return e == nullptr || std::atoi(e) != 0;
+    }();
+    const int rows_min = [] {
+        const char* e = std::getenv("MM3_VQ_SET_GEMM_ROWS");
+        return e ? std::max(1, std::atoi(e)) : 16;
+    }();
+    int busy = 0;
+    if (gemm_on && a.hbounds) {
+        for (int e = 0; e < a.n_exp; ++e) {
+            const int n = a.hbounds[e + 1] - a.hbounds[e];
+            if (n < rows_min) continue;
+            busy = 1;
+            const uint8_t* base = a.wbase + (size_t) e * a.stride;
+            for (int r0 = 0; r0 < n; r0 += kSetCap) {
+                const int nr = std::min(kSetCap, n - r0);
+                const int lr = a.hbounds[e] - a.row0 + r0;
+                set_gather_kernel<<<dim3(std::min(8, (a.n_embd + 255) / 256), nr), 256, 0, s>>>(
+                    x, ldx, row_idx + lr, a.n_embd, sc->xg);
+                set_gemm_rows(base + a.lay.trellis[0], a.lay.vq_res[0] ? base + a.lay.vq_res[0] : nullptr,
+                              base + a.lay.vq_cb, a.lay.vq_cb2 ? base + a.lay.vq_cb2 : nullptr, a.n_embd, a.n_ff,
+                              sc->xg, a.n_embd, nr, sc->gu, a.n_ff, 0.0f, sc, s);
+                set_gemm_rows(base + a.lay.trellis[1], a.lay.vq_res[1] ? base + a.lay.vq_res[1] : nullptr,
+                              base + a.lay.vq_cb, a.lay.vq_cb2 ? base + a.lay.vq_cb2 : nullptr, a.n_embd, a.n_ff,
+                              sc->xg, a.n_embd, nr, sc->gu + (size_t) kSetCap * a.n_ff, a.n_ff, 0.0f, sc, s);
+                set_swig_kernel<<<dim3((a.n_ff + 255) / 256, nr), 256, 0, s>>>(
+                    sc->gu, sc->gu + (size_t) kSetCap * a.n_ff, h16 + (size_t) lr * ldh, ldh, a.n_ff,
+                    x3::kSwigluAlpha, a.limit);
+                check("set_swig");
+            }
+        }
+    }
     dim3 grid((a.n_ff + 3) / 4, pairs);
     set_gu_kernel<<<grid, kMvThreads, 0, s>>>((unsigned long long) (uintptr_t) a.wbase, a.stride, a.bounds, row_idx, x, ldx, h16, ldh,
-                                              a.n_exp, a.n_ff, a.n_embd, x3::kSwigluAlpha, a.limit, a.lay, a.row0);
+                                              a.n_exp, a.n_ff, a.n_embd, x3::kSwigluAlpha, a.limit, a.lay, a.row0,
+                                              busy ? rows_min : 0);
     check("set_gate_up");
 }
 
@@ -710,10 +807,41 @@ void set_down(const SetArgs& a, const uint16_t* h16, int ldh, float* y, int ldy,
         fail("set_down: not covered");
         return;
     }
+    const bool gemm_on = [] {
+        const char* e = std::getenv("MM3_VQ_SET_GEMM");
+        return e == nullptr || std::atoi(e) != 0;
+    }();
+    const int rows_min = [] {
+        const char* e = std::getenv("MM3_VQ_SET_GEMM_ROWS");
+        return e ? std::max(1, std::atoi(e)) : 16;
+    }();
     const int pairs = a.hbounds ? a.hbounds[a.n_exp] - a.row0 : 0;
+    int busy = 0;
+    static const int down_on = [] {
+        const char* e = std::getenv("MM3_VQ_SET_GEMM_DOWN");
+        return e ? std::atoi(e) : -1;   // -1: follow MM3_VQ_SET_GEMM
+    }();
+    const bool gemm_down = down_on < 0 ? gemm_on : down_on != 0;
+    if (gemm_down && a.hbounds) {
+        for (int e = 0; e < a.n_exp; ++e) {
+            const int n = a.hbounds[e + 1] - a.hbounds[e];
+            if (n < rows_min) continue;
+            busy = 1;
+            const uint8_t* base = a.wbase + (size_t) e * a.stride;
+            for (int r0 = 0; r0 < n; r0 += kSetCap) {
+                const int nr = std::min(kSetCap, n - r0);
+                const int lr = a.hbounds[e] - a.row0 + r0;
+                // h16 is already pair-indexed (set_gate_up's rows, ldh apart); the w2 row gain rode into the
+                // FP16 decode, so no post-GEMM multiply (the scalar path's gain * acc is subsumed)
+                set_gemm_rows(base + a.lay.trellis[2], a.lay.vq_res[2] ? base + a.lay.vq_res[2] : nullptr,
+                              base + a.lay.vq_cb, a.lay.vq_cb2 ? base + a.lay.vq_cb2 : nullptr, a.n_ff, a.n_embd,
+                              h16 + (size_t) lr * ldh, ldh, nr, y + (size_t) lr * ldy, ldy, 0.0f, sc, s);
+            }
+        }
+    }
     dim3 grid((a.n_embd + 3) / 4, pairs);
     set_down_kernel<<<grid, kMvThreads, 0, s>>>((unsigned long long) (uintptr_t) a.wbase, a.stride, a.bounds, h16, ldh, y, ldy,
-                                                a.n_exp, a.n_embd, a.n_ff, a.lay, a.row0);
+                                                a.n_exp, a.n_embd, a.n_ff, a.lay, a.row0, busy ? rows_min : 0);
     check("set_down");
 }
 

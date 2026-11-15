@@ -762,6 +762,174 @@ int main() {
         check(worst < 1e-2, "win_experts T3 vs per-token reference", worst);
     }
 
+    // ---- the set path (long prompts): the scalar form vs the GEMM form, one arena, three experts, the
+    // bounds/bounds-cumulative law - the GEMM form's busy experts against the scalar reference
+    {
+        const int n_embd = 512, n_ff = 256, n_exp = 3, pairs = 16, T = 8;
+        Built g[3], u[3], dd[3];
+        std::vector<uint8_t> cb1(64 * 1024), cb2(2 * 1024);
+        for (auto& v : cb1) v = (uint8_t) (rnd() % 256);
+        for (auto& v : cb2) v = (uint8_t) (rnd() % 256);
+        g[0] = build_matrix(rnd, n_ff, n_embd, 0, true, cb1, cb2);
+        u[0] = build_matrix(rnd, n_ff, n_embd, 0, true, cb1, cb2);
+        dd[0] = build_matrix(rnd, n_embd, n_ff, 0, true, cb1, cb2);
+        const size_t body = 64 * 1024 + 2 * 1024 + g[0].payload.size() + u[0].payload.size() + dd[0].payload.size() +
+                            g[0].residual.size() + u[0].residual.size() + dd[0].residual.size();
+        std::vector<uint8_t> arena(body * n_exp);
+        for (int e = 0; e < n_exp; ++e) {
+            if (e) {
+                g[e] = build_matrix(rnd, n_ff, n_embd, 0, true, cb1, cb2);
+                u[e] = build_matrix(rnd, n_ff, n_embd, 0, true, cb1, cb2);
+                dd[e] = build_matrix(rnd, n_embd, n_ff, 0, true, cb1, cb2);
+            }
+            uint8_t* base = arena.data() + (size_t) e * body;
+            std::memcpy(base, cb1.data(), std::min(cb1.size(), (size_t) 64 * 1024));
+            std::memcpy(base + 64 * 1024, cb2.data(), cb2.size());
+            size_t o = 64 * 1024 + 2 * 1024;
+            for (const auto* part : {&g[e].payload, &u[e].payload, &dd[e].payload, &g[e].residual, &u[e].residual,
+                                     &dd[e].residual}) {
+                std::memcpy(base + o, part->data(), part->size());
+                o += part->size();
+            }
+        }
+        void* d_arena = nullptr;
+        cudaMalloc(&d_arena, arena.size());
+        cudaMemcpy(d_arena, arena.data(), arena.size(), cudaMemcpyHostToDevice);
+        // the pairs: expert 0 gets 5, expert 1 gets 7, expert 2 gets 4 - the bounds cumulative
+        const int bounds_h[4] = {0, 5, 12, pairs};
+        std::vector<int> row_idx(pairs);
+        for (auto& v : row_idx) v = (int) (rnd() % T);
+        std::vector<float> x((size_t) T * n_embd);
+        for (auto& v : x) v = -1.0f + 2.0f * (rnd() % 1000) / 999.0f;
+        int* d_bounds = nullptr, * d_rowidx = nullptr;
+        float* d_x = nullptr;
+        uint16_t* d_h16 = nullptr;
+        float* d_y = nullptr;
+        cudaMalloc(&d_bounds, sizeof(bounds_h));
+        cudaMemcpy(d_bounds, bounds_h, sizeof(bounds_h), cudaMemcpyHostToDevice);
+        cudaMalloc(&d_rowidx, pairs * 4);
+        cudaMemcpy(d_rowidx, row_idx.data(), pairs * 4, cudaMemcpyHostToDevice);
+        cudaMalloc(&d_x, x.size() * 4);
+        cudaMemcpy(d_x, x.data(), x.size() * 4, cudaMemcpyHostToDevice);
+        cudaMalloc(&d_h16, (size_t) pairs * n_ff * 2);
+        cudaMalloc(&d_y, (size_t) pairs * n_embd * 4);
+        strata::mm3::exl3::ExpertLayout lay;
+        lay.fmt = mm3::vq::kFmtVQ;
+        lay.trellis[0] = 64 * 1024 + 2 * 1024;
+        lay.trellis[1] = lay.trellis[0] + g[0].payload.size();
+        lay.trellis[2] = lay.trellis[1] + u[0].payload.size();
+        lay.vq_res[0] = lay.trellis[2] + dd[0].payload.size();
+        lay.vq_res[1] = lay.vq_res[0] + g[0].residual.size();
+        lay.vq_res[2] = lay.vq_res[1] + u[0].residual.size();
+        lay.vq_cb = 0;
+        lay.vq_cb2 = 64 * 1024;
+        const float alpha = strata::mm3::exl3::kSwigluAlpha, lim = 7.0f;
+        std::vector<uint16_t> h_off((size_t) pairs * n_ff), h_on((size_t) pairs * n_ff);
+        std::vector<float> y_off((size_t) pairs * n_embd), y_on((size_t) pairs * n_embd);
+        strata::mm3::exl3::SetArgs sa;
+        sa.wbase = (const uint8_t*) d_arena;
+        sa.stride = body;
+        sa.lay = lay;
+        sa.bounds = d_bounds;
+        sa.hbounds = bounds_h;
+        sa.row0 = 0;
+        sa.n_exp = n_exp;
+        sa.n_embd = n_embd;
+        sa.n_ff = n_ff;
+        sa.limit = lim;
+        for (int pass = 0; pass < 2; ++pass) {
+            setenv("MM3_VQ_SET_GEMM", pass ? "1" : "0", 1);
+            mm3::vq::set_gate_up(sa, d_x, n_embd, d_rowidx, d_h16, n_ff, s);
+            mm3::vq::set_down(sa, d_h16, n_ff, d_y, n_embd, s);
+            cudaStreamSynchronize(s);
+            auto& h = pass ? h_on : h_off;
+            auto& y = pass ? y_on : y_off;
+            cudaMemcpy(h.data(), d_h16, h.size() * 2, cudaMemcpyDeviceToHost);
+            cudaMemcpy(y.data(), d_y, y.size() * 4, cudaMemcpyDeviceToHost);
+        }
+        unsetenv("MM3_VQ_SET_GEMM");
+        // the reference over the decoded rows: the busy experts against it (the FP16 class), the quiet
+        // expert (2: 4 pairs) bitwise between the two forms - the skip law must leave it untouched
+        double worst_busy_h = 0.0, worst_busy_y = 0.0, worst_off_y = 0.0;
+        int quiet_bad = 0;
+        const int e_lo[3] = {0, 5, 12}, e_hi[3] = {5, 12, 16};
+        for (int lr = 0; lr < pairs; ++lr) {
+            const int e = lr < 5 ? 0 : lr < 12 ? 1 : 2;
+            const int t = row_idx[(size_t) lr];
+            std::vector<float> hs(n_ff);
+            for (int c = 0; c < n_ff; ++c) {
+                double gr = 0.0, ur = 0.0;
+                for (int cc = 0; cc < n_embd; ++cc) {
+                    const float xv = x[(size_t) t * n_embd + cc];
+                    gr += (double) xv * g[e].w[(size_t) c * n_embd + cc];
+                    ur += (double) xv * u[e].w[(size_t) c * n_embd + cc];
+                }
+                float gf = std::min((float) gr, lim), uf = std::min(std::max((float) ur, -lim), lim);
+                hs[(size_t) c] = gf * (1.0f / (1.0f + std::exp(-alpha * gf))) * (uf + 1.0f);
+                const uint16_t hbits = __half_as_ushort(__float2half_rn(hs[(size_t) c]));
+                if (lr >= e_lo[e] && lr < e_hi[e])
+                    worst_busy_h = std::max(worst_busy_h,
+                                            std::fabs((int) h_on[(size_t) lr * n_ff + c] - (int) hbits) /
+                                                (std::fabs((double) hbits) + 64.0));
+            }
+            for (int c = 0; c < n_embd; ++c) {
+                // the reference over the FP16-ROUNDED operands (the gemm_rows test's law); the gate is
+                // CANCELLATION-AWARE: the down sums cancel hard (|acc| << sum|terms|), so a relative gate
+                // would convict the summation-order round-off, not the code - the tolerance is a slice of
+                // the term magnitude instead
+                double acc = 0.0, terms = 0.0;
+                for (int cc = 0; cc < n_ff; ++cc) {
+                    const double hq = (double) h_f16(f32_to_f16(hs[(size_t) cc]));
+                    const double wq = (double) h_f16(f32_to_f16((float) dd[e].w[(size_t) c * n_ff + cc]));
+                    acc += hq * wq;
+                    terms += std::fabs(hq * wq);
+                }
+                const double tol = terms * 2e-3 + 1e-2;
+                if (lr >= e_lo[e] && lr < e_hi[e]) {
+                    worst_busy_y = std::max(worst_busy_y,
+                                            std::fabs(y_on[(size_t) lr * n_embd + c] - acc) / tol);
+                    worst_off_y = std::max(worst_off_y,
+                                           std::fabs(y_off[(size_t) lr * n_embd + c] - acc) / tol);
+                }
+            }
+        }
+        for (int lr = 12; lr < pairs; ++lr) {   // expert 2: 4 pairs - quiet under both forms
+            for (int c = 0; c < n_ff; ++c)
+                quiet_bad += (int) (h_off[(size_t) lr * n_ff + c] != h_on[(size_t) lr * n_ff + c]);
+            for (int c = 0; c < n_embd; ++c)
+                quiet_bad += (int) (y_off[(size_t) lr * n_embd + c] != y_on[(size_t) lr * n_embd + c]);
+        }
+        check(worst_busy_h < 2e-2, "set path: busy gate h16 vs reference", worst_busy_h);
+        check(worst_busy_y < 1.0, "set path: busy down y vs reference (cancellation-aware)", worst_busy_y);
+        check(quiet_bad == 0, "set path: quiet experts bitwise on/off", quiet_bad);
+        std::printf("  set-path worst: busy h %.4f, busy y %.4f (scalar-vs-ref %.4f), quiet mismatches %d\n",
+                    worst_busy_h, worst_busy_y, worst_off_y, quiet_bad);
+        const int lr1x = 1;
+        if (worst_off_y > 2e-2) {   // (the probe: per-column y_off vs the same-sum reference, hs done right)
+            const int e0 = 0, t0 = row_idx[(size_t) lr1x];
+            std::vector<float> hs0(n_ff);
+            for (int c = 0; c < n_ff; ++c) {
+                double gr = 0.0, ur = 0.0;
+                for (int cc = 0; cc < n_embd; ++cc) {
+                    gr += (double) x[(size_t) t0 * n_embd + cc] * g[0].w[(size_t) c * n_embd + cc];
+                    ur += (double) x[(size_t) t0 * n_embd + cc] * u[0].w[(size_t) c * n_embd + cc];
+                }
+                float gf = std::min((float) gr, lim), uf = std::min(std::max((float) ur, -lim), lim);
+                hs0[(size_t) c] = gf * (1.0f / (1.0f + std::exp(-alpha * gf))) * (uf + 1.0f);
+            }
+            std::printf("  probe lr=%d:", lr1x);
+            for (int c = 0; c < 4; ++c) {
+                double acc = 0.0;
+                for (int cc = 0; cc < n_ff; ++cc)
+                    acc += (double) h_f16(f32_to_f16(hs0[(size_t) cc])) * (double) dd[0].w[(size_t) c * n_ff + cc];
+                std::printf(" c%d dev %.1f ref %.1f", c, y_off[(size_t) lr1x * n_embd + c], acc);
+            }
+            std::printf("\n   hs0[0..3]: %.3f %.3f %.3f %.3f | x[t0][0..3]: %.3f %.3f %.3f %.3f\n",
+                        hs0[0], hs0[1], hs0[2], hs0[3], x[(size_t) t0 * n_embd], x[(size_t) t0 * n_embd + 1],
+                        x[(size_t) t0 * n_embd + 2], x[(size_t) t0 * n_embd + 3]);
+        }
+    }
+
     // ---- the REAL pack bytes: the release GGUFs parsed at the release offsets, the kernels against the
     // independent decode (skipped with a note when the release dir is absent)
     real_blob_tests(rnd);

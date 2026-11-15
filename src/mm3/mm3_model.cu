@@ -1960,6 +1960,24 @@ struct Model::Impl {
         return true;
     }
 
+    // the prompt path's staging on the COPY stream (d.cs is idle on this lane: promotions are VQ-gated off):
+    // the pass's DMAs run while the previous sub-pass's set kernels compute, and the consumers fence on the
+    // slot's event (the pattern the promotions already run at issue_promotions).  The slot it overwrites is
+    // safe by construction: the builder excludes the earlier sub-passes' slots of this forward (experts()), and
+    // the previous forward's readers finished before this layer's routing sync observed the stream.
+    bool stage_async(const Layer& l, Dev& d, int e, int s, std::string& err) {
+        const uint8_t* src = l.host_blob.empty() ? nullptr : l.host_blob[(size_t) e];
+        if (src == nullptr) {
+            CK(cudaStreamSynchronize(d.cs));   // (the pinned blob's previous READER is a d.cs copy)
+            assemble(l, e, d.pin);
+            src = d.pin;
+        }
+        CK(cudaMemcpyAsync(d.stg + (size_t) s * d.slot_bytes, src, l.blob, cudaMemcpyHostToDevice, d.cs));
+        CK(cudaEventRecord(d.slot_ev[(size_t) s], d.cs));
+        ++st.staged;
+        return true;
+    }
+
     // the device address of expert e of layer l for this call, staging it if it is not in VRAM (busy: the slots this
     // call already took)
     bool locate(Layer& l, Dev& d, int e, std::vector<char>& busy, unsigned long long& ptr, std::string& err) {
@@ -2744,9 +2762,22 @@ struct Model::Impl {
         std::vector<Pass> passes;
         if (!l.res_ids.empty()) passes.push_back({l.res_base, l.blob, l.res_ids});
         const long long lid = (long long) (&l - L.data());
+        // the staged set splits into SUB-PASSES (MM3_STAGE_SUBPASS, 4): sub-pass i+1's staging DMAs run on the
+        // copy stream while sub-pass i's set kernels compute - the copies and the tiles interleave instead of
+        // serializing.  A sub-pass's fresh picks skip the slots the earlier sub-passes of THIS forward took
+        // (their experts' kernels may still be reading them); the previous forward's readers finished before
+        // this layer's routing sync observed the stream, so older owners need no exclusion.
+        const int sub = [] {
+            const char* e = std::getenv("MM3_STAGE_SUBPASS");
+            int v = e ? std::atoi(e) : 4;
+            return std::min(8, std::max(1, v));
+        }();
+        const int npass = (int) ((staged.size() + sub - 1) / sub);
+        const int cap = npass > 0 ? std::min<int>(d.n_slots, (int) ((staged.size() + npass - 1) / npass)) : d.n_slots;
+        std::vector<int> prev_slots;
         for (size_t si = 0; si < staged.size();) {
             std::vector<int> se((size_t) d.n_slots, -1), fresh;
-            for (int n = 0; si < staged.size() && n < d.n_slots; ++si, ++n) {
+            for (int n = 0; si < staged.size() && n < cap; ++si, ++n) {
                 const int e = staged[si];
                 int at = -1;
                 for (int s = 0; s < d.n_slots; ++s)
@@ -2758,6 +2789,7 @@ struct Model::Impl {
                 int best = -1;
                 for (int s = 0; s < d.n_slots; ++s)
                     if (se[(size_t) s] < 0 && d.slot_pend[(size_t) s] < 0 &&
+                        std::find(prev_slots.begin(), prev_slots.end(), s) == prev_slots.end() &&
                         (best < 0 || d.slot_used[(size_t) s] < d.slot_used[(size_t) best]))
                         best = s;
                 if (best < 0) {   // (every free slot pending: the rest first in the next batch)
@@ -2768,6 +2800,9 @@ struct Model::Impl {
             }
             Pass p{d.stg, d.slot_bytes, std::move(se)};
             p.staged = true;
+            prev_slots.clear();
+            for (int s = 0; s < d.n_slots; ++s)
+                if (p.slot_expert[(size_t) s] >= 0) prev_slots.push_back(s);
             passes.push_back(std::move(p));
         }
         std::vector<int> rowidx, invrow((size_t) T * K, -1);
@@ -2799,13 +2834,20 @@ struct Model::Impl {
                     const int e = p.slot_expert[(size_t) s];
                     if (e < 0) continue;
                     if (d.slot_owner[(size_t) s] != lid * 1024 + e) {
-                        if (!stage(l, d, e, s, err)) return false;
+                        if (!stage_async(l, d, e, s, err)) return false;
                         d.slot_owner[(size_t) s] = lid * 1024 + e;
                     }
                     d.slot_used[(size_t) s] = fwd;
                 }
             }
             CK(cudaMemcpyAsync(d.bounds, p.bounds.data(), p.bounds.size() * 4, cudaMemcpyHostToDevice, d.s));
+            if (p.staged) {
+                // the sub-pass's kernels wait for THIS pass's copies; an older slot-event (content valid
+                // from an earlier forward, or an earlier sub-pass already waited) fires immediately
+                for (int s = 0; s < d.n_slots; ++s)
+                    if (p.slot_expert[(size_t) s] >= 0)
+                        CK(cudaStreamWaitEvent(d.s, d.slot_ev[(size_t) s]));
+            }
             x3::SetArgs sa;
             sa.wbase = p.wbase;
             sa.stride = p.stride;
@@ -2828,9 +2870,11 @@ struct Model::Impl {
             }
             x3::set_gate_up(sa, d.xn, g.dim, d.rowidx + p.row0, d.h16, g.ff, d.s);
             x3::set_down(sa, d.h16, g.ff, d.y + (size_t) p.row0 * g.dim, g.dim, d.s);
-            // (the next pass rewrites the bounds and h16: let this one finish with them)
-            CK(cudaStreamSynchronize(d.s));
         }
+        // ONE drain per layer (the old per-pass sync serialized the sub-passes): it fences the host stack
+        // vectors the H2Ds read (rowidx/invrow/bounds die at return) and closes the layer's slot reads before
+        // the next layer's LRU may re-stage them - the next layer's own routing sync would block here anyway
+        CK(cudaStreamSynchronize(d.s));
         return true;
     }
 
