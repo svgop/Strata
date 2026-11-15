@@ -4,7 +4,13 @@
     "--pack",
     "/home/svg/LLM/data/packs/minimax-m3.1-flash-vq",
     "--max-context",
-    "131072"
+    "131072",
+    "--chunk",
+    "1024",
+    "--kv-cache",
+    "fp8",
+    "--kv-rot",
+    "off"
   ],
   "cwd": "/home/svg/LLM/strata-custom-2",
   "tokenizer": "/home/svg/LLM/data/models/VQ/MiniMax-M3.1-Flash/tokenizer",
