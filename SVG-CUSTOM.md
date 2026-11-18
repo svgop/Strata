@@ -12123,3 +12123,26 @@ storage canon (reference updates in the same commit):
   logs. What it does NOT yet buy: deterministic geometry (R1) and bounded adaptation (R3).
 - Next: R1 (the VRAM budget owner: pinned cache geometry + allocation table), then R4 (certification
   on the fingerprint), then R3 (anchored residency + idle re-seed), per campaign/research/boot-contract.md.
+
+## F-385 — the store recovery is proven viable, and a store is now VALIDATED-or-not-armed (2026-11-18, 22:10)
+
+- **The requant is clean.** `llama.cpp` requantized IQ3_S -> Q2_0 into `.scratch-q2_0/Q2_0-requant.gguf`
+  (status 0; 2 fallback tensors); the tool's own GGUF reader scanned all **809 Q2_0 tensors, 18,154,671
+  scales: 0 non-finite**. The rebuilt arena `q2_0-rebuilt` (interrupted build: no index.txt/manifest.json)
+  was armed from `experts.json`+`experts.bin` alone (the store needs nothing else) and served a full
+  probe leg with **0 new #879 events** - the bytes decode under the canonical kernel. So the recovery
+  path (option (a): rebuild from the IQ3_S source) is real, not theoretical.
+- **The miss-path prize, measured with the confound named:** the armed leg read cpu-exp 6.25 ms/window
+  at hit 92.9% vs the rollback's 7.59 at 92.6% (-17% pool time) - NOT a clean A/B: the two legs are
+  different boot draws (the lottery). The isolated store delta stays owed until R1 makes the geometry
+  deterministic; the 75 us vs 152 us/entry mechanism says the prize is real.
+- **THE LAUNCHER CONTRACT (launch-common.sh):** a store is armed only when it carries a `VALIDATED`
+  marker (`launch::shadow_store_valid`), otherwise the native path serves every miss and the boot says
+  why. The canonical pack (corrupt, T68) has no marker, so **a manual start can never silently NaN at
+  its first window again** - the footgun the default `STRATA_SHADOW_EXPERTS=$canon` carried since T68.
+  Remaining to arm the rebuilt store: finish the pack (index/manifest), run the MMLU gate (the
+  double-quantized store is token-stream-affecting), then write the marker.
+- **Live state after the safe default:** 210.6/180.4/225.8, hit 96.0% (a gold draw); the launcher line
+  names the refused store. The earlier "not performing" was a bad draw plus two unrelated `python3 -`
+  jobs on the housekeeping cores (the engine measured 190.7 and 210.6 when checked).
+- Next: R1 (deterministic geometry) -> the store A/B -> R3 (anchored residency) -> R4 (certification).

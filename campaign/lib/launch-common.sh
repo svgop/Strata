@@ -80,24 +80,33 @@ launch::shadow_canon() {      # the store's one owner-path (packs live with the 
   echo /mnt/DATA/LLM/Models/GGUF/strata/data/packs/q2_0
 }
 
-launch::shadow_export() {     # THE METHOD (2026-11-18 operator ruling): the canonical pack is the
-  # primary lane's store - no ladder, no system-dir fallbacks. The pack's absence means no store
-  # (native path serves every miss), never a degraded tier. The tmpfs fast tier (F-367, +5.5% ABAB)
-  # is an explicit opt-in: STRATA_SHADOW_TMPFS=1 arms the RAM copy and lets it linger; the tier that
-  # corrupted under memory pressure (M1: the pool-short boot fell to the swappable copy) is never
-  # automatic. An explicit env value always wins - including the "" rollback (the engine treats
-  # unset and empty alike - shadow_experts.hpp).
+launch::shadow_store_valid() { # 0 = the pack at $1 carries its validation marker (F-385: THE CONTRACT)
+  # A store is armed by the launcher only when it has passed the rebuild's verify (bit-exact vs its
+  # source) AND the operator's quality gate - the marker file `VALIDATED` is the record of that.  The
+  # corrupt canonical pack (T68: 96 non-finite Q2_0 scales) has no marker, so a manual start can never
+  # NaN silently again: the boot falls back to the native path and SAYS so.
+  [ -f "$1/VALIDATED" ]
+}
+
+launch::shadow_export() {     # THE METHOD: a store is armed only when VALIDATED (F-385).  The
+  # canonical pack is corrupt on disk (T68: every armed boot reading it NaN'd at its first window),
+  # so the default is the native path (rollback), not a hope.  A validated ring/estate pack may be
+  # armed by naming it (STRATA_SHADOW_EXPERTS=<dir>) or by placing it as the canonical with its
+  # VALIDATED marker.  The tmpfs fast tier (F-367, +5.5% ABAB) is an explicit opt-in:
+  # STRATA_SHADOW_TMPFS=1 arms the RAM copy and lets it linger; the tier that corrupted under memory
+  # pressure (M1: the pool-short boot fell to the swappable copy) is never automatic.  An explicit
+  # env value always wins - including the "" rollback (the engine treats unset and empty alike).
   local canon=$(launch::shadow_canon) tmpfs=/dev/shm/strata-shadow-q2_0
   if [ -n "${STRATA_SHADOW_EXPERTS+set}" ]; then
     :                                                 # explicit value wins (incl. "" rollback)
   elif [ "${STRATA_SHADOW_TMPFS:-0}" = "1" ]; then
     export STRATA_SHADOW_EXPERTS="$tmpfs"             # opt-in fast tier: RAM copy lingers; the
                                                       # reestablish below builds it before the exec
-  elif [ -f "$canon/experts.bin" ]; then
-    export STRATA_SHADOW_EXPERTS="$canon"             # THE method: the estate artifact (like data/mtp)
+  elif [ -f "$canon/experts.bin" ] && launch::shadow_store_valid "$canon"; then
+    export STRATA_SHADOW_EXPERTS="$canon"             # THE method: a validated estate artifact
   else
     export STRATA_SHADOW_EXPERTS=""
-    echo "launcher: shadow pack $canon MISSING - no store, native path serves every miss" >&2
+    echo "launcher: no VALIDATED store at $canon - the native path serves every miss (the canonical pack is corrupt, T68; arm a validated store with STRATA_SHADOW_EXPERTS=<dir> after its quality gate)" >&2
   fi
   [ -n "$STRATA_SHADOW_EXPERTS" ] && echo "launcher: shadow store $STRATA_SHADOW_EXPERTS" >&2
 }
