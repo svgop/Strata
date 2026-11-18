@@ -12044,3 +12044,38 @@ storage canon (reference updates in the same commit):
   remains the store recovery (rebuild from the IQ3_S GGUF via the pack tools / re-download / stay
   rolled back) plus a quiet-window control — both operator calls, unchanged from T68.
 - Results: campaign/results/stand-2026-11-18-late-{DISCARD,leg1..leg4}.txt (+ the metrics.jsonl row).
+
+## F-382 — CORRECTION of F-381: the 143.8 was a DEGRADED ENGINE BOOT; the box reads 200-215 on fresh boots (2026-11-18, 21:25)
+
+- **The retraction:** F-381's "the deficit is desktop load" is WRONG. The request inventory proves my
+  legs served only my own probe (max 200/220/2000/900/600/128); the browser client's first traffic was the
+  262K-token runaway that STARTED at 21:08, after every measured leg. The 143.8 was an engine-boot state.
+- **The evidence (same host boot 20:22, same config, same model, same 15 slots, identical boot banners):**
+  | engine boot | M1 | pair | conc | flush hit | cpu-exp | VRAM exchanges (1st leg) |
+  |---|---|---|---|---|---|---|
+  | 20:57 | 143.3 | 141.7 | 191.8 | 92.6% | 7.59 | ~75,000 |
+  | 21:20 | **215.4** | 197.9 | 254.7 | 96.0% | 2.91 | ~6,500 |
+  | 21:23 | 200.4 | 200.9 | 246.4 | 93.7% | 4.21 | ~5,400 |
+  Consecutive restarts on identical inputs span **50% of M1**. The adaptive tier churns VRAM exchanges
+  10x harder in the bad state (hit 92.6 vs 96.0); T68's own battery shows the same split (r1 95.9 vs
+  r3 92.7). Boot-time geometry is identical: 7,520-7,659 slots allocated, 9,830-10,008 filled, RAM
+  37.65-38.00 GiB, same profile file (Oct 14), same 15 restored slots. The only unverified boot-time
+  object is the **profile pre-fill** ("slot 0 verified" ONLY) and the adapt tier's seed.
+- **Hardware audit: clean.** PCIe 5.0 x16 (max too), no throttle (0x400 = idle), 600 W limit, no
+  ECC/XID/MCE/EDAC errors, GPU 49C, SM 2925-2947/MEM 13801 throughout. The isolated cores' 624 MHz
+  `scaling_cur_freq` is a **nohz_full reporting artifact** - a pinned microbenchmark runs cpu9 661-669 ms
+  vs cpu0 606-652 ms (full speed); do not chase it. Memory ~40 GB/s rw single-core (sane).
+- **Standing findings that do matter:** RAM runs at **5200 MT/s** on a 6000-rated kit (CMK96GX5M2E6000Z36,
+  4x48 GiB dual-rank) - EXPO off/failed, ~10% bandwidth tax on a bandwidth-bound pool. Engine RSS 136 GiB
+  (62 shmem + 65 file + 9 anon) leaves 12 GiB free (no reclaim: pgscan/allocstall 0). The pack story is
+  unchanged (canonical corrupt; `q2_0-rebuilt` is INCOMPLETE: experts+dense only, no index/manifest/
+  tokenizer). A Chrome client sent max_tokens=262038 -> thinking budget 196,529 -> 65,963 tokens in 457 s
+  at 144 t/s (250k VRAM exchanges): the box-hog, and a client/UI default worth capping.
+- **The lane ordering this boot restores:** solo 215.4 vs record 223.6 (-3.7%), pair 197.9 vs 212.2
+  (-6.7%), conc 254.7 vs 307.6 (-17.2%) - the corrupt-store rollback taxes the CONCURRENT lane hardest,
+  exactly as the 5.7%-CPU-share anatomy predicts. The boot lottery sits on top at +-15%.
+- **Next:** (1) a boot-quality gate - first-flush hit <95% or M1 <200 => restart (recovers 50% for free);
+  (2) instrument the profile fill (verify ALL slots, not slot 0) and the adapt seed - the root cause;
+  (3) finish/decide q2_0-rebuilt; (4) BIOS EXPO check; (5) cap max_tokens/thinking defaults; (6) the 2h
+  RTC jump at boot (journal says 22:22 for a 20:22 boot).
+- Results: campaign/results/f381-reboot-check.txt (215.4), f381-reboot-check2.txt (200.4).
