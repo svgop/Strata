@@ -58,7 +58,9 @@
     "30",
     "--resident-experts",
     "--mtp",
-    "/mnt/DATA/LLM/Models/GGUF/strata/data/mtp-en/rt"
+    "/mnt/DATA/LLM/Models/GGUF/strata/data/mtp/rt",
+    "--mtp-draft-vocab",
+    "data/draft_vocab_en.bin"
   ],
   "cwd": "/home/svg/LLM/strata-custom-2",
   "tokenizer": "/mnt/DATA/LLM/Models/GGUF/strata/data/packs/iq3_s/tokenizer",

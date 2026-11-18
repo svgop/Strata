@@ -65,7 +65,7 @@ launch::exec_engine() {       # --config <file> [--port N] [--host H]
 # ---- Qwen-family shadow store (DS4 launchers never call these) ----
 
 launch::shadow_export() {     # the single-owner ladder + the `-`-default export
-  local canon=/home/svg/LLM/data/packs/q2_0 tmpfs=/dev/shm/strata-shadow-q2_0
+  local canon=/mnt/DATA/LLM/Models/GGUF/strata/data/packs/q2_0 tmpfs=/dev/shm/strata-shadow-q2_0
   local _shadow
   if [ "$(launch::hugepages_free)" -ge "$STRATA_HUGEPAGES_MIN" ]; then
     _shadow="$canon"                                  # engine builds its memfd from the pack (one owner)

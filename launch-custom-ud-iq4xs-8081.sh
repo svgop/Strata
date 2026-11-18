@@ -70,6 +70,7 @@ _SHADOW_TMPFS=/dev/shm/strata-shadow-q2_0
 # SINGLE-OWNER store rule (2026-11-09): when the reserved pool covers the store, the ENGINE builds
 # its memfd straight from the canonical pack - the tmpfs copy is then dead weight (31.6 GiB resident
 # twice).  Skip the copy and point the arm at the pack; pool-short boots keep the old ladder.
+export STRATA_SHADOW_EXPERTS=""   # 2026-11-18: the shadow NaN census rollback (see launch-custom-iq3s-8081.sh)
 launch::shadow_export
 # F-331 ARMS (10-25, both never priced on this lane; see SVG-CUSTOM F-331):
 export STRATA_QSA_SPLIT_ATTN="${STRATA_QSA_SPLIT_ATTN:-1}"     # decode+drafter attention through the split int8-MMA kernel (verify.cpp:1973 + mtp.cpp:1088;

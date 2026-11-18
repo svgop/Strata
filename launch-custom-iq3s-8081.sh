@@ -70,6 +70,13 @@ _SHADOW_TMPFS=/dev/shm/strata-shadow-q2_0
 # SINGLE-OWNER store rule (2026-11-09): when the reserved pool covers the store, the ENGINE builds
 # its memfd straight from the canonical pack - the tmpfs copy is then dead weight (31.6 GiB resident
 # twice).  Skip the copy and point the arm at the pack; pool-short boots keep the old ladder.
+# 2026-11-18 NaN CENSUS (the estate-move regression hunt): STRATA_SHADOW_EXPERTS armed = every request
+# dies at its first window (non-finite logits #879, 29/29); the same engine + flags + exact server prompt
+# with the shadow UNSET = clean (3/3, 62 t/s cold). The shadow is byte-identical to the canonical pack
+# (cmp) and armed clean through November - a latent bug in the armed path that today's environment trips,
+# root-cause pending (the ActQ/run_split_multi audit). The documented rollback (F-359: unset = nothing
+# takes a new branch, byte-identical) until that lands:
+export STRATA_SHADOW_EXPERTS=""
 launch::shadow_export
 # F-331 ARMS (10-25, both never priced on this lane; see SVG-CUSTOM F-331):
 export STRATA_QSA_SPLIT_ATTN="${STRATA_QSA_SPLIT_ATTN:-1}"     # decode+drafter attention through the split int8-MMA kernel (verify.cpp:1973 + mtp.cpp:1088;
