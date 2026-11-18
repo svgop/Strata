@@ -12224,3 +12224,34 @@ storage canon (reference updates in the same commit):
 - **The cache geometry:** 9,900 slots fits (fingerprint, 207.8/200.0/258.6 on one draw); 10,000 does
   NOT fit - the fill is cut at 9,968 with `BOOT GEOMETRY: the boot is NOT canonical` (as designed).
   Pushing further needs the reserve or the batch slots, a capability trade not taken silently.
+
+## F-390 — Calibration v2: the design (56 sources; the system, not the knobs) (2026-11-19, 00:30)
+
+- **`--calibrate` investigated**: it is `tools/calibrate.py` (setup's flag) - it measures per-PC
+  *rate* knobs (--pcie-frac, --spec-min-p, --pool-workers, **--adapt-every/swaps/decay**,
+  --prefill-pipe, HIP shared-expert stream) by running the engine per value. It IS related (it tunes
+  the adaptive tier's rate) but it never touches the *content*, the *stability* or the *persistence*
+  of the learned state. It stays as the hardware tuner; the redesign is the tier itself.
+- **The diagnosis, from 56 sources**: our tier is an open-loop scan (decayed counts, victim = least
+  count, no admission filter, no window/ghost, no global/local split, no prediction) - exactly the
+  class the field superseded. TinyLFU's admission alone beats LRU by 30-40% miss ratio; S3-FIFO up to
+  72%; MoE-Infinity's request-level activation matrix beats LRU; Diff-MoE's global/local/cold
+  differential caching beats both; prediction-based prefetch cuts TPOT 14%. CECAR fixes the ceiling:
+  hit rates are fundamentally bounded (Belady context), so the job is to HIT the bound every boot,
+  not to beat it.
+- **The design: `campaign/research/calibration-v2.md`** - six layers, each with one owner:
+  1. *Estimator*: a 4-bit frequency sketch with TinyLFU aging (replaces the float decay whose
+     half-life drifts with the traffic rate and whose per-boot phase differed - the lottery's seed).
+  2. *Policy*: global (calibrated, persistent) + local (per-conversation) segments (Diff-MoE),
+     TinyLFU admission with a ghost list, S3-FIFO-style small/main inside local, a churn budget.
+  3. *Predictor* (opt-in, accuracy-gated): routing-provenance prediction, prefetch the next window.
+  4. *Calibration protocol*: a fixed greedy corpus run at boot (60-120 s) that converges the local
+     segment deterministically - the missing "calibrated at prewarm" step.
+  5. *Persistence*: `calibration.bin` v2 (ranked pairs + frequencies + result + checksum), atomic
+     write, **champion/challenger**: a new calibration replaces the incumbent only if it beats it on
+     a held-out split by a margin - the "better calibration saves automatically" rule, executable.
+  6. *Certification*: the fixed M1 decode at boot against the bar, published to /health.
+- **Migration is strangler** (P1 estimator -> P2 admission+segments -> P3 calibration+save ->
+  P4 predictor), each env-gated, each gated by the 3v3 boot interleave. The design doc carries the
+  executable invariants (segment arithmetic, epoch-consistent reads, churn budget, atomic profile,
+  deterministic fingerprint, the certification bar).
