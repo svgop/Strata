@@ -6661,6 +6661,39 @@ int main(int argc, char** argv) {
                              "slot 0 verified\n",
                      (long long) prefilled, (long long) (per_layer ? xcache.slots() : want), fill_s,
                      fill_s > 0 ? (double) fill_bytes / 1e6 / fill_s : 0.0);
+        // ---- THE BOOT CONTRACT (F-383): the fill is verified as a SPREAD, not at slot 0 only, and the
+        // resident set is fingerprinted.  A fill that differs from the profile's canonical prefix is a
+        // BOOT DEFECT: refuse it loudly rather than serve a degraded expert tier silently (measured cost
+        // of an unverified bad boot: M1 128.9 vs 219.2, VRAM hit 91.9% vs 96.2%).  The fingerprint is the
+        // boot's identity: two boots of the same recipe must print the same one, and the certification
+        // step (R4) compares it.  One D2H per sampled pair (~48 x 1.38 MB, tens of ms), table hash is free.
+        if (prefilled > 0 && srcp != nullptr) {
+            const int64_t step = std::max<int64_t>(1, want / 48);
+            int64_t verified = 0;
+            for (int64_t i = 0; i < want; i += step) {
+                const int32_t slot = xcache.slot_of(profile[(size_t) i].first, profile[(size_t) i].second);
+                const uint8_t* b = srcp->blob_stable(profile[(size_t) i].first, profile[(size_t) i].second);
+                if (slot < 0 || b == nullptr ||
+                    !xcache.verify_slot(slot, b, err,
+                            (int64_t) strata::kernels::cpu::expert_layout().blob_bytes(profile[(size_t) i].first))) {
+                    std::fprintf(stderr, "strata generate: BOOT CONTRACT FAILED - the profile fill does not match "
+                                         "at pair %lld (%s); refusing the boot\n", (long long) i, err.c_str());
+                    return 1;
+                }
+                ++verified;
+            }
+            uint64_t fp = strata::core::fnv1a64(nullptr, 0);
+            for (int64_t l = 0; l < g.n_layers; ++l)
+                for (int64_t e = 0; e < g.n_expert; ++e) {
+                    const int32_t s = xcache.slot_of(l, e);
+                    if (s >= 0) {
+                        const int64_t v[3] = {l, e, (int64_t) s};
+                        fp = strata::core::fnv1a64((const uint8_t*) v, sizeof v, fp);
+                    }
+                }
+            std::fprintf(stderr, "strata generate: boot fingerprint %016llx slots=%lld verified=%lld\n",
+                         (unsigned long long) fp, (long long) xcache.slots(), (long long) verified);
+        }
         if (std::getenv("STRATA_VERIFY_COMPLEMENT") != nullptr) {
             // tests: the filled slots' checksum (each slot's blob read back and hashed, then the hashes in slot order)
             std::vector<std::pair<int32_t, int64_t>> sl;   // (slot, blob bytes)

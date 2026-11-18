@@ -12103,3 +12103,23 @@ storage canon (reference updates in the same commit):
   is the orthogonal second lever: it halves the miss cost and shrinks the whole spread.
 - Standing recipe restored (config back to `--expert-cache auto`); the box is up on an 185.4 draw.
   Results: campaign/results/{det-boot1,det-boot2,fixedcache-r1,fixedcache-r2,f383-standing}.{txt,out}.
+
+## F-384 — R2 landed: the boot verifies its fill as a SPREAD and publishes its identity (2026-11-18, 22:05)
+
+- **What changed (src/program/generate.cpp, the fill block):** the fill is no longer checked at slot 0
+  only. After the pre-fill the engine verifies ~48 evenly spaced pairs against their source blobs
+  (`ExpertCache::verify_slot`, ~66 MB D2H, tens of ms) and hashes the resident table into **`boot
+  fingerprint <hash> slots=<N> verified=<K>`**; a mismatch at any sampled pair prints `BOOT CONTRACT
+  FAILED` and refuses the boot instead of serving a wrong expert tier silently (the measured cost of
+  an unverified bad boot: M1 128.9 vs 219.2, hit 91.9 vs 96.2). Deployed `build-fresh/strata ->
+  engine/strata` with the rollback copy `engine/strata.pre-boot-contract` (Launch Law).
+- **Two boots of the contract engine:** 195.0/177.5/241.0 (hit 96.2%, cpu-exp 3.40) and
+  199.2/193.5/246.4 (96.4%, 3.24); fingerprints b32a06316e9637b9 (9,878 slots) and e280d3af8fe75c06
+  (9,908) — the identity differs because the **geometry still floats**: the cache size comes from
+  free VRAM at boot (9,878 vs 9,908 this pair; 9,830-10,008 across the day). That is R1's target: one
+  budget owner, canonical geometry, identical fingerprints for a fixed policy.
+- **What this buys now:** a degraded fill can never serve silently (refused at boot), and every boot
+  carries a comparable identity the certification (R4) and the battery can read instead of scraping
+  logs. What it does NOT yet buy: deterministic geometry (R1) and bounded adaptation (R3).
+- Next: R1 (the VRAM budget owner: pinned cache geometry + allocation table), then R4 (certification
+  on the fingerprint), then R3 (anchored residency + idle re-seed), per campaign/research/boot-contract.md.
