@@ -42,6 +42,13 @@ export STRATA_ADAPT_EARLY="${STRATA_ADAPT_EARLY:-1}"  # F-332 ADOPTED (10-25): t
                                   # thread UNDER the window run (snapshot of usage/pred/heat; decisions one round staler - EWMA noise); gate-set
                                   # + copy enqueues unchanged at round end (F-187 overlap lane stays closed). 3v3 same-hour: pair +5.4% (209.6 vs
                                   # 198.8), M1 +0.1 flat, conc +1.6 in-band, M3b +1.6pp; MECHANISM PROVEN: "adapt wait" 1.03 -> 0.28-0.62 ms/window.
+# F-387 THE MEMORY CONTRACT (2026-11-18, measured): the engine's exit drops the page cache of the
+# model files it read.  The batteries have always exported this; the launcher did not, so a manual
+# start left ~80 GiB of dead page cache behind and the NEXT boot ran at 120-137 t/s instead of the
+# 200+ gold (MemFree 4.9 GiB, the miss path falling through to storage).  Every bootstorm-degraded
+# leg in the certification run (171/117/161, then 137/135) was this; after `drop_caches` the same
+# recipe read 201.3/189.0/255.7 and 198.8/188.7/271.6 (armed).  It is part of the boot hygiene now.
+export STRATA_DROP_CACHE_ON_EXIT="${STRATA_DROP_CACHE_ON_EXIT:-1}"
                                   # =0 rolls back (inline scan, byte-identical legacy path). Rider: five-boot pooled confirmation (pair leg-1
                                   # sensitivity noted in F-332); engine rollback: engine/strata.pre-f332
 # F-367 ADOPTED (10-27): the shadow store's canonical home is /dev/shm (tmpfs). F-365: one probe leg

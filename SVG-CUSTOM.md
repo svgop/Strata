@@ -12170,3 +12170,30 @@ storage canon (reference updates in the same commit):
   is written (the gate is owed before adoption, per the quality law).
 - Next: R3 (bounded adaptation + idle re-anchor) with the deterministic seed as its baseline; the
   MMLU gate on the rebuilt store; then the 5-boot 3v3 interleave that writes the bank.
+
+## F-387 — the residual lottery was MEMORY STATE, not the adapt tier; the certification gate + memory contract land (2026-11-18, 23:30)
+
+- **The adaptive tier is essential, not the villain.** With static residency (`--adapt-every 0`) on the
+  deterministic seed the VRAM hit rate is **79.7/79.2%** (M1 129.3/101.6) - the adapted state (92-96%)
+  is 13-17 points better. Re-anchoring a boot to the seed (the original R3 idea) would have been a
+  disaster; the seed is the floor, not the anchor.
+- **The learned profile is a bad seed (F-271 confirmed).** Booting from
+  `data/expert-profile-learned.bin` (saved by earlier synthetic-traffic legs; the launcher's
+  load and save paths are the SAME file, so each boot re-trains it) read 91.2/90.9% hit
+  (M1 135.1/156.1) and the two boots' fingerprints DIFFERED (f1102d.. vs 396e47..) - the loop drifts.
+  A learned profile may seed a boot only through a certification gate, never raw.
+- **THE MEMORY CONTRACT (the real residual).** The certification run caught boots at 171.4/117.4/161.0
+  (fixed greedy) and 137.5/135.0 (the M1 lane, 3 samples, max) - every one after hours of boot cycling.
+  MemFree was **4.9 GiB**; the engine's 65 GiB GGUF mapping + 62 GiB shmem + (when armed) the 31.64 GiB
+  store leave the page cache thrashed and the miss path falling through to storage. After
+  `sync; drop_caches` the SAME recipe read **201.3/189.0/255.7 (95.7%, cpu-exp 2.41)** unarmed and
+  **198.8/188.7/271.6 (95.8%, 2.31)** armed - gold, back to back. Every "bad lottery draw" in this
+  session's certification was this. The launcher now exports `STRATA_DROP_CACHE_ON_EXIT=1` (the
+  batteries always did; a manual start did not), so each exit releases its page cache.
+- **The store is a memory-budget item.** Armed on fresh memory: 198.8/188.7/271.6 (conc best of the
+  session) but MemFree ends at 1.6 GiB - the pressure that degrades the NEXT boots. It must be
+  budgeted (pinned/declared), not free.
+- **The certification gate exists**: `campaign/boot-certify.sh` boots, serves the M1 lane (3 samples,
+  max), and certifies at/above the bar (200) or re-boots; it refuses to advertise a degraded box. It
+  caught every degraded boot it met. Wiring it into the start and the 5-boot bank are the remaining
+  steps; the MMLU gate on the store is still owed before it is armed by default.
