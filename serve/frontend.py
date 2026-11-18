@@ -142,7 +142,14 @@ EFFORT = {"none": None, "off": None, "minimal": None, "disabled": None, "false":
 # families keep the one above.  (F-371: ported from upstream v0.2.7.)
 EFFORT_DEEPSEEK = {"none": None, "off": None, "minimal": None, "disabled": None, "false": None,
                    "low": "low", "medium": "medium", "high": "high", "xhigh": "max", "max": "max", "maximum": "max"}
-_EFFORT_QWEN = dict(EFFORT)
+# The qwen family's OWN packs still ship the pre-F-283 template: it accepts low/medium/high (its `high`
+# aliases to the xhigh rendering, byte-identical output) and RAISES on `max`.  The default table above maps
+# xhigh/max/maximum -> "max", so every top-tier spelling on this lane was a 400 (the wire-audit's standing
+# regression): here the top tier maps to "high" - the template's own alias - which renders the same text
+# the old table's "xhigh" produced.
+_EFFORT_QWEN = {"none": None, "off": None, "minimal": None, "disabled": None, "false": None,
+                "low": "low", "medium": "medium", "high": "high", "xhigh": "high", "max": "high",
+                "maximum": "high"}
 _NUMERIC_EFFORT = False
 
 
@@ -150,10 +157,19 @@ def use_family(family: str | None) -> None:
     """The reasoning-effort words and the think-tag spelling of the model family this server runs (module
     state).  MiniMax M3.1 thinks in <mm:think>...</mm:think> (its own template's tokens; the family's
     template ships with the pack and the OutputParser reads THINK_END, so the switch moves the spelling
-    with the effort words)."""
+    with the effort words).  The effort words are the template's own: deepseek41 its four + numbers, qwen's
+    packs the pre-F-283 three (top tier = `high`, its own xhigh alias), minimax's template takes any
+    spelling (the shared four-tier table)."""
     global _NUMERIC_EFFORT, THINK_END, THINK_OPEN
     EFFORT.clear()
-    EFFORT.update(EFFORT_DEEPSEEK if family == "deepseek41" else _EFFORT_QWEN)
+    if family == "deepseek41":
+        EFFORT.update(EFFORT_DEEPSEEK)
+    elif family == "minimax-m3":
+        EFFORT.update({"none": None, "off": None, "minimal": None, "disabled": None, "false": None,
+                       "low": "low", "medium": "medium", "high": "high", "xhigh": "max", "max": "max",
+                       "maximum": "max"})
+    else:
+        EFFORT.update(_EFFORT_QWEN)
     _NUMERIC_EFFORT = family == "deepseek41"
     if family == "minimax-m3":
         THINK_END, THINK_OPEN = "</mm:think>", "<mm:think>"
