@@ -13,7 +13,7 @@
 # the quality gate is owed (the T53 task-gate precedent; the change is far below --experts 5's trade).
 # Revert: drop the line (the kernel stays default-off).
 export DS4_ATTN_SPLIT=1
-export STRATA_DS4_SLOT_DIR="${STRATA_DS4_SLOT_DIR:-/home/svg/LLM/data/ds4-slots}"  # the runtime slot cache lives in the estate, not the repo (server.py:3413 otherwise derives it from the log path)
+export STRATA_DS4_SLOT_DIR="${STRATA_DS4_SLOT_DIR:-/home/svg/LLM/data-rt/ds4-slots}"  # the runtime slot cache lives in the estate, not the repo (server.py:3413 otherwise derives it from the log path)
 
 # The exec ladder lives in campaign/lib/launch-common.sh (one owner, composed guard+pin -
 # the 2026-11-09 fleet refactor killed the copy-paste drift class).

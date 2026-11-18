@@ -6,7 +6,7 @@ set -u
 REPO=/home/svg/LLM/strata-custom-2
 CORPUS=${1:?corpus dir}
 OUT=${2:?records dir}
-MTP=${3:-/home/svg/LLM/data/mtp-en/rt}
+MTP=${3:-/mnt/DATA/LLM/Models/GGUF/strata/data/mtp-en/rt}
 mkdir -p "$OUT"
 port_busy() { ss -ltn 2>/dev/null | grep -q ":8081 "; }
 if port_busy; then echo "ABORT: the 8081 server is up — stop it first (single-engine law)"; exit 1; fi
@@ -15,9 +15,9 @@ for f in "$CORPUS"/stream-*.ids; do
   [ -s "$OUT/records-$name.f32" ] && { echo "skip $name (exists)"; continue; }
   echo "=== harvest $name ($(wc -c < "$f") bytes of ids) $(date +%H:%M:%S) ==="
   timeout 1800 "$REPO/engine/strata" \
-    --pack /home/svg/LLM/data/packs/iq3_s \
-    --native /home/svg/LLM/data/models/GSQ-RCO/Qwen3.8-Flash-Next/Qwen3.8-Flash-Next-GSQ-RCO-IQ3_S-00001-of-00002.gguf \
-    --ple-gguf /home/svg/LLM/data/models/GSQ-RCO/Qwen3.8-Flash-Next/Qwen3.8-Flash-Next-GSQ-RCO-IQ3_S-00002-of-00002.gguf \
+    --pack /mnt/DATA/LLM/Models/GGUF/strata/data/packs/iq3_s \
+    --native /mnt/DATA/LLM/Models/GGUF/GSQ-RCO/qwen3.8-flash-next/gsq-iq3s/Qwen3.8-Flash-Next-GSQ-RCO-IQ3_S-00001-of-00002.gguf \
+    --ple-gguf /mnt/DATA/LLM/Models/GGUF/GSQ-RCO/qwen3.8-flash-next/gsq-iq3s/Qwen3.8-Flash-Next-GSQ-RCO-IQ3_S-00002-of-00002.gguf \
     --expert-cache auto --spec 6 --max-context 131072 --kv int8 --kv-resident 32768 \
     --spec-min-p 0.5 --prefill auto:32768 --mtp-q4 all --mtp-hnorm stream \
     --pcie-frac 0.35 --pcie-mode dma --vram-reserve-mib 2000 \

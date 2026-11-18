@@ -21,7 +21,7 @@ import sys
 from pathlib import Path
 
 EXPORT = Path("/home/svg/LLM/Custom-data/mtp/export")
-STOCK_RT = Path("/home/svg/LLM/data/mtp/rt")          # the symlink-resolved true source
+STOCK_RT = Path("/mnt/DATA/LLM/Models/GGUF/strata/data/mtp/rt")          # the symlink-resolved true source
 OUT = Path("/home/svg/LLM/Custom-data/mtp/rt2")
 FROZEN = ("experts.bin", "draft_vocab.bin")
 

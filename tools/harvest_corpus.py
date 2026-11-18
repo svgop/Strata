@@ -20,7 +20,7 @@ from pathlib import Path
 REPO = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(REPO / "tools"))
 
-PACK_TOK = Path("/home/svg/LLM/data/packs/iq3_s/tokenizer")
+PACK_TOK = Path("/mnt/DATA/LLM/Models/GGUF/strata/data/packs/iq3_s/tokenizer")
 
 
 def build_tokenizer():

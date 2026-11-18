@@ -8,7 +8,7 @@
 # hugetlbfs-mount tier was removed - it double-drew the pool against the engine's memfd (caught
 # live: 19225 pages held after engine death; the engine owns the store now).
 set -u
-SRC=/home/svg/LLM/data/packs/q2_0
+SRC=/mnt/DATA/LLM/Models/GGUF/strata/data/packs/q2_0
 T0=$(date +%s)
 DST=/dev/shm/strata-shadow-q2_0
 

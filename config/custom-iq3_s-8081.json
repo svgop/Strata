@@ -2,11 +2,11 @@
   "exe": "/home/svg/LLM/strata-custom-2/engine/strata",
   "args": [
     "--pack",
-    "/home/svg/LLM/data/packs/iq3_s",
+    "/mnt/DATA/LLM/Models/GGUF/strata/data/packs/iq3_s",
     "--native",
-    "/home/svg/LLM/data/models/GSQ-RCO/Qwen3.8-Flash-Next/Qwen3.8-Flash-Next-GSQ-RCO-IQ3_S-00001-of-00002.gguf",
+    "/mnt/DATA/LLM/Models/GGUF/GSQ-RCO/qwen3.8-flash-next/gsq-iq3s/Qwen3.8-Flash-Next-GSQ-RCO-IQ3_S-00001-of-00002.gguf",
     "--ple-gguf",
-    "/home/svg/LLM/data/models/GSQ-RCO/Qwen3.8-Flash-Next/Qwen3.8-Flash-Next-GSQ-RCO-IQ3_S-00002-of-00002.gguf",
+    "/mnt/DATA/LLM/Models/GGUF/GSQ-RCO/qwen3.8-flash-next/gsq-iq3s/Qwen3.8-Flash-Next-GSQ-RCO-IQ3_S-00002-of-00002.gguf",
     "--expert-cache",
     "auto",
     "--spec",
@@ -38,7 +38,7 @@
     "--conversation-cache-min-tokens",
     "200",
     "--control-vector-scaled",
-    "/home/svg/LLM/data/vectors/qwen3.8-flash-next-refusal-r.gguf:1.0",
+    "/mnt/DATA/LLM/Models/GGUF/vectors/qwen3.8-flash-next-refusal-r.gguf:1.0",
     "--control-vector-layer-range",
     "1",
     "47",
@@ -58,10 +58,10 @@
     "30",
     "--resident-experts",
     "--mtp",
-    "/home/svg/LLM/data/mtp-en/rt"
+    "/mnt/DATA/LLM/Models/GGUF/strata/data/mtp-en/rt"
   ],
   "cwd": "/home/svg/LLM/strata-custom-2",
-  "tokenizer": "/home/svg/LLM/data/packs/iq3_s/tokenizer",
+  "tokenizer": "/mnt/DATA/LLM/Models/GGUF/strata/data/packs/iq3_s/tokenizer",
   "model_name": "qwen3.8-flash-next-iq3_s",
   "log": "/home/svg/LLM/strata-custom-2/logs/custom-iq3_s.log",
   "lib_dirs": [
@@ -76,8 +76,8 @@
   "draft_vocab": "en",
   "vision": {
     "exe": "/home/svg/LLM/strata-custom-2/engine/strata-vision",
-    "mmproj": "/home/svg/LLM/data/models/GSQ-RCO/Qwen3.8-Flash-Next/mmproj-Qwen3.8-Flash-Next-BF16.gguf",
-    "model": "/home/svg/LLM/data/models/GSQ-RCO/Qwen3.8-Flash-Next/Qwen3.8-Flash-Next-GSQ-RCO-IQ3_S-00001-of-00002.gguf",
+    "mmproj": "/mnt/DATA/LLM/Models/GGUF/GSQ-RCO/qwen3.8-flash-next/gsq-iq3s/mmproj-Qwen3.8-Flash-Next-BF16.gguf",
+    "model": "/mnt/DATA/LLM/Models/GGUF/GSQ-RCO/qwen3.8-flash-next/gsq-iq3s/Qwen3.8-Flash-Next-GSQ-RCO-IQ3_S-00001-of-00002.gguf",
     "elastic": true
   },
   "prewarm": {}

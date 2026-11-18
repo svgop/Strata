@@ -107,7 +107,7 @@ def main():
     rt = RtDense()
     params = {k: torch.nn.Parameter(torch.from_numpy(v.copy()), requires_grad=True)
               for k, v in rt.tensors.items()}
-    dv = np.fromfile(REPO / "/home/svg/LLM/data/mtp-en/rt/draft_vocab.bin", dtype=np.int32)
+    dv = np.fromfile(Path("/mnt/DATA/LLM/Models/GGUF/strata/data/mtp-en/rt/draft_vocab.bin"), dtype=np.int32)
     in_sub = -np.ones(248320, dtype=np.int64); in_sub[dv] = np.arange(len(dv))
     hidden = (2 * len(dv) + 255) & ~255
 

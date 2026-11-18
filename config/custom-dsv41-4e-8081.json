@@ -2,7 +2,7 @@
   "exe": "/home/svg/LLM/strata-custom-2/build-fresh/strata-dsv41",
   "args": [
     "--pack",
-    "/home/svg/LLM/data/packs/deepseek-v4.1-flash-ist-das-2.00bpw",
+    "/mnt/DATA/LLM/Models/GGUF/strata/data/packs/deepseek-v4.1-flash-ist-das-2.00bpw",
     "--max-context",
     "262144",
     "--eos",
@@ -15,7 +15,7 @@
     "4"
   ],
   "cwd": "/home/svg/LLM/strata-custom-2",
-  "tokenizer": "/home/svg/LLM/data/packs/deepseek-v4.1-flash-ist-das-2.00bpw/tokenizer",
+  "tokenizer": "/mnt/DATA/LLM/Models/GGUF/strata/data/packs/deepseek-v4.1-flash-ist-das-2.00bpw/tokenizer",
   "model_name": "deepseek-v4.1-flash",
   "arch": "deepseek41",
   "log": "/home/svg/LLM/strata-custom-2/logs/custom-dsv41-8081-4e.log",

@@ -2,7 +2,7 @@
 """The VQ release's HF tokenizer.json -> the server's tokenizer stub (the same conversion every
 family's pack carries: <pack>/tokenizer/{vocab.json, merges.txt, token_type.json, tokenizer.json}).
 
-    python tools/mm3/vq_tokenizer.py --release /home/svg/LLM/data/models/VQ/MiniMax-M3.1-Flash
+    python tools/mm3/vq_tokenizer.py --release /mnt/DATA/LLM/Models/GGUF/VQ/MiniMax-M3.1-Flash
 
 The pre-tokenizer (the M2-lineage pattern) and the NFC normalizer are shipped in the stub so the
 server runs what the family declared (tools/strata_tokenizer.py's PRE_PATTERNS/NORMALIZERS law).
