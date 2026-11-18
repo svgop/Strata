@@ -12197,3 +12197,30 @@ storage canon (reference updates in the same commit):
   max), and certifies at/above the bar (200) or re-boots; it refuses to advertise a degraded box. It
   caught every degraded boot it met. Wiring it into the start and the 5-boot bank are the remaining
   steps; the MMLU gate on the store is still owed before it is armed by default.
+
+## F-389 — restart hygiene: no synthetic conversations, no dead page cache, no scratch (2026-11-18, 00:05)
+
+- **The runtime footprint explains the 190s the operator saw.** Engine RSS 154.5 GiB (79.7 GiB model
+  mapping + **66.1 GiB shmem** + 8.7 anon) on a 184 GiB box: MemFree **1.5 GiB** after every boot. The
+  66 GiB is NOT the conversation-cache budget (the 48 GiB -> 8 GiB cut did not move it; it is the
+  pinned expert RAM tier + the elastic host pins). The conversation cache was over-provisioned 10x for
+  a 5.2 GB payload; 8 GiB is now the standing budget.
+- **The rubbish was the probe's own traffic.** 15 root-owned synthetic conversation slots (4.9 GB,
+  ~250-350 MB each from the probe's legs) sat in the OPERATOR's slot dir, restored at every boot and
+  re-parked (and the exit drain re-creates them seconds AFTER a kill - a clear that races the drain is
+  undone). The campaign now has its OWN slot dir (`/tmp/strata-campaign-slots`, in battery-lib, cleaned
+  per battery); the operator's dir is never touched by a battery again.
+- **`campaign/reset-state.sh`** (the hygiene tool): stop -> wait for the processes AND the drain to
+  finish -> clear the campaign slots (the operator's only with `--operator-slots`, explicit) -> drop the
+  page cache -> print MemFree. Measured: **MemFree 183 GiB** after the reset (vs 1.5 GiB in service).
+  `--boot [--store DIR] --bar N` then boots and certifies.
+- **The gold boots on this clean state:** 196.0/185.1/**280.7** (96.4%, cpu-exp 2.02) and
+  211.0/190.6/**285.6** (96.0%, 2.21) - conc above every earlier bank (record 307.6 still ahead; pair
+  record 212.2). The solo lane reads 196-211 in these boots.
+- **The learned-profile route is a NEGATIVE (banked):** a certified 212.6 boot's learned profile,
+  promoted as the seed, booted to **90.2% hit / 152.5** (vs the static seed's 93.1% / 207.8 at the same
+  geometry). The learned profile does not capture the converged residency (it ranks heat, not the
+  adapt's swap history); it must never seed a boot raw. The static profile stays.
+- **The cache geometry:** 9,900 slots fits (fingerprint, 207.8/200.0/258.6 on one draw); 10,000 does
+  NOT fit - the fill is cut at 9,968 with `BOOT GEOMETRY: the boot is NOT canonical` (as designed).
+  Pushing further needs the reserve or the batch slots, a capability trade not taken silently.

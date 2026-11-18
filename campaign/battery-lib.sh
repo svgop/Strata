@@ -26,6 +26,16 @@ PORT=${PORT:-8081}
 # engine process ends, where nothing latency-critical competes).  Off by default outside batteries: a
 # same-model restart wants the cache warm.  An explicit value always wins.
 export STRATA_DROP_CACHE_ON_EXIT=${STRATA_DROP_CACHE_ON_EXIT:-1}
+# F-389 THE CAMPAIGN'S OWN SLOT DIR (2026-11-18, measured): a battery/probe run parks the
+# conversations it creates (the probe's synthetic prompts, ~250-350 MB each) in the OPERATOR's
+# conversation slot dir and every later boot restores and re-parks them - 15 root-owned synthetic
+# slots (4.9 GB) were found sitting in /home/svg/LLM/data-rt/conversation-slots, restored at every
+# boot and re-parked.  The campaign's traffic is test rubbish until certified real traffic: it gets
+# its own dir, cleaned at the start of every battery.  The operator's dir is never touched by a
+# battery again.
+export STRATA_CONV_SLOT_DIR=${STRATA_CONV_SLOT_DIR:-/tmp/strata-campaign-slots}
+rm -rf "$STRATA_CONV_SLOT_DIR" 2>/dev/null || true
+mkdir -p "$STRATA_CONV_SLOT_DIR" 2>/dev/null || true
 
 port_pid() { ss -ltnp 2>/dev/null | grep ":$PORT " | grep -oP 'pid=\K[0-9]+' | head -1; }
 
