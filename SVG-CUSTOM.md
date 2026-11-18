@@ -12018,3 +12018,29 @@ storage canon (reference updates in the same commit):
   pack doesn't already give; if expert pruning is ever wanted again, the validated path is
   REAP on the base pack (the masked-router technique and the builder stay in git history at
   9e309adb, and the T67 measurement is the evidence that expert-count reduction moves this box).
+
+## F-381 — standing re-read on the same boot: the deficit is box load, not config (2026-11-18, 21:00)
+
+- **The ask:** the operator's 170-solo / 230-conc reads vs the "other day" 220 / 330. One boot of the
+  standing recipe (shadow rolled back per T68 — the canonical pack is still corrupt on disk, recovery
+  is the open operator decision), pin auto-armed (host 8, pool workers 9-15, aux on the isolated set),
+  swap guard live, zram 0 B, 165 GiB free, prewarm done (80.1 GiB page cache + replay), clocks held
+  2940-2947/13801. ONE discarded leg (146.4/137.7/199.5), then four measured legs back-to-back on the
+  SAME boot (no stop/start), per the operator's instruction.
+- **The read:** solo 143.3/147.7/136.1/148.1 → mean **143.8**; pair 141.7/136.3/139.2/146.3 → **140.9**;
+  6-conc 191.8/190.8/193.0/196.8 → **193.1**; M3b 75.1-78.7 (in-band); GPU-reach wait 0.34 ms = the
+  structural quiet class; VRAM hit 92.9%; golden a974→dbb flip pre-existing in tonight's t67/t68 records.
+- **The mechanism is load, not the engine:** cpu-exp 7.41 ms/window vs 4.1-5.0 on T68's clean legs
+  (19:03-19:06), and the dose-response line is clean across the day's points — cpu-exp ~2.0 (armed,
+  quiet) → 216-224 solo; 4.1-5.0 (rollback, quiet) → 174-176; 7.41 (rollback, desktop active, load
+  1.4-4.2, chrome ~20% CPU) → 143.8; 8.83 (r3 interference draw) → 115.9. Every +1 ms/window of
+  cpu-exp ≈ −12-14 t/s solo, all three lanes moving together (additive window-time inflation). The
+  19:14 log tail already showed wait 9.12 + cpu-exp 14.18 — the box was degraded before this boot.
+- **Verdict:** the standing config is NOT regressed; tonight's −17% vs T68-clean is the desktop-
+  interference tax on top of the known corrupt-pack rollback (−20% vs the record era, which owned the
+  armed store at cpu-exp ~2.0). The 220/330 numbers the operator remembers are the armed-store quiet
+  class; 170/230 is the rollback quiet class; ~144/193 is rollback + desktop-active. **No tracker row**
+  (law 12: a below-bank read is a question); the bank stands. The lever that restores the record class
+  remains the store recovery (rebuild from the IQ3_S GGUF via the pack tools / re-download / stay
+  rolled back) plus a quiet-window control — both operator calls, unchanged from T68.
+- Results: campaign/results/stand-2026-11-18-late-{DISCARD,leg1..leg4}.txt (+ the metrics.jsonl row).
