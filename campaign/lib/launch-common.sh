@@ -41,9 +41,21 @@ launch::swap_guard_wanted() { # 0 = arm the systemd-run scope
   [ "${STRATA_SWAP_GUARD-1}" != "0" ] && command -v systemd-run >/dev/null 2>&1 && [ -n "${XDG_RUNTIME_DIR:-}" ]
 }
 
+launch::isolated_cpus() {     # the kernel's isolated set (isolcpus=), empty when the box is unisolated
+  grep -oE "isolcpus=[0-9,-]+" /proc/cmdline 2>/dev/null | head -1 | cut -d= -f2
+}
+
 launch::exec_engine() {       # --config <file> [--port N] [--host H]
   local argv; argv="$(launch::engine_argv "$@")" || return 2
   cd "$LAUNCH_REPO" || return 1
+  # PIN DEFAULT (2026-11-18, the geometry diff): the bank-era record class ran the engine on the
+  # isolated CCD (iso legs: pool workers 9-15, host 8, aux 24); today's boot left the engine on the
+  # housekeeping cores (workers 1-7, host 0, aux 16) - the same cores that carry irqaffinity=0-7,16-23
+  # plus the desktop/chrome. The isolated set is the right pin on an isolated box (the isolation
+  # falsifier: other-CCD load 232.6 vs same-CCD 120.9); auto-derived from the kernel so an unisolated
+  # box stays unpinned (the measured law: taskset alone on a quiet unisolated box is NEUTRAL).
+  # Explicit empty = off (the documented rollback).
+  STRATA_ENGINE_CPUS="${STRATA_ENGINE_CPUS-$(launch::isolated_cpus)}"
   if launch::swap_guard_wanted; then
     # Composed (the audit's D1 fix): the pin works UNDER the guard - neither wrapper is dropped.
     if [ -n "${STRATA_ENGINE_CPUS-}" ]; then

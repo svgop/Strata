@@ -123,8 +123,11 @@ export STRATA_ROUTE_RESIDENT_MTP=1
 launch::shadow_reestablish
 
 cd "$(dirname "$0")"
-# CPU pinning (STRATA_ENGINE_CPUS, default OFF - measured neutral on a quiet box; set 8-15,24-31 for
-# contended hours) and the swap guard (MemorySwapMax=0: a swapped hot page is a decompression stall
+# CPU pinning (2026-11-18 geometry diff: the default is now the kernel's ISOLATED set, auto-derived -
+# the bank-era record class ran on the isolated CCD (workers 9-15, host 8, aux 24); a boot that left
+# the engine on the housekeeping cores paid the same-CCD contention tax, the isolation falsifier:
+# other-CCD load 232.6 vs same-CCD 120.9.  Unisolated box -> empty -> unpinned, the measured law.
+# STRATA_ENGINE_CPUS="" is the rollback.) and the swap guard (MemorySwapMax=0: a swapped hot page is a decompression stall
 # mid-window; measured 299 MiB swap-resident while decode read from storage) COMPOSE in the lib's
 # one ladder - the old first-match-exec form raced them (pin bypassed the guard here; guard made the
 # pin dead code on the other four launchers).  Plain-exec fallback for containers / non-systemd hosts.
