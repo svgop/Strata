@@ -84,8 +84,9 @@ _SHADOW_TMPFS=/dev/shm/strata-shadow-q2_0
 # (the estate artifact, like data/mtp), NOT the system dir: the engine maps the pack directly, the
 # tmpfs copy is deleted and the lib's single-owner rule skips re-copying it (hugepages are
 # doctrine-off - the boot-armed pool was convicted 2026-11-09, so tier-1 never fires).
-# Rollback remains one line: export STRATA_SHADOW_EXPERTS="" (unset/empty = native store serves misses).
-export STRATA_SHADOW_EXPERTS="$_SHADOW_CANON"
+# The resolution lives in the lib (one owner): the canonical pack is the default; the fast tier is
+# opt-in (STRATA_SHADOW_TMPFS=1); the rollback is the caller's env (export STRATA_SHADOW_EXPERTS=""
+# before launch - unset/empty = native store serves misses).
 launch::shadow_export
 # F-331 ARMS (10-25, both never priced on this lane; see SVG-CUSTOM F-331):
 export STRATA_QSA_SPLIT_ATTN="${STRATA_QSA_SPLIT_ATTN:-1}"     # decode+drafter attention through the split int8-MMA kernel (verify.cpp:1973 + mtp.cpp:1088;
