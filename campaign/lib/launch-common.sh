@@ -68,31 +68,35 @@ launch::shadow_canon() {      # the store's one owner-path (packs live with the 
   echo /mnt/DATA/LLM/Models/GGUF/strata/data/packs/q2_0
 }
 
-launch::shadow_export() {     # the single-owner ladder + the `-`-default export
+launch::shadow_export() {     # THE METHOD (2026-11-18 operator ruling): the canonical pack is the
+  # primary lane's store - no ladder, no system-dir fallbacks. The pack's absence means no store
+  # (native path serves every miss), never a degraded tier. The tmpfs fast tier (F-367, +5.5% ABAB)
+  # is an explicit opt-in: STRATA_SHADOW_TMPFS=1 arms the RAM copy and lets it linger; the tier that
+  # corrupted under memory pressure (M1: the pool-short boot fell to the swappable copy) is never
+  # automatic. An explicit env value always wins - including the "" rollback (the engine treats
+  # unset and empty alike - shadow_experts.hpp).
   local canon=$(launch::shadow_canon) tmpfs=/dev/shm/strata-shadow-q2_0
-  local _shadow
-  if [ "$(launch::hugepages_free)" -ge "$STRATA_HUGEPAGES_MIN" ]; then
-    _shadow="$canon"                                  # engine builds its memfd from the pack (one owner)
-  elif [ -f "$tmpfs/experts.bin" ]; then
-    _shadow="$tmpfs"                                  # placement cache present: the fast one
+  if [ -n "${STRATA_SHADOW_EXPERTS+set}" ]; then
+    :                                                 # explicit value wins (incl. "" rollback)
+  elif [ "${STRATA_SHADOW_TMPFS:-0}" = "1" ]; then
+    export STRATA_SHADOW_EXPERTS="$tmpfs"             # opt-in fast tier: RAM copy lingers; the
+                                                      # reestablish below builds it before the exec
   elif [ -f "$canon/experts.bin" ]; then
-    _shadow="$canon"                                  # canonical artifact, page-cached (works; slower misses)
+    export STRATA_SHADOW_EXPERTS="$canon"             # THE method: the estate artifact (like data/mtp)
   else
-    _shadow=""                                        # no shadow: the native store serves every miss
+    export STRATA_SHADOW_EXPERTS=""
+    echo "launcher: shadow pack $canon MISSING - no store, native path serves every miss" >&2
   fi
-  # NOTE the `-` (not `:-`): an explicit STRATA_SHADOW_EXPERTS="" must survive as the rollback
-  # (the engine treats unset and empty alike - shadow_experts.hpp).
-  export STRATA_SHADOW_EXPERTS="${STRATA_SHADOW_EXPERTS-$_shadow}"
   [ -n "$STRATA_SHADOW_EXPERTS" ] && echo "launcher: shadow store $STRATA_SHADOW_EXPERTS" >&2
 }
 
-launch::shadow_reestablish() {  # pool-short boot: rebuild the tmpfs tier (no-op when intact)
-  # SINGLE-OWNER RULE (2026-11-18, operator ruling): when the arm IS the canonical pack, the /dev/shm
-  # copy is dead weight — the engine maps the pack directly, and the copy would squat 39 GiB of RAM
-  # for nothing (the ladder's tier-2 only exists for the fast tier, which the standing box never
-  # selects: hugepages are doctrine-off, convicted 2026-11-09). Skip the copy when the arm is the pack.
-  [ "$STRATA_SHADOW_EXPERTS" = "$(launch::shadow_canon)" ] && return 0
+launch::shadow_reestablish() {  # the tmpfs placement copy is OPT-IN (2026-11-18 operator ruling: the
+  # primary lane has no fallbacks): default = no copy, no system-dir lingering. STRATA_SHADOW_TMPFS=1
+  # rebuilds the F-367 fast tier (the copy lingers in RAM; the prewarm then skips it as "RAM already").
+  # The old every-start copy is what left a 39.3 GiB unused store squatting /dev/shm through the
+  # rollback. Repo-anchored (the original call was cwd-relative and silently skipped from other cwds).
+  [ "${STRATA_SHADOW_TMPFS:-0}" = "1" ] || return 0
   if [ "$(launch::hugepages_free)" -lt "$STRATA_HUGEPAGES_MIN" ]; then
-    bash "$LAUNCH_REPO/campaign/shm-shadow.sh" >/dev/null 2>&1 || true   # repo-anchored (the old call was cwd-relative and silently skipped from other cwds)
+    bash "$LAUNCH_REPO/campaign/shm-shadow.sh" >/dev/null 2>&1 || true
   fi
 }

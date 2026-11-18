@@ -115,9 +115,10 @@ export STRATA_SPEC_DRAFT_TEMP=0.85  # F-201 ADOPTED 2026-10-15: coupled drafter 
 export STRATA_ROUTE_RESIDENT=0.75     # F-200 ADOPTED 2026-10-15: battery +14.9/+8.5/+12.2 M1/pair/conc vs interpolated control; routing-changing -> 2x MMLU gate PASSED (92.86/97.14, mean 95.00)
 export STRATA_ROUTE_RESIDENT_MTP=1
 
-# NORMALIZED (2026-10-29, user law): the F-367 tmpfs shadow store is re-established on EVERY lane start -
-# the manual post-reboot step is gone.  Fast path inside the script: an intact store costs two `find`s.
-# Non-fatal by design: a failed copy leaves the launch-time guard above on the disk path (never a no-boot).
+# SUPERSEDED (2026-11-18, operator ruling - the primary lane has no fallbacks): the F-367 every-start
+# copy (2026-10-29 law) is what left a 39.3 GiB unused store squatting /dev/shm through the rollback.
+# The canonical pack IS the method; the tmpfs placement copy is now OPT-IN (STRATA_SHADOW_TMPFS=1) and
+# the lib's reestablish only runs then.  Non-fatal by design: a failed copy never blocks a boot.
 launch::shadow_reestablish
 
 cd "$(dirname "$0")"
