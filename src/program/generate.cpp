@@ -6417,20 +6417,28 @@ int main(int argc, char** argv) {
         size_t free_b = 0, total_b = 0;
         free_b = strata::core::device_free_bytes(); (void) total_b;
         const auto& lay = strata::kernels::cpu::expert_layout();
-        // what the uniform sizing granted, in the 256-byte slots the loop below counts: the blob formats of 1280 / 2560
-        // rows are whole multiples of 256 already; an NVFP4 blob's 16-byte scale tail is not, and the unrounded budget
-        // held one slot fewer than asked (--expert-cache 1: none)
-        const uint64_t budget = (uint64_t) o.expert_cache * ((lay.max_blob + 255) / 256 * 256);
+        // F-386 / the Boot Contract R1: --expert-cache N is EXACTLY the profile's first N pairs.  The
+        // old sizing budgeted N *largest* blobs and capped by transient free VRAM, so the slot count
+        // came out at 9,970-10,008 for N=9,885 and the boot's resident set (and hit rate) floated with
+        // the desktop's VRAM.  The geometry is the policy: pin it, and if this boot's free VRAM cannot
+        // hold it, SAY SO - a cut boot is not canonical and must not be mistaken for one.
+        const size_t want = (size_t) o.expert_cache;
         uint64_t used = 0;
         const size_t keep_free = ((size_t) o.vram_reserve_mib << 20) + (size_t) pipe_first;
-        size_t free_room = free_b > keep_free ? free_b - keep_free : 0;
-        const uint64_t cap = std::min<uint64_t>(budget, (uint64_t) free_room);
+        const size_t free_room = free_b > keep_free ? free_b - keep_free : 0;
+        bool cut = false;
         for (const auto& pr : profile) {
+            if (sized_slots.size() >= want) break;
             const uint64_t b = (uint64_t) strata::core::ExpertCache::slot_stride((int64_t) lay.blob_bytes(pr.first), slot_guard);
-            if (used + b > cap) break;
+            if (used + b > free_room) { cut = true; break; }
             used += b;
             sized_slots.push_back((int64_t) lay.blob_bytes(pr.first));
         }
+        if (cut)
+            std::fprintf(stderr, "strata generate: BOOT GEOMETRY: --expert-cache %d does not fit this boot's free VRAM "
+                                 "(%zu slots, %.2f GiB of room): the boot is NOT canonical - lower --expert-cache or "
+                                 "close other GPU programs\n",
+                         o.expert_cache, sized_slots.size(), (double) free_room / 1073741824.0);
         // #831: the sized-slots loop walks the profile's pairs, so the profile's length is the ceiling; an explicit
         // --expert-cache above it used to be cut with no word.  A warning only (what is allocated does not change).
         if (!auto_cache && o.expert_cache > 0 && sized_slots.size() == profile.size() && (size_t) o.expert_cache > profile.size())

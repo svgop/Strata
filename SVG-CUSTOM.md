@@ -12146,3 +12146,27 @@ storage canon (reference updates in the same commit):
   names the refused store. The earlier "not performing" was a bad draw plus two unrelated `python3 -`
   jobs on the housekeeping cores (the engine measured 190.7 and 210.6 when checked).
 - Next: R1 (deterministic geometry) -> the store A/B -> R3 (anchored residency) -> R4 (certification).
+
+## F-386 — R1 landed: the geometry is deterministic (identical fingerprints); the store A/B is directional +24% conc (2026-11-18, 22:30)
+
+- **R1 (generate.cpp, the explicit-N branch):** `--expert-cache N` is now EXACTLY the profile's first
+  N pairs (it used to budget N *largest* blobs and cap on transient free VRAM, which is why N=9,885
+  came up 9,970-10,008 and the resident set floated with the desktop's VRAM). A boot whose free VRAM
+  cannot hold N prints `BOOT GEOMETRY: ... the boot is NOT canonical`. The standing config pins
+  `--expert-cache 9600`. **Two boots: the identical fingerprint `594e698ce6c74ea2 slots=9600
+  verified=48`** - the boot-time resident set is now reproducible by construction.
+- **The residual lottery is NOT the geometry:** those two same-fingerprint boots read M1 123.0 and
+  185.9, and the first flush already differs (91.9% vs 95.3% hit). Same seed, same store, different
+  early routing -> the adaptive tier (96 swaps/4 rounds on decayed counts from sampled text) is what
+  remains to be bounded (R3: churn budget + idle re-anchor).
+- **The store A/B (4 boots, off/on/off/on, same pinned geometry, rebuilt arena):** off
+  132.3/119.6/170.3 (92.5%) and 193.5/160.5/210.5 (93.0%); on 137.0/133.6/193.7 (92.8%) and
+  **224.6/201.6/279.3 (94.5%)**. Means: **off 162.9/140.1/190.4 -> on 180.8/167.6/236.5 (+11.0/+19.7/+24.2%)**;
+  zero #879 across all four boots. CAVEAT: within-condition variance is 46% (off 132.3 vs 193.5), so
+  n=4 is directional, not a verdict - the 3v3 five-boot means are owed, and the on2 draw is the
+  session's best single boot (M1 224.6 vs the record 223.6; conc 279.3 vs 307.6).
+- **State:** the engine is up on the armed on2 boot (224.6/201.6/279.3). The launcher's VALIDATED gate
+  means a manual start rolls back to the native path until the store's MMLU gate passes and the marker
+  is written (the gate is owed before adoption, per the quality law).
+- Next: R3 (bounded adaptation + idle re-anchor) with the deterministic seed as its baseline; the
+  MMLU gate on the rebuilt store; then the 5-boot 3v3 interleave that writes the bank.

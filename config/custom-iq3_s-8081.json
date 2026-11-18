@@ -8,7 +8,7 @@
     "--ple-gguf",
     "/mnt/DATA/LLM/Models/GGUF/GSQ-RCO/qwen3.8-flash-next/gsq-iq3s/Qwen3.8-Flash-Next-GSQ-RCO-IQ3_S-00002-of-00002.gguf",
     "--expert-cache",
-    "auto",
+    "9600",
     "--spec",
     "6",
     "--max-context",
