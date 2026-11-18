@@ -12079,3 +12079,27 @@ storage canon (reference updates in the same commit):
   (3) finish/decide q2_0-rebuilt; (4) BIOS EXPO check; (5) cap max_tokens/thinking defaults; (6) the 2h
   RTC jump at boot (journal says 22:22 for a 20:22 boot).
 - Results: campaign/results/f381-reboot-check.txt (215.4), f381-reboot-check2.txt (200.4).
+
+## F-383 — the boot lottery, quantified and given a contract (2026-11-18, 21:50)
+
+- **Seven restarts, one host boot, one config, one model: M1 128.9–219.2.** The state is set at boot
+  and stable within it (a second leg on the 128.9 boot read 133.3); the hardware is clean (F-382).
+  The master variable is the VRAM expert-cache hit rate (91.9% → 128.9; 96.2% → 219.2), and its slope
+  is steep because every lost hit pays the CPU miss path, made ~2x dearer by the corrupt-store
+  rollback (75 us vs 152 us/entry). The hit rate floats because (a) the cache size comes from
+  transient free VRAM (9,830–10,008 slots; `--expert-cache 9885` came up 9,970–9,971 — the option
+  adds its own headroom and does not pin), (b) the adaptive tier swaps up to 96 experts every 4
+  rounds on decayed counts from sampled text with no anchor, no budget and no idle re-seed (75k VRAM
+  exchanges in a bad boot's first leg vs ~500 on a good one), and (c) **the fill is verified at slot 0
+  only** — the all-slot checksum exists as the dormant STRATA_VERIFY_COMPLEMENT test hook.
+- **The contract: `campaign/research/boot-contract.md`** — five refinements: R1 one VRAM-budget owner
+  (canonical cache geometry, allocation table logged); R2 verified fill + published fingerprint
+  (spread sample + table hash, boot fails loudly); R3 anchored residency (churn budget + idle
+  re-anchor to the profile seed); R4 boot certification (fixed greedy decode, hit>=95.5% and
+  M1>=200 on this box, /health `boot` object); R5 one telemetry surface (the four scattered boot
+  fact sites become one report object the probe/GUI read).
+- **The prize, measured:** bad draws cost 50%, medium 15%; stabilizing the standing mean at the
+  anchor moves ~185 → ~215 with no model change. The store recovery (q2_0-rebuilt, still incomplete)
+  is the orthogonal second lever: it halves the miss cost and shrinks the whole spread.
+- Standing recipe restored (config back to `--expert-cache auto`); the box is up on an 185.4 draw.
+  Results: campaign/results/{det-boot1,det-boot2,fixedcache-r1,fixedcache-r2,f383-standing}.{txt,out}.
