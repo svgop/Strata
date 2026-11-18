@@ -75,8 +75,17 @@ _SHADOW_TMPFS=/dev/shm/strata-shadow-q2_0
 # with the shadow UNSET = clean (3/3, 62 t/s cold). The shadow is byte-identical to the canonical pack
 # (cmp) and armed clean through November - a latent bug in the armed path that today's environment trips,
 # root-cause pending (the ActQ/run_split_multi audit). The documented rollback (F-359: unset = nothing
-# takes a new branch, byte-identical) until that lands:
-export STRATA_SHADOW_EXPERTS=""
+# takes a new branch, byte-identical) held until the T66 anatomy priced its cost:
+# CANONICAL-PRIMARY (2026-11-18, operator ruling, after the T66 regression hunt): the rollback cost
+# 20% (cpu-exp 2.04 -> 4.2-4.9 ms/window: the miss path pays 152 us/entry on IQ3_S's 2.05 MB blobs
+# instead of 75 on the Q2_0 store's 1.38 MB). The NaN tripped on the tmpfs placement tier under
+# host-memory pressure (M1 root-cause), not on the pack location - and the /dev/shm copy lingered
+# (39.3 GiB resident, unused) through the rollback. So the store is armed from the CANONICAL pack
+# (the estate artifact, like data/mtp), NOT the system dir: the engine maps the pack directly, the
+# tmpfs copy is deleted and the lib's single-owner rule skips re-copying it (hugepages are
+# doctrine-off - the boot-armed pool was convicted 2026-11-09, so tier-1 never fires).
+# Rollback remains one line: export STRATA_SHADOW_EXPERTS="" (unset/empty = native store serves misses).
+export STRATA_SHADOW_EXPERTS="$_SHADOW_CANON"
 launch::shadow_export
 # F-331 ARMS (10-25, both never priced on this lane; see SVG-CUSTOM F-331):
 export STRATA_QSA_SPLIT_ATTN="${STRATA_QSA_SPLIT_ATTN:-1}"     # decode+drafter attention through the split int8-MMA kernel (verify.cpp:1973 + mtp.cpp:1088;

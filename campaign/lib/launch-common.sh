@@ -64,8 +64,12 @@ launch::exec_engine() {       # --config <file> [--port N] [--host H]
 
 # ---- Qwen-family shadow store (DS4 launchers never call these) ----
 
+launch::shadow_canon() {      # the store's one owner-path (packs live with the estate, like data/mtp)
+  echo /mnt/DATA/LLM/Models/GGUF/strata/data/packs/q2_0
+}
+
 launch::shadow_export() {     # the single-owner ladder + the `-`-default export
-  local canon=/mnt/DATA/LLM/Models/GGUF/strata/data/packs/q2_0 tmpfs=/dev/shm/strata-shadow-q2_0
+  local canon=$(launch::shadow_canon) tmpfs=/dev/shm/strata-shadow-q2_0
   local _shadow
   if [ "$(launch::hugepages_free)" -ge "$STRATA_HUGEPAGES_MIN" ]; then
     _shadow="$canon"                                  # engine builds its memfd from the pack (one owner)
@@ -83,6 +87,11 @@ launch::shadow_export() {     # the single-owner ladder + the `-`-default export
 }
 
 launch::shadow_reestablish() {  # pool-short boot: rebuild the tmpfs tier (no-op when intact)
+  # SINGLE-OWNER RULE (2026-11-18, operator ruling): when the arm IS the canonical pack, the /dev/shm
+  # copy is dead weight — the engine maps the pack directly, and the copy would squat 39 GiB of RAM
+  # for nothing (the ladder's tier-2 only exists for the fast tier, which the standing box never
+  # selects: hugepages are doctrine-off, convicted 2026-11-09). Skip the copy when the arm is the pack.
+  [ "$STRATA_SHADOW_EXPERTS" = "$(launch::shadow_canon)" ] && return 0
   if [ "$(launch::hugepages_free)" -lt "$STRATA_HUGEPAGES_MIN" ]; then
     bash "$LAUNCH_REPO/campaign/shm-shadow.sh" >/dev/null 2>&1 || true   # repo-anchored (the old call was cwd-relative and silently skipped from other cwds)
   fi
