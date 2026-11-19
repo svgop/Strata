@@ -281,3 +281,7 @@ ready: http://127.0.0.1:8081/v1  (OpenAI: /v1/chat/completions, Anthropic: /v1/m
 [strata] done: 600 tokens in 15 s (41.0 tok/s) (length, cancel=False), expert cache 91.4% hit (+1.5% of the routed experts over PCIe)
 [strata] done: 600 tokens in 15 s (39.3 tok/s) (length, cancel=False), expert cache 92.8% hit (+0.7% of the routed experts over PCIe)
 [strata] done: 600 tokens in 16 s (40.8 tok/s) (length, cancel=False), expert cache 97.4% hit (+0.1% of the routed experts over PCIe)
+
+[strata] stopping (Ctrl+C again to end the engine at once) ...
+[strata] STRATA_DROP_CACHE_ON_EXIT: released the page cache of 10 model files
+[strata] stopped

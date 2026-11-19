@@ -1,0 +1,11 @@
+BOOT CERTIFICATION Wed Nov 18 11:44:13 PM SAST 2026 bar=200 tries=3 store=/mnt/DATA/LLM/Models/GGUF/strata/data/packs/q2_0-rebuilt
+try 1 sample 1: 2000 tok in 15.24s = 131.2 t/s
+try 1 sample 2: 2000 tok in 13.67s = 146.3 t/s
+try 1 sample 3: 2000 tok in 15.65s = 127.8 t/s
+try 1: best 146.3 t/s (bar 200)
+try 1: 146.3 t/s below the 200 bar - re-booting
+try 2 sample 1: 2000 tok in 15.68s = 127.6 t/s
+try 2 sample 2: 2000 tok in 14.93s = 134.0 t/s
+try 2 sample 3: 2000 tok in 14.54s = 137.6 t/s
+try 2: best 137.6 t/s (bar 200)
+try 2: 137.6 t/s below the 200 bar - re-booting

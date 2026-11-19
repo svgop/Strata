@@ -1,0 +1,26 @@
+launcher: no VALIDATED store at /mnt/DATA/LLM/Models/GGUF/strata/data/packs/q2_0 - the native path serves every miss (the canonical pack is corrupt, T68; arm a validated store with STRATA_SHADOW_EXPERTS=<dir> after its quality gate)
+the vision encoder starts with the first picture (elastic) ...
+loading the model (the first start takes a minute or two) ...
+[strata] the config has a "vision" section but no --vision in its args: added --vision (run setup again with --vision to write them)
+[strata] prewarm: pre-boot sweep: 18 files, 80.1 GiB into the page cache (before the engine's load, so the reclaim storm plays out here)
+[strata] prewarm: pre-boot sweep warm in 34 s
+[strata] the config has a "vision" section but no --vision in its args: added --vision (run setup again with --vision to write them)
+[strata] starting the engine: reading the model's weights ...
+Traceback (most recent call last):
+  File "/home/svg/LLM/strata-custom-2/serve/server.py", line 9107, in <module>
+    sys.exit(main())
+             ~~~~^^
+  File "/home/svg/LLM/strata-custom-2/serve/server.py", line 8762, in main
+    engine = StrataEngine(exe, engine_args(cfg) + (effort_end or []), cwd=cfg.get("cwd"), log=cfg.get("log"),
+                          env=env, lazy=lazy)
+  File "/home/svg/LLM/strata-custom-2/serve/server.py", line 1188, in __init__
+    raise EngineDied(why + (f" (see {log})" if log else "") + note +
+                     start_failure_hint(log, log_start) + tail)
+EngineDied: the engine exited before it was ready (see /home/svg/LLM/strata-custom-2/logs/custom-iq3_s.log)
+the engine process ended: exit code 1
+the engine log's last lines:
+  [strata] 2026-11-18 23:50:11 engine started: /home/svg/LLM/strata-custom-2/engine/strata --serve --pack /mnt/DATA/LLM/Models/GGUF/strata/data/packs/iq3_s --native /mnt/DATA/LLM/Models/GGUF/GSQ-RCO/qwen3.8-flash-next/gsq-iq3s/Qwen3.8-Flash-Next-GSQ-RCO-IQ3_S-00001-of-00002.gguf --ple-gguf /mnt/DATA/LLM/Models/GGUF/GSQ-RCO/qwen3.8-flash-next/gsq-iq3s/Qwen3.8-Flash-Next-GSQ-RCO-IQ3_S-00002-of-00002.gguf --expert-cache 9900 --spec 6 --max-context 262144 --kv int8 --kv-resident 32768 --spec-min-p 0.5 --prefill auto:32768 --mtp-q4 all --mtp-hnorm stream --pcie-frac 0.35 --pcie-mode dma --vram-reserve-mib 2000 --conversation-cache-mib 49152 --conversation-cache-slots 24 --conversation-cache-min-tokens 200 --control-vector-scaled /mnt/DATA/LLM/Models/GGUF/vectors/qwen3.8-flash-next-refusal-r.gguf:1.0 --control-vector-layer-range 1 47 --cvec-mode project --cvec-dir per-layer --ple-io mmap --adapt-decay 0.85 --expert-profile data/expert-profile.bin --expert-profile-save data/expert-profile-learned.bin --expert-profile-save-every 30 --resident-experts --mtp /mnt/DATA/LLM/Models/GGUF/strata/data/mtp/rt --mtp-draft-vocab data/draft_vocab_en.bin --vision --batch 6
+  strata generate: memory guard: limit 184.2 GiB (source: meminfo), current 65.4 GiB, reclaimable cache credited 0.0 GiB; available 118.7 GiB (MemAvailable 118.7 GiB), floor 2560 MiB
+  strata generate: native pack: /mnt/DATA/LLM/Models/GGUF/strata/data/packs/iq3_s experts (largest blob 2.66 MB), token embedding IQ4_XS in mapped host memory (322 MiB, 0.3 s)
+  strata generate: 1466 MiB of weights loaded from /mnt/DATA/LLM/Models/GGUF/strata/data/packs/iq3_s in 0.3 s (302 canonical tensors skipped: served natively)
+  strata generate: native dense projections: native dense upload blk.3.attn_q.weight: out of memory

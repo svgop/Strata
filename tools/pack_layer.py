@@ -24,6 +24,7 @@ Run: python tools/pack_layer.py [n_layers]     (default 1; 48 = the full 34 GB a
 from __future__ import annotations
 
 import json
+import os
 import pathlib
 import struct
 import sys
@@ -35,7 +36,11 @@ from gguf_reader import GGUFFile  # noqa: E402
 
 REPO = pathlib.Path(__file__).resolve().parents[1]
 STRATA = REPO.parents[min(1, len(REPO.parents) - 1)]   # the dev layout's default shards (setup.py passes --gguf)
-SHARD1 = STRATA / "Q2_0" / "Qwen3.8-Flash-Next-GSQ-RCO-Q2_0-00001-of-00002.gguf"
+# STRATA_PACK_SHARD1 (2026-11-18): the expert arena's source GGUF, env-overridable — the hardcoded
+# dev-layout path never existed on this box, and the 2026-11-18 rebuild requants IQ3_S -> Q2_0 into
+# a scratch GGUF (the original Q2_0 shards are gone; .docs/research/2026-11-18-corrupt-shadow-pack.md).
+SHARD1 = pathlib.Path(os.environ.get("STRATA_PACK_SHARD1",
+                       str(STRATA / "Q2_0" / "Qwen3.8-Flash-Next-GSQ-RCO-Q2_0-00001-of-00002.gguf")))
 
 H, FF, NE = 2560, 640, 512
 QK, BLOCK_BYTES = 64, 18          # Q2_0

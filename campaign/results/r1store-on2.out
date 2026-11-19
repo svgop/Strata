@@ -248,3 +248,68 @@ ready: http://127.0.0.1:8081/v1  (OpenAI: /v1/chat/completions, Anthropic: /v1/m
 [strata] done: 600 tokens in 13 s (47.3 tok/s) (length, cancel=False), expert cache 94.2% hit (+0.3% of the routed experts over PCIe)
 [strata] done: 600 tokens in 13 s (49.3 tok/s) (length, cancel=False), expert cache 95.8% hit
 [strata] done: 600 tokens in 13 s (47.4 tok/s) (length, cancel=False), expert cache 95.1% hit (+0.3% of the routed experts over PCIe)
+[strata] thinking: 114 of budget 196529 (max 262038) tokens, 133.4 tok/s, 1 s
+[strata] thinking: 275 of budget 196529 (max 262038) tokens, 148.0 tok/s, 2 s
+[strata] thinking: 456 of budget 196529 (max 262038) tokens, 159.3 tok/s, 3 s
+[strata] thinking: 625 of budget 196529 (max 262038) tokens, 161.7 tok/s, 4 s
+[strata] thinking: 793 of budget 196529 (max 262038) tokens, 162.7 tok/s, 5 s
+[strata] thinking: 979 of budget 196529 (max 262038) tokens, 166.6 tok/s, 6 s
+[strata] thinking: 1176 of budget 196529 (max 262038) tokens, 171.0 tok/s, 7 s
+[strata] thinking: 1380 of budget 196529 (max 262038) tokens, 175.0 tok/s, 8 s
+[strata] thinking: 1566 of budget 196529 (max 262038) tokens, 176.1 tok/s, 9 s
+[strata] thinking: 1759 of budget 196529 (max 262038) tokens, 177.7 tok/s, 10 s
+[strata] thinking: 1997 of budget 196529 (max 262038) tokens, 183.1 tok/s, 11 s
+[strata] thinking: 2238 of budget 196529 (max 262038) tokens, 187.8 tok/s, 12 s
+[strata] thinking: 2474 of budget 196529 (max 262038) tokens, 191.5 tok/s, 13 s
+[strata] thinking: 2705 of budget 196529 (max 262038) tokens, 194.3 tok/s, 14 s
+[strata] thinking: 2952 of budget 196529 (max 262038) tokens, 197.7 tok/s, 15 s
+[strata] thinking: 3188 of budget 196529 (max 262038) tokens, 200.0 tok/s, 16 s
+[strata] thinking: 3382 of budget 196529 (max 262038) tokens, 199.6 tok/s, 17 s
+[strata] thinking: 3605 of budget 196529 (max 262038) tokens, 200.9 tok/s, 18 s
+[strata] thinking: 3856 of budget 196529 (max 262038) tokens, 203.5 tok/s, 19 s
+[strata] thinking: 4125 of budget 196529 (max 262038) tokens, 206.7 tok/s, 20 s
+[strata] thinking: 4384 of budget 196529 (max 262038) tokens, 209.2 tok/s, 21 s
+[strata] thinking: 4658 of budget 196529 (max 262038) tokens, 212.0 tok/s, 22 s
+[strata] thinking: 4885 of budget 196529 (max 262038) tokens, 212.6 tok/s, 23 s
+[strata] thinking: 5123 of budget 196529 (max 262038) tokens, 213.5 tok/s, 24 s
+[strata] thinking: 5368 of budget 196529 (max 262038) tokens, 214.8 tok/s, 25 s
+[strata] thinking: 5616 of budget 196529 (max 262038) tokens, 216.0 tok/s, 26 s
+[strata] thinking: 5848 of budget 196529 (max 262038) tokens, 216.6 tok/s, 27 s
+[strata] thinking: 6093 of budget 196529 (max 262038) tokens, 217.6 tok/s, 28 s
+[strata] thinking: 6331 of budget 196529 (max 262038) tokens, 218.2 tok/s, 29 s
+[strata] thinking: 6571 of budget 196529 (max 262038) tokens, 218.9 tok/s, 30 s
+[strata] thinking: 6830 of budget 196529 (max 262038) tokens, 220.2 tok/s, 31 s
+[strata] thinking: 7101 of budget 196529 (max 262038) tokens, 221.7 tok/s, 32 s
+[strata] thinking: 7355 of budget 196529 (max 262038) tokens, 222.6 tok/s, 33 s
+[strata] thinking: 7607 of budget 196529 (max 262038) tokens, 223.5 tok/s, 34 s
+[strata] thinking: 7892 of budget 196529 (max 262038) tokens, 225.2 tok/s, 35 s
+[strata] thinking: 8150 of budget 196529 (max 262038) tokens, 226.1 tok/s, 36 s
+[strata] thinking: 8385 of budget 196529 (max 262038) tokens, 226.2 tok/s, 37 s
+[strata] thinking: 8606 of budget 196529 (max 262038) tokens, 226.1 tok/s, 38 s
+[strata] thinking: 8848 of budget 196529 (max 262038) tokens, 226.4 tok/s, 39 s
+[strata] thinking: 9111 of budget 196529 (max 262038) tokens, 227.3 tok/s, 40 s
+[strata] thinking: 9325 of budget 196529 (max 262038) tokens, 226.9 tok/s, 41 s
+[strata] thinking: 9547 of budget 196529 (max 262038) tokens, 226.8 tok/s, 42 s
+[strata] thinking: 9787 of budget 196529 (max 262038) tokens, 227.1 tok/s, 43 s
+[strata] thinking: 10021 of budget 196529 (max 262038) tokens, 227.2 tok/s, 44 s
+[strata] thinking: 10292 of budget 196529 (max 262038) tokens, 228.1 tok/s, 45 s
+[strata] thinking: 10561 of budget 196529 (max 262038) tokens, 229.0 tok/s, 46 s
+[strata] thinking: 10787 of budget 196529 (max 262038) tokens, 228.9 tok/s, 47 s
+[strata] thinking: 11052 of budget 196529 (max 262038) tokens, 229.6 tok/s, 48 s
+[strata] thinking: 11293 of budget 196529 (max 262038) tokens, 229.8 tok/s, 49 s
+[strata] thinking: 11518 of budget 196529 (max 262038) tokens, 229.7 tok/s, 50 s
+[strata] thinking: 11736 of budget 196529 (max 262038) tokens, 229.5 tok/s, 51 s
+[strata] thinking: 11941 of budget 196529 (max 262038) tokens, 229.0 tok/s, 52 s
+[strata] thinking: 12190 of budget 196529 (max 262038) tokens, 229.3 tok/s, 53 s
+[strata] thinking: 12408 of budget 196529 (max 262038) tokens, 229.1 tok/s, 54 s
+[strata] thinking: 12641 of budget 196529 (max 262038) tokens, 229.1 tok/s, 55 s
+[strata] thinking: 12852 of budget 196529 (max 262038) tokens, 228.8 tok/s, 56 s
+[strata] thinking: 13050 of budget 196529 (max 262038) tokens, 228.2 tok/s, 57 s
+[strata] thinking: 13273 of budget 196529 (max 262038) tokens, 228.1 tok/s, 58 s
+[strata] thinking: 13482 of budget 196529 (max 262038) tokens, 227.8 tok/s, 59 s
+
+[strata] stopping (Ctrl+C again to end the engine at once) ...
+[strata] the engine reported an error: I/O operation on closed file.
+[strata] done: 13583 tokens in 60 s (227.7 tok/s) (error, cancel=False), expert cache 97.9% hit (+0.3% of the routed experts over PCIe)
+[strata] STRATA_DROP_CACHE_ON_EXIT: released the page cache of 10 model files
+[strata] stopped

@@ -29,3 +29,8 @@ ready: http://127.0.0.1:8081/v1  (OpenAI: /v1/chat/completions, Anthropic: /v1/m
 [strata] answering: 120 of max 200 tokens, 53.5 tok/s, 2 s
 [strata] thinking: 24 of budget 75 (max 150) tokens, 21.4 tok/s, 2 s
 [strata] done: 30 tokens in 2 s (24.7 tok/s) (stop, cancel=False), expert cache 88.4% hit (+3.2% of the routed experts over PCIe)
+[strata] done: 200 tokens in 3 s (63.2 tok/s) (length, cancel=False), expert cache 91.9% hit (+1.9% of the routed experts over PCIe)
+[strata] prewarm: live traffic arrived; the rest of the warm-in is skipped
+
+[strata] stopping (Ctrl+C again to end the engine at once) ...
+[strata] stopped
