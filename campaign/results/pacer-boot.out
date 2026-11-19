@@ -602,3 +602,18 @@ ready: http://127.0.0.1:8081/v1  (OpenAI: /v1/chat/completions, Anthropic: /v1/m
 [strata] answering: 589 of max 600 tokens, 26.1 tok/s, 23 s
 [strata] done: 600 tokens in 23 s (26.4 tok/s) (length, cancel=False), expert cache 83.0% hit (+3.9% of the routed experts over PCIe)
 [strata] done: 600 tokens in 23 s (25.7 tok/s) (length, cancel=False), expert cache 78.9% hit (+7.1% of the routed experts over PCIe)
+[strata] thinking: 58 of budget 196529 (max 262038) tokens, 102.8 tok/s, 1 s
+[strata] thinking: 162 of budget 196529 (max 262038) tokens, 102.2 tok/s, 2 s
+[strata] thinking: 266 of budget 196529 (max 262038) tokens, 102.5 tok/s, 3 s
+[strata] thinking: 373 of budget 196529 (max 262038) tokens, 103.3 tok/s, 4 s
+[strata] thinking: 498 of budget 196529 (max 262038) tokens, 107.7 tok/s, 5 s
+[strata] thinking: 607 of budget 196529 (max 262038) tokens, 107.8 tok/s, 6 s
+[strata] thinking: 725 of budget 196529 (max 262038) tokens, 109.3 tok/s, 7 s
+[strata] thinking: 839 of budget 196529 (max 262038) tokens, 109.8 tok/s, 8 s
+[strata] thinking: 948 of budget 196529 (max 262038) tokens, 109.7 tok/s, 9 s
+[strata] thinking: 1059 of budget 196529 (max 262038) tokens, 109.7 tok/s, 10 s
+[strata] done: 1081 tokens in 10 s (109.5 tok/s) (disconnect, cancel=True), expert cache 92.5% hit (+1.7% of the routed experts over PCIe)
+
+[strata] stopping (Ctrl+C again to end the engine at once) ...
+[strata] STRATA_DROP_CACHE_ON_EXIT: released the page cache of 10 model files
+[strata] stopped
