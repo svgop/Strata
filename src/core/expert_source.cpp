@@ -3407,7 +3407,7 @@ bool FileExpertSource::pin_cache_complement(
             char message[320];
             std::snprintf(message, sizeof message,
                           "FileExpertSource: resident complement %.2f GiB exceeds available %s (%.2f GiB) minus the "
-                          "%.0f GiB safety headroom",
+                          "%.0f GiB kept free (the RAM headroom: --ram-keep-gib sets it)",
                           (double) bytes / 1073741824.0, commit < physical ? "commit" : "RAM",
                           (double) available / 1073741824.0, (double) headroom_bytes / 1073741824.0);
             err = message;
@@ -5673,25 +5673,31 @@ bool ArenaExpertSource::open(const std::string& pack_dir, int64_t n_layers, int6
     ram_warning_.clear();
     // (a shared arena, --shared-expert-arena, may already be in RAM for another engine: not checked)
     if (detail::HostMemory hm; shared_arena_file.empty() && detail::host_available_memory(hm)) {
-        const uint64_t need = want + (uint64_t) blob;
+        // R5070 --ram-keep-gib W: the arena is chosen only if W GiB stay free after it, so its need here is the arena
+        // plus the spare blob plus W.
+        const uint64_t need = want + (uint64_t) blob + ram_keep_bytes_;
         const double gib = 1073741824.0;
+        char keep_note[96] = "";
+        if (ram_keep_bytes_ > 0)
+            std::snprintf(keep_note, sizeof keep_note, " (with the %.2f GiB --ram-keep-gib asks to leave free)",
+                          (double) ram_keep_bytes_ / gib);
         char buf[512];
         if (hm.cgroup_limit < need) {
             std::snprintf(buf, sizeof buf,
-                          "ArenaExpertSource: the expert arena needs %.2f GiB of RAM but this process's memory limit "
+                          "ArenaExpertSource: the expert arena needs %.2f GiB of RAM%s but this process's memory limit "
                           "(cgroup memory.max / memory.limit_in_bytes) is %.2f GiB: it would be killed while loading. "
                           "Raise the container's limit, or run with less RAM: --mmap-experts with "
                           "--resident-budget-gib N keeps only the hottest experts in RAM",
-                          (double) need / gib, (double) hm.cgroup_limit / gib);
+                          (double) need / gib, keep_note, (double) hm.cgroup_limit / gib);
             err = buf;
             return false;
         }
         if (hm.available < need) {
             std::snprintf(buf, sizeof buf,
-                          "the expert arena needs %.2f GiB of RAM but %.2f GiB is available (%.2f GiB short): the load "
+                          "the expert arena needs %.2f GiB of RAM%s but %.2f GiB is available (%.2f GiB short): the load "
                           "may swap or be stopped by the OS. Close other programs (or wait for an engine that is "
                           "still exiting), or run with less RAM: --mmap-experts with --resident-budget-gib N",
-                          (double) need / gib, (double) hm.available / gib, (double) (need - hm.available) / gib);
+                          (double) need / gib, keep_note, (double) hm.available / gib, (double) (need - hm.available) / gib);
             ram_warning_ = buf;
         }
     }

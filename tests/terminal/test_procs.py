@@ -112,6 +112,34 @@ class Procs(unittest.TestCase):
         self.assertEqual(procs.records(), [])
         self.assertEqual(procs.end_leftovers()["ended"], [])
 
+    # #4051: an engine holding tens of GB of pinned memory keeps its pages after its command line is gone, so the wait
+    # follows the START TOKEN, not is_same() (which reads an empty command line as gone and returns at once).
+    def test_a_signalled_process_is_waited_for_by_its_start_token(self):
+        rec = {"pid": 424242, "token": "T", "cmd": [str(SLEEP)], "role": "engine", "written_at": 0}
+        with mock.patch.object(procs, "is_same", return_value=True), \
+             mock.patch.object(procs, "_signal_verified", return_value=True), \
+             mock.patch.object(procs, "start_token", return_value="T"), \
+             mock.patch.object(procs, "drop_record"):
+            self.assertEqual(procs.end_one(rec, grace=0, settle=0.2), "stuck",
+                             "still the recorded process: the wait ends in stuck, not in ended")
+        with mock.patch.object(procs, "is_same", return_value=True), \
+             mock.patch.object(procs, "_signal_verified", return_value=True), \
+             mock.patch.object(procs, "start_token", return_value=None), \
+             mock.patch.object(procs, "drop_record") as dropped:
+            self.assertEqual(procs.end_one(rec, grace=0, settle=0.2), "ended")
+            dropped.assert_called_once_with(424242)
+
+    def test_the_settle_is_forwarded_to_every_end(self):
+        with mock.patch.object(procs, "leftovers", return_value=([{"pid": 1, "token": "t", "cmd": ["x"],
+                                                                   "role": "engine", "written_at": 0}], [])), \
+             mock.patch.object(procs, "end_one", return_value="gone") as one:
+            procs.end_leftovers(settle=120.0)
+            self.assertEqual(one.call_args.kwargs["settle"], 120.0)
+        with mock.patch.object(procs, "orphans_of", return_value=[]), \
+             mock.patch.object(procs, "end_one") as one:
+            procs.end_orphans(sys.executable, settle=120.0)
+            self.assertFalse(one.called)
+
     def test_an_engine_orphan_of_this_executable_is_found_and_a_live_one_is_not(self):
         # an "engine": this interpreter running --serve; its starter is gone after the middle process exits
         code = ("import subprocess,sys; p=subprocess.Popen([sys.executable,'-c','import time; time.sleep(120)','--serve'],"

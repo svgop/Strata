@@ -12345,3 +12345,54 @@ storage canon (reference updates in the same commit):
   reserve from the declared late terms (verify arena + hc + graphs + head) instead of a guessed margin.
 - **State measured after the port (box at load 13.9):** headroom 2,144 MiB, warm 134.8/123.4 - a bad
   draw under a loaded box, not a 220 verdict. The pacer was silent (pressure never neared the limit).
+
+## F-395 — ported upstream's desktop floor: `--ram-keep-gib` (R5070) (2026-11-19, 15:43)
+
+- **Found in upstream 0.2.16/0.1.62, not in our 0.1.46:** `--ram-keep-gib W` (`STRATA_RAM_KEEP_GIB` when a flag
+  cannot be passed) is ONE setting for both RAM decisions at the boot: the expert arena is used only if W GiB stay
+  available after it (`arena_need_with_keep`), and the RAM copy of the hottest experts leaves `max(W, safety
+  headroom)` free (`fallback_headroom`; safety 8 GiB Windows, 4 GiB elsewhere; `STRATA_RESIDENT_HEADROOM_GIB` still
+  decides when set).  Source: `engine/include/strata/core/ple_residency.hpp:140`, `engine/src/program/generate.cpp`
+  (parse 4089/4123, wiring 8196-8247, startup line 8431), `engine/src/core/expert_source.cpp:6036`.
+- **Our state before the port, and why it is the freeze class:** `--resident-experts` sized the RAM copy from
+  MemAvailable minus a fixed **4 GiB** (`generate.cpp:2874`), and the arena's RAM check compared the arena against
+  MemAvailable with no floor at all (`expert_source.cpp:5675`).  The measured consequence: a boot that ended with
+  MemFree **4.9 GiB** while the desktop needed more - the engine's RAM tier had taken what the operator's own work
+  needed, and the 03:47 freeze followed from exactly that state.  The floor was fixed policy, not the person's.
+- **Ported:** the flag and the env fallback (flag wins), the post-parse normalization
+  `resident_headroom = max(resident_headroom, ram_keep)` (never lowers the safety headroom; the env headroom still
+  wins for the testers' lever), `ArenaExpertSource::set_ram_keep` with the arena need `want + blob + keep` and the
+  message naming it, the boot line `RAM to keep free: W GiB (--ram-keep-gib|STRATA_RAM_KEEP_GIB): ... leaves H GiB
+  free`, and the usage line.  The launcher exports `STRATA_RAM_KEEP_GIB=24` - the desktop floor this box runs
+  behind - as an ENV, not a config arg, so the rollback binary (which does not know the flag) still loads the same
+  config (F-395 rollback: `STRATA_RAM_KEEP_GIB=0`, the pre-port behaviour).
+- **Verified without a boot** (the box is occupied by the operator's own transfer job): built `build-fresh/strata`
+  clean; five parse/plumbing cases read exactly as designed (`campaign/results/f395-ram-keep.out`): `-1` refuses with
+  exit 2; `--resident-experts --ram-keep-gib 24` leaves 24.00; `... 2` leaves 4.00 (safety wins); the env headroom
+  overrides at 6.00 and says so; the env keep alone reads 30.00.  No model was loaded in these runs.
+- **What this does NOT fix, stated so the next round does not over-claim:** the floor now governs the dominant term
+  (the 30-37 GiB RAM copy).  It is still a per-term guard: the KV, the 8 GiB conversation cache and the page cache
+  are not summed with it into one declared budget, so the boot's end state is bounded by the largest consumer
+  yielding, not by construction.  The boot-time budget owner (Calibration v2 R1) remains open.
+
+## F-396 — ported upstream's #4051 exit settle: the next engine no longer starts beside a dying one (2026-11-19, 15:45)
+
+- **Upstream's fix (#4051, 0.2.16):** `LEFTOVER_SETTLE_S = 120.0` - "how long an engine ended at a start is waited
+  for to give its memory back"; `end_one(settle=, say=)` waits on the START TOKEN after the signal (an exiting
+  process has an empty command line on Linux), narrates every 10 s, and reports `stuck`; the server says in plain
+  words that the next start can leave the PC short of RAM.  Source: `terminal/serve/server_parts/base.py:39`,
+  `terminal/strata_control/procs.py:305-339`, `terminal/serve/server.py:368-393`.
+- **Our bug, which is the same mechanism:** `end_one` re-checked `is_same(pid, token, cmd)` after the signal - and
+  `is_same` reads the command line, which an exiting Linux process has already emptied.  So a 30-60 GiB pinned
+  engine that was still returning its pages read as GONE within the first 0.1 s, the record was dropped, and the new
+  engine started beside it: the measured "resident complement exceeds available RAM" warning and the boot-lottery
+  shrink both follow from that overlap.  The wait after SIGKILL was a fixed 10 s with no narration.
+- **Ported:** `end_one(record, grace=8, settle=10, say=None)` with a `running()` closure on `start_token` only;
+  `end_leftovers`/`end_orphans` forward `settle` and `say`; `serve/server.py` sets `LEFTOVER_SETTLE_S = 120.0`, passes
+  it to both, and prints the plain-words warning when a process is still holding its memory (the start goes on - the
+  engine's own RAM check and the floor above then warn/refuse, nothing is silently refused).
+- **Verified:** `tests/terminal/test_procs.py` - 8 of 9 pass, including the two new ones (the start-token wait ends
+  in `stuck` while the token matches and in `ended` when it is gone; the settle is forwarded to every end).  The one
+  failure is the orphan scan, and it fails IDENTICALLY on the unmodified tree (checked by stashing the change): this
+  sandbox reparents the spawned orphan, so `orphans_of` finds nothing - an environment limit, not a regression.
+  Evidence: `campaign/results/f396-procs-tests.out`.  No boot: the box is occupied.

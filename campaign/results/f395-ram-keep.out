@@ -1,0 +1,22 @@
+F-395 --ram-keep-gib parse/plumbing evidence 2026-11-19T15:43:20+02:00 (binary build-fresh/strata, no model loaded: parse straight to usage+exit 2)
+
+### invalid: --ram-keep-gib -1
+strata generate: --ram-keep-gib needs N >= 0
+  exit=2
+
+### resident 24: --resident-experts --ram-keep-gib 24
+strata generate: RAM to keep free: 24.00 GiB (--ram-keep-gib): the expert arena is used only if that much stays available after it, and the resident RAM copy leaves 24.00 GiB free
+  exit=2
+
+### resident 2 (safety 4 wins): --resident-experts --ram-keep-gib 2
+strata generate: RAM to keep free: 2.00 GiB (--ram-keep-gib): the expert arena is used only if that much stays available after it, and the resident RAM copy leaves 4.00 GiB free
+  exit=2
+
+### env headroom 6: --resident-experts --ram-keep-gib 24
+strata generate: RAM to keep free: 24.00 GiB (--ram-keep-gib): the expert arena is used only if that much stays available after it, and the resident RAM copy leaves 6.00 GiB free (STRATA_RESIDENT_HEADROOM_GIB decides the headroom)
+  exit=2
+
+### env keep 30: --resident-experts
+strata generate: RAM to keep free: 30.00 GiB (STRATA_RAM_KEEP_GIB): the expert arena is used only if that much stays available after it, and the resident RAM copy leaves 30.00 GiB free
+  exit=2
+

@@ -1255,6 +1255,9 @@ public:
     /// Plan v0.3 P6: a native pack without experts.bin takes its experts from the model's GGUF: `native` is the
     /// --native shard, and native_experts.txt names the other shards beside it (per layer, or per role in v4).
     void set_gguf(const std::string& native) { gguf_ = native; }
+    /// R5070 --ram-keep-gib W: the RAM to leave free for the person's own work, taken on top of the arena before it is
+    /// allotted.  BEFORE open(); 0 = the behaviour before the setting (the arena whenever it fits, no margin).
+    void set_ram_keep(uint64_t bytes) { ram_keep_bytes_ = bytes; }
     void close();
 
     bool mapped() const { return base_ != nullptr; }
@@ -1327,6 +1330,7 @@ private:
     std::vector<uint64_t> pin_start_, pin_end_;
     std::vector<const uint8_t*> pin_dev_;
     std::vector<uint8_t> layer_pcie_;
+    uint64_t ram_keep_bytes_ = 0;    ///< R5070 --ram-keep-gib: the RAM to leave free after the arena (0: none)
     /// index of the registered range holding [off, off + len), or -1
     int64_t pin_range_of(uint64_t off, uint64_t len) const;
     std::string gguf_;

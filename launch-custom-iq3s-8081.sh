@@ -51,6 +51,13 @@ export STRATA_ADAPT_EARLY="${STRATA_ADAPT_EARLY:-1}"  # F-332 ADOPTED (10-25): t
 export STRATA_DROP_CACHE_ON_EXIT="${STRATA_DROP_CACHE_ON_EXIT:-1}"
                                   # =0 rolls back (inline scan, byte-identical legacy path). Rider: five-boot pooled confirmation (pair leg-1
                                   # sensitivity noted in F-332); engine rollback: engine/strata.pre-f332
+# F-395 THE DESKTOP FLOOR (2026-11-19): R5070 from upstream 0.2.16 - the RAM the person wants left free for their
+# own work.  The resident RAM copy (--resident-experts) is sized from MemAvailable at the boot minus this floor, and
+# the expert arena (unused here) is used only if the floor stays free after it.  Before it the copy was sized minus 4
+# GiB, which is why a boot could land with MemFree 4.9 GiB and the desktop frozen: the engine had taken what the
+# operator's own work needed.  It is an env, not a config arg, so the rollback binary (which does not know the flag)
+# still loads the same config.  0 = the old behaviour (4 GiB safety headroom); raise it if the desktop needs more.
+export STRATA_RAM_KEEP_GIB="${STRATA_RAM_KEEP_GIB:-24}"
 # F-367 ADOPTED (10-27): the shadow store's canonical home is /dev/shm (tmpfs). F-365: one probe leg
 # took 2,635,199 minor faults for +160 MB of RSS — page churn on the disk-backed page cache, and the
 # pool is byte-bound at ~150 us/entry. tmpfs pages are RAM-resident, THP-eligible, never evicted.

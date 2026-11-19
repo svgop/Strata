@@ -623,6 +623,11 @@ struct Options {
     /// not hold that the expert profile ranks hottest are copied into RAM, the rest are read from the files in place
     /// (the GGUF shards when the pack has no experts.bin).  0 = the whole complement (--resident-experts).
     uint64_t resident_budget = 0;
+    /// `--ram-keep-gib W` (or STRATA_RAM_KEEP_GIB): the RAM, in bytes, the person wants left free for their own work
+    /// (0: none).  One setting for both RAM decisions at the start: the expert arena is used only if W GiB stay
+    /// available after it, and the resident RAM copy leaves max(W, the 4 GiB safety headroom) free.  It can only raise
+    /// the headroom, never lower it; STRATA_RESIDENT_HEADROOM_GIB still decides when set (the testers' lever).
+    uint64_t ram_keep = 0;
     /// R4: slots of VRAM-resident experts.  **0 = off, and off is the default.**
     /// **THE COMMENT THAT USED TO BE HERE WAS FALSE AND ROUND 328 MEASURED IT.**  It said "the cache has no
     /// consumer yet - `moe_hit_grouped_s2` does not exist - so switching it on costs the fill traffic and
@@ -1139,6 +1144,9 @@ void usage() {
                  "  --resident-experts   the low-RAM PC's resident mode (setup): --mmap-experts --resident-cpu-experts\n"
                  "                       with the copy page-locked when possible, 4 GiB headroom, plain mmap if it\n"
                  "                       does not fit.  Same answers as --mmap-experts for the same placement.\n"
+                 "  --ram-keep-gib W     RAM to leave free for your own work, in GiB (default 0; STRATA_RAM_KEEP_GIB is\n"
+                 "                       the same when the flag cannot be passed).  The arena is used only if W GiB stay\n"
+                 "                       available after it, and the resident RAM copy leaves max(W, 4 GiB) free.\n"
                  "  --adapt-min-gain F   the adaptive tier swaps an expert in only when its decayed routing count beats\n"
                  "                       the one it replaces by more than F (default 1.5; higher = fewer, surer swaps)\n"
                  "  --adapt-async 1      --serve with the resident RAM mode or the arena (one GPU; opt-in): the adaptive\n"
@@ -2530,6 +2538,7 @@ int main(int argc, char** argv) {
     Options o;
     bool have_tokens = false;
     bool have_logits_stride = false;
+    bool ram_keep_by_flag = false;
     for (int i = 1; i < argc; ++i) {
         const std::string a = argv[i];
         auto next = [&](const char* what) -> const char* {
@@ -2890,6 +2899,12 @@ int main(int argc, char** argv) {
             if (const char* v = std::getenv("STRATA_RESIDENT_HEADROOM_GIB"); v != nullptr && std::atof(v) >= 0.0)
                 o.resident_headroom = (uint64_t) (std::atof(v) * 1073741824.0);
         }
+        else if (a == "--ram-keep-gib") {
+            const double gib = std::atof(next("--ram-keep-gib"));
+            if (!(gib >= 0.0)) { std::fprintf(stderr, "strata generate: --ram-keep-gib needs N >= 0\n"); return 2; }
+            o.ram_keep = (uint64_t) (gib * 1073741824.0);
+            ram_keep_by_flag = true;
+        }
         else if (a == "--stats") o.stats = true;
         else if (a == "--shared-late") o.shared_late = true;
         else if (a == "--keep-canonical") o.keep_canonical = true;
@@ -2907,6 +2922,25 @@ int main(int argc, char** argv) {
             return 2;
         }
         }
+    }
+    // #R5070: --ram-keep-gib W (or STRATA_RAM_KEEP_GIB when the flag is absent; the flag wins): the RAM the person
+    // wants left free for their own work.  It raises the resident copy's headroom - never lowers it - and gates the
+    // expert arena (expert_source.cpp), so a boot cannot take the RAM a desktop needs.  W = 0 keeps the behaviour
+    // before the setting: the whole complement when it fits minus the 4 GiB safety headroom.  STRATA_RESIDENT_HEADROOM_GIB
+    // still decides instead when set, even below the safety headroom (the testers' lever, kept).
+    if (o.ram_keep == 0) {
+        if (const char* v = std::getenv("STRATA_RAM_KEEP_GIB"); v != nullptr && std::atof(v) > 0.0)
+            o.ram_keep = (uint64_t) (std::atof(v) * 1073741824.0);
+    }
+    if (o.ram_keep > 0) {
+        const char* env_head = std::getenv("STRATA_RESIDENT_HEADROOM_GIB");
+        const bool env_head_set = env_head != nullptr && std::atof(env_head) >= 0.0;
+        if (!env_head_set && o.resident_headroom < o.ram_keep) o.resident_headroom = o.ram_keep;
+        std::fprintf(stderr, "strata generate: RAM to keep free: %.2f GiB (%s): the expert arena is used only if "
+                             "that much stays available after it, and the resident RAM copy leaves %.2f GiB free%s\n",
+                     (double) o.ram_keep / 1073741824.0, ram_keep_by_flag ? "--ram-keep-gib" : "STRATA_RAM_KEEP_GIB",
+                     (double) o.resident_headroom / 1073741824.0,
+                     env_head_set ? " (STRATA_RESIDENT_HEADROOM_GIB decides the headroom)" : "");
     }
 #if defined(STRATA_USE_HIP)
     {   // gfx1151 (Strix Halo): the switches that are exact there are on by default (strata/core/arch_defaults.hpp); before
@@ -6059,6 +6093,7 @@ int main(int argc, char** argv) {
         // engine allocates after it (the verify window's staging: "mapped staging allocation failed", exit 1).  Keep a
         // reserve while the arena pins and hand it back after (pin_budget.hpp).
         strata::core::pin_reserve_take();
+        arena_src.set_ram_keep(o.ram_keep);   // R5070: the arena is used only if W GiB stay available after it
         const bool arena_ok = arena_src.open(o.pack, g.n_layers, g.n_expert, /*threads=*/6, err, pin_limit,
                                              o.shared_expert_arena);
         strata::core::pin_note_arena(arena_src.pinned_arena_bytes());

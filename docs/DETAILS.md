@@ -169,6 +169,12 @@ other ~18 GB), a 32 GB PC with a 12-16 GB GPU the Coder; IQ3_XXS on a 32 GB PC s
   as far as the RAM allows, their experts are kept in RAM too (so a prompt reads nothing from the SSD either).
 - The cache still follows the conversation (`--adapt-every`): a swap copies the evicted expert back from VRAM into the
   RAM place of the one that replaces it, so the RAM copy keeps holding exactly what the GPU does not.
+- `--ram-keep-gib W` (default 0; `STRATA_RAM_KEEP_GIB` is the same for a program that cannot pass the flag) is the RAM
+  to leave free for your own work. The copy above is sized from the RAM available at the start minus `max(W, 4 GiB)`
+  (8 GiB on Windows, where the copy's page trim needs the room), so a PC that is also running a desktop, a browser or
+  another program keeps that room instead of the engine taking it. The expert arena, when that is the one in use, is
+  used only if W GiB are still available after it. `STRATA_RESIDENT_HEADROOM_GIB`, when set, decides the headroom
+  instead of both. With W = 0 nothing changes from before the setting.
 - `STRATA_RAM_ADAPT=<n>` (opt-in, `--serve`, one GPU): the RAM copy follows the conversation too. Without it the
   copy is chosen once, at start, so when the RAM cannot hold every expert the GPU does not, an expert outside the copy
   is read from the SSD every time the conversation routes to it. With it, before a decode window and while no adaptive
