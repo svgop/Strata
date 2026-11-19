@@ -1,0 +1,41 @@
+BOOT-SPREAD Thu Nov 19 04:24:20 PM SAST 2026 boots=5 samples=3 label=f400b
+boot 1: boot fingerprint f22e85411ce4aa82 slots=9900
+  [strata] boot contract: engine RSS 96.2 GiB (shmem 25.0), MemAvailable 103.0 GiB at READY
+  [strata] boot contract: engine RSS 92.3 GiB (shmem 25.0), MemAvailable 98.9 GiB settled (post-warm-in)
+  boot 1 leg 1: 119.7 t/s (load 6.67)
+  boot 1 leg 2: 137.2 t/s (load 7.25)
+  boot 1 leg 3: 125.6 t/s (load 6.82)
+  boot 1 MAX: 137.2
+boot 2: boot fingerprint f22e85411ce4aa82 slots=9900
+  [strata] boot contract: engine RSS 92.1 GiB (shmem 25.0), MemAvailable 102.9 GiB at READY
+  [strata] boot contract: engine RSS 86.5 GiB (shmem 25.0), MemAvailable 98.7 GiB settled (post-warm-in)
+  boot 2 leg 1: 166.7 t/s (load 7.13)
+  boot 2 leg 2: 190.1 t/s (load 7.73)
+  boot 2 leg 3: 195.4 t/s (load 8.43)
+  boot 2 MAX: 195.4
+boot 3: boot fingerprint f22e85411ce4aa82 slots=9900
+  [strata] boot contract: engine RSS 85.2 GiB (shmem 25.0), MemAvailable 102.2 GiB at READY
+  [strata] boot contract: engine RSS 72.7 GiB (shmem 25.0), MemAvailable 99.2 GiB settled (post-warm-in)
+  boot 3 leg 1: 166.3 t/s (load 9.40)
+  boot 3 leg 2: 171.0 t/s (load 9.98)
+  boot 3 leg 3: 191.3 t/s (load 9.68)
+  boot 3 MAX: 191.3
+boot 4: boot fingerprint f22e85411ce4aa82 slots=9900
+  [strata] boot contract: engine RSS 89.1 GiB (shmem 62.9), MemAvailable 103.2 GiB at READY
+  [strata] boot contract: engine RSS 90.4 GiB (shmem 62.9), MemAvailable 98.9 GiB settled (post-warm-in)
+  boot 4 leg 1: 179.3 t/s (load 8.50)
+  boot 4 leg 2: 239.9 t/s (load 8.83)
+  boot 4 leg 3: 227.2 t/s (load 9.58)
+  boot 4 MAX: 239.9
+boot 5: boot fingerprint f22e85411ce4aa82 slots=9900
+  [strata] boot contract: engine RSS 103.6 GiB (shmem 62.9), MemAvailable 102.9 GiB at READY
+  [strata] boot contract: engine RSS 96.5 GiB (shmem 62.9), MemAvailable 99.0 GiB settled (post-warm-in)
+  boot 5 leg 1: 174.1 t/s (load 8.77)
+  boot 5 leg 2: 203.8 t/s (load 9.05)
+  boot 5 leg 3: 187.2 t/s (load 8.65)
+  boot 5 MAX: 203.8
+
+SUMMARY: maxima = 137.2 195.4 191.3 239.9 203.8
+  boots=5 max-mean=193.5 spread=53.1% min=137.2 max=239.9
+  stdev=36.9
+DISCLOSED: load band per leg above; a spread verdict is claimed only within one stable band.

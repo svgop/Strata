@@ -3527,11 +3527,28 @@ bool FileExpertSource::pin_cache_complement(
                 const char* v = std::getenv("STRATA_PIN_GUARD");
                 return v == nullptr ? 1 : std::atoi(v);
             }();
+            // F-404: THE DECLARED ORGAN.  The paced heuristic below flips on a knife edge - free_now against
+            // bytes + reserve, with the reserve the RAM floor (24 GiB here) and the post-drop reading sitting
+            // right at the boundary (62-75 GiB) - so two boots of one recipe silently land in different memory
+            // organs, and the measured speed splits with them (driver-pinned maxima 204-240 against paced 137-195,
+            // same battery, load-disclosed).  STRATA_COMPLEMENT_BACKING declares it instead:
+            //   hostalloc - the one-shot cudaHostAlloc path, the measured gold organ (the banked 224.6 boots'
+            //               class).  The driver's own allocation failure is the guard, and the existing
+            //               refusal chain (refused -> pageable/locked) still holds below it.
+            //   paced     - the steps-and-register path, forced.
+            //   unset     - the sampled heuristic, unchanged (today's behaviour).
+            static const char* const backing_env = std::getenv("STRATA_COMPLEMENT_BACKING");
+            const bool want_hostalloc = backing_env != nullptr && std::strcmp(backing_env, "hostalloc") == 0;
+            const bool want_paced = backing_env != nullptr && std::strcmp(backing_env, "paced") == 0;
             uint64_t free_now = 0;
-            if (guard == 2) {
+            if (guard == 2 || want_paced) {
                 paced = true;
-                std::fprintf(stderr, "FileExpertSource: STRATA_PIN_GUARD=2: page-locking the complement in steps\n");
-            } else if (guard != 0 && free_memory_bytes(free_now) &&
+                if (want_paced)
+                    std::fprintf(stderr, "FileExpertSource: STRATA_COMPLEMENT_BACKING=paced: the complement takes "
+                                         "the steps-and-register path as declared\n");
+                if (guard == 2)
+                    std::fprintf(stderr, "FileExpertSource: STRATA_PIN_GUARD=2: page-locking the complement in steps\n");
+            } else if (guard != 0 && !want_hostalloc && free_memory_bytes(free_now) &&
                        detail::pin_depends_on_reclaim(free_now, bytes, pace_reserve)) {
                 drop_file_cache();
                 const uint64_t before = free_now;

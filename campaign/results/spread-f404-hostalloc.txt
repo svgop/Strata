@@ -1,0 +1,27 @@
+BOOT-SPREAD Thu Nov 19 04:49:13 PM SAST 2026 boots=3 samples=3 label=f404-hostalloc
+boot 1: boot fingerprint f22e85411ce4aa82 slots=9900 backing: driver-pinned
+  [strata] boot contract: engine RSS 108.3 GiB (shmem 62.9), MemAvailable 104.3 GiB at READY
+  [strata] boot contract: engine RSS 94.0 GiB (shmem 62.9), MemAvailable 100.6 GiB settled (post-warm-in)
+  boot 1 leg 1: 162.5 t/s (load 10.35)
+  boot 1 leg 2: 201.0 t/s (load 9.76)
+  boot 1 leg 3: 213.1 t/s (load 9.10)
+  boot 1 MAX: 213.1
+boot 2: boot fingerprint f22e85411ce4aa82 slots=9900 backing: driver-pinned
+  [strata] boot contract: engine RSS 111.6 GiB (shmem 62.6), MemAvailable 102.7 GiB at READY
+  [strata] boot contract: engine RSS 117.7 GiB (shmem 62.6), MemAvailable 99.4 GiB settled (post-warm-in)
+  boot 2 leg 1: 185.6 t/s (load 9.22)
+  boot 2 leg 2: 188.6 t/s (load 8.72)
+  boot 2 leg 3: 202.7 t/s (load 8.22)
+  boot 2 MAX: 202.7
+boot 3: boot fingerprint f22e85411ce4aa82 slots=9900 backing: driver-pinned
+  [strata] boot contract: engine RSS 112.2 GiB (shmem 62.6), MemAvailable 103.4 GiB at READY
+  [strata] boot contract: engine RSS 118.2 GiB (shmem 62.6), MemAvailable 98.9 GiB settled (post-warm-in)
+  boot 3 leg 1: 170.9 t/s (load 12.84)
+  boot 3 leg 2: 194.0 t/s (load 12.42)
+  boot 3 leg 3: 182.2 t/s (load 11.98)
+  boot 3 MAX: 194.0
+
+SUMMARY: maxima = 213.1 202.7 194.0
+  boots=3 max-mean=203.3 spread=9.4% min=194.0 max=213.1
+  stdev=9.6
+DISCLOSED: load band per leg above; a spread verdict is claimed only within one stable band.

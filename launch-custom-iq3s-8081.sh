@@ -58,6 +58,14 @@ export STRATA_DROP_CACHE_ON_EXIT="${STRATA_DROP_CACHE_ON_EXIT:-1}"
 # operator's own work needed.  It is an env, not a config arg, so the rollback binary (which does not know the flag)
 # still loads the same config.  0 = the old behaviour (4 GiB safety headroom); raise it if the desktop needs more.
 export STRATA_RAM_KEEP_GIB="${STRATA_RAM_KEEP_GIB:-24}"
+# F-405 THE DECLARED ORGAN (2026-11-19, measured): the complement's memory backing was a per-boot coin flip
+# on a knife edge (free-at-allocation vs complement+floor, boundary 61.86 GiB, reading 62-75) - driver-pinned
+# cudaHostAlloc (memfd, the banked gold boots' class, maxima 204-240) against paced THP+register (anon, 137-195),
+# same fingerprint, same recipe.  Declared hostalloc: 3 forced boots same-hour read maxima 213.1/202.7/194.0 -
+# spread 9.4 percent (was 53.1), M1 floor 194 (was 137) at a WORSE load band (to 12.8).  The engine names the
+# organ in the resident-mode line (backing: driver-pinned) and refuses nothing - the driver's own allocation
+# failure falls back to the existing chain.  Rollback: STRATA_COMPLEMENT_BACKING= (unset = the sampled flip).
+export STRATA_COMPLEMENT_BACKING="${STRATA_COMPLEMENT_BACKING:-hostalloc}"
 # F-397 (upstream 0.2.16 P11, c5cc7351f): glibc's ptmalloc gives every thread its own heap arena - up to
 # 8 x ncores of them (256 on this 16C/32T box) - and a fragmented arena never shrinks.  The engine (pool
 # workers, loader threads, the service loop) and the Python server are exactly that shape, so the RSS

@@ -12577,3 +12577,25 @@ storage canon (reference updates in the same commit):
   quiet-window work: the organ choice is a config-level standing change and owes the interleave, and the
   paced-vs-driver A/B needs stable load to price the gap cleanly (the current split is confounded by the
   6.7-9.6 band's wobble, disclosed).
+
+## F-405 — the organ declared: STRATA_COMPLEMENT_BACKING=hostalloc arms the gold backing; the lottery's memory side is closed (2026-11-19, 17:00)
+
+- **The arm:** `STRATA_COMPLEMENT_BACKING` (engine, env-gated): `hostalloc` skips the knife-edge reclaim
+  heuristic and takes the one-shot cudaHostAlloc path - the measured gold organ; the driver's own allocation
+  failure is the guard and the existing refusal chain (refused -> pageable/locked) holds under it.  `paced`
+  forces the steps-and-register path; unset = the sampled flip, byte-identical to before.  The launcher now
+  exports `hostalloc` (env-overridable; the `=` rollback restores the flip).
+- **The measurement (same-hour, 16:20-17:00, load-disclosed):**
+  - AUTO (the flip), 5 boots: maxima 137.2 / 195.4 / 191.3 / 239.9 / 203.8 - spread 53.1%, stdev 36.9, floor 137
+  - DECLARED hostalloc, 3 boots at a WORSE load band (to 12.8): maxima **213.1 / 202.7 / 194.0 - spread 9.4%,
+    stdev 9.6, floor 194**
+  - M1 legs-2+ means: auto 193.3 vs declared 197.0 - parity within noise; the FLOOR is the win (no boot below
+    194 at load 8-13, where the flip drew 137).  Evidence: `campaign/results/spread-f404-auto.txt` and
+    `spread-f404-hostalloc.txt`.
+- **Canary reasoning (the owed formality named):** the organ changes WHERE the expert bytes live (driver memfd
+  vs own THP mapping), not a byte of them - routing, kernels and outputs are identical; no token-stream change.
+  The quiet-window battery still owes the formal all-lane parity (M2 pair/conc, M3b, prefill) and the MMLU gate
+  per the adoption law, and the 220+ bank re-read at true quiet (the 239.9 leg says the organ's ceiling at load
+  is already record-class).
+- **Engine deployed** (`build-fresh/strata` -> `engine/strata`; `engine/strata.pre-f404` rollback).  The
+  resident-mode line names the organ every boot; boot-spread.sh records it per boot.
