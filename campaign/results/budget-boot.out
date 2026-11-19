@@ -1,0 +1,115 @@
+launcher: preflight: MemAvailable 161 GiB (floor 96), GPU 31481 MiB free (floor 1024)
+launcher: no VALIDATED store at /mnt/DATA/LLM/Models/GGUF/strata/data/packs/q2_0 - the native path serves every miss (the canonical pack is corrupt, T68; arm a validated store with STRATA_SHADOW_EXPERTS=<dir> after its quality gate)
+the vision encoder starts with the first picture (elastic) ...
+loading the model (the first start takes a minute or two) ...
+[strata] the config has a "vision" section but no --vision in its args: added --vision (run setup again with --vision to write them)
+[strata] prewarm: pre-boot sweep: 18 files, 80.1 GiB into the page cache (before the engine's load, so the reclaim storm plays out here)
+[strata] prewarm: pre-boot sweep warm in 26 s
+[strata] the config has a "vision" section but no --vision in its args: added --vision (run setup again with --vision to write them)
+[strata] starting the engine: reading the model's weights ...
+[strata] loading the experts the GPU does not hold into RAM (of about 55 GB) and locking part of them for the GPU.
+         YOUR PC CAN BE SLOW OR STOP RESPONDING FOR 1-3 MINUTES NOW - this is normal.
+         Please wait and don't close this window; the server says when it is ready.
+[strata] filling the GPU's expert cache (9634 experts, 18.28 GiB of VRAM) ...
+[strata] almost ready ...
+[strata] the config has a "vision" section but no --vision in its args: added --vision (run setup again with --vision to write them)
+[strata] control vector: armed project:1-47 (validated against the config)
+[strata] images: the image encoder starts with the first picture and stops after 120 s without one; while it runs the expert cache keeps 2048 MiB free for it
+[strata] prewarm: on (files + replay); the warm-in starts when the engine is up and yields to live traffic
+[strata] the config has a "vision" section but no --vision in its args: added --vision (run setup again with --vision to write them)
+ready: http://127.0.0.1:8081/v1  (OpenAI: /v1/chat/completions, Anthropic: /v1/messages, context 262144 tokens, images on, API key required)
+       open http://127.0.0.1:8081/ in a browser to chat; close this window to stop the model
+       from other devices: http://192.168.0.22:8081/   (API: http://192.168.0.22:8081/v1)
+[strata] prewarm: 18 files, 80.1 GiB into the page cache (the boot's pin dropped it)
+[strata] prewarm: page cache warm in 23 s
+[strata] thinking limited to 100 of max_tokens 200 so the answer has room ("answer_room": false in the config turns this off)
+[strata] thinking budget reached (100 tokens): wrapping up the thinking
+[strata] thinking: 118 of max 200 tokens, 110.0 tok/s, 1 s
+[strata] done: 200 tokens in 2 s (116.3 tok/s) (length, cancel=False), expert cache 91.8% hit (+2.0% of the routed experts over PCIe)
+[strata] thinking limited to 100 of max_tokens 200 so the answer has room ("answer_room": false in the config turns this off)
+[strata] thinking budget reached (100 tokens): wrapping up the thinking
+[strata] thinking: 118 of max 200 tokens, 121.5 tok/s, 1 s
+[strata] done: 200 tokens in 2 s (119.1 tok/s) (length, cancel=False), expert cache 92.7% hit (+1.8% of the routed experts over PCIe)
+[strata] thinking limited to 130 of max_tokens 260 so the answer has room ("answer_room": false in the config turns this off)
+[strata] thinking: 109 of budget 130 (max 260) tokens, 118.2 tok/s, 1 s
+[strata] thinking budget reached (130 tokens): wrapping up the thinking
+[strata] answering: 218 of max 260 tokens, 112.8 tok/s, 2 s
+[strata] done: 221 tokens in 2 s (112.1 tok/s) (stop, cancel=False), expert cache 91.5% hit (+2.1% of the routed experts over PCIe)
+[strata] thinking limited to 100 of max_tokens 200 so the answer has room ("answer_room": false in the config turns this off)
+[strata] thinking limited to 100 of max_tokens 200 so the answer has room ("answer_room": false in the config turns this off)
+[strata] thinking limited to 100 of max_tokens 200 so the answer has room ("answer_room": false in the config turns this off)
+[strata] thinking limited to 100 of max_tokens 200 so the answer has room ("answer_room": false in the config turns this off)
+[strata] thinking limited to 100 of max_tokens 200 so the answer has room ("answer_room": false in the config turns this off)
+[strata] thinking limited to 100 of max_tokens 200 so the answer has room ("answer_room": false in the config turns this off)
+[strata] thinking: 3 of budget 100 (max 200) tokens, 2.9 tok/s, 1 s
+[strata] thinking: 2 of budget 100 (max 200) tokens, 2.2 tok/s, 1 s
+[strata] thinking: 2 of budget 100 (max 200) tokens, 2.5 tok/s, 1 s
+[strata] thinking: 2 of budget 100 (max 200) tokens, 3.0 tok/s, 1 s
+[strata] thinking: 2 of budget 100 (max 200) tokens, 4.4 tok/s, 1 s
+[strata] thinking: 2 of budget 100 (max 200) tokens, 7.9 tok/s, 1 s
+[strata] thinking: 22 of budget 100 (max 200) tokens, 10.4 tok/s, 2 s
+[strata] thinking: 22 of budget 100 (max 200) tokens, 11.2 tok/s, 2 s
+[strata] thinking: 22 of budget 100 (max 200) tokens, 16.7 tok/s, 2 s
+[strata] thinking: 22 of budget 100 (max 200) tokens, 14.4 tok/s, 2 s
+[strata] thinking: 22 of budget 100 (max 200) tokens, 12.6 tok/s, 2 s
+[strata] thinking: 22 of budget 100 (max 200) tokens, 11.8 tok/s, 2 s
+[strata] thinking: 45 of budget 100 (max 200) tokens, 14.3 tok/s, 3 s
+[strata] thinking: 44 of budget 100 (max 200) tokens, 14.7 tok/s, 3 s
+[strata] thinking: 45 of budget 100 (max 200) tokens, 15.6 tok/s, 3 s
+[strata] thinking: 45 of budget 100 (max 200) tokens, 16.3 tok/s, 3 s
+[strata] thinking: 45 of budget 100 (max 200) tokens, 17.6 tok/s, 3 s
+[strata] thinking: 46 of budget 100 (max 200) tokens, 19.6 tok/s, 3 s
+[strata] thinking: 64 of budget 100 (max 200) tokens, 15.4 tok/s, 4 s
+[strata] thinking: 65 of budget 100 (max 200) tokens, 18.2 tok/s, 4 s
+[strata] thinking: 66 of budget 100 (max 200) tokens, 19.6 tok/s, 4 s
+[strata] thinking: 67 of budget 100 (max 200) tokens, 17.1 tok/s, 4 s
+[strata] thinking: 65 of budget 100 (max 200) tokens, 17.1 tok/s, 4 s
+[strata] thinking: 67 of budget 100 (max 200) tokens, 16.6 tok/s, 4 s
+[strata] thinking: 88 of budget 100 (max 200) tokens, 16.9 tok/s, 5 s
+[strata] thinking: 92 of budget 100 (max 200) tokens, 18.2 tok/s, 5 s
+[strata] thinking: 96 of budget 100 (max 200) tokens, 19.4 tok/s, 5 s
+[strata] thinking: 94 of budget 100 (max 200) tokens, 19.4 tok/s, 5 s
+[strata] thinking: 92 of budget 100 (max 200) tokens, 19.9 tok/s, 5 s
+[strata] thinking: 98 of budget 100 (max 200) tokens, 22.2 tok/s, 5 s
+[strata] thinking budget reached (100 tokens): wrapping up the thinking
+[strata] thinking budget reached (100 tokens): wrapping up the thinking
+[strata] thinking budget reached (100 tokens): wrapping up the thinking
+[strata] thinking budget reached (100 tokens): wrapping up the thinking
+[strata] thinking: 118 of max 200 tokens, 19.7 tok/s, 6 s
+[strata] thinking: 94 of budget 100 (max 200) tokens, 14.4 tok/s, 7 s
+[strata] thinking: 99 of budget 100 (max 200) tokens, 15.5 tok/s, 7 s
+[strata] answering: 121 of max 200 tokens, 19.3 tok/s, 7 s
+[strata] answering: 120 of max 200 tokens, 20.9 tok/s, 7 s
+[strata] thinking: 118 of max 200 tokens, 19.3 tok/s, 7 s
+[strata] thinking budget reached (100 tokens): wrapping up the thinking
+[strata] thinking budget reached (100 tokens): wrapping up the thinking
+[strata] answering: 126 of max 200 tokens, 17.9 tok/s, 8 s
+[strata] thinking: 118 of max 200 tokens, 15.1 tok/s, 8 s
+[strata] answering: 124 of max 200 tokens, 15.9 tok/s, 8 s
+[strata] answering: 129 of max 200 tokens, 16.8 tok/s, 8 s
+[strata] answering: 128 of max 200 tokens, 17.9 tok/s, 8 s
+[strata] answering: 126 of max 200 tokens, 17.1 tok/s, 8 s
+[strata] answering: 141 of max 200 tokens, 17.5 tok/s, 9 s
+[strata] answering: 149 of max 200 tokens, 16.9 tok/s, 9 s
+[strata] answering: 159 of max 200 tokens, 18.0 tok/s, 9 s
+[strata] answering: 158 of max 200 tokens, 18.1 tok/s, 9 s
+[strata] answering: 160 of max 200 tokens, 19.5 tok/s, 9 s
+[strata] answering: 162 of max 200 tokens, 19.3 tok/s, 9 s
+[strata] answering: 174 of max 200 tokens, 19.1 tok/s, 10 s
+[strata] done: 182 tokens in 10 s (19.0 tok/s) (stop, cancel=False), expert cache 89.1% hit (+2.8% of the routed experts over PCIe)
+[strata] answering: 181 of max 200 tokens, 18.3 tok/s, 10 s
+[strata] answering: 190 of max 200 tokens, 19.5 tok/s, 10 s
+[strata] answering: 199 of max 200 tokens, 21.6 tok/s, 10 s
+[strata] done: 200 tokens in 10 s (21.7 tok/s) (length, cancel=False), expert cache 87.0% hit (+3.3% of the routed experts over PCIe)
+[strata] answering: 192 of max 200 tokens, 20.4 tok/s, 10 s
+[strata] done: 200 tokens in 10 s (20.8 tok/s) (length, cancel=False), expert cache 85.7% hit (+3.5% of the routed experts over PCIe)
+[strata] done: 200 tokens in 10 s (20.2 tok/s) (length, cancel=False), expert cache 93.9% hit (+1.4% of the routed experts over PCIe)
+[strata] done: 200 tokens in 10 s (19.9 tok/s) (length, cancel=False), expert cache 84.4% hit (+4.0% of the routed experts over PCIe)
+[strata] done: 200 tokens in 10 s (19.4 tok/s) (length, cancel=False), expert cache 83.4% hit (+4.8% of the routed experts over PCIe)
+[strata] prewarm: replay done in 16 s - the first real request is warm
+[strata] done: 8 tokens in 1 s (181.2 tok/s) (length, cancel=False), expert cache 93.4% hit (+0.9% of the routed experts over PCIe)
+[strata] the reply reached max tokens while still thinking, so it has no answer: a thinking budget (reasoning_budget_tokens, in the request or in strata-<model>.json for every request) leaves room to answer
+
+[strata] stopping (Ctrl+C again to end the engine at once) ...
+[strata] STRATA_DROP_CACHE_ON_EXIT: released the page cache of 10 model files
+[strata] stopped
