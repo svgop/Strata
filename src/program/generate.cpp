@@ -5842,7 +5842,7 @@ int main(int argc, char** argv) {
 #if defined(STRATA_USE_HIP)
         std::fprintf(stderr, "strata generate: GPU %d: %s (%s)\n", dev, name, named ? p.gcnArchName : "?");
         // the first prompt's one-time hipBLAS library loads (about 2.5 s), done on a thread while the expert arena loads
-        if (named) g_warm_thr = std::thread([dev] { strata::prefill::warm_gemm_libraries(dev); });
+        if (named) g_warm_thr = std::thread([dev] { strata::aux_cpus::name_this_thread("strata-gwarm"); strata::prefill::warm_gemm_libraries(dev); });
         // (RDNA4's matrix-core prompt attention is the default since 148-amd: the engine says so once, at its first prompt;
         // STRATA_HIP_WMMA=0 turns it off.)
 #if defined(_WIN32)
@@ -11418,6 +11418,7 @@ int main(int argc, char** argv) {
         std::deque<std::string>& in_lines = in_shared->lines;
         bool& in_eof = in_shared->eof;
         std::thread([st = in_shared] {
+            strata::aux_cpus::name_this_thread("strata-stdin");
             strata::aux_cpus::pin_current_thread();
             // read(2) on the descriptor, not std::cin: glibc's exit() flushes every stdio stream and waits for
             // stdin's lock, which getline holds while it waits for input - an engine ending on an error (every
@@ -11639,6 +11640,7 @@ int main(int argc, char** argv) {
             const int io_limit = wio ? std::atoi(wio) : limit * 10;
             if (limit > 0)
                 std::thread([limit, io_limit] {
+                    strata::aux_cpus::name_this_thread("strata-io");
                     strata::aux_cpus::pin_current_thread();
                     strata::core::Progress& p = strata::core::progress();
                     uint64_t last = p.beats.load(), ticks_at = p.ticks.load();
@@ -12581,7 +12583,7 @@ int main(int argc, char** argv) {
                     const float* u0 = adapt_pre.snap_u.data();
                     const float* pc0 = adapt_pre.snap_pc.empty() ? nullptr : adapt_pre.snap_pc.data();
                     const double* h0 = adapt_pre.snap_heat.empty() ? nullptr : adapt_pre.snap_heat.data();
-                    adapt_pre.th = std::thread([&] { strata::aux_cpus::pin_current_thread();   // F-333: never contend with the doorbell/service cores (a 9.8 ms GPU-reach outlier read on the unpinned F-332 boot)
+                    adapt_pre.th = std::thread([&] { strata::aux_cpus::name_this_thread("strata-adaptp"); strata::aux_cpus::pin_current_thread();   // F-333: never contend with the doorbell/service cores (a 9.8 ms GPU-reach outlier read on the unpinned F-332 boot)
                                                      adapt_pre.swaps = adapt_scan(u0, pc0, h0); adapt_pre.done = true; });
                     static const bool said = [] { std::fprintf(stderr, "strata serve: adapt-early armed (the tier's decision scan runs under the window; STRATA_ADAPT_EARLY=0 off)\n"); return true; }();
                     (void) said;
@@ -12626,7 +12628,7 @@ int main(int argc, char** argv) {
                 } adapt_run;
                 if (!drive.d.usage.empty() && !ajob && !in_prompt_read && (++ba_window % o.adapt_every) == 0 && pending.empty()) {
                     if (adapt_pre.th.joinable()) adapt_pre.th.join();   // F-332: the scan ran under the window
-                    adapt_run.th = std::thread([&] { adapt_run.ok = adapt(adapt_pre.done ? &adapt_pre.swaps : nullptr); });
+                    adapt_run.th = std::thread([&] { strata::aux_cpus::name_this_thread("strata-adapt"); adapt_run.ok = adapt(adapt_pre.done ? &adapt_pre.swaps : nullptr); });
                 }
                 // the per-cohort tail: the standing acceptance/commit/emit/draft code, verifier- and
                 // window-parameterized (see the single-verifier tail below for the comments it mirrors)
@@ -12875,7 +12877,7 @@ int main(int argc, char** argv) {
                 ~AdaptRun() { if (th.joinable()) th.join(); }   // an error return below still joins it
             } adapt_run;
             if (!drive.d.usage.empty() && !ajob && !in_prompt_read && (++ba_window % o.adapt_every) == 0 && pending.empty())
-                adapt_run.th = std::thread([&] { adapt_run.ok = adapt(nullptr); });   // F-332: the serial lane keeps the inline scan
+                adapt_run.th = std::thread([&] { strata::aux_cpus::name_this_thread("strata-adapt"); adapt_run.ok = adapt(nullptr); });   // F-332: the serial lane keeps the inline scan
             // Accept the proposal only when the target picked it and there is room to emit both tokens.
             std::vector<int> keep(bs.size(), 0);
             for (int a = 0; a < A; ++a) {
@@ -13524,7 +13526,7 @@ int main(int argc, char** argv) {
                     (int64_t) es.spare.size() >= es.chunks_per) {
                     es_bg.slot = (int) b;
                     const int eb = (int) b;
-                    es_bg.th = std::thread([&, eb] { (void) es_promote(eb, /*allow_release=*/false, /*background=*/true); });
+                    es_bg.th = std::thread([&, eb] { strata::aux_cpus::name_this_thread("strata-esbg"); (void) es_promote(eb, /*allow_release=*/false, /*background=*/true); });
                 }
                 line = std::string(bimg ? "GENI 1" : "GEN 1") + e2;
             }
@@ -15264,6 +15266,7 @@ int main(int argc, char** argv) {
                         bell_cv.notify_one();
                     };
                     bells.th = std::thread([&] {
+                        strata::aux_cpus::name_this_thread("strata-bell");
                         conc_thread_cpus();
                         auto any_busy = [&] {
                             for (int k = 0; k < n_pipe; ++k)
@@ -15316,6 +15319,7 @@ int main(int argc, char** argv) {
                         in_prompt_read = true;
                         sp.stop_at_chunk = [&] { return want_yield.load(std::memory_order_acquire) >= 0; };
                         std::thread reader([&] {
+                            strata::aux_cpus::name_this_thread("strata-reader");
                             conc_thread_cpus();
                             try {   // (an exception leaving a std::thread ends the process: a failed read instead)
                                 if (planned) sp.force_chunk(plan.chunk, plan_single, plan.chunked);
@@ -16107,7 +16111,7 @@ int main(int argc, char** argv) {
                     if (!drive.d.usage.empty() && o.adapt_every > 0 && (rounds % o.adapt_every) == 0 && pending.empty() &&
                         !exch_wait) {
                         pl_adapt_done = false;
-                        pl_adapt_thr = std::thread([&] { strata::aux_cpus::pin_current_thread(); pl_adapt_ok = adapt(nullptr); pl_adapt_done = true; });
+                        pl_adapt_thr = std::thread([&] { strata::aux_cpus::name_this_thread("strata-adapt"); strata::aux_cpus::pin_current_thread(); pl_adapt_ok = adapt(nullptr); pl_adapt_done = true; });
                     }
                     return true;
                 };
@@ -16880,7 +16884,7 @@ int main(int argc, char** argv) {
                 bool adapt_ok = true;
                 // (--adapt-async 1: the asynchronous tier above instead, ticked before the window)
                 if (!drive.d.usage.empty() && !ajob && ((rounds + 1) % o.adapt_every) == 0)
-                    adapt_thr = std::thread([&] { strata::aux_cpus::pin_current_thread(); adapt_ok = adapt(nullptr); });
+                    adapt_thr = std::thread([&] { strata::aux_cpus::name_this_thread("strata-adapt"); strata::aux_cpus::pin_current_thread(); adapt_ok = adapt(nullptr); });
                 if (!ver.commit(a + 1, err)) {
                     if (adapt_thr.joinable()) adapt_thr.join();
                     std::printf("ERR %s\n", err.c_str());
@@ -18345,7 +18349,7 @@ int main(int argc, char** argv) {
             std::thread adapt_thr;
             bool adapt_ok = true;
             if (!drive.d.usage.empty() && ((rounds + 1) % o.adapt_every) == 0)
-                adapt_thr = std::thread([&] { strata::aux_cpus::pin_current_thread(); adapt_ok = adapt(); });
+                adapt_thr = std::thread([&] { strata::aux_cpus::name_this_thread("strata-adapt"); strata::aux_cpus::pin_current_thread(); adapt_ok = adapt(); });
             if (!ver.commit(a + 1, err)) {
                 if (adapt_thr.joinable()) adapt_thr.join();
                 std::fprintf(stderr, "strata generate: %s\n", err.c_str());

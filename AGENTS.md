@@ -329,8 +329,9 @@ port, merge:
    back-to-back with the control. Claims are made on MEANS only.
 2. **Adopt bar.** The targeted metric gains ≥ +4% AND no priority metric regresses beyond −4%
    (run noise). Inside the band = not a win; record and revert.
-3. **The priority metrics — ALL checked, every round:** M1 single-stream (probe "M1" line), M2 pair
-   aggregate, M2 6-conc aggregate, M3b acceptance rate, prefill rate (probe prefill lines or
+3. **The priority metrics — ALL checked, every round:** M1 single-stream (probe "M1" line), concurrent
+   aggregate (6-conc — operator ruling 2026-11-19: the pair lane is RETIRED as a priority metric; concurrent
+   is the multi-lane), M3b acceptance rate, prefill rate (probe prefill lines or
    `campaign/depth-lane.py`), MMLU gate (`campaign/mmlu-pro-gate.py 0.933 <label>`) whenever
    anything token-stream-affecting changes — 2 gates if the first is borderline; escalation floor
    93.3. Adherence (mimic) when the tool is ported.

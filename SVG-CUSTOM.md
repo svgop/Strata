@@ -12624,3 +12624,50 @@ storage canon (reference updates in the same commit):
   dirtied it - the quiet battery starts from the banked profile state.
 - **Rollback:** the trap is one line in battery-lib.sh; `trap - EXIT` in any battery that must keep its
   drain (none known).
+
+## F-407 — the load study: the engine acquitted, the burn map named (2026-11-19, 17:35)
+
+- **The mandate (operator):** find what makes the loads heavy and the t/s slow, audit the launcher for
+  outdated/broken/unnecessary/heavy settings, dig into the architecture, lighten — solo and concurrent;
+  the PAIR lane is retired (concurrent is the multi-lane; AGENTS law 3 updated this round).
+- **The launcher/config audit — CLEAN.** Every env arm traced to its consumer and to its adopting
+  F-entry: all evidence-adopted, none dead (STRATA_POOL_SPIN_US is consumed at pool.cpp:727; nv_defaults
+  has NO sm_120 table, so the launcher exports are load-bearing, not redundant).  The shadow-store
+  ladder correctly resolves to the native path (canonical pack corrupt, T68, no VALIDATED marker);
+  vision is truly lazy (first picture starts it, idle stops it — no resident process, no held VRAM);
+  the config was already lightened by F-389 (conv cache 48->8 GiB, no 64G scratch).  ATTN_DAILY
+  "convergence" upstream is sm_86/sm_60/sm_121 tables — our export stays necessary.
+- **The live burn map (diagnostic boots, load-disclosed, load 8-12 from the operator's own work).**
+  IDLE, settled post-prewarm: engine **0.1% CPU** (one cuda event handler), server **0.03%**, GPU 1% /
+  92 W, CPU PSI ~0 — a doing-nothing engine is FREE; the box's heavy load is the operator's workload,
+  not the engine.  ONE M1 LEG: engine 322-325% CPU = service thread 65-87% + pool workers 7x27-33% +
+  prelaunch 25-44% + doorbell-class residue; server 0.4%.  All inside the 16 isolated cores; desktop
+  PSI stayed ~0 through every leg.  The one spin-shaped loop (the doorbell thread's `if (busy) continue`)
+  is deliberate latency architecture: no CUDA call on the bell path (#31), 2 ms condvar wait when idle,
+  pinned where nothing else runs.  PRICED, NOT RUN: a sleep-when-busy variant saves CPU on cores that
+  are idle by definition and cannot buy a token — zero t/s expectation (law 15).
+- **Upstream re-priced (v0.2.16's sm_121/GB10 table).**  SIDE_MIXER=2 / GR_DOWN_TG / GU_SWIGLU /
+  PF_FUSED / MMVQ_IL: already standing here via the T20 merge (F-247/F-248, gates passed).
+  **HC_UPMIX: PRICED OUT** — in-tree it is prefill-only (all call sites prefill.cpp), and upstream's
+  own GB10 row says prompt UNCHANGED (their 1.054x was decode-side, a path our port does not touch);
+  re-open only as a decode-side port (new work, not an env arm).  **SPEC_COST: PARKED** — not in tree;
+  the capability (cost-sized verify window) is owned by our adopted STRATA_ADAPTIVE_SPEC; re-open if
+  the adaptive-spec live watch fails.
+- **The round's engine change — the burn map's instrument:** every engine thread was comm "strata"
+  (an M1 leg read 87% service + 44% UNNAMED).  `strata::aux_cpus::name_this_thread()` (Linux
+  pthread_setname_np, stub elsewhere) + 19 call sites: pool workers strata-w0..w6, stdin, io, gwarm,
+  esbg, bell, reader, adapt x4, adaptp, pfqueue, pfissue, prelnch, esrc, esram, esfill, ple.
+  Verified live (second boot: strata-w0..w6 at 32.9% each named on the first sampled leg; the
+  residual 25.4% unnamed thread was verify.cpp:3121's prelaunch, named in the follow-up build).
+  The added sites compile through the same proven helper; the full name set reads on the next
+  battery's first boot.  Zero hot-path cost (one syscall at thread start), no output depends on it.
+  Deployed engine/strata == build-fresh; rollback engine/strata.pre-f407 (the pre-round binary).
+- **Observed, deferred (out of lane):** mm3_exl3_test fails to link (undefined mm3::nf::moe_down) —
+  PRE-EXISTING, reproduced with this round's changes stashed; the engine target links clean.  The
+  mm3 lane owns its repair.
+- **The load verdict for the operator:** the engine does not load the box at idle and does not touch
+  the desktop's cores under load; the t/s loss under your own work is memory-bandwidth/CCD physics
+  (the isolation falsifier: other-CCD 232.6 vs same-CCD 120.9), which the quiet-window protocol
+  governs.  The t/s path forward is the standing queue: the 220+ quiet-window bank on the declared
+  organ, all-lane parity + MMLU for F-405, the leg-1 residual — now with per-thread attribution on
+  every future burn map.

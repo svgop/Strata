@@ -11,6 +11,7 @@
 #include "strata/core/remote_expert_opt.hpp"
 #include "strata/core/dma_batch.hpp"
 #include "strata/core/spec_prob.hpp"
+#include "strata/platform/aux_cpus.hpp"
 #if defined(_WIN32)
 #ifndef NOMINMAX
 #define NOMINMAX
@@ -3118,7 +3119,7 @@ bool Verifier::run(int T, const int32_t* tokens, int64_t pos0, PoolMultiFn pool,
     } nl;
     if (chain) {
         nl.next = next_;
-        nl.th = std::thread([&nl, T, tokens, pos0] { nl.ok = nl.next->prelaunch(T, tokens, pos0, nl.err); });
+        nl.th = std::thread([&nl, T, tokens, pos0] { strata::aux_cpus::name_this_thread("strata-prelnch"); nl.ok = nl.next->prelaunch(T, tokens, pos0, nl.err); });
     }
     volatile uint32_t* const seq = h_seq_;
     volatile uint32_t* const flag = h_flag_;

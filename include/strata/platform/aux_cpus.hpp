@@ -32,6 +32,7 @@
 
 #if defined(__linux__)
 #include <dirent.h>
+#include <pthread.h>
 #include <sched.h>
 #include <sys/syscall.h>
 #include <unistd.h>
@@ -232,6 +233,13 @@ inline bool configure(const std::string& spec, std::string& err) {
     return true;
 }
 
+/// Names the calling thread so a burn map attributes CPU to the role, not to an anonymous "strata"
+/// (F-407: an M1 leg read 87% service + 44% unnamed over threads all carrying the default comm).
+/// The kernel keeps the first 15 characters.  Purely diagnostic: no output of the engine depends on it.
+inline void name_this_thread(const char* name) {
+    pthread_setname_np(pthread_self(), name);
+}
+
 /// The calling thread belongs to the pool or is the host: the sweep leaves it alone.
 inline void note_owned_thread() {
     detail::State& s = detail::state();
@@ -410,6 +418,7 @@ inline bool configure(const std::string& spec, std::string& err) {
     return parse_spec(spec, cfg, err);
 }
 inline void note_owned_thread() {}
+inline void name_this_thread(const char*) {}
 inline int sweep() { return 0; }
 inline void pin_current_thread() {}
 inline int restore() { return 0; }

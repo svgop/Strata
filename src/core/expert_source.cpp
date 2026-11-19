@@ -2808,6 +2808,7 @@ bool RouterLookahead::start(std::vector<std::vector<uint16_t>> routers, int64_t 
     credit_.assign((size_t) routers_.size() * (size_t) n_expert_, 0.0f);
     x_.assign((size_t) (8 * n_embd), 0.f);
     thread_ = std::thread([this] {
+        strata::aux_cpus::name_this_thread("strata-esrc");
         strata::aux_cpus::pin_current_thread();
         run();
     });
@@ -4204,7 +4205,7 @@ bool FileExpertSource::ram_stage(int64_t layer, int64_t in, int64_t out) {
         ram_jobs_.push_back(std::move(j));
         if (!ram_thread_.joinable()) {
             ram_quit_ = false;
-            ram_thread_ = std::thread([this] { ram_worker(); });
+            ram_thread_ = std::thread([this] { strata::aux_cpus::name_this_thread("strata-esram"); ram_worker(); });
         }
     }
     ram_cv_.notify_one();
@@ -6122,7 +6123,7 @@ bool ForesightSwap::init(int slots_per_layer, int64_t layers, int64_t experts, c
             }
         }
     }
-    filler_ = std::thread([this] { fill_loop(); });
+    filler_ = std::thread([this] { strata::aux_cpus::name_this_thread("strata-esfill"); fill_loop(); });
     return true;
 }
 

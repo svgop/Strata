@@ -771,6 +771,9 @@ ExpertPool::ExpertPool(int n_workers, bool pin, bool host_works, PoolAffinity af
     for (int i = 0; i < n_; ++i) {
         const int core = pin ? (i < (int) topo_.worker_cores.size() ? topo_.worker_cores[(size_t) i] : -1) : -1;
         threads_.emplace_back([this, i, core] {
+            char wname[16];
+            std::snprintf(wname, sizeof wname, "strata-w%d", i);   // the burn map's thread name (F-407)
+            strata::aux_cpus::name_this_thread(wname);
             strata::aux_cpus::note_owned_thread();   // --aux-cpus never moves a worker
             pin_this_thread(core, i);
             worker(i);

@@ -383,6 +383,7 @@ struct HandWorker {
     std::thread th;
     HandWorker() {
         th = std::thread([this] {
+            strata::aux_cpus::name_this_thread("strata-pfqueue");
             strata::aux_cpus::pin_current_thread();
             for (;;) {
                 std::packaged_task<bool()> job;
@@ -2996,6 +2997,7 @@ bool Prefill::run_impl(const int64_t* tokens, int64_t n, int64_t pos0, std::stri
         const bool threaded_issue = stream_all && issuer_on;
         if (threaded_issue) {
             issuer = std::thread([&] {
+                strata::aux_cpus::name_this_thread("strata-pfissue");
                 strata::aux_cpus::pin_current_thread();
                 const core::OnDevice od(m.device);
                 for (size_t idx = 0; idx < seq.size(); ++idx) {
