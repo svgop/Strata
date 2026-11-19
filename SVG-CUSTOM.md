@@ -12280,3 +12280,24 @@ storage canon (reference updates in the same commit):
   (campaign law 1/2). The recommendation is banked in `data/calibration/champion.json` + the report.
 - **State**: engine up at 177.8/183.3/250.7 (95.9%); the headroom patch's rollback is
   `engine/strata.pre-headroom`; the calibration corpus/logs in `data/calibration/`.
+
+## F-392 — the headroom cliff, caught live; the reserve fix; the warm test is load-blocked (2026-11-19, 03:55)
+
+- **The cliff fired on our box, measured.** The warm probe at 03:16 read **M1 51.0 / pair 76.7 / conc 107.3**
+  with **490 MiB VRAM free** (below the 512 bar) - upstream's "0 MiB free costs 7x", live. The cause: the
+  boot leaves 1,998 MiB, then the elastic slot arenas materialize during admissions ("slot 3 materialized
+  ... release 13.7 + map 0.7 from the expert cache's tail") and the runtime free fell to ~490-570 MiB.
+  This is the same variable that made some earlier "draws" slow: the free VRAM at the moment of decode.
+- **The fix (reserve):** `--vram-reserve-mib 2000 -> 2800`. Boot headroom **2,774 MiB**; runtime free
+  **1,596 MiB** after the probe (vs 490) - the cliff is cleared with margin. The cache pays ~400 slots.
+  The headroom law (F-391) now prints the boot number and the serve loop repeats it per request, so
+  this class can never be silent again.
+- **The 220 warm test is load-blocked:** at the measurement the box was at **load 16.5** (a `python3 -`
+  at ~18 GiB, chrome, zcode - the operator's own work). The same-window read was 179.6/163.8/184.9 (conc
+  crushed by the load). A clean warm test needs the box quiet; the harness (`campaign/probe-lane.py`)
+  and the certification (`campaign/boot-certify.sh`) are ready for it.
+- **Upstream scan so far:** #1975 is fixed in 0.1.43.1 (our 0.1.46 has it, overlap off anyway - F-391);
+  the headroom law is now ours; the calibration protocol re-derived Niko's own 5090 knobs (1/160/0.97,
+  +2.1 pp share); the remaining upstream lever to test on a quiet window is the **pool-worker/CCD**
+  question (upstream's 5090 report ran **15 workers on CPUs 1-15**; our isolated-CCD pin gives 7 on 9-15)
+  and the batch-slot VRAM (5.69 GiB for 6 slots) as a labeled solo shelf.

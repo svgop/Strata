@@ -1,0 +1,41 @@
+CALIBRATION Thu Nov 19 02:57:33 AM SAST 2026 corpus=3 tokens=600 bar=768MiB margin=0.5pp
+headroom: 798 MiB free (bar 768)
+  prompt 1: 600 tok in 5.48s = 109.4 t/s
+  prompt 2: 600 tok in 5.88s = 102.0 t/s
+  prompt 3: 367 tok in 3.80s = 96.5 t/s
+  corpus tokens generated: 1567
+trace: 17432448 bytes
+--- profile champion/challenger (hit share on the trace; deterministic) ---
+  incumbent seed: 0.8839
+  challenger learned: 0.8771
+--- knob sweep (current: every=4 decay=0.85 swaps=96) ---
+  every=1 decay=0.7 swaps=32 -> 0.8845
+  every=1 decay=0.7 swaps=96 -> 0.8912
+  every=1 decay=0.7 swaps=160 -> 0.8915
+  every=1 decay=0.85 swaps=32 -> 0.8892
+  every=1 decay=0.85 swaps=96 -> 0.8963
+  every=1 decay=0.85 swaps=160 -> 0.8965
+  every=1 decay=0.97 swaps=32 -> 0.8973
+  every=1 decay=0.97 swaps=96 -> 0.9045
+  every=1 decay=0.97 swaps=160 -> 0.9049
+  every=2 decay=0.7 swaps=32 -> 0.8744
+  every=2 decay=0.7 swaps=96 -> 0.8912
+  every=2 decay=0.7 swaps=160 -> 0.8936
+  every=2 decay=0.85 swaps=32 -> 0.8781
+  every=2 decay=0.85 swaps=96 -> 0.8945
+  every=2 decay=0.85 swaps=160 -> 0.8971
+  every=2 decay=0.97 swaps=32 -> 0.8830
+  every=2 decay=0.97 swaps=96 -> 0.8986
+  every=2 decay=0.97 swaps=160 -> 0.8998
+  every=4 decay=0.7 swaps=32 -> 0.8577
+  every=4 decay=0.7 swaps=96 -> 0.8839
+  every=4 decay=0.7 swaps=160 -> 0.8894
+  every=4 decay=0.85 swaps=32 -> 0.8596
+  every=4 decay=0.85 swaps=96 -> 0.8868
+  every=4 decay=0.85 swaps=160 -> 0.8927
+  every=4 decay=0.97 swaps=32 -> 0.8593
+  every=4 decay=0.97 swaps=96 -> 0.8869
+  every=4 decay=0.97 swaps=160 -> 0.8898
+BEST KNOBS: every=1 decay=0.97 swaps=160 (share 0.9049)
+{"ts": "2026-11-19T02:59:25", "seed_hit": 0.8839, "challenger_hit": 0.8771, "margin_pp": 0.5, "promoted": false, "note": "challenger did not beat the seed by the margin (or is absent); the incumbent stands"}
+CALIBRATION done Thu Nov 19 02:59:25 AM SAST 2026
