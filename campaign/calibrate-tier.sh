@@ -45,13 +45,14 @@ cleanup_engine
 ( cd "$REPO" && nohup bash "$LAUNCH" > "$CAL/capture.out" 2>&1 < /dev/null & )
 wait_health || { echo "FATAL: the boot did not answer /health" | tee -a "$OUT"; exit 1; }
 wait_prewarm
-# the three fixed prompts (M1, a code-shaped one, a short chat) at temperature 0: the corpus is the constant
+# the three fixed prompts (M1, a code-shaped one, a short chat) at temperature 0: the corpus is the constant.
+# F-400: the SERVER owns the corpus text (serve/server.py PREWARM_CORPUS, the boot's deterministic warm-in);
+# this script reads it from /health so there is one definition, not two that drift.
 python3 - "$KEY" "$TOKENS" "$CORPUS" << 'PY' | tee -a "$OUT"
 import json,sys,time,urllib.request
 key,tok,n=sys.argv[1],int(sys.argv[2]),int(sys.argv[3])
-P=["Write a comprehensive technical analysis of modern GPU memory hierarchies and their impact on LLM inference performance. Cover HBM bandwidth, L2 cache behavior, PCIe transfer overhead, and pinned memory tradeoffs, with concrete numbers and examples throughout.",
-   "Write a Python function that parses a JSONL file of inference requests, groups them by model, computes p50 and p99 latency with numpy, and returns a sorted summary. Include error handling and a docstring.",
-   "Explain, in concrete terms, why a mixture-of-experts model offloads experts to CPU memory and how the GPU decides which experts to keep resident. Keep it under 300 words."]
+P=json.load(urllib.request.urlopen("http://127.0.0.1:8081/health",timeout=30))["prewarm"]["corpus_prompts"]
+assert P, "the server reports no corpus prompts (prewarm.corpus off?)"
 tot=0
 for i,p in enumerate(P[:n],1):
     body=json.dumps({"messages":[{"role":"user","content":p}],"max_tokens":tok,"temperature":0}).encode()

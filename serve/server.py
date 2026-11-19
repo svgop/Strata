@@ -3741,6 +3741,21 @@ PREWARM_MID = ("Review note: the serving fabric moved its queues into the NICs, 
                "rather than per port, and the unit of capacity planning became the rack, not the switch. ") * 90
 PREWARM_BURST = ("Two engineers disagree about whether to shard a database by tenant or by region. Draft the "
                  "one-paragraph decision memo you would send them.")
+# THE CALIBRATION CORPUS (F-400): the campaign's fixed corpus (calibrate-tier.sh, boot-certify's M1 lane) - the
+# one token stream the tier's convergence is measured against.  Run at temperature 0 as the FIRST replay stage,
+# the routing it induces - and so the expert set the adaptive tier converges to before the first real request -
+# is a function of the config, not of sampling luck: the residual boot lottery (same geometry, same inputs, M1
+# 143/200/215) lived exactly there.  The server owns the text; the campaign scripts read it from /health's
+# prewarm.corpus_prompts, so there is one definition, not two that drift.
+PREWARM_CORPUS = (
+    "Write a comprehensive technical analysis of modern GPU memory hierarchies and their impact on LLM inference "
+    "performance. Cover HBM bandwidth, L2 cache behavior, PCIe transfer overhead, and pinned memory tradeoffs, "
+    "with concrete numbers and examples throughout.",
+    "Write a Python function that parses a JSONL file of inference requests, groups them by model, computes p50 "
+    "and p99 latency with numpy, and returns a sorted summary. Include error handling and a docstring.",
+    "Explain, in concrete terms, why a mixture-of-experts model offloads experts to CPU memory and how the GPU "
+    "decides which experts to keep resident. Keep it under 300 words.",
+)
 
 
 class Prewarm:
@@ -3765,6 +3780,9 @@ class Prewarm:
     replay: a few real-shaped requests through the server's own door (loopback /v1/chat/completions), text only
             - a picture would start the elastic encoder - and any request that is not ours ends the warm-in:
             live traffic pre-empts it.  Re-armed after every engine restart (the pin drops the cache again).
+            The FIRST stage is the calibration corpus at temperature 0 (F-400): a fixed greedy token stream
+            induces the same expert routing every boot, so the adaptive tier converges to the same starting
+            state - the boot's warm state is derived from the config, not from sampling luck.
 
     It fails open: a warm-in that cannot finish leaves one line here and its state in /health and /v1/status,
     and the server serves cold, exactly as it did without the section."""
@@ -3782,12 +3800,25 @@ class Prewarm:
         self.shorts = max(0, int(shape.get("shorts", 2)))
         self.mid = max(0, int(shape.get("mid", 1)))
         self.burst = max(0, int(shape.get("burst", 0 if arch == "deepseek41" else 6)))
-        self.replay_on = p.get("replay") is not False and bool(self.shorts or self.mid or self.burst)
+        # F-400: the calibration corpus as the boot's deterministic tier warm-in.  temperature 0 (greedy) - the
+        # token stream, and so the routing the adaptive tier converges to, is the same every boot; that is the
+        # residual boot lottery closed by construction.  The WARM-IN copies carry a prepended divergence
+        # sentence: a parked warm-in conversation must not prefix-match a probe (the campaign's warm-in law -
+        # the probe would serve from the conversation cache and stop measuring), and a PREPEND breaks the match
+        # at its first token while the body after it still routes through the corpus's own experts.
+        corpus = p.get("corpus")
+        corpus = corpus if isinstance(corpus, dict) else {}
+        self.corpus_prompts = [s for s in (corpus.get("prompts") or PREWARM_CORPUS) if isinstance(s, str)]
+        self.corpus_tokens = max(0, int(corpus.get("tokens", 600)))
+        self.corpus_on = (p.get("corpus") is not False and p.get("replay") is not False
+                          and bool(self.corpus_prompts) and self.corpus_tokens > 0)
+        self.replay_on = p.get("replay") is not False and bool(self.shorts or self.mid or self.burst or self.corpus_on)
         self.timeout_s = float(p.get("timeout_s") or 1800.0)
         self.extra = [g for g in p.get("extra_files", ()) if isinstance(g, str)]
         self.stop = threading.Event()
         self.lock = threading.Lock()
-        self.state = {"phase": "idle", "note": "", "files_gib": 0.0, "files_s": 0.0, "replay_s": 0.0, "at": 0.0}
+        self.state = {"phase": "idle", "note": "", "files_gib": 0.0, "files_s": 0.0, "replay_s": 0.0, "at": 0.0,
+                      "corpus_prompts": list(self.corpus_prompts) if self.corpus_on else []}
         self.svc = None                  # set by start(): the live-traffic counter, the loaded() gate
         self._own = 0                    # warm-in requests of ours that finished (any answer)
         self._base = 0                   # the service's request total when this warm-in's replay began
@@ -3994,6 +4025,26 @@ class Prewarm:
         -> "" when they all ran, "traffic" when live traffic pre-empted the rest, else the reason it stopped."""
         temp = 1.0 if self.arch == "deepseek41" else 0.7  # each model's own sampling; the words are thrown away
         why = ""
+        if self.corpus_on:
+            # FIRST, at temperature 0: the corpus's greedy token stream induces the same routing every boot, so
+            # the adaptive tier converges to the same expert set before any sampled request (or live traffic)
+            # can move it - the boot's warm state becomes a function of the config, not of sampling luck.
+            self._note("corpus")
+            t0 = time.monotonic()
+            for prompt in self.corpus_prompts:
+                if self._external():
+                    return "traffic"
+                if time.monotonic() >= stop_at:
+                    return "the warm-in's own timeout"
+                ok = self._ask(f"[boot warm-in {self.arch or 'engine'}; not a probe] {prompt}", self.corpus_tokens, 0.0)
+                self._own += 1
+                if not ok:
+                    why = "a corpus warm request was refused"
+                    break
+            if not why:
+                print(f"[strata] prewarm: corpus warm: {len(self.corpus_prompts)} prompt(s) x {self.corpus_tokens} "
+                      f"tokens at temperature 0 in {time.monotonic() - t0:.0f} s - the tier's starting state is "
+                      "deterministic", flush=True)
         for i in range(self.shorts):
             if self._external():
                 return "traffic"

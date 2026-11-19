@@ -1,0 +1,13 @@
+F-400 evidence 2026-11-19T16:03:09+02:00 (no boot: the box runs the operator's transfer job)
+
+## Prewarm corpus config cases (.venv python, Prewarm class direct)
+  default: corpus on, 3 prompts x 600, replay on   corpus_on=True  replay_on=True  snap=3
+  corpus False: off, shorts still on               corpus_on=False replay_on=True  snap=0
+  tokens 0: off                                    corpus_on=False replay_on=True  snap=0
+  custom prompts honored                           corpus_on=True  replay_on=True  snap=1
+  replay master off: corpus gated off, snapshot empty corpus_on=False replay_on=False snap=0
+  corpus alone keeps replay alive                  corpus_on=True  replay_on=True  snap=3
+  the server constant is the calibration corpus (3 texts): OK
+
+## calibrate-tier.sh reads the corpus from /health (owner unification)
+  bash -n: ok; P := /health prewarm.corpus_prompts (the local text copy deleted)

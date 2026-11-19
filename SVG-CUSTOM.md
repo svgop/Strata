@@ -12455,3 +12455,34 @@ storage canon (reference updates in the same commit):
 - **Verified:** `py_compile` on both files; `bash -n` on the launcher; the procs suite unchanged (the one
   failure is the pre-existing sandbox orphan-reparent, verified identical on the unmodified tree in F-396's
   round).
+
+## F-400 — the boot's tier warm-in became deterministic: the calibration corpus at temperature 0 (2026-11-19, 16:03)
+
+- **The residual lottery, stated precisely:** since F-384 the boot GEOMETRY is identical every boot (fingerprint
+  `594e698ce6c74ea2 slots=9600`), yet M1 still drew 143/200/215 on identical inputs.  The remaining variable was
+  the adaptive tier's STARTING STATE: the prewarm replay warmed it with temperature-0.7 requests ("the words are
+  thrown away") - but for a MoE, WHICH EXPERTS a token routes to depends on the token, and a sampled stream
+  differs per boot, so the tier converged to a different expert set before the first probe ran.  The boot's warm
+  state was a function of sampling luck, not of the config.
+- **The fix (architecture, not a retry gate):** the Prewarm replay's FIRST stage is now the calibration corpus -
+  the campaign's three fixed prompts (M1, code, short chat) - at **temperature 0**, 600 tokens each.  Greedy
+  decoding produces the same token stream every boot, so the routing it induces - and the expert set the tier
+  converges to before any sampled request or live traffic - is a function of the config alone.  The boot prints
+  `prewarm: corpus warm: 3 prompt(s) x 600 tokens at temperature 0 in Ns - the tier's starting state is
+  deterministic`; /health carries `prewarm.corpus_prompts`.
+- **The probe lane is protected by construction:** a parked warm-in conversation that prefix-matched a probe
+  would serve it from the conversation cache and the probe would stop measuring (the warm-in law already in the
+  file).  `strata_checkpoint: false` does not prevent the park (the park is the outgoing-session snapshot, not a
+  checkpoint), so the warm-in copies PREPEND a fixed divergence sentence - the prefix match breaks at its first
+  token while the body after it still routes through the corpus's own experts.  A PREPEND, not an append: an
+  append would leave the probe a strict prefix of the parked conversation and resume the whole prompt.
+- **One owner for the corpus:** the server owns the text (`PREWARM_CORPUS`); calibrate-tier.sh now reads the
+  prompts from /health's `prewarm.corpus_prompts` instead of carrying its own copy - the calibration measurement
+  and the boot warm-in cannot drift apart.  Rollback: `"prewarm": {"corpus": false}` in the config (the sampled
+  stages are unchanged).
+- **Verified without a boot** (the box runs the operator's transfer job): six config cases pass - default on
+  (3x600), corpus False, tokens 0, custom prompts, the replay master gating the corpus and its snapshot, and the
+  corpus alone keeping the replay stage alive (`campaign/results/f400-corpus.out`); py_compile clean;
+  calibrate-tier.sh bash -n clean.  The LIVE proof - two boots, identical fingerprint, the corpus line in both
+  logs, M1 spread collapsed - is the owed quiet-window battery (with the F-397 rewind-keep arm in the same
+  window: its adoption needs agent-shaped follow-ups).
