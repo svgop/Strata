@@ -12255,3 +12255,28 @@ storage canon (reference updates in the same commit):
   P4 predictor), each env-gated, each gated by the 3v3 boot interleave. The design doc carries the
   executable invariants (segment arithmetic, epoch-consistent reads, churn budget, atomic profile,
   deterministic fingerprint, the certification bar).
+
+## F-391 — the headroom law + the calibration protocol (deterministic, offline, auto-save) (2026-11-19, 03:05)
+
+- **THE HEADROOM LAW (engine, built + deployed):** upstream's measured cliff ("453 slots / 0.86 GiB separate
+  13.7 from 102 tok/s, and the slower run had the HIGHER hit rate; 0 MiB free is what costs 7x") is now a
+  boot contract line: `headroom: X MiB VRAM free after the boot (bar Y)` with a LOW warning naming the
+  remedies (`STRATA_HEADROOM_MIB` sets the bar; default kVramSafeMib=512 on Linux). Measured this boot:
+  **1994 MiB free (ok)**; a calibration boot read 798 MiB against the 768 bar - the bar is live.
+- **THE CALIBRATION PROTOCOL (`campaign/calibrate-tier.sh`)**: reset/headroom -> boot the standing recipe
+  with `--dump-routing` on a FIXED greedy corpus (3 prompts, temp 0) -> stop (the trace and the learned
+  profile are written) -> **replay the same trace offline** (`tools/replay_cache_policy.py`) for the
+  incumbent seed, the learned challenger, and a 27-point knob sweep -> **atomic champion/challenger**:
+  the challenger replaces `data/expert-profile.bin` only when it beats the incumbent by the margin.
+  Same trace + same profile = the same share, so **the boot draw cannot decide the champion**.
+- **Measured on this box (trace 17.4 MB, 1567 tokens):** incumbent seed share **0.8839**; learned
+  challenger **0.8771** -> **KEPT** (the protocol independently reproduced, deterministically, the
+  empirical F-389 result that the learned profile is a worse seed); **best knobs: every=1 decay=0.97
+  swaps=160 -> 0.9049 (+2.1 pp over the stock 4/0.85/96)** - **the same set upstream's own RTX 5090
+  report used**, re-derived here from our trace, not copied.
+- **The knobs are NOT adopted yet**: the replay scores hit SHARE, not the swap cost (every=1 x 160 swaps
+  is much more work per window), and the one live boot on the calibrated set landed on a bad draw
+  (126.8 at 89.5%). The standing stays 4/0.85/96 until a 3v3 boot interleave measures the throughput
+  (campaign law 1/2). The recommendation is banked in `data/calibration/champion.json` + the report.
+- **State**: engine up at 177.8/183.3/250.7 (95.9%); the headroom patch's rollback is
+  `engine/strata.pre-headroom`; the calibration corpus/logs in `data/calibration/`.

@@ -6702,6 +6702,26 @@ int main(int argc, char** argv) {
             std::fprintf(stderr, "strata generate: boot fingerprint %016llx slots=%lld verified=%lld\n",
                          (unsigned long long) fp, (long long) xcache.slots(), (long long) verified);
         }
+        // ---- THE HEADROOM LAW (F-391; from upstream's measured cliff: 453 slots / 0.86 GiB separate 13.7 from
+        // 102 tok/s, and the SLOWER run had the HIGHER cache hit rate - a card at 0 MiB free pages GPU memory and
+        // collapses decode).  The boot reports the VRAM it leaves free and says LOW below the bar; the serve loop
+        // repeats it per request (kVramSafeMib).  STRATA_HEADROOM_MIB sets the bar for this lane.
+        {
+            size_t fb = 0, tb = 0;
+            if (cudaMemGetInfo(&fb, &tb) == cudaSuccess) {
+                const char* hv = std::getenv("STRATA_HEADROOM_MIB");
+                const int64_t bar = hv != nullptr ? std::atoll(hv) : 0;
+                const int64_t safe = bar > 0 ? bar : kVramSafeMib;
+                const int64_t free_mib = (int64_t) (fb >> 20);
+                std::fprintf(stderr, "strata generate: headroom: %lld MiB VRAM free after the boot (bar %lld)%s\n",
+                             (long long) free_mib, (long long) safe,
+                             free_mib >= safe
+                                 ? ""
+                                 : " - LOW: the upstream cliff is 0 MiB free at ~7x decode; a larger "
+                                   "--vram-reserve-mib, a smaller --max-context, fewer programs on the GPU, or "
+                                   "'Prefer No Sysmem Fallback' leaves room");
+            }
+        }
         if (std::getenv("STRATA_VERIFY_COMPLEMENT") != nullptr) {
             // tests: the filled slots' checksum (each slot's blob read back and hashed, then the hashes in slot order)
             std::vector<std::pair<int32_t, int64_t>> sl;   // (slot, blob bytes)
