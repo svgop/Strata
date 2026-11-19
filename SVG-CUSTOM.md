@@ -12301,3 +12301,26 @@ storage canon (reference updates in the same commit):
   +2.1 pp share); the remaining upstream lever to test on a quiet window is the **pool-worker/CCD**
   question (upstream's 5090 report ran **15 workers on CPUs 1-15**; our isolated-CCD pin gives 7 on 9-15)
   and the batch-slot VRAM (5.69 GiB for 6 slots) as a labeled solo shelf.
+
+## F-393 — the 03:47 freeze, the boot preflight, and what actually eats the reserve (2026-11-19, 04:15)
+
+- **The freeze:** the box went down unclean at **03:47:02** (no shutdown sequence in journald - the fan
+  poller is the last line; reboot at 03:58) during a boot that loaded the model beside the operator's own
+  workload (load 16.5, an 18 GiB `python3 -`, chrome + zcode on the GPU). No OOM or XID survived the
+  crash; the class is "a boot into a box already at its RAM/VRAM edge". **The launcher now has a boot
+  preflight**: it prints MemAvailable and the GPU free before allocating, refuses below
+  `STRATA_BOOT_MIN_RAM_GIB` (96) / `STRATA_BOOT_MIN_VRAM_MIB` (1024), `STRATA_BOOT_PREFLIGHT=0` skips.
+- **Reserve 600 / elastic off - tested, and it fails on a REAL consumer:** the boot came up at
+  `headroom: 597 MiB` and then died at **`strata serve: verify: the device arena (128 MiB) does not fit`**.
+  So the reserve is not eaten by the elastic slots: it pays for the LATE allocations - the verify device
+  arena (128 MiB), the hc split/staged check (15 MiB, which also failed: "could not run"), the graph
+  captures and the head scratch. 600 MiB is below that floor for this config (batch 6, 262K, vision).
+- **The elastic verdict:** the elastic sessions DEFER the batch slot arenas into the expert cache and map
+  them on admission ("slot 3 materialized ... release 13.7 + map 0.7 from the expert cache's tail") - a
+  gain while idle, and the runtime free drop when they materialize. It is not the reserve's consumer; a
+  proper low reserve needs the late-allocation floor measured (the next instrument: a headroom line per
+  late allocation, then the reserve sized to it ~1.2-1.5 GiB, not 600).
+- **The warm test on the quiet box (load 1.5, then 7.6):** discard leg **197.3** t/s, measured leg
+  **190.4 / 187.5 / 238.5** (hit 96.0%, cpu-exp 3.33, window 16.21 ms), runtime VRAM free **1,420 MiB**
+  with the reserve 2,800. The engine is sorted at this state; the 200+ draws (203-224) remain the good
+  side of the boot distribution.

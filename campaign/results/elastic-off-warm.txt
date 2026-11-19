@@ -1,0 +1,21 @@
+=== PROBE elastic-off-warm | 2026-11-19 04:08:52 | log=/home/svg/LLM/strata-custom-2/logs/custom-iq3_s.log
+    warmup: 0 tok in 0.00s
+    A.short[1]: 0 tok in 0.00s = 0.0 t/s
+    A.short[2]: 0 tok in 0.00s = 0.0 t/s
+    A.short[3]: 0 tok in 0.00s = 0.0 t/s
+    A.short[4]: 0 tok in 0.00s = 0.0 t/s
+    A.short[5]: 0 tok in 0.00s = 0.0 t/s
+    A.short[6]: 0 tok in 0.00s = 0.0 t/s
+    fresh-long-prompt: 0 tok out in 0.00s
+    B.short[1]: 0 tok in 0.00s = 0.0 t/s
+    B.short[2]: 0 tok in 0.00s = 0.0 t/s
+    B.short[3]: 0 tok in 0.00s = 0.0 t/s
+    B.short[4]: 0 tok in 0.00s = 0.0 t/s
+    B.short[5]: 0 tok in 0.00s = 0.0 t/s
+    B.short[6]: 0 tok in 0.00s = 0.0 t/s
+M1 single-stream : 0.0 t/s (0 tok in 0.00s)
+M2 pair          : 0.0 t/s aggregate (0 tok in 0.00s)
+M2 6-conc        : 0.0 t/s aggregate (0 tok in 0.00s)
+--- engine accounting, in order (ms/window is the degradation signal) ---
+M3d per-position : not printed (arm STRATA_SPEC_DEPTH=1 to publish accepted/tested by depth)
+=== PROBE END elastic-off-warm

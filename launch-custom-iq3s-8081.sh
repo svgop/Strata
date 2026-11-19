@@ -25,11 +25,11 @@ export STRATA_KV_PREFETCH=1         # +5.3%/4.1% prefill at 32K/64K
 export STRATA_ADAPT_LAG=2           # kills the lag-1 event sync stall in the adapt tier
 export STRATA_DMA_BATCH=1           # 84.9% fewer DMA submit cycles
 export STRATA_VERIFY_DEVICE_PLAN=1  # device-side routing plan when all experts resident
-export STRATA_ELASTIC_SESSIONS=1
-export STRATA_ELASTIC_PARK=1        # F-276 ADOPTED: demote parks via ConversationCache - returns restore 9-15ms vs 275-326ms re-reads
-export STRATA_ELASTIC_WATERMARK=1   # F-276 ADOPTED: spare always holds one arena - promotes background 2.2-8ms, demote unmap 2-2.8ms
-export STRATA_ELASTIC_TIMED_SCAN=1  # F-276 ADOPTED: demotes in true idle - the 128-310ms first-arrival bill removed
-export STRATA_VMM_CHUNK_MIB=32      # F-276 ADOPTED: superchunks - 24 driver ops/arena vs 373 (29-51us/op GSP-measured)
+export STRATA_ELASTIC_SESSIONS="${STRATA_ELASTIC_SESSIONS:-1}"
+export STRATA_ELASTIC_PARK="${STRATA_ELASTIC_PARK:-1}"        # F-276 ADOPTED: demote parks via ConversationCache - returns restore 9-15ms vs 275-326ms re-reads
+export STRATA_ELASTIC_WATERMARK="${STRATA_ELASTIC_WATERMARK:-1}"   # F-276 ADOPTED: spare always holds one arena - promotes background 2.2-8ms, demote unmap 2-2.8ms
+export STRATA_ELASTIC_TIMED_SCAN="${STRATA_ELASTIC_TIMED_SCAN:-1}"  # F-276 ADOPTED: demotes in true idle - the 128-310ms first-arrival bill removed
+export STRATA_VMM_CHUNK_MIB="${STRATA_VMM_CHUNK_MIB:-32}"      # F-276 ADOPTED: superchunks - 24 driver ops/arena vs 373 (29-51us/op GSP-measured)
 export STRATA_SERVE_TELEMETRY=1     # F-276 ADOPTED: window p50/p99 + true per-token gaps + admission waits in /metrics  # F-273 ADOPTED (T33/T34): slot arenas VMM-elastic - S_min=2 mapped, promote ~12-17ms, demote feeds the cache; conc +4.0% 3/3 rounds, M1 no-regression, 9-wide with zero solo tax. OFF: unset
 export STRATA_ADAPTIVE_SPEC="${STRATA_ADAPTIVE_SPEC:-1}"  # W1 ADOPTED 2026-11-02: the cost-model controller sizes the serial window (cut-only; battery-neutral 232.2/222.3/315.4 vs matched ctl 230.2/223.1/306.3 - every lane inside noise; the M15 +35% class is LIVE deep traffic, the owed live watch decides it; sizing-only per the roadmap risk note, MMLU owed on the next quiet window)
 export STRATA_ROUTE_TAIL_SKIP="${STRATA_ROUTE_TAIL_SKIP:-7}"  # T63 ADOPTED 2026-11-02: the tail-skip was OFF standing (--batch 6 defeats the CUDA default's o.batch==0): a CPU-missed expert every token of a window ranks >=7 is neither copied nor computed. T63 2v2 interleaved (box degraded 2955MHz+swap, clean re-bank owed): +10.2% solo / +4.4% pair / -0.6% conc vs ctl; golden hash IDENTICAL to ctl (rank-7 skip changed no output on the golden set); MMLU 98.6 + 95.7 (floor 93.3); mimic 90.9% = the banked ctl.  Rollback: STRATA_ROUTE_TAIL_SKIP=0.  (ts6 measured and killed: output-changing + dominated on M1.)
@@ -94,6 +94,21 @@ _SHADOW_TMPFS=/dev/shm/strata-shadow-q2_0
 # The resolution lives in the lib (one owner): the canonical pack is the default; the fast tier is
 # opt-in (STRATA_SHADOW_TMPFS=1); the rollback is the caller's env (export STRATA_SHADOW_EXPERTS=""
 # before launch - unset/empty = native store serves misses).
+# F-393 THE BOOT PREFLIGHT (2026-11-19): the box froze at 03:47 while a boot loaded the model beside an
+# operator workload (load 16, an 18 GiB python3, chrome on the GPU) - a boot into a box at the edge froze
+# the desktop.  A boot now states, before it allocates anything, the RAM and VRAM it is about to take; below
+# the floors it refuses (STRATA_BOOT_PREFLIGHT=0 skips, STRATA_BOOT_MIN_RAM_GIB / _VRAM_MIB tune).
+if [ "${STRATA_BOOT_PREFLIGHT:-1}" != "0" ]; then
+  _mem_avail_gib=$(awk '/^MemAvailable:/{printf "%d", $2/1048576}' /proc/meminfo)
+  _vram_free_mib=$(nvidia-smi --query-gpu=memory.free --format=csv,noheader,nounits 2>/dev/null | head -1 | tr -d ' ')
+  _min_ram=${STRATA_BOOT_MIN_RAM_GIB:-96}; _min_vram=${STRATA_BOOT_MIN_VRAM_MIB:-1024}
+  printf 'launcher: preflight: MemAvailable %s GiB (floor %s), GPU %s MiB free (floor %s)\n' \
+    "${_mem_avail_gib:-?}" "$_min_ram" "${_vram_free_mib:-?}" "$_min_vram" >&2
+  if [ "${_mem_avail_gib:-0}" -lt "$_min_ram" ] || [ "${_vram_free_mib:-0}" -lt "$_min_vram" ]; then
+    echo "launcher: REFUSING to boot: the box is at its edge (the 03:47 freeze class). Close the other workload or set STRATA_BOOT_PREFLIGHT=0." >&2
+    exit 3
+  fi
+fi
 launch::shadow_export
 # F-331 ARMS (10-25, both never priced on this lane; see SVG-CUSTOM F-331):
 export STRATA_QSA_SPLIT_ATTN="${STRATA_QSA_SPLIT_ATTN:-1}"     # decode+drafter attention through the split int8-MMA kernel (verify.cpp:1973 + mtp.cpp:1088;

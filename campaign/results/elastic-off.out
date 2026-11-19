@@ -1,0 +1,47 @@
+launcher: preflight: MemAvailable 175 GiB (floor 96), GPU 31568 MiB free (floor 1024)
+launcher: no VALIDATED store at /mnt/DATA/LLM/Models/GGUF/strata/data/packs/q2_0 - the native path serves every miss (the canonical pack is corrupt, T68; arm a validated store with STRATA_SHADOW_EXPERTS=<dir> after its quality gate)
+the vision encoder starts with the first picture (elastic) ...
+loading the model (the first start takes a minute or two) ...
+[strata] the config has a "vision" section but no --vision in its args: added --vision (run setup again with --vision to write them)
+[strata] prewarm: pre-boot sweep: 18 files, 80.1 GiB into the page cache (before the engine's load, so the reclaim storm plays out here)
+[strata] prewarm: pre-boot sweep warm in 23 s
+[strata] the config has a "vision" section but no --vision in its args: added --vision (run setup again with --vision to write them)
+[strata] starting the engine: reading the model's weights ...
+[strata] loading the experts the GPU does not hold into RAM (of about 55 GB) and locking part of them for the GPU.
+         YOUR PC CAN BE SLOW OR STOP RESPONDING FOR 1-3 MINUTES NOW - this is normal.
+         Please wait and don't close this window; the server says when it is ready.
+[strata] filling the GPU's expert cache (9318 experts, 17.67 GiB of VRAM) ...
+[strata] almost ready ...
+Traceback (most recent call last):
+  File "/home/svg/LLM/strata-custom-2/serve/server.py", line 9107, in <module>
+    sys.exit(main())
+             ~~~~^^
+  File "/home/svg/LLM/strata-custom-2/serve/server.py", line 8762, in main
+    engine = StrataEngine(exe, engine_args(cfg) + (effort_end or []), cwd=cfg.get("cwd"), log=cfg.get("log"),
+                          env=env, lazy=lazy)
+  File "/home/svg/LLM/strata-custom-2/serve/server.py", line 1188, in __init__
+    raise EngineDied(why + (f" (see {log})" if log else "") + note +
+                     start_failure_hint(log, log_start) + tail)
+EngineDied: the engine exited before it was ready (see /home/svg/LLM/strata-custom-2/logs/custom-iq3_s.log)
+the engine process ended: exit code 1
+the engine log's last lines:
+  FileExpertSource: copied cache complement through layer 24/48 (20.32 GiB, 2 s)
+  FileExpertSource: copied cache complement through layer 32/48 (27.26 GiB, 2 s)
+  FileExpertSource: copied cache complement through layer 40/48 (33.98 GiB, 3 s)
+  FileExpertSource: copied cache complement through layer 48/48 (38.97 GiB, 3 s)
+  FileExpertSource: mapped pinned cache complement ready: resident 38.97 GiB, pinned 38.97 GiB in 8 s; page-locked and mapped
+  FileExpertSource: 5194 of the prompt path's 5194 lendable slots keep their experts in RAM too
+  strata generate: resident RAM mode: 38.97 GiB of experts in RAM (page-locked), 9318 in the GPU cache; adaptive swaps exchange them with the GPU cache (no file reads)
+  strata: prefill plan: chunk 32768, ring 96 kept: file set 0.4 GiB fits the page cache 108.2 GiB -> about 0.0 GB read from the drive per 32768-token prompt (1 chunks)
+  strata: prefill plan inputs: 46.8 GiB experts, 17.7 GiB in the GPU caches, 39.0 GiB RAM copy (5194 lend slots kept), file tier 0.0 GiB; 108.2 GiB available for the page cache; PCIe 12.0 GB/s; drive 2.50 GB/s (nvme2n1 is NVMe); a 32768-token prompt
+  strata serve: prompt chunk auto: 32768 tokens, a 96-slot ring
+  strata serve: the prompt path borrows 5194 CUDA0 cache slots (9.80 GiB)
+  prefill: the GGUF experts are 100% in the page cache; the stager takes the RAM profile
+  strata generate: STRATA_ROUTE_RESIDENT_MTP: the MTP draft's router is biased toward layer 47's resident experts (margin 0.75, ranks 6-9; experimental)
+  strata hc: STRATA_GR_NORM_FAST=1 (T15C S3 default): the split norm runs the fast kernel
+  strata hc: CUDA0: the check of split/staged could not run (no room for the check (15 MiB))
+  strata hc: CUDA0: the hyper-connection read runs as the plain read (the norm per token, the down projection on 41 blocks)
+  strata verify: hc read weights bf16 rows copies=0, final mixer q8=0, native head=1
+  strata serve: verify: the device arena (128 MiB) does not fit
+  route-resident: margin=0.75 ranks=6-9 windows T>8 (prompt reads): tail_nonres=0 swaps=0 (0.0%) nonres_entries before=0 after=0
+  route-resident: margin=0.75 ranks=6-9 windows T<=8 (decode): tail_nonres=0 swaps=0 (0.0%) nonres_entries before=0 after=0
