@@ -12486,3 +12486,23 @@ storage canon (reference updates in the same commit):
   calibrate-tier.sh bash -n clean.  The LIVE proof - two boots, identical fingerprint, the corpus line in both
   logs, M1 spread collapsed - is the owed quiet-window battery (with the F-397 rewind-keep arm in the same
   window: its adoption needs agent-shaped follow-ups).
+
+## F-401 — the boot's host end-state on the record: one contract line at READY (2026-11-19, 16:04)
+
+- **The invariant:** "the engine must not choke the hardware" was, until now, UNCHECKABLE per boot - the
+  diagnosis needed an operator to run /proc by hand after a hang.  At every READY the server now samples the
+  host once and prints `boot contract: engine RSS X GiB (shmem Y), MemAvailable Z GiB at READY` - the engine's
+  actual footprint (shmem is where the pinned complements and the KV pool live) against the RAM that is left,
+  the two numbers the freeze class lived between.  When `STRATA_RAM_KEEP_GIB` is set and MemAvailable is under
+  the floor, the line adds the WARNING naming it - a boot that would stall the desktop says so at birth, not
+  at the hang.
+- **Where it lives and why there:** the server, not the engine - the reading is a HOST fact (the engine cannot
+  see its own RSS meaningfully through the cgroup filters it sizes allocations by), and the server owns the
+  boot narration; it re-prints at every engine restart (each boot gets its own end-state).  The reading also
+  lands in the engine info dict (`boot_mem_available_gib`, `boot_engine_rss_gib`, `boot_engine_shmem_gib`),
+  so /health and boot-certify can assert on it without parsing text.  Linux only; fails silent.
+- **Verified live without an engine boot** (the box runs the operator's transfer job): run against this very
+  process the line prints with real /proc numbers, the info keys land as floats, and the floor-warning path
+  fires under a forced 99999 GiB floor (`campaign/results/f401-boot-contract.out`).  py_compile clean.  The
+  first engine read lands at the next boot: expected shape `engine RSS ~100-150 GiB (shmem ~60), MemAvailable
+  vs the 24 GiB floor` - the certified-good boots' readings become the reference band for the certification.

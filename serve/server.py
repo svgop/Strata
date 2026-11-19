@@ -128,6 +128,51 @@ def rttime_limit_note() -> str:
 LEFTOVER_SETTLE_S = 120.0       # #4051: how long an engine ended at a start is waited for to give its memory back
 
 
+def boot_contract_note(proc, info: dict) -> None:
+    """F-400: the boot's HOST end-state, one line at READY (Linux only, fails silent).  The Boot Contract's
+    memory side made checkable per boot: what the engine's process actually holds (RSS, and the shmem the
+    pinned complements and the KV pool live in) against the RAM that is left.  A boot that ends near the
+    floor is a boot that chokes the desktop - this line is what the certification compares across boots, so
+    "the same recipe landed in a different state" is a logged fact, not a suspicion.  `info` gains the
+    reading (INFO lines are the engine's own; this one is the host's, so the server writes it)."""
+    if sys.platform != "linux" or proc is None:
+        return
+    try:
+        avail_gib = None
+        with open("/proc/meminfo", encoding="ascii", errors="replace") as f:
+            for line in f:
+                if line.startswith("MemAvailable:"):
+                    avail_gib = int(line.split()[1]) / 2 ** 20
+                    break
+        rss_gib = shmem_gib = None
+        with open(f"/proc/{proc.pid}/status", encoding="ascii", errors="replace") as f:
+            for line in f:
+                if line.startswith("VmRSS:"):
+                    rss_gib = int(line.split()[1]) / 2 ** 20
+                elif line.startswith("RssShmem:"):
+                    shmem_gib = int(line.split()[1]) / 2 ** 20
+        if avail_gib is None or rss_gib is None:
+            return
+        keep_gib = 0.0
+        if (os.environ.get("STRATA_RAM_KEEP_GIB") or "").strip():
+            try:
+                keep_gib = float(os.environ["STRATA_RAM_KEEP_GIB"])
+            except ValueError:
+                pass
+        note = ""
+        if keep_gib > 0 and avail_gib < keep_gib:
+            note = f"  WARNING: below the {keep_gib:g} GiB --ram-keep-gib floor - the desktop may stall"
+        info["boot_mem_available_gib"] = round(avail_gib, 1)
+        info["boot_engine_rss_gib"] = round(rss_gib, 1)
+        if shmem_gib is not None:
+            info["boot_engine_shmem_gib"] = round(shmem_gib, 1)
+        print(f"[strata] boot contract: engine RSS {rss_gib:.1f} GiB"
+              f"{f' (shmem {shmem_gib:.1f})' if shmem_gib is not None else ''}"
+              f", MemAvailable {avail_gib:.1f} GiB at READY{note}", flush=True)
+    except (OSError, ValueError, ProcessLookupError):
+        pass
+
+
 def end_leftover_engines(exe: str) -> None:
     """Before an engine starts: end the ones a lost server left running (strata_control/procs.py). Only a process
     this install recorded whose starter is gone, or an orphan of exactly this executable running --serve, and only
@@ -1213,6 +1258,7 @@ class StrataEngine:
             raise EngineDied(why + (f" (see {log})" if log else "") + note +
                              start_failure_hint(log, log_start) + tail)
         self.known_ctx = self.max_context   # survives a failed restart: requests keep their limit and restart it
+        boot_contract_note(self.proc, self.info)
         # (from PR #41, midhatn) a locally built engine can sit next to another release's BUILD.json: engines that
         # report their own version (INFO engine=, 0.1.8+) win, the manifest stays the fallback for older ones
         if self.info.get("engine"):
