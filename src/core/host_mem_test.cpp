@@ -1,9 +1,10 @@
-#include "strata/core/conversation_memory.hpp"
+#include "strata/core/host_mem.hpp"
 
 #include <cstdio>
 #include <cstdlib>
 #include <limits>
 #include <sstream>
+#include <vector>
 
 #if defined(_WIN32)
 #ifndef NOMINMAX
@@ -52,6 +53,64 @@ int main() {
     // Test the real provider without assuming any particular amount of free RAM.
     const auto available = available_host_bytes();
     check(!available || conversation_memory_admit(available, 0, 0), "provider returns bytes or unknown");
+    {   // evict_for_ram (upstream #5697 + #2253): the admission-gate eviction loop's three stops.
+        struct Sim {
+            std::optional<uint64_t> avail;      // what the reading says (nullopt: unknown)
+            std::vector<uint64_t> entries;      // bytes of each evictable parked conversation, oldest first
+            size_t evictions = 0;
+            std::vector<uint64_t> gains;        // what the reading gains per eviction (default: the entry's bytes)
+            bool admit(uint64_t allocation, uint64_t floor) const {
+                return avail && *avail >= floor && allocation <= *avail - floor;
+            }
+        };
+        auto run = [](Sim& s, uint64_t allocation, uint64_t floor, size_t max_evictions,
+                      uint64_t required, uint64_t evictable) {
+            return evict_for_ram(
+                [&] { return s.admit(allocation, floor); },
+                [&]() -> std::optional<uint64_t> { return s.avail; },
+                [&]() -> size_t {
+                    if (s.evictions >= s.entries.size()) return 0;
+                    const size_t freed = (size_t) s.entries[s.evictions];
+                    const uint64_t gain = s.evictions < s.gains.size() ? s.gains[s.evictions] : freed;
+                    ++s.evictions;
+                    if (s.avail) *s.avail += gain;
+                    return freed;
+                },
+                max_evictions, required, evictable);
+        };
+        {   // fits after two evictions: the loop stops the moment admit() passes
+            Sim s{{1000}, {300, 300, 300}, 0, {}};
+            const auto r = run(s, 1150, 200, 8, 1150 + 200, 900);
+            check(r.fits && r.evicted == 2 && !r.no_progress && !r.cannot_help, "two evictions admit the park");
+        }
+        {   // #5697 no-progress: the first eviction gives nothing back, the rest stay parked
+            Sim s{{1000}, {300, 300, 300}, 0, {0}};
+            const auto r = run(s, 900, 200, 8, 0, UINT64_MAX);
+            check(!r.fits && r.evicted == 1 && r.no_progress && !r.cannot_help,
+                  "an eviction that gave nothing back stops the loop after one entry");
+        }
+        {   // #2253 cannot-help: short by more than everything evictable, nothing is evicted at all
+            Sim s{{100}, {300, 300}, 0, {}};
+            const auto r = run(s, 900, 200, 8, 900 + 200, 600);
+            check(!r.fits && r.evicted == 0 && r.cannot_help && !r.no_progress && r.short_by == 1000,
+                  "short by more than all that may leave: nothing evicted, short_by reported");
+        }
+        {   // short, but within what the entries can give: evicted as before
+            Sim s{{700}, {300, 300}, 0, {}};
+            const auto r = run(s, 900, 200, 8, 1100, 600);
+            check(r.fits && r.evicted == 2, "a deficit the entries can cover is evicted normally");
+        }
+        {   // nothing left that may go: freed 0 ends the loop
+            Sim s{{100}, {}, 0, {}};
+            const auto r = run(s, 900, 200, 8, 0, UINT64_MAX);
+            check(!r.fits && r.evicted == 0 && !r.no_progress, "an empty cache ends without the no-progress stop");
+        }
+        {   // max_evictions bounds the pass
+            Sim s{{100}, {300, 300, 300}, 0, {}};
+            const auto r = run(s, 900, 200, 2, 0, UINT64_MAX);
+            check(!r.fits && r.evicted == 2, "the eviction count is bounded by max_evictions");
+        }
+    }
 #if defined(_WIN32)
     // Unknown must fail closed in production, but must not let a broken Windows provider pass this test.
     // Compare with total physical memory, not a second available reading: other processes can allocate

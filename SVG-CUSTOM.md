@@ -12396,3 +12396,62 @@ storage canon (reference updates in the same commit):
   failure is the orphan scan, and it fails IDENTICALLY on the unmodified tree (checked by stashing the change): this
   sandbox reparents the spawned orphan, so `orphans_of` finds nothing - an environment limit, not a regression.
   Evidence: `campaign/results/f396-procs-tests.out`.  No boot: the box is occupied.
+
+## F-397 — ported upstream's rewind-keep: the follow-up turn stops paying the whole-K/V park (2026-11-19, 15:57)
+
+- **Upstream fe686835d (bitaccesscomau, 0.2.16):** `--conversation-cache-rewind-keep N` — when a request
+  resumes this conversation and at most N of the live tokens sit past the resume point (the answer a client
+  that strips reasoning did not send back), the park is SKIPPED.  Their measurement at 460K context: the park
+  was 4.7-5.0 s of a 6.3-6.5 s follow-up TTFT (3.2 s zero-filling fresh pages + 0.8 s copying 7.86 GB) to
+  preserve ~198 tokens the client never reuses; with the flag, follow-up TTFT 6.46 -> 1.62 s, the main turn
+  byte-identical (answer SHA equal under the deterministic switches), 460,180 tokens reused exactly as before.
+- **Why this is OUR traffic's number:** the harness and agent clients on this box strip reasoning every turn
+  (reasoning-budget wraps + clients that resend history without thinking) — every follow-up was paying the
+  whole-snapshot park.  This is TTFT on the request-critical path (law 9's pathway: the park stage REMOVED,
+  not tuned).
+- **Ported:** `rewind_keep()` (pure, prefix-proven) into conv_cache.hpp; the option field, usage, parse with
+  the INT32_MAX limit class; the park site takes `keep_branch = pin_sibling || rewind_skip` on both park
+  branches with the skip line naming the kept tokens.  Default 0 = the old behaviour, byte for byte.
+  NOT ARMED in the standing config yet: the flag changes when parks happen, and its adoption is a measured
+  battery (law 1), owed on the next quiet window with agent-shaped follow-ups.
+- **Verified without a boot** (the box runs the operator's transfer job): conv_cache_test extended with
+  upstream's 10 cases + a null-pointer case — all pass (`campaign/results/f397-ports.out`); the deployed
+  binary refuses `-5` with the range error and parses `4096` through to the tokenizer requirement.
+
+## F-398 — ported the #5697/#2253 eviction stops: the RAM gate can no longer empty the cache for nothing (2026-11-19, 15:58)
+
+- **The defect our fork still carried:** the park's physical-RAM gate evicted parked conversations in a loop
+  until the reading admitted the park — with NO stop for an eviction whose memory never showed up, and no
+  check whether the cache could ever cover the shortfall.  Upstream's field log (#5697): the loop "went on
+  through every parked conversation, read no change, and refuse anyway with an empty cache"; #2253: when the
+  reading is short by more than everything evictable, the loop EMPTied the cache first, then refused.
+- **Ported (upstream's exact template, host_mem.hpp — the fork's memory owner):** `evict_for_ram` with the two
+  stops — `no_progress` (a gain under half the entry's bytes AND under 64 MiB ends the pass after ONE entry:
+  the C library kept it, or another process took it) and `cannot_help` (#2253: short by more than all that
+  may leave → NOTHING is evicted, short_by reported).  `ConversationCache::evict_oldest()` now returns the
+  bytes freed (both existing bool callsites keep their meaning), and `evictable_bytes()` sums what may go.
+  The park site reports which stop fired, in the refusal line.
+- **Verified:** host_mem_test extended 23 -> 29 checks (six simulated cases: admit-after-two, no-progress
+  one-entry stop, cannot-help nothing-evicted, coverable-deficit eviction, empty cache, max_evictions bound)
+  — all pass; engine built clean and deployed (`engine/strata.pre-f397` rollback).  Evidence:
+  `campaign/results/f397-ports.out`.  Also fixed in passing: host_mem_test included a header that does not
+  exist in this tree (`conversation_memory.hpp`) and its CMake target had never been generated — the test
+  was dead weight since the split; it builds and runs now.
+
+## F-399 — the Linux start hygiene upstream ships: MALLOC_ARENA_MAX=2 and stdin-clean probes (2026-11-19, 15:59)
+
+- **MALLOC_ARENA_MAX=2 (upstream c5cc7351f, P11 of FIX-PLAT):** glibc's ptmalloc gives every thread its own
+  heap arena — up to 8 x ncores (256 on this 16C/32T box) — and a fragmented arena never shrinks.  The engine
+  (pool workers, loader threads, the service loop) and the Python server are exactly that shape, so the RSS
+  tail grows with uptime and buys no capability.  Upstream starts BOTH with MALLOC_ARENA_MAX=2 on every Linux
+  machine class — their golden snapshots carry it (a production precedent on our exact component class,
+  law 12).  The launcher now exports `MALLOC_ARENA_MAX="${MALLOC_ARENA_MAX:-2}"`.
+- **Probe stdin (upstream 43e4f52f6):** a child started by the server inherits its stdin; when that stdin is
+  a pipe nobody drains, a read-only probe waits on it — upstream measured their card-speed child taking its
+  WHOLE 20 s limit, 0.05 s with stdin=DEVNULL.  Our fork had four such sites: the CUDA speed probe (30 s
+  timeout) and the strata-device probe (60 s) in serve/server.py, and both `ps` calls in serve/lifeline.py.
+  All four now pass `stdin=subprocess.DEVNULL`.  The pacer's `_run` already had it (F-394 ported the fixed
+  version).
+- **Verified:** `py_compile` on both files; `bash -n` on the launcher; the procs suite unchanged (the one
+  failure is the pre-existing sandbox orphan-reparent, verified identical on the unmodified tree in F-396's
+  round).

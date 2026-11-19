@@ -414,17 +414,30 @@ public:
     // gate in generate.cpp).  A ConversationBuffer is a list of 16 MiB segments and each segment is its
     // own allocation, far above glibc's mmap threshold, so dropping an entry returns the whole footprint
     // to the kernel at once - the next admission check reads it back from /proc/meminfo.
-    // False when none can go (empty, or only entries that hold a pinned shared prefix are left).
-    bool evict_oldest() {
+    // Returns the bytes freed, 0 when none can go (empty, or only entries that hold a pinned shared
+    // prefix are left).  evict_for_ram (host_mem.hpp) reads the count for its no-progress and cannot-help
+    // stops, so a full pass that changes nothing costs one entry, not the whole cache.
+    size_t evict_oldest() {
         // the oldest entry that holds no pinned shared prefix and is not the guarded (borrowed) donor
         for (size_t i = 0; i < entries_.size(); ++i) {
             if (entries_[i].pinned() || (guarded_ != 0 && serials_[i] == guarded_)) continue;
-            bytes_ -= entries_[i].bytes();
+            const size_t freed = entries_[i].bytes();
+            bytes_ -= freed;
             erase(i);
             ++evictions_;
-            return true;
+            return freed;
         }
-        return false;
+        return 0;
+    }
+
+    /// What every parked conversation that may go holds in all (the entries evict_oldest can take): the
+    /// most the physical-RAM gate's eviction loop can give back, for #2253's cannot-help check - a park
+    /// short by more than this would refuse even over an empty cache, so nothing is evicted for it.
+    size_t evictable_bytes() const {
+        size_t sum = 0;
+        for (size_t i = 0; i < entries_.size(); ++i)
+            if (!entries_[i].pinned() && !(guarded_ != 0 && serials_[i] == guarded_)) sum += entries_[i].bytes();
+        return sum;
     }
 
     // #879: every parked conversation (pinned ones too) and the retained K/V go - after non-finite logits any of them

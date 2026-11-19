@@ -58,6 +58,13 @@ export STRATA_DROP_CACHE_ON_EXIT="${STRATA_DROP_CACHE_ON_EXIT:-1}"
 # operator's own work needed.  It is an env, not a config arg, so the rollback binary (which does not know the flag)
 # still loads the same config.  0 = the old behaviour (4 GiB safety headroom); raise it if the desktop needs more.
 export STRATA_RAM_KEEP_GIB="${STRATA_RAM_KEEP_GIB:-24}"
+# F-397 (upstream 0.2.16 P11, c5cc7351f): glibc's ptmalloc gives every thread its own heap arena - up to
+# 8 x ncores of them (256 on this 16C/32T box) - and a fragmented arena never shrinks.  The engine (pool
+# workers, loader threads, the service loop) and the Python server are exactly that shape, so the RSS
+# tail grows with uptime for no capability.  Upstream starts BOTH with MALLOC_ARENA_MAX=2 on every Linux
+# machine class (their golden snapshots carry it).  Overridable; =0 is not valid for glibc, unset rolls
+# back to the libc default.
+export MALLOC_ARENA_MAX="${MALLOC_ARENA_MAX:-2}"
 # F-367 ADOPTED (10-27): the shadow store's canonical home is /dev/shm (tmpfs). F-365: one probe leg
 # took 2,635,199 minor faults for +160 MB of RSS — page churn on the disk-backed page cache, and the
 # pool is byte-bound at ~150 us/entry. tmpfs pages are RAM-resident, THP-eligible, never evicted.

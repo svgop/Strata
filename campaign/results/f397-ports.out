@@ -1,0 +1,21 @@
+F-397/F-398/F-399 parse + test evidence 2026-11-19T15:56:44+02:00
+
+## rewind-keep flag (deployed engine/strata)
+--conversation-cache-rewind-keep needs a nonnegative integer within range
+## host_mem_test (23 old + 6 evict_for_ram)
+conversation_memory_test: 29 checks passed
+## conv_cache_test (rewind_keep cases)
+  a one-slot budget keeps no pin: the oldest leaves                  ok
+  198 of 200 live: the rewind keeps the conversation, no park        ok
+  max_suffix 0: never skips                                          ok
+  198 past the resume with max_suffix 1: parks                       ok
+  a different conversation (diverges before resume): parks           ok
+  the resume point is under half the live tokens: parks              ok
+  8,000 tokens past the resume: parks (max_suffix)                   ok
+  2,000 past the resume and the prefix is the bulk: skips            ok
+  resume at the end: parked (strict bound)                           ok
+  empty live session: never skips                                    ok
+  no live session pointer: never skips                               ok
+PASS
+## python compile
+serve/server.py serve/lifeline.py compile ok

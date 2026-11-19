@@ -815,6 +815,11 @@ struct Options {
     /// (drop_superseded) after writing the same bytes once more, so on a long single conversation every turn pays a
     /// whole-snapshot copy for nothing.  0 = park every turn, as before.
     int64_t conversation_cache_park_gain = 0;
+    /// --serve (upstream fe686835d): skip the park when the request resumes this conversation and at most this many
+    /// of its live tokens sit past the resume point - the client's stripped answer.  The park is a 6-8 GB copy on the
+    /// follow-up's critical path (4.7-5.0 s measured at 460K); the suffix is re-read only if that branch is revisited,
+    /// and a client that strips reasoning never revisits it.  0 = park, as before.
+    int64_t conversation_cache_rewind_keep = 0;
     /// --conversation-cache-dir PATH / STRATA_CONV_SLOT_DIR: persist the parked conversations across restarts as
     /// one session file (slot-<serial>.bin) per entry.  On exit (QUIT or the server closing stdin) the newest
     /// parked entries are written; on boot they are read back newest-first under the RAM preflight, so a restart
@@ -987,6 +992,10 @@ void usage() {
                  "  --conversation-cache-park-gain N  --serve: park only after the conversation advanced N tokens past\n"
                  "                       the copy it would supersede, so a turn that grew by a few hundred tokens does not\n"
                  "                       write a whole snapshot that the next turn drops (default 0 = park every turn)\n"
+                 "  --conversation-cache-rewind-keep N  --serve: when a request resumes this conversation and at most N\n"
+                 "                       of its live tokens are past that point (the answer a client that strips reasoning\n"
+                 "                       did not send back), skip parking it (default 0 = park; the suffix is re-read only\n"
+                 "                       if that branch is revisited)\n"
                  "  --session-min-free-mib N  --serve: disk space a SAVE must leave free (default 4096; 0 = no check)\n"
                  "  --session-save-reclaim  --serve: reclaim unpinned host caches if SAVE needs RAM (opt-in)\n"
                  "  --vram-elastic       --serve (#533, opt-in, NVIDIA): the expert cache in segments (--vram-segment-mib,\n"
@@ -2766,13 +2775,13 @@ int main(int argc, char** argv) {
         else if (a == "--prompt-cache") o.prompt_cache = std::max(0, std::atoi(next("--prompt-cache")));
         else if (a == "--conversation-cache-mib" || a == "--conversation-cache-slots" ||
                  a == "--conversation-cache-min-free-mib" || a == "--conversation-cache-min-tokens" ||
-                 a == "--conversation-cache-park-gain" ||
+                 a == "--conversation-cache-park-gain" || a == "--conversation-cache-rewind-keep" ||
                  a == "--session-min-free-mib" || a == "--memory-limit-mib") {
             const std::string value = next(a.c_str());
             int64_t number = 0;
             const auto result = std::from_chars(value.data(), value.data() + value.size(), number);
             const int64_t limit = (a == "--conversation-cache-slots" || a == "--conversation-cache-min-tokens" ||
-                                   a == "--conversation-cache-park-gain")
+                                   a == "--conversation-cache-park-gain" || a == "--conversation-cache-rewind-keep")
                                       ? INT32_MAX : INT64_MAX / (1024 * 1024);
             if (result.ec != std::errc{} || result.ptr != value.data() + value.size() || number < 0 || number > limit) {
                 std::fprintf(stderr, "%s needs a nonnegative integer within range\n", a.c_str());
@@ -2782,6 +2791,7 @@ int main(int argc, char** argv) {
             else if (a == "--conversation-cache-min-free-mib") o.conversation_cache_min_free_mib = number;
             else if (a == "--conversation-cache-min-tokens") o.conversation_cache_min_tokens = number;
             else if (a == "--conversation-cache-park-gain") o.conversation_cache_park_gain = number;
+            else if (a == "--conversation-cache-rewind-keep") o.conversation_cache_rewind_keep = number;
             else if (a == "--session-min-free-mib") o.session_min_free_mib = number;
             else if (a == "--memory-limit-mib") o.memory_limit_mib = number;
             else o.conversation_cache_slots = (int) number;
@@ -9924,31 +9934,55 @@ int main(int argc, char** argv) {
                 // above only balanced the cache's own budget, so a full cache leaves this one short even
                 // though every parked conversation could give its RAM back - and refusing here throws
                 // away the whole prompt read that produced this snapshot (measured: 270k tokens, 96 s).
-                // Evict the least recently active parked conversations until it fits, or until none are
-                // left.  Each ConversationBuffer is a list of 16 MiB segments, each segment its own
-                // allocation, so an evicted entry is back with the kernel before the next check reads
-                // /proc/meminfo; no waiting is needed.  slots() bounds the loop, and the two lines
-                // below say what it did either way.  The reading is the guard's (MemAvailable, the cgroup
-                // limits above the engine, --memory-limit-mib); `mem` keeps the last one for the refusal line.
-                size_t evicted = 0;
+                // Evict the least recently active parked conversations until it fits (upstream #5697 +
+                // #2253, evict_for_ram in host_mem.hpp): never more than one entry past the first whose
+                // memory did not show up in the reading (no_progress: the C library kept it, or another
+                // process took it), and NOTHING at all when the reading is short by more than every
+                // evictable entry together (cannot_help: even an empty cache would refuse this park -
+                // the loop used to empty it first and refuse anyway).  Each ConversationBuffer is a list
+                // of 16 MiB segments, each segment its own allocation, so an evicted entry is back with
+                // the kernel before the next check reads /proc/meminfo; no waiting is needed.
+                // slots() bounds the loop, and the lines below say what it did either way.  The reading
+                // is the guard's (MemAvailable, the cgroup limits above the engine, --memory-limit-mib);
+                // `mem` keeps the last one for the refusal line.
                 std::optional<strata::core::HostMemoryReading> mem;
                 auto admit = [&] {
                     mem = strata::core::sample_host_memory();
                     return strata::core::conversation_memory_admit(
                         mem ? std::optional<uint64_t>(mem->available) : std::nullopt, additional, floor);
                 };
-                while (!admit() && conversations.size() > 0 && evicted < conversations.slots() &&
-                       conversations.evict_oldest())
-                    ++evicted;
-                if (!admit()) {
-                    std::fprintf(stderr, "strata serve: conversation cache: skip parking (physical RAM admission; need %zu MiB plus %lld MiB floor, %s; evicted %zu, %zu still parked)\n",
-                                 additional >> 20, (long long) o.conversation_cache_min_free_mib, ram_note(mem).c_str(),
-                                 evicted, conversations.size());
+                const uint64_t required = additional + floor;
+                const strata::core::EvictForRam gate = strata::core::evict_for_ram(
+                    admit,
+                    [&]() -> std::optional<uint64_t> {
+                        const auto r = strata::core::sample_host_memory();
+                        return r ? std::optional<uint64_t>(r->available) : std::nullopt;
+                    },
+                    [&]() -> size_t { return conversations.evict_oldest(); },
+                    conversations.slots(), required, conversations.evictable_bytes());
+                if (!gate.fits) {
+                    if (gate.cannot_help)
+                        std::fprintf(stderr, "strata serve: conversation cache: skip parking (physical RAM admission; "
+                                             "need %zu MiB plus %lld MiB floor, %s; short by %llu MiB more than the %zu MiB "
+                                             "all %zu parked conversations could give back, so none was evicted)\n",
+                                     additional >> 20, (long long) o.conversation_cache_min_free_mib, ram_note(mem).c_str(),
+                                     (unsigned long long) (gate.short_by >> 20), conversations.evictable_bytes() >> 20,
+                                     conversations.size());
+                    else if (gate.no_progress)
+                        std::fprintf(stderr, "strata serve: conversation cache: skip parking (physical RAM admission; "
+                                             "need %zu MiB plus %lld MiB floor, %s; evicted %zu and the next eviction gave "
+                                             "nothing back, so the rest stay parked)\n",
+                                     additional >> 20, (long long) o.conversation_cache_min_free_mib, ram_note(mem).c_str(),
+                                     gate.evicted);
+                    else
+                        std::fprintf(stderr, "strata serve: conversation cache: skip parking (physical RAM admission; need %zu MiB plus %lld MiB floor, %s; evicted %zu, %zu still parked)\n",
+                                     additional >> 20, (long long) o.conversation_cache_min_free_mib, ram_note(mem).c_str(),
+                                     gate.evicted, conversations.size());
                     return true;
                 }
-                if (evicted)
+                if (gate.evicted)
                     std::fprintf(stderr, "strata serve: conversation cache: evicted %zu parked conversation%s to admit this snapshot (%zu MiB plus %lld MiB floor)\n",
-                                 evicted, evicted == 1 ? "" : "s", additional >> 20,
+                                 gate.evicted, gate.evicted == 1 ? "" : "s", additional >> 20,
                                  (long long) o.conversation_cache_min_free_mib);
                 strata::core::SavedConversation image;
                 size_t reused_bytes = 0;
@@ -14226,7 +14260,23 @@ int main(int argc, char** argv) {
                                          : 0;
             const bool park_worth = o.conversation_cache_park_gain <= 0 || park_held == 0 ||
                                     (int64_t) live.size() >= (int64_t) park_held + o.conversation_cache_park_gain;
-            if (borrow && !pin_sibling && park_worth) {
+            // --conversation-cache-rewind-keep N (upstream fe686835d): the request resumes this conversation and at
+            // most N of its live tokens are past the resume point.  Those are the client's stripped answer; a park
+            // copies the whole K/V (6-8 GB, 4.7-5.0 s measured at 460K) to keep them.  A park only reads, so skipping
+            // it cannot change a token; the suffix is re-read only if that branch is revisited.  The same-conversation
+            // check inside rewind_keep keeps a switch that only shares a system prompt parking as before.
+            const bool rewind_skip =
+                o.conversation_cache_rewind_keep > 0 && !from_live && resume > 0 && live_ok && !incoming && !borrow &&
+                slot_source < 0 && lent_slot < 0 && req_imgs.empty() && stages.empty() &&
+                strata::program::conv_cache::rewind_keep(live.data(), (int64_t) live.size(), ids.data(), resume,
+                                                         o.conversation_cache_rewind_keep);
+            const bool keep_branch = pin_sibling || rewind_skip;
+            if (rewind_skip)
+                std::fprintf(stderr,
+                             "strata serve: conversation cache: skip parking (the rewind keeps %lld of %lld tokens "
+                             "live; %lld past the resume point are not kept)\n",
+                             (long long) resume, (long long) live.size(), (long long) (live.size() - resume));
+            if (borrow && !keep_branch && park_worth) {
                 conversations.guard(parked.serial);   // parking the outgoing conversation must not evict the donor
                 const bool parked_ok = park_current(0);
                 const bool blocked = conversations.guard_blocked();
@@ -14248,7 +14298,7 @@ int main(int argc, char** argv) {
                         return 1;
                     }
                 }
-            } else if ((!from_live || incoming || slot_source >= 0) && !pin_sibling && park_worth &&
+            } else if ((!from_live || incoming || slot_source >= 0) && !keep_branch && park_worth &&
                        !park_current(incoming ? incoming->bytes() : 0)) {
                 std::printf("ERR %s\n", err.c_str());
                 return 1;

@@ -3291,7 +3291,7 @@ def gpu_speed_scores(indices: list[int]) -> dict[int, float] | None:
         env = dict(os.environ)
         env["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
         env.pop("CUDA_VISIBLE_DEVICES", None)
-        r = subprocess.run([sys.executable, "-c", code], capture_output=True, text=True, timeout=30, env=env)
+        r = subprocess.run([sys.executable, "-c", code], capture_output=True, stdin=subprocess.DEVNULL, text=True, timeout=30, env=env)
         got = {}
         for line in r.stdout.splitlines():
             i, sm, khz = (int(x) for x in line.split())
@@ -3440,7 +3440,7 @@ def hip_auto_devices(cfg: dict, env: dict) -> list[int] | None:
     if not probe.is_file():
         return None
     try:
-        done = subprocess.run([str(probe), "--list-devices"], capture_output=True, text=True, timeout=60, cwd=str(probe.parent), env=env,
+        done = subprocess.run([str(probe), "--list-devices"], capture_output=True, stdin=subprocess.DEVNULL, text=True, timeout=60, cwd=str(probe.parent), env=env,
                               creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0))
     except (OSError, subprocess.SubprocessError):
         return None
