@@ -12324,3 +12324,24 @@ storage canon (reference updates in the same commit):
   **190.4 / 187.5 / 238.5** (hit 96.0%, cpu-exp 3.33, window 16.21 ms), runtime VRAM free **1,420 MiB**
   with the reserve 2,800. The engine is sorted at this state; the 200+ draws (203-224) remain the good
   side of the boot distribution.
+
+## F-394 — ported 0.2.16's memory-guard fix; the freeze's structural answer (2026-11-19, 04:35)
+
+- **Niko's 0.2.16 (engines 0.1.62) is out and names our freeze class directly:** "*Ubuntu's memory guard
+  (systemd-oomd) could end `strata launch` in a normal terminal while a big model loaded... Strata now
+  frees the memory that still holds the model's old file copies before the engine starts, and pauses it
+  if memory gets tight*". The code is `terminal/serve/oomd_pacer.py` (a SIGSTOP/SIGCONT pacer driven by
+  the manager's memory.pressure vs oomd's kill limit, a 600 s budget, a 2 s stop-confirm) plus the
+  `make_room()` file-cache drop and `lastrun.py`'s next-start OOM report.
+- **Ported into this fork (serve/oomd_pacer.py + three hooks in serve/server.py):** `make_room(args)`
+  before the engine spawn (drops the model files' stale cache when the pressure is near), and
+  `oomd_pacer.start(self.proc, loading, args=args)` after it (paces the load; `loading.set()` at READY
+  already existed). Never raises, never blocks a start; on a quiet box it is silent. This is the
+  structural fix for the 03:47 freeze, not a preflight: the load can no longer be killed mid-way (and
+  the desktop with it) - it is paused instead.
+- **What 0.2.16 does NOT change:** the reserve sizing is the same architecture (a static margin for the
+  late allocations); its known-problems entry for the Windows page file suggests `--expert-cache 8192`,
+  a capacity trade. The budget-owner design (Calibration v2 R1) remains our improvement on top: size the
+  reserve from the declared late terms (verify arena + hc + graphs + head) instead of a guessed margin.
+- **State measured after the port (box at load 13.9):** headroom 2,144 MiB, warm 134.8/123.4 - a bad
+  draw under a loaded box, not a 220 verdict. The pacer was silent (pressure never neared the limit).

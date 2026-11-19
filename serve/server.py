@@ -75,6 +75,7 @@ from strata_control import user_args  # noqa: E402
 from serve import ready as ready_file  # noqa: E402
 from serve import owner_guard  # noqa: E402
 from serve import launch_identity  # noqa: E402
+from serve import oomd_pacer  # noqa: E402  (0.2.16 port: the Linux desktop memory-guard pacer)
 from serve import handshake  # noqa: E402  (Layer 2: the versioned engine handshake, serve/handshake.py)
 from serve import logit_bias as bias_api  # noqa: E402
 from serve import lifeline  # noqa: E402
@@ -1099,6 +1100,14 @@ class StrataEngine:
         if cpus and hasattr(os, "sched_setaffinity"):    # replicas: this engine's own physical cores (serve/replicas.py)
             pin["preexec_fn"] = lambda: os.sched_setaffinity(0, cpus)
         end_leftover_engines(exe)                        # one an earlier run lost still holds the GPU and the memory
+        # THE 0.2.16 MEMORY-GUARD FIX, ported (F-394): before the engine reads tens of GB into RAM, give back the
+        # file cache an earlier start left of the model's files (the pressure that let systemd-oomd end the load,
+        # and on this box froze the desktop at 03:47).  make_room() only acts when the manager's pressure is near
+        # the guard's limit; it never raises and never blocks a start.
+        try:
+            oomd_pacer.make_room(args)
+        except Exception:                                # noqa: BLE001 - a nicety, never a failed start
+            pass
         spawned_at = time.monotonic()
         try:
             self.proc = popen("the Strata engine", [exe, "--serve", *args], cwd=cwd, stdin=subprocess.PIPE,
@@ -1111,6 +1120,10 @@ class StrataEngine:
                 except OSError:
                     pass
             raise
+        try:
+            oomd_pacer.start(self.proc, loading, args=args)  # 0.2.16 port: SIGSTOP/CONT under pressure while loading
+        except Exception:                                    # noqa: BLE001
+            pass
         # the READY read has a timeout (#1317): the lines come from a thread, up to READY, so the rest of the stream
         # stays for _pump (one reader at a time)
         ready_q: queue.Queue = queue.Queue()
