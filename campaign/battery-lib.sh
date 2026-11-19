@@ -66,6 +66,22 @@ cleanup_engine() {
   done
 }
 
+# F-406 THE BATTERY'S LAST DRAIN (2026-11-19): a battery's final exit drain — the parked synthetic
+# conversations written as slot-<serial>.bin when its last engine ends — stayed in the campaign slot
+# dir until the NEXT battery's start wipe.  /tmp is tmpfs: 3.0 GiB of dead test traffic held RAM
+# between batteries (13 slots, root-owned, measured 2026-11-19 16:56).  cleanup_slots is the
+# END-of-battery wipe.  It must NEVER run between a battery's boots: boot N+1 restores boot N's
+# drained slots, which is the measured T66 restart axis — cleanup_engine stays slot-blind for
+# exactly that reason.  The EXIT trap makes every shell that sources this lib clean on any exit
+# path (abort included) without touching the kill discipline each battery owns; it wipes ONLY the
+# campaign's declared dir — an operator-overridden STRATA_CONV_SLOT_DIR is never deleted.
+cleanup_slots() {
+  case "${STRATA_CONV_SLOT_DIR:-}" in
+    /tmp/strata-campaign-slots) rm -rf "$STRATA_CONV_SLOT_DIR" 2>/dev/null || true ;;
+  esac
+}
+trap 'cleanup_slots' EXIT
+
 wait_health() {  # wait_health [tries-of-3s] — any /health body means the API answers
   local t
   for t in $(seq 1 "${1:-120}"); do

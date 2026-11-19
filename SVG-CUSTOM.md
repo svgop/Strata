@@ -12599,3 +12599,28 @@ storage canon (reference updates in the same commit):
   is already record-class).
 - **Engine deployed** (`build-fresh/strata` -> `engine/strata`; `engine/strata.pre-f404` rollback).  The
   resident-mode line names the organ every boot; boot-spread.sh records it per boot.
+
+## F-406 — the battery's last drain: campaign slot hygiene made structural (2026-11-19, 17:15)
+
+- **The question (operator):** do the session's ~20 restarts clean up properly?  Verified live, plane by
+  plane: zero engine/server/wrapper processes (self-match-safe scan), zero strata GPU compute apps, RAM
+  168 GiB available (the 37.86 GiB organ is a process-private driver memfd - no SysV segment, no /dev/shm
+  file, no global handle: process death returns it unconditionally, leak-proof by construction), /dev/shm
+  410 MiB all Steam, no 808x listeners, no engine coredumps, teardown owned and waited (start-token waits
+  in procs.py, `LEFTOVER_SETTLE_S=120` sweep at every server start).
+- **The one real gap:** F-389 gave the campaign its own slot dir (`/tmp/strata-campaign-slots`, wiped at
+  battery START) but nothing wiped it at battery END - and /tmp is tmpfs.  Measured after this session's
+  last battery: 13 root-owned `slot-*.bin`, 3.0 GiB of dead synthetic conversations holding RAM until the
+  next battery or reboot.  boot-spread.sh's `/tmp/spread-boot-*.out` console scratch lingered the same way.
+- **The fix (one owner, one rule):** `cleanup_slots()` in battery-lib.sh (the slot dir's declared owner)
+  + an EXIT trap installed at source time - every battery cleans on ANY exit path (abort included) with
+  zero per-battery edits.  Guarded to the exact declared path: an operator-overridden
+  `STRATA_CONV_SLOT_DIR` is never deleted.  **cleanup_engine stays slot-blind on purpose:** between a
+  battery's boots, boot N+1 restoring boot N's drained slots is the measured T66 restart axis - only the
+  battery's LAST drain leaves.  boot-spread.sh wipes its own console scratch at end.
+- **Verified:** `bash -n` both; a DRY-RUN `boot-spread.sh --boots 0` with a sentinel slot file - the trap
+  fired on exit, the dir and the scratch were gone; the live 3.0 GiB wiped (tmpfs 3.3G -> 282M); the
+  F-271 learned profile re-pinned from gold (2026-11-18 23:41) after the session's diagnostic boots
+  dirtied it - the quiet battery starts from the banked profile state.
+- **Rollback:** the trap is one line in battery-lib.sh; `trap - EXIT` in any battery that must keep its
+  drain (none known).

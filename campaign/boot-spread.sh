@@ -64,6 +64,7 @@ for b in $(seq 1 "$BOOTS"); do
   MAXES="$MAXES $BEST"
 done
 cleanup_engine
+cleanup_slots   # F-406: the last boot's exit drain (tmpfs RAM) leaves with the battery
 echo | tee -a "$OUT"
 echo "SUMMARY: maxima =$MAXES" | tee -a "$OUT"
 python3 - $MAXES <<'PY' | tee -a "$OUT"
@@ -75,3 +76,4 @@ if len(v)>=2:
     if len(v)>=3: print(f"  stdev={statistics.stdev(v):.1f}")
 PY
 echo "DISCLOSED: load band per leg above; a spread verdict is claimed only within one stable band." | tee -a "$OUT"
+rm -f /tmp/spread-boot-*.out   # this battery's boot-console scratch (the evidence lives in $OUT)
