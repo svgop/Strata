@@ -1,0 +1,8 @@
+BOOT-SPREAD Thu Nov 19 04:19:58 PM SAST 2026 boots=5 samples=3 label=f400
+boot 1: boot fingerprint f22e85411ce4aa82 slots=9900
+  [strata] boot contract: engine RSS 101.3 GiB (shmem 25.0), MemAvailable 106.0 GiB at READY
+  [strata] boot contract: engine RSS 92.1 GiB (shmem 25.0), MemAvailable 102.2 GiB settled (post-warm-in)
+  boot 1 leg 1: 118.3 t/s (load 9.54)
+  boot 1 leg 2: 132.3 t/s (load 9.53)
+  boot 1 leg 3: 141.4 t/s (load 9.48)
+  boot 1 MAX: 141.4

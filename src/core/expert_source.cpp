@@ -3912,6 +3912,16 @@ bool FileExpertSource::pin_cache_complement(
     complement_lent_slots_ = lend ? n_slots - keep_from : budget_lent;   // a budget keeps its own tail of the region
     complement_lent_slots_ += stage_lent;   // and the split stages' regions: pairs the copy kept of them
     complement_ready_ = true;
+    // F-404: the backing the complement actually landed in, named once so two boots of the same recipe
+    // cannot silently differ in memory layout.  The 2026-11-19 5-boot battery measured the bimodality:
+    // cudaHostAlloc (the driver's memfd: RssShmem, "page-locked and mapped") against the paced
+    // THP+register path (anonymous: RssAnon) - chosen per boot by whether the free RAM at the allocation
+    // moment needed reclaim, i.e. by the box's page-cache state, not by the config.  The maxima split
+    // with it (137-195 anon boots against 204-240 shmem boots, load-disclosed), so the organ the tier
+    // reads experts through is part of the boot contract, and it must be observable in one grep.
+    complement_backing_ = pinned_ok ? "driver-pinned"            // cudaHostAlloc: the driver's memfd, device-mapped
+                        : partial_pin > 0 ? (paced ? "paced-registered" : "registered")
+                        : locked > 0 ? "locked" : "pageable";
     std::fprintf(stderr, "FileExpertSource: %s cache complement ready: resident %.2f GiB, pinned %.2f GiB in %.0f s%s%s\n",
                  complement_pinned_ ? "mapped pinned" : pin ? "locked resident" : "pageable resident",
                  (double) resident_bytes() / 1073741824.0, (double) pinned_bytes() / 1073741824.0,

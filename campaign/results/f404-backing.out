@@ -1,0 +1,15 @@
+F-404 evidence 2026-11-19T16:47:44+02:00
+
+== smaps identification (the 62.9-boot) ==
+  37.86 GiB  rw-s /dev/zero (deleted)  = memfd = driver cudaHostAlloc (RssShmem)
+  23.26 GiB r--s <model gguf>          = the mmap'd model (RssFile)
+
+== the flip, named by the new line ==
+  boot A (smaps boot):   strata generate: resident RAM mode: 37.86 GiB of experts in RAM (page-locked, backing: paced-registered), 9900 in the GPU cache; adaptive swaps exchange them with the GPU cache (no file reads)
+  boot B (this boot):    resident RAM mode: 37.86 GiB (page-locked, backing: paced-registered) — shmem 25.0 both samples
+
+== the correlation (battery2 + follow-ups, load-disclosed) ==
+  backing            shmem   boots' M1 maxima                    load band
+  driver-pinned      62.9    239.9, 203.8 (+192.7 diag)          8.5-11.7
+  paced-registered   25.0    137.2, 195.4, 191.3, 138.7          6.7-12.9
+  the adjacent pair: battery boot 4 (driver-pinned) 179/240/227 vs boot 1 (paced) 120/137/126

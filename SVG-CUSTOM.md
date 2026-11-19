@@ -12546,3 +12546,34 @@ storage canon (reference updates in the same commit):
   boot's end-state, the one the certification compares across boots and the one the RAM floor is judged
   against.  Verified on a live process: both lines print, both key sets land
   (`campaign/results/f401-boot-contract.out` appended).  The next boot's log carries both samples.
+
+## F-404 — the boot lottery's memory organ identified: the complement's backing flips per boot (2026-11-19, 16:55)
+
+- **The catch:** the F-401/F-403 contract line, run over the 5-boot spread battery (`campaign/results/spread-f400b-*.txt`),
+  exposed a BIMODAL shmem at the identical fingerprint `f22e85411ce4aa82 slots=9900`: **25.0 GiB on three boots,
+  62.9 on two** - and 62.9 - 25.0 = 37.9 = the resident complement exactly.
+- **The identification (smaps on a live 62.9-boot):** the 37.86 GiB sits in one `rw-s /dev/zero (deleted)` VMA -
+  a memfd, i.e. **driver-allocated pinned memory** (modern NVIDIA drivers back cudaHostAlloc with memfd).  The
+  engine code confirms the two paths (`expert_source.cpp` pin_cache_complement): when the free RAM at the
+  allocation moment covers the complement after the file-cache drop, the ONE-SHOT **cudaHostAlloc** path runs
+  ("page-locked and mapped" - driver-pinned, RssShmem); when `pin_depends_on_reclaim` says the pages must come
+  from reclaim, the **paced THP+cudaHostRegister** path runs (own anonymous mapping - RssAnon).  The choice is
+  made by the BOX's page-cache state at that instant, not by the config: same recipe, two memory organs.
+- **The speed split (load-disclosed, all legs in the battery + the follow-ups):**
+  - driver-pinned boots (shmem 62.9): maxima **239.9, 203.8**; legs to 240 at load 8.8 - record-class AT LOAD
+  - paced-registered boots (shmem 25.0): maxima **137.2, 195.4, 191.3, 138.7** at loads 6.7-9.6
+  - the cleanest pair is inside one battery, adjacent boots, overlapping load bands: boot 4 (driver-pinned,
+    179/240/227) against boot 1 (paced, 120/137/126).  The standing gold boots (224.6 banked) sit in the
+    driver-pinned class.
+- **The instrument (deployed):** `complement_backing()` names the organ - the resident-mode line now reads
+  `(page-locked, backing: driver-pinned)` or `(page-locked, backing: paced-registered)` - and boot-spread.sh
+  records it per boot.  Verified live: two consecutive boots flipped driver-pinned -> paced-registered and the
+  line named both (`campaign/results/f404-backing.out`).  Engine rolled forward; `engine/strata.pre-f404` is
+  the rollback.
+- **The open fix (the next battery's decision):** declare the organ.  (a) Prefer driver-pinned when it fits and
+  let the paced path remain the RAM-short fallback (the measured fast organ becomes the default, not a draw);
+  (b) understand why the post-drop free reading differs between adjacent same-battery boots (the previous
+  engine's exit state? the prewarm sweep's progress at that instant?) and remove that variance.  Both are
+  quiet-window work: the organ choice is a config-level standing change and owes the interleave, and the
+  paced-vs-driver A/B needs stable load to price the gap cleanly (the current split is confounded by the
+  6.7-9.6 band's wobble, disclosed).

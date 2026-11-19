@@ -763,6 +763,10 @@ public:
     uint64_t pinned_bytes() const { return complement_pinned_ ? complement_pin_limit_ : 0; }
     uint64_t resident_bytes() const { return complement_bytes_; }
     bool complement_pinned() const { return complement_pinned_; }
+    /// F-404: the backing the complement landed in - "driver-pinned" (cudaHostAlloc: the driver's memfd,
+    /// device-mapped, shows as RssShmem), "paced-registered" / "registered" (own mapping + cudaHostRegister,
+    /// anonymous), "locked" (working set), "pageable".  Named at the boot so the certification compares it.
+    const char* complement_backing() const { return complement_backing_; }
     bool complement_ready() const { return complement_ready_; }
     uint64_t locked_bytes() const { return complement_locked_; }
     /// Lend-region slots whose experts the compact copy holds (the last ones of the cache).
@@ -1194,6 +1198,7 @@ private:
     bool complement_pinned_ = false;
     bool complement_partial_ = false;         ///< CS-T: only the first complement_pin_limit_ bytes are registered
     bool complement_registered_ = false;      ///< the arena is ordinary memory registered with cudaHostRegister (not cudaHostAlloc)
+    const char* complement_backing_ = "pageable";   ///< F-404: which memory organ holds the copy (see complement_backing)
     uint64_t complement_pin_limit_ = 0;
     uint64_t complement_lock_off_ = 0;        ///< the working-set lock covers [lock_off, lock_off + locked)
     bool complement_ready_ = false;
