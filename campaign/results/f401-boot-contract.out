@@ -3,3 +3,8 @@ F-401 evidence 2026-11-19T16:04:23+02:00
 self line: [strata] boot contract: engine RSS 0.0 GiB (shmem 0.0), MemAvailable 163.0 GiB at READY
 info keys: {'boot_engine_rss_gib': 0.0, 'boot_engine_shmem_gib': 0.0, 'boot_mem_available_gib': 163.0}
 floor path: [strata] boot contract: engine RSS 0.0 GiB (shmem 0.0), MemAvailable 163.0 GiB at READY  WARNING: below the 99999 GiB --ram-keep-gib floor - the desktop may stall
+
+## F-403 two-sample verification 2026-11-19T16:19:00+02:00
+[strata] boot contract: engine RSS 0.0 GiB (shmem 0.0), MemAvailable 171.9 GiB at READY
+[strata] boot contract: engine RSS 0.0 GiB (shmem 0.0), MemAvailable 171.9 GiB settled (post-warm-in)
+keys: ['boot_engine_rss_gib', 'boot_engine_shmem_gib', 'boot_mem_available_gib', 'boot_settled_engine_rss_gib', 'boot_settled_engine_shmem_gib', 'boot_settled_mem_available_gib']

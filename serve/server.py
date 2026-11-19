@@ -128,13 +128,16 @@ def rttime_limit_note() -> str:
 LEFTOVER_SETTLE_S = 120.0       # #4051: how long an engine ended at a start is waited for to give its memory back
 
 
-def boot_contract_note(proc, info: dict) -> None:
-    """F-400: the boot's HOST end-state, one line at READY (Linux only, fails silent).  The Boot Contract's
-    memory side made checkable per boot: what the engine's process actually holds (RSS, and the shmem the
-    pinned complements and the KV pool live in) against the RAM that is left.  A boot that ends near the
-    floor is a boot that chokes the desktop - this line is what the certification compares across boots, so
-    "the same recipe landed in a different state" is a logged fact, not a suspicion.  `info` gains the
-    reading (INFO lines are the engine's own; this one is the host's, so the server writes it)."""
+def boot_contract_note(proc, info: dict, settled: bool = False) -> None:
+    """F-400/F-402: the boot's HOST end-state (Linux only, fails silent).  The Boot Contract's memory side made
+    checkable per boot: what the engine's process actually holds (RSS, and the shmem the pinned complements and
+    the KV pool live in) against the RAM that is left.  A boot that ends near the floor is a boot that chokes
+    the desktop - this line is what the certification compares across boots, so "the same recipe landed in a
+    different state" is a logged fact, not a suspicion.  Sampled twice: at READY (`settled` False) and after the
+    warm-in (`settled` True - the settled end-state; the READY sample is a moving moment, F-402 measured 25.0
+    vs 62.9 GiB shmem at the same fingerprint as the pools materialize).  `info` gains the reading under
+    `boot_*` (READY) and `boot_settled_*` (settled); the engine's own INFO lines are untouched - this reading
+    is the host's, so the server writes it."""
     if sys.platform != "linux" or proc is None:
         return
     try:
@@ -162,13 +165,15 @@ def boot_contract_note(proc, info: dict) -> None:
         note = ""
         if keep_gib > 0 and avail_gib < keep_gib:
             note = f"  WARNING: below the {keep_gib:g} GiB --ram-keep-gib floor - the desktop may stall"
-        info["boot_mem_available_gib"] = round(avail_gib, 1)
-        info["boot_engine_rss_gib"] = round(rss_gib, 1)
+        p = "boot_settled_" if settled else "boot_"
+        when = "settled (post-warm-in)" if settled else "at READY"
+        info[p + "mem_available_gib"] = round(avail_gib, 1)
+        info[p + "engine_rss_gib"] = round(rss_gib, 1)
         if shmem_gib is not None:
-            info["boot_engine_shmem_gib"] = round(shmem_gib, 1)
+            info[p + "engine_shmem_gib"] = round(shmem_gib, 1)
         print(f"[strata] boot contract: engine RSS {rss_gib:.1f} GiB"
               f"{f' (shmem {shmem_gib:.1f})' if shmem_gib is not None else ''}"
-              f", MemAvailable {avail_gib:.1f} GiB at READY{note}", flush=True)
+              f", MemAvailable {avail_gib:.1f} GiB {when}{note}", flush=True)
     except (OSError, ValueError, ProcessLookupError):
         pass
 
@@ -3969,6 +3974,16 @@ class Prewarm:
                 else:
                     print(f"[strata] prewarm: replay done in {time.monotonic() - t0:.0f} s "
                           "- the first real request is warm", flush=True)
+                    # F-402 finding 2: the READY contract sample is a moving moment (the KV pool and the
+                    # elastic slot arenas materialize after it - measured 25.0 vs 62.9 GiB shmem at the same
+                    # fingerprint).  The SECOND sample, after the warm-in, is the boot's settled end-state:
+                    # the number the certification compares across boots.
+                    try:
+                        proc = getattr(getattr(self.svc, "engine", None), "proc", None)
+                        if proc is not None:
+                            boot_contract_note(proc, getattr(self.svc.engine, "info", {}), settled=True)
+                    except Exception:
+                        pass
         except Exception as e:                            # the server serves on; the state says what happened
             self._note("failed", note=f"{type(e).__name__}: {e}")
             print(f"[strata] prewarm: the warm-in did not finish ({type(e).__name__}: {e}); serving continues "

@@ -12536,3 +12536,13 @@ storage canon (reference updates in the same commit):
   operator's ~1 GiB baseline).  One process-handling footgun re-confirmed: a hand-rolled `pkill -f` with the
   pattern in the caller's own command line signals the caller (F-233's class) - use battery-lib's
   cleanup_engine / reset-state, which own this.
+
+## F-403 — the contract's second sample: the settled end-state after the warm-in (2026-11-19, 16:20)
+
+- **F-402's finding 2, instrumented:** the READY-time contract sample caught 25.0 vs 62.9 GiB shmem under the
+  same fingerprint - the READY moment is a moving one (the KV pool and the elastic slot arenas materialize
+  after it).  `boot_contract_note` now samples TWICE: at READY (`boot_*` keys) and after the prewarm replay
+  completes (`boot_settled_*` keys, the line reading `settled (post-warm-in)`) - the settled number is the
+  boot's end-state, the one the certification compares across boots and the one the RAM floor is judged
+  against.  Verified on a live process: both lines print, both key sets land
+  (`campaign/results/f401-boot-contract.out` appended).  The next boot's log carries both samples.
