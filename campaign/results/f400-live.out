@@ -1,0 +1,27 @@
+F-400/F-401/F-397 LIVE diagnostic 2026-11-19T16:17:44+02:00 — load-disclosed (boot1 @ load 12.9-13.9, boot2/3 @ 8.5-11.7; NOT a speed verdict - the quiet-window interleave remains owed)
+
+Engine logs are ephemeral (rotated per boot); each boot's lines were captured live in the round. The fingerprint read f22e85411ce4aa82 slots=9900 verified=49 at EVERY boot.
+
+== boot 1 (server output /tmp/f400-diag-boot.out + live engine-log grep) ==
+launcher: preflight: MemAvailable 162 GiB (floor 96), GPU 31078 MiB free (floor 1024)
+[strata] boot contract: engine RSS 95.6 GiB (shmem 25.0), MemAvailable 96.4 GiB at READY
+[strata] prewarm: corpus warm: 3 prompt(s) x 600 tokens at temperature 0 in 15 s - the tier's starting state is deterministic
+engine: RAM to keep free 24.00 GiB | fingerprint f22e85411ce4aa82 slots=9900 verified=49 | headroom 1921 MiB (bar 512) | resident 37.86 GiB, 9900 in cache
+M1: 146.2 / 173.2 / 182.8 (max 182.8) @ load 12.86-13.85
+
+== boot 2 (server output /tmp/f400-diag-boot2.out + live engine-log grep) ==
+[strata] boot contract: engine RSS 103.6 GiB (shmem 62.9), MemAvailable 105.9 GiB at READY
+[strata] prewarm: corpus warm: 3 prompt(s) x 600 tokens at temperature 0 in 11 s - the tier's starting state is deterministic
+engine: RAM to keep free 24.00 GiB | fingerprint f22e85411ce4aa82 slots=9900 verified=49 | headroom 1969 MiB (bar 512) | resident 37.86 GiB, 9900 in cache
+M1: 174.0 / 188.1 / 192.7 (max 192.7) @ load 8.51-11.68
+
+== boot 3 (rewind-keep 4096 armed for the diagnostic; config restored after, git-clean) ==
+requests: turn A (2322-word prompt, 120-tok answer): 1.84 s; turn B (same prompt resent - the stripped-answer rewind): 0.73 s
+strata serve: conversation cache: skip parking (the rewind keeps 2971 of 3097 tokens live; 126 past the resume point are not kept)
+strata serve: conversation cache: skip parking (the rewind keeps 2971 of 3037 tokens live; 66 past the resume point are not kept)
+
+Findings:
+1. F-400 live: the corpus warm line fires every boot (3x600 @ temp 0, 15 s / 11 s); fingerprint identical across all three boots.
+2. F-401 live: the boot contract line lands real numbers - and EXPOSES VARIANCE: shmem at READY 25.0 (boot1) vs 62.9 (boot2/3) GiB with the same fingerprint - the READY sample is a moving moment (KV pool/slot arenas materialize after); a post-prewarm second sample is the next instrument.
+3. F-397 live: the rewind skip fires on the agent shape (2971 of 3097 kept, 126 past resume not kept); the follow-up ran 0.73 s vs the turn's 1.84 s.
+4. The first measured leg stays ~15-20 percent below legs 2-3 on EVERY boot even with the corpus warm done - the leg-1 cost is NOT the tier's starting state (that is now deterministic); the quiet-window battery pins the residual (first-leg page faults on the sampled shapes, or the M1 park of the corpus conversations).

@@ -12506,3 +12506,33 @@ storage canon (reference updates in the same commit):
   fires under a forced 99999 GiB floor (`campaign/results/f401-boot-contract.out`).  py_compile clean.  The
   first engine read lands at the next boot: expected shape `engine RSS ~100-150 GiB (shmem ~60), MemAvailable
   vs the 24 GiB floor` - the certified-good boots' readings become the reference band for the certification.
+
+## F-402 — the diagnostic boots: F-395/F-397/F-400/F-401 verified live, and what they exposed (2026-11-19, 16:17)
+
+- **Three diagnostic boots, load-disclosed** (boot 1 at load 12.9-13.9, boots 2-3 at 8.5-11.7 - the operator's
+  own work; NO speed verdict is claimed, the quiet-window interleave remains the owed proof).  Evidence:
+  `campaign/results/f400-live.out`.
+- **F-395 live:** `RAM to keep free: 24.00 GiB (STRATA_RAM_KEEP_GIB)` on every boot; the resident copy 37.86 GiB
+  unchanged on a clean box (162 GiB available minus the 24 floor still covers the whole complement - the floor
+  costs nothing when the box is clean, exactly as designed).
+- **F-400 live:** `prewarm: corpus warm: 3 prompt(s) x 600 tokens at temperature 0 in 15 s / 11 s - the tier's
+  starting state is deterministic` on every boot; the boot fingerprint IDENTICAL across all three boots
+  (`f22e85411ce4aa82 slots=9900 verified=49`); /v1/status carries `prewarm.corpus_prompts`.
+- **F-401 live - and it already pays:** the boot contract line landed real numbers and EXPOSED VARIANCE the old
+  instrumentation could not see: shmem at READY was **25.0 GiB on boot 1 vs 62.9 on boots 2-3** under the same
+  fingerprint.  The READY sample is a moving moment (the KV pool and the elastic slot arenas materialize after
+  it); a post-prewarm second sample is the next instrument, not a new mystery - the line exists precisely to
+  make this visible per boot.
+- **F-397 live (the flag armed for one diagnostic boot, then the standing config restored, git-clean):** the
+  rewind skip fires on the agent shape - `skip parking (the rewind keeps 2971 of 3097 tokens live; 126 past the
+  resume point are not kept)` - and the follow-up turn ran **0.73 s against the original turn's 1.84 s**.  A
+  first shape (short prompt, longer answer) correctly PARKED: the half rule (the shared prefix must be the bulk)
+  is doing its job.  Adoption (the flag in the standing recipe) remains a measured battery decision.
+- **Finding 4, the next thread:** the first measured leg is ~15-20% below legs 2-3 on EVERY boot even with the
+  corpus warm done - so the leg-1 cost is NOT the tier's starting state (that is now deterministic).  The
+  quiet-window battery pins the residual: first-leg faults on the sampled shapes, or the M1 request parking the
+  corpus conversations.
+- **Operational note:** the stop path recovered fully each time (MemAvailable back to 171-172 GiB, GPU to the
+  operator's ~1 GiB baseline).  One process-handling footgun re-confirmed: a hand-rolled `pkill -f` with the
+  pattern in the caller's own command line signals the caller (F-233's class) - use battery-lib's
+  cleanup_engine / reset-state, which own this.
