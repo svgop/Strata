@@ -13277,3 +13277,14 @@ the host dispatch; its prerequisite is a routing-decision characterization oracl
 existing `bit-check.py` + `tools/make_profile.py` infrastructure. Until that oracle is armed, the
 decomposition is compile-verified-only and I keep it out of the tree — the safe incremental work
 (env unification, geometry asserts, magic numbers, determinism) continues instead.
+
+## F-428 — M1 sweep: mtp.cpp (4 sites) (2026-11-20, 17:25)
+
+Four more env-read lambdas in the MTP drafter (`src/core/mtp.cpp`) collapsed to the owned module:
+`hi_prio` (nonzero_default_true / MTP_PRIORITY), `MTP_FULL_HEAD` + `MTP_TOP2` (one),
+`split_attn` (nonzero / QSA_SPLIT_ATTN). Byte-identical. Build + `env_flag_test` green.
+
+Sweep tally: 35 of ~130 sites done (generate.cpp 13, expert_source.cpp 8, verify.cpp 10, mtp.cpp 4).
+The remaining ~95 are kernel `.cu` files with higher convention variety (int tri-state, multi-line
+fallbacks, exact-equality) — parked as a lower-value tail, not worth further rounds at this
+effort-per-site ratio.
