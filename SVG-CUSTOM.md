@@ -13401,3 +13401,27 @@ Extracting them needs a 12-arg signature or a state struct — the doctrine's ov
 (law 16), and they are boot/capture code where the operator's interleaved gate is the only real
 oracle. `expert_pool_dispatch_multi` was decomposable because its phases were genuinely separable in time
 (admit → plan → CPU-run → finish); these are not. Left standing, with the reason on the record.
+
+## F-437 — verification gate V1: the F-432..F-436 extractions certified against the pre-session baseline (2026-11-20, 18:40)
+
+The CPU-runnable verification the refactor was scoped for. Method: full `ctest` on the current tree vs a
+worktree built at `8d56000c4~1` (the commit before the session's first extraction), plus direct binary
+comparisons of the failing tests.
+
+- **Deterministic failure set — IDENTICAL on baseline and current (6):** `expert_parity`, `pool_test`
+  (both abort at `pack/full/experts.bin`, a gitignored generated fixture absent from this box — both
+  binaries exit 2 with byte-identical messages, proven by running both directly); `tq_cpu_parity` ×2
+  (this ggml has no trellis types); `isa_guard_check` (pre-existing wide-ISA violation in
+  `tq_avx512.cpp`); `native_hadamard_test`. Zero new CPU-side failures from the extractions.
+- **GPU-side failures (17) — environmental, not code:** the serving engine holds 31,451 of 32,607 MiB
+  (730 free), so CUDA parity tests OOM at init. Proof of nondeterminism: two runs of the SAME current
+  binary produced different failure sets (24 vs 23; `dm_plan_parity` flipped in, `qsa_merge_daily_*`
+  flipped out). None of the 17 link `strata_engine` (they link `strata_kernels`/`strata_mmq`/
+  `strata_prefill`/runtime).
+- **Every test linking `strata_engine` — the library containing all five extractions — passes:**
+  `native_expert_parity` (all quant variants, synthetic packs through the real dispatch),
+  `expert_multi_test`, `file_expert_source_test`, `expert_layout_test`, `expert_cache_*`,
+  `expert_profile_*`, `pool_plan/pool_tasks/pool_affinity`, `share_rules`, `pcie_share_rule`.
+- **V2 (engine down):** the full GPU parity suite and the interleaved same-hour lane battery remain
+  the operator's window — deploy and battery are never one command (law 9). The baseline worktree was
+  removed at closeout.
