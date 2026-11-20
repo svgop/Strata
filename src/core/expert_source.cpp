@@ -3368,28 +3368,19 @@ bool FileExpertSource::copy_complement_layers(const std::vector<uint64_t>& offse
     return true;
 }
 
-bool FileExpertSource::pin_cache_complement(
-    const ExpertCache& cache, std::string& err, bool pin,
-    const std::vector<std::pair<int32_t, int32_t>>& additional_gpu_pairs, int64_t lend_from_slot,
-    uint64_t headroom_bytes, uint64_t budget_bytes, const std::vector<std::pair<int32_t, int32_t>>* rank) {
-    err.clear();
-    const auto pin_t0 = std::chrono::steady_clock::now();
-    if (base_ == nullptr) { err = "FileExpertSource: open the mapped experts before pinning a complement"; return false; }
-    if (complement_ready_) { err = "FileExpertSource: the cache complement is already pinned"; return false; }
-    if (!cache.valid()) { err = "FileExpertSource: the GPU expert cache is not open"; return false; }
-    if (cache.fills() != cache.resident()) {
-        err = "FileExpertSource: the GPU expert cache is not fully filled";
-        return false;
-    }
-    const cudaError_t sync = cudaDeviceSynchronize();
-    if (sync != cudaSuccess) {
-        err = std::string("FileExpertSource: GPU expert cache is not ready: ") + cudaGetErrorString(sync);
-        (void) cudaGetLastError();
-        return false;
-    }
-
-    // The GPU cache's experts, and the bytes each slot's expert takes here (for the lend region below).
-    const int64_t n_slots = cache.slots();
+// The planning phase of `pin_cache_complement`, extracted verbatim (F-442): the cache inventory scan,
+// the initial complement plan, the --resident-budget-gib lane (clamp, profile-ranked walk, the budget's
+// own lend tail), the RAM-headroom safety check, the single lend region, and the split stages' lend
+// regions.  Owns `budget`/`budget_physical`/`budget_commit` entirely (they die here).  Mutates
+// `offsets`/`bytes` (the plan), `budget_bytes` (clamped to the room) and `lend_from_slot` (a budget
+// turns the loan off); `keep_from`/`stage_lent`/`stage_lent_bytes`/`budget_lent`/`budget_lendable`
+// come back for the commit and the report.  Every refusal sets `err` and returns false.
+bool FileExpertSource::plan_cache_complement(
+    const ExpertCache& cache, int64_t n_slots, const std::vector<std::pair<int32_t, int32_t>>& additional_gpu_pairs,
+    int64_t& lend_from_slot, uint64_t headroom_bytes, uint64_t& budget_bytes,
+    const std::vector<std::pair<int32_t, int32_t>>* rank, std::vector<uint64_t>& offsets, uint64_t& bytes,
+    int64_t& keep_from, int64_t& stage_lent, uint64_t& stage_lent_bytes, int64_t& budget_lent,
+    int64_t& budget_lendable, std::string& err) const {
     std::vector<std::pair<int32_t, int32_t>> primary_gpu_pairs;
     std::vector<int32_t> pair_slot;
     std::vector<uint64_t> slot_bytes((size_t) std::max<int64_t>(n_slots, 0), 0);
@@ -3404,8 +3395,6 @@ bool FileExpertSource::pin_cache_complement(
             if (slot >= 0 && slot < n_slots) slot_bytes[(size_t) slot] = layer_blob_bytes_[(size_t) layer];
         }
     }
-    std::vector<uint64_t> offsets;
-    uint64_t bytes = 0;
     if (!detail::make_cache_complement_plan(n_layers_, n_expert_, layer_blob_bytes_, primary_gpu_pairs,
                                             additional_gpu_pairs, offsets, bytes, err)) return false;
 #if defined(_WIN32)
@@ -3424,7 +3413,6 @@ bool FileExpertSource::pin_cache_complement(
     }
 #endif
     const bool what_fits = budget_bytes == kResidentWhatFits;   // #467: the soft mode's second try
-    int64_t budget_lent = 0, budget_lendable = 0;   // the lend region's slots kept by a budget (below), and its size
     uint64_t budget_physical = 0;   // #403: reuse the memory snapshot a budget was sized from
     uint64_t budget_commit = std::numeric_limits<uint64_t>::max();
     if (budget_bytes > 0) {
@@ -3554,7 +3542,6 @@ bool FileExpertSource::pin_cache_complement(
     // The prompt path's lend region: its slots' experts are streamed from here during a prompt and copied back into
     // their slots after it, so the ones that fit are kept here too (from the last slot down: a short prompt lends
     // only the last few).  The rest keep the mapped-file fallback.
-    int64_t keep_from = n_slots;
     if (lend) {
         keep_from = detail::choose_resident_keep_from(slot_bytes, bytes, budget, lend_from_slot);
         if (keep_from < 0) keep_from = n_slots;
@@ -3577,8 +3564,6 @@ bool FileExpertSource::pin_cache_complement(
     // 8192-token chunk spent 1.5 s of its 3.9 s on host staging (arena: 0.37 s).  The regions walk each
     // stage's highest slots first, as the borrowing does; the whole copy - complement and regions
     // together - stays within one budget, and experts past it keep the file fallback they had.
-    int64_t stage_lent = 0;
-    uint64_t stage_lent_bytes = 0;
     if (!stage_lend_regions_.empty()) {
         if (budget == std::numeric_limits<uint64_t>::max()) {   // #403: the one reading, taken now
             uint64_t physical = budget_physical, commit = budget_commit;
@@ -3597,7 +3582,40 @@ bool FileExpertSource::pin_cache_complement(
         if (stage_lent < 0) return false;
         stage_lent_bytes = bytes - before;
     }
+    return true;
+}
 
+bool FileExpertSource::pin_cache_complement(
+    const ExpertCache& cache, std::string& err, bool pin,
+    const std::vector<std::pair<int32_t, int32_t>>& additional_gpu_pairs, int64_t lend_from_slot,
+    uint64_t headroom_bytes, uint64_t budget_bytes, const std::vector<std::pair<int32_t, int32_t>>* rank) {
+    err.clear();
+    const auto pin_t0 = std::chrono::steady_clock::now();
+    if (base_ == nullptr) { err = "FileExpertSource: open the mapped experts before pinning a complement"; return false; }
+    if (complement_ready_) { err = "FileExpertSource: the cache complement is already pinned"; return false; }
+    if (!cache.valid()) { err = "FileExpertSource: the GPU expert cache is not open"; return false; }
+    if (cache.fills() != cache.resident()) {
+        err = "FileExpertSource: the GPU expert cache is not fully filled";
+        return false;
+    }
+    const cudaError_t sync = cudaDeviceSynchronize();
+    if (sync != cudaSuccess) {
+        err = std::string("FileExpertSource: GPU expert cache is not ready: ") + cudaGetErrorString(sync);
+        (void) cudaGetLastError();
+        return false;
+    }
+
+    // The GPU cache's experts, and the bytes each slot's expert takes here (for the lend region below).
+    const int64_t n_slots = cache.slots();
+    std::vector<uint64_t> offsets;
+    uint64_t bytes = 0;
+    int64_t keep_from = n_slots, stage_lent = 0, budget_lent = 0, budget_lendable = 0;
+    uint64_t stage_lent_bytes = 0;
+    if (!plan_cache_complement(cache, n_slots, additional_gpu_pairs, lend_from_slot, headroom_bytes, budget_bytes,
+                               rank, offsets, bytes, keep_from, stage_lent, stage_lent_bytes, budget_lent,
+                               budget_lendable, err))
+        return false;
+    const bool lend = lend_from_slot >= 0 && lend_from_slot < n_slots && additional_gpu_pairs.empty();
     void* arena = nullptr;
     const uint8_t* host = nullptr;
     const uint8_t* device = nullptr;

@@ -1084,6 +1084,17 @@ private:
     /// set.  The caller owns the arena and releases it when this returns false.
     bool copy_complement_layers(const std::vector<uint64_t>& offsets, uint64_t bytes, const uint8_t* host,
                                 std::string& err) const;
+    /// The planning phase of `pin_cache_complement` (F-442): inventory scan, initial plan, the
+    /// --resident-budget-gib lane (clamp + profile-ranked walk + the budget's lend tail), the RAM-headroom
+    /// safety check, the single lend region, and the split stages' lend regions.  Mutates `offsets`/`bytes`/
+    /// `budget_bytes`/`lend_from_slot`; `keep_from`/`stage_lent`/`stage_lent_bytes`/`budget_lent`/
+    /// `budget_lendable` return for the commit and the report.
+    bool plan_cache_complement(
+        const ExpertCache& cache, int64_t n_slots,
+        const std::vector<std::pair<int32_t, int32_t>>& additional_gpu_pairs, int64_t& lend_from_slot,
+        uint64_t headroom_bytes, uint64_t& budget_bytes, const std::vector<std::pair<int32_t, int32_t>>* rank,
+        std::vector<uint64_t>& offsets, uint64_t& bytes, int64_t& keep_from, int64_t& stage_lent,
+        uint64_t& stage_lent_bytes, int64_t& budget_lent, int64_t& budget_lendable, std::string& err) const;
     bool open_direct(std::string& why);
     /// Windows: experts.bin mapped again as `open` maps it (begin/end_startup_unbuffered).
     bool map_view(std::string& why);

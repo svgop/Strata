@@ -13520,3 +13520,30 @@ failure join, and the Win32 working-set trim — moved verbatim into
   `file_expert_source_test` incl. the budget+rank lane at :715, dispatch golden ×2, cache/layout/
   profile/vmm/ple/conversation set). No engine binary rebuilt yet — V2 below.
 - Rollback: `git revert` of this commit (pure extraction, no env, no behavior change).
+
+## F-442 — pin_cache_complement cut 2: the plan phase extracted (2026-11-20, 20:1x)
+
+The decision logic — 206 lines — moved verbatim into private
+`FileExpertSource::plan_cache_complement(...) const`: the cache inventory scan (`primary_gpu_pairs`/
+`pair_slot`/`slot_bytes`), the initial `make_cache_complement_plan`, the Win32 working-set trim, the
+`--resident-budget-gib` lane (clamp, profile-ranked walk, the budget's own lend tail,
+`lend_from_slot = -1`), the RAM-headroom safety check with its refusal, the single lend region
+(`choose_resident_keep_from` + core re-plan), and the split stages' lend regions
+(`append_stage_lend_regions`).  `budget`/`budget_physical`/`budget_commit` die inside the helper.
+
+- **Extraction diff (script, vs F-441):** 206 lines in, 202 out; the only changes are the 7 output
+  declarations becoming reference parameters, one declaration relocated to the helper's first line,
+  and the added `return true;`.  Return-path audit (the F-441 law) run BEFORE compiling: 8 exits, all
+  value-returning, `return true` last.
+- The caller now reads: guards → sync → plan → `lend` → allocation organ → copy → checksum → commit →
+  report.  `pin_cache_complement` is down to ~500 lines with two of its three phases named.
+- **Banked (law 8): `conversation_snapshot_test` flakes on this box same-binary** — "A/B/A byte-exact
+  K/V and indexer state" failed 2/3 runs on the F-442 tree AND 1/4 on the isolated F-441 baseline
+  rebuild (same source, no complement path touched — the test links `strata_engine` but never calls
+  `pin_cache_complement`).  This extends F-437's same-binary instability record with a named test and
+  a ~30-50% rate.  Re-open condition: profile the snapshot's A/B/A window for a race (KV restore vs a
+  background thread); a byte-exact contract that intermittently fails is a determinism suspect in the
+  snapshot seam itself, independent of this refactor.
+- **Gate:** 14/14 engine-linked ctests PASS (the flake re-confirmed pre-existing by baseline
+  isolation, not counted).  Warning parity unchanged (2 pre-existing in this TU).
+- Rollback: `git revert` of this commit.
