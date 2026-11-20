@@ -13030,3 +13030,17 @@ current layer's GPU execution.  Wrong guesses cost idle CPU only; right guesses 
 term (the same cover the conc shape buys with rows).  Priced by the anatomy: up to 2.9 ms of the
 13.6 ms M1 window (~+21% ceiling), second to H5 (which multiplies rows instead of shrinking the
 serial stage).  The two compose: deeper drafts AND lookahead compute.
+
+### note (2026-11-20, 16:14) — the lookahead arm's falsifier already exists: STRATA_LOOKAHEAD_STATS
+
+The interface read (expert_source.hpp:292): RouterLookahead already runs host-side per layer
+(submit(layer, x, n_tok, host_res) - "predict and warm layer+1, never waits"), its consumers are
+ForesightSwap (VRAM pre-copy) and the IO prefetch, and **enable_stats/stats_score score every
+prediction against the experts the next layer really routes outside the GPU cache** - recall
+bands at top-k, k+4 and k+10, with predicted/skipped/busy counters.  THE FALSIFIER (law 4, one
+boot): STRATA_LOOKAHEAD_STATS=1 + probe leg -> the predictor's real recall on the CURRENT
+standing.  Low recall on the CPU-bound misses kills the speculative-pool arm free; high recall
+prices it up (the ceiling stands at ~the whole 2.9 ms CPU-expert term).  The integration seam if
+it lives: a third consumer beside ForesightSwap/IO - predicted-miss jobs handed to ExpertPool as
+speculative work, whose epoch-claim machinery expires stragglers naturally (a wrong prediction's
+output is simply never consumed).  Queued behind the card with the depth re-test.
