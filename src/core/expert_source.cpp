@@ -4915,6 +4915,8 @@ void expert_pool_dispatch_multi(ExpertDispatch& d, const float* x_f, const int32
         P.counts[0] = groups;
         P.counts[1] = entries;
         P.counts[2] = fetches;
+        if (d.fetch_admit > 0 && P.dst2 != nullptr)
+            for (int q = 0; q < fetches; ++q) P.dst2[q] = 0;   // ADAPT_FETCH step 3a: staging until the admission fills a slot
         std::atomic_thread_fence(std::memory_order_seq_cst);
         pt("publish", fetches);
         if (P.publish) P.publish(P.ctx);

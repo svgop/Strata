@@ -7131,6 +7131,15 @@ int main(int argc, char** argv) {
         drive.d.cache_base = (const uint8_t*) xcache.device_slot(0);
         drive.d.cache_blob = (int64_t) strata::kernels::cpu::expert_layout().max_blob;
         drive.d.cache_slot_off = xcache.slot_offsets();
+        // ADAPT_FETCH (port step 3a, upstream 0.2.16): the knobs ride the env; the RANK/PICK and the
+        // res_mut wiring are step 3b - with res_mut null the admission stays inert whatever the env says.
+        {
+            static const int v = [] { const char* e = std::getenv("STRATA_ADAPT_FETCH");
+                                      return e ? std::max(0, std::min(2, std::atoi(e))) : 0; }();
+            drive.d.fetch_admit = v;
+            if (const char* m = std::getenv("STRATA_ADAPT_FETCH_MIN")) drive.d.fetch_min = (float) std::atof(m);
+            if (const char* m2 = std::getenv("STRATA_ADAPT_FETCH_MARGIN")) drive.d.fetch_margin = (float) std::atof(m2);
+        }
         drive.d.hit_scratch = hit_scratch;
         drive.d.parts_out = d_parts;
         drive.d.hit_out = d_hit_out;

@@ -555,6 +555,18 @@ struct ExpertDispatch {
     /// of what the device hit path reads.  When set, the pool leaves a resident expert's row at zero (the GPU
     /// computes it) without any `Launch` callback.
     const int32_t* host_res = nullptr;
+    /// ADAPT_FETCH (port step 3, from upstream 0.2.16): the MUTABLE residency table the admission swaps write
+    /// (null = admission inert); the usage-ranked fetched misses land straight in freed slots as they stage.
+    /// The knobs ride STRATA_ADAPT_FETCH (0 off - the shipped default, 1 beside the tier's copies, 2 instead),
+    /// MIN and MARGIN (defaults 1 and 0.5).
+    int32_t* res_mut = nullptr;
+    int fetch_admit = 0;                     ///< STRATA_ADAPT_FETCH's value on this session
+    float fetch_min = 1.0f;                  ///< a fetched miss admits only at use >= this
+    float fetch_margin = 0.5f;               ///< ... and only when it out-ranks its victim by this
+    std::vector<uint8_t> fetch_avail;        ///< per-layer: a fetch flew (the admission may pay here)
+    std::vector<uint8_t> fetch_mark;         ///< per-expert scratch: this window routes it
+    std::vector<uint8_t> in_flight;          ///< per-(layer,expert): an admission's fetch has not landed
+    int64_t fetch_admitted = 0;              ///< counter, for the driver's report
     /// Plan v0.3 P4: split every expert by rows across the pool's threads (default on; A/B `--no-split-rows`).
     bool split_rows = true;
 
