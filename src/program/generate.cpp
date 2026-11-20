@@ -8567,11 +8567,12 @@ int main(int argc, char** argv) {
                          (long long) xcache.resident(),
                          o.adapt_every > 0 && o.adapt_swaps > 0 ? "exchange them with the GPU cache (no file reads)"
                                                                 : "off");
-        } else if (o.resident_soft) {
+        } else if (o.resident_soft && !strata::core::FileExpertSource::contract_refused()) {
+            // F-409: a DECLARED organ that refused never takes the soft degrade - the boot exits below
             std::fprintf(stderr, "strata generate: WARNING: the resident RAM mode does not fit (%s); the experts the "
                                  "GPU does not hold are read from the model folder through the OS file cache "
                                  "(--mmap-experts), which is slower when the RAM cannot keep them\n", err.c_str());
-        } else if (o.resident_budget > 0) {
+        } else if (o.resident_budget > 0 && !strata::core::FileExpertSource::contract_refused()) {
             // #403: a RAM budget that cannot be kept is not a reason to stop - the experts it would have held are
             // read from the files like the ones outside it (pin_cache_complement leaves nothing half-built)
             std::fprintf(stderr, "strata generate: WARNING: the RAM budget (--resident-budget-gib) cannot be kept (%s); "
@@ -8579,6 +8580,7 @@ int main(int argc, char** argv) {
                                  "(--mmap-experts), which is slower\n", err.c_str(),
                          src.unbuffered() ? "with unbuffered I/O" : "through the OS file cache");
         } else {
+            // the hard exit: a real failure, or (F-409) a declared organ that refused - a contract is a contract
             std::fprintf(stderr, "strata generate: CPU expert residency: %s\n", err.c_str());
             return 1;
         }

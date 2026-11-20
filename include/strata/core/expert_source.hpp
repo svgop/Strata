@@ -769,6 +769,11 @@ public:
     const char* complement_backing() const { return complement_backing_; }
     bool complement_ready() const { return complement_ready_; }
     uint64_t locked_bytes() const { return complement_locked_; }
+
+    /// F-409: true once a DECLARED organ (STRATA_COMPLEMENT_BACKING) refused to be honored - the
+    /// process-global contract-refusal flag.  The boot's resident-mode soft fallbacks (mmap-experts,
+    /// the RAM budget) consult it: a declared organ never degrades, the engine exits instead.
+    static bool contract_refused() { return contract_refused_.load(std::memory_order_acquire); }
     /// Lend-region slots whose experts the compact copy holds (the last ones of the cache).
     int64_t resident_lent_slots() const { return complement_lent_slots_; }
 
@@ -1199,6 +1204,7 @@ private:
     bool complement_partial_ = false;         ///< CS-T: only the first complement_pin_limit_ bytes are registered
     bool complement_registered_ = false;      ///< the arena is ordinary memory registered with cudaHostRegister (not cudaHostAlloc)
     const char* complement_backing_ = "pageable";   ///< F-404: which memory organ holds the copy (see complement_backing)
+    static std::atomic<bool> contract_refused_;     ///< F-409: set by a declared organ's refusal (see contract_refused)
     uint64_t complement_pin_limit_ = 0;
     uint64_t complement_lock_off_ = 0;        ///< the working-set lock covers [lock_off, lock_off + locked)
     bool complement_ready_ = false;

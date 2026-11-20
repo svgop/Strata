@@ -77,6 +77,8 @@
 
 namespace strata::core {
 
+std::atomic<bool> FileExpertSource::contract_refused_{false};   // F-409: set when a declared organ refuses
+
 namespace detail {
 
 bool cgroup_available_bytes(uint64_t limit, const CgroupMemoryStat& stat, uint64_t& bytes) {
@@ -3522,6 +3524,10 @@ bool FileExpertSource::pin_cache_complement(
             return v != nullptr && std::atof(v) > 0 ? (uint64_t) (std::atof(v) * 1073741824.0)
                                                      : std::max<uint64_t>(headroom_bytes, 2ull << 30);
         }();
+        // F-404: the declared organ (hoisted: the F-409 refusals below run outside the Linux guard block)
+        const char* const backing_env = std::getenv("STRATA_COMPLEMENT_BACKING");
+        const bool want_hostalloc = backing_env != nullptr && std::strcmp(backing_env, "hostalloc") == 0;
+        const bool want_paced = backing_env != nullptr && std::strcmp(backing_env, "paced") == 0;
 #if defined(__linux__)
         if (pin) {
             static const int guard = [] {
@@ -3534,15 +3540,18 @@ bool FileExpertSource::pin_cache_complement(
             // organs, and the measured speed splits with them (driver-pinned maxima 204-240 against paced 137-195,
             // same battery, load-disclosed).  STRATA_COMPLEMENT_BACKING declares it instead:
             //   hostalloc - the one-shot cudaHostAlloc path, the measured gold organ (the banked 224.6 boots'
-            //               class).  The driver's own allocation failure is the guard, and the existing
-            //               refusal chain (refused -> pageable/locked) still holds below it.
-            //   paced     - the steps-and-register path, forced.
-            //   unset     - the sampled heuristic, unchanged (today's behaviour).
-            static const char* const backing_env = std::getenv("STRATA_COMPLEMENT_BACKING");
-            const bool want_hostalloc = backing_env != nullptr && std::strcmp(backing_env, "hostalloc") == 0;
-            const bool want_paced = backing_env != nullptr && std::strcmp(backing_env, "paced") == 0;
+            //               class).  F-409: a declaration is a CONTRACT - if the driver refuses it, the boot
+            //               refuses (no fallback to a slower organ); the refusal names bytes, free RAM and the
+            //               driver's error.
+            //   paced     - the steps-and-register path, forced; the same contract: the WHOLE complement
+            //               registered or the boot refuses.
+            //   unset     - the sampled heuristic, unchanged (today's behaviour, fallbacks and all - the
+            //               documented rollback).
             uint64_t free_now = 0;
-            if (guard == 2 || want_paced) {
+            if (want_hostalloc) {
+                // F-409: a declaration outranks the knobs - neither guard=2's paced walk nor the
+                // hugepage-pool conversion below overrides a declared organ.
+            } else if (guard == 2 || want_paced) {
                 paced = true;
                 if (want_paced)
                     std::fprintf(stderr, "FileExpertSource: STRATA_COMPLEMENT_BACKING=paced: the complement takes "
@@ -3571,7 +3580,7 @@ bool FileExpertSource::pin_cache_complement(
         // original T35 C2 note kept the one-shot path because one cudaHostRegister over a THP mapping
         // stalled boots for minutes (100% CPU spin); the pool route is different: 2 MiB pages fault
         // BEFORE the registration, the composition the UD expert arena proves at 39.4 GiB scale.
-        if (pin && !paced && strata::platform::hugepage_arenas_enabled() &&
+        if (pin && !paced && !want_hostalloc && strata::platform::hugepage_arenas_enabled() &&
             strata::platform::huge_pool_covers((size_t) bytes)) {
             paced = true;
             std::fprintf(stderr, "FileExpertSource: STRATA_HUGEPAGE_ARENAS=1: the complement takes the paced "
@@ -3603,6 +3612,27 @@ bool FileExpertSource::pin_cache_complement(
                 arena = nullptr;
             }
             }
+        }
+        // F-409 THE DECLARED ORGAN IS A CONTRACT (operator ruling, 2026-11-20): a declared backing that
+        // cannot be honored REFUSES the boot - it never falls back to a slower organ.  A silent
+        // degradation is a contract that does not exist; the refusal names the bytes, the free RAM and
+        // the driver's own error so the operator can act.
+        if (want_hostalloc && !pinned_ok) {
+            uint64_t free_at_refusal = 0;
+            (void) free_memory_bytes(free_at_refusal);
+            char msg[440];
+            std::snprintf(msg, sizeof msg,
+                          "FileExpertSource: STRATA_COMPLEMENT_BACKING=hostalloc: the declared organ was REFUSED - "
+                          "no fallback taken (%s); wanted %.2f GiB page-locked, %.2f GiB free, %.2f GiB reserve floor. "
+                          "Free RAM, lower STRATA_RAM_KEEP_GIB, or unset the declaration for the legacy heuristic.",
+                          note.empty() ? "cudaHostAlloc failed" : note.c_str(),
+                          (double) bytes / 1073741824.0, (double) free_at_refusal / 1073741824.0,
+                          (double) pace_reserve / 1073741824.0);
+            err = msg;
+            std::fprintf(stderr, "%s\n", msg);
+            log_complement_memory("after a refused declared organ", bytes);
+            contract_refused_.store(true, std::memory_order_release);   // F-409: the boot must not degrade
+            return false;
         }
         if (arena == nullptr) {
             if (!note.empty()) {
@@ -3731,6 +3761,21 @@ bool FileExpertSource::pin_cache_complement(
                                       populate_pass ? "one MADV_POPULATE_WRITE pass" : "paced steps");
                     note += std::string(note.empty() ? "" : "; ") + msg;
                     if (stop != nullptr) std::fprintf(stderr, "FileExpertSource: %s\n", msg);
+                    if (want_paced && partial_pin < bytes) {   // F-409: the declared organ is a contract
+                        char rmsg[440];
+                        std::snprintf(rmsg, sizeof rmsg,
+                                      "FileExpertSource: STRATA_COMPLEMENT_BACKING=paced: the declared organ was REFUSED - "
+                                      "no fallback taken (%s); %.2f of %.2f GiB obtained. Free RAM, lower "
+                                      "STRATA_RAM_KEEP_GIB / STRATA_PIN_RESERVE_GIB, or unset the declaration.",
+                                      stop != nullptr ? stop : "the registration fell short",
+                                      (double) partial_pin / 1073741824.0, (double) bytes / 1073741824.0);
+                        err = rmsg;
+                        std::fprintf(stderr, "%s\n", rmsg);
+                        log_complement_memory("after a refused declared organ", bytes);
+                        contract_refused_.store(true, std::memory_order_release);   // F-409: the boot must not degrade
+                        release();
+                        return false;
+                    }
                 } else if (budget_bytes > 0 && partial_on) {
                     const uint64_t step = 2ull << 30;
                     for (uint64_t want = std::min(bytes, pin_cap); want >= step; want = want > step ? want - step : 0) {

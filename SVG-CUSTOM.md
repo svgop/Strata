@@ -12713,3 +12713,31 @@ storage canon (reference updates in the same commit):
   never recorded; labels hold peaks 240.0/216.5/303.5) — they plotted as a dive to zero since
   Nov 10.  Converted to lane=note annotations; chart rebuilt and READ: solo means 216.3 -> 223.6 ->
   220.6 (within noise), record diamond 228.7 on top.
+
+## F-409 — the declaration is a contract: a refused organ exits, it never degrades (operator ruling, 2026-11-20, 13:30)
+
+- **The ruling (operator):** a declared organ (STRATA_COMPLEMENT_BACKING=hostalloc|paced) that cannot
+  be honored must FAIL THE BOOT with the issue in the log - never fall back to a slower method.  A
+  silent (or even loud) degradation is a contract that does not exist.
+- **The source-level refusals (expert_source.cpp):** declared hostalloc that does not end
+  `pinned_ok` refuses with bytes/free-RAM/reserve-floor/the driver's error, before the pageable
+  fallback; declared paced that registers less than the whole complement refuses with the stop
+  reason and the obtained/wanted split, after unwinding the partial registration.  The declaration
+  now also OUTRANKS the knobs: neither STRATA_PIN_GUARD=2's paced walk nor the hugepage-pool
+  conversion overrides a declared organ.
+- **The retest caught a SECOND fallback layer (law 14's own lesson, live):** the first build's
+  refusal fired correctly - and the ENGINE absorbed it: `resident_soft` downgraded the whole boot to
+  --mmap-experts (health "ok", serving cold, the slowest organ class).  Exactly the behavior the
+  ruling forbids, one level up.  Fixed with `FileExpertSource::contract_refused_` (process-global,
+  set by both refusal sites): the resident-mode soft branches (mmap-experts, the RAM budget) are
+  gated on it, and a refused contract routes to the hard exit (`return 1`).
+- **Verified on the live system:** (a) the standing boot unchanged - fingerprint
+  f22e85411ce4aa82, `backing: driver-pinned`, health ok; (b) the forced refusal
+  (declared paced + STRATA_PIN_RESERVE_GIB=185, an impossible floor) - BOTH sizing attempts
+  (45.53 then 38.58 GiB) refused with full diagnostics and the engine took the HARD EXIT
+  (`strata generate: CPU expert residency: ... REFUSED ...` then process death) - no mmap
+  degrade, no degraded serving, health never came up.  Evidence: `campaign/results/f409-refusal.out`.
+  The sizing ladder's retry-with-smaller is sizing adaptation, not an organ swap: each attempt
+  honored the contract or refused.
+- **Rollback:** engine/strata.pre-f409; env unset (STRATA_COMPLEMENT_BACKING=) = the legacy sampled
+  flip WITH its fallbacks - the documented rollback, unchanged.
