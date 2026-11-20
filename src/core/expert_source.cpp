@@ -1,6 +1,5 @@
 // src/core/expert_source.cpp - the adapter.  See the header for the three clauses of the contract.
 #include "strata/core/expert_source.hpp"
-#include "strata/core/env_flag.hpp"
 #include "strata/core/foresight_swap.hpp"
 #include "strata/core/on_device.hpp"
 #include "strata/platform/aux_cpus.hpp"
@@ -4686,7 +4685,7 @@ void expert_pool_dispatch_multi(ExpertDispatch& d, const float* x_f, const int32
     if (d.job_of.size() != (size_t) d.n_expert) d.job_of.assign((size_t) d.n_expert, (int16_t) -1);
     else std::fill(d.job_of.begin(), d.job_of.end(), (int16_t) -1);
     if (d.jobs_multi.size() < (size_t) (n_tok * k)) d.jobs_multi.resize((size_t) (MAXT * k));
-    static const bool ptrace = strata::env::present("STRATA_POOL_TRACE");
+    static const bool ptrace = std::getenv("STRATA_POOL_TRACE") != nullptr;
     auto pt = [&](const char* what, long long a = -1) {
         if (ptrace) { std::fprintf(stderr, "pool trace: layer %lld %s %lld\n", (long long) d.layers, what, a); std::fflush(stderr); }
     };
@@ -4726,8 +4725,8 @@ void expert_pool_dispatch_multi(ExpertDispatch& d, const float* x_f, const int32
         // F-225: the formal 3v3 (planarm/planctl r1-r3) put the onepass arm at M1 -6.9% vs the old scan
         // (pair/conc in-band), so the default is OFF again; the 213-215 boots it had been credited with
         // were the session warm trend - round 3 cleared 208.6-216.7 on BOTH arms.  =1 re-arms it.
-        static const bool plan_onepass = strata::env::nonzero("STRATA_PLAN_ONEPASS");
-        static const bool plan_diff = strata::env::nonzero("STRATA_PLAN_DIFF");
+        static const bool plan_onepass = [] { const char* v = std::getenv("STRATA_PLAN_ONEPASS"); return v != nullptr && std::atoi(v) != 0; }();
+        static const bool plan_diff = [] { const char* v = std::getenv("STRATA_PLAN_DIFF"); return v != nullptr && std::atoi(v) != 0; }();
         constexpr int kIdPlanIds = 1024;
         static thread_local int32_t s_first[kIdPlanIds], s_gid[kIdPlanIds];
         static thread_local uint32_t s_stamp[kIdPlanIds];
@@ -4839,14 +4838,14 @@ void expert_pool_dispatch_multi(ExpertDispatch& d, const float* x_f, const int32
         // PCIe staging it cannot know about (its counts[2] is 0), so the pool must not route a miss to the copy
         // engine under it - every miss runs on the CPU.  v1 keeps the A/B bit-identical at --pcie-frac 0; a
         // device-side PCIe share is the v2.
-        static const bool plan_partial = strata::env::nonzero("STRATA_PLAN_PARTIAL");
+        static const bool plan_partial = [] { const char* v = std::getenv("STRATA_PLAN_PARTIAL"); return v != nullptr && std::atoi(v) != 0; }();
         // STRATA_PCIE_BALANCE (opt-in, #1548): the count comes from the measured CPU and GPU costs instead of the share
         const bool pcie_ok = !plan_partial && (d.pcie_num > 0 || d.pcie_model.on) && d.src->pcie_layer(d.layers);
         int m = pcie_ok ? d.pcie_model.pick(nmiss, (nmiss * d.pcie_num) >> 8) : 0;
         // STRATA_PCIE_MIN1 (opt-in): the share rounds to 0 for 1-2 misses per layer, so the PCIe lane idles on the typical
         // decode step; with >= 2 misses give it at least one (the last in routing order).  It only flies if its blob is
         // pinned (the fetch below checks), else it stays a CPU miss exactly as before.  Read once.
-        static const bool pcie_min1 = strata::env::nonzero("STRATA_PCIE_MIN1");
+        static const bool pcie_min1 = [] { const char* v = std::getenv("STRATA_PCIE_MIN1"); return v && std::atoi(v) != 0; }();
         if (pcie_min1 && pcie_ok && m < 1 && nmiss >= 2) m = 1;
         int miss_rank = 0, groups = 0, entries = 0, fetches = 0;
         GpuPlanSink& P = *d.plan;
@@ -4993,10 +4992,10 @@ void expert_pool_dispatch_multi(ExpertDispatch& d, const float* x_f, const int32
             for (int64_t i = 0; i < n; ++i) if (d.remote[r]->owns(i)) kind[i] = 2;
         }
     }
-    static const bool dec_batch = strata::env::nonzero_default_true("STRATA_DEC_BATCH");
+    static const bool dec_batch = [] { const char* v = std::getenv("STRATA_DEC_BATCH"); return v == nullptr || std::atoi(v) != 0; }();
     // the GPU's copy_rows_from_mapped zeroes the rows it computed itself (dec_batch); STRATA_VERIFY_DEVICE_PLAN's
     // copy_or_zero_from_mapped copies every row, so there the host still zeroes them
-    static const bool device_plan = strata::env::nonzero("STRATA_VERIFY_DEVICE_PLAN");
+    static const bool device_plan = [] { const char* v = std::getenv("STRATA_VERIFY_DEVICE_PLAN"); return v != nullptr && std::atoi(v) != 0; }();
     const bool gpu_zeroes_hits = (d.plan != nullptr && n <= kMaxWindowEntries && n <= d.plan->cap && dec_batch && !device_plan);
     bool any_cpu = false;
     for (int64_t i = 0; i < n; ++i)
@@ -5752,7 +5751,7 @@ bool ArenaExpertSource::open(const std::string& pack_dir, int64_t n_layers, int6
 #if defined(_WIN32)
     static const bool arena_mmap = false;   // POSIX mmap/madvise: Linux only for now
 #else
-    static const bool arena_mmap = strata::env::one("STRATA_ARENA_MMAP");
+    static const bool arena_mmap = [] { const char* v = std::getenv("STRATA_ARENA_MMAP"); return v && v[0] == '1'; }();
     if (arena_mmap) {
         const uint64_t file_bytes = want + (uint64_t) blob;
         uint64_t have = 0;

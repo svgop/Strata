@@ -1,6 +1,5 @@
 // src/core/mtp.cpp - see include/strata/core/mtp.hpp.
 #include "strata/core/mtp.hpp"
-#include "strata/core/env_flag.hpp"
 #include "strata/core/pin_budget.hpp"
 #include "strata/kernels/qsa_prompt_attn.hpp"
 #include "strata/core/coupled_draft.hpp"
@@ -491,7 +490,7 @@ bool MtpDrafter::load(const std::string& rt_dir, const ModelGeometry& g, Session
     // on stage 0 waits for it, so its stream gets the highest priority there (STRATA_MTP_PRIORITY=0: the default)
     bool prio = false;
 #if !defined(STRATA_USE_HIP) && !defined(STRATA_HIP_GFX906) && !defined(STRATA_GPU_METAL)   // (HIP, Metal: the default priority)
-    static const bool hi_prio = strata::env::nonzero_default_true("STRATA_MTP_PRIORITY");
+    static const bool hi_prio = [] { const char* v = std::getenv("STRATA_MTP_PRIORITY"); return v == nullptr || std::atoi(v) != 0; }();
     int prio_lo = 0, prio_hi = 0;
     if (force_on_ && hi_prio && cudaDeviceGetStreamPriorityRange(&prio_lo, &prio_hi) == cudaSuccess)
         prio = cudaStreamCreateWithPriority(&cs_, cudaStreamNonBlocking, prio_hi) == cudaSuccess;
@@ -562,13 +561,13 @@ namespace {
 // STRATA_MTP_FULL_HEAD=1 (a diagnostic): draft over the whole vocabulary (the main head itself) instead of
 // rt/draft_vocab.bin's subset - the reference head, to measure what the subset costs in acceptance
 bool full_head_env() {
-    static const bool on = strata::env::one("STRATA_MTP_FULL_HEAD");
+    static const bool on = [] { const char* v = std::getenv("STRATA_MTP_FULL_HEAD"); return v && v[0] == '1'; }();
     return on;
 }
 }  // namespace
 
 bool MtpDrafter::top2_env() {
-    static const bool on = strata::env::one("STRATA_MTP_TOP2");
+    static const bool on = [] { const char* v = std::getenv("STRATA_MTP_TOP2"); return v && v[0] == '1'; }();
     return on;
 }
 
@@ -1104,7 +1103,7 @@ bool MtpDrafter::record_rest(int step_row, cudaStream_t cs, std::string& err) {
         const QsaAttnPools pools = qsa_attn_pools(st_);
         if (window_ > 0) window_ids(const_cast<int32_t*>(step), T, (int) window_, ident_, cap_, cs);
         // STRATA_QSA_SPLIT_ATTN=1: the draft layer's attention over its window, split the same way
-        static const bool split_attn = strata::env::nonzero("STRATA_QSA_SPLIT_ATTN");
+        static const bool split_attn = [] { const char* v = std::getenv("STRATA_QSA_SPLIT_ATTN"); return v != nullptr && std::atoi(v) != 0; }();
         if (!(split_attn && qsa_decode_attn_split(qcur_, pools, ident_, step, cap_, s, attn_scratch_, (uint64_t) attn_scratch_floats_, attn_, T, cs)))
         qsa_decode_attn_batch(qcur_, pools, ident_, step, cap_, s, attn_scratch_, attn_, T, cs);
         if (st_.kv_rot) fwht256_inplace_cuda(attn_, (int64_t) T * NH, cs);

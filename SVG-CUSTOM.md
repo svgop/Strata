@@ -13303,3 +13303,19 @@ declarations (a semantic refactor), which needs the boot oracle, not a verbatim 
 Build green. This closes the safe-cleanup lane: the high-value hardening is committed (F-419-F-429),
 and the remaining work — the god-module decomposition and the verification gate — is gated on the
 operator's engine boot (bit-check.py routing oracle + interleaved battery), now 4 rounds running.
+
+## F-431 — REVERT of the env_flag detour (2026-11-20, 17:54)
+
+Operator ruling: the env_flag module was the wrong trade — it ADDED a 50-line module + 81-line test
+and 4 build lines to *name* the existing truthiness inconsistency without removing it. It centralized
+the reading but kept all the conventions, so the "boot-state lottery" was unchanged and the tree grew
+~125 lines. That is complexity added, not removed; the mission is to clean and simplify.
+
+- Reverted F-422/F-423/F-424/F-425/F-426/F-428: `include/strata/core/env_flag.hpp`,
+  `src/core/env_flag_test.cpp`, the CMakeLists test target, and all 35 call sites across
+  `generate.cpp`, `expert_source.cpp`, `verify.cpp`, `mtp.cpp` restored byte-for-byte to the original
+  bespoke lambdas.
+- **Kept** (genuine hardening, no new module): F-419 audit+dossier, F-420 (per-window getenv hoist +
+  deterministic RNG), F-421 geometry asserts, F-427/F-429 magic-number fixes, F-430 duplicate-include
+  removal.
+- Build green. Net env detour: removed.
