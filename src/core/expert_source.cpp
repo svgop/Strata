@@ -4741,15 +4741,16 @@ static void plan_distinct_groups(const ExpertDispatch& d, const int32_t* ids, in
     *nmiss_out = nmiss;
 }
 
-void expert_pool_dispatch_multi(ExpertDispatch& d, const float* x_f, const int32_t* ids, int64_t n_tok, int64_t k,
-                                float* out) {
+// The admission checks + the lookahead warm, split out of expert_pool_dispatch_multi. Returns false
+// when the window is refused (d.failed set; the caller returns), true to proceed into the plan.
+static bool dispatch_begin(ExpertDispatch& d, const float* x_f, const int32_t* ids, int64_t n_tok, int64_t k) {
     using namespace strata::kernels::cpu;
-    if (d.failed) return;
+    if (d.failed) return false;
     if (n_tok < 1 || n_tok > MAXT) {
         d.failed = true;
         d.fail = "a verify window has more tokens than the multi-token expert kernel takes";
         d.fail_layer = d.layers;
-        return;
+        return false;
     }
     if (d.lookahead != nullptr) {
         if (d.lookahead->stats_on()) {
@@ -4762,9 +4763,16 @@ void expert_pool_dispatch_multi(ExpertDispatch& d, const float* x_f, const int32
         d.failed = true;
         d.fail = "a verify window routes more entries than the expert pool's window tables hold";
         d.fail_layer = d.layers;
-        return;
+        return false;
     }
     if ((int64_t) d.act_multi.size() < n_tok) d.act_multi.resize((size_t) MAXT);
+    return true;
+}
+
+void expert_pool_dispatch_multi(ExpertDispatch& d, const float* x_f, const int32_t* ids, int64_t n_tok, int64_t k,
+                                float* out) {
+    using namespace strata::kernels::cpu;
+    if (!dispatch_begin(d, x_f, ids, n_tok, k)) return;
     const ExpertLayout& lay = expert_layout();
     const bool native = lay.native;
     // F-359 STRATA_SHADOW_EXPERTS: armed, every CPU miss below computes from the shadow Q2_0 store - the

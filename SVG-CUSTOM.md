@@ -13335,3 +13335,14 @@ plan-bookkeeping block (T12-HOST #1's distinct/first-of/group-link pass) moved v
   expected two changes (arrays→params, lambda→function). Build green.
 - **Net:** the god-function loses ~89 lines; the module count is unchanged (one new static helper, no
   new file). This is subtraction, not addition.
+
+## F-433 — second decomposition step: admission checks extracted (2026-11-20, 17:57)
+
+The ~22-line admission block of `expert_pool_dispatch_multi` (the `d.failed` guard, the two window
+checks, the lookahead warm, the act-buffer resize) moved verbatim into `dispatch_begin()`, which
+returns false on refusal. The caller is now `if (!dispatch_begin(...)) return;` then straight into
+the plan.
+
+- Byte-identical logic (the two early-return bodies and the lookahead block moved as one).
+- Build green. The god-function now reads: begin → locals → plan (helper) → tail-skip → PCIe →
+  group dispatch, with two named phases gone from its body.
