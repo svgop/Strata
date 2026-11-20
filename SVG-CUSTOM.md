@@ -13091,3 +13091,47 @@ structure, not speed; not a port candidate for our lanes.  STRATA_SLOT_READ_WIDE
 SOLO PREFILL batching lever (multi-turn TTFT), a named arm for later, distinct from our decode
 starvation (F-414).  STRATA_ROUTE_WIN (one routing launch pair per layer) is graphed-away for us.
 The multi-card/link-aware prefill shares and the cgroup/container fixes are not our topology.
+
+## F-419 — structural & slowness forensic audit (read-only): the hardening mission's foundation (2026-11-20, 16:44)
+
+A full read-only audit for the untangle/simplify/harden mission, distinct from the performance
+dossiers. Method: four parallel lane dissections (prefill, decode, orchestration/boot, external
+sweep) + cross-cutting probes. Static analysis only — no measurement this pass. Full dossier:
+`campaign/research/STRUCTURAL-AUDIT-2026-11-20.md` (INDEX'd).
+
+- **The two invariants held throughout: nothing was modified except this journal + the dossier;
+  every finding is code-read, no lane was touched.**
+- **God-modules (severity A):** `main()` in `generate.cpp:2459-18739` is a ~16,280-line function with
+  116 includes (one duplicated `gfx_arch.hpp`); `Prefill::run_impl` is 2473 lines
+  (`prefill.cpp:2562-5034`, 14 lambdas + 2 threads + 1 async in one scope); `expert_pool_dispatch_multi`
+  is ~570 lines (`expert_source.cpp:4643-5210`); `post(l,grp)` is a ~190-line ~30-branch env-flag
+  matrix (`verify.cpp:2195-2381`); `Service._run` is ~534 lines (`server.py:5571-6105`).
+- **Lane suspects (severity B):** the decode anchor is the serial `act_quant_q8_1` BETWEEN the two
+  parallel pool phases (`pool.cpp:1090-1092`, the F-414 term — `ms_multi_q` already prices it); the
+  per-layer doorbell round trip (`verify.cpp:3154-3244`); per-MoE-layer host round-trip on the default
+  MMQ prefill path (`prefill.cpp:3735→3909`); quadratic indexer block-scoring O(T·pos/4)
+  (`qsa_select.cu:201`). **Correction banked: attention is already fused flash-style — the quadratic
+  term is in sparse-attention SELECTION, not attention.**
+- **Boot-state lottery (severity C):** time-seeded sampling RNG — unseeded sampled requests seed Philox
+  from `steady_clock::now()` (`generate.cpp:15610-15611`), nondeterministic output per request, a direct
+  threat to the M3b exact-match canary; per-window `getenv("STRATA_LOOKUP_CHAIN_FIXED")` inside the
+  decode loop (`generate.cpp:18326`); a 3-way env-truthiness inconsistency (`""`/`"0"`/unset resolve
+  differently at `:184` vs `:336` vs `:368`) rooted in ~40 bespoke one-line env-helper lambdas
+  (`generate.cpp:178-370`); `STRATA_ROUTE_TAIL_SKIP=7` verified as a DELIBERATE owner-decision default
+  (not a hidden lottery — off for NVFP4, loud in-banner).
+- **Drift (severity D):** three duplicated decode loops (serial serve / batch-cohort / generate) with
+  slight drift; duplicated token-read loop + three request handlers in server.py; SYCL is a dpct mirror
+  (56 `.dp.cpp`) with thinner parity coverage (40) than CUDA (76); 708 tracked binary-extension files.
+- **Roofline:** decode is latency-bound (CPU-expert term + doorbell RTT), prefill is latency+compute
+  (host round-trip + indexer), serving host is GIL/syscall-bound (per-token SSE serialize+flush +
+  status_lock + ASCII-text token hop).
+- **External sweep converges with banked intel** (re-prices, doesn't re-discover): NVFP4/FP8 experts +
+  speculative prefetch and warp-specialized persistent decode are the real ports, both gated on whether
+  sm_120 exposes NVFP4/mxfp4 tensor-core formats — the one falsifier no source resolves; it corroborates
+  T35/T42/F-252. Citations in the dossier §4.
+- **Mikado tree + safety-net gaps (G1-G4) defined** in the dossier §5-6. Execution order: leaf utilities
+  (env unification M1, getenv hoist M2, geometry asserts M3) → safety nets (G1-G4) → god-module
+  decomposition (D1-D5) → consolidation (C1-C3) → clutter purge (P1-P2) → verification gate (V1-V3).
+- **Next concrete step (cheapest, zero-behavior):** M2 — hoist `generate.cpp:18326` (and `:18059`) to
+  `static const`, then M1 with the G1 Golden Master pinning the current truthiness matrix before any
+  refactor touches the 227 getenv sites.
