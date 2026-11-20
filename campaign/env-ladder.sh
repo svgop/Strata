@@ -43,15 +43,17 @@ boot_and_probe() {   # $1 = on|off, $2 = tag
   local ep; ep=$(pgrep -x strata | head -1)
   echo "[$2] env $VAR=$(tr '\0' '\n' < /proc/$ep/environ | sed -n "s/^$VAR=//p" | head -1)"
   grep -E ".{0,60}STRATA_SHARED_HOIST.{0,40}" $REPO/logs/custom-iq3_s.log 2>/dev/null | tail -2
+  uptime | awk -F'average:' '{print "[warm-discard] load:"$2}'
   .venv/bin/python campaign/probe-lane.py --port 8081 --label "$LABEL-$2-warm" 2>&1 \
     | tee "campaign/results/$LABEL-$2-warm.txt" | grep -E "^M1|^M2" | sed 's/^/[warm-discard] /'
   for l in 1 2 3; do
+    uptime | awk -F'average:' '{print "['"$LABEL-$2-$l"'] load:"$2}'
     .venv/bin/python campaign/probe-lane.py --port 8081 --label "$LABEL-$2-$l" 2>&1 \
       | tee "campaign/results/$LABEL-$2-$l.txt" | grep -E "^M1|^M2"
   done
 }
 
-for round in 1 2; do
+for round in $(seq 1 "${ROUNDS:-2}"); do
   echo "=== round $round: OFF ==="; cleanup_engine; boot_and_probe off "off$round"
   [ "$round" = 1 ] && [ "$BITS" = yes ] && .venv/bin/python campaign/bit-check.py "$LABEL-off"
   echo "=== round $round: ON ==="; cleanup_engine; boot_and_probe on "on$round"
@@ -62,20 +64,21 @@ cleanup_engine; cp /tmp/env-ladder-pre-run.bin engine/strata; nohup ./launch-cus
 for i in $(seq 1 100); do curl -s -m 3 http://127.0.0.1:8081/health 2>/dev/null | grep -q '"status": "ok"' && break; sleep 5; done
 wait_prewarm
 
-.venv/bin/python - "$LABEL" << 'PY'
+.venv/bin/python - "$LABEL" "${ROUNDS:-2}" << 'PY'
 import re, statistics as st, sys
-label = sys.argv[1]
+label, rounds = sys.argv[1], int(sys.argv[2])
 def lane(tag, l, pat):
     t = open(f'campaign/results/{label}-{tag}-{l}.txt').read()
     return float(re.search(pat, t).group(1))
 def boot(tag):
     return {k: st.mean([lane(tag, l, p) for l in (1, 2, 3)])
             for k, p in (('M1', r'M1 single-stream : ([\d.]+)'), ('pair', r'M2 pair          : ([\d.]+)'), ('conc', r'M2 6-conc        : ([\d.]+)'))}
-o1, n1, o2, n2 = boot('off1'), boot('on1'), boot('off2'), boot('on2')
-print(f"\noff1 {o1}\non1  {n1}\noff2 {o2}\non2  {n2}")
+offs = [boot(f'off{r}') for r in range(1, rounds + 1)]
+ons  = [boot(f'on{r}')  for r in range(1, rounds + 1)]
+for r in range(rounds):
+    print(f"off{r+1} {offs[r]}\non{r+1}  {ons[r]}")
 for lane in ('M1', 'pair', 'conc'):
-    d1 = 100 * (n1[lane] - o1[lane]) / o1[lane]
-    d2 = 100 * (n2[lane] - o2[lane]) / o2[lane]
-    print(f"{lane}: pairs {d1:+.1f}% / {d2:+.1f}%  mean {(d1 + d2) / 2:+.1f}%")
+    ds = [100 * (o[lane] - f[lane]) / f[lane] for f, o in zip(offs, ons)]
+    print(f"{lane}: pairs {' / '.join(f'{d:+.1f}%' for d in ds)}  mean {st.mean(ds):+.1f}%")
 PY
 echo "ENV LADDER DONE — lane binary restored from /tmp/env-ladder-pre-run.bin"
