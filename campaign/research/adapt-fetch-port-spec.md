@@ -39,10 +39,31 @@ the `pcie_mode == 2` staging machinery (`verify.cpp:2276-2281`). The port is exa
 
 1. Plan geometry + `sink_.dst2` plumbed but ALWAYS EMPTY (dst2 null) — no behavior change;
    bit-check green. The plan is a load-bearing layout: this step only WIDENS it.
+   **[LANDED 2026-11-20, commit 72a3fc058 — plan carries the dst2 column at both init sites,
+   GpuPlanSink owns the member; builds clean ecc0a3b5; proof owed with step 2 in one boot.]**
 2. `p_dst2` threading with a null default — `fetch_blobs`/`rebase_ptrs` signature grows a
    defaulted arg; the staged path behavior identical.
+   **[LANDED 2026-11-20, commit 8adb0a5aa — kernels carry the per-blob destination select
+   (dst2[k] != 0 ? the tier slot : staging, kd-cached per blob), wrappers + declarations
+   null-defaulted; builds clean b8153a66; the one boot proves 1+2 together.]**
 3. Pool-side rank/pick behind `STRATA_ADAPT_FETCH=0` (default off) — the env exists, the arm
    inert. `ADAPT_CHECKRES=1` boot verifies the residency table stays exact with the arm off.
+   **The complete anatomy (read at upstream 5125-5205, executes mechanically):**
+   - Dispatch fields to port: `fetch_admit` (int), `fetch_min`/`fetch_margin` (floats),
+     `fetch_avail` (per-layer flags), `fetch_mark` (per-expert scratch), `in_flight`
+     (per-layer-expert guard), `res_mut` (the MUTABLE residency table - distinct from host_res
+     if our fork's is read-only), `cache_base`/`cache_slot_off`/`cache_blob` (the VRAM cache
+     geometry), `fetch_admitted` (counter), `res_dirty`/`res_dirty_idx`, `fetch_log*`.
+   - Default `P.dst2[q] = 0` (staging) for all fetches when `fetch_admit > 0 && P.dst2`.
+   - The pick: candidates `cq` = fetched misses with `use[e] >= fetch_min` and not in-flight,
+     stable-sorted by usage desc; victims `vic` = resident experts the window does NOT route
+     (`res_mut >= 0`, `fetch_mark == 0`), kept least-routed-first via the insertion-swap.
+   - The admission (margin-gated swap): `use[e] >= use[v] + fetch_margin`, `P.dst2[q] =
+     cache_base + slot_off[slot]`, `res_mut[v] = -1; res_mut[e] = slot`, dirty-idx appended,
+     `in_flight` set for the layer-expert until the fetch lands.
+   - Our miss-pick rule today is POSITIONAL (the last m in routing order, `miss_rank >= nmiss-m`);
+     upstream's `fetch_on` pick is usage-ranked - compose per upstream (the rank picks, the
+     positional rule stays for the non-admitted tail).
 4. Arm on (=1): the parity harness + the battery (below).
 
 ## 4. Verification (the harness before the arm)
