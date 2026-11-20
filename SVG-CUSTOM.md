@@ -12769,3 +12769,34 @@ storage canon (reference updates in the same commit):
   nothing (port stays with the parent) — the parent's exit reaped it; port free, GPU 651 MiB
   baseline, no orphan processes, learned profile re-pinned from gold (md5 match).  The
   `strata-gpu-lock` helper at pid 6062 predates this battery (10:31) — system-owned, not ours.
+
+## F-411 — H1 decided by the missing instrument: the kernels are FAST, suspect #1 is falsified (2026-11-20, 13:55)
+
+- **The instrument (law 4 + law 11, built this round):** `bench/micro/moe_hit_sat.cu` — a standalone
+  saturation microbench that INCLUDES the engine's own `s2_expert_grouped.cu` (no copied kernels;
+  the owner law) and launches `gu_pair_kernel`/`down_pair_kernel` exactly as `launch_hit_*` do
+  (THREADS=256, one warp per row pair), no doorbell, no window machinery.  Modes: ROTATE (fresh
+  slots every iteration — DRAM-honest) vs HOT (same slots — the L2 ceiling), swept n_hits
+  13→3328, cudaEvent-timed, 4 warmup + 64 iterations per point.  ANCHOR: a grid-stride uint4
+  stream over the same 2.83 GB allocation.
+- **The anchor:** 1493 GB/s measured stream on the ~1790 GB/s part (83% — the machine's honest
+  read roof for this allocation; the datasheet number is not the comparator, the anchor is).
+- **The plateau (ROTATE, saturated n_hits ≥ 416):** gu 1445-1470 GB/s, down 1317-1334 GB/s,
+  combined ~1403-1470 GB/s — **95-98% of the anchor**.  The dp4a + `expand_codes` inner loop
+  keeps pace with a pure uint4 stream: the operator's binding suspicion (integer-dequant ALU
+  starvation) is FALSIFIED.  ROTATE and HOT converge at saturation (1470/1469) — the plateau is
+  DRAM-bound, not cache-flattered; the convergence is the instrument's self-validation.
+- **The verdict (the perf-hunt decision table, ≥600 GB/s branch):** suspect #1 DEMOTED; **H2
+  (the layout/kernel arm priced at M1 ×1.5-1.7) is killed before it was built** — one microbench,
+  zero engine risk.  The HOT mode adds: at live-like n_hits=52, gu reads 3601 GB/s L2-fed — the
+  live per-layer working set is L2-scale, so repetition already collects cache interest.
+- **The blob correction:** the expert blob is 1,382,400 B (2·FF·ROW_GU codes + H·ROW_D + scales),
+  not the dossier's 2.66 MB assumption — live unique bytes ≈ 48 × 13 × 1.38 MB ≈ **862 MB/window,
+  i.e. ~0.6 ms of kernel time at the measured 1400 GB/s, inside a ~9 ms GPU-reach wait**.  The
+  wall is the WAIT STRUCTURE around the kernels (doorbell/service serialization, the F-222 class),
+  not the kernels.  The queue reorders: doorbell/service structure succeeds suspect #1; H3
+  (F-391 calibration 3v3) and H5 (M3c) unchanged.
+- **Instrument notes:** tiny-n_hits points are conservative (launch overhead inflates them);
+  `pgrep -f` matched its caller's own command line once more (the F-409 lesson) — resolved by
+  `ps` on the pid; bench binary is scratch (/tmp), the source is the durable artifact.
+  Evidence: `campaign/results/f411-moe-hit-sat.txt`.

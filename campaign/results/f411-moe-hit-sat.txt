@@ -1,0 +1,25 @@
+# moe_hit_sat: blob=1382400 B (gu 921600 + down 460800), N_SLOTS=2048, ITERS=64, THREADS=256
+ANCHOR stream_read 2831155200 B in 1.896 ms -> 1493 GB/s (the part's achievable stream)
+SAT n_hits=  13 mode=ROTATE gu=1981 GB/s (0.006 ms) down=1418 GB/s (0.004 ms) gu+down=1749 GB/s
+SAT n_hits=  13 mode=HOT    gu=2564 GB/s (0.005 ms) down=1537 GB/s (0.004 ms) gu+down=2097 GB/s
+SAT n_hits=  26 mode=ROTATE gu=1447 GB/s (0.017 ms) down=1604 GB/s (0.007 ms) gu+down=1496 GB/s
+SAT n_hits=  26 mode=HOT    gu=3170 GB/s (0.008 ms) down=1766 GB/s (0.007 ms) gu+down=2506 GB/s
+SAT n_hits=  40 mode=ROTATE gu=1493 GB/s (0.025 ms) down=1391 GB/s (0.013 ms) gu+down=1457 GB/s
+SAT n_hits=  40 mode=HOT    gu=3502 GB/s (0.011 ms) down=1940 GB/s (0.009 ms) gu+down=2761 GB/s
+SAT n_hits=  52 mode=ROTATE gu=1550 GB/s (0.031 ms) down=1403 GB/s (0.017 ms) gu+down=1498 GB/s
+SAT n_hits=  52 mode=HOT    gu=3601 GB/s (0.013 ms) down=2018 GB/s (0.012 ms) gu+down=2855 GB/s
+SAT n_hits= 104 mode=ROTATE gu=1611 GB/s (0.059 ms) down=1218 GB/s (0.039 ms) gu+down=1455 GB/s
+SAT n_hits= 104 mode=HOT    gu=2601 GB/s (0.037 ms) down=2164 GB/s (0.022 ms) gu+down=2437 GB/s
+SAT n_hits= 208 mode=ROTATE gu=1491 GB/s (0.129 ms) down=1383 GB/s (0.069 ms) gu+down=1453 GB/s
+SAT n_hits= 208 mode=HOT    gu=1411 GB/s (0.136 ms) down=2075 GB/s (0.046 ms) gu+down=1579 GB/s
+SAT n_hits= 416 mode=ROTATE gu=1460 GB/s (0.263 ms) down=1317 GB/s (0.146 ms) gu+down=1409 GB/s
+SAT n_hits= 416 mode=HOT    gu=1445 GB/s (0.265 ms) down=1345 GB/s (0.142 ms) gu+down=1410 GB/s
+SAT n_hits= 832 mode=ROTATE gu=1449 GB/s (0.529 ms) down=1318 GB/s (0.291 ms) gu+down=1403 GB/s
+SAT n_hits= 832 mode=HOT    gu=1468 GB/s (0.522 ms) down=1340 GB/s (0.286 ms) gu+down=1423 GB/s
+SAT n_hits=1664 mode=ROTATE gu=1458 GB/s (1.052 ms) down=1330 GB/s (0.576 ms) gu+down=1413 GB/s
+SAT n_hits=1664 mode=HOT    gu=1448 GB/s (1.059 ms) down=1329 GB/s (0.577 ms) gu+down=1406 GB/s
+SAT n_hits=3328 mode=ROTATE gu=1470 GB/s (2.086 ms) down=1334 GB/s (1.150 ms) gu+down=1422 GB/s
+SAT n_hits=3328 mode=HOT    gu=1469 GB/s (2.088 ms) down=1334 GB/s (1.149 ms) gu+down=1421 GB/s
+# decision inputs: live n_hits ~13-40 per layer-launch; ANCHOR is the roofline;
+#   ROTATE at saturated n_hits decides ALU/BW vs issue-rate (perf-hunt table);
+#   the ROTATE->HOT and n_hits spread prices occupancy and L2 residency.
