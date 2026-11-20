@@ -1,8 +1,9 @@
-// The Golden Master for `expert_pool_dispatch_multi` - the verify-window expert dispatch the host
-// thread drives (generate.cpp:1250, its ONLY production caller; before F-438 no test executed it at
-// all).  F-432..F-436 split that god-function into dispatch_begin / plan_distinct_groups / plan_build
-// / plan_admit_fetch / cpu_miss_pipeline; this test freezes the seam those helpers form, on the real
-// CPU path, with a synthetic canonical pack:
+// The Golden Master for BOTH expert dispatch entry points, neither of which any test executed before
+// F-438: `expert_pool_dispatch_multi` (the verify-window path, generate.cpp:1250, its only production
+// caller) and `expert_pool_dispatch` (the single-token decode lane).  F-432..F-436 split the multi
+// god-function into dispatch_begin / plan_distinct_groups / plan_build / plan_admit_fetch /
+// cpu_miss_pipeline; this test freezes the seam those helpers form on the real CPU path, with a
+// synthetic canonical pack:
 //
 //   - the fingerprint (FNV-1a 64) is over the full `out` window after a fixed 8-token x 10-expert
 //     window with fixed activations, fixed routing (two resident experts, five misses, duplicates in
@@ -161,6 +162,11 @@ struct Run {
 // constant - re-record it there and note the box; the determinism and value assertions still hold.
 constexpr uint64_t kGoldenHash = 0xc90ded77662c664dull;
 
+// The single-token (decode-lane) dispatch's fingerprint, recorded the same day on 37e2d2cfe.  That
+// function is byte-identical before and after this session's extractions (verified by extraction and
+// diff against e0f4c57bc), so the pin's provenance is textual - no A/B rebuild was needed.
+constexpr uint64_t kSingleGoldenHash = 0xf37183119d4d14faull;
+
 std::vector<float> sentinel_window() {
     return std::vector<float>((size_t) (kTokens * kTop) * (size_t) H, -1.2345e33f);
 }
@@ -288,6 +294,38 @@ int main() {
         require(f.d.failed && std::strcmp(f.d.fail, "a routed expert id is out of range") == 0 &&
                     f.d.fail_expert == 999,
                 "the out-of-range id was not refused with its string");
+    }
+
+    // ---- the single-token (decode-lane) dispatch: graph-hits mode (host_res wired), residents
+    // zeroed by the host and owned by the GPU, misses computed into jobs
+    {
+        Run f(pool, src, host_res, sentinel_window());
+        expert_pool_dispatch((void*) &f.d, x_f.data(), w.ids.data(), nullptr, H, kTop, f.out.data());
+        require(!f.d.failed, std::string("single-token dispatch failed: ") +
+                                 (f.d.fail ? f.d.fail : "?"));
+        int zeroed = 0, computed = 0;
+        for (int64_t i = 0; i < kTop; ++i) {
+            const float* row = f.out.data() + (size_t) i * (size_t) H;
+            const bool zero = row[0] == 0.0f && row[(size_t) H - 1] == 0.0f;
+            const bool untouched = row[0] == -1.2345e33f && row[(size_t) H - 1] == -1.2345e33f;
+            const int32_t e = w.ids[(size_t) i];
+            if (e == 0 || e == 1) {
+                if (zero) ++zeroed;
+            } else if (!untouched)
+                ++computed;
+        }
+        require(zeroed == 2, "the host did not zero the GPU-owned rows");
+        require(computed == kTop - 2, "a single-token miss was never computed");
+        require(f.d.cache_hits == 2, "the hit counter is wrong");
+        require(f.d.cache_refused == kTop - 2, "the refused counter is wrong");
+        require(f.d.experts == kTop && f.d.layers == 1, "the single-token counters are wrong");
+        const uint64_t hs = fnv1a(f.out.data(), f.out.size() * sizeof(float));
+        std::fprintf(stderr, "  dispatch golden (single token): hash %016llx, 2 rows zeroed, %d computed\n",
+                     (unsigned long long) hs, computed);
+        std::fflush(nullptr);
+        require(hs == kSingleGoldenHash,
+                "the single-token fingerprint moved (or this is a new ISA: re-record "
+                "kSingleGoldenHash and note the box)");
     }
 
     std::printf("  dispatch golden: hash %016llx, %d resident rows kept, %d CPU rows computed\n",

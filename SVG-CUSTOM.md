@@ -13452,3 +13452,26 @@ byte-diff-verified but never *executed* by the suite.
   CPU-only configure silently skips the whole gated test block — the same trap F-437's baseline
   comparison fell into; recorded here so the next harness builds the baseline with CUDA on.)
 - ctest: `expert_dispatch_golden_test` PASS (0.02 s). Worktree removed at closeout.
+
+## F-439 — clutter purge: the tree is clean (negative result, banked); the single-token dispatch joins the Golden Master (2026-11-20, 18:57)
+
+**Part 1 — the systematic clutter sweep (mission phase 7) executed, nothing found:**
+
+| Class | Scope | Result |
+|---|---|---|
+| Dead file-local functions | 295 translation units (`static`/anon-ns, zero in-file references) | **0** |
+| `#if 0` blocks | first-party `src/**` | **0** |
+| Backup/orphan files | `*.bak/*.orig/*~/*.old/*.rej/*.tmp`, repo-wide | **0** |
+| Commented-out code runs | ≥6 consecutive code-shaped comment lines, `src/**` | **0** |
+
+The F-268/F-325 workspace laws evidently hold; the next agent should not re-run this sweep without a
+new artifact class to check. The one tracked ELF (`engine/strata-vision`, deliberate commit
+`a68fb702b`) remains the operator's keep/purge call.
+
+**Part 2 — `expert_pool_dispatch` (single-token decode lane) frozen:** it also had zero test callers.
+The golden test now drives it in graph-hits mode (host_res wired): 2 resident rows zeroed by the host
+and GPU-owned, 8 misses computed through `ExpertJob`s and `run_split`, counters (`cache_hits`=2,
+`cache_refused`=8, `experts`=10, `layers`=1), and the output fingerprint
+`kSingleGoldenHash = 0xf37183119d4d14fa`. Provenance: that function is **byte-identical before and
+after this session's extractions** (extraction-diff against `e0f4c57bc`), so the pin needed no A/B
+rebuild. Both hashes pass under ctest.
