@@ -4769,54 +4769,14 @@ static bool dispatch_begin(ExpertDispatch& d, const float* x_f, const int32_t* i
     return true;
 }
 
-void expert_pool_dispatch_multi(ExpertDispatch& d, const float* x_f, const int32_t* ids, int64_t n_tok, int64_t k,
-                                float* out) {
-    using namespace strata::kernels::cpu;
-    if (!dispatch_begin(d, x_f, ids, n_tok, k)) return;
-    const ExpertLayout& lay = expert_layout();
-    const bool native = lay.native;
-    // F-359 STRATA_SHADOW_EXPERTS: armed, every CPU miss below computes from the shadow Q2_0 store - the
-    // canonical kernels (run_split_multi) over `shadow::blob(layer, expert)` - instead of the native pack's
-    // blob.  The misses' outputs differ by the shadow's quantization, by design; the plan's hit/PCIe kinds,
-    // the GPU's share and every combine path read none of this.  Unset, `shadow` is false and nothing below
-    // takes a new branch: byte-identical.
-    const bool shadow = strata::core::shadow::armed();
-    if (native && d.nact_multi.size() < (size_t) MAXT * kNativeActBytes) d.nact_multi.resize((size_t) MAXT * kNativeActBytes);
-    // T18 (the iq4nl_nt SIGSEGV, 3 sightings under 6-stream load): `job_of` maps an expert id to its job for
-    // THIS call and was reset only on the success path - a dispatch that returned early (`d.failed`: a blob
-    // that could not be produced, a bad router id) left its stale indices behind. The host clears `d.failed`
-    // before the next round, so the next window then REUSED the stale job descriptors: `nt` was never reset
-    // and never bounds-checked, so `act[nt]`/`nact[nt]`/`out[nt]` walked past MAXT into the following jobs'
-    // fields, and the pool's drain then read `hq[t]`/`act[t]` out of bounds - the split buffers' float bytes
-    // as pointers, tiny denormals included - which faults at 0x2/0x3/0x5/0xa inside `vnni::iq4nl_nt`, several
-    // workers at once, at the same instruction. Reset at the START of every call: one failed window costs
-    // that window, never the round after it. (512 int16 stores per layer-window; not measurable.)
-    if (d.job_of.size() != (size_t) d.n_expert) d.job_of.assign((size_t) d.n_expert, (int16_t) -1);
-    else std::fill(d.job_of.begin(), d.job_of.end(), (int16_t) -1);
-    if (d.jobs_multi.size() < (size_t) (n_tok * k)) d.jobs_multi.resize((size_t) (MAXT * k));
-    static const bool ptrace = std::getenv("STRATA_POOL_TRACE") != nullptr;
+// Plan emission: decide the GPU's share and fill `kind[]` for every entry (the plan block split
+// out of expert_pool_dispatch_multi; the else branch is the no-plan fallback scan). Fills d.pcie_experts,
+// d.tail_experts, d.fetch_admitted and the GpuPlanSink. Byte-identical to the inline block.
+static void plan_build(ExpertDispatch& d, const int32_t* ids, int64_t n, int64_t k,
+                       const strata::kernels::cpu::ExpertLayout& lay, int32_t* kind, bool ptrace) {
     auto pt = [&](const char* what, long long a = -1) {
         if (ptrace) { std::fprintf(stderr, "pool trace: layer %lld %s %lld\n", (long long) d.layers, what, a); std::fflush(stderr); }
     };
-    const auto c0 = std::chrono::steady_clock::now();
-    const FileExpertSource::DecodeScope decode_scope;   // 149 STRATA_IO_PF_GATE: this thread reads for the decode
-    // 149-cold STRATA_COLD_OVERLAP: 0 off, 1 overlap, 2 measure only, 3 overlap + zero-copy, 4 zero-copy only.
-    // 0.2.0: unset, 4 for the GGUF read in place on Linux (zero-copy needs the page cache's residency query), else 0
-    static const int cold_env = [] {
-        const char* v = std::getenv("STRATA_COLD_OVERLAP");
-        return v == nullptr || v[0] == '\0' ? -1 : std::clamp(std::atoi(v), 0, 4);
-    }();
-    d.cold_mode = cold_env >= 0 ? cold_env : (d.src != nullptr && d.src->linux_file_defaults() ? 4 : 0);
-    pt("begin");
-    d.src->begin_layer(d.layers, ids, n_tok * k);
-    pt("begun");
-    if (!d.usage.empty())
-        for (int64_t i = 0; i < n_tok * k; ++i)
-            if (ids[i] >= 0 && ids[i] < d.n_expert) d.usage[(size_t) d.layers * (size_t) d.n_expert + (size_t) ids[i]] += 1.0f;
-    // ---- plan v0.3 P6: the GPU's share, decided and published FIRST so the GPU starts while the CPU works.
-    // Distinct experts in routing order; resident ones and the last pcie_num/256 of the missed ones go to the GPU.
-    const int64_t n = n_tok * k;
-    int32_t kind[kMaxWindowEntries];       // per entry: -1 CPU, 0 VRAM, 1 PCIe
     if (d.plan != nullptr && n <= kMaxWindowEntries && n <= d.plan->cap) {
         int64_t distinct[kMaxWindowEntries], first_of[kMaxWindowEntries];
         int32_t gi[kMaxWindowEntries];               // group index of every entry (-1: fall back per entry)
@@ -4995,6 +4955,56 @@ void expert_pool_dispatch_multi(ExpertDispatch& d, const float* x_f, const int32
                     : (e >= 0 && e < d.n_expert && d.peer != nullptr && d.peer->has(d.layers, e)) ? 2 : -1;
         }
     }
+}
+void expert_pool_dispatch_multi(ExpertDispatch& d, const float* x_f, const int32_t* ids, int64_t n_tok, int64_t k,
+                                float* out) {
+    using namespace strata::kernels::cpu;
+    if (!dispatch_begin(d, x_f, ids, n_tok, k)) return;
+    const ExpertLayout& lay = expert_layout();
+    const bool native = lay.native;
+    // F-359 STRATA_SHADOW_EXPERTS: armed, every CPU miss below computes from the shadow Q2_0 store - the
+    // canonical kernels (run_split_multi) over `shadow::blob(layer, expert)` - instead of the native pack's
+    // blob.  The misses' outputs differ by the shadow's quantization, by design; the plan's hit/PCIe kinds,
+    // the GPU's share and every combine path read none of this.  Unset, `shadow` is false and nothing below
+    // takes a new branch: byte-identical.
+    const bool shadow = strata::core::shadow::armed();
+    if (native && d.nact_multi.size() < (size_t) MAXT * kNativeActBytes) d.nact_multi.resize((size_t) MAXT * kNativeActBytes);
+    // T18 (the iq4nl_nt SIGSEGV, 3 sightings under 6-stream load): `job_of` maps an expert id to its job for
+    // THIS call and was reset only on the success path - a dispatch that returned early (`d.failed`: a blob
+    // that could not be produced, a bad router id) left its stale indices behind. The host clears `d.failed`
+    // before the next round, so the next window then REUSED the stale job descriptors: `nt` was never reset
+    // and never bounds-checked, so `act[nt]`/`nact[nt]`/`out[nt]` walked past MAXT into the following jobs'
+    // fields, and the pool's drain then read `hq[t]`/`act[t]` out of bounds - the split buffers' float bytes
+    // as pointers, tiny denormals included - which faults at 0x2/0x3/0x5/0xa inside `vnni::iq4nl_nt`, several
+    // workers at once, at the same instruction. Reset at the START of every call: one failed window costs
+    // that window, never the round after it. (512 int16 stores per layer-window; not measurable.)
+    if (d.job_of.size() != (size_t) d.n_expert) d.job_of.assign((size_t) d.n_expert, (int16_t) -1);
+    else std::fill(d.job_of.begin(), d.job_of.end(), (int16_t) -1);
+    if (d.jobs_multi.size() < (size_t) (n_tok * k)) d.jobs_multi.resize((size_t) (MAXT * k));
+    static const bool ptrace = std::getenv("STRATA_POOL_TRACE") != nullptr;
+    auto pt = [&](const char* what, long long a = -1) {
+        if (ptrace) { std::fprintf(stderr, "pool trace: layer %lld %s %lld\n", (long long) d.layers, what, a); std::fflush(stderr); }
+    };
+    const auto c0 = std::chrono::steady_clock::now();
+    const FileExpertSource::DecodeScope decode_scope;   // 149 STRATA_IO_PF_GATE: this thread reads for the decode
+    // 149-cold STRATA_COLD_OVERLAP: 0 off, 1 overlap, 2 measure only, 3 overlap + zero-copy, 4 zero-copy only.
+    // 0.2.0: unset, 4 for the GGUF read in place on Linux (zero-copy needs the page cache's residency query), else 0
+    static const int cold_env = [] {
+        const char* v = std::getenv("STRATA_COLD_OVERLAP");
+        return v == nullptr || v[0] == '\0' ? -1 : std::clamp(std::atoi(v), 0, 4);
+    }();
+    d.cold_mode = cold_env >= 0 ? cold_env : (d.src != nullptr && d.src->linux_file_defaults() ? 4 : 0);
+    pt("begin");
+    d.src->begin_layer(d.layers, ids, n_tok * k);
+    pt("begun");
+    if (!d.usage.empty())
+        for (int64_t i = 0; i < n_tok * k; ++i)
+            if (ids[i] >= 0 && ids[i] < d.n_expert) d.usage[(size_t) d.layers * (size_t) d.n_expert + (size_t) ids[i]] += 1.0f;
+    // ---- plan v0.3 P6: the GPU's share, decided and published FIRST so the GPU starts while the CPU works.
+    // Distinct experts in routing order; resident ones and the last pcie_num/256 of the missed ones go to the GPU.
+    const int64_t n = n_tok * k;
+    int32_t kind[kMaxWindowEntries];       // per entry: -1 CPU, 0 VRAM, 1 PCIe
+    plan_build(d, ids, n, k, lay, kind, ptrace);
     if (d.peer != nullptr) {                 // multi-GPU: start the second GPU's share before the CPU's own work
         std::string perr;
         if (!d.peer->launch(d.layers, x_f, ids, n_tok, k, kind, perr, out)) {

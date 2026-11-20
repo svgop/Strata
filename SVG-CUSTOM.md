@@ -13346,3 +13346,19 @@ the plan.
 - Byte-identical logic (the two early-return bodies and the lookahead block moved as one).
 - Build green. The god-function now reads: begin → locals → plan (helper) → tail-skip → PCIe →
   group dispatch, with two named phases gone from its body.
+
+## F-434 — plan emission extracted: the god-function halves (2026-11-20, 18:06)
+
+The whole 178-line plan block of `expert_pool_dispatch_multi` (tail-skip decision, PCIe share,
+VRAM/PCIe group fill into `GpuPlanSink`, the ADAPT_FETCH swap-admission, the fence + publish/fetch,
+and the no-plan fallback `kind` scan) moved verbatim into `plan_build(d, ids, n, k, lay, kind,
+ptrace)`.
+
+- Its scratch arrays (`distinct`/`first_of`/`gi`/`ghead`/`gtail`/`gnxt`/`nd`/`nmiss`) — used only
+  inside the block — now live inside `plan_build`, so they leave the god-function's frame entirely.
+  `plan_distinct_groups` (F-432) is now called *inside* `plan_build`, a clean two-level decomposition.
+- `ExpertLayout` needed its qualified name (`strata::kernels::cpu::ExpertLayout`) — the god-function
+  resolved it via `using namespace`, the free function does not.
+- **Parity proof:** script-diffed the moved block against HEAD's block — IDENTICAL. Build green.
+- **Net:** `expert_pool_dispatch_multi` 486 → **309 lines** (−177). Cumulative god-function reduction
+  this session: 570 → 309 (−46%). No new file; two static helpers in one translation unit.
