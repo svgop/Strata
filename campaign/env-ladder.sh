@@ -72,13 +72,19 @@ def lane(tag, l, pat):
     return float(re.search(pat, t).group(1))
 def boot(tag):
     return {k: st.mean([lane(tag, l, p) for l in (1, 2, 3)])
-            for k, p in (('M1', r'M1 single-stream : ([\d.]+)'), ('pair', r'M2 pair          : ([\d.]+)'), ('conc', r'M2 6-conc        : ([\d.]+)'))}
+            for k, p in (('M1', r'M1 single-stream : ([\d.]+)'), ('pair', r'M2 pair          : ([\d.]+)'), ('conc', r'M2 6-conc        : ([\d.]+)'),
+                         ('M3b', r'M3b rate         : ([\d.]+)'))}   # the canary (law 10): the means table carries it every battery
 offs = [boot(f'off{r}') for r in range(1, rounds + 1)]
 ons  = [boot(f'on{r}')  for r in range(1, rounds + 1)]
 for r in range(rounds):
     print(f"off{r+1} {offs[r]}\non{r+1}  {ons[r]}")
+ok = True
 for lane in ('M1', 'pair', 'conc'):
     ds = [100 * (o[lane] - f[lane]) / f[lane] for f, o in zip(offs, ons)]
     print(f"{lane}: pairs {' / '.join(f'{d:+.1f}%' for d in ds)}  mean {st.mean(ds):+.1f}%")
+    if st.mean(ds) < -4.0: ok = False
+m3 = [100 * (o['M3b'] - f['M3b']) / f['M3b'] for f, o in zip(offs, ons)]
+print(f"M3b canary: OFF {st.mean([b['M3b'] for b in offs]):.1f}% vs ON {st.mean([b['M3b'] for b in ons]):.1f}% (mean {st.mean(m3):+.1f}%)")
+print("BAR: no lane below -4%:", "PASS" if ok else "FAIL", "- the targeted lane's +4% gain is judged on its mean above (law 2, both legs)")
 PY
 echo "ENV LADDER DONE — lane binary restored from /tmp/env-ladder-pre-run.bin"
