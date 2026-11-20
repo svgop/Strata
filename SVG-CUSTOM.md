@@ -13200,3 +13200,23 @@ with the lookahead arm (halve the term, hide the remainder). (4) The deployed dr
 lever starts with a re-harvest. The priced order: lookahead falsifier -> depth-2 quiet re-test
 -> swaps=80 + spec-min-p 0.7 -> pool-granularity build -> n-gram falsifier -> 16k falsifier
 boot (expect REFUSE) -> M3b era-gap hunt -> retrain -> C2 admission overlap -> mixed-form cache.
+
+## F-422 — G1 env-truthiness safety net: the owned env_flag module + Golden Master (2026-11-20, 17:01)
+
+The G1 prerequisite for M1, landed as an owned leaf module — no generate.cpp change yet, so no behavior
+change and no operator conflict.
+
+- **The module:** `include/strata/core/env_flag.hpp` names the five historical truthiness conventions
+  that generate.cpp's ~40 bespoke lambdas silently re-implemented: `present` (any value incl ""/"0"),
+  `truthy` ("" arms, "0" disarms), `truthy_strict` ("" and "0" disarm), `nonzero` (numeric), `one`
+  (first char '1'). Each has a pure `*_value(const char*)` predicate (testable with no environment) and
+  a getenv reader. The header comment carries the arm/disarm table as the contract.
+- **The Golden Master:** `src/core/env_flag_test.cpp` pins the full truth table for unset/""/"0"/"00"/
+  "1"/"10"/"2"/"abc"/"-1" across all five conventions, registered under `STRATA_BUILD_TESTS`. This is
+  the executable oracle the M1 extraction must preserve exactly.
+- **Verified:** `ninja -C build-fresh env_flag_test` green + `./build-fresh/env_flag_test` → "ok"
+  (exit 0). The CMakeLists addition is inside the existing `STRATA_BUILD_TESTS` block; the main
+  `strata` target is untouched.
+- **Next (M1):** extract generate.cpp's pure env-helper lambdas to call this module, one helper at a
+  time, the Golden Master as guard. Helpers with side effects (e.g. the HIP_ADAPT_KERNEL_COPY
+  `cudaHostGetDevicePointer` probe) are not pure env reads and stay in place.
