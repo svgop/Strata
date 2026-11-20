@@ -33,6 +33,10 @@ inline bool truthy_strict(const char* name) { return truthy_strict_value(std::ge
 inline bool nonzero(const char* name) { return nonzero_value(std::getenv(name)); }
 inline bool one(const char* name) { return one_value(std::getenv(name)); }
 
+// numeric, but default-true: unset arms; "" / "0" / non-numeric disarms (v == nullptr || atoi(v) != 0)
+inline bool nonzero_default_true_value(const char* v) { return v == nullptr || std::atoi(v) != 0; }
+inline bool nonzero_default_true(const char* name) { return nonzero_default_true_value(std::getenv(name)); }
+
 // --- value readers (parse a number; unset or empty returns the default) ---
 inline float float_value(const char* v, float dflt) {
     return (v != nullptr && v[0] != '\0') ? (float) std::atof(v) : dflt;

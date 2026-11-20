@@ -13236,3 +13236,15 @@ module instead of bespoke lambdas; the truthiness convention is named at the cal
 - **Verified:** `ninja -C build-fresh strata env_flag_test` green; `env_flag_test` -> ok (exit 0).
 - **Left (not pure bool):** `adapt_copy_h2d` (HIP-only, prints a banner) and `typical_threshold`
   (a float parse - needs a float reader). Not touched this pass.
+
+## F-425 — M1 extension: env reads in expert_source.cpp consolidated to strata::env (2026-11-20, 17:15)
+
+The env-unification spreads to the decode hot path. Eight bespoke env-read lambdas in
+`expert_source.cpp` now call the owned module, convention named at each site.
+
+- **Extracted:** `ptrace` (present / STRATA_POOL_TRACE), `plan_onepass` + `plan_diff` +
+  `plan_partial` + `pcie_min1` + `device_plan` (nonzero), `dec_batch` (`nonzero_default_true` -
+  the new default-on numeric), `arena_mmap` (one / STRATA_ARENA_MMAP). Byte-identical.
+- **Module:** `nonzero_default_true` added (unset arms; ""/"0"/non-numeric disarm) with Golden
+  Master cases.
+- **Verified:** `ninja -C build-fresh strata env_flag_test` green; `env_flag_test` ok.

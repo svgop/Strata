@@ -56,6 +56,14 @@ int main() {
         expect("0.5", strata::env::float_value("0.5", 0.0f) - 0.5f < eps && strata::env::float_value("0.5", 0.0f) - 0.5f > -eps, true);
         expect("abc", strata::env::float_value("abc", 1.5f) == 0.0f, true);  // non-empty -> atof("abc")==0
     }
+    // nonzero_default_true: unset arms; ""/"0"/non-numeric disarm
+    {
+        expect("(unset)", strata::env::nonzero_default_true_value(nullptr), true);
+        expect("(empty)", strata::env::nonzero_default_true_value(""), false);
+        expect("0", strata::env::nonzero_default_true_value("0"), false);
+        expect("1", strata::env::nonzero_default_true_value("1"), true);
+        expect("abc", strata::env::nonzero_default_true_value("abc"), false);
+    }
     if (failures) {
         std::printf("env_flag_test: %d failure(s)\n", failures);
         return 1;
