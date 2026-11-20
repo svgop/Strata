@@ -97,3 +97,21 @@ m collapses to 0 at typical decode (PCIE_MIN1 exists for exactly this), or admis
 Three files, ~150 lines lifted from a production tree we have already ported two siblings from
 (PCIE_MIN1, CHECKRES). Rollback: `STRATA_ADAPT_FETCH=0` (the shipped default) — one env, no
 binary swap needed. The plan-widening step (1) is the only structural footprint and is inert.
+
+
+## 7. The scope fact, priced (2026-11-20, post-port)
+
+The arm gate's off-reason ladder ends at `complement_ready()` — the RESIDENT-RAM mode. Upstream's
+ADAPT_FETCH optimizes the NON-RESIDENT configuration class (their default recipe): the admission
+converts PCIe-staged misses into VRAM slots, which is exactly the resident complement's own job
+here. Our standing declares the resident organ (F-405: the complement backing IS the contract) and
+runs `--pcie-mode dma` — the arm refuses BOTH, by design, with the banner naming it.
+
+**Consequence for the queue:** the armed battery is NOT a standing-lane arm. It is a SHELF lane —
+a scoped non-resident + staged-copy recipe (drop --resident-experts, --pcie-mode staged), compared
+against itself without the arm, under law 4b. That prices the arm's standing-campaign value DOWN:
+it optimizes a recipe class we do not serve. The port still pays three ways: the code is green and
+inert on the standing (the env-off proof boot is the only gate), any future non-resident shelf
+lane gets the mechanism free, and the dst2 column + destination-select kernels are harmless
+generalizations the tier machinery can grow into. The standing's own M1 levers remain H5 (depth,
+the live mechanism) and the doorbell structure — unchanged by this port.
