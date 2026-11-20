@@ -13016,3 +13016,17 @@ class (the F-410/F-412 control legs read 210-215 in this band) while the box loa
 tier's convergence outran the added contention; the swap counters went quiet (converged).  The
 operator's slowness is resolved: the pre-fix boot thrashed (25.3k exchanges, 10.2k file reads on
 the poisoned profile); the post-fix boot pays only the fresh-profile ramp, now complete.
+
+### note (2026-11-20, 16:15) — the CPU-expert term's shape: per-layer granularity, and the lookahead-overlap arm
+
+F-414 left the CPU-expert term at 2.85-3.27 ms/window for 3.6-4.0% of entries (~65 us/miss, 2.2-
+2.5x the DRAM floor for the weight bytes).  The code read prices it: ExpertPool::run_split runs
+PER LAYER - ~48 calls/window, each paying two phase setups, the SERIAL host-thread act_quant_q8_1
+loop between them (pool.cpp:1050), and park/drain latency; at ~1 miss/layer the machinery dominates
+the GEMV (the F-407 burn map's 27-33% worker CPU is granularity, not bandwidth).  THE ARM, from
+the tree's own parts: RouterLookahead (in-tree, "warms the next layer's predicted file-tier
+experts") predicts next-layer routing - compute the PREDICTED misses speculatively under the
+current layer's GPU execution.  Wrong guesses cost idle CPU only; right guesses hide the whole
+term (the same cover the conc shape buys with rows).  Priced by the anatomy: up to 2.9 ms of the
+13.6 ms M1 window (~+21% ceiling), second to H5 (which multiplies rows instead of shrinking the
+serial stage).  The two compose: deeper drafts AND lookahead compute.
