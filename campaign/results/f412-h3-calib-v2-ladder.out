@@ -1,0 +1,125 @@
+=== round 1: OFF (pristine config) ===
+grep: warning: stray \ before -
+[off1] adapt args: --adapt-decay 0.85 
+[warm-discard] load: 4.35, 3.53, 3.36
+[warm-discard] M1 single-stream : 206.2 t/s (2000 tok in 9.70s)
+[warm-discard] M2 pair          : 201.3 t/s aggregate (1800 tok in 8.94s)
+[warm-discard] M2 6-conc        : 249.2 t/s aggregate (3600 tok in 14.45s)
+[f412-h3-calib-v2-off1-1] load: 8.48, 4.82, 3.81
+M1 single-stream : 215.7 t/s (2000 tok in 9.27s)
+M2 pair          : 196.5 t/s aggregate (1800 tok in 9.16s)
+M2 6-conc        : 271.5 t/s aggregate (3600 tok in 13.26s)
+[f412-h3-calib-v2-off1-2] load: 7.48, 5.09, 3.96
+M1 single-stream : 225.6 t/s (2000 tok in 8.87s)
+M2 pair          : 192.7 t/s aggregate (1800 tok in 9.34s)
+M2 6-conc        : 295.9 t/s aggregate (3600 tok in 12.17s)
+[f412-h3-calib-v2-off1-3] load: 8.91, 5.72, 4.22
+M1 single-stream : 235.5 t/s (2000 tok in 8.49s)
+M2 pair          : 216.1 t/s aggregate (1800 tok in 8.33s)
+M2 6-conc        : 291.8 t/s aggregate (3600 tok in 12.34s)
+=== round 1: ON (--adapt-every 1 --adapt-decay 0.97 --adapt-swaps 160) ===
+grep: warning: stray \ before -
+[on1] adapt args: --adapt-every 1 --adapt-decay 0.97 --adapt-swaps 160 
+[warm-discard] load: 5.71, 5.33, 4.25
+[warm-discard] M1 single-stream : 242.0 t/s (2000 tok in 8.27s)
+[warm-discard] M2 pair          : 202.2 t/s aggregate (1800 tok in 8.90s)
+[warm-discard] M2 6-conc        : 267.8 t/s aggregate (3600 tok in 13.44s)
+[f412-h3-calib-v2-on1-1] load: 5.27, 5.23, 4.27
+M1 single-stream : 232.9 t/s (2000 tok in 8.59s)
+M2 pair          : 212.0 t/s aggregate (1800 tok in 8.49s)
+M2 6-conc        : 285.5 t/s aggregate (3600 tok in 12.61s)
+[f412-h3-calib-v2-on1-2] load: 5.23, 5.23, 4.31
+M1 single-stream : 225.9 t/s (2000 tok in 8.85s)
+M2 pair          : 212.9 t/s aggregate (1800 tok in 8.45s)
+M2 6-conc        : 294.3 t/s aggregate (3600 tok in 12.23s)
+[f412-h3-calib-v2-on1-3] load: 5.48, 5.29, 4.38
+M1 single-stream : 215.2 t/s (2000 tok in 9.30s)
+M2 pair          : 220.1 t/s aggregate (1800 tok in 8.18s)
+M2 6-conc        : 286.5 t/s aggregate (3600 tok in 12.57s)
+=== round 2: OFF (pristine config) ===
+grep: warning: stray \ before -
+[off2] adapt args: --adapt-decay 0.85 
+[warm-discard] load: 6.04, 5.47, 4.56
+[warm-discard] M1 single-stream : 207.8 t/s (2000 tok in 9.62s)
+[warm-discard] M2 pair          : 194.6 t/s aggregate (1800 tok in 9.25s)
+[warm-discard] M2 6-conc        : 276.2 t/s aggregate (3600 tok in 13.03s)
+[f412-h3-calib-v2-off2-1] load: 6.89, 5.76, 4.70
+M1 single-stream : 210.3 t/s (2000 tok in 9.51s)
+M2 pair          : 201.9 t/s aggregate (1800 tok in 8.92s)
+M2 6-conc        : 281.7 t/s aggregate (3600 tok in 12.78s)
+[f412-h3-calib-v2-off2-2] load: 4.70, 5.34, 4.61
+M1 single-stream : 223.0 t/s (2000 tok in 8.97s)
+M2 pair          : 195.0 t/s aggregate (1800 tok in 9.23s)
+M2 6-conc        : 290.2 t/s aggregate (3600 tok in 12.40s)
+[f412-h3-calib-v2-off2-3] load: 4.75, 5.26, 4.62
+M1 single-stream : 204.9 t/s (2000 tok in 9.76s)
+M2 pair          : 196.2 t/s aggregate (1800 tok in 9.17s)
+M2 6-conc        : 256.6 t/s aggregate (3600 tok in 14.03s)
+=== round 2: ON (--adapt-every 1 --adapt-decay 0.97 --adapt-swaps 160) ===
+grep: warning: stray \ before -
+[on2] adapt args: --adapt-every 1 --adapt-decay 0.97 --adapt-swaps 160 
+[warm-discard] load: 3.43, 4.67, 4.50
+[warm-discard] M1 single-stream : 197.5 t/s (2000 tok in 10.13s)
+[warm-discard] M2 pair          : 194.4 t/s aggregate (1800 tok in 9.26s)
+[warm-discard] M2 6-conc        : 256.1 t/s aggregate (3600 tok in 14.06s)
+[f412-h3-calib-v2-on2-1] load: 4.69, 4.76, 4.53
+M1 single-stream : 207.9 t/s (2000 tok in 9.62s)
+M2 pair          : 201.5 t/s aggregate (1800 tok in 8.93s)
+M2 6-conc        : 261.2 t/s aggregate (3600 tok in 13.78s)
+[f412-h3-calib-v2-on2-2] load: 5.71, 4.99, 4.62
+M1 single-stream : 230.1 t/s (2000 tok in 8.69s)
+M2 pair          : 204.2 t/s aggregate (1800 tok in 8.82s)
+M2 6-conc        : 268.7 t/s aggregate (3600 tok in 13.40s)
+[f412-h3-calib-v2-on2-3] load: 5.40, 4.99, 4.63
+M1 single-stream : 218.4 t/s (2000 tok in 9.16s)
+M2 pair          : 199.3 t/s aggregate (1800 tok in 9.03s)
+M2 6-conc        : 271.9 t/s aggregate (3600 tok in 13.24s)
+=== round 3: OFF (pristine config) ===
+grep: warning: stray \ before -
+[off3] adapt args: --adapt-decay 0.85 
+[warm-discard] load: 5.31, 5.20, 4.77
+[warm-discard] M1 single-stream : 222.7 t/s (2000 tok in 8.98s)
+[warm-discard] M2 pair          : 195.5 t/s aggregate (1800 tok in 9.21s)
+[warm-discard] M2 6-conc        : 273.6 t/s aggregate (3600 tok in 13.16s)
+[f412-h3-calib-v2-off3-1] load: 5.16, 5.15, 4.77
+M1 single-stream : 222.2 t/s (2000 tok in 9.00s)
+M2 pair          : 200.9 t/s aggregate (1800 tok in 8.96s)
+M2 6-conc        : 276.5 t/s aggregate (3600 tok in 13.02s)
+[f412-h3-calib-v2-off3-2] load: 6.82, 5.52, 4.91
+M1 single-stream : 200.2 t/s (2000 tok in 9.99s)
+M2 pair          : 199.3 t/s aggregate (1800 tok in 9.03s)
+M2 6-conc        : 285.6 t/s aggregate (3600 tok in 12.61s)
+[f412-h3-calib-v2-off3-3] load: 6.81, 5.72, 5.01
+M1 single-stream : 208.2 t/s (2000 tok in 9.61s)
+M2 pair          : 200.0 t/s aggregate (1800 tok in 9.00s)
+M2 6-conc        : 278.2 t/s aggregate (3600 tok in 12.94s)
+=== round 3: ON (--adapt-every 1 --adapt-decay 0.97 --adapt-swaps 160) ===
+grep: warning: stray \ before -
+[on3] adapt args: --adapt-every 1 --adapt-decay 0.97 --adapt-swaps 160 
+[warm-discard] load: 6.21, 5.75, 5.10
+[warm-discard] M1 single-stream : 194.6 t/s (2000 tok in 10.28s)
+[warm-discard] M2 pair          : 199.8 t/s aggregate (1800 tok in 9.01s)
+[warm-discard] M2 6-conc        : 256.0 t/s aggregate (3600 tok in 14.06s)
+[f412-h3-calib-v2-on3-1] load: 7.63, 6.15, 5.26
+M1 single-stream : 214.2 t/s (2000 tok in 9.34s)
+M2 pair          : 191.9 t/s aggregate (1800 tok in 9.38s)
+M2 6-conc        : 238.0 t/s aggregate (3600 tok in 15.13s)
+[f412-h3-calib-v2-on3-2] load: 7.42, 6.33, 5.37
+M1 single-stream : 214.3 t/s (2000 tok in 9.33s)
+M2 pair          : 195.7 t/s aggregate (1800 tok in 9.20s)
+M2 6-conc        : 260.3 t/s aggregate (3600 tok in 13.83s)
+[f412-h3-calib-v2-on3-3] load: 7.37, 6.47, 5.47
+M1 single-stream : 215.6 t/s (2000 tok in 9.28s)
+M2 pair          : 198.9 t/s aggregate (1800 tok in 9.05s)
+M2 6-conc        : 261.7 t/s aggregate (3600 tok in 13.75s)
+off1 {'M1': 225.6, 'pair': 201.76666666666665, 'conc': 286.4}
+on1  {'M1': 224.66666666666666, 'pair': 215.0, 'conc': 288.76666666666665}
+off2 {'M1': 212.73333333333335, 'pair': 197.7, 'conc': 276.1666666666667}
+on2  {'M1': 218.8, 'pair': 201.66666666666666, 'conc': 267.26666666666665}
+off3 {'M1': 210.2, 'pair': 200.06666666666666, 'conc': 280.1}
+on3  {'M1': 214.7, 'pair': 195.5, 'conc': 253.33333333333334}
+M1: pairs -0.4% / +2.9% / +2.1%  mean +1.5%
+pair: pairs +6.6% / +2.0% / -2.3%  mean +2.1%
+conc: pairs +0.8% / -3.2% / -9.6%  mean -4.0%
+CONFIG LADDER DONE — config restored from /tmp/config-ladder-cfg.bak, engine DOWN.
+OWED: the F-271 re-pin (cp data/expert-profile-gold.bin data/expert-profile-learned.bin) and, on adoption, the MMLU gate.

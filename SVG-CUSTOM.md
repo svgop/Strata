@@ -12837,3 +12837,36 @@ The code read behind the F-411 succession (the wall is the wait structure, not t
   (waitA/waitB/waitCPU + reach-before-wait on the CURRENT standing; the T26-era read is
   adoption-stale) -> the ADAPT_FETCH port priced against those numbers (strangler fold, three
   files, parity harness first).
+
+## F-412 — the calibration champion measured live: inside the band, not adopted (2026-11-20, 14:30)
+
+- **The arm:** F-391's held champion knob set (`--adapt-every 1 --adapt-decay 0.97 --adapt-swaps 160`
+  vs the stock `4 / 0.85 / 96`), 3v3 interleaved same-hour boots via config-ladder (its first full
+  battery: trap-restored config, per-boot cmdline banners verified from /proc, load per leg, 3
+  measured legs per boot after the law-11 discard).  Attempt 1 was refused by the box (magma held
+  the card; the abort verified the instrument's refusal+restore path live).
+- **The boots were certified:** fingerprint f22e85411ce4aa82 slots=9900 verified=49 and
+  `backing: driver-pinned` on BOTH arms — the arms differ by exactly the three knobs.
+- **The means (interleave pairs, M1):** −0.4% / +2.9% / +2.1% → **+1.5%**; pair +6.6/+2.0/−2.3 →
+  +2.1%; conc +0.8/−3.2/−9.6 → **−4.0%** (round 3's pair ran at load 7.4 — disclosed, but the
+  means rule stands); M3b canary 76.1 → 77.2 (+1.1pp, in-band).  Evidence:
+  `campaign/results/f412-h3-calib-v2-ladder.out` + per-leg files.
+- **The ruling (law 2):** the targeted lane's +1.5% is inside the band and conc sits at the −4%
+  floor — **NOT ADOPTED; recorded and reverted** (the ladder restored the pristine config,
+  verified byte-equal; profile re-pinned from gold, engine down, port free).  No MMLU gate and no
+  tracker point: inside-band arms never append.
+- **The mechanism verdict:** the offline +2.1pp hit share (0.9049 vs 0.8839, the calibration
+  replay) translated to only +1.5% live M1 — the CPU-expert miss term the calibration feeds is
+  smaller in the live window than the replay priced (the adapt wait overlaps much of it; the
+  F-411 arithmetic agrees: the whole CPU-expert term is 19-22% of a 13.25 ms window, so +2pp of
+  hit share moves ~0.1 ms/window ≈ +1%).  **The tier calibration is not the M1 lever at this
+  standing.**
+- **The warm-leg preview that did not survive:** round 1's leg-1 read ON 242.0 vs OFF 206.2
+  (+17.4% at the time) collapsed across rounds (ON warms 197.5/194.6 vs OFF 207.8/222.7) — the
+  means-only law discarded it correctly.  A single warm leg is a rumor.
+- **Banked with its re-open clause (law 8):** re-opens when the CPU-expert share GROWS (an
+  ADAPT_FETCH-class port changes the miss economics) or in a colder-tier-start regime.  The
+  champion set stays recorded in data/calibration/report-025733.txt.
+- **Scratch-tool bug disclosed:** the session's /tmp verdict script printed "clears the bar" — it
+  tested only the −4% floor, not the +4% gain leg; the ruling above is the law's, not the
+  script's.
