@@ -12741,3 +12741,31 @@ storage canon (reference updates in the same commit):
   honored the contract or refused.
 - **Rollback:** engine/strata.pre-f409; env unset (STRATA_COMPLEMENT_BACKING=) = the legacy sampled
   flip WITH its fallbacks - the documented rollback, unchanged.
+
+## F-410 — the conc re-bank attempted, the window closed under it (load-disclosed read, 2026-11-20, 13:47)
+
+- **The push landed:** remote `main` = `a2dce9285` (verified by `git ls-remote` live) — the 42-commit
+  backlog including F-405..F-409 is published; law 14's push leg closed.
+- **The question (from F-408):** is standing conc still the 307.6 bank at a quiet box, or inside the
+  264-306 window-class envelope the loaded arms read?  The box read load 0.65 / 174 GiB available at
+  13:36 — the window was open; the battery went immediately.
+- **The boot was canonical and certified:** fingerprint `f22e85411ce4aa82` slots=9900 verified=49,
+  `backing: driver-pinned` (the declared organ honored), health ok + prewarm done at t=50s, leg 1
+  discarded per law 11, load recorded per leg per law 17.
+- **The window closed mid-battery:** non-engine load (box load minus the engine's ~3.2 isolated-core
+  threads, F-407's map) rose 0.5 → 3.8 across the legs; M1 fell in lockstep (213.8 → 195.1 as load
+  3.68 → 6.99) — the doorbell's GPU-reach wait is load-dependent poller preemption (the v6 note's
+  mechanism, now seen live in the M1 column).
+- **The reads (all load-disclosed, rising band):** conc mean **273.8** (268.1/292.1/261.3) vs the
+  307.6 quiet-hour bank (−11.0%); M1 mean **209.1** over 7 legs (211.3/208.4/219.2/210.1/213.8/
+  205.6/195.1) vs the 220.6 bank (−5.2%).  Evidence: `campaign/results/f410-conc-rebank-quiet-v2.txt`
+  (legs 2-5 in `…-quiet.txt` carry M1 only — the first capture's grep ate the M2 lines; disclosed).
+- **The verdict (law 12, step 1 of the ladder executed):** a same-hour standing read below bank under
+  a MOVED load band is a question, not a point — NO tracker row.  No mechanism exists between
+  identical fingerprints and identical organs (F-408's certification); the deficit tracks the load
+  column, not any code path.  The question stays OPEN and wants a true quiet window (the F-408
+  protocol: preflight load < 1, five-boot means).
+- **Teardown discipline:** killing the engine before its server parent leaves a defunct child holding
+  nothing (port stays with the parent) — the parent's exit reaped it; port free, GPU 651 MiB
+  baseline, no orphan processes, learned profile re-pinned from gold (md5 match).  The
+  `strata-gpu-lock` helper at pid 6062 predates this battery (10:31) — system-owned, not ours.

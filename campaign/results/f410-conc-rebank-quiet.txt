@@ -1,0 +1,20 @@
+=== MEASURED LEG 2 13:40:00 ===
+load: 4.35, 1.97, 1.77
+M1 single-stream : 211.3 t/s (2000 tok in 9.47s)
+TREND ms/window: early 12.7 -> late 10.6 (stable)
+M3b rate         : 78.2% mean over 28 requests (diagnostic)
+=== MEASURED LEG 3 13:40:45 ===
+load: 3.65, 2.12, 1.83
+M1 single-stream : 208.4 t/s (2000 tok in 9.60s)
+TREND ms/window: early 26.6 -> late 9.7 (stable)
+M3b rate         : 76.0% mean over 29 requests (diagnostic)
+=== MEASURED LEG 4 13:41:31 ===
+load: 5.45, 2.81, 2.08
+M1 single-stream : 219.2 t/s (2000 tok in 9.13s)
+TREND ms/window: early 13.7 -> late 10.0 (stable)
+M3b rate         : 74.7% mean over 29 requests (diagnostic)
+=== MEASURED LEG 5 13:42:17 ===
+load: 5.52, 3.15, 2.23
+M1 single-stream : 210.1 t/s (2000 tok in 9.52s)
+TREND ms/window: early 13.6 -> late 10.4 (stable)
+M3b rate         : 76.7% mean over 28 requests (diagnostic)

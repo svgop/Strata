@@ -1,0 +1,21 @@
+=== MEASURED LEG 6 13:43:38 ===
+load: 3.68, 3.20, 2.33
+M1 single-stream : 213.8 t/s (2000 tok in 9.36s)
+M2 pair          : 195.0 t/s aggregate (1800 tok in 9.23s)
+M2 6-conc        : 268.1 t/s aggregate (3600 tok in 13.43s)
+TREND ms/window: early 14.3 -> late 10.8 (stable)
+M3b rate         : 78.3% mean over 27 requests (diagnostic)
+=== MEASURED LEG 7 13:44:25 ===
+load: 6.09, 3.94, 2.63
+M1 single-stream : 205.6 t/s (2000 tok in 9.73s)
+M2 pair          : 215.3 t/s aggregate (1800 tok in 8.36s)
+M2 6-conc        : 292.1 t/s aggregate (3600 tok in 12.33s)
+TREND ms/window: early 15.2 -> late 10.5 (stable)
+M3b rate         : 77.6% mean over 29 requests (diagnostic)
+=== MEASURED LEG 8 13:45:12 ===
+load: 6.99, 4.49, 2.88
+M1 single-stream : 195.1 t/s (2000 tok in 10.25s)
+M2 pair          : 191.1 t/s aggregate (1800 tok in 9.42s)
+M2 6-conc        : 261.3 t/s aggregate (3600 tok in 13.78s)
+TREND ms/window: early 14.0 -> late 12.4 (stable)
+M3b rate         : 77.2% mean over 27 requests (diagnostic)
