@@ -12870,3 +12870,27 @@ The code read behind the F-411 succession (the wall is the wait structure, not t
 - **Scratch-tool bug disclosed:** the session's /tmp verdict script printed "clears the bar" — it
   tested only the −4% floor, not the +4% gain leg; the ruling above is the law's, not the
   script's.
+
+## F-413 — the corpus extension falsified: shape is not routing (2026-11-20, 14:58)
+
+- **The arm:** three SHAPE-matched prewarm corpus prompts (FRESH's numbered-section structure,
+  CONC's MoE depth, SHORT's length - content-distinct) appended via the config override
+  (`campaign/arms/h4-prewarm-corpus.patch.json`, config-ladder's @merge-patch form, 3v3
+  interleaved, load per leg, cmdline banners verified).  The F-400 default corpus in server.py
+  stayed untouched.
+- **The target metric (the warm/discarded leg - F-408's -11.8% leg-1 residual):** OFF warms
+  215.4/206.5/217.9 (mean 213.3) vs ON 201.3/213.4/218.3 (mean 211.0) -> **-1.1%**.  The arm
+  does not move the leg it was aimed at.
+- **The parity lanes:** M1 +2.5 / pair +3.4 / conc +3.4 (all inside noise), M3b 77.6 -> 77.2
+  (in-band).  No lane clears the bar; nothing regresses.  Evidence:
+  `campaign/results/f413-h4-corpus-ladder.out` + per-leg files.
+- **The ruling:** FALSIFIED IN THIS FORM - recorded, reverted (config pristine, profile
+  re-pinned).  **The mechanism: the leg-1 residual is a routing-SET mismatch; domain-level shape
+  matching does not close expert-set overlap.**  The warm-in's corpus generations route to their
+  own expert sets; the probe's first leg routes to different ones regardless of topical
+  similarity.
+- **The reframe the falsification buys:** leg 1 is DISCARDED by protocol (law 11) - the residual
+  costs battery time (~10 s/boot), not standing performance.  A routing-set-based warm-in (the
+  profile's own ranked pairs pre-staged, not text-driven) is the only form that could close it;
+  priced against its actual value (seconds of battery hygiene), it does not clear the effort bar
+  - the discard IS the fix.  Banked closed unless a protocol change ever counts leg 1.

@@ -1,0 +1,125 @@
+=== round 1: OFF (pristine config) ===
+grep: warning: stray \ before -
+[off1] adapt args: --adapt-decay 0.85 
+[warm-discard] load: 4.09, 5.51, 5.32
+[warm-discard] M1 single-stream : 215.4 t/s (2000 tok in 9.29s)
+[warm-discard] M2 pair          : 193.7 t/s aggregate (1800 tok in 9.29s)
+[warm-discard] M2 6-conc        : 259.3 t/s aggregate (3600 tok in 13.88s)
+[f413-h4-corpus-off1-1] load: 6.04, 5.70, 5.39
+M1 single-stream : 204.8 t/s (2000 tok in 9.77s)
+M2 pair          : 195.8 t/s aggregate (1800 tok in 9.19s)
+M2 6-conc        : 269.9 t/s aggregate (3600 tok in 13.34s)
+[f413-h4-corpus-off1-2] load: 5.96, 5.69, 5.40
+M1 single-stream : 209.6 t/s (2000 tok in 9.54s)
+M2 pair          : 188.0 t/s aggregate (1800 tok in 9.57s)
+M2 6-conc        : 268.2 t/s aggregate (3600 tok in 13.42s)
+[f413-h4-corpus-off1-3] load: 5.12, 5.49, 5.35
+M1 single-stream : 205.2 t/s (2000 tok in 9.75s)
+M2 pair          : 197.6 t/s aggregate (1800 tok in 9.11s)
+M2 6-conc        : 278.6 t/s aggregate (3600 tok in 12.92s)
+=== round 1: ON (@campaign/arms/h4-prewarm-corpus.patch.json) ===
+grep: warning: stray \ before -
+[on1] adapt args: --adapt-decay 0.85 
+[warm-discard] load: 6.39, 5.95, 5.54
+[warm-discard] M1 single-stream : 201.3 t/s (2000 tok in 9.93s)
+[warm-discard] M2 pair          : 196.3 t/s aggregate (1800 tok in 9.17s)
+[warm-discard] M2 6-conc        : 280.5 t/s aggregate (3600 tok in 12.83s)
+[f413-h4-corpus-on1-1] load: 6.59, 6.09, 5.61
+M1 single-stream : 214.1 t/s (2000 tok in 9.34s)
+M2 pair          : 195.6 t/s aggregate (1800 tok in 9.20s)
+M2 6-conc        : 278.2 t/s aggregate (3600 tok in 12.94s)
+[f413-h4-corpus-on1-2] load: 8.02, 6.48, 5.76
+M1 single-stream : 222.8 t/s (2000 tok in 8.98s)
+M2 pair          : 206.5 t/s aggregate (1800 tok in 8.72s)
+M2 6-conc        : 288.7 t/s aggregate (3600 tok in 12.47s)
+[f413-h4-corpus-on1-3] load: 8.57, 6.80, 5.90
+M1 single-stream : 210.6 t/s (2000 tok in 9.49s)
+M2 pair          : 198.8 t/s aggregate (1800 tok in 9.05s)
+M2 6-conc        : 248.8 t/s aggregate (3600 tok in 14.47s)
+=== round 2: OFF (pristine config) ===
+grep: warning: stray \ before -
+[off2] adapt args: --adapt-decay 0.85 
+[warm-discard] load: 5.53, 6.12, 5.76
+[warm-discard] M1 single-stream : 206.5 t/s (2000 tok in 9.69s)
+[warm-discard] M2 pair          : 198.5 t/s aggregate (1800 tok in 9.07s)
+[warm-discard] M2 6-conc        : 261.9 t/s aggregate (3600 tok in 13.75s)
+[f413-h4-corpus-off2-1] load: 7.31, 6.43, 5.88
+M1 single-stream : 222.6 t/s (2000 tok in 8.98s)
+M2 pair          : 191.5 t/s aggregate (1800 tok in 9.40s)
+M2 6-conc        : 276.8 t/s aggregate (3600 tok in 13.01s)
+[f413-h4-corpus-off2-2] load: 6.12, 6.24, 5.84
+M1 single-stream : 201.0 t/s (2000 tok in 9.95s)
+M2 pair          : 197.0 t/s aggregate (1800 tok in 9.14s)
+M2 6-conc        : 278.4 t/s aggregate (3600 tok in 12.93s)
+[f413-h4-corpus-off2-3] load: 6.02, 6.17, 5.83
+M1 single-stream : 215.3 t/s (2000 tok in 9.29s)
+M2 pair          : 198.8 t/s aggregate (1800 tok in 9.05s)
+M2 6-conc        : 271.5 t/s aggregate (3600 tok in 13.26s)
+=== round 2: ON (@campaign/arms/h4-prewarm-corpus.patch.json) ===
+grep: warning: stray \ before -
+[on2] adapt args: --adapt-decay 0.85 
+[warm-discard] load: 4.45, 5.53, 5.65
+[warm-discard] M1 single-stream : 213.4 t/s (2000 tok in 9.37s)
+[warm-discard] M2 pair          : 195.5 t/s aggregate (1800 tok in 9.21s)
+[warm-discard] M2 6-conc        : 278.1 t/s aggregate (3600 tok in 12.95s)
+[f413-h4-corpus-on2-1] load: 5.06, 5.58, 5.66
+M1 single-stream : 222.2 t/s (2000 tok in 9.00s)
+M2 pair          : 203.2 t/s aggregate (1800 tok in 8.86s)
+M2 6-conc        : 279.3 t/s aggregate (3600 tok in 12.89s)
+[f413-h4-corpus-on2-2] load: 5.13, 5.50, 5.63
+M1 single-stream : 208.6 t/s (2000 tok in 9.59s)
+M2 pair          : 198.9 t/s aggregate (1800 tok in 9.05s)
+M2 6-conc        : 284.3 t/s aggregate (3600 tok in 12.66s)
+[f413-h4-corpus-on2-3] load: 5.88, 5.60, 5.65
+M1 single-stream : 209.7 t/s (2000 tok in 9.54s)
+M2 pair          : 199.0 t/s aggregate (1800 tok in 9.04s)
+M2 6-conc        : 281.5 t/s aggregate (3600 tok in 12.79s)
+=== round 3: OFF (pristine config) ===
+grep: warning: stray \ before -
+[off3] adapt args: --adapt-decay 0.85 
+[warm-discard] load: 4.90, 5.48, 5.61
+[warm-discard] M1 single-stream : 217.9 t/s (2000 tok in 9.18s)
+[warm-discard] M2 pair          : 203.9 t/s aggregate (1800 tok in 8.83s)
+[warm-discard] M2 6-conc        : 263.5 t/s aggregate (3600 tok in 13.66s)
+[f413-h4-corpus-off3-1] load: 6.13, 5.69, 5.68
+M1 single-stream : 214.4 t/s (2000 tok in 9.33s)
+M2 pair          : 200.2 t/s aggregate (1800 tok in 8.99s)
+M2 6-conc        : 277.1 t/s aggregate (3600 tok in 12.99s)
+[f413-h4-corpus-off3-2] load: 7.63, 6.02, 5.78
+M1 single-stream : 212.2 t/s (2000 tok in 9.42s)
+M2 pair          : 195.0 t/s aggregate (1800 tok in 9.23s)
+M2 6-conc        : 274.4 t/s aggregate (3600 tok in 13.12s)
+[f413-h4-corpus-off3-3] load: 7.79, 6.28, 5.88
+M1 single-stream : 202.7 t/s (2000 tok in 9.87s)
+M2 pair          : 211.8 t/s aggregate (1800 tok in 8.50s)
+M2 6-conc        : 277.2 t/s aggregate (3600 tok in 12.99s)
+=== round 3: ON (@campaign/arms/h4-prewarm-corpus.patch.json) ===
+grep: warning: stray \ before -
+[on3] adapt args: --adapt-decay 0.85 
+[warm-discard] load: 7.10, 6.26, 5.91
+[warm-discard] M1 single-stream : 218.3 t/s (2000 tok in 9.16s)
+[warm-discard] M2 pair          : 209.2 t/s aggregate (1800 tok in 8.61s)
+[warm-discard] M2 6-conc        : 270.2 t/s aggregate (3600 tok in 13.33s)
+[f413-h4-corpus-on3-1] load: 8.17, 6.59, 6.03
+M1 single-stream : 217.7 t/s (2000 tok in 9.19s)
+M2 pair          : 206.6 t/s aggregate (1800 tok in 8.71s)
+M2 6-conc        : 309.2 t/s aggregate (3600 tok in 11.64s)
+[f413-h4-corpus-on3-2] load: 8.70, 7.00, 6.20
+M1 single-stream : 210.2 t/s (2000 tok in 9.52s)
+M2 pair          : 220.0 t/s aggregate (1800 tok in 8.18s)
+M2 6-conc        : 301.9 t/s aggregate (3600 tok in 11.92s)
+[f413-h4-corpus-on3-3] load: 5.93, 6.54, 6.08
+M1 single-stream : 218.6 t/s (2000 tok in 9.15s)
+M2 pair          : 208.4 t/s aggregate (1800 tok in 8.64s)
+M2 6-conc        : 285.1 t/s aggregate (3600 tok in 12.63s)
+off1 {'M1': 206.53333333333333, 'pair': 193.8, 'conc': 272.23333333333335}
+on1  {'M1': 215.83333333333334, 'pair': 200.3, 'conc': 271.9}
+off2 {'M1': 212.96666666666667, 'pair': 195.76666666666668, 'conc': 275.56666666666666}
+on2  {'M1': 213.5, 'pair': 200.36666666666667, 'conc': 281.7}
+off3 {'M1': 209.76666666666665, 'pair': 202.33333333333334, 'conc': 276.23333333333335}
+on3  {'M1': 215.5, 'pair': 211.66666666666666, 'conc': 298.73333333333335}
+M1: pairs +4.5% / +0.3% / +2.7%  mean +2.5%
+pair: pairs +3.4% / +2.3% / +4.6%  mean +3.4%
+conc: pairs -0.1% / +2.2% / +8.1%  mean +3.4%
+CONFIG LADDER DONE — config restored from /tmp/config-ladder-cfg.bak, engine DOWN.
+OWED: the F-271 re-pin (cp data/expert-profile-gold.bin data/expert-profile-learned.bin) and, on adoption, the MMLU gate.
