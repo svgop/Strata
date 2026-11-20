@@ -13578,3 +13578,29 @@ commit, releasing `organ` on every failure path (idempotent: paths that released
 
 `pin_cache_complement` now reads as five named phases: guards → `plan_cache_complement` →
 `alloc_complement_organ` → `copy_complement_layers` → commit/report (~480 → orchestration only).
+
+## F-444 — session verification gate V2: the suite's true failure taxonomy pinned (2026-11-20, 20:5x)
+
+The F-441..F-443 extractions close under the full gate, and the wider suite's behavior is now
+correctly attributed — the first full `ctest -j8` sweep read **111/196 failed** and looked like a
+disaster; it was the environment, and the record now proves it:
+
+| Mode | Result | Cause |
+|---|---|---|
+| `ctest -j8` (19:36) | 111/196 failed, `cuda_device_selftest` included | **VRAM starvation**: the operator's live `engine/strata` (PID 565410, serving since 16:28) holds 30.7 of 32.6 GB; eight concurrent CUDA contexts cannot fit in what remains |
+| `ctest` serial (20:4x) | **171/196 passed, 25 failed** | The F-437-documented pre-existing environmental set: pack-dependent tests (`pool_test`, `expert_parity` — `pack/full/experts.bin` absent on this box), the marginal-VRAM parity set (`qsa_*`, `mmvq_il`, `dma_batch`, `gemm_bf16`, `kv_stream/window`, `mm3_*`), `isa_guard_check`, `cond_node`, plus the F-442-banked `conversation_snapshot_test` timing flake |
+| Serial re-runs of the "failed" GPU tests | 8/8 + `dm_plan_parity` + `native_expert_parity_q4_K_q5_1` PASS | Recovery on de-parallelization — contention, not corruption |
+| Engine-linked gate (F-441..F-443, serial, repeated) | **14/14 PASS** | The seam this session touched |
+| `ninja strata` | links clean | The full driver program builds |
+
+**Law (measurement): the full GPU suite runs serially or in the operator's window with the engine
+down — a parallel sweep under a live server measures VRAM contention, not code.**  No deploy was
+made this session (the running engine binary, built 15:34, is untouched; session output lives in
+`build-fresh/`).
+
+Net for the session (F-441..F-444): `pin_cache_complement` **783 → 125 lines** as five named phases
+(`plan_cache_complement` → `alloc_complement_organ` behind `ComplementArena` → `copy_complement_layers`
+→ commit/report), three laws banked (whole-log reads, return-path audits, splice masking of comments
+AND string literals), one flake isolated to baseline, one suite-taxonomy record.  Every change is a
+pure verbatim extraction: public signature, callers, error strings, banners, and organ decisions
+byte-identical.  Rollback: `git revert 952bf6fe6..664140896` (or per-commit).
