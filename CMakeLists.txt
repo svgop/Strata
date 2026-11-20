@@ -667,6 +667,12 @@ if(STRATA_ENABLE_CUDA OR STRATA_ENABLE_HIP)
     target_link_libraries(expert_dispatch_golden_test PRIVATE strata_engine)
     add_test(NAME expert_dispatch_golden_test COMMAND expert_dispatch_golden_test)
     set_tests_properties(expert_dispatch_golden_test PROPERTIES TIMEOUT 120)
+    # The same binary with the fast grouping armed: STRATA_PLAN_ONEPASS runs plan_distinct_groups'
+    # stamp-array pass and STRATA_PLAN_DIFF re-derives the old scan per entry, aborting loudly on any
+    # mismatch.  The plan is designed byte-identical, so the pinned fingerprints must NOT move.
+    add_test(NAME expert_dispatch_golden_onepass COMMAND expert_dispatch_golden_test)
+    set_tests_properties(expert_dispatch_golden_onepass PROPERTIES TIMEOUT 120
+        ENVIRONMENT "STRATA_PLAN_ONEPASS=1;STRATA_PLAN_DIFF=1")
     add_executable(vmm_test tests/core/vmm_test.cpp)
     target_link_libraries(vmm_test PRIVATE strata_engine)
     add_test(NAME vmm_test COMMAND vmm_test)

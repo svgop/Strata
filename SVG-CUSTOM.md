@@ -13475,3 +13475,21 @@ and GPU-owned, 8 misses computed through `ExpertJob`s and `run_split`, counters 
 `kSingleGoldenHash = 0xf37183119d4d14fa`. Provenance: that function is **byte-identical before and
 after this session's extractions** (extraction-diff against `e0f4c57bc`), so the pin needed no A/B
 rebuild. Both hashes pass under ctest.
+
+## F-440 — the Golden Master's branch matrix completed: no-plan arm + the onepass arm frozen (2026-11-20, 19:03)
+
+The dispatch's three behavioral arms are now all frozen, completing the F-438/F-439 oracle:
+
+| Arm | Mechanism frozen | Fingerprint |
+|---|---|---|
+| plan wired (F-438) | full `plan_build`: groups/entries/starts/ptrs, publish+fetch(0), GPU-owned rows untouched | `c90ded77662c664d` |
+| plan == nullptr (F-440) | `plan_build`'s fallback `kind` scan; `gpu_zeroes_hits` false so the **host zeroes the residents** — the row-ownership split inverts, asserted by value (16 zeroed / 64 computed) | `ec8d5c9cdddc564d` |
+| `STRATA_PLAN_ONEPASS=1` + `STRATA_PLAN_DIFF=1` (F-440) | `plan_distinct_groups`' stamp-array fast pass, executed AND self-checked against the old scan per entry | **all three fingerprints unchanged** |
+
+- The onepass arm is a second ctest registration of the same binary (`expert_dispatch_golden_onepass`)
+  with `ENVIRONMENT "STRATA_PLAN_ONEPASS=1;STRATA_PLAN_DIFF=1"`: the statics read the env at first
+  call, the test's own determinism pins stay set. **Zero `plan diff:` lines** across every entry of
+  every window — the "byte for byte" design claim in the plan comments is now an executable
+  invariant, not prose. (F-225 note: onepass stays default OFF for its measured M1 cost; the arm is
+  now provably safe to flip whenever a battery wants it.)
+- ctest: 2/2 PASS.

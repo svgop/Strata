@@ -167,6 +167,11 @@ constexpr uint64_t kGoldenHash = 0xc90ded77662c664dull;
 // diff against e0f4c57bc), so the pin's provenance is textual - no A/B rebuild was needed.
 constexpr uint64_t kSingleGoldenHash = 0xf37183119d4d14faull;
 
+// The no-plan arm (plan == nullptr: a session without a GPU plan) takes plan_build's fallback kind
+// scan, and because gpu_zeroes_hits is false there the HOST zeroes the resident rows itself - the
+// row-ownership split inverts relative to the plan arm.  Recorded the same day, same provenance.
+constexpr uint64_t kNoPlanGoldenHash = 0xec8d5c9cdddc564dull;
+
 std::vector<float> sentinel_window() {
     return std::vector<float>((size_t) (kTokens * kTop) * (size_t) H, -1.2345e33f);
 }
@@ -326,6 +331,37 @@ int main() {
         require(hs == kSingleGoldenHash,
                 "the single-token fingerprint moved (or this is a new ISA: re-record "
                 "kSingleGoldenHash and note the box)");
+    }
+
+    // ---- the no-plan arm: plan == nullptr takes plan_build's fallback kind scan, and the HOST
+    // zeroes the resident rows (gpu_zeroes_hits is false without a plan)
+    {
+        Run f(pool, src, host_res, sentinel_window());
+        f.d.plan = nullptr;
+        expert_pool_dispatch_multi(f.d, x_f.data(), w.ids.data(), kTokens, kTop, f.out.data());
+        require(!f.d.failed, std::string("no-plan dispatch failed: ") +
+                                 (f.d.fail ? f.d.fail : "?"));
+        int zeroed = 0, computed = 0;
+        for (int64_t i = 0; i < kTokens * kTop; ++i) {
+            const float* row = f.out.data() + (size_t) i * (size_t) H;
+            const bool zero = row[0] == 0.0f && row[(size_t) H - 1] == 0.0f;
+            const bool untouched = row[0] == -1.2345e33f && row[(size_t) H - 1] == -1.2345e33f;
+            const int32_t e = w.ids[(size_t) i];
+            if (e == 0 || e == 1) {
+                if (zero) ++zeroed;
+            } else if (!untouched)
+                ++computed;
+        }
+        require(zeroed == w.resident_entries, "the host did not zero the residents without a plan");
+        require(computed == w.cpu_entries, "a no-plan CPU entry was never computed");
+        require(f.d.cache_refused == w.cpu_entries && f.d.multi_misses == 8,
+                "the no-plan counters are wrong");
+        const uint64_t hn = fnv1a(f.out.data(), f.out.size() * sizeof(float));
+        std::fprintf(stderr, "  dispatch golden (no plan): hash %016llx, %d rows zeroed, %d computed\n",
+                     (unsigned long long) hn, zeroed, computed);
+        std::fflush(nullptr);
+        require(hn == kNoPlanGoldenHash,
+                "the no-plan fingerprint moved (or this is a new ISA: re-record kNoPlanGoldenHash)");
     }
 
     std::printf("  dispatch golden: hash %016llx, %d resident rows kept, %d CPU rows computed\n",
