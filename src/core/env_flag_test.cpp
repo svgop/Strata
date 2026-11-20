@@ -47,6 +47,19 @@ int main() {
         std::printf("env_flag_test: %d failure(s)\n", failures);
         return 1;
     }
+    // value readers: unset/empty -> default; any non-empty string parses (garbage parses to 0)
+    {
+        const float eps = 1e-6f;
+        expect("(unset)", strata::env::float_value(nullptr, 1.5f) - 1.5f < eps && strata::env::float_value(nullptr, 1.5f) - 1.5f > -eps, true);
+        expect("(empty)", strata::env::float_value("", 1.5f) - 1.5f < eps && strata::env::float_value("", 1.5f) - 1.5f > -eps, true);
+        expect("0", strata::env::float_value("0", 1.5f) == 0.0f, true);
+        expect("0.5", strata::env::float_value("0.5", 0.0f) - 0.5f < eps && strata::env::float_value("0.5", 0.0f) - 0.5f > -eps, true);
+        expect("abc", strata::env::float_value("abc", 1.5f) == 0.0f, true);  // non-empty -> atof("abc")==0
+    }
+    if (failures) {
+        std::printf("env_flag_test: %d failure(s)\n", failures);
+        return 1;
+    }
     std::printf("env_flag_test: ok\n");
     return 0;
 }

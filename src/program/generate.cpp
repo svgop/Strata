@@ -338,8 +338,7 @@ static const char* pipe_dbg_env(const char* name) {
 // temperature softmax (no top-k/top-p replication), which is slightly more permissive. Sampled
 // traffic only - call sites gate on temperature > 0, so greedy output stays stock exact-match.
 static float typical_threshold() {
-    static const float t = [] { const char* v = std::getenv("STRATA_TYPICAL_ACCEPT");
-                                return v != nullptr && v[0] != 0 ? (float) std::atof(v) : 0.0f; }();
+    static const float t = strata::env::float_or("STRATA_TYPICAL_ACCEPT", 0.0f);
     return t;
 }
 // savage-custom F-30b: the batch-site rescue arm. DEFAULT OFF (the No-Regression Law): the

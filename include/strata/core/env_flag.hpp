@@ -33,4 +33,10 @@ inline bool truthy_strict(const char* name) { return truthy_strict_value(std::ge
 inline bool nonzero(const char* name) { return nonzero_value(std::getenv(name)); }
 inline bool one(const char* name) { return one_value(std::getenv(name)); }
 
+// --- value readers (parse a number; unset or empty returns the default) ---
+inline float float_value(const char* v, float dflt) {
+    return (v != nullptr && v[0] != '\0') ? (float) std::atof(v) : dflt;
+}
+inline float float_or(const char* name, float dflt) { return float_value(std::getenv(name), dflt); }
+
 }  // namespace strata::env
