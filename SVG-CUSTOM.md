@@ -13157,6 +13157,28 @@ The first execution step after F-419's audit. Two changes, one build, no lane to
   reproducible) + one lane-sanity probe. Not deployed this pass; the source + this journal are the
   record until the proof boot runs.
 
+## F-421 — M3 geometry asserts: three Qwen4Exp prefill kernels pinned to kCompiledGeometry (2026-11-20, 16:57)
+
+The D7 finding's gap, closed for the production prefill kernels. Compile-time only — no runtime, no
+lane touched.
+
+- **The gap:** `src/prefill/kernels.cu:23-24` fixed N/HC/D/LR/S/HK/HV/C without any assert against
+  `kCompiledGeometry`, while every sibling in `src/kernels/cuda/` already asserted. Two more
+  Qwen4Exp prefill kernels shared the hole: `src/prefill/gdn_chunk.cu` (S/HK/HV/C) and
+  `src/kernels/cuda/native_gdn_preprocess.cu` (S).
+- **The fix:** three `static_assert`s + the `strata/core/geometry.hpp` include in each. A kernel and
+  `geometry.hpp` now cannot drift apart without the build failing (the `geometry.hpp:1` contract).
+- **Build proof:** `ninja -C build-fresh strata` green (exit 0). The asserts *holding* is itself the
+  verification — the pinned constants match `kCompiledGeometry` exactly. One pre-existing
+  unused-function warning at `gdn_chunk.cu:514`, untouched.
+- **M2 re-check (closure):** the orchestration audit's "second candidate" `STRATA_ADAPT_CHECKRES`
+  getenv (`generate.cpp:18059`) is a ONE-TIME setup read inside the speculative-decoding `if` gate,
+  not a per-window read — M2 was genuinely complete at F-420 (the only hot-loop getenv was `:18326`).
+- **Follow-up owed (lower priority):** the remaining 19 constant-defining files without asserts split
+  into (a) model-variant production files — `src/qwen35/q36_engine.cu`, `src/mm3/vendor/expert.hpp`,
+  `src/prefill/prefill.cpp` (host indexing) — which need model-family scoping before asserting, and
+  (b) parity/bench/test fixtures whose constants are test-local shapes. Not touched this pass.
+
 ### note (2026-11-20, 16:55) — the far-higher-t/s investigation: the wall as one equation, and the coverage correction
 
 Dossier: `campaign/research/levers-2026-11-20-evening.md` (read-only, priced per law 15). The

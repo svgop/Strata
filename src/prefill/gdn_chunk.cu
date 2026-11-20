@@ -10,6 +10,7 @@
 // registers - the chunk-serial scan of the reference's fwd kernel).  The per-chunk 64x64 matrices A and P are
 // computed once per (chunk, head) by the kkt kernel and read by the four column slices.
 #include "strata/prefill/gdn_chunk.hpp"
+#include "strata/core/geometry.hpp"
 
 #include <cuda_runtime.h>
 #if !defined(__HIPCC__)
@@ -26,6 +27,7 @@ namespace strata::prefill {
 namespace {
 
 constexpr int S = 128, HK = 16, HV = 48, C = 10240;  // the geometry of src/prefill/kernels.cu
+static_assert(S == strata::core::kCompiledGeometry.ssm_state_size && HK == strata::core::kCompiledGeometry.ssm_k_heads && HV == strata::core::kCompiledGeometry.ssm_v_heads && C == strata::core::kCompiledGeometry.ssm_conv_channels, "gdn_chunk is compiled for core/geometry.hpp");
 constexpr int CH = 64;                               // tokens per chunk (the reference's chunk)
 constexpr int NS = 32;                               // value columns per fwd CTA
 constexpr int NSE = S / NS;                          // 4 slices per head

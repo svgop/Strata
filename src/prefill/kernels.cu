@@ -5,6 +5,7 @@
 #include "strata/kernels/gfx_arch.hpp"
 #include "strata/kernels/router_top10.hpp"
 #include "strata/core/emulate.hpp"
+#include "strata/core/geometry.hpp"
 
 #include <cuda_fp16.h>
 #include <cuda_runtime.h>
@@ -22,6 +23,8 @@ namespace {
 
 constexpr int N = 2560, HC = 4, D = N * HC, LR = 320;
 constexpr int S = 128, HK = 16, HV = 48, C = 10240;
+static_assert(N == strata::core::kCompiledGeometry.n_embd && HC == strata::core::kCompiledGeometry.hc && LR == strata::core::kCompiledGeometry.hc_lr && D == strata::core::kCompiledGeometry.hc_dim(), "prefill kernels are compiled for core/geometry.hpp");
+static_assert(S == strata::core::kCompiledGeometry.ssm_state_size && HK == strata::core::kCompiledGeometry.ssm_k_heads && HV == strata::core::kCompiledGeometry.ssm_v_heads && C == strata::core::kCompiledGeometry.ssm_conv_channels, "prefill kernels are compiled for core/geometry.hpp");
 
 __device__ __forceinline__ float warp_sum(float v) {
 #pragma unroll
