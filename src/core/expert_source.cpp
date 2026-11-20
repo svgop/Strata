@@ -2467,32 +2467,19 @@ bool FileExpertSource::map_view(std::string& why) {
 #endif
 }
 
-bool FileExpertSource::read_direct(const Fill* fills, size_t n) const {
-#if defined(_WIN32)
-    // NTFS runs the unbuffered reads of a file one at a time while the file is mapped or cached anywhere (the engine
-    // maps the GGUF shards for the token embedding and the PLE table): measured on a PCIe 5 drive, 512 KiB reads at
-    // queue depth 48 make 10.4 GB/s on a file nobody maps and 3.4 GB/s on a mapped one, 8 MiB reads 8.6 GB/s.  So
-    // windows less than kGap apart (the same role of nearby experts) are merged into requests of up to kMerge bytes.
-    constexpr uint64_t kSector = 4096, kGap = 1ull << 20, kMerge = 32ull << 20;
-    struct Window { int file; uint64_t a0, size, skip, n, at; uint8_t* dst; size_t req; uint64_t in_req; };
-    struct Req { HANDLE h; uint64_t a0, size, pos; };
-    // this thread's aligned buffer and events, kept for its next batch
-    struct Scratch {
-        uint8_t* buf = nullptr;
-        size_t cap = 0;
-        std::vector<HANDLE> ev;
-        std::vector<OVERLAPPED> ov;
-        std::vector<Window> win;
-        std::vector<size_t> order;
-        std::vector<Req> req;
-        std::vector<DWORD> got;
-        ~Scratch() {
-            if (buf != nullptr) VirtualFree(buf, 0, MEM_RELEASE);
-            for (HANDLE e : ev) CloseHandle(e);
-        }
-    };
-    thread_local Scratch sc;
-    sc.win.clear();
+// One sector-rounded byte range to fetch for one blob slice (F-445: hoisted from read_direct's two
+// platform halves, which declared it identically).  `req`/`in_req` are the merge's back-links.
+struct ReadWindow { int file; uint64_t a0, size, skip, n, at; uint8_t* dst; size_t req; uint64_t in_req; };
+
+
+// The shared front half of `read_direct` (F-445), identical on Windows and Linux until the merge
+// policy diverges: validate the batch, cut each blob's sector-rounded window(s) (experts.bin is one
+// contiguous range; a GGUF blob is three role slices), then order the windows by (file, offset) so
+// the platform merge walks them sequentially.  False on an invalid fill - the caller refuses the batch.
+bool FileExpertSource::build_read_windows(const Fill* fills, size_t n, std::vector<ReadWindow>& win,
+                                          std::vector<size_t>& order) const {
+    constexpr uint64_t kSector = 4096;   // both platform halves round windows to this
+    win.clear();
     for (size_t k = 0; k < n; ++k) {
         const Fill& f = fills[k];
         if (f.dst == nullptr || f.layer < 0 || f.e < 0 || f.layer >= n_layers_ || f.e >= n_expert_) return false;
@@ -2500,7 +2487,7 @@ bool FileExpertSource::read_direct(const Fill* fills, size_t n) const {
             const uint64_t per = layer_blob_bytes_[(size_t) f.layer];
             const uint64_t off = layer_offsets_[(size_t) f.layer] + (uint64_t) f.e * per;
             const uint64_t a0 = off / kSector * kSector, a1 = (off + per + kSector - 1) / kSector * kSector;
-            sc.win.push_back({0, a0, a1 - a0, off - a0, per, 0, f.dst, 0, 0});
+            win.push_back({0, a0, a1 - a0, off - a0, per, 0, f.dst, 0, 0});
             continue;
         }
         uint64_t at = 0;
@@ -2510,20 +2497,48 @@ bool FileExpertSource::read_direct(const Fill* fills, size_t n) const {
             const Map& m = maps_[(size_t) role_file_[i]];
             const uint64_t off = (uint64_t) (role_ptr_[i] - m.base) + (uint64_t) f.e * per;
             const uint64_t a0 = off / kSector * kSector, a1 = (off + per + kSector - 1) / kSector * kSector;
-            sc.win.push_back({role_file_[i], a0, a1 - a0, off - a0, per, at, f.dst, 0, 0});
+            win.push_back({role_file_[i], a0, a1 - a0, off - a0, per, at, f.dst, 0, 0});
             at += per;
         }
     }
-    sc.order.resize(sc.win.size());
-    for (size_t w = 0; w < sc.win.size(); ++w) sc.order[w] = w;
-    std::sort(sc.order.begin(), sc.order.end(), [&](size_t a, size_t b) {
-        return sc.win[a].file != sc.win[b].file ? sc.win[a].file < sc.win[b].file : sc.win[a].a0 < sc.win[b].a0;
+    order.resize(win.size());
+    for (size_t w = 0; w < win.size(); ++w) order[w] = w;
+    std::sort(order.begin(), order.end(), [&](size_t a, size_t b) {
+        return win[a].file != win[b].file ? win[a].file < win[b].file : win[a].a0 < win[b].a0;
     });
+    return true;
+}
+
+bool FileExpertSource::read_direct(const Fill* fills, size_t n) const {
+#if defined(_WIN32)
+    // NTFS runs the unbuffered reads of a file one at a time while the file is mapped or cached anywhere (the engine
+    // maps the GGUF shards for the token embedding and the PLE table): measured on a PCIe 5 drive, 512 KiB reads at
+    // queue depth 48 make 10.4 GB/s on a file nobody maps and 3.4 GB/s on a mapped one, 8 MiB reads 8.6 GB/s.  So
+    // windows less than kGap apart (the same role of nearby experts) are merged into requests of up to kMerge bytes.
+    constexpr uint64_t kSector = 4096, kGap = 1ull << 20, kMerge = 32ull << 20;
+    struct Req { HANDLE h; uint64_t a0, size, pos; };
+    // this thread's aligned buffer and events, kept for its next batch
+    struct Scratch {
+        uint8_t* buf = nullptr;
+        size_t cap = 0;
+        std::vector<HANDLE> ev;
+        std::vector<OVERLAPPED> ov;
+        std::vector<ReadWindow> win;
+        std::vector<size_t> order;
+        std::vector<Req> req;
+        std::vector<DWORD> got;
+        ~Scratch() {
+            if (buf != nullptr) VirtualFree(buf, 0, MEM_RELEASE);
+            for (HANDLE e : ev) CloseHandle(e);
+        }
+    };
+    thread_local Scratch sc;
+    if (!build_read_windows(fills, n, sc.win, sc.order)) return false;
     sc.req.clear();
     uint64_t total = 0;
     int last_file = -1;
     for (size_t w : sc.order) {
-        Window& x = sc.win[w];
+        ReadWindow& x = sc.win[w];
         if (!sc.req.empty() && x.file == last_file) {
             Req& q = sc.req.back();
             const uint64_t end = q.a0 + q.size, xend = x.a0 + x.size;
@@ -2575,7 +2590,7 @@ bool FileExpertSource::read_direct(const Fill* fills, size_t n) const {
     for (size_t q = 0; q < issued; ++q)
         if (!GetOverlappedResult(sc.req[q].h, &sc.ov[q], &got[q], TRUE)) ok = false;
     if (!ok || issued < sc.req.size()) return false;
-    for (const Window& x : sc.win) {
+    for (const ReadWindow& x : sc.win) {
         // a request may run past the end of the file: only the role's own bytes have to arrive
         if ((uint64_t) got[x.req] < x.in_req + x.skip + x.n) return false;
         std::memcpy(x.dst + x.at, sc.buf + sc.req[x.req].pos + x.in_req + x.skip, (size_t) x.n);
@@ -2589,13 +2604,12 @@ bool FileExpertSource::read_direct(const Fill* fills, size_t n) const {
     // own context and aligned buffer, kept for its next batch, so concurrent batches never see each other's events.
     constexpr uint64_t kSector = 4096, kMerge = 32ull << 20;
     constexpr long kDepth = 256;   // requests in flight per thread; a larger batch is read in waves of this many
-    struct Window { int file; uint64_t a0, size, skip, n, at; uint8_t* dst; size_t req; uint64_t in_req; };
     struct Req { int fd; uint64_t a0, size, pos; };
     struct Scratch {
         uint8_t* buf = nullptr;
         size_t cap = 0;
         aio_context_t ctx = 0;
-        std::vector<Window> win;
+        std::vector<ReadWindow> win;
         std::vector<size_t> order;
         std::vector<Req> req;
         std::vector<int64_t> got;
@@ -2612,38 +2626,12 @@ bool FileExpertSource::read_direct(const Fill* fills, size_t n) const {
         sc.ctx = 0;
         return false;   // no AIO (a seccomp profile, aio-max-nr): the caller falls back to the mapped copy
     }
-    sc.win.clear();
-    for (size_t k = 0; k < n; ++k) {
-        const Fill& f = fills[k];
-        if (f.dst == nullptr || f.layer < 0 || f.e < 0 || f.layer >= n_layers_ || f.e >= n_expert_) return false;
-        if (role_ptr_.empty()) {   // experts.bin: the blob is one contiguous range
-            const uint64_t per = layer_blob_bytes_[(size_t) f.layer];
-            const uint64_t off = layer_offsets_[(size_t) f.layer] + (uint64_t) f.e * per;
-            const uint64_t a0 = off / kSector * kSector, a1 = (off + per + kSector - 1) / kSector * kSector;
-            sc.win.push_back({0, a0, a1 - a0, off - a0, per, 0, f.dst, 0, 0});
-            continue;
-        }
-        uint64_t at = 0;
-        for (int r = 0; r < 3; ++r) {
-            const size_t i = (size_t) (3 * f.layer + r);
-            const uint64_t per = role_bytes_[i];
-            const Map& m = maps_[(size_t) role_file_[i]];
-            const uint64_t off = (uint64_t) (role_ptr_[i] - m.base) + (uint64_t) f.e * per;
-            const uint64_t a0 = off / kSector * kSector, a1 = (off + per + kSector - 1) / kSector * kSector;
-            sc.win.push_back({role_file_[i], a0, a1 - a0, off - a0, per, at, f.dst, 0, 0});
-            at += per;
-        }
-    }
-    sc.order.resize(sc.win.size());
-    for (size_t w = 0; w < sc.win.size(); ++w) sc.order[w] = w;
-    std::sort(sc.order.begin(), sc.order.end(), [&](size_t a, size_t b) {
-        return sc.win[a].file != sc.win[b].file ? sc.win[a].file < sc.win[b].file : sc.win[a].a0 < sc.win[b].a0;
-    });
+    if (!build_read_windows(fills, n, sc.win, sc.order)) return false;
     sc.req.clear();
     uint64_t total = 0;
     int last_file = -1;
     for (size_t w : sc.order) {
-        Window& x = sc.win[w];
+        ReadWindow& x = sc.win[w];
         if (!sc.req.empty() && x.file == last_file) {
             Req& q = sc.req.back();
             const uint64_t end = q.a0 + q.size, xend = x.a0 + x.size;
@@ -2717,7 +2705,7 @@ bool FileExpertSource::read_direct(const Fill* fills, size_t n) const {
         }
     }
     if (!ok) return false;
-    for (const Window& x : sc.win) {
+    for (const ReadWindow& x : sc.win) {
         // a request may run past the end of the file: only the role's own bytes have to arrive
         if (sc.got[x.req] < 0 || (uint64_t) sc.got[x.req] < x.in_req + x.skip + x.n) return false;
         std::memcpy(x.dst + x.at, sc.buf + sc.req[x.req].pos + x.in_req + x.skip, (size_t) x.n);

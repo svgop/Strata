@@ -718,6 +718,8 @@ void expert_hit_run(void* user, void* stream, HitPhase phase, const int32_t* ids
 /// token - which is the only way they get debugged before speed matters.
 struct ComplementArena;   // F-443: the allocation organ's state (defined in expert_source.cpp)
 
+struct ReadWindow;   // F-445: one sector-rounded fetch range (defined in expert_source.cpp)
+
 class FileExpertSource : public ExpertSource {
 public:
     FileExpertSource() = default;
@@ -1103,6 +1105,10 @@ private:
     /// walk, the partial-pin walk, and the working-set lock.  Fills `a`; on false the caller releases.
     bool alloc_complement_organ(ComplementArena& a, uint64_t bytes, const std::vector<uint64_t>& offsets,
                                 bool pin, uint64_t budget_bytes, uint64_t headroom_bytes, std::string& err);
+    /// The shared front half of `read_direct` (F-445): validate the batch, cut the sector-rounded windows
+    /// (experts.bin contiguous, or three GGUF role slices per blob), order them by (file, offset).
+    bool build_read_windows(const Fill* fills, size_t n, std::vector<ReadWindow>& win,
+                            std::vector<size_t>& order) const;
     bool open_direct(std::string& why);
     /// Windows: experts.bin mapped again as `open` maps it (begin/end_startup_unbuffered).
     bool map_view(std::string& why);

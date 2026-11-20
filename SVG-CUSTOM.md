@@ -13604,3 +13604,24 @@ Net for the session (F-441..F-444): `pin_cache_complement` **783 → 125 lines**
 AND string literals), one flake isolated to baseline, one suite-taxonomy record.  Every change is a
 pure verbatim extraction: public signature, callers, error strings, banners, and organ decisions
 byte-identical.  Rollback: `git revert 952bf6fe6..664140896` (or per-commit).
+
+## F-445 — read_direct deduplicated: the platform halves share one window builder (2026-11-20, 21:0x)
+
+The miss-fetch lane's dual-platform body carried its front half TWICE, byte-for-byte: the 27-line
+window build (batch validation, experts.bin's contiguous range vs a GGUF blob's three role slices,
+sector rounding) plus the (file, offset) ordering — once inside the `#if defined(_WIN32)` overlapped-
+ReadFile half, once inside the `__linux__` libio half.  A fix to one half could silently miss the
+other; now the concept has one authoritative location.
+
+- `struct ReadWindow` hoisted to file scope; `FileExpertSource::build_read_windows(fills, n, win,
+  order) const` (private, forward-declared in the header) carries the verbatim block with `sc.win`/
+  `sc.order` becoming parameters; both halves call it and keep only their divergent tails (NTFS's
+  kGap/kMerge merge + overlapped IO vs Linux's touch-only merge + `io_submit` waves).
+- **Proof:** the two platform blocks were asserted `==` BEFORE the move; the helper body diffs against
+  that block by exactly one line — the hoisted `constexpr kSector = 4096` (both halves declared it).
+  Linux executes under the complement tests' exact-byte assertions (`copy_from_files` → `read_direct`
+  is the file-fallback lane they freeze); Win32 is textually certified, the F-439 precedent for
+  arms this box cannot compile.
+- **Gate:** 13/13 engine-linked ctests + `ninja strata` link, zero new diagnostics.  Net −6 lines and
+  −27 duplicated lines of divergence risk.
+- Rollback: `git revert` of this commit.
