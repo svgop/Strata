@@ -12818,3 +12818,22 @@ walk is 1,382,400 B (`load_main.cpp:19`, asserted at five sites incl. `s2_expert
 F-411's live-bytes derivation (862 MB/window unique, ~0.6 ms kernel time at 1400 GB/s) stands on
 the cache-side number; the dossier's 2.66 MB was the pack-side number. The wall remains the wait
 structure.
+
+### note (2026-11-20, 14:12) — the wait-structure succession priced: upstream owns the predicted-prefetch arm
+
+The code read behind the F-411 succession (the wall is the wait structure, not the kernels):
+- The overlap architecture ALREADY exists in our verify loop (`verify.cpp:2262-2275`): the hit
+  experts launch on flag A (the pool's GPU plan), only the PCIe/miss share waits flag B, the CPU
+  rows wait flag _.  The 2.73-2.90 ms CPU-expert term is the UN-HIDDEN remainder (rows outlasting
+  the hit kernels' execution), not a missing pipeline.
+- Upstream (v0.2.16, same flagA/flagB skeleton - they did not restructure the serialization
+  either) wrapped it with **STRATA_ADAPT_FETCH**: the layer's most-routed misses are prefetched
+  with plan-carried destinations (`p_dst2` through `fetch_blobs`), admitted into the VRAM tier
+  (`ExpertDispatch::fetch_admit`, env 1 = beside the tier's copies, 2 = instead; MIN/MARGIN
+  thresholds; `expert_source.cpp:5059`, `verify.cpp:2426`, `generate.cpp:2236`).  Our fork has
+  ZERO of it - a named gap, exactly the dossier S2 lever 3 ("predicted prefetch") with a
+  production precedent on our exact component class (law 12).
+- The queue order stands: H3 verdict -> H4 -> the fresh STRATA_DM_WAIT_STATS recalibration boot
+  (waitA/waitB/waitCPU + reach-before-wait on the CURRENT standing; the T26-era read is
+  adoption-stale) -> the ADAPT_FETCH port priced against those numbers (strangler fold, three
+  files, parity harness first).
