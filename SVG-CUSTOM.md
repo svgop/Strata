@@ -13666,3 +13666,26 @@ pass it (five `return true` tails; `arena_plan_layout` is void).
 - **Gate:** 14/14 engine-linked ctests + `arena_source_golden_test` PASS with the frozen
   fingerprint; `ninja strata` links.  Warning parity unchanged.
 - Rollback: `git revert` of this commit.
+
+## F-448 — the twice-earned UB class is now a build failure; the specdec unlock task is specced (2026-11-20, 21:0x)
+
+Two hardening moves close the session's second front:
+
+1. **`-Werror=return-type` (CXX/HIP) and `/we4715` (MSVC) joined `strata_warnings` unconditionally.**
+   Both session UBs (F-441's missing success return, F-447's data-dependent fall-through) were this
+   exact warning class; the first was visible in an unread log, the second GCC did not even emit.
+   Narrow errorization - not the whole `-Werror` surface, which stays behind `STRATA_WERROR` -
+   because a falling-off-the-end function is never intentional.  **Full-tree certification: engine
+   library, driver binary, and the test set rebuild clean; 14/14 engine-linked ctests PASS.**
+2. **`campaign/research/verifier-golden-harness-spec.md`**: the unlock task for the specdec front.
+   verify.cpp (4,727; `record_window` 1,308 lines, 23 captured lambdas), mtp.cpp (2,169) and
+   generate.cpp (18,744) have ZERO unit callers - `verify_parity` links `strata_kernels`, the
+   specdec tests are CPU-only headers - and the engine-level A/B is blocked while the operator's
+   engine holds the VRAM.  The spec: synthetic WeightTable at REAL dims (kCompiledGeometry is
+   pinned, F-421), the dispatch golden's synthetic-pack machinery for experts, fingerprint R_ +
+   logits after `record_window(1)`, the capped-vocab option priced, and the do-not clause: no
+   `record_window` extraction before the harness exists.
+
+Also closed by inspection: `FileExpertSource::open` (171 lines) is already clean guard-style - not
+every long function is a god-function; cutting it would be churn.  `expert_source.cpp` stands at
+6,548 lines with every major seam named, extracted, and execution-pinned.

@@ -250,11 +250,14 @@ add_library(strata_warnings INTERFACE)
 target_compile_options(strata_warnings INTERFACE
   $<$<AND:$<COMPILE_LANGUAGE:CXX>,$<CXX_COMPILER_ID:MSVC>>:/W4>
   $<$<AND:$<COMPILE_LANGUAGE:CXX>,$<CXX_COMPILER_ID:MSVC>>:/utf-8>
+  $<$<AND:$<COMPILE_LANGUAGE:CXX>,$<CXX_COMPILER_ID:MSVC>>:/we4715>   # F-448: falling off a non-void end is UB, twice earned
   $<$<AND:$<COMPILE_LANGUAGE:CXX>,$<NOT:$<CXX_COMPILER_ID:MSVC>>>:-Wall>
   $<$<AND:$<COMPILE_LANGUAGE:CXX>,$<NOT:$<CXX_COMPILER_ID:MSVC>>>:-Wextra>
+  $<$<AND:$<COMPILE_LANGUAGE:CXX>,$<NOT:$<CXX_COMPILER_ID:MSVC>>>:-Werror=return-type>   # F-448: ditto, the F-441/F-447 class
   $<$<AND:$<COMPILE_LANGUAGE:CUDA>,$<CXX_COMPILER_ID:MSVC>>:-Xcompiler=/W4>
   $<$<COMPILE_LANGUAGE:HIP>:-Wall>
-  $<$<COMPILE_LANGUAGE:HIP>:-Wextra>)
+  $<$<COMPILE_LANGUAGE:HIP>:-Wextra>
+  $<$<COMPILE_LANGUAGE:HIP>:-Werror=return-type>)   # F-448: the F-441/F-447 class, on the HIP lane too
 if(STRATA_WERROR)
   target_compile_options(strata_warnings INTERFACE
     $<$<AND:$<COMPILE_LANGUAGE:CXX>,$<CXX_COMPILER_ID:MSVC>>:/WX>
