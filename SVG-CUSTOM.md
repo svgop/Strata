@@ -13689,3 +13689,24 @@ Two hardening moves close the session's second front:
 Also closed by inspection: `FileExpertSource::open` (171 lines) is already clean guard-style - not
 every long function is a god-function; cutting it would be churn.  `expert_source.cpp` stands at
 6,548 lines with every major seam named, extracted, and execution-pinned.
+
+## F-449 — session close-out gate: 92% serial, the failure set stays environmental (2026-11-20, 21:1x)
+
+The F-441..F-448 session closes under the full serial suite: **181/197 passed, 15 failed** - all
+members of the documented environmental classes (missing `pack/full/experts.bin`: `expert_parity`,
+`pool_test`; VRAM-marginal beside the live engine: the parity/kernels set, now including
+`prefill_fused_moe_test`/`prefill_fused_iq_test` whose `cudaMalloc: out of memory` fires AFTER their
+parity numbers print clean; `mm3_*`; `isa_guard_check`; `cond_node`).  **Not one of the 15 links
+`strata_engine`** - the library carrying every extraction this session - and the engine-linked gate
+is 14/14 with both Golden Master fingerprints unchanged (`c90ded77662c664d`, `f2da901296f91c2d`).
+
+Session ledger (F-441..F-449): `pin_cache_complement` 783 → 125 lines as five named phases;
+`read_direct`'s duplicated platform front unified; `ArenaExpertSource::open` decomposed under a NEW
+Golden Master; `arena_source_golden_test` added (the specdec-front pattern proven); two UBs caught,
+root-caused, and killed as a class by `-Werror=return-type`; `campaign/return_audit.py` +
+`campaign/research/verifier-golden-harness-spec.md` banked.  Net: −230 lines of god-function body,
+zero behavior deltas, every change a one-commit revert.
+
+Next front (specced, not started): the verifier-golden harness unlocks verify.cpp/mtp.cpp/
+generate.cpp; `Prefill::run_impl` (2,473 lines, 19 lambdas, the TTFT lane) opens the session after,
+net-first.  The engine serving since 16:28 was never touched; no deploy was made.
