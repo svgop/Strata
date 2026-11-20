@@ -2405,7 +2405,8 @@ add_executable(strata-mm3 src/mm3/mm3_main.cpp src/mm3/mm3_model.cu src/mm3/mm3_
       # dequantize_row_* and a double reference.  The vendored ds4_iq fork compiles into each test exactly
       # as into the engine (MAYA_DS4_IQ_ONLY).
       add_executable(mm3_exl3_test tests/mm3/mm3_exl3_test.cu src/mm3/mm3_exl3.cu src/mm3/mm3_gv.cu
-                                   src/mm3/mm3_gguf.cu src/mm3/mm3_vq.cu src/mm3/vendor/ds4_iq.cu src/mm3/vendor/ds4_lt.cu
+                                   src/mm3/mm3_gguf.cu src/mm3/mm3_vq.cu src/mm3/mm3_nvfp4.cu
+                                   src/mm3/vendor/ds4_iq.cu src/mm3/vendor/ds4_lt.cu
                                    src/mm3/vendor/exl3_ref.cpp src/mm3/vendor/exl3_cpu.cpp
                                    src/mm3/vendor/expert_layout.cpp src/mm3/vendor/expert.cpp
                                    src/mm3/vendor/iq_avx2.cpp src/mm3/vendor/iq_avx512.cpp
