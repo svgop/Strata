@@ -13078,3 +13078,16 @@ output is simply never consumed).  Queued behind the card with the depth re-test
   context/vision/spec envelope, the card's idle VRAM put to work.
 - Evidence: /tmp/upstream-calibrate-v2.out (their run), the sweep lines in this entry, the
   coverage curve above (tools/replay_cache_policy.py, our trace, deterministic).
+
+### note (2026-11-20, 16:32) — the v0.2.16→v0.2.17+ delta triaged (101 engine commits)
+
+The fresh upstream pull's engine subtree, filtered for our topology (one RTX 5090 32 GB, resident
+mode):  **STRATA_ADAPT_FETCH=2 is upstream's DEFAULT on 12.x cards with <=16 GiB** (ca99e886f) -
+the mechanism we ported this morning is production-proven at their end (their gate keeps it opt-in
+on 32 GB cards, as our port does).  STRATA_POOL_DEP (default-on, the per-expert dependency queue)
+was measured BIT-EXACT with the CPU pool's window -2.9% on an RTX 5090 + EPYC - adopted for
+structure, not speed; not a port candidate for our lanes.  STRATA_SLOT_READ_WIDE / READ_AHEAD
+(#5866/#5868, opt-in): a slot ALONE in its group reads whole windows / sends windows ahead - the
+SOLO PREFILL batching lever (multi-turn TTFT), a named arm for later, distinct from our decode
+starvation (F-414).  STRATA_ROUTE_WIN (one routing launch pair per layer) is graphed-away for us.
+The multi-card/link-aware prefill shares and the cgroup/container fixes are not our topology.
