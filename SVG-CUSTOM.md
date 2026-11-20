@@ -13380,3 +13380,24 @@ out-params for the caller's final run.
 - **Net:** `expert_pool_dispatch_multi` 309 → **141 lines**. The god-function is now a phase list:
   `dispatch_begin` → locals → `plan_build` → peer/remote → `cpu_miss_pipeline` → final run →
   finish → timing. Cumulative this session: 570 → 141 (−75%).
+
+## F-436 — ADAPT_FETCH swap-admission extracted from plan_build (2026-11-20, 18:15)
+
+The 40-line ADAPT_FETCH step-3b block (the fetched misses that routed enough swap into the slots of
+the least-routed resident experts the window does not route) moved verbatim from `plan_build` into
+`plan_admit_fetch(d, ids, n, pcie_i0, fetches, P)` — six params, a genuinely separable concern that
+touches only `d` and the plan sink's `dst2`.
+
+- **Parity:** script-diffed the block against HEAD — BYTE-IDENTICAL. Guard (`d.fetch_admit > 0`,
+  default off) moves inside the helper; the call is unconditional, the guard returns immediately when
+  off. Build green.
+- **Net:** `plan_build` 184 → 144 lines.
+
+**Structural finding (recorded so the next agent does not re-pay it):** the other giant functions —
+`pin_cache_complement` (783, boot), `main()` (~16k, boot), `record_window` (1308, graph capture) —
+resist clean decomposition. Their phases share fine-grained state (capture lambdas `mm`/`quant_in`/
+`stamp`/`fork`/`join`, loop-carried flags like `il_ready`, stream/event handles, arena bookkeeping).
+Extracting them needs a 12-arg signature or a state struct — the doctrine's over-engineering trap
+(law 16), and they are boot/capture code where the operator's interleaved gate is the only real
+oracle. `expert_pool_dispatch_multi` was decomposable because its phases were genuinely separable in time
+(admit → plan → CPU-run → finish); these are not. Left standing, with the reason on the record.
