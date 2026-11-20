@@ -13007,3 +13007,12 @@ steering on the same empty counters.  Teardown clean, profile re-pinned.
 - **The boot-restore wrinkle named:** env-ladder leaves a serving engine up by design (the restore
   boot); anything that connects to it between the battery and the re-pin gets the battery's last
   learned state.  The structural re-pin closes that window to seconds.
+
+### F-417 verification (16:12): the convergence measured to band
+
+Post-fix trajectory on the re-pinned, re-certified boot (load disclosed per read):
+200.4 @2.4 -> 204.6 @2.0 -> 209.9 @3.0 -> **210.1 @4.2** - the climb to the load-adjusted bank
+class (the F-410/F-412 control legs read 210-215 in this band) while the box load ROSE, so the
+tier's convergence outran the added contention; the swap counters went quiet (converged).  The
+operator's slowness is resolved: the pre-fix boot thrashed (25.3k exchanges, 10.2k file reads on
+the poisoned profile); the post-fix boot pays only the fresh-profile ramp, now complete.
