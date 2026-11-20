@@ -12178,6 +12178,10 @@ int main(int argc, char** argv) {
         // savage-custom F-31: slot-draft acceptance telemetry (the coupled-in-slots diagnostic) -
         // with the rescue off, keep==2 IS the exact-match agreement rate.
         int64_t bt_slot_drafts = 0, bt_slot_accepts = 0;
+        // H5's prerequisite (F-note 15:06): the slot drafter's per-depth acceptance, the same censoring
+        // rule the MTP dp_tested/dp_ok counters carry (positions <= accepted+1) - the F-228 instrument
+        // reads the MTP chain class while the standing drafts via slots, so its zeros priced nothing.
+        int64_t bt_sd_tested[strata::kernels::kVerifyMaxT] = {}, bt_sd_ok[strata::kernels::kVerifyMaxT] = {};
         // T39 (R3): the batch-lane twin of the serial STRATA_SPEC_TRACE - per-round tested/accepted +
         // rescue outcome + dprob as "b " lines into the same file (the serial lane writes "w " lines).
         // Settles the 9-conc acceptance denominator artifact (exact vs rescue-inclusive vs offered).
@@ -12667,6 +12671,10 @@ int main(int argc, char** argv) {
                             }
                             keep[b] = acc;
                             if (acc >= 2) ++bt_slot_accepts;
+                            for (int d = 0; d + 1 < w.nrows[a] && d < strata::kernels::kVerifyMaxT && d <= acc - 1; ++d) {
+                                ++bt_sd_tested[d];
+                                bt_sd_ok[d] += d < acc - 1;
+                            }
                         }
                     }
                     if (bt_trace_f) {
@@ -12924,6 +12932,10 @@ int main(int argc, char** argv) {
                     }
                     keep[b] = acc;
                     if (acc >= 2) ++bt_slot_accepts;   // rescued counts as accepted in the telemetry
+                    for (int d = 0; d + 1 < nrows[a] && d < strata::kernels::kVerifyMaxT && d <= acc - 1; ++d) {
+                        ++bt_sd_tested[d];
+                        bt_sd_ok[d] += d < acc - 1;
+                    }
                 }
             }
             if (!(mtp_use ? ver.commit_slot_prefixes(keep.data(), err) : ver.commit_slots(err))) {
@@ -13085,9 +13097,15 @@ int main(int argc, char** argv) {
                     std::fprintf(stderr, "strata batch: MTP proposals accepted %lld of %lld (%.1f%%)\n",
                                  (long long) bt_accepted, (long long) (bt_rows - bt_accepted),
                                  100.0 * (double) bt_accepted / (double) std::max<int64_t>(bt_rows - bt_accepted, 1));
+                if (std::getenv("STRATA_SPEC_DEPTH") != nullptr && bt_sd_tested[0] > 0)   // the slot drafter's own stair
+                    std::fprintf(stderr, "strata serve: slot depth: accepted/tested %lld/%lld %lld/%lld %lld/%lld %lld/%lld %lld/%lld\n",
+                                 (long long) bt_sd_ok[0], (long long) bt_sd_tested[0], (long long) bt_sd_ok[1], (long long) bt_sd_tested[1],
+                                 (long long) bt_sd_ok[2], (long long) bt_sd_tested[2], (long long) bt_sd_ok[3], (long long) bt_sd_tested[3],
+                                 (long long) bt_sd_ok[4], (long long) bt_sd_tested[4]);
                 bt_run = bt_commit = bt_emit = bt_adapt_wait = 0;
                 bt_windows = bt_rows = bt_tokens = bt_accepted = bt_adapt_rounds = bt_adapt_swaps = 0;
                 bt_slot_drafts = bt_slot_accepts = 0;
+                for (int d = 0; d < strata::kernels::kVerifyMaxT; ++d) bt_sd_tested[d] = bt_sd_ok[d] = 0;
                 bt_adapt_rounds = bt_adapt_swaps = 0;
                 bt_adapt_wait = 0;
             }

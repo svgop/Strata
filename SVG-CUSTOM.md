@@ -12941,3 +12941,28 @@ drafter - the same censoring rule (positions <= accepted+1) applied where slot-d
 is resolved.  Until it exists, the depth stair cannot be priced on this standing, and
 ADAPTIVE_SPEC (whose W1 controller seeds from per-depth EMAs, generate.cpp:15808) would be
 steering on the same empty counters.  Teardown clean, profile re-pinned.
+
+## F-415 — the slot stair instrumented, and the drafter's true shape: depth 1 only (2026-11-20, 15:15)
+
+- **The instrument (H5's prerequisite, built this round):** per-depth accepted/tested counters for
+  the SLOT drafter at both acceptance sites (the cohort `finish` lambda and the solo/batch tail,
+  generate.cpp - the same censoring rule the MTP dp counters carry: positions <= accepted+1),
+  printed as `slot depth: accepted/tested ...` beside the batch anatomy under
+  STRATA_SPEC_DEPTH, reset with the interval.  Publish-only: zero behavior change.
+- **The deploy lesson (live):** the stash-provenance test rebuilt build-fresh from the STASHED
+  source and that stale binary was deployed - the first verification boot ran without the
+  telemetry and printed nothing (correctly).  Caught by hash mismatch on rebuild; redeployed,
+  re-verified.  Law 14 again: the deployed process is the change, and the hash is the proof.
+- **The finding (the stair's first real data):** `slot depth: accepted/tested 658/1100 0/0 0/0
+  0/0 0/0` - **the slot drafter offers ONE draft per window; positions 1-4 are never tested.**
+  The 61-66% aggregate acceptance is depth-0 acceptance (59.8-64.6% per interval).  F-228's
+  "depths 4-6 offered" described the MTP chain era; the standing speculates single proposals.
+- **The lever, now exact:** the chain machinery is ready and idle - `keep[b] = acc` accepts
+  chains, `commit_slot_prefixes` commits them, the verify window carries up to kVerifyMaxT rows.
+  F-414 priced rows/window as THE M1 lever (8.79 ms GPU-reach idle at 3.1 rows vs 0.51 at 4.9).
+  **H5's arm: offer deeper chains per slot** - find the drafter's per-slot proposal count (what
+  sets nrows) and the depth knob, price the stair against the depth-0 acceptance floor (a depth
+  offered at p pays when p x rows-marginal-cost > 1; with the host stages already paid at depth 0,
+  the marginal GPU cost of an accepted chain row is the cheap one).
+- Verification legs standing-class (M1 231.9 at load 3.7).  Teardown clean, profile re-pinned.
+  Rollback: engine/strata.pre-h5tele.
