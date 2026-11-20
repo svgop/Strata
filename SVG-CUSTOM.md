@@ -13044,3 +13044,37 @@ prices it up (the ceiling stands at ~the whole 2.9 ms CPU-expert term).  The int
 it lives: a third consumer beside ForesightSwap/IO - predicted-miss jobs handed to ExpertPool as
 speculative work, whose epoch-claim machinery expires stragglers naturally (a wrong prediction's
 output is simply never consumed).  Queued behind the card with the depth re-test.
+
+## F-418 — upstream's calibration run against ours, and the 99% answer: coverage, not knobs (2026-11-20, 16:35)
+
+- **The upstream run (operator-directed):** ~/LLM/strata fast-forwarded 1005 commits to v0.2.17+
+  (engine 0.1.63; the layout moved - fresh build-cuda configured at engine/, toolchain from the
+  stale cache), their terminal/tools/calibrate.py on strata-iq3s-stock.json (6.3 min, seeded with
+  OUR gold profile for the same-seed control - their tree's profile had been cleaned).
+- **Their tuned settings (live interleave, their stock engine):** pcie-frac 0.35 (IDENTICAL to
+  our standing), spec-min-p 0.70 (+4% over 0.5 on their engine - a NEW arm candidate for ours),
+  adapt trio 1/80/0.97, 10 pool workers.  **Their best-tuned stock decode: 163.1 t/s.  Our
+  standing: 210-230.  The custom fork leads upstream's best-of-box by +29-41%.**
+- **The tier shape converges cross-engine:** every=1 + decay=0.97 on both (our F-391 offline,
+  their live).  The swaps count: their live 80 > 160 by +7% - and our EXTENDED OFFLINE SWEEP
+  (swaps 48/64/80/96/128/160 at 1/0.97 on our trace) shows why: the share SATURATES at ~80
+  (0.9042 -> 0.9049 across 80-160, a 0.07pp span) - past 80, extra swaps buy nothing and cost
+  double the copy traffic.  **1/0.97/80 is the better point: same share, half the swap overhead.**
+  The F-412 live test of 160 landing inside-band corroborates from our side.
+- **The 99% question answered with the coverage curve (the replay tool's slots parameter):**
+  9900 -> 90.4%, 11k -> 92.0%, 12.3k -> 93.4%, 14k -> 95.0%, 16.4k -> 96.6%, 20k -> 98.4%,
+  24.6k -> 100%.  ~+1.5pp per 1000 slots.  **The knob space is EXHAUSTED at ~90.5%; the SLOT
+  COUNT is the 99% lever.**  99% needs ~20.8k slots = 28.7 GiB of experts - beyond the envelope
+  (the engine holds 31.1 of 32.6 GiB with ~17.4 non-expert); ~16k slots (22.1 GiB) is the
+  candidate IF the ledger allows: offline ~96.3%, live share ~98%+, the CPU-expert term (the
+  F-414 wall's 2.9 ms) shrinks toward zero - the same +21%-class ceiling the lookahead arm
+  targets, by coverage instead of compute overlap.  Two roads up the same hill.
+- **The denominators named (the live lines' lesson):** the engine's "decode expert cache hit
+  rate 99.6%" counts CACHE LOOKUPS; the anatomy's "VRAM 95.8%" counts where routed entries
+  COMPUTED.  The 3.7% CPU compute share is the tax the operator sees; the slot curve attacks it.
+- **The falsifier (one boot, queued behind the card):** --expert-cache 16000 - the boot's own
+  geometry guard answers fit (the F-409 refusal class); fingerprint changes (slots=16000) so any
+  adoption is a deliberate re-bank under the full battery law.  Not an illusion win: same
+  context/vision/spec envelope, the card's idle VRAM put to work.
+- Evidence: /tmp/upstream-calibrate-v2.out (their run), the sweep lines in this entry, the
+  coverage curve above (tools/replay_cache_policy.py, our trace, deterministic).
