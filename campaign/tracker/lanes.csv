@@ -172,9 +172,12 @@ qwen,2026-11-09,v6,GSQ v6 PINNED-REGIME bank (see solo row for witnesses),conc,2
 qwen,2026-11-09,v6,GSQ RECORD-CLASS RESTORED (quiet-hour v6: controls 223.6/212.2/307.6 means with peaks 238-239 solo and 316-318 conc; GPU-reach wait collapsed 12.27 -> 0.98-1.55ms unpinned - the doorbell is load-dependent poller preemption confirmed by engine telemetry; record 233.1 solo vs tonight mean -4pct with peaks at record; taskset pinning neutral on a quiet box = parked env-gated),solo,223.6,0,mean
 qwen,2026-11-09,v6,GSQ RECORD-CLASS RESTORED (see solo row for witnesses),pair,212.2,0,mean
 qwen,2026-11-09,v6,GSQ RECORD-CLASS RESTORED (see solo row for witnesses),conc,307.6,0,mean
-qwen,2026-11-10,712f1981,GSQ POST-REBOOT WARM BENCH (isolation stack LIVE: isolcpus/nohz_full/rcu_nocbs 8-15+24-31 + irqaffinity 0-7+16-23; engine pinned 8-15+24-31 under swap scope; clocks 2962/13801 held; 5 probes; last-3 booked; solo peak 240.0 = best since F-357's 241.8 and +3.8pct over the 231.2 recent-era best; GPU-reach wait 0.40-0.63ms in ALL FIVE probes = the structural quiet class with zero 12ms flushes; pool released 0),solo,0,0,mean
-qwen,2026-11-10,712f1981,GSQ POST-REBOOT WARM BENCH (see solo row for witnesses; peak 216.5),pair,0,0,mean
-qwen,2026-11-10,712f1981,GSQ POST-REBOOT WARM BENCH (see solo row for witnesses; peak 303.5),conc,0,0,mean
+qwen,2026-11-10,712f1981,GSQ POST-REBOOT WARM BENCH (isolation stack LIVE: isolcpus/nohz_full/rcu_nocbs 8-15+24-31 + irqaffinity 0-7+16-23; engine pinned 8-15+24-31 under swap scope; clocks 2962/13801 held; 5 probes; last-3 booked; solo peak 240.0 = best since F-357's 241.8 and +3.8pct over the 231.2 recent-era best; GPU-reach wait 0.40-0.63ms in ALL FIVE probes = the structural quiet class with zero 12ms flushes; pool released 0),note,0,0,note
+qwen,2026-11-10,712f1981,GSQ POST-REBOOT WARM BENCH (see solo row for witnesses; peak 216.5),note,0,0,note
+qwen,2026-11-10,712f1981,GSQ POST-REBOOT WARM BENCH (see solo row for witnesses; peak 303.5),note,0,0,note
 deepseek,2026-11-10,912b4069,DS POST-REBOOT WARM BENCH (isolation stack live; pinned 8-15+24-31 under swap scope swap.max=0+current=0; clocks 2955/13801; ordinary-arena all-or-none copy 111 GiB anon - pool released by doctrine; Rsvd-fixed dsv41 binary; 3 probes booked; at-or-above every Nov-5 bank: geometry 56.8/57.2/64.4 - handshake 60.0/57.7/65.2 - T61 4e 59.3/57.9/65.3; solo rising 57.6-59.4-62.8 = still warming),solo,59.9,0,mean
 deepseek,2026-11-10,912b4069,DS POST-REBOOT WARM BENCH (see solo row for witnesses),pair,59.4,0,mean
 deepseek,2026-11-10,912b4069,DS POST-REBOOT WARM BENCH (see solo row for witnesses; conc peak 69.4),conc,67.6,0,mean
+qwen,2026-11-20,f55ba500,F-408 quiet-window bank (5 boots legs 2-3 spread 1.5%),solo,220.6,0,mean
+qwen,2026-11-20,f55ba500,F-408 record leg (boot 5 leg 3),solo,228.7,0,best
+qwen,2026-11-20,f55ba500,F-405 organ declared+armed hostalloc; pair lane retired per operator (concurrent is the multi-lane),note,0,0,note

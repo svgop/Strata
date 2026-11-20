@@ -12671,3 +12671,45 @@ storage canon (reference updates in the same commit):
   governs.  The t/s path forward is the standing queue: the 220+ quiet-window bank on the declared
   organ, all-lane parity + MMLU for F-405, the leg-1 residual — now with per-thread attribution on
   every future burn map.
+
+## F-408 — the quiet window collected: the lottery certified dead (spread 1.5%), the 220 bank landed, F-405 adopted (2026-11-20, 12:33-13:10)
+
+- **The adoption interleave (env-ladder ABAB, 4 boots, one binary, `STRATA_COMPLEMENT_BACKING`
+  auto/hostalloc):** off1 225.7/215.2/286.2, on1 209.7/205.0/273.9, off2 207.9/205.0/298.1, on2
+  230.6/206.2/278.9 (M1/pair/conc leg means) — **M1 +1.9% mean, pair -2.1% (retired lane), conc
+  -5.4%**.  EVERY boot — controls included — came up driver-pinned (231/231 watcher samples + all
+  boot lines): at 169 GiB free the flip's knife edge never triggers, so the arms ran the IDENTICAL
+  organ and the interleave measures the declaration's PARITY (a conc delta has no mechanism between
+  identical code paths; the conc lane's documented window classes — F-246 — cover the wobble; both
+  arms' windows agree).  Evidence: `campaign/results/f405-envladder.out` + `f405-adopt-*.txt`.
+- **Bit identity:** p2 sha matches exactly across arms; p1/p3 differ — with both arms on the same
+  code path this is the S3/F-244 cross-boot greedy nondeterminism re-documented (the instrument's
+  known limit), not an organ effect.  The canary stands on mechanism (same bytes, same kernels, the
+  env string only chose between paths both boots took the same way) + the MMLU gate below.
+- **MMLU gate PASSED: 94.29%** (66/70, floor 93.3, not borderline — one gate suffices).
+  `campaign/results/mmlu-f405-hostalloc.json`.  **F-405 ADOPTION COMPLETE** — parity + gate + the
+  load-band floor evidence (spread 53.1->9.4, floor 137->194).
+- **THE BANK (boot-spread 5 boots x 3 legs, quiet window, load-disclosed 3.1-9.2 incl. the engine's
+  own isolated-core threads):** fingerprint identical every boot, backing driver-pinned every boot,
+  memory envelope held (READY 101-102.7 GiB, settled 95-96.7 — the 61.9 knife edge never approached).
+  Maxima 226.5/225.3/226.7/227.8/228.7 — **spread 1.5%, stdev 1.3, max-mean 227.0**.  **M1 bank
+  220.6** (10 legs, legs 2-3) vs the Nov-9 GSQ standing 223.6: -1.3%, inside the noise band — a
+  within-noise re-bank confirmation, appended (the line never steps down beyond noise).  **Record leg
+  228.7** (previous solo best 223.4).  The boot lottery's full arc: 53.1% -> 9.4% (load band) ->
+  **1.5% (quiet)**.  Evidence: `campaign/results/spread-f405-bank-125807.txt`.
+- **The leg-1 residual (-11.8% on the bank boots) — mechanism NARROWED by the instrumented boot:**
+  NOT first-touch faults (minor faults equal per leg at 105-136k, majors 0 after settle — F-365's
+  class would read millions), NOT parking cost (42-45 ms/leg, every leg).  The signature: leg 1 pays
+  **338 ms of file-tier decode waits** (613 fetches, 5.7 GB expert reads through the page cache,
+  which then holds 100%) vs 10-12 ms on later legs, plus the adaptive tier reshaping (2378 experts
+  swapped in) from corpus-shaped to probe-shaped traffic.  The residual is the SHAPE MISMATCH between
+  the prewarm corpus (3 fixed prompts) and the probe's expert distribution.  NEXT-ROUND ARM: extend
+  the corpus to the battery's traffic shapes (re-verification owed — F-400's determinism contract
+  must survive the corpus change).  On the instrumented boot the residual read 2 legs deep
+  (208.9/206.8/221.4/220.0) — the first TWO legs carry it when the boot settles shorter.
+- **Conc window-class note (no tracker point):** today's conc reads 264-306 both arms vs the 305.9
+  bank — the F-246 window class, arms in agreement, ledger not chart.
+- **Tracker hygiene (on touch):** the Nov-10 qwen rows carried tps=0 as kind=mean (booked means
+  never recorded; labels hold peaks 240.0/216.5/303.5) — they plotted as a dive to zero since
+  Nov 10.  Converted to lane=note annotations; chart rebuilt and READ: solo means 216.3 -> 223.6 ->
+  220.6 (within noise), record diamond 228.7 on top.

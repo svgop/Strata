@@ -1,0 +1,74 @@
+lane binary saved: e2e6d7d9
+=== round 1: OFF ===
+[off1] env STRATA_COMPLEMENT_BACKING=auto
+[warm-discard] M1 single-stream : 200.1 t/s (2000 tok in 10.00s)
+[warm-discard] M2 pair          : 198.2 t/s aggregate (1800 tok in 9.08s)
+[warm-discard] M2 6-conc        : 281.0 t/s aggregate (3600 tok in 12.81s)
+M1 single-stream : 214.6 t/s (2000 tok in 9.32s)
+M2 pair          : 216.6 t/s aggregate (1800 tok in 8.31s)
+M2 6-conc        : 295.4 t/s aggregate (3600 tok in 12.19s)
+M1 single-stream : 239.5 t/s (2000 tok in 8.35s)
+M2 pair          : 221.2 t/s aggregate (1800 tok in 8.14s)
+M2 6-conc        : 286.9 t/s aggregate (3600 tok in 12.55s)
+M1 single-stream : 223.1 t/s (2000 tok in 8.96s)
+M2 pair          : 207.9 t/s aggregate (1800 tok in 8.66s)
+M2 6-conc        : 276.3 t/s aggregate (3600 tok in 13.03s)
+p1: 320 tok, sha256 9595f078bf7fd0d4..., 3.28s
+p2: 320 tok, sha256 80b1065b2ea74722..., 2.77s
+p3: 320 tok, sha256 705c70d717d387ab..., 2.42s
+saved /home/svg/LLM/strata-custom-2/campaign/results/f209-bit-f405-adopt-off.json
+=== round 1: ON ===
+[on1] env STRATA_COMPLEMENT_BACKING=hostalloc
+[warm-discard] M1 single-stream : 215.7 t/s (2000 tok in 9.27s)
+[warm-discard] M2 pair          : 193.7 t/s aggregate (1800 tok in 9.29s)
+[warm-discard] M2 6-conc        : 276.4 t/s aggregate (3600 tok in 13.02s)
+M1 single-stream : 235.2 t/s (2000 tok in 8.50s)
+M2 pair          : 217.0 t/s aggregate (1800 tok in 8.29s)
+M2 6-conc        : 269.7 t/s aggregate (3600 tok in 13.35s)
+M1 single-stream : 197.4 t/s (2000 tok in 10.13s)
+M2 pair          : 200.5 t/s aggregate (1800 tok in 8.98s)
+M2 6-conc        : 269.7 t/s aggregate (3600 tok in 13.35s)
+M1 single-stream : 196.4 t/s (2000 tok in 10.18s)
+M2 pair          : 197.6 t/s aggregate (1800 tok in 9.11s)
+M2 6-conc        : 282.4 t/s aggregate (3600 tok in 12.75s)
+p1: 320 tok, sha256 6f8bee3f3d4ab0d9..., 2.17s
+p2: 320 tok, sha256 80b1065b2ea74722..., 2.39s
+p3: 320 tok, sha256 b5dd006e59fb2a54..., 1.92s
+saved /home/svg/LLM/strata-custom-2/campaign/results/f209-bit-f405-adopt-on.json
+=== round 2: OFF ===
+[off2] env STRATA_COMPLEMENT_BACKING=auto
+[warm-discard] M1 single-stream : 226.6 t/s (2000 tok in 8.83s)
+[warm-discard] M2 pair          : 197.1 t/s aggregate (1800 tok in 9.13s)
+[warm-discard] M2 6-conc        : 272.8 t/s aggregate (3600 tok in 13.20s)
+M1 single-stream : 228.9 t/s (2000 tok in 8.74s)
+M2 pair          : 208.2 t/s aggregate (1800 tok in 8.65s)
+M2 6-conc        : 293.2 t/s aggregate (3600 tok in 12.28s)
+M1 single-stream : 199.5 t/s (2000 tok in 10.03s)
+M2 pair          : 208.2 t/s aggregate (1800 tok in 8.65s)
+M2 6-conc        : 305.8 t/s aggregate (3600 tok in 11.77s)
+M1 single-stream : 195.2 t/s (2000 tok in 10.24s)
+M2 pair          : 198.6 t/s aggregate (1800 tok in 9.06s)
+M2 6-conc        : 295.2 t/s aggregate (3600 tok in 12.20s)
+=== round 2: ON ===
+[on2] env STRATA_COMPLEMENT_BACKING=hostalloc
+[warm-discard] M1 single-stream : 227.4 t/s (2000 tok in 8.80s)
+[warm-discard] M2 pair          : 213.1 t/s aggregate (1800 tok in 8.45s)
+[warm-discard] M2 6-conc        : 285.7 t/s aggregate (3600 tok in 12.60s)
+M1 single-stream : 244.0 t/s (2000 tok in 8.20s)
+M2 pair          : 214.6 t/s aggregate (1800 tok in 8.39s)
+M2 6-conc        : 281.0 t/s aggregate (3600 tok in 12.81s)
+M1 single-stream : 233.6 t/s (2000 tok in 8.56s)
+M2 pair          : 203.3 t/s aggregate (1800 tok in 8.85s)
+M2 6-conc        : 264.8 t/s aggregate (3600 tok in 13.60s)
+M1 single-stream : 214.3 t/s (2000 tok in 9.33s)
+M2 pair          : 200.6 t/s aggregate (1800 tok in 8.97s)
+M2 6-conc        : 290.8 t/s aggregate (3600 tok in 12.38s)
+
+off1 {'M1': 225.73333333333332, 'pair': 215.23333333333332, 'conc': 286.2}
+on1  {'M1': 209.66666666666666, 'pair': 205.03333333333333, 'conc': 273.93333333333334}
+off2 {'M1': 207.86666666666667, 'pair': 205.0, 'conc': 298.06666666666666}
+on2  {'M1': 230.63333333333333, 'pair': 206.16666666666666, 'conc': 278.8666666666667}
+M1: pairs -7.1% / +11.0%  mean +1.9%
+pair: pairs -4.7% / +0.6%  mean -2.1%
+conc: pairs -4.3% / -6.4%  mean -5.4%
+ENV LADDER DONE — lane binary restored from /tmp/env-ladder-pre-run.bin

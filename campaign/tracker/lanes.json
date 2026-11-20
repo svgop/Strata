@@ -1,6 +1,6 @@
 {
  "type": "strata-lane-trend",
- "updated": "2026-11-10",
+ "updated": "2026-11-20",
  "unit": "tok/s",
  "engines": {
   "qwen": {
@@ -492,10 +492,10 @@
      }
     },
     {
-     "date": "2026-11-10",
-     "commit": "712f1981",
-     "label": "GSQ POST-REBOOT WARM BENCH (isolation stack LIVE: isolcpus/nohz_full/rcu_nocbs 8-15+24-31 + irqaffinity 0-7+16-23; engine pinned 8-15+24-31 under swap scope; clocks 2962/13801 held; 5 probes; last-3 booked; solo peak 240.0 = best since F-357's 241.8 and +3.8pct over the 231.2 recent-era best; GPU-reach wait 0.40-0.63ms in ALL FIVE probes = the structural quiet class with zero 12ms flushes; pool released 0)",
-     "solo": 0.0,
+     "date": "2026-11-20",
+     "commit": "f55ba500",
+     "label": "F-408 quiet-window bank (5 boots legs 2-3 spread 1.5%)",
+     "solo": 220.6,
      "pair": null,
      "conc": null,
      "kinds": {
@@ -503,25 +503,14 @@
      }
     },
     {
-     "date": "2026-11-10",
-     "commit": "712f1981",
-     "label": "GSQ POST-REBOOT WARM BENCH (see solo row for witnesses; peak 216.5)",
-     "solo": null,
-     "pair": 0.0,
+     "date": "2026-11-20",
+     "commit": "f55ba500",
+     "label": "F-408 record leg (boot 5 leg 3)",
+     "solo": 228.7,
+     "pair": null,
      "conc": null,
      "kinds": {
-      "pair": "mean"
-     }
-    },
-    {
-     "date": "2026-11-10",
-     "commit": "712f1981",
-     "label": "GSQ POST-REBOOT WARM BENCH (see solo row for witnesses; peak 303.5)",
-     "solo": null,
-     "pair": null,
-     "conc": 0.0,
-     "kinds": {
-      "conc": "mean"
+      "solo": "best"
      }
     }
    ],
@@ -623,7 +612,28 @@
      "kind": "mean"
     }
    ],
-   "notes": []
+   "notes": [
+    {
+     "date": "2026-11-10",
+     "commit": "712f1981",
+     "label": "GSQ POST-REBOOT WARM BENCH (isolation stack LIVE: isolcpus/nohz_full/rcu_nocbs 8-15+24-31 + irqaffinity 0-7+16-23; engine pinned 8-15+24-31 under swap scope; clocks 2962/13801 held; 5 probes; last-3 booked; solo peak 240.0 = best since F-357's 241.8 and +3.8pct over the 231.2 recent-era best; GPU-reach wait 0.40-0.63ms in ALL FIVE probes = the structural quiet class with zero 12ms flushes; pool released 0)"
+    },
+    {
+     "date": "2026-11-10",
+     "commit": "712f1981",
+     "label": "GSQ POST-REBOOT WARM BENCH (see solo row for witnesses; peak 216.5)"
+    },
+    {
+     "date": "2026-11-10",
+     "commit": "712f1981",
+     "label": "GSQ POST-REBOOT WARM BENCH (see solo row for witnesses; peak 303.5)"
+    },
+    {
+     "date": "2026-11-20",
+     "commit": "f55ba500",
+     "label": "F-405 organ declared+armed hostalloc; pair lane retired per operator (concurrent is the multi-lane)"
+    }
+   ]
   },
   "qwen-ud-iq2xs": {
    "label": "Qwen3.8 UD-IQ2_XS (42 GB, speed+economy set)",
