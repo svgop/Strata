@@ -12924,3 +12924,20 @@ The code read behind the F-411 succession (the wall is the wait structure, not t
 - Teardown verified: engine down, port free, profile re-pinned.  Evidence: this entry's numbers
   from logs/custom-iq3_s.log (the dm-wait-stats lines + the two batch anatomies), diagnostic leg
   label `dmwait-m1`.
+
+### note (2026-11-20, 15:06) — H5's prerequisite found: the per-depth instrument reads a drafter the standing no longer runs
+
+The H5 falsifier boot (standing + STRATA_SPEC_DEPTH=1 publish, canonical boot, one probe leg at
+load 3.1: M1 219.7 / conc 280.9 / M3b 76.0) printed `spec depth: accepted/tested 0/0 0/0 0/0 0/0
+0/0` on EVERY request - while the same leg's anatomy counted `slot drafts accepted 1357 of 2123
+(63.9%)`.  **The dp_tested/dp_ok counters (generate.cpp:16833, gated `!from_sfx && !first_window`,
+T_mtp-1 positions) count MTP CHAIN drafts; the standing drafts via the SLOT drafter.**  F-228's
+per-depth instrument reads a path the F-405-era standing no longer exercises - the zeros are
+correct for a drafter that does not run.  Law 11 live: an instrument that cannot see the path
+that runs voids the verdict it would produce.
+
+**H5's prerequisite (named, priced small):** per-depth accepted/tested telemetry for the SLOT
+drafter - the same censoring rule (positions <= accepted+1) applied where slot-draft acceptance
+is resolved.  Until it exists, the depth stair cannot be priced on this standing, and
+ADAPTIVE_SPEC (whose W1 controller seeds from per-depth EMAs, generate.cpp:15808) would be
+steering on the same empty counters.  Teardown clean, profile re-pinned.
