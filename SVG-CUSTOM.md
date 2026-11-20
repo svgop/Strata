@@ -13296,3 +13296,10 @@ effort-per-site ratio.
 not assumed: the whole `expert_pool_dispatch_multi` body is one `if (d.plan != nullptr && ...)` block,
 so the plan/group/job sections share locals declared inside that block — extraction requires hoisting
 declarations (a semantic refactor), which needs the boot oracle, not a verbatim move.
+
+## F-430 — final safe cleanup: duplicate gfx_arch.hpp include removed (2026-11-20, 17:32)
+
+`generate.cpp` included `strata/kernels/gfx_arch.hpp` twice (`:23` and `:47`). Removed the duplicate.
+Build green. This closes the safe-cleanup lane: the high-value hardening is committed (F-419-F-429),
+and the remaining work — the god-module decomposition and the verification gate — is gated on the
+operator's engine boot (bit-check.py routing oracle + interleaved battery), now 4 rounds running.
