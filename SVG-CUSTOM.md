@@ -12800,3 +12800,21 @@ storage canon (reference updates in the same commit):
   `pgrep -f` matched its caller's own command line once more (the F-409 lesson) — resolved by
   `ps` on the pid; bench binary is scratch (/tmp), the source is the durable artifact.
   Evidence: `campaign/results/f411-moe-hit-sat.txt`.
+
+### note (2026-11-20, 13:58) — the H3 battery's first attempt: refused by the box, aborted clean
+
+The config-ladder 3v3 (F-391 champion knobs `every=1 decay=0.97 swaps=160` vs stock, label
+`f412-h3-calib`) launched at 13:55 with preflight green (31.5 GB VRAM free); the operator's
+`magma` run (pid 236919) took 30.7 GB of the card between preflight and the first boot's arena
+allocation - the OFF-1 boot refused exactly as designed (the arena-first OOM exit names the
+holder), the battery was killed before any leg ran, and the teardown verified: engine gone, port
+free, CONFIG RESTORED byte-equal by the EXIT trap, profile pinned. Zero contaminated legs; the
+instrument passed its first live fire (refusal + restore). The battery re-arms when the card
+frees.
+
+**The blob reconciliation (from the refusing boot's own lines):** the boot prints "native pack:
+largest blob 2.66 MB" - that is the PACK's IQ3_S source form; the VRAM cache slot the S2 kernels
+walk is 1,382,400 B (`load_main.cpp:19`, asserted at five sites incl. `s2_expert_grouped_parity.cpp`).
+F-411's live-bytes derivation (862 MB/window unique, ~0.6 ms kernel time at 1400 GB/s) stands on
+the cache-side number; the dossier's 2.66 MB was the pack-side number. The wall remains the wait
+structure.
