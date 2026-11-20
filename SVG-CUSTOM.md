@@ -12894,3 +12894,33 @@ The code read behind the F-411 succession (the wall is the wait structure, not t
   profile's own ranked pairs pre-staged, not text-driven) is the only form that could close it;
   priced against its actual value (seconds of battery hygiene), it does not clear the effort bar
   - the discard IS the fix.  Banked closed unless a protocol change ever counts leg 1.
+
+## F-414 — the wait structure decomposed: solo starvation, and M3c revealed as THE M1 lever (2026-11-20, 15:02)
+
+- **The boot:** standing recipe + STRATA_DM_WAIT_STATS=1 (the T26-era instrument, first read on
+  the F-405/F-408-era standing), canonical fingerprint f22e85411ce4aa82, driver-pinned, health +
+  prewarm done, one probe leg (load 2.2 - the box quiet again).  Session note: the arm line
+  prints as "STRATA_DM_WAIT_STATS armed" while the reports print "dm-wait-stats" - a grep-pattern
+  stumble cost one look; disclosed.
+- **The decomposition (pre-registered table applied):** waitA (host plan) 4.8-5.2 us/group -
+  DEAD, the pool-plan rate limit of the T26 era is gone on this standing.  waitB (PCIe) 9.8-24.0
+  us with reach 52-56 us - COVERED, the GPU's queued work hides it entirely.  waitCPU (rows)
+  37.9-59.1 us with reach 4.7-6.1 - **EXPOSED: ~53 us/group of GPU idle, ~25.5 paying
+  groups/window = ~1.35 ms/window**.
+- **The smoking gun (window-scale reach, the same phenomenon one level up):** the M1 leg's
+  anatomy: 13.60 ms/window, GPU-reach wait **8.79 ms** at 3.10 rows; the conc leg on the SAME
+  boot: 12.94 ms/window, GPU-reach wait **0.51 ms** at 4.88 rows.  Not the kernels (F-411: 1400
+  GB/s), not the plan rate, not PCIe - **the solo window starves the GPU: too few rows in
+  flight, so the host stages (CPU experts 2.85-2.92 + emit ~0.4 + adapt ~0.7) expose as GPU
+  idle**.
+- **The unification this forces:** M3c (tokens/window, the dossier's H5, target >=3.0 vs the
+  2.18-2.41 banked) and the M1 wait wall are THE SAME LEVER - every additional accepted draft
+  row is GPU work that covers host stages.  H5's priced +15-25% and the 8.79 ms idle are one
+  equation.  **The queue's M1 priority is H5; ADAPT_FETCH re-prices second** (its pool term is
+  2.92 ms/window, its EXPOSED fraction ~1.35 ms -> ~+10% ceiling at full conversion).
+- **Quiet-box bonus reads (single diagnostic leg, no tracker point):** M1 223.4, conc **312.5**
+  at load 2.2 - the F-410 conc question's shape answers itself: quiet conc reads bank-class.
+  The re-bank still wants its five-boot protocol.
+- Teardown verified: engine down, port free, profile re-pinned.  Evidence: this entry's numbers
+  from logs/custom-iq3_s.log (the dm-wait-stats lines + the two batch anatomies), diagnostic leg
+  label `dmwait-m1`.
