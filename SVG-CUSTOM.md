@@ -12966,3 +12966,24 @@ steering on the same empty counters.  Teardown clean, profile re-pinned.
   the marginal GPU cost of an accepted chain row is the cheap one).
 - Verification legs standing-class (M1 231.9 at load 3.7).  Teardown clean, profile re-pinned.
   Rollback: engine/strata.pre-h5tele.
+
+## F-416 — draft depth 2 armed: the mechanism is live, the window was not quiet (2026-11-20, 15:37)
+
+- **The arm:** STRATA_BATCH_DRAFT_DEPTH=2 (the pre-built, never-armed lever - D proposals per
+  slot per window, D=1 byte-identical default, cap min(spec-1,3); the slots' draft[] arrays and
+  the chain-accept machinery were already in the tree, law 5 again), env-ladder ABAB 2v2, bits
+  off by design (residency moves; M3b is the canary).
+- **The means:** M1 +6.8% / -2.0% -> **+2.4%**; conc +2.5 / -8.0 -> -2.7%; pair (retired)
+  -3.9 / -7.7 -> -5.8%.  M3b canary QUIET: off 76.5/77.1 vs on 77.8/77.4 - deeper drafts do not
+  tax acceptance (per-position conditional, as designed).  Round 1's pair cleared the bar
+  (+6.8% M1, legs peaked 239.4); round 2 flipped under a control boot that ran hot (off2 M1
+  226.6) at a load band 4.2-7.5 (operator active, disclosed per law 17).
+- **The ruling:** M1 +2.4% is inside the band at THIS load -> **not adopted on this battery**
+  (law 2: means only, and the load moved between arms).  This is NOT a falsification of the
+  mechanism - F-414's physics stands (rows/window covers the host stages) and round 1 showed the
+  size the lever can reach.  The re-test ladder is named: (a) a QUIET window, five-boot means
+  (the F-408 protocol); (b) the stair publish armed (STRATA_SPEC_DEPTH on both arms) so
+  position-1 acceptance prices D=3 in the same battery; (c) MMLU x2 on any adoption (a
+  distribution-adjacent change: deeper drafts shift the accept/emit mix).
+- The env restores to unset (the launcher's own default D=1); teardown by the ladder's restore.
+  Evidence: campaign/results/f416-h5-depth2-ladder.out + per-leg files.

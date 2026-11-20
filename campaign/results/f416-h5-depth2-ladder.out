@@ -1,0 +1,66 @@
+lane binary saved: e3acbffe
+=== round 1: OFF ===
+[off1] env STRATA_BATCH_DRAFT_DEPTH=
+[warm-discard] M1 single-stream : 203.1 t/s (2000 tok in 9.85s)
+[warm-discard] M2 pair          : 195.4 t/s aggregate (1800 tok in 9.21s)
+[warm-discard] M2 6-conc        : 285.5 t/s aggregate (3600 tok in 12.61s)
+M1 single-stream : 207.3 t/s (2000 tok in 9.65s)
+M2 pair          : 204.2 t/s aggregate (1800 tok in 8.81s)
+M2 6-conc        : 300.3 t/s aggregate (3600 tok in 11.99s)
+M1 single-stream : 214.4 t/s (2000 tok in 9.33s)
+M2 pair          : 212.9 t/s aggregate (1800 tok in 8.45s)
+M2 6-conc        : 277.7 t/s aggregate (3600 tok in 12.96s)
+M1 single-stream : 213.2 t/s (2000 tok in 9.38s)
+M2 pair          : 203.0 t/s aggregate (1800 tok in 8.87s)
+M2 6-conc        : 258.8 t/s aggregate (3600 tok in 13.91s)
+=== round 1: ON ===
+[on1] env STRATA_BATCH_DRAFT_DEPTH=2
+[warm-discard] M1 single-stream : 213.8 t/s (2000 tok in 9.35s)
+[warm-discard] M2 pair          : 207.0 t/s aggregate (1800 tok in 8.70s)
+[warm-discard] M2 6-conc        : 281.6 t/s aggregate (3600 tok in 12.78s)
+M1 single-stream : 239.4 t/s (2000 tok in 8.36s)
+M2 pair          : 200.1 t/s aggregate (1800 tok in 9.00s)
+M2 6-conc        : 287.6 t/s aggregate (3600 tok in 12.52s)
+M1 single-stream : 221.2 t/s (2000 tok in 9.04s)
+M2 pair          : 195.6 t/s aggregate (1800 tok in 9.20s)
+M2 6-conc        : 299.9 t/s aggregate (3600 tok in 12.01s)
+M1 single-stream : 217.4 t/s (2000 tok in 9.20s)
+M2 pair          : 200.5 t/s aggregate (1800 tok in 8.98s)
+M2 6-conc        : 270.1 t/s aggregate (3600 tok in 13.33s)
+=== round 2: OFF ===
+[off2] env STRATA_BATCH_DRAFT_DEPTH=
+[warm-discard] M1 single-stream : 236.2 t/s (2000 tok in 8.47s)
+[warm-discard] M2 pair          : 209.3 t/s aggregate (1800 tok in 8.60s)
+[warm-discard] M2 6-conc        : 294.1 t/s aggregate (3600 tok in 12.24s)
+M1 single-stream : 228.3 t/s (2000 tok in 8.76s)
+M2 pair          : 219.2 t/s aggregate (1800 tok in 8.21s)
+M2 6-conc        : 289.8 t/s aggregate (3600 tok in 12.42s)
+M1 single-stream : 219.6 t/s (2000 tok in 9.11s)
+M2 pair          : 214.9 t/s aggregate (1800 tok in 8.38s)
+M2 6-conc        : 313.2 t/s aggregate (3600 tok in 11.49s)
+M1 single-stream : 231.9 t/s (2000 tok in 8.62s)
+M2 pair          : 216.5 t/s aggregate (1800 tok in 8.31s)
+M2 6-conc        : 293.3 t/s aggregate (3600 tok in 12.27s)
+=== round 2: ON ===
+[on2] env STRATA_BATCH_DRAFT_DEPTH=2
+[warm-discard] M1 single-stream : 224.2 t/s (2000 tok in 8.92s)
+[warm-discard] M2 pair          : 195.1 t/s aggregate (1800 tok in 9.22s)
+[warm-discard] M2 6-conc        : 253.5 t/s aggregate (3600 tok in 14.20s)
+M1 single-stream : 230.4 t/s (2000 tok in 8.68s)
+M2 pair          : 192.5 t/s aggregate (1800 tok in 9.35s)
+M2 6-conc        : 284.1 t/s aggregate (3600 tok in 12.67s)
+M1 single-stream : 206.5 t/s (2000 tok in 9.68s)
+M2 pair          : 201.3 t/s aggregate (1800 tok in 8.94s)
+M2 6-conc        : 267.7 t/s aggregate (3600 tok in 13.45s)
+M1 single-stream : 229.2 t/s (2000 tok in 8.73s)
+M2 pair          : 207.0 t/s aggregate (1800 tok in 8.70s)
+M2 6-conc        : 273.1 t/s aggregate (3600 tok in 13.18s)
+
+off1 {'M1': 211.63333333333333, 'pair': 206.7, 'conc': 278.93333333333334}
+on1  {'M1': 226.0, 'pair': 198.73333333333332, 'conc': 285.8666666666667}
+off2 {'M1': 226.6, 'pair': 216.86666666666667, 'conc': 298.76666666666665}
+on2  {'M1': 222.03333333333333, 'pair': 200.26666666666668, 'conc': 274.9666666666667}
+M1: pairs +6.8% / -2.0%  mean +2.4%
+pair: pairs -3.9% / -7.7%  mean -5.8%
+conc: pairs +2.5% / -8.0%  mean -2.7%
+ENV LADDER DONE — lane binary restored from /tmp/env-ladder-pre-run.bin
