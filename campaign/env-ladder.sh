@@ -27,12 +27,15 @@ cp engine/strata /tmp/env-ladder-pre-run.bin
 echo "lane binary saved: $(md5sum engine/strata | cut -c1-8)"
 
 boot_and_probe() {   # $1 = on|off, $2 = tag
+  # PUBLISH_ENV (optional): space-separated PUBLISH-ONLY vars exported to BOTH arms - telemetry that
+  # cannot change behavior (STRATA_SPEC_DEPTH=1's per-depth counters, DM_WAIT_STATS) so a battery can
+  # capture its mechanism data in-window.  The arm variable itself stays the only A/B difference.
   if [ "$1" = on ]; then
-    env "$VAR=$ON" nohup ./launch-custom-iq3s-8081.sh > /tmp/envl-$2.out 2>&1 &
+    env $PUBLISH_ENV "$VAR=$ON" nohup ./launch-custom-iq3s-8081.sh > /tmp/envl-$2.out 2>&1 &
   elif [ "$OFF" = unset ]; then
-    nohup ./launch-custom-iq3s-8081.sh > /tmp/envl-$2.out 2>&1 &
+    env $PUBLISH_ENV nohup ./launch-custom-iq3s-8081.sh > /tmp/envl-$2.out 2>&1 &
   else
-    env "$VAR=$OFF" nohup ./launch-custom-iq3s-8081.sh > /tmp/envl-$2.out 2>&1 &
+    env $PUBLISH_ENV "$VAR=$OFF" nohup ./launch-custom-iq3s-8081.sh > /tmp/envl-$2.out 2>&1 &
   fi
   for i in $(seq 1 100); do
     curl -s -m 3 http://127.0.0.1:8081/health 2>/dev/null | grep -q '"status": "ok"' && break
