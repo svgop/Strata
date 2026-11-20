@@ -1079,6 +1079,11 @@ private:
     /// #286: the blobs from the drive, unbuffered: every role's 4 KiB-aligned window is read at once (overlapped on
     /// Windows, io_submit on Linux) into this thread's aligned buffer, then copied into place.  False when a read fails.
     bool read_direct(const Fill* fills, size_t n) const;
+    /// The copy phase of `pin_cache_complement` (F-441): the plan's experts read into the arena on a few
+    /// threads (the mapped files' page faults overlap), then on Windows the touched pages leave the working
+    /// set.  The caller owns the arena and releases it when this returns false.
+    bool copy_complement_layers(const std::vector<uint64_t>& offsets, uint64_t bytes, const uint8_t* host,
+                                std::string& err) const;
     bool open_direct(std::string& why);
     /// Windows: experts.bin mapped again as `open` maps it (begin/end_startup_unbuffered).
     bool map_view(std::string& why);

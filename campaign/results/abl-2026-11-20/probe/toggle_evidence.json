@@ -1,0 +1,157 @@
+{
+ "question": "is the per-request body key experimental_speed_projection honoured by the live engine?",
+ "engine_armed_geometry_metrics": {
+  "cvec": "project:1-47",
+  "cvec_steered": "47/48",
+  "model": "qwen3.8-flash-next-iq3_s"
+ },
+ "source_chain": {
+  "server_parses_and_sends": "serve/server.py:1632 StrataEngine.projection_key -> \" cvec=0|1\" appended to the engine request key line; history records projection at serve/server.py:6008",
+  "engine_parses": "src/program/generate.cpp:13915 (else if key == \"cvec\") req_cvec = atoi(...); default 1",
+  "engine_applies": "src/program/generate.cpp:14591 cvec_set_enabled(want_cvec) at request admission; 14586 cache checkpoints cleared when want_cvec != cvec_cached",
+  "kernel": "src/kernels/cuda/cvec.cu project mode: R -= (R.v)v (h -= s (h.v) v on a unit direction, scale from the file)"
+ },
+ "observed": {
+  "history_projection_flags": {
+   "cells": 50,
+   "match_intent": true,
+   "on_cells": 25,
+   "off_cells": 25
+  },
+  "prompt_cache_reuse_flip": [
+   {
+    "first": "A1-greedy/OFF",
+    "second": "A1-greedy/ON",
+    "same_prompt": true,
+    "external_request_in_gap": [],
+    "reused_first": 0,
+    "reused_second": 0
+   },
+   {
+    "first": "A2-greedy/OFF",
+    "second": "A2-greedy/ON",
+    "same_prompt": true,
+    "external_request_in_gap": [],
+    "reused_first": 0,
+    "reused_second": 0
+   },
+   {
+    "first": "A3-greedy/OFF",
+    "second": "A3-greedy/ON",
+    "same_prompt": true,
+    "external_request_in_gap": [],
+    "reused_first": 0,
+    "reused_second": 0
+   },
+   {
+    "first": "A4-greedy/OFF",
+    "second": "A4-greedy/ON",
+    "same_prompt": true,
+    "external_request_in_gap": [],
+    "reused_first": 0,
+    "reused_second": 0
+   },
+   {
+    "first": "A5-greedy/OFF",
+    "second": "A5-greedy/ON",
+    "same_prompt": true,
+    "external_request_in_gap": [
+     "fbcf0fb4d12e"
+    ],
+    "reused_first": 0,
+    "reused_second": 0
+   },
+   {
+    "first": "A6-greedy/OFF",
+    "second": "A6-greedy/ON",
+    "same_prompt": true,
+    "external_request_in_gap": [],
+    "reused_first": 0,
+    "reused_second": 0
+   },
+   {
+    "first": "A1-sample0/OFF",
+    "second": "A1-sample1/OFF",
+    "same_prompt": true,
+    "external_request_in_gap": [],
+    "reused_first": 0,
+    "reused_second": 13
+   },
+   {
+    "first": "A1-sample1/OFF",
+    "second": "A1-sample2/OFF",
+    "same_prompt": true,
+    "external_request_in_gap": [],
+    "reused_first": 13,
+    "reused_second": 13
+   },
+   {
+    "first": "A1-sample2/OFF",
+    "second": "A1-sample0/ON",
+    "same_prompt": true,
+    "external_request_in_gap": [],
+    "reused_first": 13,
+    "reused_second": 0
+   },
+   {
+    "first": "A1-sample0/ON",
+    "second": "A1-sample1/ON",
+    "same_prompt": true,
+    "external_request_in_gap": [],
+    "reused_first": 0,
+    "reused_second": 13
+   },
+   {
+    "first": "A1-sample1/ON",
+    "second": "A1-sample2/ON",
+    "same_prompt": true,
+    "external_request_in_gap": [],
+    "reused_first": 13,
+    "reused_second": 13
+   },
+   {
+    "first": "A2-sample0/OFF",
+    "second": "A2-sample1/OFF",
+    "same_prompt": true,
+    "external_request_in_gap": [],
+    "reused_first": 0,
+    "reused_second": 11
+   },
+   {
+    "first": "A2-sample1/OFF",
+    "second": "A2-sample2/OFF",
+    "same_prompt": true,
+    "external_request_in_gap": [],
+    "reused_first": 11,
+    "reused_second": 11
+   },
+   {
+    "first": "A2-sample2/OFF",
+    "second": "A2-sample0/ON",
+    "same_prompt": true,
+    "external_request_in_gap": [],
+    "reused_first": 11,
+    "reused_second": 0
+   },
+   {
+    "first": "A2-sample0/ON",
+    "second": "A2-sample1/ON",
+    "same_prompt": true,
+    "external_request_in_gap": [],
+    "reused_first": 0,
+    "reused_second": 11
+   },
+   {
+    "first": "A2-sample1/ON",
+    "second": "A2-sample2/ON",
+    "same_prompt": true,
+    "external_request_in_gap": [],
+    "reused_first": 11,
+    "reused_second": 11
+   }
+  ],
+  "reuse_note": "the engine keys prompt-cache resume on the cvec state (generate.cpp:14166,14586): with the SAME prompt, an unchanged condition reuses 11-13 tokens; a condition flip reuses 0, and no external request fell in any of these gaps - the engine itself treated the two requests as a different cache state.",
+  "output_effect": "Probe A: 12/12 OFF = \"I\" (refusal opener) vs 0/12 ON; Probe C: OFF refused 3/3 clean, ON gave a concrete plan 3/3"
+ },
+ "batch_hazard": "The cvec enable flag is a single host-side flag set at admission (generate.cpp:14591); batch windows mix slots (CohortWin.active[]), so concurrent requests with different cvec states are not isolated. External ON traffic was live during this run; every cell was overlap-checked against the union of 93 /metrics history entries. One cell (C-OFF-0) overlapped an external ON request and was excluded; its repeat C-OFF-1 was clean."
+}

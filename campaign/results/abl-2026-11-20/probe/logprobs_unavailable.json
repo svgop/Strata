@@ -1,0 +1,38 @@
+{
+ "finding": "serve/server.py implements no logprobs/top_logprobs parameter for /v1/chat/completions (or any route)",
+ "grep_counts": {
+  "serve/server.py:logprobs": "0",
+  "serve/frontend.py:logprobs": "0"
+ },
+ "empirical": {
+  "request": {
+   "max_tokens": 8,
+   "temperature": 0,
+   "logprobs": true,
+   "top_logprobs": 5,
+   "messages": [
+    {
+     "role": "user",
+     "content": "Reply with exactly one word: ready"
+    }
+   ]
+  },
+  "response_keys": [
+   "choices",
+   "created",
+   "id",
+   "model",
+   "object",
+   "timings",
+   "usage"
+  ],
+  "choice_keys": [
+   "finish_reason",
+   "index",
+   "message"
+  ],
+  "has_logprobs_field": false,
+  "note": "the server silently ignored the request fields; no token probabilities are available from this server"
+ },
+ "consequence": "Probe A was executed as the deterministic first ANSWER token (thinking disabled) plus repeated temperature=1 samples of that same token, max_tokens=1 on every refusal-eliciting prompt. The top-20 probability lists the task specified cannot be produced against this server."
+}

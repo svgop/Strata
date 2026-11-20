@@ -3241,6 +3241,133 @@ uint64_t FileExpertSource::release(int64_t layer, int64_t expert) {
 #endif
 }
 
+// The copy phase of `pin_cache_complement`, extracted verbatim (F-441): every expert the plan kept
+// (offsets != kNoComplement) is read into the arena layer by layer on a few threads - the mapped file's
+// page faults are the cost, and they overlap - then, on Windows, the pages this process touched leave
+// its working set for the standby list.  The caller owns the arena: on false it releases, exactly as the
+// inlined code did.
+bool FileExpertSource::copy_complement_layers(const std::vector<uint64_t>& offsets, uint64_t bytes,
+                                              const uint8_t* host, std::string& err) const {
+    // Copied layer by layer on a few threads: the page faults of the mapped file are the cost, and they overlap.
+#if !defined(_WIN32)
+    const long page_size = sysconf(_SC_PAGESIZE);
+    if (page_size <= 0) {
+        err = "FileExpertSource: cannot determine page size for mapped-page release";
+        return false;
+    }
+#endif
+    std::atomic<int64_t> next_layer{0}, layers_done{0};
+    std::atomic<uint64_t> copied{0};
+    std::atomic<bool> failed{false};
+    std::mutex fail_mu;
+    const auto copy_t0 = std::chrono::steady_clock::now();
+    std::string fail_msg;
+    auto fail = [&](const std::string& m) {
+        std::lock_guard<std::mutex> lock(fail_mu);
+        if (fail_msg.empty()) fail_msg = m;
+        failed.store(true);
+    };
+    auto worker = [&]() {
+        for (;;) {
+            const int64_t layer = next_layer.fetch_add(1);
+            if (layer >= n_layers_ || failed.load()) return;
+            const uint64_t blob_bytes = layer_blob_bytes_[(size_t) layer];
+            std::vector<Fill> batch;   // #286, unbuffered: 32 blobs' reads in flight at once, merged where near
+            auto flush = [&]() {
+                if (batch.empty()) return true;
+                bool ok = read_direct(batch.data(), batch.size());
+                for (size_t i = 0; !ok && i < batch.size(); ++i)
+                    if (!copy_from_files(batch[i].layer, batch[i].e, batch[i].dst)) return false;
+                copied.fetch_add(blob_bytes * (uint64_t) batch.size());
+                batch.clear();
+                return true;
+            };
+            if (direct_.empty()) {   // mapped reads: ask for the layer's blobs before copying them
+                std::vector<std::pair<int32_t, int32_t>> ahead;
+                for (int64_t expert = 0; expert < n_expert_; ++expert)
+                    if (offsets[(size_t) layer * (size_t) n_expert_ + (size_t) expert] != kNoComplement)
+                        ahead.emplace_back((int32_t) layer, (int32_t) expert);
+                (void) advise_pairs(ahead.data(), (int64_t) ahead.size());
+            }
+            for (int64_t expert = 0; expert < n_expert_; ++expert) {
+                const size_t index = (size_t) layer * (size_t) n_expert_ + (size_t) expert;
+                const uint64_t offset = offsets[index];
+                if (offset == kNoComplement) continue;
+                if (offset > bytes || blob_bytes > bytes - offset) {
+                    fail("FileExpertSource: invalid blob bounds while building the cache complement");
+                    return;
+                }
+                uint8_t* dst = (uint8_t*) host + (size_t) offset;
+                if (!direct_.empty()) {
+                    batch.push_back({0, layer, expert, dst});
+                    if (batch.size() == 32 && !flush()) {
+                        fail("FileExpertSource: an expert could not be read while building the cache complement");
+                        return;
+                    }
+                    continue;
+                }
+                if (!copy_from_files(layer, expert, dst)) {
+                    fail("FileExpertSource: invalid blob bounds while building the cache complement");
+                    return;
+                }
+                copied.fetch_add(blob_bytes);
+            }
+            if (!flush()) {
+                fail("FileExpertSource: an expert could not be read while building the cache complement");
+                return;
+            }
+#if !defined(_WIN32)
+            if (role_ptr_.empty()) {   // experts.bin; the GGUF in place leaves its pages to the OS
+            const uint64_t layer_offset = layer_offsets_[(size_t) layer];
+            const uint64_t layer_bytes = blob_bytes * (uint64_t) n_expert_;
+            const uint64_t layer_end = layer_offset + layer_bytes;
+            const uint64_t page = (uint64_t) page_size;
+            const uint64_t advice_start = layer_offset - layer_offset % page;
+            const uint64_t end_remainder = layer_end % page;
+            const uint64_t extra = end_remainder == 0 ? 0 : page - end_remainder;
+            const uint64_t advice_end = extra > mapped_bytes_ - layer_end ? mapped_bytes_ : layer_end + extra;
+            if (advice_end > advice_start &&
+                madvise((void*) (base_ + (size_t) advice_start), (size_t) (advice_end - advice_start), MADV_DONTNEED) != 0) {
+                fail("FileExpertSource: madvise could not release mapped expert layer " + std::to_string(layer));
+                return;
+            }
+#if !defined(__APPLE__)   // macOS has no posix_fadvise; the madvise above already released the mapping
+            if (posix_fadvise(fd_, (off_t) layer_offset, (off_t) layer_bytes, POSIX_FADV_DONTNEED) != 0) {
+                fail("FileExpertSource: posix_fadvise could not release expert layer " + std::to_string(layer));
+                return;
+            }
+#endif
+            }
+#endif
+            const int64_t done = layers_done.fetch_add(1) + 1;
+            if (done % 8 == 0 || done == n_layers_)
+                std::fprintf(stderr, "FileExpertSource: copied cache complement through layer %lld/%lld (%.2f GiB, %.0f s)\n",
+                             (long long) done, (long long) n_layers_, (double) copied.load() / 1073741824.0,
+                             std::chrono::duration<double>(std::chrono::steady_clock::now() - copy_t0).count());
+        }
+    };
+    {
+        const int threads = (int) std::max<int64_t>(1, std::min<int64_t>(6, n_layers_));
+        std::vector<std::thread> pool;
+        for (int i = 1; i < threads; ++i) pool.emplace_back(worker);
+        worker();
+        for (auto& t : pool) t.join();
+    }
+    std::fflush(stderr);
+    if (failed.load()) {
+        err = fail_msg;
+        return false;
+    }
+#if defined(_WIN32)
+    // The mapped pages this process touched (the GPU cache's fill and this copy) leave its working set for the
+    // standby list: VirtualUnlock on pages that are not locked does exactly that (it then reports ERROR_NOT_LOCKED).
+    // Not with the view closed (begin_startup_unbuffered): its range may hold other memory by now.
+    if (maps_.empty() && !unmapped_) (void) VirtualUnlock((LPVOID) base_, (SIZE_T) mapped_bytes_);
+    for (const Map& m : maps_) if (!m.closed) (void) VirtualUnlock((LPVOID) m.base, (SIZE_T) m.bytes);
+#endif
+    return true;
+}
+
 bool FileExpertSource::pin_cache_complement(
     const ExpertCache& cache, std::string& err, bool pin,
     const std::vector<std::pair<int32_t, int32_t>>& additional_gpu_pairs, int64_t lend_from_slot,
@@ -3821,125 +3948,10 @@ bool FileExpertSource::pin_cache_complement(
         if (huge_ok) strata::platform::hugepage_report("the expert complement", arena, (size_t) bytes);
     }
 
-    // Copied layer by layer on a few threads: the page faults of the mapped file are the cost, and they overlap.
-#if !defined(_WIN32)
-    const long page_size = sysconf(_SC_PAGESIZE);
-    if (page_size <= 0) {
-        err = "FileExpertSource: cannot determine page size for mapped-page release";
+    if (!copy_complement_layers(offsets, bytes, host, err)) {
         release();
         return false;
     }
-#endif
-    std::atomic<int64_t> next_layer{0}, layers_done{0};
-    std::atomic<uint64_t> copied{0};
-    std::atomic<bool> failed{false};
-    std::mutex fail_mu;
-    const auto copy_t0 = std::chrono::steady_clock::now();
-    std::string fail_msg;
-    auto fail = [&](const std::string& m) {
-        std::lock_guard<std::mutex> lock(fail_mu);
-        if (fail_msg.empty()) fail_msg = m;
-        failed.store(true);
-    };
-    auto worker = [&]() {
-        for (;;) {
-            const int64_t layer = next_layer.fetch_add(1);
-            if (layer >= n_layers_ || failed.load()) return;
-            const uint64_t blob_bytes = layer_blob_bytes_[(size_t) layer];
-            std::vector<Fill> batch;   // #286, unbuffered: 32 blobs' reads in flight at once, merged where near
-            auto flush = [&]() {
-                if (batch.empty()) return true;
-                bool ok = read_direct(batch.data(), batch.size());
-                for (size_t i = 0; !ok && i < batch.size(); ++i)
-                    if (!copy_from_files(batch[i].layer, batch[i].e, batch[i].dst)) return false;
-                copied.fetch_add(blob_bytes * (uint64_t) batch.size());
-                batch.clear();
-                return true;
-            };
-            if (direct_.empty()) {   // mapped reads: ask for the layer's blobs before copying them
-                std::vector<std::pair<int32_t, int32_t>> ahead;
-                for (int64_t expert = 0; expert < n_expert_; ++expert)
-                    if (offsets[(size_t) layer * (size_t) n_expert_ + (size_t) expert] != kNoComplement)
-                        ahead.emplace_back((int32_t) layer, (int32_t) expert);
-                (void) advise_pairs(ahead.data(), (int64_t) ahead.size());
-            }
-            for (int64_t expert = 0; expert < n_expert_; ++expert) {
-                const size_t index = (size_t) layer * (size_t) n_expert_ + (size_t) expert;
-                const uint64_t offset = offsets[index];
-                if (offset == kNoComplement) continue;
-                if (offset > bytes || blob_bytes > bytes - offset) {
-                    fail("FileExpertSource: invalid blob bounds while building the cache complement");
-                    return;
-                }
-                uint8_t* dst = (uint8_t*) host + (size_t) offset;
-                if (!direct_.empty()) {
-                    batch.push_back({0, layer, expert, dst});
-                    if (batch.size() == 32 && !flush()) {
-                        fail("FileExpertSource: an expert could not be read while building the cache complement");
-                        return;
-                    }
-                    continue;
-                }
-                if (!copy_from_files(layer, expert, dst)) {
-                    fail("FileExpertSource: invalid blob bounds while building the cache complement");
-                    return;
-                }
-                copied.fetch_add(blob_bytes);
-            }
-            if (!flush()) {
-                fail("FileExpertSource: an expert could not be read while building the cache complement");
-                return;
-            }
-#if !defined(_WIN32)
-            if (role_ptr_.empty()) {   // experts.bin; the GGUF in place leaves its pages to the OS
-            const uint64_t layer_offset = layer_offsets_[(size_t) layer];
-            const uint64_t layer_bytes = blob_bytes * (uint64_t) n_expert_;
-            const uint64_t layer_end = layer_offset + layer_bytes;
-            const uint64_t page = (uint64_t) page_size;
-            const uint64_t advice_start = layer_offset - layer_offset % page;
-            const uint64_t end_remainder = layer_end % page;
-            const uint64_t extra = end_remainder == 0 ? 0 : page - end_remainder;
-            const uint64_t advice_end = extra > mapped_bytes_ - layer_end ? mapped_bytes_ : layer_end + extra;
-            if (advice_end > advice_start &&
-                madvise((void*) (base_ + (size_t) advice_start), (size_t) (advice_end - advice_start), MADV_DONTNEED) != 0) {
-                fail("FileExpertSource: madvise could not release mapped expert layer " + std::to_string(layer));
-                return;
-            }
-#if !defined(__APPLE__)   // macOS has no posix_fadvise; the madvise above already released the mapping
-            if (posix_fadvise(fd_, (off_t) layer_offset, (off_t) layer_bytes, POSIX_FADV_DONTNEED) != 0) {
-                fail("FileExpertSource: posix_fadvise could not release expert layer " + std::to_string(layer));
-                return;
-            }
-#endif
-            }
-#endif
-            const int64_t done = layers_done.fetch_add(1) + 1;
-            if (done % 8 == 0 || done == n_layers_)
-                std::fprintf(stderr, "FileExpertSource: copied cache complement through layer %lld/%lld (%.2f GiB, %.0f s)\n",
-                             (long long) done, (long long) n_layers_, (double) copied.load() / 1073741824.0,
-                             std::chrono::duration<double>(std::chrono::steady_clock::now() - copy_t0).count());
-        }
-    };
-    {
-        const int threads = (int) std::max<int64_t>(1, std::min<int64_t>(6, n_layers_));
-        std::vector<std::thread> pool;
-        for (int i = 1; i < threads; ++i) pool.emplace_back(worker);
-        worker();
-        for (auto& t : pool) t.join();
-    }
-    std::fflush(stderr);
-    if (failed.load()) {
-        err = fail_msg;
-        release();
-        return false;
-    }
-#if defined(_WIN32)
-    // The mapped pages this process touched (the GPU cache's fill and this copy) leave its working set for the
-    // standby list: VirtualUnlock on pages that are not locked does exactly that (it then reports ERROR_NOT_LOCKED).
-    // Not with the view closed (begin_startup_unbuffered): its range may hold other memory by now.
-    if (maps_.empty() && !unmapped_) (void) VirtualUnlock((LPVOID) base_, (SIZE_T) mapped_bytes_);
-    for (const Map& m : maps_) if (!m.closed) (void) VirtualUnlock((LPVOID) m.base, (SIZE_T) m.bytes);
-#endif
     if (std::getenv("STRATA_VERIFY_COMPLEMENT") != nullptr && host != nullptr && bytes > 0) {
         // tests: the copy's checksum (FNV-1a of each 1 GiB piece on its own thread, then of those), any reader
         constexpr uint64_t kPiece = 1ull << 30;

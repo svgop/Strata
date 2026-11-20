@@ -13493,3 +13493,30 @@ The dispatch's three behavioral arms are now all frozen, completing the F-438/F-
   invariant, not prose. (F-225 note: onepass stays default OFF for its measured M1 cost; the arm is
   now provably safe to flip whenever a battery wants it.)
 - ctest: 2/2 PASS.
+
+## F-441 — pin_cache_complement cut 1: the copy engine extracted; a UB lesson banked (2026-11-20, 19:4x)
+
+The module's last monster (`pin_cache_complement`, 783 lines, the F-405/F-409 boot organ) begins to
+dissolve. The copy phase — 118 lines: the page-size guard, the fail/workers/flush lambdas, the
+`read_direct` batching, the mapped-layer `madvise`/`posix_fadvise` release, the ≤6-thread pool, the
+failure join, and the Win32 working-set trim — moved verbatim into
+`FileExpertSource::copy_complement_layers(offsets, bytes, host, err) const` (private; declared beside
+`read_direct`). The caller keeps arena ownership: on false it releases, exactly as the inlined code did.
+
+- **Extraction diff (script, vs HEAD):** 118 lines in, 118 out; the ONLY changes are the four
+  authorized ones — two `release();` calls relocated to the caller, the Win32 `#endif` closing inside
+  the helper, and the added `return true;`.
+- **THE INCIDENT (law 8, banked at full price):** the first build passed and the first test run died
+  with `terminate called without an active exception` inside a `.cold` landing pad destroying a
+  "joinable" pool vector — no exception in flight (`catch throw` never fired), probes showed the join
+  completing. Root cause: **the helper fell off its end without returning a value** — the original
+  block's `return true;` belongs to `pin_cache_complement`'s very end (after commit/report phases that
+  did NOT move), so the extracted phase had no success return. Falling off a non-void function is UB;
+  GCC had said so in the build log (`control reaches end of non-void function`) and the log was
+  tail-truncated instead of read. **Law: a build log is read whole or not claimed as green — warnings
+  are part of the gate, not noise past line 5.** Two hours of gdb was the price of one unread line.
+- **Warning parity:** 17 compiler warnings on the baseline TU, 17 on the extracted TU — zero new.
+- **Gate:** 14/14 `strata_engine`-linked ctests PASS (`split_lend_complement_test` 3 arms,
+  `file_expert_source_test` incl. the budget+rank lane at :715, dispatch golden ×2, cache/layout/
+  profile/vmm/ple/conversation set). No engine binary rebuilt yet — V2 below.
+- Rollback: `git revert` of this commit (pure extraction, no env, no behavior change).
