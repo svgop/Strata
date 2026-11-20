@@ -1,5 +1,6 @@
 // src/core/verify.cpp - see include/strata/core/verify.hpp.
 #include "strata/core/batch_rows.hpp"
+#include "strata/core/env_flag.hpp"
 #include "strata/core/sm75_series.hpp"
 #include "strata/core/sm120_series.hpp"
 #include "strata/kernels/gfx_arch.hpp"
@@ -94,8 +95,8 @@ namespace {
 constexpr float EPS = 1e-6f;
 using Clock = std::chrono::steady_clock;
 double ms_since(Clock::time_point t) { return std::chrono::duration<double, std::milli>(Clock::now() - t).count(); }
-const bool g_dbg = std::getenv("STRATA_VERIFY_DEBUG") != nullptr;
-inline bool g_lfuse() { static const bool on = [] { const char* v = std::getenv("STRATA_LFUSE"); return v != nullptr && v[0] == '1'; }(); return on; }
+const bool g_dbg = strata::env::present("STRATA_VERIFY_DEBUG");
+inline bool g_lfuse() { static const bool on = strata::env::one("STRATA_LFUSE"); return on; }
 // STRATA_ROUTE_RESIDENT=<margin logits> (+ STRATA_ROUTE_RESIDENT_RANKS=lo-hi, default 6-9): residency-biased routing.
 struct RouteResidentCfg;
 RouteResidentCfg& route_resident_cfg();
@@ -158,13 +159,13 @@ RouteResidentCfg& route_resident_cfg() {
     (void) parsed;
     return c;
 }
-inline bool g_lfuse_gate() { static const bool on = [] { const char* v = std::getenv("STRATA_LFUSE_GATE"); return v == nullptr || v[0] != '0'; }(); return on; }
-inline bool g_lfuse_pair() { static const bool on = [] { const char* v = std::getenv("STRATA_LFUSE_PAIR"); return v == nullptr || v[0] != '0'; }(); return on; }
-inline bool g_qdedup() { static const bool on = [] { const char* v = std::getenv("STRATA_VERIFY_QDEDUP"); return v != nullptr && std::atoi(v) != 0; }(); return on; }
+inline bool g_lfuse_gate() { static const bool on = strata::env::truthy_default_true("STRATA_LFUSE_GATE"); return on; }
+inline bool g_lfuse_pair() { static const bool on = strata::env::truthy_default_true("STRATA_LFUSE_PAIR"); return on; }
+inline bool g_qdedup() { static const bool on = strata::env::nonzero("STRATA_VERIFY_QDEDUP"); return on; }
 // S26 STRATA_QFUSE=1: activation q8_1 images written by their producers (the GDN output norm) - the same bytes
 // fork F4 (Eddoursul): 2-4 token dense projections read an interleaved copy of the q8_1 activations (bitwise the same
 // outputs); STRATA_MMVQ_IL=0 keeps native_mmvq's multi-column kernels
-inline bool g_mmvq_il() { static const bool on = [] { const char* v = std::getenv("STRATA_MMVQ_IL"); return v == nullptr || v[0] != '0'; }(); return on; }
+inline bool g_mmvq_il() { static const bool on = strata::env::truthy_default_true("STRATA_MMVQ_IL"); return on; }
 // 143-amdk: STRATA_QFUSE_HC - only the hyper-connection read writes its consumer's q8_1 image (not the GDN recurrence): gfx12 default (=0 / 1 forces off / on)
 inline bool g_qfuse_hc() {
 #if defined(STRATA_USE_HIP)
@@ -203,7 +204,7 @@ inline int g_side_mixer() {
     return per_dev[dev] - 1;
 #endif
 }
-inline bool g_qfuse() { static const bool on = [] { const char* v = std::getenv("STRATA_QFUSE"); return v != nullptr && std::atoi(v) != 0; }(); return on; }
+inline bool g_qfuse() { static const bool on = strata::env::nonzero("STRATA_QFUSE"); return on; }
 #define VDBG(...) do { if (g_dbg) { std::fprintf(stderr, "verify dbg: " __VA_ARGS__); std::fflush(stderr); } } while (0)
 
 struct Bump {
@@ -371,7 +372,7 @@ bool fuse_rows_on() {
 // 143-amdk: STRATA_FUSE_CONVAB=1 - the GDN conv and the a/b projections in one launch.  Opt-in: measured -0.3% on gfx1201 (the a/b dot chain is the longer one).
 bool fuse_convab_on() {
 #if defined(STRATA_USE_HIP)
-    static const bool on = [] { const char* v = std::getenv("STRATA_FUSE_CONVAB"); return v != nullptr && std::atoi(v) != 0; }();
+    static const bool on = strata::env::nonzero("STRATA_FUSE_CONVAB");
     return on;
 #else
     return false;
@@ -507,7 +508,7 @@ const bool g_dmws_cleanup = [] { return std::atexit([] { if (g_dmws.d != nullptr
 // instrument (its slot-2 wait is one of the nodes the fold deletes) or a profiled window (the fold skips the
 // stamps it replaces).
 bool dm_fold_on() {
-    static const bool on = [] { const char* e = std::getenv("STRATA_DM"); return e != nullptr && e[0] == '1'; }();
+    static const bool on = strata::env::one("STRATA_DM");
     return on;
 }
 
@@ -1070,7 +1071,7 @@ bool Verifier::init(const WeightTable& wt, const ModelGeometry& g, SessionState&
     // its own (ROCm hands queues out per priority).  Sharing one with the window's stream, --pcie-mode dma's copies and
     // their host function queue behind the window's graph, which spins on the flag they raise (a timeout at layer 1).
     {
-        static const bool cp = [] { const char* v = std::getenv("STRATA_COPY_HIP_PRIO"); return v != nullptr && std::atoi(v) != 0; }();
+        static const bool cp = strata::env::nonzero("STRATA_COPY_HIP_PRIO");
         int lo = 0, hi = 0;
         if (cp && hipDeviceGetStreamPriorityRange(&lo, &hi) == hipSuccess)
             copy_made = hipStreamCreateWithPriority(&copy_, hipStreamNonBlocking, hi) == hipSuccess;

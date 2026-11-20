@@ -64,6 +64,14 @@ int main() {
         expect("1", strata::env::nonzero_default_true_value("1"), true);
         expect("abc", strata::env::nonzero_default_true_value("abc"), false);
     }
+    // truthy_default_true: unset arms; "" arms; "0" disarms
+    {
+        expect("(unset)", strata::env::truthy_default_true_value(nullptr), true);
+        expect("(empty)", strata::env::truthy_default_true_value(""), true);
+        expect("0", strata::env::truthy_default_true_value("0"), false);
+        expect("1", strata::env::truthy_default_true_value("1"), true);
+        expect("abc", strata::env::truthy_default_true_value("abc"), true);
+    }
     if (failures) {
         std::printf("env_flag_test: %d failure(s)\n", failures);
         return 1;

@@ -37,6 +37,10 @@ inline bool one(const char* name) { return one_value(std::getenv(name)); }
 inline bool nonzero_default_true_value(const char* v) { return v == nullptr || std::atoi(v) != 0; }
 inline bool nonzero_default_true(const char* name) { return nonzero_default_true_value(std::getenv(name)); }
 
+// truthy, but default-true: unset arms; "" arms; "0" disarms (v == nullptr || v[0] != '0')
+inline bool truthy_default_true_value(const char* v) { return v == nullptr || v[0] != '0'; }
+inline bool truthy_default_true(const char* name) { return truthy_default_true_value(std::getenv(name)); }
+
 // --- value readers (parse a number; unset or empty returns the default) ---
 inline float float_value(const char* v, float dflt) {
     return (v != nullptr && v[0] != '\0') ? (float) std::atof(v) : dflt;

@@ -13248,3 +13248,16 @@ The env-unification spreads to the decode hot path. Eight bespoke env-read lambd
 - **Module:** `nonzero_default_true` added (unset arms; ""/"0"/non-numeric disarm) with Golden
   Master cases.
 - **Verified:** `ninja -C build-fresh strata env_flag_test` green; `env_flag_test` ok.
+
+## F-426 — M1 sweep continues: verify.cpp (10 sites) + truthy_default_true (2026-11-20, 17:18)
+
+Ten bespoke env-read lambdas in the decode verify path (`src/core/verify.cpp`) collapsed to the owned
+module, and the module gains the `truthy_default_true` convention (unset arms, "" arms, "0" disarms).
+
+- **Extracted:** `g_dbg` (present / VERIFY_DEBUG), `g_lfuse` + `g_dm` (one / LFUSE, DM),
+  `g_lfuse_gate` + `g_lfuse_pair` + `g_mmvq_il` (truthy_default_true — the new default-on truthy),
+  `g_qdedup` + `g_qfuse` + `fuse_convab` + `copy_hip_prio` (nonzero). Byte-identical.
+- **Left in verify.cpp (not pure bool):** `parsed` (float + sscanf), `QFUSE_HC`/`SH_STREAM`/
+  `HEAD_MIX_MULTI`/`ONE_TOKEN_COMMIT`/`PIPED_CONCURRENT` (multi-line bodies), `SIDE_MIXER`/`FUSE_WAIT`/
+  `FUSE_HITS` (int tri-state), `FUSE_WAIT==1` (exact-equality). Not touched.
+- **Verified:** `ninja -C build-fresh strata env_flag_test` green; `env_flag_test` ok.
