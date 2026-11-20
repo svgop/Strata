@@ -2456,6 +2456,12 @@ const float SpecKeep::A[5][6] = {
     {0.5150f, 0.5700f, 0.5916f, 0.5732f, 0.7839f, 0.8985f},
     {0.5464f, 0.6127f, 0.6898f, 0.7212f, 0.7950f, 0.9812f}};
 
+// Deterministic-by-default request sampling (F-419, operator decision 2026-11-20): an unseeded
+// serve request draws from this fixed Philox seed instead of steady_clock, so sampled output is
+// reproducible across boots and the M3b exact-match canary covers non-greedy traffic. A request's
+// "seed" field still wins; the CLI --seed (o.seed) governs the generate path, not serve.
+constexpr unsigned long long kDefaultRequestSeed = 0x5eed1a7eULL;
+
 int main(int argc, char** argv) {
     // **UNBUFFERED, BECAUSE THE INTERESTING OUTPUT IS THE OUTPUT BEFORE A CRASH.**  `stdout` redirected to a
     // pipe or a file is block-buffered, so a program that dies loses every line it had already printed - which
@@ -15607,8 +15613,7 @@ int main(int argc, char** argv) {
             req_sp.temperature = req_temperature;
             req_sp.top_p = req_top_p;
             req_sp.top_k = req_top_k;
-            req_sp.seed = req_seed ? req_seed
-                                   : (unsigned long long) std::chrono::steady_clock::now().time_since_epoch().count();
+            req_sp.seed = req_seed ? req_seed : kDefaultRequestSeed;
             req_sp.min_p = std::clamp(req_min_p, 0.0f, 1.0f);
             req_sp.penalty_last_n = std::max(req_penalty_last_n, 0);
             req_sp.penalty_repeat = req_penalty_repeat;
@@ -18292,6 +18297,7 @@ int main(int argc, char** argv) {
         }
         const double pool_ms0 = drive.cpu_ms;
         const int64_t misses0 = drive.d.multi_misses, entries0 = drive.d.multi_entries;
+        static const bool chain_fixed = std::getenv("STRATA_LOOKUP_CHAIN_FIXED") != nullptr;   // no policy gate
         while ((int64_t) produced.size() < max_new) {
             const Clock::time_point t0 = Clock::now();
             int T = S_mtp;
@@ -18323,7 +18329,7 @@ int main(int argc, char** argv) {
                 chain_n = strata::spec::propose_from_sources(lookup_src, ctail.data(), nt, T - 1,
                                                              std::min(o.lookup_chain, room - T), o.lookup_chain_min,
                                                              cbuf.data(), &cm, &csrc);
-                if (chain_n > 0 && std::getenv("STRATA_LOOKUP_CHAIN_FIXED") == nullptr) {
+                if (chain_n > 0 && !chain_fixed) {
                     double p_mtp = 1.0;
                     for (int i = 0; i < T - 1; ++i) p_mtp *= dprob[(size_t) i];
                     chain_n = policy.chain(T, p_mtp, chain_n, cm);

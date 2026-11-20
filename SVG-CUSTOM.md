@@ -13136,6 +13136,27 @@ sweep) + cross-cutting probes. Static analysis only — no measurement this pass
   `static const`, then M1 with the G1 Golden Master pinning the current truthiness matrix before any
   refactor touches the 227 getenv sites.
 
+## F-420 — Mikado Layer 0 first land: per-window getenv hoisted + sampling deterministic-by-default (2026-11-20, 16:50)
+
+The first execution step after F-419's audit. Two changes, one build, no lane touched.
+
+- **M2 (zero-behavior):** `generate.cpp:18326` read `STRATA_LOOKUP_CHAIN_FIXED` via a non-static
+  `std::getenv` inside the decode window loop (the CLI generate path) — an environment walk per
+  window. Hoisted to `static const bool chain_fixed` (read once, matching the serve path's existing
+  static at `:15898`). Semantics identical: the loop now reads the value frozen at first window.
+- **Sampling determinism (operator decision, F-419 Q1):** `generate.cpp:15610` derived an unseeded
+  serve request's Philox seed from `steady_clock::now()` — nondeterministic output for every
+  temperature>0 request without a "seed" field, a direct gap in the M3b exact-match canary. Now
+  `kDefaultRequestSeed = 0x5eed1a7eULL` (file-scope, documented). A request's "seed" field still
+  wins; the CLI `--seed` (`o.seed`) still governs the generate path. Rollback = one line (restore
+  the clock expression).
+- **Build:** `ninja -C build-fresh strata` green (exit 0). The two compile warnings are pre-existing
+  telemetry-printf / unused-var at `generate.cpp:13118` / `:13373`, untouched by this pass.
+- **Deploy gate (laws 9/10/14):** the RNG change touches the sampling path, so the deploy to
+  `engine/strata` is gated on the standing-boot proof — M3b canary (greedy unaffected; sampled now
+  reproducible) + one lane-sanity probe. Not deployed this pass; the source + this journal are the
+  record until the proof boot runs.
+
 ### note (2026-11-20, 16:55) — the far-higher-t/s investigation: the wall as one equation, and the coverage correction
 
 Dossier: `campaign/research/levers-2026-11-20-evening.md` (read-only, priced per law 15). The
