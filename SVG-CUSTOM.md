@@ -13135,3 +13135,25 @@ sweep) + cross-cutting probes. Static analysis only — no measurement this pass
 - **Next concrete step (cheapest, zero-behavior):** M2 — hoist `generate.cpp:18326` (and `:18059`) to
   `static const`, then M1 with the G1 Golden Master pinning the current truthiness matrix before any
   refactor touches the 227 getenv sites.
+
+### note (2026-11-20, 16:55) — the far-higher-t/s investigation: the wall as one equation, and the coverage correction
+
+Dossier: `campaign/research/levers-2026-11-20-evening.md` (read-only, priced per law 15). The
+headline findings: (1) the wall is ONE equation - host-stage exposure x (1 - rows in flight);
+the batch anatomy at 4.68 rows still shows reach idle 1.33 + CPU experts 2.98 + adapt 1.19, so
+the conc lane is gated by the same host stages as solo. (2) THE COVERAGE CORRECTION: the
+resident cache slots are the pack form - `ExpertCache::slot_stride(lay.blob_bytes(l))` per
+layer, IQ3_S, boot line 9900 slots = 18.78 GiB = 1.94 MiB/slot (the prompt path's 5189-slot
+borrow = 9.80 GiB agrees). F-418's fit used the Q2_0 1.3824 MiB blob: 16k slots is 30.3 GiB,
+not 22.1 - the geometry guard will REFUSE; the fit on 32 GB is ~11k slots (offline ~92%,
+live ~+1%). The 99% goal needs ~40 GiB - off the envelope; the real coverage lever is
+cache FORM per expert (Q2_0-form slots are 29% fewer bytes; frequency-tiered requant, hot
+IQ3_S/cold Q2_0, the T47 §3.8 MxMoE class, a quality-axis design with a measured price).
+(3) NEW priced arm: the pool's serial act_quant barrier (pool.cpp:1050 - the service thread
+quantizes between the two phases while seven workers park, ~48 calls/window) - folding the
+quant into the phase-1 epilogue halves the miss path, ~1.35 ms exposed, ~+10% class; composes
+with the lookahead arm (halve the term, hide the remainder). (4) The deployed drafter is Oct
+13 and the trainer's ckpt/harvest homes are GONE post-move (Custom-data empty) - the retrain
+lever starts with a re-harvest. The priced order: lookahead falsifier -> depth-2 quiet re-test
+-> swaps=80 + spec-min-p 0.7 -> pool-granularity build -> n-gram falsifier -> 16k falsifier
+boot (expect REFUSE) -> M3b era-gap hunt -> retrain -> C2 admission overlap -> mixed-form cache.
