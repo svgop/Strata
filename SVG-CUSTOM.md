@@ -13288,3 +13288,11 @@ Sweep tally: 35 of ~130 sites done (generate.cpp 13, expert_source.cpp 8, verify
 The remaining ~95 are kernel `.cu` files with higher convention variety (int tri-state, multi-line
 fallbacks, exact-equality) — parked as a lower-value tail, not worth further rounds at this
 effort-per-site ratio.
+
+## F-429 — magic-number fix: 2560 → kCompiledGeometry.n_embd (2026-11-20, 17:29)
+
+`generate.cpp:2319` (`std::vector<float> out(kTok * 2560)`) now reads the compiled geometry's
+`n_embd` instead of the literal. Build green. The decomposition's gating is now confirmed at source,
+not assumed: the whole `expert_pool_dispatch_multi` body is one `if (d.plan != nullptr && ...)` block,
+so the plan/group/job sections share locals declared inside that block — extraction requires hoisting
+declarations (a semantic refactor), which needs the boot oracle, not a verbatim move.
