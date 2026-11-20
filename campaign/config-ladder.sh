@@ -121,4 +121,9 @@ print(f"M3b canary: OFF {st.mean([b['M3b'] for b in offs]):.1f}% vs ON {st.mean(
 print("BAR: no lane below -4%:", "PASS" if ok else "FAIL", "- the targeted lane's +4% gain is judged on its mean above (law 2, both legs)")
 PY
 echo "CONFIG LADDER DONE — config restored from /tmp/config-ladder-cfg.bak, engine DOWN."
-echo "OWED: the F-271 re-pin (cp data/expert-profile-gold.bin data/expert-profile-learned.bin) and, on adoption, the MMLU gate."
+# F-271 as STRUCTURE (the 2026-11-20 incident: the OWED line was printed and missed): the re-pin
+# happens HERE, verified, every run - a battery's learned profile never outlives its battery.
+cp -f data/expert-profile-gold.bin data/expert-profile-learned.bin
+md5sum data/expert-profile-gold.bin data/expert-profile-learned.bin | awk '{print $1}' | uniq -c | grep -q "^      2" \
+  && echo "F-271 re-pin VERIFIED (learned == gold)" || echo "F-271 RE-PIN FAILED - pin it by hand before the next boot"
+echo "Still owed on adoption only: the MMLU gate."

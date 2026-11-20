@@ -12987,3 +12987,23 @@ steering on the same empty counters.  Teardown clean, profile re-pinned.
   distribution-adjacent change: deeper drafts shift the accept/emit mix).
 - The env restores to unset (the launcher's own default D=1); teardown by the ladder's restore.
   Evidence: campaign/results/f416-h5-depth2-ladder.out + per-leg files.
+
+## F-417 — the operator's slowness root-caused: the missed F-271 re-pin, live (2026-11-20, 16:00)
+
+- **The report:** solo slowness on the serving boot; suspected orphaned bench processes.  The audit
+  found NONE (no orphans, memory healthy, canonical boot) - it found the F-271 hazard instead.
+- **The mechanism, in full:** the F-416 battery's last boot saved its learned profile at exit
+  (15:34, D=2 probe-traffic rankings); env-ladder's restore boot started 15:34:54 and loaded it;
+  the ladder's DONE line flagged "OWED: the F-271 re-pin" - and it was missed (my omission).  The
+  tier then fought the operator's REAL traffic: **25,303 experts exchanged with the VRAM tier and
+  10,196 blob reads from the file** on one boot (the running signature is 2.7-3.1k exchanges) -
+  the complement thrashing against NVMe is exactly the 2.2x-down class F-271 documented.
+- **The fix, applied:** gold re-pinned to learned (md5-verified), engine restarted, boot
+  re-certified (fingerprint f22e85411ce4aa82 slots=9900 verified=49, driver-pinned), and the tier
+  runs CALM on the fresh profile (2.9-3.1k exchanges, a 120-token probe answered in 0.82 s).
+- **The fix, structural (law 4):** both ladders now re-pin at DONE themselves - the cp runs, the
+  md5 is CHECKED, and the line reads VERIFIED or FAILED.  An OWED line that depends on memory is
+  the defect class; the re-pin is now part of the instrument's close-out, like the trap restore.
+- **The boot-restore wrinkle named:** env-ladder leaves a serving engine up by design (the restore
+  boot); anything that connects to it between the battery and the re-pin gets the battery's last
+  learned state.  The structural re-pin closes that window to seconds.

@@ -90,4 +90,10 @@ m3 = [100 * (o['M3b'] - f['M3b']) / f['M3b'] for f, o in zip(offs, ons)]
 print(f"M3b canary: OFF {st.mean([b['M3b'] for b in offs]):.1f}% vs ON {st.mean([b['M3b'] for b in ons]):.1f}% (mean {st.mean(m3):+.1f}%)")
 print("BAR: no lane below -4%:", "PASS" if ok else "FAIL", "- the targeted lane's +4% gain is judged on its mean above (law 2, both legs)")
 PY
-echo "ENV LADDER DONE — lane binary restored from /tmp/env-ladder-pre-run.bin"
+echo "CONFIG/ENV LADDER DONE — config restored, engine UP on the restored binary."
+# F-271 as STRUCTURE (the 2026-11-20 incident: the OWED line was printed and missed - the battery's
+# last boot saved a probe-traffic learned profile, the restore boot loaded it, the tier thrashed
+# 25k exchanges with 10k file reads on real traffic): the re-pin happens HERE, verified, every run.
+cp -f data/expert-profile-gold.bin data/expert-profile-learned.bin
+md5sum data/expert-profile-gold.bin data/expert-profile-learned.bin | awk '{print $1}' | uniq -c | grep -q "^      2" \
+  && echo "F-271 re-pin VERIFIED (learned == gold)" || echo "F-271 RE-PIN FAILED - pin it by hand before the next boot"
