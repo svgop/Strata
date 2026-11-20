@@ -140,3 +140,58 @@ coverage lever that survives the card's ceiling; it is a design, not an arm.
 re-priced this session. The composition A+B+C attacks the same wall from three sides and is
 the credible path to solo 250-270 in the current envelope; 8 raises the ceiling on top;
 9-10 are the lane/coverage plays beyond.
+
+## 7. CODE STUDY: the cache-hit levers, grounded (same day, post-answer)
+
+Read the residency pathway end to end: `expert_cache.hpp/.cpp` (slots, residency table,
+admission), `expert_source.cpp` (the host plan, the miss split, the swaps, ForesightSwap),
+`generate.cpp` (the adaptive tier's scan at 10801-10856, the ADAPT_FETCH wiring at 7140),
+`verify.cpp` (the grouped launches at 2213-2289), `foresight_swap.hpp`, `shadow_experts.hpp`,
+`PcieModel` (expert_source.hpp:400). Live anatomy from the serving log: routed entries per
+window VRAM 95.8-97.6%, PCIe 0.4-0.8%, CPU 2.1-4.0%; adaptive tier churns 2374-6190 experts
+per request batch; the tier runs every=4, swaps=96, decay=0.85 (config).
+
+**Laws the code states:**
+1. `ExpertCache` NEVER evicts (`admit` takes free slots only; header comment: eviction
+   policy is a measured question). The live set churns only via the adaptive tier's
+   `install_resident`/`replace` and the fetch-admission.
+2. The adaptive scan is PER LAYER and swaps within a layer (the victim's slot is the
+   candidate's new home) — the per-layer budget is fixed at the profile-fill and can
+   never move across layers.
+3. `native_expert_grouped` refuses non-i-quant types (`is_iq` in `native_expert_supported`,
+   iq_kernels.cu:4100); the canonical Q2_0 form is computed by `moe_grouped_s2` (the
+   non-native path, kernel in tree). The plan already carries TWO group sets (VRAM P.ptr,
+   PCIe P.ptr2); a third (s2-form resident) is a plan-column change, not a new kernel.
+4. The shadow store (`shadow_experts.hpp`, F-359, ARMED) already maps the whole model in
+   canonical Q2_0 form — 1,382,400 B blobs, uniform across layers — and the engine already
+   computes every CPU miss from it (the quality axis at 3.7% of routings passed the gate).
+5. `PcieModel` is ON (pcie_balance() default true + --pcie-frac 0.35) and picks the
+   per-layer fetch count to minimize max(GPU, CPU); the measured 5090-class fit says the
+   pool is DRAM-bound (d ~ c). pcie_frac is NOT the lever — the model already optimizes
+   the split.
+
+**The unarmed arms (zero-build, env-gated):**
+- `STRATA_ADAPT_FETCH` (default 0 here; upstream ships =2 on ≤16 GiB cards): the fetched
+  PCIe copies land in the victim slot (dst2) instead of staging — the bytes are already
+  in flight, the residency is free. Converts ~9 fetches/window into permanent residents
+  AND shrinks the tier's own copy churn (the adapt wait 1.19 ms term).
+- `STRATA_FS_SLOTS` (ForesightSwap, unset): separate per-layer VRAM slots refilled by
+  RouterLookahead predictions + note_miss; a landed slot is a GPU group like a hit
+  ("the grouped kernel reads whatever address the plan carries, so no kernel changes").
+  Budget 32 copies/card/window covers the ~70 misses. COLLISION: declared "Not with
+  STRATA_VERIFY_DEVICE_PLAN" (armed here) — but the device plan only plans all-resident
+  layers, and those have no misses; the gate may be over-broad. Falsifier: boot
+  FS_SLOTS=4 with the device plan on and read the refusal line; if refused, the small
+  build is scoping the gate to host-planned layers.
+
+**The capacity lever, redesigned (supersedes §2's design sketch):**
+mixed-form cache = a second ExpertCache arena of canonical Q2_0 slots (1,382,400 B,
+uniform across layers), filled from the shadow store's mapping (no requant — the bytes
+already exist), consumed by a second grouped launch per layer (moe_grouped_s2; activation
+quantization already exists for the canonical path). Q2_0 form is uniform across layers,
+so cold slots are a cross-layer pool — the per-layer budget constraint dissolves for the
+cold tier. Budget math: 18.78 GiB in IQ3_S buys 9900 slots; 6k IQ3_S + 5.5k Q2_0 = 11.5k
+slots in the same bytes, hot experts keep IQ3_S quality. No new kernel; ~4-5 files
+(expert_cache form vector, expert_source plan column + fill + admission, verify.cpp third
+launch, generate.cpp heat-tier policy). The offline falsifier is free: score a slot mix in
+tools/replay_cache_policy.py where cold slots carry the 1.3824 MB cost.
