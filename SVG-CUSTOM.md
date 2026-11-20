@@ -13220,3 +13220,19 @@ change and no operator conflict.
 - **Next (M1):** extract generate.cpp's pure env-helper lambdas to call this module, one helper at a
   time, the Golden Master as guard. Helpers with side effects (e.g. the HIP_ADAPT_KERNEL_COPY
   `cudaHostGetDevicePointer` probe) are not pure env reads and stay in place.
+
+## F-423 — M1 env unification: 12 pure helpers extracted to strata::env (2026-11-20, 17:06)
+
+The generate.cpp extraction the G1 Golden Master guarded. Twelve pure bool helpers now call the owned
+module instead of bespoke lambdas; the truthiness convention is named at the call site.
+
+- **Extracted:** 6x `truthy` (pipe_byield_nodrain, admit_merge_first, ckpt_pool, ckpt_threads,
+  slot_ckpt_move, slot_copy_batchsync), 1x `one` (pin_blobs_on / STRATA_ARENA_MMAP), 2x `present`
+  (rss_probe / STRATA_RSS_TRACE, refill_blocking / STRATA_REFILL_BLOCKING), 1x `truthy_strict`
+  (pipe_dbg_env / STRATA_PIPELINE_DEBUG), 2x `nonzero` (batch_rescue_on / STRATA_BATCH_RESCUE,
+  typical_stats use_dev / STRATA_TYPICAL_DEVICE).
+- **Behavioral parity:** each replacement is byte-identical (the module predicate is the exact
+  historical expression); the `static const` read-once caching is preserved.
+- **Verified:** `ninja -C build-fresh strata env_flag_test` green; `env_flag_test` -> ok (exit 0).
+- **Left (not pure bool):** `adapt_copy_h2d` (HIP-only, prints a banner) and `typical_threshold`
+  (a float parse - needs a float reader). Not touched this pass.

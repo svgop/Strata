@@ -1,4 +1,5 @@
 #include "strata/core/logit_bias.hpp"
+#include "strata/core/env_flag.hpp"
 // src/program/generate.cpp - P2.S6: `strata generate`.
 //
 // THE DRIVER, and the first program in this project that answers a question.  Everything below it is a
@@ -179,10 +180,7 @@ std::string vram_free_note() {
 // loop is dropped without draining the groups first.  A pipelined read never gives way (batch_read_piece), so the
 // BYIELD is for a read that has ended, and the drain (and the refill after it) did nothing for it
 bool pipe_byield_nodrain_env() {
-    static const bool on = [] {
-        const char* v = std::getenv("STRATA_PIPE_BYIELD_NODRAIN");
-        return v && v[0] != '0';
-    }();
+    static const bool on = strata::env::truthy("STRATA_PIPE_BYIELD_NODRAIN");
     return on;
 }
 // STRATA_ADMIT_MERGE_FIRST=1 (read once; off by default): a batch admission reads the last prompt tokens of its last
@@ -191,10 +189,7 @@ bool pipe_byield_nodrain_env() {
 // every expert is in VRAM, and row T-1 is the first window's position with its history and its Philox draw, so the
 // token and the state are the same; the rows before it commit as the prompt windows commit them
 bool admit_merge_first_env() {
-    static const bool on = [] {
-        const char* v = std::getenv("STRATA_ADMIT_MERGE_FIRST");
-        return v && v[0] != '0';
-    }();
+    static const bool on = strata::env::truthy("STRATA_ADMIT_MERGE_FIRST");
     return on;
 }
 // STRATA_CKPT_POOL=1 (read once; off by default): the serve loop keeps the running-state vectors of the conversation
@@ -202,20 +197,14 @@ bool admit_merge_first_env() {
 // resizes nothing (no zero-fill of ~118 MB of fresh vectors) and a slot's copy reuses their pages.  Every byte is
 // overwritten by the copy, so the checkpoints are the same
 bool ckpt_pool_env() {
-    static const bool on = [] {
-        const char* v = std::getenv("STRATA_CKPT_POOL");
-        return v && v[0] != '0';
-    }();
+    static const bool on = strata::env::truthy("STRATA_CKPT_POOL");
     return on;
 }
 // STRATA_CKPT_THREADS=1 (read once; off by default): a layer split's checkpoint saves every stage's part at once, the
 // first on the calling thread and each later stage's on a thread of its own device (kept for the process: the copies'
 // private streams are per thread), instead of one stage after the other.  Each part is the same copy of the same state
 bool ckpt_threads_env() {
-    static const bool on = [] {
-        const char* v = std::getenv("STRATA_CKPT_THREADS");
-        return v && v[0] != '0';
-    }();
+    static const bool on = strata::env::truthy("STRATA_CKPT_THREADS");
     return on;
 }
 // STRATA_SLOT_CKPT_MOVE=1 (read once; off by default): a batch admission MOVES its own turn checkpoint into the slot
@@ -225,10 +214,7 @@ bool ckpt_threads_env() {
 // same history).  The same bytes are restored from another container, so the tokens are the same.  It keeps the
 // dropped checkpoints' storage as STRATA_CKPT_POOL does (the slot's old checkpoint is the next save's)
 bool slot_ckpt_move_env() {
-    static const bool on = [] {
-        const char* v = std::getenv("STRATA_SLOT_CKPT_MOVE");
-        return v && v[0] != '0';
-    }();
+    static const bool on = strata::env::truthy("STRATA_SLOT_CKPT_MOVE");
     return on;
 }
 // STRATA_SLOT_COPY_BATCHSYNC=1 (read once; off by default): the direct slot copy (STRATA_SLOT_COPY_DIRECT) only queues
@@ -236,10 +222,7 @@ bool slot_ckpt_move_env() {
 // for each of its ~116 copies.  A streamed K/V state's residency refresh waits for its copies through an event.  The
 // same copies in the same order on one stream, so the slot holds the same bytes
 bool slot_copy_batchsync_env() {
-    static const bool on = [] {
-        const char* v = std::getenv("STRATA_SLOT_COPY_BATCHSYNC");
-        return v && v[0] != '0';
-    }();
+    static const bool on = strata::env::truthy("STRATA_SLOT_COPY_BATCHSYNC");
     return on;
 }
 
@@ -255,7 +238,7 @@ bool slot_copy_batchsync_env() {
 // then - `blob()` is not free (it counts reads, and the file tier may assemble the blob), so the default runs skip it.
 bool pin_blobs_on() {
 #if (defined(STRATA_USE_HIP) || defined(STRATA_HIP_GFX906)) && !defined(_WIN32)
-    static const bool on = std::getenv("STRATA_ARENA_MMAP") && std::getenv("STRATA_ARENA_MMAP")[0] == '1';
+    static const bool on = strata::env::one("STRATA_ARENA_MMAP");
     return on;
 #else
     return false;
@@ -319,7 +302,7 @@ void unpin_blobs(std::vector<void*>& v) {
 
 // STRATA_RSS_TRACE=1: the process's mapped file pages (the arena) at a startup step - who reads the arena back
 void rss_probe(const char* where) {
-    static const bool on = std::getenv("STRATA_RSS_TRACE") != nullptr;
+    static const bool on = strata::env::present("STRATA_RSS_TRACE");
     if (!on) return;
     FILE* f = std::fopen("/proc/self/status", "r");
     if (!f) return;
@@ -333,7 +316,7 @@ void rss_probe(const char* where) {
 }
 
 bool refill_blocking() {
-    static const bool v = std::getenv("STRATA_REFILL_BLOCKING") != nullptr;
+    static const bool v = strata::env::present("STRATA_REFILL_BLOCKING");
     return v;
 }
 
@@ -343,7 +326,7 @@ using Clock = std::chrono::steady_clock;
 // LOOKUP_PON, PRESTAGE, AGREE, SNAP_OVERLAP, SPEC_DEPTH) is read only with STRATA_PIPELINE_DEBUG=1; without it the
 // defaults apply.
 static const char* pipe_dbg_env(const char* name) {
-    static const bool on = [] { const char* v = std::getenv("STRATA_PIPELINE_DEBUG"); return v != nullptr && v[0] != 0 && v[0] != '0'; }();
+    static const bool on = strata::env::truthy_strict("STRATA_PIPELINE_DEBUG");
     return on ? std::getenv(name) : nullptr;
 }
 
@@ -364,8 +347,7 @@ static float typical_threshold() {
 // land in slots - armed, MMLU dropped 95.7 -> 91.4-92.9 (F-30b attribution). The serial-path
 // rescue keeps its own STRATA_TYPICAL_ACCEPT arm. 1 = re-enable the batch rescue.
 static bool batch_rescue_on() {
-    static const bool on = [] { const char* v = std::getenv("STRATA_BATCH_RESCUE");
-                                return v != nullptr && std::atoi(v) != 0; }();
+    static const bool on = strata::env::nonzero("STRATA_BATCH_RESCUE");
     return on;
 }
 static bool typical_stats(strata::core::Verifier& ver, int row, int32_t drafted, float temperature,
@@ -375,8 +357,7 @@ static bool typical_stats(strata::core::Verifier& ver, int row, int32_t drafted,
     // F-14/F-16: the device arm (STRATA_TYPICAL_DEVICE=1) is the re-streamed kernel.
     const float threshold = typical_threshold();
     if (!(threshold > 0.0f) || !(temperature > 0.0f)) return false;
-    static const bool use_dev = [] { const char* v = std::getenv("STRATA_TYPICAL_DEVICE");
-                                     return v != nullptr && std::atoi(v) != 0; }();
+    static const bool use_dev = strata::env::nonzero("STRATA_TYPICAL_DEVICE");
     if (use_dev) {
         float st[2] = {0.0f, 0.0f};
         if (ver.row_typical_stats(row, drafted, 1.0f / temperature, st)) {
