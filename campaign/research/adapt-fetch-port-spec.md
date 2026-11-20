@@ -46,8 +46,12 @@ the `pcie_mode == 2` staging machinery (`verify.cpp:2276-2281`). The port is exa
    **[LANDED 2026-11-20, commit 8adb0a5aa — kernels carry the per-blob destination select
    (dst2[k] != 0 ? the tier slot : staging, kd-cached per blob), wrappers + declarations
    null-defaulted; builds clean b8153a66; the one boot proves 1+2 together.]**
-3. Pool-side rank/pick behind `STRATA_ADAPT_FETCH=0` (default off) — the env exists, the arm
-   inert. `ADAPT_CHECKRES=1` boot verifies the residency table stays exact with the arm off.
+3. Pool-side rank/pick behind `STRATA_ADAPT_FETCH=0` (default off). **[LANDED 2026-11-20,
+   commits e4c76f4b6 (3a: fields/env) + 64a79c18b (3b: admission + the faithful arm gate).]**
+   **Applicability fact discovered in porting: the arm REFUSES the resident-RAM mode and the DMA
+   PCIe mode (upstream's own gate, the reason named in the banner) - our standing runs BOTH, so
+   the battery needs a scoped staged-copy recipe first (law 4b). The env-off proof boot is the
+   only remaining gate before deploy.** `ADAPT_CHECKRES=1` boot verifies the residency table stays exact with the arm off.
    **The complete anatomy (read at upstream 5125-5205, executes mechanically):**
    - Dispatch fields to port: `fetch_admit` (int), `fetch_min`/`fetch_margin` (floats),
      `fetch_avail` (per-layer flags), `fetch_mark` (per-expert scratch), `in_flight`
