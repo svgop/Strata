@@ -13425,3 +13425,30 @@ comparisons of the failing tests.
 - **V2 (engine down):** the full GPU parity suite and the interleaved same-hour lane battery remain
   the operator's window — deploy and battery are never one command (law 9). The baseline worktree was
   removed at closeout.
+
+## F-438 — Golden Master for the dispatch seam: `expert_pool_dispatch_multi` now executes under test (2026-11-20, 18:49)
+
+The coverage gap F-437 exposed is closed: the verify-window dispatch had exactly one production caller
+(`generate.cpp:1250`) and **zero test callers** — the F-432..F-436 extractions were compile- and
+byte-diff-verified but never *executed* by the suite.
+
+- **New test:** `tests/core/expert_dispatch_golden_test.cpp` (+ CMake, CUDA-gated block beside
+  `file_expert_source_test`). It drives the REAL dispatch on the CPU path with a synthetic canonical
+  pack (2 layers x 512 experts, sparse, deterministic LCG blobs), a fixed 8-token x 10-expert window
+  (each token a rotation of ten distinct experts — the router contract; the first draft violated it
+  and the T18 `MAXT` guard refused the window, which is the guard working), two resident experts and
+  eight misses, a counting `GpuPlanSink`, and sentinel-filled output rows.
+- **Frozen, by value:** plan `counts`/`start`/`ptr`, publish called once, fetch called with 0 entries,
+  16 GPU-owned rows untouched (dec_batch: the device zeroes them), 64 CPU rows computed, counters
+  (`experts`=80, `multi_misses`=8, `cache_refused`=64), and the three refusal paths with their exact
+  `d.fail` strings (oversized window, pre-failed dispatch, out-of-range id 999). Plus the output
+  fingerprint `kGoldenHash = 0xc90ded77662c664d` (FNV-1a 64, machine-pinned, provenance below).
+- **Determinism pins:** `STRATA_COLD_OVERLAP=0` (the async cold-overlap batches land in timing order)
+  and `STRATA_ROUTE_TAIL_SKIP=0` (the serve default 7 changes output by design), set before the first
+  call — both are read once per process.
+- **The A/B:** the same test built at `e0f4c57bc` (pre-F-432) and on HEAD produced **identical
+  fingerprints** `c90ded77662c664d` — the decomposition is now certified by execution on the real
+  path, on this box. (Baseline build needed `-DSTRATA_ENABLE_CUDA=ON` + the nvcc toolchain: the
+  CPU-only configure silently skips the whole gated test block — the same trap F-437's baseline
+  comparison fell into; recorded here so the next harness builds the baseline with CUDA on.)
+- ctest: `expert_dispatch_golden_test` PASS (0.02 s). Worktree removed at closeout.
