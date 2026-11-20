@@ -13261,3 +13261,19 @@ module, and the module gains the `truthy_default_true` convention (unset arms, "
   `HEAD_MIX_MULTI`/`ONE_TOKEN_COMMIT`/`PIPED_CONCURRENT` (multi-line bodies), `SIDE_MIXER`/`FUSE_WAIT`/
   `FUSE_HITS` (int tri-state), `FUSE_WAIT==1` (exact-equality). Not touched.
 - **Verified:** `ninja -C build-fresh strata env_flag_test` green; `env_flag_test` ok.
+
+## F-427 — magic-number fixes + the decomposition's missing oracle (2026-11-20, 17:23)
+
+Two hardcoded trunk-layer bounds in `generate.cpp` (`:1214`, `:1238`) now read
+`strata::core::kCompiledGeometry.n_layers` instead of a literal `48` — behavior-identical, and the
+routing-trace bounds follow the compiled geometry instead of a magic number. Build green.
+
+**The decomposition's blocker, stated precisely (the mission's own Mikado rule):** the god-modules
+(`main`, `Prefill::run_impl`, `expert_pool_dispatch_multi`, `post`) are HOST-SIDE dispatch logic with
+**no parity oracle**. The kernels carry 76 bit-exact parity tests; the host dispatch carries zero. A
+decomposition of the plan bookkeeping / group dispatch changes the expert routing (an OUTPUT), and
+without a boot (bit-check.py / routing-trace) a subtle capture error is silent. The untestable seam is
+the host dispatch; its prerequisite is a routing-decision characterization oracle runnable under the
+existing `bit-check.py` + `tools/make_profile.py` infrastructure. Until that oracle is armed, the
+decomposition is compile-verified-only and I keep it out of the tree — the safe incremental work
+(env unification, geometry asserts, magic numbers, determinism) continues instead.
