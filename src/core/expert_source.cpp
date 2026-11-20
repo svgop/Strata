@@ -4917,6 +4917,49 @@ void expert_pool_dispatch_multi(ExpertDispatch& d, const float* x_f, const int32
         P.counts[2] = fetches;
         if (d.fetch_admit > 0 && P.dst2 != nullptr)
             for (int q = 0; q < fetches; ++q) P.dst2[q] = 0;   // ADAPT_FETCH step 3a: staging until the admission fills a slot
+        // ADAPT_FETCH step 3b (upstream 0.2.16's anatomy, verbatim mechanism): the fetched misses that
+        // routed enough, most-routed first, each against the next least-routed resident expert the window
+        // does not route (its slot is read by nothing until the next window - the admission is safe there).
+        if (d.fetch_admit > 0 && d.res_mut != nullptr && fetches > 0 && !d.usage.empty()) {
+            const float* use = d.usage.data() + (size_t) d.layers * (size_t) d.n_expert;
+            const size_t lb = (size_t) d.layers * (size_t) d.n_expert;
+            if (d.fetch_mark.size() != (size_t) d.n_expert) d.fetch_mark.assign((size_t) d.n_expert, 0);
+            if (d.in_flight.size() != lb + (size_t) d.n_expert) d.in_flight.assign(lb + (size_t) d.n_expert, 0);
+            for (int64_t i = 0; i < n; ++i)
+                if (ids[i] >= 0 && ids[i] < d.n_expert) d.fetch_mark[(size_t) ids[i]] = 1;
+            int cq[64], nc = 0;
+            for (int q = 0; q < fetches; ++q) {
+                const int32_t e = ids[pcie_i0[q]];
+                if (use[e] >= d.fetch_min && d.in_flight[lb + (size_t) e] == 0) cq[nc++] = q;
+            }
+            std::stable_sort(cq, cq + nc, [&](int a, int b) { return use[ids[pcie_i0[a]]] > use[ids[pcie_i0[b]]]; });
+            int32_t vic[64];
+            int nv = 0;
+            for (int32_t e = 0; e < (int32_t) d.n_expert && nc > 0; ++e) {
+                if (d.res_mut[lb + (size_t) e] < 0 || d.fetch_mark[(size_t) e] != 0) continue;
+                if (nv < nc) vic[nv++] = e;
+                else if (use[e] < use[vic[nv - 1]]) vic[nv - 1] = e;
+                else continue;
+                for (int j = nv - 1; j > 0 && use[vic[j]] < use[vic[j - 1]]; --j) std::swap(vic[j], vic[j - 1]);
+            }
+            for (int j = 0; j < nc && j < nv; ++j) {
+                const int q = cq[j];
+                const int32_t e = ids[pcie_i0[q]], v = vic[j];
+                if (use[e] < use[v] + d.fetch_margin) break;
+                const int32_t slot = d.res_mut[lb + (size_t) v];
+                P.dst2[q] = (unsigned long long) (d.cache_base + (d.cache_slot_off ? (size_t) d.cache_slot_off[slot]
+                                                                                   : (size_t) slot * (size_t) d.cache_blob));
+                d.res_mut[lb + (size_t) v] = -1;   // kNotResident
+                d.res_mut[lb + (size_t) e] = slot;
+                d.in_flight[lb + (size_t) e] = 1;
+                ++d.fetch_admitted;
+                d.res_dirty = true;
+                d.res_dirty_idx.push_back((int32_t) (lb + (size_t) v));
+                d.res_dirty_idx.push_back((int32_t) (lb + (size_t) e));
+            }
+            for (int64_t i = 0; i < n; ++i)
+                if (ids[i] >= 0 && ids[i] < d.n_expert) d.fetch_mark[(size_t) ids[i]] = 0;
+        }
         std::atomic_thread_fence(std::memory_order_seq_cst);
         pt("publish", fetches);
         if (P.publish) P.publish(P.ctx);

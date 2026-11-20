@@ -7131,8 +7131,8 @@ int main(int argc, char** argv) {
         drive.d.cache_base = (const uint8_t*) xcache.device_slot(0);
         drive.d.cache_blob = (int64_t) strata::kernels::cpu::expert_layout().max_blob;
         drive.d.cache_slot_off = xcache.slot_offsets();
-        // ADAPT_FETCH (port step 3a, upstream 0.2.16): the knobs ride the env; the RANK/PICK and the
-        // res_mut wiring are step 3b - with res_mut null the admission stays inert whatever the env says.
+        // ADAPT_FETCH (port step 3a, upstream 0.2.16): the knobs ride the env; the arm gate lives where
+        // host_res does (the res_mut/in_flight wiring needs its storage).
         {
             static const int v = [] { const char* e = std::getenv("STRATA_ADAPT_FETCH");
                                       return e ? std::max(0, std::min(2, std::atoi(e))) : 0; }();
@@ -7751,6 +7751,32 @@ int main(int argc, char** argv) {
         thits.scratch = drive.d.hit_scratch;
         thits.hit_out = drive.d.hit_out;
         drive.d.host_res = host_res.data();
+        // ADAPT_FETCH step 3b: the working residency table IS the mutable table the admission swaps
+        // (upstream's res_mut = our host_res pre-const); the dirty-pairs upload the tier already owns
+        // carries the admission's entries too (the pre-launch hook's res_patch_pairs).  Upstream's arm
+        // gate applied: the resident-RAM mode and the DMA PCIe mode both refuse the arm, WITH THE REASON
+        // NAMED - our standing runs resident+dma, so an armed env reads its own off-banner here until a
+        // scoped staged-copy recipe is built for the battery (law 4b's scoping, not a silent no-op).
+        {
+            const char* off = drive.d.usage.empty() ? "the adaptive tier is off"
+                            : o.pcie_mode == "dma" || o.pcie_mode == "direct" ? "--pcie-mode dma / direct (the staged-copy mode is required)"
+                            : drive.d.plan == nullptr ? "no GPU plan"
+                            : drive.d.pcie_num <= 0 ? "no PCIe share"
+                            : src.complement_ready() ? "the resident RAM mode" : nullptr;
+            if (drive.d.fetch_admit > 0 && off != nullptr) {
+                drive.d.fetch_admit = 0;
+                drive.d.res_mut = nullptr;
+                std::fprintf(stderr, "strata serve: STRATA_ADAPT_FETCH is off (%s)\n", off);
+            } else if (drive.d.fetch_admit > 0) {
+                drive.d.res_mut = host_res.data();
+                drive.d.in_flight.assign(host_res.size(), 0);
+                drive.d.fetch_avail.assign((size_t) g.n_layers, 0);
+                std::fprintf(stderr, "strata serve: STRATA_ADAPT_FETCH=%d: the PCIe share takes each layer's most-routed "
+                                     "misses and admits those routed >= %.2f and %.2f more than a resident one%s\n",
+                             drive.d.fetch_admit, drive.d.fetch_min, drive.d.fetch_margin,
+                             drive.d.fetch_admit == 2 ? "; the tier's own copies are off" : "");
+            }
+        }
         std::fprintf(stderr, "strata generate: token graph hit path: %lld resident experts, decided on the device\n",
                      (long long) resident);
     }
