@@ -14,10 +14,13 @@
 # the gates for such arms are M3b in-band + the MMLU floor, so bits default to "no".
 #
 # Usage: bash campaign/config-ladder.sh <on-args> <label> [bits]
-#   on-args: the arg tokens to apply on ON boots (space-separated), e.g.
+#   on-args: EITHER arg tokens to apply on ON boots (space-separated), e.g.
 #            "--adapt-every 1 --adapt-decay 0.97 --adapt-swaps 160"
-#   Every flag named in on-args is first REMOVED (with its value) from the standing args, then
-#   the on-args are appended; OFF boots run the pristine config byte-for-byte.
+#            OR "@path/to/patch.json" - a JSON MERGE PATCH deep-merged onto the pristine config
+#            for ON boots (dicts merge recursively; lists and scalars are replaced wholesale).
+#            This is the form for arms that live outside "args" (prewarm sections, kv knobs).
+#   Every flag named in token-style on-args is first REMOVED (with its value) from the standing
+#   args, then the on-args are appended; OFF boots run the pristine config byte-for-byte.
 # ROUNDS (default 3) sets boots per arm - 3 = the doctrine 3v3.
 set -u
 REPO=/home/svg/LLM/strata-custom-2
@@ -36,20 +39,28 @@ trap restore EXIT
 # F-271: pin one profile for both arms; the post-battery re-pin from gold stays owed.
 cp -f data/expert-profile-gold.bin data/expert-profile-learned.bin
 
-set_config_args() {   # $1 = "" (restore pristine) or the on-args string
+set_config_args() {   # $1 = "" (restore pristine) or the on-args string / @patch.json
   python3 - "$CFG" "$1" << 'PY'
 import json, shlex, sys
+
+def deep_merge(base, patch):
+    for k, v in patch.items():
+        base[k] = deep_merge(base[k], v) if isinstance(v, dict) and isinstance(base.get(k), dict) else v
+    return base
+
 path, on = sys.argv[1], sys.argv[2]
 c = json.load(open(path))
-a = c['args']
-if on:
+if on.startswith('@'):
+    c = deep_merge(c, json.load(open(on[1:])))
+elif on:
+    a = c['args']
     toks = shlex.split(on)
     flags = {t for t in toks if t.startswith('--')}
     a = [t for i, t in enumerate(a) if not (t in flags or (i > 0 and a[i-1] in flags))]
     a += toks
+    c['args'] = a
 else:
-    a = json.load(open('/tmp/config-ladder-cfg.bak'))['args']
-c['args'] = a
+    c = json.load(open('/tmp/config-ladder-cfg.bak'))
 json.dump(c, open(path, 'w'), indent=2)
 PY
 }
