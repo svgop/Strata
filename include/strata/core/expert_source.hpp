@@ -1358,6 +1358,17 @@ public:
     double load_seconds() const { return load_seconds_; }
 
 private:
+    /// The RAM preflight of `open` (F-447): #633's rule - a cgroup limit below the need refuses with the
+    /// numbers, low availability only warns (writes `ram_warning_`).
+    bool arena_preflight_ram(uint64_t want, int64_t blob, const std::string& shared_arena_file,
+                             std::string& err);
+    /// The layout planning of `open` (F-447): registration bounds; pin-by-need's strides and merged
+    /// priority ranges.  Sets `padded_`/`pad_`; returns the organ's and the load's tables.
+    void arena_plan_layout(const strata::kernels::cpu::ExpertLayout& lay, int64_t n_layers, int64_t n_expert,
+                           uint64_t want, bool arena_mmap, const std::string& shared_arena_file,
+                           std::vector<uint64_t>& bounds, std::vector<uint64_t>& loff,
+                           std::vector<uint64_t>& lbytes, uint64_t& arena_bytes,
+                           std::vector<std::pair<uint64_t, uint64_t>>& need_ranges);
     void* arena_ = nullptr;          ///< the PinnedArena, owned
     void* map_ = nullptr;            ///< STRATA_ARENA_MMAP: the arena file, mapped read-only (not the PinnedArena)
     uint64_t map_bytes_ = 0;

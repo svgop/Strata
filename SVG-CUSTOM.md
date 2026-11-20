@@ -13641,3 +13641,28 @@ the threaded load) had ZERO test callers - generate.cpp only.  Before any extrac
   deliberately NOT frozen - driver-dependent, not contract.
 - ctest: `arena_source_golden_test` PASS (0.22 s).  The seam is now execution-pinned; extractions
   from `open()` have an oracle that moves if any byte or refusal drifts.
+
+## F-447 — ArenaExpertSource::open cut: RAM preflight + layout planning extracted; the audit becomes a tool (2026-11-20, 20:2x)
+
+Two phases moved out of the 337-line arena boot, both now under F-446's Golden Master:
+
+- `arena_preflight_ram(want, blob, shared_arena_file, err)` — #633's rule verbatim (36 lines): a
+  cgroup limit below the need refuses with the numbers; low availability writes `ram_warning_`.
+  Diff vs HEAD: exactly one added line (`return true;`).
+- `arena_plan_layout(lay, n_layers, n_expert, want, arena_mmap, shared_arena_file, bounds, loff,
+  lbytes, arena_bytes, need_ranges)` — the registration bounds and pin-by-need's stride/range
+  planning (59 lines; the three output decls became parameters, one decl became an assignment).
+  `open()` keeps: validation → mmap arm → preflight → shared hash → plan → organ/load/commit.
+
+**THE SECOND UB (law hardened):** the first build of the preflight helper SPUN inside `snprintf`'s
+float formatter — the extracted block's success path had no `return` (inline code never needed one),
+and this time the compiler did NOT warn (the fall-through was data-dependent).  The F-446 Golden
+Master caught it in one run (fingerprint hang vs 0.22 s PASS at baseline), gdb named the frame, the
+one-line fix restored the identical fingerprint `f2da901296f91c2d`.  **The F-441 law ("audit every
+return path") was a habit and habits skip steps: it is now `campaign/return_audit.py`, a mechanical
+check that fails when a listed non-void function's tail is not a return.**  All six session helpers
+pass it (five `return true` tails; `arena_plan_layout` is void).
+
+- **Gate:** 14/14 engine-linked ctests + `arena_source_golden_test` PASS with the frozen
+  fingerprint; `ninja strata` links.  Warning parity unchanged.
+- Rollback: `git revert` of this commit.

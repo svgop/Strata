@@ -38,7 +38,7 @@
   "--conversation-cache-min-tokens",
   "200",
   "--control-vector-scaled",
-  "/home/svg/LLM/strata-custom-2/data/experimental-speed-projection/Qwen3.8-Flash-Next-experimental-speed-projection.gguf:0.10,/mnt/DATA/LLM/Models/GGUF/vectors/qwen3.8-flash-next-persona-war-r01.gguf:0.40",
+  "/home/svg/LLM/strata-custom-2/data/experimental-speed-projection/Qwen3.8-Flash-Next-experimental-speed-projection.gguf:0.10,/mnt/DATA/LLM/Models/GGUF/vectors/qwen3.8-flash-next-persona-war-r01.gguf:0.05",
   "--control-vector-layer-range",
   "16",
   "32",
@@ -64,7 +64,7 @@
  ],
  "cwd": "/home/svg/LLM/strata-custom-2",
  "tokenizer": "/mnt/DATA/LLM/Models/GGUF/strata/data/packs/iq3_s/tokenizer",
- "model_name": "qwen3.8-flash-next-iq3_s-war-r01",
+ "model_name": "qwen3.8-flash-next-iq3_s-war-r01-tested",
  "log": "/home/svg/LLM/strata-custom-2/logs/custom-iq3_s-persona-war.log",
  "lib_dirs": [
   "/usr/local/cuda-13.4/lib64"

@@ -1,6 +1,10 @@
 # persona-war-r01 — shelf arm (not adopted)
 
-Status: shelf artifact + shelf config. Nothing standing was changed; the live server was not restarted.
+Status: shelf artifact + shelf config, **TESTED 2026-11-20 and NOT adopted** — the output-head logit-lens
+construction fails the dose test (see `campaign/results/abl-2026-11-20/persona-test/SUMMARY.md`): at 0.02
+it already corrupts reasoning, at 0.10 it collapses, at 0.40 the model emits the trait vocabulary itself.
+Mechanism: an output-head vector biases the LM head directly (trait tokens + EOS), not internal state.
+The arm is banked as a negative; the measured activation-contrast vector is the replacement path.
 Vector: `/mnt/DATA/LLM/Models/GGUF/vectors/qwen3.8-flash-next-persona-war-r01.gguf`
 sha256 `acdfc492a77446ea7c878ac9b1d7b9163662b24faff0e2068c596692b2ecd485`, 483,840 bytes, 47 × 2560 F32,
 unit-norm rows (identical), `controlvector` / `qwen4exp`.
@@ -45,7 +49,7 @@ Cudecnik card validates for its own vector at 0.05–0.15 on layers 16–32:
 ```
 --cvec-mode add
 --control-vector-layer-range 16 32
---control-vector-scaled <per-layer refusal vector>:0.10,<persona war-r01>:0.40
+--control-vector-scaled <per-layer refusal vector>:0.10,<persona war-r01>:0.05
 ```
 
 Effective added vector per layer: `0.10·u_refusal,l + 0.40·v_persona`, norm ≈ 0.412, 97 % persona /
@@ -68,7 +72,8 @@ by this direct command; behavior testing does not need them (the engine loads fr
 
 1. Same prompt set, same hour, interleaved: standing (project 1–47) vs this shelf arm.
 2. Sweep persona scale 0.20 / 0.40 / 0.60 (refusal held at 0.10); if refusals return, sweep refusal
-   0.10 / 0.15. The failure modes at too-high persona dose are repetition, persona collapse, and
+   0.10 / 0.15. The 2026-11-20 sweep found 0.05 the least-damage dose and still
+   not usable; see campaign/results/abl-2026-11-20/persona-test/SUMMARY.md. The failure modes at too-high persona dose are repetition, persona collapse, and
    incoherent assertive prose.
 3. Metrics: an assertive/serious register battery (hedge rate, joke/lightness markers, commitment
    markers, imperative voice, CTF/game reframing, permission-seeking), a refusal battery, a research

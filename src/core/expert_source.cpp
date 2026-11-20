@@ -5800,6 +5800,120 @@ LoadStats load_experts_gguf(const std::string& gguf, uint8_t* dst, const strata:
 
 ArenaExpertSource::~ArenaExpertSource() { close(); }
 
+// The RAM preflight of `ArenaExpertSource::open` (F-447), extracted verbatim: #633's rule - a hard
+// cgroup limit below the arena's need REFUSES with the numbers (the load would be OOM-killed
+// mid-way, messageless), while merely-low availability is a warning the OS may still resolve.
+// Writes `ram_warning_` (the recommendation) or `err` (the refusal).
+bool ArenaExpertSource::arena_preflight_ram(uint64_t want, int64_t blob, const std::string& shared_arena_file,
+                                             std::string& err) {
+    // #633: THE RAM BEFORE THE ALLOCATION.  On Linux the arena is an anonymous mapping that succeeds whatever the host
+    // has; its pages are committed as the load writes them, so a container whose memory limit is below the arena was
+    // killed by the OOM killer part-way through the load, without a message.  A hard cgroup limit below it is
+    // certain to end that way: refused, with the numbers.  Less RAM available than the arena (another program, an
+    // engine still exiting) is only a warning - the OS may make room - per the recommend-not-force rule.
+    ram_warning_.clear();
+    // (a shared arena, --shared-expert-arena, may already be in RAM for another engine: not checked)
+    if (detail::HostMemory hm; shared_arena_file.empty() && detail::host_available_memory(hm)) {
+        // R5070 --ram-keep-gib W: the arena is chosen only if W GiB stay free after it, so its need here is the arena
+        // plus the spare blob plus W.
+        const uint64_t need = want + (uint64_t) blob + ram_keep_bytes_;
+        const double gib = 1073741824.0;
+        char keep_note[96] = "";
+        if (ram_keep_bytes_ > 0)
+            std::snprintf(keep_note, sizeof keep_note, " (with the %.2f GiB --ram-keep-gib asks to leave free)",
+                          (double) ram_keep_bytes_ / gib);
+        char buf[512];
+        if (hm.cgroup_limit < need) {
+            std::snprintf(buf, sizeof buf,
+                          "ArenaExpertSource: the expert arena needs %.2f GiB of RAM%s but this process's memory limit "
+                          "(cgroup memory.max / memory.limit_in_bytes) is %.2f GiB: it would be killed while loading. "
+                          "Raise the container's limit, or run with less RAM: --mmap-experts with "
+                          "--resident-budget-gib N keeps only the hottest experts in RAM",
+                          (double) need / gib, keep_note, (double) hm.cgroup_limit / gib);
+            err = buf;
+            return false;
+        }
+        if (hm.available < need) {
+            std::snprintf(buf, sizeof buf,
+                          "the expert arena needs %.2f GiB of RAM%s but %.2f GiB is available (%.2f GiB short): the load "
+                          "may swap or be stopped by the OS. Close other programs (or wait for an engine that is "
+                          "still exiting), or run with less RAM: --mmap-experts with --resident-budget-gib N",
+                          (double) need / gib, keep_note, (double) hm.available / gib, (double) (need - hm.available) / gib);
+            ram_warning_ = buf;
+        }
+    }
+    return true;
+}
+
+// The layout planning of `ArenaExpertSource::open` (F-447), extracted verbatim: the per-layer
+// registration bounds, and - when pin-by-need is armed - the page-aligned blob strides (`pad_`) and
+// the priority-ordered, neighbour-merged byte ranges the driver will register.  Sets `padded_`/`pad_`;
+// returns `bounds`/`loff`/`lbytes`/`arena_bytes`/`need_ranges` for the organ and the load.
+void ArenaExpertSource::arena_plan_layout(const strata::kernels::cpu::ExpertLayout& lay, int64_t n_layers,
+                                          int64_t n_expert, uint64_t want, bool arena_mmap,
+                                          const std::string& shared_arena_file, std::vector<uint64_t>& bounds,
+                                          std::vector<uint64_t>& loff, std::vector<uint64_t>& lbytes,
+                                          uint64_t& arena_bytes,
+                                          std::vector<std::pair<uint64_t, uint64_t>>& need_ranges) {
+    // one layer per registration slice, so no expert straddles two registrations.  The arena is one blob
+    // longer than the file: a copy of a whole VRAM slot (the largest blob) may then start at any expert.
+    for (int64_t l = 0; l < n_layers; ++l) {
+        bounds.push_back(lay.layer_offset(l));
+        loff.push_back(lay.layer_offset(l));
+        lbytes.push_back(lay.blob_bytes(l) * (uint64_t) n_expert);
+    }
+    bounds.push_back(want);
+    // Pin by need: the arena gets a page-aligned blob STRIDE (blob rounded up to 4 KiB, ~+0.15 %), so every blob starts
+    // on a page and any set of blobs can be registered exactly (a canonical blob is 337.5 pages: packed, an isolated
+    // blob could never be registered without its neighbours' bytes).  Not with the mapped arena file (STRATA_ARENA_MMAP
+    // writes experts.bin from the arena).  The file offsets (loff) stay packed; only the destination moves.
+    padded_ = false;
+    pad_ = PadMap{};
+    if (pin_by_need_ && !pin_pairs_.empty() && !arena_mmap && shared_arena_file.empty()) {   // (a shared arena file has one layout for every process: the packed one)
+        padded_ = true;
+        uint64_t at = 0;
+        for (int64_t l = 0; l < n_layers; ++l) {
+            const uint64_t b = lay.blob_bytes(l), s = (b + 4095) & ~(uint64_t) 4095;
+            pad_.dst_off.push_back(at);
+            pad_.blob.push_back(b);
+            pad_.stride.push_back(s);
+            at += s * (uint64_t) n_expert;
+        }
+        pad_.total = at;
+    }
+    arena_bytes = padded_ ? pad_.total : want;   // the spare blob below comes on top, as before
+    // Pin by need: the pairs set_pin_priority gave, as byte ranges in priority order.  Neighbours (adjacent blobs) merge
+    // into one range that takes the best rank of its members, so the hottest experts are registered first and the
+    // number of cudaHostRegister calls stays far below the number of pairs.
+    const bool by_need = padded_;
+    if (by_need) {
+        // every blob starts on a page and owns its whole stride (pad included), so a run of adjacent blobs is one exact
+        // range: [first start, last start + stride).  The best rank of a run's members is its priority.
+        struct Ext { uint64_t off, len; size_t rank; int tier; };
+        std::vector<Ext> ex;
+        ex.reserve(pin_pairs_.size());
+        std::vector<uint8_t> seen((size_t) (n_layers * n_expert), 0);
+        for (size_t i = 0; i < pin_pairs_.size(); ++i) {
+            const int64_t l = pin_pairs_[i].first, e = pin_pairs_[i].second;
+            if (l < 0 || l >= n_layers || e < 0 || e >= n_expert || seen[(size_t) (l * n_expert + e)]) continue;
+            seen[(size_t) (l * n_expert + e)] = 1;
+            ex.push_back({arena_off(l, e), pad_.stride[(size_t) l], i, i < pin_first_ ? 0 : 1});
+        }
+        std::sort(ex.begin(), ex.end(), [](const Ext& a, const Ext& b) { return a.off < b.off; });
+        std::vector<Ext> merged;
+        for (const Ext& x : ex) {
+            if (!merged.empty() && merged.back().off + merged.back().len == x.off && merged.back().tier == x.tier) {
+                merged.back().len += x.len;
+                merged.back().rank = std::min(merged.back().rank, x.rank);
+            } else {
+                merged.push_back(x);
+            }
+        }
+        std::stable_sort(merged.begin(), merged.end(), [](const Ext& a, const Ext& b) { return a.rank < b.rank; });
+        for (const Ext& x : merged) need_ranges.emplace_back(x.off, x.len);
+    }
+}
+
 bool ArenaExpertSource::open(const std::string& pack_dir, int64_t n_layers, int64_t n_expert, int threads,
                              std::string& err, uint64_t max_pinned_bytes,
                              const std::string& shared_arena_file) {
@@ -5880,106 +5994,18 @@ bool ArenaExpertSource::open(const std::string& pack_dir, int64_t n_layers, int6
     }
 #endif
 
-    // #633: THE RAM BEFORE THE ALLOCATION.  On Linux the arena is an anonymous mapping that succeeds whatever the host
-    // has; its pages are committed as the load writes them, so a container whose memory limit is below the arena was
-    // killed by the OOM killer part-way through the load, without a message.  A hard cgroup limit below it is
-    // certain to end that way: refused, with the numbers.  Less RAM available than the arena (another program, an
-    // engine still exiting) is only a warning - the OS may make room - per the recommend-not-force rule.
-    ram_warning_.clear();
-    // (a shared arena, --shared-expert-arena, may already be in RAM for another engine: not checked)
-    if (detail::HostMemory hm; shared_arena_file.empty() && detail::host_available_memory(hm)) {
-        // R5070 --ram-keep-gib W: the arena is chosen only if W GiB stay free after it, so its need here is the arena
-        // plus the spare blob plus W.
-        const uint64_t need = want + (uint64_t) blob + ram_keep_bytes_;
-        const double gib = 1073741824.0;
-        char keep_note[96] = "";
-        if (ram_keep_bytes_ > 0)
-            std::snprintf(keep_note, sizeof keep_note, " (with the %.2f GiB --ram-keep-gib asks to leave free)",
-                          (double) ram_keep_bytes_ / gib);
-        char buf[512];
-        if (hm.cgroup_limit < need) {
-            std::snprintf(buf, sizeof buf,
-                          "ArenaExpertSource: the expert arena needs %.2f GiB of RAM%s but this process's memory limit "
-                          "(cgroup memory.max / memory.limit_in_bytes) is %.2f GiB: it would be killed while loading. "
-                          "Raise the container's limit, or run with less RAM: --mmap-experts with "
-                          "--resident-budget-gib N keeps only the hottest experts in RAM",
-                          (double) need / gib, keep_note, (double) hm.cgroup_limit / gib);
-            err = buf;
-            return false;
-        }
-        if (hm.available < need) {
-            std::snprintf(buf, sizeof buf,
-                          "the expert arena needs %.2f GiB of RAM%s but %.2f GiB is available (%.2f GiB short): the load "
-                          "may swap or be stopped by the OS. Close other programs (or wait for an engine that is "
-                          "still exiting), or run with less RAM: --mmap-experts with --resident-budget-gib N",
-                          (double) need / gib, keep_note, (double) hm.available / gib, (double) (need - hm.available) / gib);
-            ram_warning_ = buf;
-        }
-    }
+    if (!arena_preflight_ram(want, blob, shared_arena_file, err)) return false;
 
     uint64_t pack_hash = 0;
     if (!shared_arena_file.empty() &&
         !shared_arena_pack_hash(pack_dir, path, gguf_, lay, pack_hash, err)) return false;
 
-    // one layer per registration slice, so no expert straddles two registrations.  The arena is one blob
-    // longer than the file: a copy of a whole VRAM slot (the largest blob) may then start at any expert.
     std::vector<uint64_t> bounds, loff, lbytes;
-    for (int64_t l = 0; l < n_layers; ++l) {
-        bounds.push_back(lay.layer_offset(l));
-        loff.push_back(lay.layer_offset(l));
-        lbytes.push_back(lay.blob_bytes(l) * (uint64_t) n_expert);
-    }
-    bounds.push_back(want);
-    // Pin by need: the arena gets a page-aligned blob STRIDE (blob rounded up to 4 KiB, ~+0.15 %), so every blob starts
-    // on a page and any set of blobs can be registered exactly (a canonical blob is 337.5 pages: packed, an isolated
-    // blob could never be registered without its neighbours' bytes).  Not with the mapped arena file (STRATA_ARENA_MMAP
-    // writes experts.bin from the arena).  The file offsets (loff) stay packed; only the destination moves.
-    padded_ = false;
-    pad_ = PadMap{};
-    if (pin_by_need_ && !pin_pairs_.empty() && !arena_mmap && shared_arena_file.empty()) {   // (a shared arena file has one layout for every process: the packed one)
-        padded_ = true;
-        uint64_t at = 0;
-        for (int64_t l = 0; l < n_layers; ++l) {
-            const uint64_t b = lay.blob_bytes(l), s = (b + 4095) & ~(uint64_t) 4095;
-            pad_.dst_off.push_back(at);
-            pad_.blob.push_back(b);
-            pad_.stride.push_back(s);
-            at += s * (uint64_t) n_expert;
-        }
-        pad_.total = at;
-    }
-    const uint64_t arena_bytes = padded_ ? pad_.total : want;   // the spare blob below comes on top, as before
-    // Pin by need: the pairs set_pin_priority gave, as byte ranges in priority order.  Neighbours (adjacent blobs) merge
-    // into one range that takes the best rank of its members, so the hottest experts are registered first and the
-    // number of cudaHostRegister calls stays far below the number of pairs.
+    uint64_t arena_bytes = 0;
     std::vector<std::pair<uint64_t, uint64_t>> need_ranges;
+    arena_plan_layout(lay, n_layers, n_expert, want, arena_mmap, shared_arena_file, bounds, loff, lbytes,
+                     arena_bytes, need_ranges);
     const bool by_need = padded_;
-    if (by_need) {
-        // every blob starts on a page and owns its whole stride (pad included), so a run of adjacent blobs is one exact
-        // range: [first start, last start + stride).  The best rank of a run's members is its priority.
-        struct Ext { uint64_t off, len; size_t rank; int tier; };
-        std::vector<Ext> ex;
-        ex.reserve(pin_pairs_.size());
-        std::vector<uint8_t> seen((size_t) (n_layers * n_expert), 0);
-        for (size_t i = 0; i < pin_pairs_.size(); ++i) {
-            const int64_t l = pin_pairs_[i].first, e = pin_pairs_[i].second;
-            if (l < 0 || l >= n_layers || e < 0 || e >= n_expert || seen[(size_t) (l * n_expert + e)]) continue;
-            seen[(size_t) (l * n_expert + e)] = 1;
-            ex.push_back({arena_off(l, e), pad_.stride[(size_t) l], i, i < pin_first_ ? 0 : 1});
-        }
-        std::sort(ex.begin(), ex.end(), [](const Ext& a, const Ext& b) { return a.off < b.off; });
-        std::vector<Ext> merged;
-        for (const Ext& x : ex) {
-            if (!merged.empty() && merged.back().off + merged.back().len == x.off && merged.back().tier == x.tier) {
-                merged.back().len += x.len;
-                merged.back().rank = std::min(merged.back().rank, x.rank);
-            } else {
-                merged.push_back(x);
-            }
-        }
-        std::stable_sort(merged.begin(), merged.end(), [](const Ext& a, const Ext& b) { return a.rank < b.rank; });
-        for (const Ext& x : merged) need_ranges.emplace_back(x.off, x.len);
-    }
     // #285: on Windows the per-layer registration runs on a thread ahead of the readers, which wait for their
     // layer's slice (the whole arena registered before the load cost ~2.5 s at 33 GiB of 4 KB pages, not hidden).
     // Only where the whole arena would be registered: no cap (STRATA_ARENA_PIN_GIB, multi-GPU), no shared arena.
