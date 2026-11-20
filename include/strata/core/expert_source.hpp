@@ -372,6 +372,11 @@ struct GpuPlanSink {
     /// copy engine.  counts[0] = VRAM groups, counts[1] = all entries, counts[2] = PCIe groups.
     unsigned long long* ptr2 = nullptr;
     int32_t* start2 = nullptr;
+    /// ADAPT_FETCH (port step 1, from upstream 0.2.16): the admission destinations - the tier-slot device
+    /// addresses the usage-ranked fetched misses land in (the fetch IS the admission; expert_source.cpp's
+    /// pool fills them, verify.cpp's fetch_blobs/rebase_ptrs consume them).  Null until the pool side lands
+    /// (step 3): the plan column exists, nothing writes it.
+    unsigned long long* dst2 = nullptr;
     unsigned long long staging = 0;
     int64_t staging_cap = 0;
     int64_t cap = 0;

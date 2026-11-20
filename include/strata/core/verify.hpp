@@ -626,6 +626,7 @@ private:
     static void raise_flag(uint32_t* flag, uint32_t value);
     int32_t* h_plan_ = nullptr;  int32_t* m_plan_ = nullptr;     // counts | start | dst | tok | ptr (as int32 pairs)
     int64_t plan_i32_ = 0;                                        // int32 words in the plan block
+    int64_t dst2_off_ = 0;                                        // ADAPT_FETCH step 1: the dst2 column's i32 offset (admission destinations, empty until the pool side lands)
     GpuPlanSink sink_;
     uint32_t cur_layer_ = 0;
     static void publish_plan(void* ctx);
