@@ -13547,3 +13547,34 @@ The decision logic — 206 lines — moved verbatim into private
 - **Gate:** 14/14 engine-linked ctests PASS (the flake re-confirmed pre-existing by baseline
   isolation, not counted).  Warning parity unchanged (2 pre-existing in this TU).
 - Rollback: `git revert` of this commit.
+
+## F-443 — pin_cache_complement cut 3: the allocation organ extracted behind `ComplementArena` (2026-11-20, 20:3x)
+
+The phase that owns the boot-state contract — 323 lines of organ selection — moved verbatim into
+private `alloc_complement_organ(a, bytes, offsets, pin, budget_bytes, headroom_bytes, err)`.  The nine
+arena locals (`arena`/`host`/`device`/`pinned_ok`/`huge_ok`/`huge_map`/`paced`/`locked`/`partial_pin`/
+`lock_off`/`note`) became the fields of a file-scope `struct ComplementArena`, and the `release`
+cleanup lambda became its `release()` method (platform calls only — no members, so no header weight
+beyond a forward declaration).  The caller: `ComplementArena organ;` → alloc → copy → checksum →
+commit, releasing `organ` on every failure path (idempotent: paths that released internally left
+`arena == nullptr`).
+
+- **The organ decisions stay byte-identical:** pace_reserve, STRATA_COMPLEMENT_BACKING
+  (hostalloc/paced), the Linux pin guard + file-cache drop, the hugepage-pool conversion, one-shot
+  cudaHostAlloc, both F-409 contract refusals (`contract_refused_` arming included), pageable
+  malloc/posix_memalign/huge_alloc, the paced fault walk with MADV_POPULATE_WRITE, the boundary-cut
+  registrations, and the working-set lock.
+- **Extraction diff (script, normalized for the `a.`/`organ.` qualifications):** 327 in, 322 out; the
+  7 diffs are the decl→field relocations, the `#if __linux__` repositioning, and the added
+  `return true;`.  Return-path audit: 7 exits + 4 lambda-internal returns, all value-bearing.
+- **Law earned (splice tooling):** the first attempt mangled the string literal `"page-locked"` — a
+  token-replacement that masked `//` comments but not `"..."` literals, plus a six-line-late slice
+  that beheaded `drop_file_cache`.  Both caught by the compiler, both fixed by re-splicing from git
+  with every anchor asserted and both mask classes applied.  **A splice script masks comments AND
+  string literals, or it is not done.**
+- **Gate:** 13/13 engine-linked ctests PASS (+ `conversation_snapshot_test` run separately; its
+  F-442-banked flake is pre-existing).  Zero new compiler diagnostics.
+- Rollback: `git revert` of this commit.
+
+`pin_cache_complement` now reads as five named phases: guards → `plan_cache_complement` →
+`alloc_complement_organ` → `copy_complement_layers` → commit/report (~480 → orchestration only).

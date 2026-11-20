@@ -716,6 +716,8 @@ void expert_hit_run(void* user, void* stream, HitPhase phase, const int32_t* ids
 /// IT IS NOT AN LRU, AN LFU OR A PREFETCHER.  Phase 3 replaces this object with those.  Phase 2 is hit rate
 /// `h = 0` on purpose, so that the CPU path and the host round trip are exercised on every layer of every
 /// token - which is the only way they get debugged before speed matters.
+struct ComplementArena;   // F-443: the allocation organ's state (defined in expert_source.cpp)
+
 class FileExpertSource : public ExpertSource {
 public:
     FileExpertSource() = default;
@@ -1095,6 +1097,12 @@ private:
         uint64_t headroom_bytes, uint64_t& budget_bytes, const std::vector<std::pair<int32_t, int32_t>>* rank,
         std::vector<uint64_t>& offsets, uint64_t& bytes, int64_t& keep_from, int64_t& stage_lent,
         uint64_t& stage_lent_bytes, int64_t& budget_lent, int64_t& budget_lendable, std::string& err) const;
+    /// The allocation/organ-selection phase of `pin_cache_complement` (F-443): paced-reserve and
+    /// declared-organ decisions, the Linux pin guard, the hugepage-pool conversion, the one-shot
+    /// cudaHostAlloc, the F-409 contract refusals, the pageable allocation, the paced fault+register
+    /// walk, the partial-pin walk, and the working-set lock.  Fills `a`; on false the caller releases.
+    bool alloc_complement_organ(ComplementArena& a, uint64_t bytes, const std::vector<uint64_t>& offsets,
+                                bool pin, uint64_t budget_bytes, uint64_t headroom_bytes, std::string& err);
     bool open_direct(std::string& why);
     /// Windows: experts.bin mapped again as `open` maps it (begin/end_startup_unbuffered).
     bool map_view(std::string& why);
