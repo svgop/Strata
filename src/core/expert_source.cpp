@@ -4640,6 +4640,107 @@ int tail_skip_rank() {
 }
 void set_tail_skip_rank(int r) { g_tail_skip_rank.store(r > 0 && r < 10 ? r : 0, std::memory_order_relaxed); }
 
+// T12-HOST #1 (the host critical-path audit's exposed segment): the old shape re-scanned the entries
+// per group - the distinct/first-of pass O(n^2), the tail ranks an O(n x nd) lookup per entry, and
+// every fill below walked all n entries per group.  All of it is bookkeeping in front of flagA, so it
+// sat on the GPU's per-layer critical path (~25-40 us x 48 layers/window).  The single pass below
+// maps an expert id to its first entry and its group through a stamp array (valid for calls with
+// <= kIdPlanIds experts; an oversized table or an out-of-range id falls back to the old scan for
+// that entry, which the router never emits), links the entries of a group in ascending order once,
+// and the fills walk those links.  The plan this emits is the old one byte for byte: the groups are
+// the distinct experts in order of first occurrence (the same nd sequence), every group's entries
+// ascending (the links are appended in the i loop), the same kind/dst/tok/ptr writes in the same
+// order.  STRATA_PLAN_ONEPASS=0 keeps the old path (the A/B arm); STRATA_PLAN_DIFF=1 re-derives the
+// old first-of and per-group entry sets and aborts loudly on any difference, so one battery run
+// proves the grouping over the whole corpus (the F-216 audit pattern).
+// F-225: the formal 3v3 (planarm/planctl r1-r3) put the onepass arm at M1 -6.9% vs the old scan
+// (pair/conc in-band), so the default is OFF again; the 213-215 boots it had been credited with
+// were the session warm trend - round 3 cleared 208.6-216.7 on BOTH arms.  =1 re-arms it.
+//
+// F-431: split verbatim out of expert_pool_dispatch_multi (the god-function decomposition).  Fills
+// the caller's distinct/first_of/gi/ghead/gtail/gnxt and reports nd/nmiss; byte-identical.
+// a helper GPU (RemoteExperts) holding the expert computes it in its own VRAM once begin() claims the row: like
+// the peer tier's, such an expert is no miss of this plan and never part of the PCIe share, which would read it
+// over the primary's link instead (2x RX 6900 XT, IQ3_S, --remote-expert-opt with the probed share 0.39: ~4
+// helper experts per layer-window moved to PCIe, 59 ms per window against 34 ms)
+static bool remote_holds(const ExpertDispatch& d, int32_t e) {
+    for (int r = 0; r < d.remote_count; ++r)
+        if (d.remote[r]->holds(d.layers, e)) return true;
+    return false;
+}
+
+static void plan_distinct_groups(const ExpertDispatch& d, const int32_t* ids, int64_t n,
+                                 int64_t* distinct, int64_t* first_of, int32_t* gi,
+                                 int64_t* ghead, int64_t* gtail, int64_t* gnxt,
+                                 int* nd_out, int* nmiss_out) {
+    static const bool plan_onepass = [] { const char* v = std::getenv("STRATA_PLAN_ONEPASS"); return v != nullptr && std::atoi(v) != 0; }();
+    static const bool plan_diff = [] { const char* v = std::getenv("STRATA_PLAN_DIFF"); return v != nullptr && std::atoi(v) != 0; }();
+    constexpr int kIdPlanIds = 1024;
+    static thread_local int32_t s_first[kIdPlanIds], s_gid[kIdPlanIds];
+    static thread_local uint32_t s_stamp[kIdPlanIds];
+    static thread_local uint32_t s_epoch = 0;
+    int nd = 0, nmiss = 0;
+    const bool fast_ids = plan_onepass && d.n_expert <= kIdPlanIds;
+    if (fast_ids) {
+        if (s_epoch == 0xFFFFFFFFu) std::memset(s_stamp, 0, sizeof s_stamp);   // wrap: stale stamps die
+        else ++s_epoch;
+    }
+    for (int64_t i = 0; i < n; ++i) {
+        int64_t fo = i;
+        int q = -1;
+        const int32_t e = ids[i];
+        if (fast_ids && e >= 0 && e < d.n_expert) {
+            if (s_stamp[e] == s_epoch) {
+                fo = s_first[e];
+                q = s_gid[e];
+            } else {
+                s_stamp[e] = s_epoch; s_first[e] = (int32_t) i; s_gid[e] = nd;
+                q = nd;
+                distinct[nd] = i;
+                ++nd;
+                ghead[q] = -1;
+                gtail[q] = -1;
+                if (d.host_res[(size_t) d.layers * (size_t) d.n_expert + (size_t) e] < 0 &&
+                    !(d.peer != nullptr && d.peer->has(d.layers, e)) && !remote_holds(d, e)) ++nmiss;
+            }
+        } else {
+            for (int64_t j = 0; j < i; ++j)
+                if (ids[j] == e) { fo = first_of[j]; break; }
+            if (fo == i) {
+                distinct[nd++] = i;
+                ghead[nd - 1] = -1;
+                if (e >= 0 && e < d.n_expert && d.host_res[(size_t) d.layers * (size_t) d.n_expert + (size_t) e] < 0 &&
+                    !(d.peer != nullptr && d.peer->has(d.layers, e)) && !remote_holds(d, e)) ++nmiss;
+            }
+        }
+        first_of[i] = fo;
+        gi[i] = q;
+        if (q >= 0) {   // link into the group once, ascending
+            if (gtail[q] >= 0) gnxt[gtail[q]] = i; else ghead[q] = i;
+            gtail[q] = i;
+            gnxt[i] = -1;
+        }
+    }
+    if (plan_diff) {   // an independent scan (the old shape) compared entry by entry: per-entry
+        // first-of equality implies equal groups, and the ascending links then equal the old scans' order.
+        static thread_local int32_t diff_calls = 0, diff_bad = 0;
+        ++diff_calls;
+        int64_t fo2[kMaxWindowEntries];
+        for (int64_t i = 0; i < n; ++i) {
+            fo2[i] = i;
+            for (int64_t j = 0; j < i; ++j)
+                if (ids[j] == ids[i]) { fo2[i] = fo2[j]; break; }
+            if (gi[i] >= 0 && fo2[i] != first_of[i]) {
+                ++diff_bad;
+                std::fprintf(stderr, "plan diff: layer %d entry %d fast %lld scan %lld (%d/%d calls)\n",
+                             (int) d.layers, (int) i, (long long) first_of[i], (long long) fo2[i], diff_bad, diff_calls);
+            }
+        }
+    }
+    *nd_out = nd;
+    *nmiss_out = nmiss;
+}
+
 void expert_pool_dispatch_multi(ExpertDispatch& d, const float* x_f, const int32_t* ids, int64_t n_tok, int64_t k,
                                 float* out) {
     using namespace strata::kernels::cpu;
@@ -4709,98 +4810,11 @@ void expert_pool_dispatch_multi(ExpertDispatch& d, const float* x_f, const int32
     const int64_t n = n_tok * k;
     int32_t kind[kMaxWindowEntries];       // per entry: -1 CPU, 0 VRAM, 1 PCIe
     if (d.plan != nullptr && n <= kMaxWindowEntries && n <= d.plan->cap) {
-        // T12-HOST #1 (the host critical-path audit's exposed segment): the old shape re-scanned the entries
-        // per group - the distinct/first-of pass O(n^2), the tail ranks an O(n x nd) lookup per entry, and
-        // every fill below walked all n entries per group.  All of it is bookkeeping in front of flagA, so it
-        // sat on the GPU's per-layer critical path (~25-40 us x 48 layers/window).  The single pass below
-        // maps an expert id to its first entry and its group through a stamp array (valid for calls with
-        // <= kIdPlanIds experts; an oversized table or an out-of-range id falls back to the old scan for
-        // that entry, which the router never emits), links the entries of a group in ascending order once,
-        // and the fills walk those links.  The plan this emits is the old one byte for byte: the groups are
-        // the distinct experts in order of first occurrence (the same nd sequence), every group's entries
-        // ascending (the links are appended in the i loop), the same kind/dst/tok/ptr writes in the same
-        // order.  STRATA_PLAN_ONEPASS=0 keeps the old path (the A/B arm); STRATA_PLAN_DIFF=1 re-derives the
-        // old first-of and per-group entry sets and aborts loudly on any difference, so one battery run
-        // proves the grouping over the whole corpus (the F-216 audit pattern).
-        // F-225: the formal 3v3 (planarm/planctl r1-r3) put the onepass arm at M1 -6.9% vs the old scan
-        // (pair/conc in-band), so the default is OFF again; the 213-215 boots it had been credited with
-        // were the session warm trend - round 3 cleared 208.6-216.7 on BOTH arms.  =1 re-arms it.
-        static const bool plan_onepass = [] { const char* v = std::getenv("STRATA_PLAN_ONEPASS"); return v != nullptr && std::atoi(v) != 0; }();
-        static const bool plan_diff = [] { const char* v = std::getenv("STRATA_PLAN_DIFF"); return v != nullptr && std::atoi(v) != 0; }();
-        constexpr int kIdPlanIds = 1024;
-        static thread_local int32_t s_first[kIdPlanIds], s_gid[kIdPlanIds];
-        static thread_local uint32_t s_stamp[kIdPlanIds];
-        static thread_local uint32_t s_epoch = 0;
         int64_t distinct[kMaxWindowEntries], first_of[kMaxWindowEntries];
         int32_t gi[kMaxWindowEntries];               // group index of every entry (-1: fall back per entry)
         int64_t ghead[kMaxWindowEntries], gtail[kMaxWindowEntries], gnxt[kMaxWindowEntries];
         int nd = 0, nmiss = 0;
-        // a helper GPU (RemoteExperts) holding the expert computes it in its own VRAM once begin() claims the row: like
-        // the peer tier's, such an expert is no miss of this plan and never part of the PCIe share, which would read it
-        // over the primary's link instead (2x RX 6900 XT, IQ3_S, --remote-expert-opt with the probed share 0.39: ~4
-        // helper experts per layer-window moved to PCIe, 59 ms per window against 34 ms)
-        auto helper_holds = [&](int32_t e) {
-            for (int r = 0; r < d.remote_count; ++r)
-                if (d.remote[r]->holds(d.layers, e)) return true;
-            return false;
-        };
-        const bool fast_ids = plan_onepass && d.n_expert <= kIdPlanIds;
-        if (fast_ids) {
-            if (s_epoch == 0xFFFFFFFFu) std::memset(s_stamp, 0, sizeof s_stamp);   // wrap: stale stamps die
-            else ++s_epoch;
-        }
-        for (int64_t i = 0; i < n; ++i) {
-            int64_t fo = i;
-            int q = -1;
-            const int32_t e = ids[i];
-            if (fast_ids && e >= 0 && e < d.n_expert) {
-                if (s_stamp[e] == s_epoch) {
-                    fo = s_first[e];
-                    q = s_gid[e];
-                } else {
-                    s_stamp[e] = s_epoch; s_first[e] = (int32_t) i; s_gid[e] = nd;
-                    q = nd;
-                    distinct[nd] = i;
-                    ++nd;
-                    ghead[q] = -1;
-                    gtail[q] = -1;
-                    if (d.host_res[(size_t) d.layers * (size_t) d.n_expert + (size_t) e] < 0 &&
-                        !(d.peer != nullptr && d.peer->has(d.layers, e)) && !helper_holds(e)) ++nmiss;
-                }
-            } else {
-                for (int64_t j = 0; j < i; ++j)
-                    if (ids[j] == e) { fo = first_of[j]; break; }
-                if (fo == i) {
-                    distinct[nd++] = i;
-                    ghead[nd - 1] = -1;
-                    if (e >= 0 && e < d.n_expert && d.host_res[(size_t) d.layers * (size_t) d.n_expert + (size_t) e] < 0 &&
-                        !(d.peer != nullptr && d.peer->has(d.layers, e)) && !helper_holds(e)) ++nmiss;
-                }
-            }
-            first_of[i] = fo;
-            gi[i] = q;
-            if (q >= 0) {   // link into the group once, ascending
-                if (gtail[q] >= 0) gnxt[gtail[q]] = i; else ghead[q] = i;
-                gtail[q] = i;
-                gnxt[i] = -1;
-            }
-        }
-        if (plan_diff) {   // an independent scan (the old shape) compared entry by entry: per-entry
-            // first-of equality implies equal groups, and the ascending links then equal the old scans' order.
-            static thread_local int32_t diff_calls = 0, diff_bad = 0;
-            ++diff_calls;
-            int64_t fo2[kMaxWindowEntries];
-            for (int64_t i = 0; i < n; ++i) {
-                fo2[i] = i;
-                for (int64_t j = 0; j < i; ++j)
-                    if (ids[j] == ids[i]) { fo2[i] = fo2[j]; break; }
-                if (gi[i] >= 0 && fo2[i] != first_of[i]) {
-                    ++diff_bad;
-                    std::fprintf(stderr, "plan diff: layer %d entry %d fast %lld scan %lld (%d/%d calls)\n",
-                                 (int) d.layers, (int) i, (long long) first_of[i], (long long) fo2[i], diff_bad, diff_calls);
-                }
-            }
-        }
+        plan_distinct_groups(d, ids, n, distinct, first_of, gi, ghead, gtail, gnxt, &nd, &nmiss);
         // STRATA_ROUTE_TAIL_SKIP=R (default 7 on CUDA serve, =0 off; changes the output): a missed expert that EVERY token of the window routes
         // only at rank >= R (the smallest weights of the top-10) is neither copied nor computed; its contribution is
         // zero, without renormalisation (the others keep the weight the router gave them).  Less PCIe and CPU work.
@@ -4868,7 +4882,7 @@ void expert_pool_dispatch_multi(ExpertDispatch& d, const float* x_f, const int32
                                                                                  : (size_t) slot * (size_t) d.cache_blob));
                 } else if (d.peer != nullptr && d.peer->has(d.layers, e)) {
                     kd = 2;                        // multi-GPU: the second GPU computes it
-                } else if (helper_holds(e)) {
+                } else if (remote_holds(d, e)) {
                     // left to the helper: kind -1 until RemoteExperts::begin() claims the row (see above)
                 } else if (d.fs != nullptr && d.fs->take(d.layers, e, ptr)) {
                     kd = 0;                        // Foresight: a landed swap-space slot holds it - a GPU group like a hit

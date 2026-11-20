@@ -13319,3 +13319,19 @@ the reading but kept all the conventions, so the "boot-state lottery" was unchan
   deterministic RNG), F-421 geometry asserts, F-427/F-429 magic-number fixes, F-430 duplicate-include
   removal.
 - Build green. Net env detour: removed.
+
+## F-432 — first real god-module decomposition: plan bookkeeping extracted (2026-11-20, 17:56)
+
+The simplification the mission actually asked for: `expert_pool_dispatch_multi` shrinks. The ~89-line
+plan-bookkeeping block (T12-HOST #1's distinct/first-of/group-link pass) moved verbatim into a named
+`plan_distinct_groups()` helper.
+
+- **Shape:** the helper's six output arrays (`distinct`/`first_of`/`gi`/`ghead`/`gtail`/`gnxt`) and
+  `nd`/`nmiss` are now declared in the caller and passed as out-params, so the tail-skip, PCIe share
+  and group dispatch downstream read byte-identical arrays. The `helper_holds` lambda was promoted to
+  one file-scope `remote_holds()` (used by both the helper and the group dispatch) — removing a
+  closure, not adding one.
+- **Proof of parity:** script-diffed the moved logic against the original block — identical except the
+  expected two changes (arrays→params, lambda→function). Build green.
+- **Net:** the god-function loses ~89 lines; the module count is unchanged (one new static helper, no
+  new file). This is subtraction, not addition.
