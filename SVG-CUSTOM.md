@@ -13625,3 +13625,19 @@ other; now the concept has one authoritative location.
 - **Gate:** 13/13 engine-linked ctests + `ninja strata` link, zero new diagnostics.  Net −6 lines and
   −27 duplicated lines of divergence risk.
 - Rollback: `git revert` of this commit.
+
+## F-446 — the arena boot organ gets its Golden Master (2026-11-20, 21:2x)
+
+`ArenaExpertSource::open` (337 lines, the arena-mode boot: GGUF-vs-bin validation, size check, the
+STRATA_ARENA_MMAP arm, the cgroup/RAM preflight, pad/need-range planning, the PinnedArena organ,
+the threaded load) had ZERO test callers - generate.cpp only.  Before any extraction:
+
+- **New test:** `tests/core/arena_source_golden_test.cpp` (+ CMake beside `file_expert_source_test`).
+  Synthetic canonical pack (2 layers x 4 experts, LCG blobs); freezes the arena BYTES by FNV-1a
+  (`kGoldenHash = 0xf2da901296f91c2d`, recorded on this box, Linux/CUDA 13.4, this build = the
+  pre-refactor oracle), `blobs()`/`reads()` counting (`blob_at` never counts, `blob` counts once),
+  byte-level spot checks, two-opens determinism, and the three refusal arms with exact strings
+  (geometry mismatch / missing pack / truncated pack).  The organ class (page-locked vs pageable) is
+  deliberately NOT frozen - driver-dependent, not contract.
+- ctest: `arena_source_golden_test` PASS (0.22 s).  The seam is now execution-pinned; extractions
+  from `open()` have an oracle that moves if any byte or refusal drifts.
