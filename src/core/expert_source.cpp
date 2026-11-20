@@ -4956,6 +4956,189 @@ static void plan_build(ExpertDispatch& d, const int32_t* ids, int64_t n, int64_t
         }
     }
 }
+// The CPU-side miss pipeline: read the CPU's experts (cold overlap: prefetch + batch), assemble the
+// ExpertJobMulti jobs, and run the pool batch by batch. Returns false on a refused window (d.failed
+// set); reports njobs/npend for the caller's final run and accounting. Split verbatim out of
+// expert_pool_dispatch_multi (miss/mstate are thread-local scratch, exactly as before).
+static bool cpu_miss_pipeline(ExpertDispatch& d, const int32_t* ids, int64_t n, int64_t n_tok, int64_t k,
+                              float* out, const strata::kernels::cpu::ExpertLayout& lay, const int32_t* kind,
+                              bool native, bool shadow, bool gpu_zeroes_hits, bool any_cpu,
+                              int* njobs_out, int64_t* npend_out) {
+    using namespace strata::kernels::cpu;
+    // 149-cold STRATA_COLD_OVERLAP (d.cold_mode): which of the CPU's experts still have a blob to read.  Mode 1 reads
+    // them in the background and computes the ready ones first, then each read one as it lands; every expert keeps
+    // its own token rows (the pool splits rows, never a row's sum), and the weighted sum over a token's experts is
+    // the GPU's, after the dispatch - so the result is the same bits in any batch order.  The stage buffers stay
+    // claimed (busy, then young) until the dispatch has joined its reads and run every batch.
+    static thread_local std::vector<int64_t> miss;
+    static thread_local std::vector<uint8_t> mstate;   // per miss: 0 ready, 1 being read, 2 landed, 3 computed
+    miss.clear();
+    int64_t npend = 0;
+    double cold_r_ms = 0;
+    if (any_cpu) {   // CS-T: the experts the CPU computes, fetched together (the GGUF in place reads them on several threads)
+        for (int64_t i = 0; i < n_tok * k; ++i)
+            if (kind[i] == -1 && ids[i] >= 0 && ids[i] < d.n_expert &&
+                std::find(miss.begin(), miss.end(), (int64_t) ids[i]) == miss.end())
+                miss.push_back(ids[i]);
+        if (shadow) {
+            // the misses read the shadow's own mapping; pulling the native pack's 2 MiB blobs into the page
+            // cache for them would only evict pages the window will never touch
+        } else if (d.cold_mode == 0) {
+            d.src->prefetch(d.layers, miss.data(), (int64_t) miss.size());
+        } else {
+            mstate.assign(miss.size(), 0);
+            const auto r0 = std::chrono::steady_clock::now();
+            npend = d.src->prefetch_begin(d.layers, miss.data(), (int64_t) miss.size(), mstate.data());
+            if (npend > 0 && d.cold_mode == 2) {   // measure: every read first, as mode 0 does
+                d.src->prefetch_end();
+                for (uint8_t& s : mstate) if (s == 1) s = 2;
+                cold_r_ms = std::chrono::duration<double, std::milli>(std::chrono::steady_clock::now() - r0).count();
+                d.ms_cold_wait += cold_r_ms;
+            }
+        }
+    }
+    // the CPU's experts this batch takes: all (mode 0, or no read), else by their state (want 0: the ready ones,
+    // want 2: those that landed since the last batch)
+    auto take = [&](int64_t e, uint8_t want) {
+        if (npend == 0) return true;
+        for (size_t q = 0; q < miss.size(); ++q)
+            if (miss[q] == e) return mstate[q] == want;
+        return want == 0;
+    };
+    int njobs = 0, njobs_all = 0;
+    bool first_pass = true;
+    uint8_t want = 0;
+    double run_ms_extra = 0, cr_ms = 0;
+    for (;;) {
+    for (int64_t t = 0; t < n_tok; ++t)
+        for (int64_t j = 0; j < k; ++j) {
+            const int64_t i = t * k + j;
+            const int64_t e = ids[i];
+            float* row = out + (size_t) i * H;
+            if (!first_pass && (e < 0 || e >= d.n_expert || kind[i] != -1 || !take(e, want)))
+                continue;   // a later batch: only the CPU entries of the experts that just landed
+            if (first_pass && kind[i] == -1 && e >= 0 && e < d.n_expert && !take(e, 0)) continue;   // being read: a later batch
+            if (e < 0 || e >= d.n_expert) {
+                d.failed = true;
+                d.fail = "a routed expert id is out of range";
+                d.fail_layer = d.layers;
+                d.fail_expert = e;
+        return false;
+            }
+            if (kind[i] == -2) {            // STRATA_ROUTE_TAIL_SKIP: a skipped tail expert contributes zero
+                std::memset(row, 0, (size_t) H * sizeof(float));
+                ++d.tail_skipped;
+                continue;
+            }
+            if (kind[i] >= 0) {             // CUDA0, PCIe, or a remote/peer result staged into this row below
+                if (kind[i] == 0) { ++d.cache_hits; if (!d.layer_hits.empty()) ++d.layer_hits[(size_t) d.layers]; }
+                else ++d.offload_entries;                       // #588: PCIe or another GPU
+                if (kind[i] == 2 && d.peer != nullptr) ++d.peer_entries;
+                // multi-GPU: a direct peer launch is writing this row right now - zeroing it would race it;
+                // dec_batch: copy_rows_from_mapped_kernel already zeroes kind 0/1 rows on the GPU
+                if (!((kind[i] == 2 && d.peer != nullptr && d.peer->launched_direct()) ||
+                      (gpu_zeroes_hits && (kind[i] == 0 || kind[i] == 1))))
+                    std::memset(row, 0, (size_t) H * sizeof(float));
+                continue;
+            }
+            ++d.cache_refused;
+            int16_t& jo = d.job_of[(size_t) e];
+            if (jo < 0) {
+                const uint8_t* zp[3] = {nullptr, nullptr, nullptr};
+                const bool zc = !shadow && d.cold_mode >= 3 && native && d.src->zc_roles(d.layers, e, zp);
+                const uint8_t* b = zc ? zp[0]
+                                      : (shadow ? strata::core::shadow::blob(d.layers, e) : d.src->blob(d.layers, e));
+                if (b == nullptr) {
+                    d.failed = true;
+                    d.fail = "the expert source could not produce a blob";
+                    d.fail_layer = d.layers;
+                    d.fail_expert = e;
+                    ++d.missing;
+        return false;
+                }
+                jo = (int16_t) njobs++;
+                ExpertJobMulti& nj = d.jobs_multi[(size_t) jo];
+                nj.blob = b;
+                nj.nt = 0;
+                nj.fmt = nullptr;
+                if (shadow) ++d.shadow_misses;   // F-359: this miss computes from the shadow Q2_0 store
+                if (zc) {   // 149-cold mode 3: the gate rows are the blob; up and down at their distance in the mapping
+                    if (d.zc_fmt.size() < d.jobs_multi.size()) d.zc_fmt.resize(d.jobs_multi.size());
+                    strata::kernels::cpu::NativeFmt& f = d.zc_fmt[(size_t) jo];
+                    f = lay.fmt[(size_t) d.layers];
+                    f.up_off = (size_t) ((uintptr_t) zp[1] - (uintptr_t) zp[0]);     // modular: the tensors' order
+                    f.down_off = (size_t) ((uintptr_t) zp[2] - (uintptr_t) zp[0]);   // in the file does not matter
+                    nj.fmt = &f;
+                    ++d.cold_zc;
+                }
+            }
+            ExpertJobMulti& jb = d.jobs_multi[(size_t) jo];
+            // T18: the second wall. Within one window an expert is seen at most n_tok (<= MAXT) times, so this
+            // cannot fire on a clean call - it turns any future stale-descriptor path into a refused window
+            // instead of a write past `act`/`nact`/`out` (MAXT entries each) into the following jobs' fields.
+            if (jb.nt >= MAXT) {
+                d.failed = true;
+                d.fail = "a routed expert job exceeded the verify window's token capacity";
+                d.fail_layer = d.layers;
+                d.fail_expert = e;
+        return false;
+            }
+            jb.act[jb.nt] = &d.act_multi[(size_t) t];
+            jb.nact[jb.nt] = native && !shadow ? d.nact_multi.data() + (size_t) t * kNativeActBytes : nullptr;
+            jb.out[jb.nt] = row;
+            ++jb.nt;
+            ++d.multi_entries;
+        }
+    if (npend == 0) break;
+    // 149-cold: run this batch now (the ready experts, then each landed group), then wait for the next landing
+    {
+        const auto b0 = std::chrono::steady_clock::now();
+        if (njobs > 0) {
+            if (native && !shadow) d.pool->run_split_multi_native(lay.fmt[(size_t) d.layers], d.jobs_multi.data(), njobs);
+            else d.pool->run_split_multi(d.jobs_multi.data(), njobs);
+            ++d.cold_batches;
+        }
+        const auto b1 = std::chrono::steady_clock::now();
+        const double bm = std::chrono::duration<double, std::milli>(b1 - b0).count();
+        run_ms_extra += bm;
+        if (first_pass) { d.ms_cold_cr += bm; cr_ms = bm; }
+        else d.ms_cold_cc += bm;
+        if (first_pass) d.cold_ready += njobs;
+        // the computed ones' job slots are free again (an expert is in one batch only)
+        for (int jx = 0; jx < njobs; ++jx) d.jobs_multi[(size_t) jx].nt = 0;
+        for (int64_t i = 0; i < n_tok * k; ++i)
+            if (ids[i] >= 0 && ids[i] < d.n_expert) d.job_of[(size_t) ids[i]] = -1;
+        if (!first_pass) for (uint8_t& s : mstate) if (s == 2) s = 3;
+        njobs_all += njobs;
+        njobs = 0;
+        first_pass = false;
+        want = 2;
+        bool left = false;
+        for (uint8_t s : mstate) left = left || s == 1 || s == 2;
+        if (!left) break;
+        if (std::none_of(mstate.begin(), mstate.end(), [](uint8_t s) { return s == 2; })) {
+            const auto w0 = std::chrono::steady_clock::now();
+            (void) d.src->wait_landed(d.layers, miss.data(), (int64_t) miss.size(), mstate.data());
+            d.ms_cold_wait += std::chrono::duration<double, std::milli>(std::chrono::steady_clock::now() - w0).count();
+        }
+    }
+    }
+    if (npend > 0) {
+        d.src->prefetch_end();
+        const FileExpertSource* fs = dynamic_cast<const FileExpertSource*>(d.src);
+        const double r_ms = d.cold_mode == 2 ? cold_r_ms : (fs != nullptr ? fs->async_fill_us() / 1e3 : 0.0);
+        ++d.cold_layers;
+        d.cold_pending += npend;
+        d.ms_cold_r += r_ms;
+        d.ms_cold_hide += std::min(r_ms, cr_ms);   // what an overlap can hide of this layer's reads at most
+        njobs = njobs_all;
+        d.ms_run += run_ms_extra;    // the batches ran inside the job loop: the pool's time stays the pool's
+        d.ms_jobs -= run_ms_extra;
+    }
+    *njobs_out = njobs;
+    *npend_out = npend;
+    return true;
+}
 void expert_pool_dispatch_multi(ExpertDispatch& d, const float* x_f, const int32_t* ids, int64_t n_tok, int64_t k,
                                 float* out) {
     using namespace strata::kernels::cpu;
@@ -5056,176 +5239,8 @@ void expert_pool_dispatch_multi(ExpertDispatch& d, const float* x_f, const int32
         }
     }
     const auto c2 = std::chrono::steady_clock::now();
-    // 149-cold STRATA_COLD_OVERLAP (d.cold_mode): which of the CPU's experts still have a blob to read.  Mode 1 reads
-    // them in the background and computes the ready ones first, then each read one as it lands; every expert keeps
-    // its own token rows (the pool splits rows, never a row's sum), and the weighted sum over a token's experts is
-    // the GPU's, after the dispatch - so the result is the same bits in any batch order.  The stage buffers stay
-    // claimed (busy, then young) until the dispatch has joined its reads and run every batch.
-    static thread_local std::vector<int64_t> miss;
-    static thread_local std::vector<uint8_t> mstate;   // per miss: 0 ready, 1 being read, 2 landed, 3 computed
-    miss.clear();
-    int64_t npend = 0;
-    double cold_r_ms = 0;
-    if (any_cpu) {   // CS-T: the experts the CPU computes, fetched together (the GGUF in place reads them on several threads)
-        for (int64_t i = 0; i < n_tok * k; ++i)
-            if (kind[i] == -1 && ids[i] >= 0 && ids[i] < d.n_expert &&
-                std::find(miss.begin(), miss.end(), (int64_t) ids[i]) == miss.end())
-                miss.push_back(ids[i]);
-        if (shadow) {
-            // the misses read the shadow's own mapping; pulling the native pack's 2 MiB blobs into the page
-            // cache for them would only evict pages the window will never touch
-        } else if (d.cold_mode == 0) {
-            d.src->prefetch(d.layers, miss.data(), (int64_t) miss.size());
-        } else {
-            mstate.assign(miss.size(), 0);
-            const auto r0 = std::chrono::steady_clock::now();
-            npend = d.src->prefetch_begin(d.layers, miss.data(), (int64_t) miss.size(), mstate.data());
-            if (npend > 0 && d.cold_mode == 2) {   // measure: every read first, as mode 0 does
-                d.src->prefetch_end();
-                for (uint8_t& s : mstate) if (s == 1) s = 2;
-                cold_r_ms = std::chrono::duration<double, std::milli>(std::chrono::steady_clock::now() - r0).count();
-                d.ms_cold_wait += cold_r_ms;
-            }
-        }
-    }
-    // the CPU's experts this batch takes: all (mode 0, or no read), else by their state (want 0: the ready ones,
-    // want 2: those that landed since the last batch)
-    auto take = [&](int64_t e, uint8_t want) {
-        if (npend == 0) return true;
-        for (size_t q = 0; q < miss.size(); ++q)
-            if (miss[q] == e) return mstate[q] == want;
-        return want == 0;
-    };
-    int njobs = 0, njobs_all = 0;
-    bool first_pass = true;
-    uint8_t want = 0;
-    double run_ms_extra = 0, cr_ms = 0;
-    for (;;) {
-    for (int64_t t = 0; t < n_tok; ++t)
-        for (int64_t j = 0; j < k; ++j) {
-            const int64_t i = t * k + j;
-            const int64_t e = ids[i];
-            float* row = out + (size_t) i * H;
-            if (!first_pass && (e < 0 || e >= d.n_expert || kind[i] != -1 || !take(e, want)))
-                continue;   // a later batch: only the CPU entries of the experts that just landed
-            if (first_pass && kind[i] == -1 && e >= 0 && e < d.n_expert && !take(e, 0)) continue;   // being read: a later batch
-            if (e < 0 || e >= d.n_expert) {
-                d.failed = true;
-                d.fail = "a routed expert id is out of range";
-                d.fail_layer = d.layers;
-                d.fail_expert = e;
-                return;
-            }
-            if (kind[i] == -2) {            // STRATA_ROUTE_TAIL_SKIP: a skipped tail expert contributes zero
-                std::memset(row, 0, (size_t) H * sizeof(float));
-                ++d.tail_skipped;
-                continue;
-            }
-            if (kind[i] >= 0) {             // CUDA0, PCIe, or a remote/peer result staged into this row below
-                if (kind[i] == 0) { ++d.cache_hits; if (!d.layer_hits.empty()) ++d.layer_hits[(size_t) d.layers]; }
-                else ++d.offload_entries;                       // #588: PCIe or another GPU
-                if (kind[i] == 2 && d.peer != nullptr) ++d.peer_entries;
-                // multi-GPU: a direct peer launch is writing this row right now - zeroing it would race it;
-                // dec_batch: copy_rows_from_mapped_kernel already zeroes kind 0/1 rows on the GPU
-                if (!((kind[i] == 2 && d.peer != nullptr && d.peer->launched_direct()) ||
-                      (gpu_zeroes_hits && (kind[i] == 0 || kind[i] == 1))))
-                    std::memset(row, 0, (size_t) H * sizeof(float));
-                continue;
-            }
-            ++d.cache_refused;
-            int16_t& jo = d.job_of[(size_t) e];
-            if (jo < 0) {
-                const uint8_t* zp[3] = {nullptr, nullptr, nullptr};
-                const bool zc = !shadow && d.cold_mode >= 3 && native && d.src->zc_roles(d.layers, e, zp);
-                const uint8_t* b = zc ? zp[0]
-                                      : (shadow ? strata::core::shadow::blob(d.layers, e) : d.src->blob(d.layers, e));
-                if (b == nullptr) {
-                    d.failed = true;
-                    d.fail = "the expert source could not produce a blob";
-                    d.fail_layer = d.layers;
-                    d.fail_expert = e;
-                    ++d.missing;
-                    return;
-                }
-                jo = (int16_t) njobs++;
-                ExpertJobMulti& nj = d.jobs_multi[(size_t) jo];
-                nj.blob = b;
-                nj.nt = 0;
-                nj.fmt = nullptr;
-                if (shadow) ++d.shadow_misses;   // F-359: this miss computes from the shadow Q2_0 store
-                if (zc) {   // 149-cold mode 3: the gate rows are the blob; up and down at their distance in the mapping
-                    if (d.zc_fmt.size() < d.jobs_multi.size()) d.zc_fmt.resize(d.jobs_multi.size());
-                    strata::kernels::cpu::NativeFmt& f = d.zc_fmt[(size_t) jo];
-                    f = lay.fmt[(size_t) d.layers];
-                    f.up_off = (size_t) ((uintptr_t) zp[1] - (uintptr_t) zp[0]);     // modular: the tensors' order
-                    f.down_off = (size_t) ((uintptr_t) zp[2] - (uintptr_t) zp[0]);   // in the file does not matter
-                    nj.fmt = &f;
-                    ++d.cold_zc;
-                }
-            }
-            ExpertJobMulti& jb = d.jobs_multi[(size_t) jo];
-            // T18: the second wall. Within one window an expert is seen at most n_tok (<= MAXT) times, so this
-            // cannot fire on a clean call - it turns any future stale-descriptor path into a refused window
-            // instead of a write past `act`/`nact`/`out` (MAXT entries each) into the following jobs' fields.
-            if (jb.nt >= MAXT) {
-                d.failed = true;
-                d.fail = "a routed expert job exceeded the verify window's token capacity";
-                d.fail_layer = d.layers;
-                d.fail_expert = e;
-                return;
-            }
-            jb.act[jb.nt] = &d.act_multi[(size_t) t];
-            jb.nact[jb.nt] = native && !shadow ? d.nact_multi.data() + (size_t) t * kNativeActBytes : nullptr;
-            jb.out[jb.nt] = row;
-            ++jb.nt;
-            ++d.multi_entries;
-        }
-    if (npend == 0) break;
-    // 149-cold: run this batch now (the ready experts, then each landed group), then wait for the next landing
-    {
-        const auto b0 = std::chrono::steady_clock::now();
-        if (njobs > 0) {
-            if (native && !shadow) d.pool->run_split_multi_native(lay.fmt[(size_t) d.layers], d.jobs_multi.data(), njobs);
-            else d.pool->run_split_multi(d.jobs_multi.data(), njobs);
-            ++d.cold_batches;
-        }
-        const auto b1 = std::chrono::steady_clock::now();
-        const double bm = std::chrono::duration<double, std::milli>(b1 - b0).count();
-        run_ms_extra += bm;
-        if (first_pass) { d.ms_cold_cr += bm; cr_ms = bm; }
-        else d.ms_cold_cc += bm;
-        if (first_pass) d.cold_ready += njobs;
-        // the computed ones' job slots are free again (an expert is in one batch only)
-        for (int jx = 0; jx < njobs; ++jx) d.jobs_multi[(size_t) jx].nt = 0;
-        for (int64_t i = 0; i < n_tok * k; ++i)
-            if (ids[i] >= 0 && ids[i] < d.n_expert) d.job_of[(size_t) ids[i]] = -1;
-        if (!first_pass) for (uint8_t& s : mstate) if (s == 2) s = 3;
-        njobs_all += njobs;
-        njobs = 0;
-        first_pass = false;
-        want = 2;
-        bool left = false;
-        for (uint8_t s : mstate) left = left || s == 1 || s == 2;
-        if (!left) break;
-        if (std::none_of(mstate.begin(), mstate.end(), [](uint8_t s) { return s == 2; })) {
-            const auto w0 = std::chrono::steady_clock::now();
-            (void) d.src->wait_landed(d.layers, miss.data(), (int64_t) miss.size(), mstate.data());
-            d.ms_cold_wait += std::chrono::duration<double, std::milli>(std::chrono::steady_clock::now() - w0).count();
-        }
-    }
-    }
-    if (npend > 0) {
-        d.src->prefetch_end();
-        const FileExpertSource* fs = dynamic_cast<const FileExpertSource*>(d.src);
-        const double r_ms = d.cold_mode == 2 ? cold_r_ms : (fs != nullptr ? fs->async_fill_us() / 1e3 : 0.0);
-        ++d.cold_layers;
-        d.cold_pending += npend;
-        d.ms_cold_r += r_ms;
-        d.ms_cold_hide += std::min(r_ms, cr_ms);   // what an overlap can hide of this layer's reads at most
-        njobs = njobs_all;
-        d.ms_run += run_ms_extra;    // the batches ran inside the job loop: the pool's time stays the pool's
-        d.ms_jobs -= run_ms_extra;
-    }
+    int njobs = 0; int64_t npend = 0;
+    if (!cpu_miss_pipeline(d, ids, n, n_tok, k, out, lay, kind, native, shadow, gpu_zeroes_hits, any_cpu, &njobs, &npend)) return;
     const auto c3 = std::chrono::steady_clock::now();
     if (d.plan != nullptr) d.plan->cpu_jobs = njobs;
     pt("run", njobs);

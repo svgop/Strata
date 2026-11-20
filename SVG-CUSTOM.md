@@ -13362,3 +13362,21 @@ ptrace)`.
 - **Parity proof:** script-diffed the moved block against HEAD's block — IDENTICAL. Build green.
 - **Net:** `expert_pool_dispatch_multi` 486 → **309 lines** (−177). Cumulative god-function reduction
   this session: 570 → 309 (−46%). No new file; two static helpers in one translation unit.
+
+## F-435 — CPU-miss pipeline extracted: the god-function is now a phase list (2026-11-20, 18:08)
+
+The 170-line cold-overlap CPU pipeline of `expert_pool_dispatch_multi` (the `miss`/`mstate`
+prefetch, the `take` batch selector, the `for(;;)` job-assembly loop that builds `ExpertJobMulti`
+jobs and runs the pool batch-by-batch, and the `npend>0` cold accounting) moved verbatim into
+`cpu_miss_pipeline(...)`, returning false on a refused window and reporting `njobs`/`npend` via
+out-params for the caller's final run.
+
+- The three failure returns became `return false;` (the caller returns); the loop's `break`s are
+  unchanged. `miss`/`mstate` stay `static thread_local` exactly as before.
+- `ExpertJobMulti`/`MAXT`/`kNativeActBytes`/`H`/`NativeFmt` needed the `using namespace
+  strata::kernels::cpu;` the god-function had; the helper now carries it.
+- **Parity proof:** script-diffed the moved block against HEAD — BYTE-IDENTICAL (170/170 lines).
+  Build green.
+- **Net:** `expert_pool_dispatch_multi` 309 → **141 lines**. The god-function is now a phase list:
+  `dispatch_begin` → locals → `plan_build` → peer/remote → `cpu_miss_pipeline` → final run →
+  finish → timing. Cumulative this session: 570 → 141 (−75%).
