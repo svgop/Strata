@@ -275,3 +275,66 @@ identical, MMLU 98.6/95.7). Their --skip-weight data (weight-gated skip 10-12% f
 equal KL vs position-gated) is the refinement candidate IF Tier C ever opens — and the
 A2-vs-T63 conflict needs one ruling (the cheap resolution is our own golden set + quality
 battery on =0 vs =7, our build).
+
+## 9. UPSTREAM ENGINE DELTA via PolyStrata (0.2.2..0.2.20 content; sweep 3)
+
+PolyStrata rebased upstream content beyond its release notes (STRATA_DEFAULTS=026 in-tree).
+The 147-verify cc12.0 bitwise set we ALREADY took as sm120_series card rules (SIDE_MIXER=2,
+ATTN_DAILY, GR_UP75/DOWN_TG, GU_SWIGLU, GR_V3(+PF), PF_FUSED, SMALL_UNR) — the gap is the
+nv_defaults table remainder + CPU-pool/prefill/drafter machinery.
+
+**PRICED QUEUE (their numbers, our lanes):**
+- POOL_DEP (default-on upstream, edef565b9->902ea2328): run_split_multi_native's
+  gate/up->barrier->down (+serial intermediate quantize) becomes ONE mode-7 batch, per-expert
+  counters, first thread quantizes. BIT-EXACT (BASE-05 27/27, pool_determinism 124,656
+  checks); CPU-pool window -2.9% on 5090+EPYC. This IS dossier section 4's C arm
+  (pool.cpp serial act_quant barrier) — upstream engineered it; the port is the shortest
+  intelligent path (law 9). LACK confirmed at pool.cpp:1106.
+- Parallel doorbell quant-act + PLE gather_batch (431a26db1): host grouping 81->7 ms on our
+  exact card (RTX 5090); our doorbell quant is serial per-token (expert_source.cpp:5286).
+  Pairs with POOL_DEP: the serial-quant class.
+- Missing cc12.0 defaults, kernels mostly PRESENT in our tree but never selected on CUDA
+  cc12.0: Q80_ROWS1 (kernel exists, native_mmvq.cu:1301; our dev_class misses cc12.0),
+  EXP_MODE=8, DEQUANT_SIDE (LACK), QFUSE/LFUSE/HC_UPMIX/PROMPT_ATTN_IMMA (opt-in here,
+  default there). ZERO-CODE env falsifiers today; Q80_ROWS1/EXP_MODE/DEQUANT_SIDE need
+  small card-rule code first. Toolkit gate: ours is CUDA 13.4 — PLE_BATCH's illegal-access
+  negative is a 12.8-build class, NOT ours.
+- CPU-share link_rule + NT (a620ffb61, 16c3fa0cd; NT=32 in sm_120 table, -26% 3K follow-up
+  TTFT on 4090): pure-rule port; falsifier = env-boot with raised CPU_SHARE_MAX first.
+- Drafter BF16 TC attention (-0.10..-0.20 ms/round drafting, 2.1x attention): falsifier =
+  measure our MTP verify-attention ms/window first (F-228/DRAFT_TIMING data).
+- SPEC_COST (sm_121 table, 1.047x decode, 24/24 greedy byte-identical): compare against our
+  W1 ADAPTIVE_SPEC controller (both cost-model window pickers); falsifier = F-228 data.
+- Conversation-cache swap-block + spill-persist (0f1738e61): LACK; serving TTFT for
+  alternating agents; falsifier = measure our park/restore copy ms.
+- CPU complement quant dots, AVX-512 VBMI byte-lookup (afdff31ba: 40.5 vs 25.1 GB/s, 0/26000
+  dots differ): falsifier = quant_bench cross-comparison on this box (bench, not port) —
+  if theirs wins, the CPU-experts term (2.98-3.55 ms/window) shrinks proportionally.
+- MMQ_TIER_SORT (240aeb985): falsifier = code read of our staged-walk ordering.
+- VERIFY_DEVICE_HITS (a14c910fe, default >16 GiB): CONFLICTS with ForesightSwap in BOTH
+  trees; skip unless we trade FS for device planning.
+- SEQ_READAHEAD (dc3ace6a0, author-reported 65-76s -> 23-28s cold follow-ups, left OFF
+  upstream): our complement prevents the shape; low.
+- SLOT_READ_WIDE/AHEAD: --batch-lane only; skip (cohorts standing).
+
+**NEGATIVES BANKED (upstream measured on OUR exact shape — do not adopt):**
+- L2_PF default-rejected on sm_120: -8-12% on 1x 5090 IQ3_S (#6431) — OUR pack. The BW-C
+  trio's +2.0% does NOT transfer; only Q80_ROWS1+EXP_MODE legs.
+- TAIL_SKIP: upstream flipped default OFF for 0.1.63 (answers differ when on). Ours T63
+  =7 is golden-identical ON OUR SET — conscious divergence; sharpens the A2-vs-T63 ruling.
+- QFUSE on sm_86 regressed partial-VRAM decode ~5% — scope any QFUSE default to
+  all-resident, keep GR_UP75 semantics.
+- ADAPT_FETCH=2: upstream default ONLY on <=16 GiB cc12.x; NOT bit-exact (forced-token KL
+  0.948 [0.830, 1.063]); hit-rate gains cited were AT 54->62% there. REVISION of section 7:
+  on our 32 GB card upstream itself takes 0; the arm's honest price is =1 (parity-safe
+  semantics) with a forced-token KL canary, expected value below the first pricing.
+- ROUTE_PRIOR: upstream owner-reverted to default-off (agent tasks 4.5/10 vs 5.6/10,
+  repetition loops). Ours is off standing (verified: launcher has no STRATA_ROUTE_PRIOR).
+  Keep off; bank the negative.
+- gfx12 miss-split 0.15, PCIe-share auto rule: HAVE/NA. PLE_BATCH@CUDA-12.8: NA (13.4).
+
+**EXECUTION ORDER (all gated on the campaign law; none run on our box):**
+(a) zero-code env falsifiers: QFUSE/LFUSE/HC_UPMIX/PROMPT_ATTN_IMMA/PLE_BATCH + raised
+CPU_SHARE_MAX (diagnostic boots, interleave, M3b watched); (b) POOL_DEP port (bit-exact
+harness pattern exists upstream); (c) link_rule+NT pure-rule port; (d) parallel quant-act +
+gather_batch; (e) quant_bench cross-comparison; (f) SPEC_COST after DRAFT_TIMING pricing.
