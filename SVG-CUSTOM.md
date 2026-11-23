@@ -13710,3 +13710,30 @@ zero behavior deltas, every change a one-commit revert.
 Next front (specced, not started): the verifier-golden harness unlocks verify.cpp/mtp.cpp/
 generate.cpp; `Prefill::run_impl` (2,473 lines, 19 lambdas, the TTFT lane) opens the session after,
 net-first.  The engine serving since 16:28 was never touched; no deploy was made.
+
+---
+
+## F-450 — the standing line: quality/perf Pareto rule codified; Q2_0-shadow divergence diagnosed
+
+Operator directive 2026-11-23: "better quality with same performance, or better performance with
+same quality" becomes the standing acceptance rule.  Codified in `campaign/standing-line.md`:
+the rule (both axes >= 0, one strictly >, measured A/B same build pair), the two batteries
+(quality: fixed suite, greedy + seeded-sample, exact-match; perf: TTFT@4K/32K, median tok/s of
+full-length runs, completion counts, cold/warm labeled), the determinism canary (`shadow_misses`,
+expert_source.hpp:661 — differing counts across runs of one prompt invalidate the comparison),
+and a three-tier ledger (A: residency / tail-skip-0 / MTP-behind-exact-verify; B: q8_0 KV /
+long-prompt prefill scaling / routing-aware cold prefetch / shadow-populate overlap; C: the
+quarantined quality-for-speed knobs).  Evidence base: the 2026-11-23 external benchmark, marked
+directional-only, with its arithmetic re-derived in the doc (3.21x = 143.2/44.6; residency ratio
+3.67x) so no future reader mistakes it for a baseline contract.
+
+Same-session diagnosis (no code changed): "same prompt, wildly different results" — primary
+mechanism is F-359's `STRATA_SHADOW_EXPERTS` when armed (operator logs show it armed:
+48 layers x 512 experts = 31.64 GiB, /dev/shm + packs/q2_0): every CPU miss computes from the Q2_0
+store "and the misses' outputs differ by the shadow's quantization, by design" (expert_source.cpp:
+5198-5200), while the hit/miss boundary moves with cache history — so the per-token quantization
+mix moves run to run, the logits jitter, and F-419's fixed request seed cannot stabilize outputs
+because the SAMPLING stream is fixed but the distribution it draws from is not.  Sampling with
+temperature>0 amplifies; greedy collapses it to near-boundary flips only.  Secondary mechanisms:
+GPU-hit vs CPU-miss native numerics (path mix moves even shadow-off), client-passed seeds,
+coupled draft sampling.  Falsifier ladder recorded in the doc's battery section.
