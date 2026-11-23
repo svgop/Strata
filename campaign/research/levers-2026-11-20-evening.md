@@ -396,3 +396,88 @@ only for token-stream-affecting changes: A yes; B/C/F no; E watch-only.
 DO-FIRST ORDER (serve): A (~70 LOC, biggest quality win, gates paid) -> E (free
 falsifier done, ladder armed when card frees) -> C step 1 (0 LOC + corpus harness) ->
 F (~25 LOC) -> B (falsify then port pin-core) -> D dropped.
+
+## 11. ENGINE-PACKAGE ADJUDICATION (2026-11-23; desk recon + BANKED evidence; corrections to my own pricings)
+
+- **A POOL_DEP: CONFIRMED 1:1 (pool.cpp:1106 same structure; no NUMA/invariant variants here
+  = simpler port; pack manifest: 40/49 layers engage, 9 Q2_0-down excluded) — but the
+  falsifier ALREADY RAN BANKED: campaign/results/f325-stair-*.out reads gate/up 1.301 /
+  quantize 0.009 / down 0.716 ms/round (and 1.950/0.015/1.012). The serial-quant term is
+  0.009-0.015 ms/round; the overlap win ~0.06-0.10 ms/round = ~0.4-0.7% of our ~15 ms
+  window. CORRECTION: section 4's C-arm pricing (~+10%) was WRONG — carried from the
+  compaction's 1.35 ms figure; the banked data contradicts it. Law 15: DROP standalone
+  (below the +4% bar on every lane); compose-only if ever (env STRATA_POOL_DEP, ~70-85
+  LOC; certifiers already ours: pool_tasks_test extend, native_hadamard_test, M3b+MMLU).
+- **B parallel doorbell quant / gather_batch: DROP** (banked falsifier fired: our decode
+  exposure 0.036-0.090 ms/window; prefill ceiling ~0.5%; their own evidence is comment-
+  argument, no parity harness). Re-open only on hardware change.
+- **C cc12.0 default-set gap: CONFIRMED, the best-value cluster on our box.** PROMPT_ATTN_
+  IMMA already standing (launcher:142). Today's PURE ENV arms (one boot each, identity-
+  gated, M3b exact-match + golden hash, MMLU 93.3 gate): STRATA_EXP_MODE=8 (consumer in-
+  tree iq_kernels.cu:4725; exact on P100/P40 per our own comments), STRATA_NO_MMVQ_ROWS2=1
+  (bit-exact, unscoped — if it reads, write the 10-LOC scoped STRATA_Q80_ROWS1 class-3
+  rule mirroring their e6efa2b16), STRATA_HC_UPMIX=1 (+STRATA_HC_UPMIX_CHECK=64: BUILT-IN
+  rel-RMS/max|diff| print, prefill.cpp:3172-90), STRATA_LFUSE=1, STRATA_PLE_BATCH=1
+  (12.8-hazard N/A on our 13.4), STRATA_QFUSE=1 (watch partial-VRAM decode, #6583 tax).
+  Their BW-C trio (Q80_ROWS1+EXP_MODE+L2_PF) decode +2.0% DOES NOT transfer wholesale —
+  the L2_PF leg is the measured sm_120 negative; the pair alone is the candidate. Code-
+  first later: STRATA_DEQUANT_SIDE (~80-120 LOC + parity), PLE_COMPACT/COPY_STREAM. Ours
+  has NO sm_120 nv_defaults table at all (nv_defaults.cpp = sm_86/sm_60 only) — the
+  composed-verified set lands as ~15 LOC + test.
+- **D CPU-share link_rule + NT: DORMANT on our standing — the arm gate requires
+  o.batch <= 0 (generate.cpp:17586-90) and we serve parallel:6 -> the CPU share is OFF
+  entirely.** DROP-standing; re-open under a solo/batch<=0 serving arm with the F-print
+  falsifier (3.4 x 700ms = 2,380 tokens < our fixed 3072, so the rule would TIGHTEN us —
+  note the link-GB/s spread 55/26/12 is tier-dependent; F must come from a live probe,
+  not assumption). Port shape when opened: ~60-75 LOC rule + ~20 plumbing + 15 NT knob.
+- **E VBMI byte-lookup dots: FALSIFY-FIRST at bench level, no boot.** Their 40.5-vs-25.1
+  GB/s is THEIR OWN "from memory" figure, PENDING on their side (only 0/32,000 SIMDe
+  parity banked). Ours: iq_avx512.cpp Fmt<21> (AVX-512+VNNI, no vpermi2b in tree); the
+  trick touches ~20% of gate/up work (IQ3_S gu on 10/49 layers); contract differs
+  (Q8_K vs our ActQ). Step 1 zero-code: kq_cpu_bench --pairs iq3_s/iq4_nl --threads
+  1,8,16,32 --nt 1,2,4 baseline. Step 2 ~100-150 LOC vpermi2b variant + parity
+  (iq_avx2_parity/expert_parity, 0 differing dots). Expected if it transfers: 1.5-2.5%
+  window, LOW confidence.
+- **F falsifiers refined:** F4 SPEC_COST -> OFFLINE arithmetic from F-228 banked data
+  (depths 3/4/5 offered 35/17/8%, accept ~85/68/75%) through E(tokens)=1+sum(prod p) vs
+  step_ms=8.4+1.57T: ZERO boots; optimum >= standing T kills the W1 follow-up free.
+  Optional 3-5 LOC decision print at generate.cpp:16645 (STRATA_ADAPTIVE_SPEC log line —
+  the controller is invisible today). F2/F3: ONE diagnostic boot, STRATA_PREFILL_TIMING=1
+  at 4K/16K/32K — the timing lines already print the gdn recurrence share (prefill.cpp:
+  3218-32); +5-15 LOC for the effective-floor/ring print. Their gdn_mma is the F-224
+  re-open candidate (final-state-only prefill recurrence), not a coverage hole.
+- **G VERIFY_DEVICE_HITS: DROP.** Two corrections to the claim: the >16 GiB default is
+  431a26db1 (not a14c910fe), and OUR TREE ALREADY OWNED the class — T1.1
+  STRATA_PLAN_PARTIAL, measured CLOSED-NEUTRAL banked at F-222 (-0.6/-1.6/-0.9; the
+  flagA round-trip is worth ~0.26 ms/window). A verbatim port is INERT on our boot
+  (explicit --pcie-frac 0.35) and would fight PcieAuto on frac-less boots (law 2).
+  Re-open clause: a new instrument reads flagA/flagB/plan-publish > ~0.3 ms/window, or
+  pcie_frac 0 adopted standing -> then STRATA_PLAN_PARTIAL=1 (fully wired, ONE env)
+  before any port.
+
+**NEGATIVES (verified in their tree; our standing respects all six):** L2_PF sm_120
+(-8-12% on 1x5090 IQ3_S #6431 — mechanism ABSENT in ours), ADAPT_FETCH=2 <=16 GiB +
+not-bit-exact (we carry the plumbing, unset standing), ROUTE_PRIOR owner-off (4.5/10
+agent score NOT in their tree — unconfirmed, owner decision 2026-10-29 #4402 is),
+QFUSE sm_86 partial-VRAM tax, gfx12 miss-split RDNA4-only, PCIe-share auto rule already
+ours (generate.cpp:2273-2324, dormant under explicit 0.35).
+
+**UNIFIED DO-FIRST (serve package section 10 + engine package):**
+1. [0 boots] F4 offline SPEC_COST arithmetic; A-correction recorded (done here).
+2. [0 LOC] Serve step 1: arm tool_call_recovery + corpus falsifier; DONE-line ladder
+   design for E already measured (193 full re-reads).
+3. [1 boot] Serve A port (~70 LOC) — greedy-card guard, the proven defect; MMLU+M3b,
+   output jump pre-registered.
+4. [1 boot each, identity-gated] Engine env arms: EXP_MODE=8 -> NO_MMVQ_ROWS2 ->
+   HC_UPMIX(+CHECK) -> LFUSE -> PLE_BATCH -> QFUSE; compose survivors through
+   campaign/binary-ladder.sh; then the ~15-LOC sm_120 defaults table.
+5. [1 diagnostic boot] STRATA_PREFILL_TIMING=1 stair (F2 floor fit + F3 recurrence
+   share) + PEER_STALL_S port (~25 LOC) same window if convenient.
+6. [bench, no boot] kq_cpu_bench baseline -> vpermi2b variant + parity.
+7. [port] warm_start pin-core after its DONE-line falsifier; conversation-cache ladder
+   (prompt-cache 12 -> park_gain 256 -> rewind_keep) gated on full-reread count.
+8. [compose-class, when the above read] POOL_DEP + DEQUANT_SIDE + sm_120 table into ONE
+   candidate binary through the ladder.
+DROP with mechanisms banked: D-standing, G, B, L2_PF, ROUTE_PRIOR, ADAPT_FETCH=2,
+shared-prefix tokenize (HAVE), RAM-diet family (~0), R1-R6 (until our logs show the
+class), d35353903 (blast radius), KVA (Tier C quarantine, ladder written).
