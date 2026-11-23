@@ -481,3 +481,26 @@ ours (generate.cpp:2273-2324, dormant under explicit 0.35).
 DROP with mechanisms banked: D-standing, G, B, L2_PF, ROUTE_PRIOR, ADAPT_FETCH=2,
 shared-prefix tokenize (HAVE), RAM-diet family (~0), R1-R6 (until our logs show the
 class), d35353903 (blast radius), KVA (Tier C quarantine, ladder written).
+
+**ADDENDUM (same session — supersedes §11's E paragraph): E REVISED TO DROP.**
+The VBMI byte-lookup is real and bit-preserving (permutex2var_epi8 reproduces our
+scalar decode exactly; bit-exact by construction), but the lever's PREMISE is false on
+our box: the stage is BYTE-BOUND — F-375 banked (SVG-CUSTOM.md:11884): IQ3_S 45.7 GB/s
+against a 48-50 GB/s plain read = 93-96% of DRAM ceiling on every type; F-360: the pool
+is byte-bound. OUR INCUMBENT ALREADY OUTRUNS THEIR NUMBER (40.5 GB/s is their own
+"from memory", 7800X3D V-Cache cache-resident regime, AVX2→VBMI delta, no in-tree
+source; their quant_bench is one-thread only). Priced ceiling on us: 2.98-3.55 ms x
+(1 - 45.7/48.5) = 0.14-0.31 ms/window = 0.9-2.0%, inside drift — law 15: do not build.
+Also corrected: the "VBMI" at generate.cpp:3543 is expert.cpp's canonical-Q2_0
+multishift kernel; our iq3_s requirement is plain AVX-512 (generate.cpp:3745-67), TU
+already -mavx512vbmi (CMakeLists.txt:1661-62), kernel = iq512_gu_rows/iq512_rows
+(iq_avx512.cpp:245/257, row_dot<21,NT> :156). HAZARD for any future port: theirs is a
+single-token kernel, ours amortizes 1..8 tokens (iq_avx512.cpp:3-8) — a naive port
+could REGRESS M1. Re-open: zero-cost premise-check with existing binaries
+(build-fresh/kq_cpu_bench --pairs iq3_s/iq4_nl --threads 1,16 vs plain-read GB/s, same
+hour) — if the stage ever reads NOT byte-bound, the true falsifier is their one-process
+quant_bench --type IQ3_S built from a worktree at ~/LLM/strata (references pristine,
+F-329), measuring the only delta that matters (avx512→VBMI) + memcmp bits. Plan if
+re-opened: ~45-70 LOC in iq_avx512.cpp, STRATA_IQ512_VBMI=1 default off, bit-for-bit
+parity leg (we lack an iq512-vs-ggml bit harness; native_expert_parity is rel<=1e-5),
+MMLU + binary ladder.
