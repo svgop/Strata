@@ -195,3 +195,83 @@ slots in the same bytes, hot experts keep IQ3_S quality. No new kernel; ~4-5 fil
 (expert_cache form vector, expert_source plan column + fill + admission, verify.cpp third
 launch, generate.cpp heat-tier policy). The offline falsifier is free: score a slot mix in
 tools/replay_cache_policy.py where cold slots carry the 1.3824 MB cost.
+
+## 8. POLYSTRATA DELTA STUDY (2026-11-23; external intel = re-pricing, law 12)
+
+Lineage: PolyStrata (simplexai-labs) = upstream Strata **0.2.7** + their poly engine program
+(388+ poly: commits; 234+ prefill:; hy4flash = a fourth engine with Tree-8 SpecInfer + MLA).
+Our fork shares history only to 0.2.1 (90767252f). Their Qwen3.8 lane is upstream's engine
+UNCHANGED (0.1.26/0.1.36 builds) — not a competitor on our lane. Clone:
+/home/svg/LLM/data/references/PolyStrata (pristine). The 2026-11-20..23 sessions here
+(F-419..F-450) hardened our tree independently; F-450 codified the Pareto rule this study
+prices under.
+
+**CODE-READ FALSIFIERS ALREADY RESOLVED (this session, zero boots):**
+- FATTN-MMA/FDEC: **HAVE.** Our QSA prompt attention IS MMA (qsa_prompt_attn.cu m16n8k16,
+  sm_75+ gate, default on sm_120) WITH the hi+lo split (qh/ql register halves = their
+  split_bits fp32-faithful form); decode is split-K (qsa_decode_attn under g_fast_attn).
+  The vec kernel survives only as the <=256-context short adapter. Their +65-85% is their
+  gap, not ours. DEAD as a port.
+- Cache-freeze during prompt read (their 3%): **HAVE** — adapt_quiesce fires on prompt lend
+  (generate.cpp:11051); the round drains before a prompt borrows slots (11015).
+- B3 partial: STRATA_RAM_ADAPT2 already seeds the RAM policy from the prompt's routing
+  (generate.cpp:11531).
+- Routed-stream skip copies: dead on our box (~96-97.6% VRAM share; <5% non-cached).
+- RAM diet / --ram-experts-mib / --lock-experts / card_far: priced ~0 (184 GiB, deliberate
+  pinned complement). Shelf only.
+
+**THE PARETO-PRICED QUEUE from their material:**
+- KVA (approximate late-layer prompt read, split 36): the only REMOVES-WORK lever, fitted on
+  OUR model shape (48L/512E), +12-28% prompt at 14-30K. BUT their own numbers: KL
+  0.018-0.020 nats (control floor 0.0013-0.0032; 6-15x), decode acceptance -0-11%, split-24
+  failed 0/10 agent runs, split-36 6/10 vs exact 4/7. Quality axis < 0 by their own
+  measurement -> **Tier C quarantine** (operator decision only). Priced falsifier ladder:
+  (1) one instrumented boot pricing the late-layer skippable share of a 30K cold prompt
+  (dead if <8% of TTFT); (2) if >=, KL/acceptance canary on 3 forced-token prompts; (3)
+  only then a port behind STRATA_KVA.
+- FATTN/#8 split_bits: HAVE (above). GDN-MMA scan: capped by the recurrence share of a 32K
+  prompt (one timing boot; we hold GDN_CHUNKED 1.68x banked; their sm_120 class matches).
+- Size-class tile launches (their staged +10%, decode 132->241-269 t/s on THEIR engine):
+  falsifier = one counters boot histogramming rows-per-expert + launches/window; dead if
+  our groups land >=70% tile occupancy.
+- Switch-point fitted crossover vs our static floors: one boot logging both sides' ms at
+  2-3 prompt lengths; dead if our floor sits within +/-10% of the fit.
+- CPU-share link rule (limit = 3.4 x F, F = missing bytes / link GB/s): one boot line. On
+  our box a cold 32K prompt streams ~37.9 GiB non-resident over ~55 GB/s -> F ~ 0.7 s,
+  limit ~2.4 s: LIVE, not dead; price before any port.
+- Draft admission economics (their wants()/takes() marginal-ms gate + ask/no-ask A/B):
+  **offline replay** through our banked window anatomy (zero boots) prices an ask-gate
+  beside the W1 ADAPTIVE_SPEC controller. Wholesale prompt-lookup adoption (no verify) is
+  output-risky: needs the exact-match canary first, else quarantined.
+- hy4flash Tree-8 SpecInfer (tree drafting): unexamined this pass; our MTP lane is
+  serial-depth. A separate study item, priced only after the drafter retrain.
+
+**SERVE-LAYER PACKAGE (clearest Pareto-positive ports; quality first):**
+1. Greedy-card guard (QUALITY FIX, zero perf cost): our merge honors per-key overrides
+   only — an explicit temperature:0 request still runs under the qwen4exp instruct card's
+   top_k 20 + presence_penalty 1.5 (serve/server.py:5581 + MODEL_CARD_SAMPLING:8610),
+   against the merge's own comment "explicit 0 stays greedy". Their fix d7ce708ba
+   (#3295/#2940): suppress card sampling when the request asks greedy. One guard.
+2. warm_start read-at-start (server-only): capture the agent's first turn at runtime,
+   re-read through the engine at server start. Their numbers: agent-start TTFT
+   0.24-0.43 s vs 1.49-1.74 s; 37/37 pinned answers identical. (Pinned-session form needs
+   an engine leg; later.)
+3. --prompt-cache / rewind-keep / spread: ALREADY PORTED in our engine (prompt_cache
+   generate.cpp:804; rewind_keep :821 wired :14326 citing upstream fe686835d; spread :837)
+   — all default-OFF, none armed in our config. Action = a config ladder for agent-rotation
+   traffic, gated on measured re-read counters (their 8-agents measurement: 196K -> 105K
+   tokens re-read, evictions 19 -> 0).
+4. Shared-prefix tokenization (LACK, confirmed 0 hits): server CPU TTFT on long unchanged
+   resubmissions; cheapest port on the list.
+5. Tool-call robustness series (LACK: tool_markup_retry, undeclared_tool_calls, R1-R6,
+   linear compaction): their measured 98.3% vs 92.9% intended-read on 1,462 agent turns.
+   Quality lever aimed at the operator's own traffic shape.
+6. Stalled-peer turn release (PARTIAL): their PEER_STALL_S frees the engine turn from a
+   client that stops reading; our timeouts cover only the announce-body read.
+
+**RECORD INCONSISTENCY surfaced (operator ruling owed):** standing-line A2 says ROUTE
+TAIL SKIP stays 0 everywhere; T63 ADOPTED STRATA_ROUTE_TAIL_SKIP=7 standing (golden
+identical, MMLU 98.6/95.7). Their --skip-weight data (weight-gated skip 10-12% faster at
+equal KL vs position-gated) is the refinement candidate IF Tier C ever opens — and the
+A2-vs-T63 conflict needs one ruling (the cheap resolution is our own golden set + quality
+battery on =0 vs =7, our build).
