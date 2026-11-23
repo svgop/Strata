@@ -338,3 +338,61 @@ nv_defaults table remainder + CPU-pool/prefill/drafter machinery.
 CPU_SHARE_MAX (diagnostic boots, interleave, M3b watched); (b) POOL_DEP port (bit-exact
 harness pattern exists upstream); (c) link_rule+NT pure-rule port; (d) parallel quant-act +
 gather_batch; (e) quant_bench cross-comparison; (f) SPEC_COST after DRAFT_TIMING pricing.
+
+## 10. SERVE-PACKAGE ADJUDICATION (2026-11-23; desk recon, both trees; free falsifiers RUN)
+
+Per-claim verdicts (evidence in the adjudicator's report; corrections to section 8 marked):
+- **A Greedy-card guard: CONFIRMED, deeper than priced.** (i) The merge (server.py:5581,
+  :7443 /props) lets the card's other keys survive an explicit temperature:0 — REPL PROVEN
+  on our code today: card {temperature 0.7, top_p 0.8, top_k 20, presence_penalty 1.5} +
+  {temperature:0} -> GEN "top_p=0.8 top_k=20 penalty_present=1.5 penalty_last_n=64".
+  (ii) Engine side: sampler.cu:1259-1269 greedy branch argmaxes over apply_penalties()-
+  SHIFTED logits whenever a penalty window exists — the pick is not the true argmax
+  whenever it appeared in the last 64 tokens. (iii) OUR OWN F-400 Prewarm replay posts
+  temperature 0.0 through the same merge (:4145-4150) — its "greedy" premise is false the
+  same way (deterministic, but penalized). (iv) Their fix is TWO commits: d7ce708ba
+  (asks_greedy + greedy= param popping CARD_PENALTIES; ~70 LOC port, env kill-switch,
+  port their test) and d35353903 (MTP + nothing-asks-sampling -> card={}: DO NOT port
+  blindly — flips our whole default-API traffic to greedy). HAZARD: presence 1.5 is our
+  incidental anti-degeneration medicine — pair the fix with arming
+  reasoning_loop_recovery (default OFF today, :4342) or verify :5914 recovery armed.
+  Gates: MMLU + M3b MANDATORY (token-stream-affecting; expect an output JUMP,
+  pre-register), 3x probe-lane same-hour.
+- **B warm_start: FALSIFY-FIRST.** Their read-at-start is real (numbers verbatim, their
+  box); port shape = persist agent's first turn + pin at boot (~120-160 LOC). OUR
+  conflicts: F-400 corpus replay ordering (warm GPU reads BEFORE the replay break routing
+  determinism — pin-only is safe, re-read is not), probe-prefix contamination (a pinned
+  10-15K start parked must not prefix-match probe prompts), 24-slot budget holds the
+  ~212-433 MiB state. Cheapest falsifier: one boot, read the FIRST real agent request's
+  DONE line vs mid-session — if Prewarm+cache already hold a 4K+ warm prefix, residual
+  win is only the system-prompt-shaped prefix.
+- **C Tool-call robustness: PARTIAL — the 98.3/92.9 number is tool_call_recovery's,
+  WHICH WE ALREADY HAVE, DEFAULT OFF** (serve/frontend.py:931-1469, wired :4346,
+  config :9141; not armed in custom-iq3_s-8081.json). Step 1 = config-only arm +
+  adherence battery. Step 2 = port _compact_scan_body + tool_markup_retry +
+  undeclared_tool_calls (~110 LOC) after their rcall_specimens.json (25-entry corpus,
+  IN THEIR TREE) runs against our parser (~60 LOC adapter, no GPU). R1-R6 (~150-200 LOC)
+  falsify first: count damaged openers in our logs.
+- **D Shared-prefix tokenization: REFUTED — we HAVE it.** The named commit f13a870d5 is
+  in OUR history; PromptEncoder (tools/strata_tokenizer.py:446, wired :4359-4368,
+  keep=24). My section 8 "LACK" was a wrong-symbol grep. Law 18 in action.
+- **E Conversation-cache arms: CONFIRMED ported-but-off; MEASURED, and the arm has a
+  live target.** OUR LOG (4,820 prompt events): mean prefix reuse 93.2%, but 193 FULL
+  re-reads (4.0%) and 266 prompts <50% reuse (5.5%) — a real returning-agent/eviction
+  class. Ladder when the card frees: prompt-cache 12 -> park_gain 256 -> rewind_keep,
+  one per leg, gated on the full-reread count falling; read-only skips are
+  byte-identical (M3b watch only; MMLU cheap insurance).
+- **F PEER_STALL_S: CONFIRMED gap, DO (~25 LOC + test).** Our engine survives a stalled
+  reader (stdout pumped to per-slot queues) but the HANDLER THREAD + ITS BATCH SLOT LEAK
+  forever — one hung client silently drops 6-conc capacity by 1/6. Port their
+  99b1b27b1 form: per-socket-op bound, SSE write loop settimeout, OSError ->
+  existing disconnect path; STRATA_PEER_STALL_S=0 rolls back. Falsifier: campaign logs
+  for stuck slots; synthetic stalled-reader test on a dev boot.
+
+BANKING LAW (recon): server-only changes need NO binary ladder (that is an engine-binary
+gauntlet; precedent F-19 serve-layer default-on with before/after evidence). MMLU gate
+only for token-stream-affecting changes: A yes; B/C/F no; E watch-only.
+
+DO-FIRST ORDER (serve): A (~70 LOC, biggest quality win, gates paid) -> E (free
+falsifier done, ladder armed when card frees) -> C step 1 (0 LOC + corpus harness) ->
+F (~25 LOC) -> B (falsify then port pin-core) -> D dropped.
