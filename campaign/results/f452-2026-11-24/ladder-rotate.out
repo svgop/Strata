@@ -1,0 +1,84 @@
+lane binary saved: 9c8a4567
+=== round 1: OFF ===
+[off1] env STRATA_EXCHANGE_ROTATE=
+[warm-discard] load: 2.96, 3.31, 3.22
+[warm-discard] M1 single-stream : 184.5 t/s (2000 tok in 10.84s)
+[warm-discard] M2 pair          : 176.1 t/s aggregate (1800 tok in 10.22s)
+[warm-discard] M2 6-conc        : 244.2 t/s aggregate (3600 tok in 14.74s)
+[f452-rotate-off1-1] load: 5.59, 4.01, 3.46
+M1 single-stream : 225.3 t/s (2000 tok in 8.88s)
+M2 pair          : 204.2 t/s aggregate (1800 tok in 8.81s)
+M2 6-conc        : 266.0 t/s aggregate (3600 tok in 13.53s)
+[f452-rotate-off1-2] load: 6.04, 4.31, 3.59
+M1 single-stream : 229.6 t/s (2000 tok in 8.71s)
+M2 pair          : 206.9 t/s aggregate (1800 tok in 8.70s)
+M2 6-conc        : 275.1 t/s aggregate (3600 tok in 13.09s)
+[f452-rotate-off1-3] load: 4.13, 4.07, 3.54
+M1 single-stream : 221.6 t/s (2000 tok in 9.03s)
+M2 pair          : 198.6 t/s aggregate (1800 tok in 9.06s)
+M2 6-conc        : 274.1 t/s aggregate (3600 tok in 13.13s)
+=== round 1: ON ===
+[on1] env STRATA_EXCHANGE_ROTATE=1
+[warm-discard] load: 3.00, 3.71, 3.48
+[warm-discard] M1 single-stream : 239.4 t/s (2000 tok in 8.35s)
+[warm-discard] M2 pair          : 207.3 t/s aggregate (1800 tok in 8.68s)
+[warm-discard] M2 6-conc        : 263.0 t/s aggregate (3600 tok in 13.69s)
+[f452-rotate-on1-1] load: 3.91, 3.95, 3.57
+M1 single-stream : 230.8 t/s (2000 tok in 8.66s)
+M2 pair          : 204.0 t/s aggregate (1800 tok in 8.82s)
+M2 6-conc        : 274.3 t/s aggregate (3600 tok in 13.13s)
+[f452-rotate-on1-2] load: 3.17, 3.75, 3.52
+M1 single-stream : 209.5 t/s (2000 tok in 9.55s)
+M2 pair          : 201.7 t/s aggregate (1800 tok in 8.92s)
+M2 6-conc        : 278.7 t/s aggregate (3600 tok in 12.92s)
+[f452-rotate-on1-3] load: 4.96, 4.15, 3.67
+M1 single-stream : 230.7 t/s (2000 tok in 8.67s)
+M2 pair          : 204.9 t/s aggregate (1800 tok in 8.78s)
+M2 6-conc        : 266.5 t/s aggregate (3600 tok in 13.51s)
+=== round 2: OFF ===
+[off2] env STRATA_EXCHANGE_ROTATE=
+[warm-discard] load: 3.55, 3.84, 3.61
+[warm-discard] M1 single-stream : 230.8 t/s (2000 tok in 8.67s)
+[warm-discard] M2 pair          : 199.3 t/s aggregate (1800 tok in 9.03s)
+[warm-discard] M2 6-conc        : 246.3 t/s aggregate (3600 tok in 14.62s)
+[f452-rotate-off2-1] load: 4.54, 3.99, 3.66
+M1 single-stream : 209.6 t/s (2000 tok in 9.54s)
+M2 pair          : 193.4 t/s aggregate (1800 tok in 9.31s)
+M2 6-conc        : 278.0 t/s aggregate (3600 tok in 12.95s)
+[f452-rotate-off2-2] load: 5.35, 4.26, 3.77
+M1 single-stream : 236.5 t/s (2000 tok in 8.46s)
+M2 pair          : 197.2 t/s aggregate (1800 tok in 9.13s)
+M2 6-conc        : 265.2 t/s aggregate (3600 tok in 13.57s)
+[f452-rotate-off2-3] load: 3.12, 3.83, 3.65
+M1 single-stream : 209.7 t/s (2000 tok in 9.54s)
+M2 pair          : 195.4 t/s aggregate (1800 tok in 9.21s)
+M2 6-conc        : 270.5 t/s aggregate (3600 tok in 13.31s)
+=== round 2: ON ===
+[on2] env STRATA_EXCHANGE_ROTATE=1
+[warm-discard] load: 3.94, 3.75, 3.63
+[warm-discard] M1 single-stream : 219.0 t/s (2000 tok in 9.13s)
+[warm-discard] M2 pair          : 203.0 t/s aggregate (1800 tok in 8.87s)
+[warm-discard] M2 6-conc        : 245.2 t/s aggregate (3600 tok in 14.68s)
+[f452-rotate-on2-1] load: 6.67, 4.49, 3.88
+M1 single-stream : 226.4 t/s (2000 tok in 8.83s)
+M2 pair          : 206.0 t/s aggregate (1800 tok in 8.74s)
+M2 6-conc        : 253.8 t/s aggregate (3600 tok in 14.18s)
+[f452-rotate-on2-2] load: 6.10, 4.74, 4.01
+M1 single-stream : 213.5 t/s (2000 tok in 9.37s)
+M2 pair          : 197.1 t/s aggregate (1800 tok in 9.13s)
+M2 6-conc        : 269.0 t/s aggregate (3600 tok in 13.38s)
+[f452-rotate-on2-3] load: 4.80, 4.58, 3.99
+M1 single-stream : 237.7 t/s (2000 tok in 8.41s)
+M2 pair          : 213.9 t/s aggregate (1800 tok in 8.42s)
+M2 6-conc        : 279.6 t/s aggregate (3600 tok in 12.88s)
+off1 {'M1': 225.5, 'pair': 203.23333333333332, 'conc': 271.73333333333335, 'M3b': 78.63333333333334}
+on1  {'M1': 223.66666666666666, 'pair': 203.53333333333333, 'conc': 273.1666666666667, 'M3b': 76.9}
+off2 {'M1': 218.6, 'pair': 195.33333333333334, 'conc': 271.23333333333335, 'M3b': 77.63333333333334}
+on2  {'M1': 225.86666666666667, 'pair': 205.66666666666666, 'conc': 267.4666666666667, 'M3b': 78.26666666666667}
+M1: pairs -0.8% / +3.3%  mean +1.3%
+pair: pairs +0.1% / +5.3%  mean +2.7%
+conc: pairs +0.5% / -1.4%  mean -0.4%
+M3b canary: OFF 78.1% vs ON 77.6% (mean -0.7%)
+BAR: no lane below -4%: PASS - the targeted lane's +4% gain is judged on its mean above (law 2, both legs)
+CONFIG/ENV LADDER DONE — config restored, engine UP on the restored binary.
+F-271 re-pin VERIFIED (learned == gold)

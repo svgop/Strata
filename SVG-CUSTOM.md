@@ -13806,3 +13806,134 @@ force, which re-opens Maya's `--pool-workers` retest for as long as the box is u
 Restoring isolation is the operator's boot configuration; the engine-side check is one interleave,
 `STRATA_ENGINE_CPUS=8-15,24` vs unpinned, same load.  Teardown verified: engine down by pid, 8081
 closed, GPU 630 MiB, learned profile restored to the pin (md5 2ef052c1...).
+
+## F-452 — the window boundary resolved by nsys: it was launch mechanics, not the drafter; the window graph now launches from the device (ADOPTED, M1 +5.0% over 3 pairs); exchange rotation live for the first time and in the band; three corrections (F-451 B, F-229 step cost, F-23b re-open); the learned-profile question priced; two instruments repaired (2026-11-24 19:00-21:00)
+
+Operator brief: proceed, push, squeeze more decode t/s with deeper low-level work; and the observation that the
+calibration-created learned profile .bin and the cache hit % determine a good portion of performance.  Push: the five
+unpushed commits went as the `svg` user through its `gh` credential helper (this shell is root with HOME=/root; the
+root-owned strays in the operator's repo - 1,385 files, the launcher and SVG-CUSTOM.md among them - were chowned back).
+
+**CORRECTIONS (law 8):**
+1. F-451's solo boundary B = 2.3 ms mixed two lanes: "emit 0.54 + adapt wait 0.73" is the BATCH summary's wall, "draft
+   1.06" the solo decode-timing split.  Solo: commit/emit 0.01 (stdout is a pipe, F-232) + draft 1.06 + adapt wait 0.24
+   + join 0.03 = **1.34 ms**.  L1 "draft under the emit" was worth <= 0.01 ms: dead before it ran.
+2. F-229's "~50 us per step graph" is stale by 5x.  `STRATA_DRAFT_TIMING` (server boot, 11,100 rounds): round graph
+   0.390 ms as the host sees it (nsys: 103-143 us of GPU), **step graph 265 us of GPU** (50 nodes - a full block: hc reads,
+   split attention with K/V append, router + experts + shared, the 40K head, the coupled select), host gaps between step
+   graphs **0.045 ms/window** (6% of the draft).  The conditional-node drafter graph (F-451's implied L1') is priced out
+   at +0.4%: not run.
+3. F-23b banked exchange rotation as format-blocked ("the engine requires equal-size expert blocks").  The tree now
+   carries the fix - expert_source.cpp:4108, `ExchangeStorage::exchange_bytes_needed(layer_blob_bytes_, ...)`, "spares of
+   every size" - and the arm had been deleted from the launcher as dead (F-195) before that landed.  Re-opened below.
+
+**THE ANATOMY (nsys 2026-11-24; standalone `build-fresh/strata`, standing argv minus the profile save, harvest-probe.ids
+1,663 tokens, 1200-1500 new; `--cuda-graph-trace=node`, then `--sample=cpu --backtrace=dwarf`; warm = the last 38% of
+windows; evidence `campaign/results/f452-2026-11-24/nsys-anatomy.md`):**
+- Per window the GPU idles **1.13 ms median (mean 1.49, p90 3.36)** between the drafter's last step graph and the verify
+  graph's first kernel - 8.5% of a 13.3 ms round - and none of it is compute.
+- Two populations.  TYPICAL (half the windows, < 1.4 ms): post-draft host ~80 us -> `HostGraphLaunch` spawns a
+  `std::thread` (~360 us to its first CUDA call) -> **`cudaGraphLaunch` of the 1949-node window = 552 us of host time,
+  the first kernel starting 462 us into the call** (0.28 us/node); the drafter's 50-node graphs launch in 11.7 us.  The
+  main thread's samples inside these gaps: 15 of 16 in `Verifier::run`'s layer-reach spin (verify.cpp:3154, one
+  instruction, 0x4fc82f5) - a host waiting for a GPU that is waiting for the host's submission.  SLOW (every ~4th
+  window, p90 3.4 ms): `FileExpertSource::commit_exchanges()` (expert_source.cpp:4198) - the standing runs the COPY path
+  (:4218), a **2.03 MB host memcpy per swap** x 22-36 swaps per adapt round = 45-73 MB; 65 of 117 samples under
+  `__memcpy_avx512_unaligned_erms`.  A 50K-token corpus prompt made the same engine read 4.66 CPU experts/layer and
+  144 t/s: the first capture was of the wrong regime and is itself the residency datum below.
+- Graph census: the window graph is 1949 kernel nodes on 3 captured streams, **0 host nodes, 0 memsets** (the
+  `cudaLaunchHostFunc` at verify.cpp:3447 is the pool callback's stream function, outside the graph).
+
+**ARM B - `STRATA_VERIFY_DEVICE_LAUNCH=1` (new; default off in the engine; ADOPTED in the launcher):**
+- Design: the same window graphs instantiated with `cudaGraphInstantiateFlagDeviceLaunch` and uploaded at capture
+  (`Verifier::make_dev_exec`, verify.cpp); the host launches a ONE-NODE parent graph whose kernel tail-launches the
+  window (`window_dev_launch_node`, verify_kernels.cu; `exec_devp_[T]` / `exec_devp_nr_[T]`; a decline prints once and
+  drops `dev_launch_`, the host launch serving the windows).  No helper thread.  The three serial launch sites
+  (run / prelaunch / pl_launch) share `dev_exec(T)`; the batch lane's graphs (`exec_bm_`) keep the host launch - the
+  named v1 scope, and the interleave's untouched control.
+- The CUDA rule, learned on a 29-line test (`/tmp/f452-dl`): a device graph may only be launched from INSIDE a graph
+  (Programming Guide 4.2.6.2); a stream-launched launcher kernel gets `cudaErrorNotSupported` at launch, with or without
+  `-rdc=true`, while CDP itself works on this driver (615.71.09, kernel 7.2.15, sm_120).  The one-node parent form
+  works and keeps the stream contract (work after the parent waits for the window; no relocatable device code).
+- Mechanism proof (nsys, flag on, same standalone): device launch latency **3.5 us** (parent kernel end -> first
+  window kernel), the one-node host launch 7.9 us, boundary **median 1126 -> 31 us** (p10 21); "device launch armed"
+  on all 8 window sizes.
+- Identity.  The UNTOUCHED recipe is not reproducible run to run: sampled flag-off runs 566 vs 623 rounds with different
+  outputs (the W1 controller sizes T from measured timing; residency-biased routing reads the adaptive tier); greedy
+  flag-off runs differ too.  On a deterministic config (ROUTE_RESIDENT=0, ADAPTIVE_SPEC=0, SPEC_PROB=0, TYPICAL=0,
+  `--adapt-every 0`, temperature 0): off1 607fec6c... / off2 ae19e6f2... / **on 607fec6c...** / on2 = off2 through 282
+  of 320 tokens then one late flip.  The arm reproduced a control run exactly; the control does not reproduce itself.
+  **On the server path two CONTROL boots disagree on all three bit-check prompts** (616cc5f2/90212014/ce323043 vs
+  167f104c/7119a421/9a8fab42): `bit-check.py` is void as an oracle on the standing recipe - a sha mismatch is evidence
+  of nothing; identity is judged on a deterministic config by divergence index, and the canary is M3b.
+- Ladder (`campaign/env-ladder.sh`, label f452-devlaunch + a third quiet-box pair f452-devlaunch3; 3 legs per boot after
+  a discard): M1 211.5 -> 229.4 (**+8.4%**), 217.4 -> 218.0 (+0.3%), 215.3 -> 229.0 (**+6.4%**): **mean +5.0%**; pair
+  -0.3/+0.9/+5.1 (+1.9%); conc +1.5/+0.1/+8.6 (+3.4%); M3b +0.4/+0.4/-0.4 (flat).  Round 2 ran under load spikes to
+  6-7 (OFF legs 204.6/229.1/218.5) and is the weak pair.  Engine accounting for the M1 request, ms/window: OFF 11.9-13.3
+  (mean 12.74), ON 11.8-12.2 (mean 12.17, one 15.0 outlier) - the trace's -1.1 ms as the engine books it.  The lane's
+  own noise tonight: an 18% spread inside one control boot (196.1 -> 231.1), leg 1 lowest every boot.
+- Adoption: launcher line with rollback `STRATA_VERIFY_DEVICE_LAUNCH=0`; champion archived `engine/strata.pre-f452`
+  (0e6c5dc9), new 9c8a4567; commit 465b4b617.  VRAM: the eight device images + parents cost ~6 MiB per window size
+  (~50 MiB; the per-T capture step went 5-6 -> 12 MiB against 1.6 GiB of headroom).
+- **MMLU gate on the adopted state - an ESCALATION-FLOOR ITEM for the operator.**  Not owed for a bitwise change,
+  run anyway (a first-run launch path): ON **92.86 / 92.86** (65/70 twice; the same five questions, four of them with
+  DIFFERENT wrong answers across the two runs), same-box control boot (flag verified 0 on the process, same hour)
+  **94.29** (66/70).  One question under the 93.3 floor, on a 70-question suite whose sigma is 2.8-3.1 points, on an
+  engine whose answers are not reproducible run to run (above).  The identity oracle that can resolve it is the
+  deterministic config (passed); a 70-question suite cannot resolve a one-question delta - the >= 534q gate remains
+  the instrument owed.  The adoption stands on the lane law (3 pairs, +5.0% M1, no lane below -4%), the flat M3b
+  canary and the identity test; `STRATA_VERIFY_DEVICE_LAUNCH=0` is the rollback.  Evidence:
+  `campaign/results/mmlu-f452-{devlaunch-stand,devlaunch-stand2,ctl-off}.json`, `campaign/results/f452-2026-11-24/mmlu-gate-*.out`.
+
+**ARM A - `STRATA_EXCHANGE_ROTATE=1` (zero code): LIVE on this box for the first time, and IN THE BAND - not adopted,
+recorded, banked with its mechanism.**  Banner: `strata serve: exchange rotation: 31536 blocks, 67618969600 host memcpy
+bytes avoided (cumulative payload)` over one ladder session; F-23b's blocker is gone in practice.  Ladder on the new
+standing (label f452-rotate, 2 pairs x 3 legs): M1 225.5 -> 223.7 (-0.8%), 218.6 -> 225.9 (+3.3%), mean +1.3%; pair +2.7%;
+conc -0.4%; M3b 78.1 vs 77.6.  Per-request ms/window for the M1 request: OFF 12.00 (clean boots) vs ON 11.90 / 12.17 - no
+movement.  MECHANISM: in serve mode the copy path's memcpy runs on the adapt JOB thread and was already off the critical
+path (the main thread's join reads 0.03 ms); the 3-6 ms slow gaps in the standalone capture were that path's INLINE adapt
+round - a standalone artifact, not a server term (the typical gaps, the launch latency, are real in both and are Arm B's
+win).  The rotation still deletes 2.03 MB x 31,536 = 67.6 GB of host memcpy per session (memory bandwidth beside the
+DDR-bound pool, ~15 GB/s for ~0.5 ms per four windows: ~0.1 ms per four windows - noise).  Re-opens when the adapt round
+lands on the main thread (a standalone or single-threaded serve shape) or when pool bandwidth becomes the binding term.
+Default off; not in the launcher; the engine keeps the arm.
+
+**THE LEARNED PROFILE AND THE HIT RATE, PRICED (the operator's observation, audited read-only):**
+- The standing recipe loads `data/expert-profile.bin` - the gold profile (mtime 10-14, 24,576 ranked pairs, boot
+  fingerprint f22e85411ce4aa82).  `--expert-profile-save data/expert-profile-learned.bin` is WRITE-ONLY: the learned
+  file enters no decision (F-195 exonerated it as a drift suspect for the same reason).  The gold profile decides the boot
+  fill (global top-9,900 of 24,576 (layer, expert) pairs = 40.3%, 141-265 per layer), PINCAP 48 per layer (2,304
+  un-evictable slots) and the save's tiebreak.  "Calibration" is `campaign/calibrate-tier.sh` (F-391: a `--dump-routing`
+  boot replayed offline by `tools/replay_cache_policy.py`); nothing runs it at runtime.
+- Hit rate (M1 request, leg 2): 48 layers x 512 experts, top-10; 9,900 slots at 2.03 MB; entries per window VRAM 1,883.1
+  (97.5%) / PCIe 6.4 (0.3%) / CPU 42.2 (2.2%); 8.9 swaps/window.  Miss cost (same-boot least squares, n = 63): pool wall
+  **60.1 +/- 1.7 us per distinct CPU expert**; ms/window = 7.70 + 1.08 T + 0.0671 C_distinct, all of it in "per-layer
+  host", none in GPU-reach wait - fully exposed.  With the induced swap churn (0.28 swaps per miss, 29 us each): 67 us
+  net per distinct CPU expert = **1.18 ms per hit-point = +8% t/s per point**.  The whole CPU tier is 2.2 points = 2.6 ms
+  = +18%: the ceiling of the placement axis, and not reachable by policy - F-412 swept every/decay/swaps in replay
+  (share 0.8868 -> 0.9049) and read +1.5% M1 / -4.0% conc on the leg; banked.
+- The hit rate is partly MANUFACTURED: `STRATA_ROUTE_RESIDENT=0.75` re-picks the target's ranks 6-9 toward resident
+  experts (verify.cpp:2090; exit counters: 719,629 of 727,512 non-resident tail picks swapped, 98.9%) - a quality axis
+  adopted under F-200 with two MMLU gates.  Raising the number further means re-routing more, not placing better; every
+  placement change is token-stream-coupled (ROUTE_RESIDENT, ROUTE_RESIDENT_MTP, ROUTE_TAIL_SKIP read the table).
+- Verdict on the axis: placement is at its ceiling; what the profile governs is the 2.6 ms of exposed pool time, and
+  only a second window in flight hides it (F-223's theorem stands).  The profile matters exactly as much as a miss costs.
+
+**TWO INSTRUMENTS REPAIRED (law 11; the F-205 class):**
+1. `campaign/env-ladder.sh` ran `set -u` over the optional `PUBLISH_ENV`: any invocation that did not export it aborted
+   the boot line before launching, the health loop timed out in silence after 500 s, and every leg read 0 tok while
+   `probe-lane.py` swallowed the exception.  Fixed: `${PUBLISH_ENV:-}` at the three sites, an ABORT when /health never
+   answers, and a probe that prints the request failure once per class.  Every ladder since PUBLISH_ENV was introduced
+   without it was a silent no-op.
+2. The bit-check oracle (above).
+
+**ENV:** `isolcpus` still empty (unpinned all day; the conc lane reads 262-275 against a 307.6 bank from the isolated
+box - the pin interleave is owed before any conc verdict).  State at close: engine stopped by pid, 8081 closed, profile
+re-pinned to `pinned-1357` (2ef052c1) per the standing procedure, root-owned strays chowned back to `svg`.  Two profile
+bookkeeping defects, recorded: (a) two pins exist - the ladder's F-271 structure re-pins the learned file to
+`expert-profile-gold.bin` (3322da6f), the 11-24 session procedure to `pinned-1357` - neither is loaded by the standing
+recipe, so behavior is unaffected; (b) **the ladder's re-pin is undone by its own restore boot**: the engine saves the
+learned profile at exit, so the stop after "re-pin VERIFIED" wrote a fresh traffic profile (4871c4ea) over the pin.  The
+re-pin must run after the final engine stop, or the restore boot must run with the save disabled.
+
+Tracker: solo 225.5 banked (3 ON boots x 3 legs; the previous bank 220.6); conc as a note row (the unpinned box), not a point.

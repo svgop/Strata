@@ -1,0 +1,11 @@
+# F-452 draft anatomy - STRATA_DRAFT_TIMING (server boot 2026-11-24 19:02, logs/custom-iq3_s.log)
+
+strata mtp draft timing: 300 rounds, 1.66 steps/round: wall 0.791 ms = round graph 0.310 + steps 0.336 GPU (0.202 per step) + host gaps between graphs 0.070 + tail 0.004 (per round)
+strata mtp draft timing (host, per round): staging 0.000, graph launch calls 0.009, PLE prefetch 0.000, wait for draft 0 0.389, waits for the steps 0.380
+strata mtp draft timing: 600 rounds, 1.90 steps/round: wall 0.912 ms = round graph 0.316 + steps 0.383 GPU (0.202 per step) + host gaps between graphs 0.109 + tail 0.004 (per round)
+strata mtp draft timing (host, per round): staging 0.000, graph launch calls 0.010, PLE prefetch 0.000, wait for draft 0 0.423, waits for the steps 0.465
+strata mtp draft timing: 900 rounds, 1.87 steps/round: wall 0.918 ms = round graph 0.324 + steps 0.401 GPU (0.214 per step) + host gaps between graphs 0.102 + tail 0.005 (per round)
+strata mtp draft timing (host, per round): staging 0.001, graph launch calls 0.009, PLE prefetch 0.000, wait for draft 0 0.418, waits for the steps 0.473
+
+# the M1 request's decode timing on the same boot (STRATA_DECODE_TIMING)
+strata decode timing: 558 windows, avg T 3.20, 2.67 tokens/window, 13.04 ms/window = verify 11.70 (GPU-reach wait 8.96 + per-layer host 2.19 [plan 0.09 actq 0.05 jobs 0.13 CPU 1.74] + stage 0.07) + commit/emit 0.01 + draft 1.06; per layer-window: CPU experts 0.61 (0.72 entries), VRAM hits 31.14, PCIe 0.10; adapt wait 0.24 join 0.03, 6.9 swaps/window

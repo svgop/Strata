@@ -181,3 +181,5 @@ deepseek,2026-11-10,912b4069,DS POST-REBOOT WARM BENCH (see solo row for witness
 qwen,2026-11-20,f55ba500,F-408 quiet-window bank (5 boots legs 2-3 spread 1.5%),solo,220.6,0,mean
 qwen,2026-11-20,f55ba500,F-408 record leg (boot 5 leg 3),solo,228.7,0,best
 qwen,2026-11-20,f55ba500,F-405 organ declared+armed hostalloc; pair lane retired per operator (concurrent is the multi-lane),note,0,0,note
+qwen,2026-11-24,465b4b617,F-452 standing bank: window graph launched from the device (3 ON boots x 3 legs 229.4/218.0/229.0; same-window OFF 211.5/217.4/215.3 = 214.7),solo,225.5,0,mean
+qwen,2026-11-24,465b4b617,F-452 conc on an unpinned box (isolcpus empty): ON 273.8/263.8/274.7 = 270.8 vs same-window OFF 262.1; below the 11-09 bank 307.6 for the box state - not the change - no point,note,0,0,note

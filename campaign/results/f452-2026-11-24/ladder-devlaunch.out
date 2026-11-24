@@ -1,0 +1,92 @@
+lane binary saved: 9c8a4567
+=== round 1: OFF ===
+[off1] env STRATA_VERIFY_DEVICE_LAUNCH=
+[warm-discard] load: 2.32, 1.78, 1.29
+[warm-discard] M1 single-stream : 203.6 t/s (2000 tok in 9.82s)
+[warm-discard] M2 pair          : 189.8 t/s aggregate (1800 tok in 9.48s)
+[warm-discard] M2 6-conc        : 265.4 t/s aggregate (3600 tok in 13.56s)
+[f452-devlaunch-off1-1] load: 3.13, 2.11, 1.43
+M1 single-stream : 224.1 t/s (2000 tok in 8.93s)
+M2 pair          : 194.2 t/s aggregate (1800 tok in 9.27s)
+M2 6-conc        : 268.4 t/s aggregate (3600 tok in 13.41s)
+[f452-devlaunch-off1-2] load: 3.53, 2.40, 1.56
+M1 single-stream : 213.5 t/s (2000 tok in 9.37s)
+M2 pair          : 196.6 t/s aggregate (1800 tok in 9.16s)
+M2 6-conc        : 275.0 t/s aggregate (3600 tok in 13.09s)
+[f452-devlaunch-off1-3] load: 3.28, 2.56, 1.66
+M1 single-stream : 197.0 t/s (2000 tok in 10.15s)
+M2 pair          : 194.4 t/s aggregate (1800 tok in 9.26s)
+M2 6-conc        : 265.6 t/s aggregate (3600 tok in 13.56s)
+p1: 320 tok, sha256 616cc5f240b5381f..., 2.8s
+p2: 320 tok, sha256 902120147089115f..., 2.79s
+p3: 320 tok, sha256 ce323043f45df983..., 3.19s
+saved /home/svg/LLM/strata-custom-2/campaign/results/f209-bit-f452-devlaunch-off.json
+=== round 1: ON ===
+[on1] env STRATA_VERIFY_DEVICE_LAUNCH=1
+[warm-discard] load: 5.17, 3.37, 2.07
+[warm-discard] M1 single-stream : 224.8 t/s (2000 tok in 8.90s)
+[warm-discard] M2 pair          : 204.2 t/s aggregate (1800 tok in 8.81s)
+[warm-discard] M2 6-conc        : 250.4 t/s aggregate (3600 tok in 14.38s)
+[f452-devlaunch-on1-1] load: 4.36, 3.41, 2.15
+M1 single-stream : 224.2 t/s (2000 tok in 8.92s)
+M2 pair          : 186.1 t/s aggregate (1800 tok in 9.67s)
+M2 6-conc        : 265.6 t/s aggregate (3600 tok in 13.55s)
+[f452-devlaunch-on1-2] load: 4.42, 3.62, 2.28
+M1 single-stream : 236.5 t/s (2000 tok in 8.46s)
+M2 pair          : 190.9 t/s aggregate (1800 tok in 9.43s)
+M2 6-conc        : 267.1 t/s aggregate (3600 tok in 13.48s)
+[f452-devlaunch-on1-3] load: 3.92, 3.61, 2.35
+M1 single-stream : 227.4 t/s (2000 tok in 8.79s)
+M2 pair          : 206.4 t/s aggregate (1800 tok in 8.72s)
+M2 6-conc        : 288.8 t/s aggregate (3600 tok in 12.47s)
+p1: 320 tok, sha256 361961562e68ec87..., 2.16s
+p2: 320 tok, sha256 9831a1a152411539..., 1.93s
+p3: 320 tok, sha256 3ca7bc18a199201a..., 1.96s
+saved /home/svg/LLM/strata-custom-2/campaign/results/f209-bit-f452-devlaunch-on.json
+=== round 2: OFF ===
+[off2] env STRATA_VERIFY_DEVICE_LAUNCH=
+[warm-discard] load: 3.39, 3.57, 2.49
+[warm-discard] M1 single-stream : 220.4 t/s (2000 tok in 9.08s)
+[warm-discard] M2 pair          : 203.8 t/s aggregate (1800 tok in 8.83s)
+[warm-discard] M2 6-conc        : 268.6 t/s aggregate (3600 tok in 13.40s)
+[f452-devlaunch-off2-1] load: 3.70, 3.66, 2.57
+M1 single-stream : 204.6 t/s (2000 tok in 9.77s)
+M2 pair          : 190.8 t/s aggregate (1800 tok in 9.43s)
+M2 6-conc        : 263.4 t/s aggregate (3600 tok in 13.67s)
+[f452-devlaunch-off2-2] load: 3.33, 3.54, 2.59
+M1 single-stream : 229.1 t/s (2000 tok in 8.73s)
+M2 pair          : 193.9 t/s aggregate (1800 tok in 9.28s)
+M2 6-conc        : 275.9 t/s aggregate (3600 tok in 13.05s)
+[f452-devlaunch-off2-3] load: 6.15, 4.15, 2.83
+M1 single-stream : 218.5 t/s (2000 tok in 9.15s)
+M2 pair          : 190.7 t/s aggregate (1800 tok in 9.44s)
+M2 6-conc        : 251.1 t/s aggregate (3600 tok in 14.34s)
+=== round 2: ON ===
+[on2] env STRATA_VERIFY_DEVICE_LAUNCH=1
+[warm-discard] load: 4.18, 4.37, 3.10
+[warm-discard] M1 single-stream : 213.9 t/s (2000 tok in 9.35s)
+[warm-discard] M2 pair          : 200.4 t/s aggregate (1800 tok in 8.98s)
+[warm-discard] M2 6-conc        : 262.4 t/s aggregate (3600 tok in 13.72s)
+[f452-devlaunch-on2-1] load: 4.87, 4.55, 3.22
+M1 single-stream : 217.9 t/s (2000 tok in 9.18s)
+M2 pair          : 189.9 t/s aggregate (1800 tok in 9.48s)
+M2 6-conc        : 263.0 t/s aggregate (3600 tok in 13.69s)
+[f452-devlaunch-on2-2] load: 3.50, 4.22, 3.17
+M1 single-stream : 220.6 t/s (2000 tok in 9.07s)
+M2 pair          : 195.6 t/s aggregate (1800 tok in 9.20s)
+M2 6-conc        : 269.5 t/s aggregate (3600 tok in 13.36s)
+[f452-devlaunch-on2-3] load: 7.09, 5.00, 3.48
+M1 single-stream : 215.4 t/s (2000 tok in 9.28s)
+M2 pair          : 195.2 t/s aggregate (1800 tok in 9.22s)
+M2 6-conc        : 258.8 t/s aggregate (3600 tok in 13.91s)
+off1 {'M1': 211.53333333333333, 'pair': 195.06666666666666, 'conc': 269.6666666666667, 'M3b': 76.96666666666667}
+on1  {'M1': 229.36666666666667, 'pair': 194.46666666666667, 'conc': 273.83333333333337, 'M3b': 77.2}
+off2 {'M1': 217.4, 'pair': 191.8, 'conc': 263.46666666666664, 'M3b': 76.43333333333334}
+on2  {'M1': 217.96666666666667, 'pair': 193.56666666666666, 'conc': 263.76666666666665, 'M3b': 76.86666666666667}
+M1: pairs +8.4% / +0.3%  mean +4.3%
+pair: pairs -0.3% / +0.9%  mean +0.3%
+conc: pairs +1.5% / +0.1%  mean +0.8%
+M3b canary: OFF 76.7% vs ON 77.0% (mean +0.4%)
+BAR: no lane below -4%: PASS - the targeted lane's +4% gain is judged on its mean above (law 2, both legs)
+CONFIG/ENV LADDER DONE — config restored, engine UP on the restored binary.
+F-271 re-pin VERIFIED (learned == gold)

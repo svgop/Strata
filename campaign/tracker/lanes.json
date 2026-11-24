@@ -1,6 +1,6 @@
 {
  "type": "strata-lane-trend",
- "updated": "2026-11-20",
+ "updated": "2026-11-24",
  "unit": "tok/s",
  "engines": {
   "qwen": {
@@ -512,6 +512,17 @@
      "kinds": {
       "solo": "best"
      }
+    },
+    {
+     "date": "2026-11-24",
+     "commit": "465b4b617",
+     "label": "F-452 standing bank: window graph launched from the device (3 ON boots x 3 legs 229.4/218.0/229.0; same-window OFF 211.5/217.4/215.3 = 214.7)",
+     "solo": 225.5,
+     "pair": null,
+     "conc": null,
+     "kinds": {
+      "solo": "mean"
+     }
     }
    ],
    "prefill": [
@@ -632,6 +643,11 @@
      "date": "2026-11-20",
      "commit": "f55ba500",
      "label": "F-405 organ declared+armed hostalloc; pair lane retired per operator (concurrent is the multi-lane)"
+    },
+    {
+     "date": "2026-11-24",
+     "commit": "465b4b617",
+     "label": "F-452 conc on an unpinned box (isolcpus empty): ON 273.8/263.8/274.7 = 270.8 vs same-window OFF 262.1; below the 11-09 bank 307.6 for the box state - not the change - no point"
     }
    ]
   },

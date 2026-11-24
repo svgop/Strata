@@ -1,0 +1,46 @@
+lane binary saved: 9c8a4567
+=== round 1: OFF ===
+[off1] env STRATA_VERIFY_DEVICE_LAUNCH=
+[warm-discard] load: 1.76, 3.35, 3.19
+[warm-discard] M1 single-stream : 216.4 t/s (2000 tok in 9.24s)
+[warm-discard] M2 pair          : 207.9 t/s aggregate (1800 tok in 8.66s)
+[warm-discard] M2 6-conc        : 257.7 t/s aggregate (3600 tok in 13.97s)
+[f452-devlaunch3-off1-1] load: 3.79, 3.60, 3.28
+M1 single-stream : 196.1 t/s (2000 tok in 10.20s)
+M2 pair          : 201.3 t/s aggregate (1800 tok in 8.94s)
+M2 6-conc        : 256.0 t/s aggregate (3600 tok in 14.06s)
+[f452-devlaunch3-off1-2] load: 4.72, 3.91, 3.40
+M1 single-stream : 218.6 t/s (2000 tok in 9.15s)
+M2 pair          : 188.4 t/s aggregate (1800 tok in 9.56s)
+M2 6-conc        : 254.4 t/s aggregate (3600 tok in 14.15s)
+[f452-devlaunch3-off1-3] load: 4.82, 4.05, 3.48
+M1 single-stream : 231.1 t/s (2000 tok in 8.66s)
+M2 pair          : 203.1 t/s aggregate (1800 tok in 8.86s)
+M2 6-conc        : 248.7 t/s aggregate (3600 tok in 14.47s)
+=== round 1: ON ===
+[on1] env STRATA_VERIFY_DEVICE_LAUNCH=1
+[warm-discard] load: 4.17, 4.11, 3.57
+[warm-discard] M1 single-stream : 245.0 t/s (2000 tok in 8.16s)
+[warm-discard] M2 pair          : 209.0 t/s aggregate (1800 tok in 8.61s)
+[warm-discard] M2 6-conc        : 289.1 t/s aggregate (3600 tok in 12.45s)
+[f452-devlaunch3-on1-1] load: 5.01, 4.35, 3.68
+M1 single-stream : 235.2 t/s (2000 tok in 8.50s)
+M2 pair          : 209.0 t/s aggregate (1800 tok in 8.61s)
+M2 6-conc        : 280.1 t/s aggregate (3600 tok in 12.85s)
+[f452-devlaunch3-on1-2] load: 3.92, 4.21, 3.66
+M1 single-stream : 225.2 t/s (2000 tok in 8.88s)
+M2 pair          : 205.3 t/s aggregate (1800 tok in 8.77s)
+M2 6-conc        : 272.5 t/s aggregate (3600 tok in 13.21s)
+[f452-devlaunch3-on1-3] load: 4.98, 4.41, 3.75
+M1 single-stream : 226.7 t/s (2000 tok in 8.82s)
+M2 pair          : 208.6 t/s aggregate (1800 tok in 8.63s)
+M2 6-conc        : 271.6 t/s aggregate (3600 tok in 13.25s)
+off1 {'M1': 215.26666666666665, 'pair': 197.6, 'conc': 253.03333333333333, 'M3b': 76.96666666666667}
+on1  {'M1': 229.03333333333333, 'pair': 207.63333333333333, 'conc': 274.73333333333335, 'M3b': 76.66666666666667}
+M1: pairs +6.4%  mean +6.4%
+pair: pairs +5.1%  mean +5.1%
+conc: pairs +8.6%  mean +8.6%
+M3b canary: OFF 77.0% vs ON 76.7% (mean -0.4%)
+BAR: no lane below -4%: PASS - the targeted lane's +4% gain is judged on its mean above (law 2, both legs)
+CONFIG/ENV LADDER DONE — config restored, engine UP on the restored binary.
+F-271 re-pin VERIFIED (learned == gold)
