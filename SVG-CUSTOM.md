@@ -13737,3 +13737,72 @@ because the SAMPLING stream is fixed but the distribution it draws from is not. 
 temperature>0 amplifies; greedy collapses it to near-boundary flips only.  Secondary mechanisms:
 GPU-hit vs CPU-miss native numerics (path mix moves even shadow-off), client-passed seeds,
 coupled draft sampling.  Falsifier ladder recorded in the doc's battery section.
+
+## F-451 — the principal low-level lexicon (96 terms) and the window re-formulated: the boundary is three serial streams that depend on nothing of each other; the "machinery dominates the GEMV" reading corrected on measurement; the box is running unpinned
+
+Operator brief 2026-11-24: formulate as a principal inference engineer - better code, better
+logic, better code routing - through >= 60 low-level terms, then investigate through them.  The
+lexicon was built from the tree and the record, not from a textbook: every term is bound to a
+site (`file:line`) or a measured number, and classed live / banked / open.  Dossier:
+`campaign/research/2026-11-24-principal-lowlevel-lexicon.md` (Part I the lexicon, Part II the
+investigation and the priced queue).
+
+**THE DIAGNOSTIC (one boot, standing recipe, env verified on the engine process, profile pinned
+and restored):** `STRATA_VERIFY_PROFILE=1 STRATA_DECODE_TIMING=1`, leg 1 discarded (197.1), leg 2
+M1 206.3 instrumented (the `gpu_stamp` nodes cost a few percent - a diagnostic, no tracker point).
+The M1 request's stage map (558 windows, 3.20 rows; 13.09 ms of stage time in a 14.70 ms wall):
+VRAM-hits grouped kernel 2.30 (17.6%) | copy+combine 1.03 | router+plan+bell 0.94 | shared+quant
+0.91 | waits A/B + PCIe + gap 0.97 | attention blocks 4.39 (33.5%) | **hyper-connections 2.20
+(16.8%: down 1.00 / up 1.13 / norm 0.07)** | head 0.36.  Host split per window: GPU-reach 8.96 +
+per-layer host 2.19 **[plan 0.09, actq 0.05, jobs 0.13, CPU 1.74]** + **draft 1.06** + adapt
+wait 0.24 / join 0.03.  Conc on the same boot (5.0 rows): reach 0.36-0.64.  Evidence:
+`campaign/results/lex-2026-11-24/{probe-leg2-profile.txt,engine-anatomy-lines.txt}`.
+
+**THREE CORRECTIONS TO THE WORKING MODEL (law 8):**
+1. "GPU-reach wait" is the GPU EXECUTING the dense chain between handshakes (8.0 ms at T=1, 8.96
+   at T=3.2), not idle.  F-414's starvation is real at the boundary and in the CPU-rows spin; the
+   reach term was misread as idle.  The window is now one equation: **t/s = 1000·R / (F + m·T +
+   B)**, F = 8.4 (HBM-bound; the VRAM-hits stage implies ~1 TB/s on the 5090 - at its floor at
+   this quant), m = 1.57 (0.26 dense + 0.6 extra CPU misses + 0.5 commit/draft/emit growth), B =
+   2.3 solo (emit 0.54 + adapt wait 0.73 + draft 1.06), R = 3.21.
+2. The F-417 note's "machinery dominates the GEMV at ~1 miss/layer" is FALSE on measurement: plan +
+   actq + jobs = 0.27 ms of the 2.75 ms CPU term; the term is the pool's DRAIN.  The serial
+   `act_quant_q8_1` between phases is ~24 us/window - an exact fold into phase A's workers (each
+   task owns a contiguous ff slice, pool.cpp:955) buys nothing.  Priced out, banked.
+3. The boundary has a third term F-414 did not name: the draft, 1.06 ms/window SERIAL in solo -
+   the loop calls the launch->spin->sync `mtp.draft()` (generate.cpp:17160), the form F-206 split
+   for the batch lane and never for solo.
+
+**THE PRICED QUEUE (needles before legs, law 15; ship order = structure then compose):**
+- **L1 draft under the emit** - `draft_launch` -> `fflush` -> `draft_finish` in the solo loop: the
+  two share no data (the fflush at :17141 precedes draft() at :17160).  <= 0.54 ms -> +3.7%.  A
+  MOVE (law 9 §3), bitwise output.
+- **L2 adapt wait as a stream dependency** - the window graph waits `adapt_ev` on-stream instead
+  of the host's `cudaEventSynchronize` (:10760): 0.3-0.73 ms -> +2-5%.  ADAPT_OVERLAP took this
+  1.03 -> 0.28-0.62; this is the remainder.
+- **L1+L2 one commit: +5-8% composed, no gate owed beyond M3b-in-band.**
+- **L3 the speculative next window on one GPU** (pipeline-windows-2's substrate, built for two
+  cards): K+1's rows fill K's stalls on the guess K is accepted whole (p^2 ~ 37% at T=3): up to
+  2.3 ms when right -> +6-8% net.  The structural one (F-223 -> F-233's solo form).
+- L4 prefix-memoized residency (the 11-24 m1-regression L1): +8-10% on first-of-signature traffic.
+- L5 H5 re-laddered AFTER L1-L3 (the controller cuts less as m and B fall).
+- L6 hc absorption (R37, never executed): down-mix 1.00 ms -> net 0.4-0.7 -> +3-5%; static-only is
+  lossy at n=4 -> MMLU gate.  L7 R29's surviving bell term (0.94): <= 0.5 -> +3-4%.  L8 IQ2 expert
+  requant: +7-10% ceiling, a NAMED capability axis (law 16, Pareto rule).  L9 acceptance (retrain):
+  +0.01 p -> +3.3% R, blocked on windows.npy.
+
+**NOT LEVERS (banked):** shared+quant hoist (F-362: G=1 - the 0.91 is real cost); pool spin
+threshold (F-346 null); speculative publish / RouterLookahead compute (F-348, Jaccard 0.232 - the
+11-20 note re-proposes it without the citation; it does not re-open); node count (neutral); slot
+count (917 MiB free against the vision reserve); profile-calibrated hit rate (F-412).
+
+**ENVIRONMENTAL FINDING - DISCLOSED:** `/sys/devices/system/cpu/isolated` is EMPTY and the cmdline
+carries no isolcpus/nohz_full/rcu_nocbs (box up since 10:57).  By `launch::isolated_cpus`'s own
+law the engine ran UNPINNED all day - the 14:08 bench (236.9), the anatomy runs, this diagnostic.
+Neutral on a quiet box (the launcher's measured law); under housekeeping load the 11-18 falsifier
+read same-CCD 232.6 vs other-CCD 120.9.  Consequences: today's numbers and the 11-20 bank may
+differ on the pin axis, not the hour; the pool's one-worker-per-isolated-core placement is not in
+force, which re-opens Maya's `--pool-workers` retest for as long as the box is unisolated.
+Restoring isolation is the operator's boot configuration; the engine-side check is one interleave,
+`STRATA_ENGINE_CPUS=8-15,24` vs unpinned, same load.  Teardown verified: engine down by pid, 8081
+closed, GPU 630 MiB, learned profile restored to the pin (md5 2ef052c1...).
