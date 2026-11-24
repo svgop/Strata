@@ -13,15 +13,15 @@ Everything that made the 2026-11-23 window real, in one place. Two tools own the
 # 2. Capture: teacher-forced ±arms through the legacy pack, every position's residual dumped.
 .venv/bin/python campaign/vector-capture.py capture \
   --elicit campaign/results/vec-2026-11-23/01-r02-dose/elicit.jsonl \
-  --out /home/svg/LLM/Custom-data/persona-vectors/capture/<run> --per-cell 12 --resume
+  --out /mnt/DATA/LLM/Models/GGUF/strata/Custom-data/persona-vectors/capture/<run> --per-cell 12 --resume
 
 # 3. Reduce + rank: d′/prominence/coherence report per trait.  A clean "no candidate" is a RESULT.
-.venv/bin/python campaign/vector-capture.py report --out /home/svg/LLM/Custom-data/persona-vectors/capture/<run>
+.venv/bin/python campaign/vector-capture.py report --out /mnt/DATA/LLM/Models/GGUF/strata/Custom-data/persona-vectors/capture/<run>
 
 # 4. Build the row: dump slot k -> direction.<k-1>; row = rho * mean||h_slot|| * v̂,
 #    refusal-orthogonalized; --project-router strips the router-visible component (see physics).
 .venv/bin/python campaign/vector-capture.py build \
-  --out /home/svg/LLM/Custom-data/persona-vectors/capture/<run> --slot 9 --trait assertive \
+  --out /mnt/DATA/LLM/Models/GGUF/strata/Custom-data/persona-vectors/capture/<run> --slot 9 --trait assertive \
   --rho 1.0 --project-router 12 --out-dir /mnt/DATA/LLM/Models/GGUF/vectors
 
 # 5. Dose ladder, base context (mechanism isolation): the bracket is the science.
@@ -101,7 +101,7 @@ Single boots (interleaves, knee probes): `vector-lab.py ab --label L --vector F 
   `down` returns.
 - `build` refuses overwrites and out-of-range slots; `capture` aborts on any failed boot, row-count
   mismatch, or non-finite slot in the usable range.
-- Raw dumps/npz live in `/home/svg/LLM/Custom-data/persona-vectors/` (never the repo); evidence
+- Raw dumps/npz live in `/mnt/DATA/LLM/Models/GGUF/strata/Custom-data/persona-vectors/` (never the repo); evidence
   JSON/MD under `campaign/results/`; standing config/launcher/engine binary are fences — a
   fences.txt before/after block rides on every ladder.
 
@@ -113,6 +113,8 @@ plain slot-9 @0.3 deployed: **WINDOW** (ass 12/4, ser 13/1, dir 12/3, facts 1.00
 (add, 8-8) + refusal-r as table 2 (project, 1-47) — a two-table engine extension
 (`--control-vector-scaled2/--cvec-mode2/--control-vector-layer-range2`, per-entry mode composition;
 paritied, gate-verified, deployed-verified). Vectors:
-`…/vectors/qwen3.8-flash-next-persona-r03-r03s9rnsp-s9-rho1.gguf` (adopted, direction.8, norm
-1.0261) and `…r03-r03s9-s9-rho1.gguf` (plain, the 0.3 fallback). Source capture `r03-run1`,
-means.npz sha16 `55be45efa4d6cef2`. Rollback: `engine/strata.pre-phase-gate` + drop the `*2`/phase config block (or git).
+`/mnt/DATA/LLM/Models/GGUF/vectors/qwen3.8-flash-next-persona-r03-r03s9rnsp-s9-rho1.gguf` (adopted,
+direction.8, norm 1.0261). The plain (unprojected) row is not kept on disk: it is a rebuild -
+`vector-capture.py build --trait assertive --slot 9 --rho 1` without `--project-router` - from the
+source capture `r03-run1`, means.npz sha16 `55be45efa4d6cef2`. The vectors directory holds only what
+a config loads plus the one build input the adopted row's recipe reads (`refusal-v2-primary`). Rollback: `engine/strata.pre-phase-gate` + drop the `*2`/phase config block (or git).

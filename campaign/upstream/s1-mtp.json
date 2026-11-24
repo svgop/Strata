@@ -1,5 +1,5 @@
 {
- "exe": "/home/svg/LLM/data/references/Strata-v0242/build/strata",
+ "exe": "/mnt/DATA/LLM/Models/GGUF/strata/data/references/Strata-v0242/build/strata",
  "args": [
   "--pack",
   "/home/svg/LLM/data/packs/iq3_s",

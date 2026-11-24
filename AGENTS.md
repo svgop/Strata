@@ -288,7 +288,7 @@ line before suspecting config or code.
 
 No loose files, no ad-hoc scripts, no mystery artifacts. Everything has exactly one home:
 
-**`/home/svg/LLM/Custom-data/` is the data home** (never in git, never in /tmp, never at repo root):
+**`/mnt/DATA/LLM/Models/GGUF/strata/Custom-data/` is the data home** (never in git, never in /tmp, never at repo root):
 
     harvest/records/   records-<shard>.f32 (engine dumps) + derived indexes (windows.npy — starts are PER-SHARD indices)
     harvest/corpus/    token-id inputs (stream-N.ids, manifests) that generated the records
@@ -297,14 +297,16 @@ No loose files, no ad-hoc scripts, no mystery artifacts. Everything has exactly 
     mtp/ckpts/         ALL training state: cycle-last.pt (rolling), cycle-best.pt, history.jsonl
     mtp/export/        trainer export output (dense_rt2.bin/.txt, staged atomically)
 
-    Where the bulk lives (consolidation 2026-11-24): `harvest/`, `mtp/` and `data/references/` are
-    SYMLINKS into `/mnt/DATA/LLM/Models/GGUF/strata/` (`Custom-data/harvest`, `Custom-data/mtp`,
-    `data/references`) — the 3.7 TB disk owns the tens of GB, the NVMe owns code and small scratch, and
-    every script keeps the paths above. `harvest/records` is itself an alias of the staged
-    `records-round2-aligned` shards. Resolve through the links; never copy the data back to `/home`.
-    The slot caches are the other bulk: the standing's `~/LLM/data-rt/conversation-slots` is the
-    operator's parked conversations (untouchable from a lab); the lab's own slot scratch lives under
-    `Custom-data/vector-lab/` and is reclaimed by every clean `down`.
+    Re-pathed 2026-11-24 (operator directive: DATA owns all bulk; no symlinks): every consumer names
+    the DATA path directly and `/home/svg/LLM` holds no data tree. The layout follows the DATA estate's
+    own standard (`/mnt/DATA/LLM/Models/GGUF/strata/data/AGENTS.md`): training data in
+    `strata/Custom-data/` (harvest, mtp, persona-vectors, vector-lab scratch), runtime state in
+    `strata/data/` (`conversation-slots/` = the standing's parked conversations, untouchable from a lab;
+    `ds4-slots/` = the DS engine's; `references/` = the F-329 library). `harvest/records/` is the
+    staged round-2 shard set (formerly `records-round2-aligned`). Nothing is copied back to `/home`.
+    Lab slot scratch under `Custom-data/vector-lab/` is reclaimed by every clean `down`.
+    Known gap: `harvest/records/windows.npy` is absent and required by the trainer (indexer cache,
+    W=512/K=6/seam-law, SVG-CUSTOM:10477) - rebuild it over the 11 shards before the next cycle.
 
 **Training runs under the checkpoint system, never ad-hoc** (`campaign/retrain/train_cycle.py`):
 GPU-exclusive (8081 DOWN), launched as `~/venvs/mtp-train/bin/python campaign/retrain/train_cycle.py
@@ -312,7 +314,7 @@ GPU-exclusive (8081 DOWN), launched as `~/venvs/mtp-train/bin/python campaign/re
 a kill loses at most one interval, resume is automatic. NEVER hand-write a /tmp training script —
 extend the standing trainer. Evidence logs go to `campaign/results/fNNN-*.out`, committed.
 
-**Upstream checks (F-329 law):** the references library (`/home/svg/LLM/data/references/*`)
+**Upstream checks (F-329 law):** the references library (`/mnt/DATA/LLM/Models/GGUF/strata/data/references/*`)
 stays PRISTINE — pinned clones, no worktrees, no builds inside it. Upstream checkouts,
 builds, and test binaries live at `~/LLM/strata` (the stock tree), and derived test artifacts
 (packs, worktree builds) are DELETED at closeout — evidence + configs go to

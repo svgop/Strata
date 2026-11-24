@@ -29,7 +29,7 @@ export STRATA_DROP_CACHE_ON_EXIT=${STRATA_DROP_CACHE_ON_EXIT:-1}
 # F-389 THE CAMPAIGN'S OWN SLOT DIR (2026-11-18, measured): a battery/probe run parks the
 # conversations it creates (the probe's synthetic prompts, ~250-350 MB each) in the OPERATOR's
 # conversation slot dir and every later boot restores and re-parks them - 15 root-owned synthetic
-# slots (4.9 GB) were found sitting in /home/svg/LLM/data-rt/conversation-slots, restored at every
+# slots (4.9 GB) were found sitting in /mnt/DATA/LLM/Models/GGUF/strata/data/conversation-slots, restored at every
 # boot and re-parked.  The campaign's traffic is test rubbish until certified real traffic: it gets
 # its own dir, cleaned at the start of every battery.  The operator's dir is never touched by a
 # battery again.

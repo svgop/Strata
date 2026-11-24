@@ -56,7 +56,7 @@ The harvest = TWO passes over ONE assembled corpus, plus a ~half-day of env-gate
 
 ## 2. Data contract (what the harvest emits, and who reads it)
 
-Artifacts land under `/home/svg/LLM/Custom-data/mtp-iq3s/r18-train/` (the trainer-spec §8 layout):
+Artifacts land under `/mnt/DATA/LLM/Models/GGUF/strata/Custom-data/mtp-iq3s/r18-train/` (the trainer-spec §8 layout):
 
 ```
 r18-train/
@@ -100,7 +100,7 @@ and :141).
 
 | Source | Status | Role |
 |---|---|---|
-| MIMIC corpus (`~/LLM/Custom-data`) | **ABSENT — CONFIRMED AGAIN.** Custom-data holds only `gguf_fingerprints.json`, `models/` 78 GB, `mtp/` 6.5 GB, `mtp-iq3s/` 6.5 GB, `packs/` 1.5 GB (ls+du this session). Note: campaign lore's "mimic" = the mimicbench 64-prompt adherence benchmark (`campaign/mimicbench2.py`), not a corpus | none |
+| MIMIC corpus (`/mnt/DATA/LLM/Models/GGUF/strata/Custom-data`) | **ABSENT — CONFIRMED AGAIN.** Custom-data holds only `gguf_fingerprints.json`, `models/` 78 GB, `mtp/` 6.5 GB, `mtp-iq3s/` 6.5 GB, `packs/` 1.5 GB (ls+du this session). Note: campaign lore's "mimic" = the mimicbench 64-prompt adherence benchmark (`campaign/mimicbench2.py`), not a corpus | none |
 | `/mnt/DATA` (Windows frozen copies) | **NOT MOUNTED** — `/mnt/DATA` is an empty mountpoint; mounted NTFS volumes are `/mnt/HQ` (3.7 T, 2.4 T used), `/mnt/STORE`, `/mnt/SCRATCH` (mount/df this session). Read-allowed IF the operator mounts it; do not schedule against it | conditional only |
 | Repo technical prose (the F-236 probe's proven corpus) | PRIMARY SEED. AGENTS.md + README.md + SVG-CUSTOM.md (8,136 ln) + SVG-CUSTOM-TODO.md + `docs/*.md` (40 files, 742 KB) + `campaign/research/*.md` (43 files, 758 KB) + `campaign/*.md` ~= 2.21 MB ~= **675k tokens** at the calibrated 3.27 chars/token (depth-lane-real.py:36). Real, diverse, human/agent-written; content-matched to this campaign's actual serving mix (F-236 promoted content-matched data) | seed text |
 | `/mnt/HQ` (read-allowed, frozen) | SECONDARY SEED, <= 25% of corpus text. `store/KnowledgeBase/DATASET/` 4.5 GB (1,071 .md of 357,105 files — take md/txt only, 8-256 KB each, >= 90% printable UTF-8), `store/Repo Collection/` (repo READMEs/docs = code-adjacent prose). Diversifies domain mix (code/security/docs); gated by the one-doc A/B in §12 | optional diversifier |
@@ -256,7 +256,7 @@ deemed inert when unset (grep the boot log; the STRATA_MTP_TAP discipline).
   harvest must too), `--mtp .../mtp/rt` (the drafter stays live: Pass B's per-request final window drafts
   exactly as served, and `on_chunk` feeds it).
 - Launcher COPY `launch-custom-iq3s-harvest.sh`: standing exports verbatim + ONE added line:
-  `export STRATA_PREFILL_DUMP_R_ALL=/home/svg/LLM/Custom-data/mtp-iq3s/r18-train/records/raw-r.bf16`
+  `export STRATA_PREFILL_DUMP_R_ALL=/mnt/DATA/LLM/Models/GGUF/strata/Custom-data/mtp-iq3s/r18-train/records/raw-r.bf16`
   (and `STRATA_OPD_LOG` only in the Pass A variant of the launcher). Boot pattern = prefill-probe.sh's
   `boot()`: pkill discipline, `bash campaign/prewarm.sh`, `nohup serve/server.py --engine strata --config
   ... --port 8082`, /health poll (campaign/prefill-probe.sh:12-40).
@@ -434,7 +434,7 @@ expansion adds ~1 h of harvest.
     Assemble final corpus docs (user seed+instruction, assistant reply) into corpus.jsonl; re-check §3.3.
  4. PASS B:
       cp launch-custom-iq3s-harvest.sh launch-custom-iq3s-harvestB.sh  # swap OPD env for:
-      #   export STRATA_PREFILL_DUMP_R_ALL=/home/svg/LLM/Custom-data/mtp-iq3s/r18-train/records/raw-r.bf16
+      #   export STRATA_PREFILL_DUMP_R_ALL=/mnt/DATA/LLM/Models/GGUF/strata/Custom-data/mtp-iq3s/r18-train/records/raw-r.bf16
       pkill per prefill-probe.sh discipline; bash campaign/prewarm.sh; boot; /health.
       python campaign/t14b_harvest_driver.py harvest            # replay every doc as a FRESH conversation,
                                                                 # max_tokens=1, serial; write ledger.jsonl
@@ -527,7 +527,7 @@ Code (read this session; engine = /home/svg/LLM/strata-custom-2):
   campaign/depth-lane-real.py:30-47 (SOURCES pool, 3.27 chars/token calibration), :49-63 (request shape),
   :76-84 (acceptance-line parse); campaign/mimicbench2.py (the "mimic" benchmark, not a corpus).
 - Tools: tools/mtp_fetch.py / mtp_pack.py / mtp_rt.py (export chain context; not exercised by the harvest).
-- Rig/filesystem (verified 2026-10-18): df (/home 952 GB, 705 GB free), ls/du ~/LLM/Custom-data (no MIMIC),
+- Rig/filesystem (verified 2026-10-18): df (/home 952 GB, 705 GB free), ls/du /mnt/DATA/LLM/Models/GGUF/strata/Custom-data (no MIMIC),
   /mnt mount table (DATA unmounted; HQ/STORE/SCRATCH ntfs3), /mnt/HQ/store listing (KnowledgeBase/DATASET
   4.5 GB, Repo Collection), find for *mimic*/*corpus*/*pairs-r17* under /home/svg/LLM and .zcode (absent).
 

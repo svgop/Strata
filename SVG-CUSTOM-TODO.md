@@ -1883,7 +1883,7 @@ launch-map diet + PDL kill-switch (+ mid_chain/dec_gdn_rec); re-quant USER GO (T
 objective question feeds it); T14B retrain → 262k.
 
 ### Phase-2 alternative lane (10-24, DFlash2 quick test per user ask): weights PULLED
-- /home/svg/LLM/Custom-data/mtp/fixtures/dflash2/model.safetensors (1.206 GB, sha256 d6723f2a… verified vs LFS pointer)
+- /mnt/DATA/LLM/Models/GGUF/strata/Custom-data/mtp/fixtures/dflash2/model.safetensors (1.206 GB, sha256 d6723f2a… verified vs LFS pointer)
 - Inventory: 81 tensors / 603.1M params bf16 — 5 sliding-attn layers (32q/8kv heads, q/k norm), two-tap convs
   (attention_conv + mlp_conv per layer), MLP 7680, input fc [12800,2560] = the FIVE target taps
   (layers 5/15/25/35/45, hc-mean) concatenated, candidate_selector = rank-256 predecessor/successor

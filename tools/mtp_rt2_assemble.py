@@ -3,12 +3,12 @@
 
 Assembles the --mtp-ready rt2 drafter dir from the trainer's export:
 
-    /home/svg/LLM/Custom-data/mtp/export/dense_rt2.{bin,txt}   (trained, F-325 trainer export)
+    /mnt/DATA/LLM/Models/GGUF/strata/Custom-data/mtp/export/dense_rt2.{bin,txt}   (trained, F-325 trainer export)
   + experts.bin, draft_vocab.bin                                (FROZEN, byte-identical
                                                                  copies from the stock rt)
-    -> /home/svg/LLM/Custom-data/mtp/rt2/{dense.bin,dense.txt,experts.bin,draft_vocab.bin}
+    -> /mnt/DATA/LLM/Models/GGUF/strata/Custom-data/mtp/rt2/{dense.bin,dense.txt,experts.bin,draft_vocab.bin}
 
-The engine consumes it unchanged: `--mtp /home/svg/LLM/Custom-data/mtp/rt2` in a launcher
+The engine consumes it unchanged: `--mtp /mnt/DATA/LLM/Models/GGUF/strata/Custom-data/mtp/rt2` in a launcher
 copy (LAUNCH LAW). Verifies: 29 dense.txt lines, sizes match the manifest's byte column,
 sha256(experts/draft_vocab) == the stock source. Atomic: staged in rt2.tmp/ then renamed.
 """
@@ -20,9 +20,9 @@ import shutil
 import sys
 from pathlib import Path
 
-EXPORT = Path("/home/svg/LLM/Custom-data/mtp/export")
+EXPORT = Path("/mnt/DATA/LLM/Models/GGUF/strata/Custom-data/mtp/export")
 STOCK_RT = Path("/mnt/DATA/LLM/Models/GGUF/strata/data/mtp/rt")          # the symlink-resolved true source
-OUT = Path("/home/svg/LLM/Custom-data/mtp/rt2")
+OUT = Path("/mnt/DATA/LLM/Models/GGUF/strata/Custom-data/mtp/rt2")
 FROZEN = ("experts.bin", "draft_vocab.bin")
 
 

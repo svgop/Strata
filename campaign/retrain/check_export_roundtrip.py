@@ -30,8 +30,8 @@ sys.path.insert(0, str(REPO / "campaign" / "retrain"))
 from p2_rt_loader import RtDense   # noqa: E402
 from mtp_module import MTPDraft    # noqa: E402
 
-RT2 = Path(sys.argv[1]) if len(sys.argv) > 1 else Path("/home/svg/LLM/Custom-data/mtp/rt2")
-CKPT = Path(sys.argv[2]) if len(sys.argv) > 2 else Path("/home/svg/LLM/Custom-data/mtp/ckpts/cycle-best.pt")
+RT2 = Path(sys.argv[1]) if len(sys.argv) > 1 else Path("/mnt/DATA/LLM/Models/GGUF/strata/Custom-data/mtp/rt2")
+CKPT = Path(sys.argv[2]) if len(sys.argv) > 2 else Path("/mnt/DATA/LLM/Models/GGUF/strata/Custom-data/mtp/ckpts/cycle-best.pt")
 
 
 def rel_err(a: np.ndarray, b: np.ndarray) -> float:

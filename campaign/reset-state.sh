@@ -31,10 +31,10 @@ for i in $(seq 1 30); do
   sleep 1
 done
 rm -rf "$STRATA_CONV_SLOT_DIR"; mkdir -p "$STRATA_CONV_SLOT_DIR"
-[ "$OP" = 1 ] && rm -f /home/svg/LLM/data-rt/conversation-slots/slot-*.bin
+[ "$OP" = 1 ] && rm -f /mnt/DATA/LLM/Models/GGUF/strata/data/conversation-slots/slot-*.bin
 sync
 ( echo 3 | sudo -n tee /proc/sys/vm/drop_caches >/dev/null ) 2>/dev/null || true
-echo "reset-state: $(date +%H:%M:%S) engine stopped, campaign slots cleared: $(ls "$STRATA_CONV_SLOT_DIR" 2>/dev/null | wc -l) files; operator slots: $(ls /home/svg/LLM/data-rt/conversation-slots/ 2>/dev/null | wc -l) files; page cache dropped"
+echo "reset-state: $(date +%H:%M:%S) engine stopped, campaign slots cleared: $(ls "$STRATA_CONV_SLOT_DIR" 2>/dev/null | wc -l) files; operator slots: $(ls /mnt/DATA/LLM/Models/GGUF/strata/data/conversation-slots/ 2>/dev/null | wc -l) files; page cache dropped"
 grep -aE 'MemFree|MemAvailable' /proc/meminfo
 [ "$BOOT" = 1 ] || exit 0
 if [ "${BAR:-0}" -gt 0 ]; then

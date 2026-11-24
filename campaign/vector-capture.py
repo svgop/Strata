@@ -62,7 +62,7 @@ PACK_NATIVE = "/mnt/DATA/LLM/Models/GGUF/strata/data/packs/iq3_s"
 PLE_SHARD = ("/mnt/DATA/LLM/Models/GGUF/GSQ-RCO/qwen3.8-flash-next/gsq-iq3s/"
              "Qwen3.8-Flash-Next-GSQ-RCO-IQ3_S-00002-of-00002.gguf")
 VECTOR_DIR = pathlib.Path("/mnt/DATA/LLM/Models/GGUF/vectors")
-DUMP_HOME = pathlib.Path("/home/svg/LLM/Custom-data/persona-vectors/capture")
+DUMP_HOME = pathlib.Path("/mnt/DATA/LLM/Models/GGUF/strata/Custom-data/persona-vectors/capture")
 SLOTS, HC, N = 49, 4, 2560
 FINITE_SLOTS = 45                 # slots 0..44; 45..48 are non-finite on this store
 ROW_BYTES = SLOTS * HC * N * 4    # 2,007,040

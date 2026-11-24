@@ -1,5 +1,5 @@
 {
- "exe": "/home/svg/LLM/data/references/Strata-v0242/build/strata",
+ "exe": "/mnt/DATA/LLM/Models/GGUF/strata/data/references/Strata-v0242/build/strata",
  "args": [
   "--pack",
   "/home/svg/LLM/data/packs/iq3_s",
@@ -52,7 +52,7 @@
   "--draft",
   "dflash2",
   "--draft-model",
-  "/home/svg/LLM/Custom-data/dflash2/drafter.pack",
+  "/mnt/DATA/LLM/Models/GGUF/strata/Custom-data/dflash2/drafter.pack",
   "--vram-reserve-mib",
   "2000"
  ],

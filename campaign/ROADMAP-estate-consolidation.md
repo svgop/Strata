@@ -7,6 +7,14 @@ evidence: .docs/research/2026-11-15-estate-consolidation-study.md
 ---
 
 # ROADMAP — Estate consolidation (Strata 2 parity)
+> **Superseded 2026-11-24 (operator directive).** The data home moved to the DATA disk, not to
+> `~/LLM/data`: no symlinks, every consumer re-pathed directly. The layout follows the DATA estate's
+> own standard - `/mnt/DATA/LLM/Models/GGUF/strata/data/AGENTS.md` (training data in `strata/Custom-data/`,
+> runtime state in `strata/data/`). `/home/svg/LLM` now holds `strata-custom-2`, `strata`, `backup`, `.docs`,
+> `llm`, `.zcode` and no data tree. The consumer list in 2.3 is the closure that was re-pathed; the
+> remaining waves (stock tree, `.docs`, `llm/`) are the operator's to decide. The law of record is
+> `AGENTS.md` > Workspace organization law.
+
 
 Kill every parallel system in `/home/svg/LLM`. End state: the estate root holds
 exactly `data/`, `strata-custom-2/`, `.zcode/`; all data lives under one home

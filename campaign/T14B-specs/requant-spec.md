@@ -63,10 +63,10 @@ No-Regression absolute (SVG-CUSTOM-TODO.md:1235-1236).
 ## 1. What the pack is, and what the loader accepts (code-verified)
 
 Artifacts today:
-- Shards: `/home/svg/LLM/Custom-data/models/Qwen3.8-Flash-Next-GSQ-RCO-IQ3_S-0000{1,2}-of-00002.gguf`
+- Shards: `/mnt/DATA/LLM/Models/GGUF/strata/Custom-data/models/Qwen3.8-Flash-Next-GSQ-RCO-IQ3_S-0000{1,2}-of-00002.gguf`
   (54.82 + 28.80 GB; arch `qwen4exp`, `general.file_type 26`, tokenizer embedded,
   `qwen4exp.expert_count 512`, `expert_feed_forward_length 640` — GGUF header dump this session).
-- Pack dir: `/home/svg/LLM/Custom-data/packs/iq3_s/` — `native_experts.txt` (v3, 48 rows),
+- Pack dir: `/mnt/DATA/LLM/Models/GGUF/strata/Custom-data/packs/iq3_s/` — `native_experts.txt` (v3, 48 rows),
   `index.txt` (1,079 tensors), `dense.bin` (1.47 GiB), `conversions.json` (**zero** converted
   tensors — the GSQ-RCO file already stores every small projection in the engine's form),
   `tokenizer/`. No `experts.bin`: the engine reads experts straight from the GGUF shards.
@@ -277,8 +277,8 @@ throughput gains a proportional slice of its expert-traffic share. conc/pair gai
 ### 4.0 Workspace
 
 ```
-RQ=/home/svg/LLM/Custom-data/requant            # new: all artifacts, ~165 GB transient peak
-RQ_PACK=/home/svg/LLM/Custom-data/packs/iq3_s_rq1
+RQ=/mnt/DATA/LLM/Models/GGUF/strata/Custom-data/requant            # new: all artifacts, ~165 GB transient peak
+RQ_PACK=/mnt/DATA/LLM/Models/GGUF/strata/Custom-data/packs/iq3_s_rq1
 ```
 Everything under /home: 705 GB free; peak usage ≈ old shards (read) + merged intermediate (83.7,
 only if 4.5 needs it) + new shards (~80) + new pack (1.5) ≈ 165 GB. ≥ 500 GB stays free — the
@@ -470,7 +470,7 @@ construction. The conversation cache re-fingerprints back automatically.
 
 **Stamp procedure (banked BEFORE the first new boot):**
 ```
-mkdir -p campaign/results/requant-stamp && cd /home/svg/LLM/Custom-data
+mkdir -p campaign/results/requant-stamp && cd /mnt/DATA/LLM/Models/GGUF/strata/Custom-data
 sha256sum models/Qwen3.8-...-IQ3_S-0000{1,2}-of-00002.gguf \
           packs/iq3_s/native_experts.txt packs/iq3_s/index.txt \
           packs/iq3_s/dense.bin packs/iq3_s/conversions.json \
@@ -551,7 +551,7 @@ src/core/expert_cache.cpp:72-209 (profile read/write/rank); src/program/generate
 tools/quant_quality.py (whole; the G2 surface); tools/make_profile.py:1-58 (profile/trace
 formats); tools/quantscope.py:117-124 (type-42 identification); tools/quant_bound.py:21-32
 (routed-bytes model); campaign/battery-config.sh:1-46 (M3b line, env-source law).
-Data: /home/svg/LLM/Custom-data/packs/iq3_s/native_experts.txt (48 rows parsed, all formulas
+Data: /mnt/DATA/LLM/Models/GGUF/strata/Custom-data/packs/iq3_s/native_experts.txt (48 rows parsed, all formulas
 verified); data/expert-profile.bin + -learned (parsed: 24,576 ranks; layer shares computed);
 data/expert-profile-coder.bin (rejected, 48x256); data/gguf_fingerprints.json (family bpw table);
 GGUF shard-1 header dump; boot logs custom-iq3_s.log:34-35, custom-iq3s-adaptmtp.log:5-11

@@ -67,12 +67,12 @@ LAUNCHER = REPO / "launch-custom-iq3s-8081.sh"
 ANCHOR = "launch::exec_engine --config config/custom-iq3_s-8081.json --port 8081 --host 0.0.0.0"
 LAB_CONFIG = "config/custom-iq3_s-veclab-8081.json"      # relative: the launcher word-splits its argv
 SERVER_PATTERN = f"serve/server.py --engine strata --config {LAB_CONFIG}"
-SCRATCH = pathlib.Path("/home/svg/LLM/Custom-data/vector-lab")
+SCRATCH = pathlib.Path("/mnt/DATA/LLM/Models/GGUF/strata/Custom-data/vector-lab")
 STOCK_TEMPLATE = "/mnt/DATA/LLM/Models/GGUF/strata/data/packs/iq3_s/tokenizer/chat_template.jinja"     # base persona
 DEPLOYED_TEMPLATE = ("/mnt/DATA/LLM/Models/GGUF/GSQ-RCO/qwen3.8-flash-next/gsq-iq3s/chat_template.jinja")  # the operator's four-tier template
 EVIDENCE = REPO / "campaign/results/vec-2026-11-23"
 FENCED = [STANDING, LAUNCHER, REPO / "engine/strata", REPO / "data/expert-profile-learned.bin"]
-USER_SLOTS = pathlib.Path("/home/svg/LLM/data-rt/conversation-slots")
+USER_SLOTS = pathlib.Path("/mnt/DATA/LLM/Models/GGUF/strata/data/conversation-slots")
 URL = "http://127.0.0.1:8081"
 DROP_EXACT = {"--cvec-mode", "--cvec-dir", "--cvec-mode2", "--cvec-phase-table", "--expert-profile-save", "--expert-profile-save-every"}
 # the F-17 phase block rides with the cvec block: the lab re-arms it exactly as the standing carries it,

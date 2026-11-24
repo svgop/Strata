@@ -6,11 +6,11 @@ six depth terms (R[a+d-1] -> tok[a+d], w_deep doubled at pos>=16384 per F-235), 
 2% fixed eval split, per-depth top-1 acceptance vs the stock drafter.
 
 Data home (the F-325 Custom-data layout):
-  /home/svg/LLM/Custom-data/harvest/records/records-*.f32   {int64 pos, int64 tok, f32 R[4][2560]}
-  /home/svg/LLM/Custom-data/harvest/records/windows.npy     seam-respecting window index (exec-A)
-  /home/svg/LLM/Custom-data/mtp/fixtures/tap_head.q4        the Q4 head bytes (W_head build)
-  /home/svg/LLM/Custom-data/mtp/ckpts/                      cycle-last.pt / cycle-best.pt / history.jsonl
-  /home/svg/LLM/Custom-data/mtp/export/                     dense_rt2.bin / dense_rt2.txt (+ .tmp staging)
+  /mnt/DATA/LLM/Models/GGUF/strata/Custom-data/harvest/records/records-*.f32   {int64 pos, int64 tok, f32 R[4][2560]}
+  /mnt/DATA/LLM/Models/GGUF/strata/Custom-data/harvest/records/windows.npy     seam-respecting window index (exec-A)
+  /mnt/DATA/LLM/Models/GGUF/strata/Custom-data/mtp/fixtures/tap_head.q4        the Q4 head bytes (W_head build)
+  /mnt/DATA/LLM/Models/GGUF/strata/Custom-data/mtp/ckpts/                      cycle-last.pt / cycle-best.pt / history.jsonl
+  /mnt/DATA/LLM/Models/GGUF/strata/Custom-data/mtp/export/                     dense_rt2.bin / dense_rt2.txt (+ .tmp staging)
 
 Checkpoint contract:
   cycle-last.pt  rolling full state {model, opt, sched, step, rng, eval_history, best_mean};
@@ -66,12 +66,12 @@ def pack_q8_0(x: np.ndarray) -> bytes:
     out[:, 2:] = q.view(np.uint8)
     return out.tobytes()
 
-RECORDS_GLOB = "/home/svg/LLM/Custom-data/harvest/records/records-*.f32"
-WINDOWS_NPY = "/home/svg/LLM/Custom-data/harvest/records/windows.npy"
-HEAD_Q4 = "/home/svg/LLM/Custom-data/mtp/fixtures/tap_head.q4"
+RECORDS_GLOB = "/mnt/DATA/LLM/Models/GGUF/strata/Custom-data/harvest/records/records-*.f32"
+WINDOWS_NPY = "/mnt/DATA/LLM/Models/GGUF/strata/Custom-data/harvest/records/windows.npy"
+HEAD_Q4 = "/mnt/DATA/LLM/Models/GGUF/strata/Custom-data/mtp/fixtures/tap_head.q4"
 DRAFT_VOCAB = "/home/svg/LLM/data/mtp-en/rt/draft_vocab.bin"
-CKPT_DIR = Path("/home/svg/LLM/Custom-data/mtp/ckpts")   # module default; main() may rebind via --ckpt-dir
-EXPORT_DIR = Path("/home/svg/LLM/Custom-data/mtp/export")
+CKPT_DIR = Path("/mnt/DATA/LLM/Models/GGUF/strata/Custom-data/mtp/ckpts")   # module default; main() may rebind via --ckpt-dir
+EXPORT_DIR = Path("/mnt/DATA/LLM/Models/GGUF/strata/Custom-data/mtp/export")
 LEGACY_SEED = CKPT_DIR / "full_cycle_ckpt.pt"
 REC = 40976
 K = 6
@@ -83,11 +83,11 @@ def _verify_labels(shard: str, pos, tok):
     regenerated AFTER the harvest (records 09:05 vs corpus 09:22) — 28% poisoned labels,
     caught only at the DAgger merge. This check makes that class of bug unloadable."""
     stem = shard.replace("records-", "").replace(".f32", "")
-    ids_file = ("/home/svg/LLM/Custom-data/harvest/corpus/harvest-probe.ids"
+    ids_file = ("/mnt/DATA/LLM/Models/GGUF/strata/Custom-data/harvest/corpus/harvest-probe.ids"
                 if stem == "probe" else
-                f"/home/svg/LLM/Custom-data/harvest/corpus/stream-{stem.split('-')[-1]}.ids"
+                f"/mnt/DATA/LLM/Models/GGUF/strata/Custom-data/harvest/corpus/stream-{stem.split('-')[-1]}.ids"
                 if stem.startswith("dagger") else
-                f"/home/svg/LLM/Custom-data/harvest/corpus/{stem}.ids")
+                f"/mnt/DATA/LLM/Models/GGUF/strata/Custom-data/harvest/corpus/{stem}.ids")
     ids = np.array([int(x) for x in open(ids_file).read().strip().split(",")], dtype=np.int64)
     assert len(tok) >= len(ids) - 1, f"{shard}: {len(tok)} records vs {len(ids)} corpus ids"
     m = pos < len(ids)

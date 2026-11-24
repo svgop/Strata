@@ -48,12 +48,12 @@ below-bar at +1.81% and did NOT adopt.
 > **162,100 B, sha256 369151522226a5ed…** (measured 2026-10-21). The full-vocab `mtp/rt` file is
 > 425,196 B (b1e1d3a7a9e4bf86…). Every G0 copy step below must source the **mtp-en** file: copying
 > the 425 KB full vocab binds the WRONG contract and the pre-flight byte-audit must fail loudly on
-> a size/SHA mismatch, not silently pass. Also note `/home/svg/LLM/Custom-data` no longer exists
+> a size/SHA mismatch, not silently pass. Also note `/mnt/DATA/LLM/Models/GGUF/strata/Custom-data` no longer exists
 > (all 32 references in this spec set are stale paths) — resolve them to `/home/svg/LLM/data/`
 > before any G0 run.
 
 Inputs this spec assumes (produced by the sibling specs — none of them are gates here):
-1. `/home/svg/LLM/Custom-data/mtp/rt2/` exists: trainer-exported `dense.bin` + `dense.txt`, with
+1. `/mnt/DATA/LLM/Models/GGUF/strata/Custom-data/mtp/rt2/` exists: trainer-exported `dense.bin` + `dense.txt`, with
    `experts.bin` and `draft_vocab.bin` copied BYTE-IDENTICAL from production `rt/` (the F-114
    validated shipping config — train dense only, stock experts; T14B §2.1/§3-P4,
    campaign/research/T14B-fastmtp-training-infra.md:29, 183-186). **Production = `mtp-en/rt`
@@ -74,12 +74,12 @@ The `env` dict + per-arm `log` pattern is the existing stair50 convention
 
 | File | Deltas from custom-iq3_s-8081.json | Used by |
 |---|---|---|
-| campaign/t14b-g0-rt.json | `--mtp` -> `/home/svg/LLM/Custom-data/mtp/rt-g0`; `log` -> `custom-iq3s-t14b.log` | G0 |
-| campaign/t14b-rt2-arm.json | `--mtp` -> `/home/svg/LLM/Custom-data/mtp/rt2`; `log` -> `custom-iq3s-t14b.log` | G2, G3, G4 |
+| campaign/t14b-g0-rt.json | `--mtp` -> `/mnt/DATA/LLM/Models/GGUF/strata/Custom-data/mtp/rt-g0`; `log` -> `custom-iq3s-t14b.log` | G0 |
+| campaign/t14b-rt2-arm.json | `--mtp` -> `/mnt/DATA/LLM/Models/GGUF/strata/Custom-data/mtp/rt2`; `log` -> `custom-iq3s-t14b.log` | G2, G3, G4 |
 | campaign/t14b-g1-ctl.json | `log` -> `custom-iq3s-t14b-g1ctl.log`; `"env": {"STRATA_SPEC_DEPTH": "1"}` | G1 |
 | campaign/t14b-g1-arm.json | `--mtp` -> `.../rt2`; `log` -> `custom-iq3s-t14b-g1arm.log`; `"env": {"STRATA_SPEC_DEPTH": "1"}` | G1 |
 
-Production `--mtp` today: `/home/svg/LLM/Custom-data/mtp/rt` (custom-iq3_s-8081.json:56-57).
+Production `--mtp` today: `/mnt/DATA/LLM/Models/GGUF/strata/Custom-data/mtp/rt` (custom-iq3_s-8081.json:56-57).
 Both launchers point at this same config (launch-custom-iq3s-8081.sh:42 and
 launch-custom-iq3s-8081-conc.sh:47), so a config-level adoption propagates to both lanes.
 `rt/` is NEVER written (T14B P5, :188-193). Keep `--mtp-q4 all --mtp-hnorm stream --spec 6
@@ -123,12 +123,12 @@ Commands:
 ```
 cd /home/svg/LLM/strata-custom-2
 mkdir -p /tmp/t14b-g0
-.venv/bin/python tools/mtp_pack.py --src /home/svg/LLM/Custom-data/mtp/tensors \
+.venv/bin/python tools/mtp_pack.py --src /mnt/DATA/LLM/Models/GGUF/strata/Custom-data/mtp/tensors \
     --experts q2_0 --out /tmp/t14b-g0/mtp-roundtrip-q2_0.gguf
 .venv/bin/python tools/mtp_rt.py --gguf /tmp/t14b-g0/mtp-roundtrip-q2_0.gguf \
-    --out /home/svg/LLM/Custom-data/mtp/rt-g0
-cp /home/svg/LLM/Custom-data/mtp/rt/draft_vocab.bin \
-   /home/svg/LLM/Custom-data/mtp/rt/experts.bin /home/svg/LLM/Custom-data/mtp/rt-g0/
+    --out /mnt/DATA/LLM/Models/GGUF/strata/Custom-data/mtp/rt-g0
+cp /mnt/DATA/LLM/Models/GGUF/strata/Custom-data/mtp/rt/draft_vocab.bin \
+   /mnt/DATA/LLM/Models/GGUF/strata/Custom-data/mtp/rt/experts.bin /mnt/DATA/LLM/Models/GGUF/strata/Custom-data/mtp/rt-g0/
 # (tool usage per tools/mtp_pack.py and tools/mtp_rt.py headers; ~0.9 GB + ~0.83 GB outputs)
 bash campaign/t17-leg.sh custom-iq3_s-8081.json t14b-g0-ctl
 .venv/bin/python campaign/bit-check.py t14b-g0-ctl
@@ -428,7 +428,7 @@ Adoption (one command; both launchers read this same config, launch-custom-iq3s-
 launch-custom-iq3s-8081-conc.sh:47):
 ```
 cp custom-iq3_s-8081.json custom-iq3_s-8081.json.pre-t14b \
-  && sed 's#/home/svg/LLM/Custom-data/mtp/rt"#/home/svg/LLM/Custom-data/mtp/rt2"#' \
+  && sed 's#/mnt/DATA/LLM/Models/GGUF/strata/Custom-data/mtp/rt"#/mnt/DATA/LLM/Models/GGUF/strata/Custom-data/mtp/rt2"#' \
        custom-iq3_s-8081.json.pre-t14b > custom-iq3_s-8081.json
 ```
 Rollback (one command + the mandatory verify boot, AGENTS.md rule 7 "revert cleanly on failure
@@ -529,7 +529,7 @@ Instruments (campaign/, read in full):
   campaign/stair50-iq3_s-8081.json (env-dict + per-arm log pattern); launch-custom-iq3s-8081.sh
   (:42) and launch-custom-iq3s-8081-conc.sh (:47) both consume custom-iq3_s-8081.json;
 - tools/mtp_pack.py and tools/mtp_rt.py headers (usage, formats, the Gemma +1 fold);
-- /home/svg/LLM/Custom-data/mtp/{rt,tensors} layout (verified by listing, 2026-10-18);
+- /mnt/DATA/LLM/Models/GGUF/strata/Custom-data/mtp/{rt,tensors} layout (verified by listing, 2026-10-18);
 - campaign/results/: mmlu-fbench-mmlu-{1,2}.json (floor 91.0, 95.7/94.3),
   mimicbench2-fbench-f233.json + fbench-mimic.txt (58/66 = 87.9), stair50/stair35 and
   s35arm/s35ctl files (F-228/T14C ground truth), depth-t17f-* (the 53.1/93.6/68.0 split).

@@ -20,6 +20,6 @@ STRATA_SPEC_DEPTH=1 timeout 900 "$REPO/engine/strata" \
   --cvec-mode project --cvec-dir per-layer --ple-io mmap --adapt-decay 0.85 \
   --expert-profile "$REPO/data/expert-profile.bin" --resident-experts \
   --mtp "$MTP" --batch 6 \
-  --tokens-file /home/svg/LLM/Custom-data/harvest/corpus/stream-0.ids --max-new 2048 \
+  --tokens-file /mnt/DATA/LLM/Models/GGUF/strata/Custom-data/harvest/corpus/stream-0.ids --max-new 2048 \
   2>&1 | tee "$OUT" | grep -E 'spec depth|tokens/s|accept' | tail -8
 echo "stair written: $OUT"

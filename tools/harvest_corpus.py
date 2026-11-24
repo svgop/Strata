@@ -7,7 +7,7 @@ Streams per the exec-A content mix, scaled for the FIRST training cycle:
   - conversation streams (~4k): mimic-lane-style rendered turns (offline task text,
     no HTTP), multiple per stream to fill ~40-60k.
 Writes per-stream token-ID files (comma-separated) to <out>/stream-<n>.ids.
-Usage: .venv/bin/python tools/harvest_corpus.py --out /home/svg/LLM/Custom-data/harvest/corpus --streams 6
+Usage: .venv/bin/python tools/harvest_corpus.py --out /mnt/DATA/LLM/Models/GGUF/strata/Custom-data/harvest/corpus --streams 6
 """
 from __future__ import annotations
 

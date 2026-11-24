@@ -74,7 +74,7 @@ cu130 wheel (python3.13/3.14 from Fedora 45 repos). Do NOT upgrade the repo `.ve
 
 Mirror of the 31-tensor block, initialized from the SHIPPED tensors (warm-start law, Section 3.4):
 `tensors/<name>.bin` BF16 + `mtp-manifest.json` (the `mtp_fetch.py` layout; stock copy already at
-`/home/svg/LLM/Custom-data/mtp/tensors/`, sha256-verified).
+`/mnt/DATA/LLM/Models/GGUF/strata/Custom-data/mtp/tensors/`, sha256-verified).
 
 Forward conventions — ALL previously convicted bug sites, cite-checked in the current tree:
 1. hnorm STREAM mode (production arm `--mtp-hnorm stream`): per-stream RMS over the hc slices of the 10240 input,
@@ -263,7 +263,7 @@ the best arm graduates to `rt-r18` (Section 9) — the others stay checkpoints.
 trainer -> <out>/tensors/<name>.bin (BF16 LE, norms RAW w, NOT 1+w — F-109 law)
         -> <out>/mtp-manifest.json (name, dtype "BF16", shape, file, sha256 of the TRAINED tensor)
         -> python tools/mtp_pack.py --src <out> --experts q2_0 --out mtp-r18-q2_0.gguf
-        -> python tools/mtp_rt.py --gguf mtp-r18-q2_0.gguf --out /home/svg/LLM/Custom-data/mtp-iq3s/rt-r18
+        -> python tools/mtp_rt.py --gguf mtp-r18-q2_0.gguf --out /mnt/DATA/LLM/Models/GGUF/strata/Custom-data/mtp-iq3s/rt-r18
         -> copy rt/draft_vocab.bin and rt/experts.bin BYTE-IDENTICAL into rt-r18   (F-114 config)
         -> value audit: every UNtrained tensor byte/quant-equal vs rt (one script; the F-111..F-113 audit)
 ```
@@ -299,7 +299,7 @@ mtp.hpp:69) performs the Q4 cast at LOAD with ggml's reference quantizer — the
 ## 8. Trainer-side artifacts (runs, harvest, checkpoints)
 
 ```
-/home/svg/LLM/Custom-data/mtp-iq3s/r18-train/
+/mnt/DATA/LLM/Models/GGUF/strata/Custom-data/mtp-iq3s/r18-train/
   records/            harvest: records.f32|f16 (dump-final-r), plists.bin, replay.bin, PROBE.md (rate + sizes)
   runs/<arm>/         train_config.json, ckpt-last.pt, ckpt-best.pt, loss.jsonl,
                       tensors/ + mtp-manifest.json (the exportable snapshot), audit-vs-stock.txt
@@ -322,11 +322,11 @@ drafter's files_s MiB print (mtp.cpp:528 region) and `bind()`'s "draft head over
 
 ### 9.2 Directory + flip convention (rt-r18 beside rt-r17)
 
-`/home/svg/LLM/Custom-data/mtp-iq3s/` is the retrain dir: `mtp-r17-q2_0.gguf`, `rt-r17/`, `r17-fetch/` live
+`/mnt/DATA/LLM/Models/GGUF/strata/Custom-data/mtp-iq3s/` is the retrain dir: `mtp-r17-q2_0.gguf`, `rt-r17/`, `r17-fetch/` live
 there today (ls this session; rt-r17's `dense.bin` DIFFERS from stock while `experts.bin`/`draft_vocab.bin` are
 byte-identical — the r17 precedent of "new dense, stock rest", sha256-checked this session). r18 follows it:
 
-- Production/standing config `custom-iq3_s-8081.json` keeps `"--mtp", "/home/svg/LLM/Custom-data/mtp/rt"` —
+- Production/standing config `custom-iq3_s-8081.json` keeps `"--mtp", "/mnt/DATA/LLM/Models/GGUF/strata/Custom-data/mtp/rt"` —
   NEVER written.
 - A/B config = COPY `custom-iq3s-rt18-8081.json` with only `--mtp .../mtp-iq3s/rt-r18`, the log path, and the
   port changed; A/B launcher = copy of `launch-custom-iq3s-8081.sh` pointing at that config (Launch Law: never
@@ -399,7 +399,7 @@ are the SAME rows `bind()` gathers (mtp.cpp:726-777) — zero head-distribution 
    (generate.cpp:13971-13972) — 16-byte header, 40,976-byte records. The spec follows the CODE; the dossier's
    line is corrected here.
 3. **"rt2 in mtp/" (T14B P4 example) vs "rt-r18 beside rt-r17" (task).** The task's convention matches the
-   on-disk reality (rt-r17 lives in mtp-iq3s/); rt-r18 goes to `/home/svg/LLM/Custom-data/mtp-iq3s/rt-r18`.
+   on-disk reality (rt-r17 lives in mtp-iq3s/); rt-r18 goes to `/mnt/DATA/LLM/Models/GGUF/strata/Custom-data/mtp-iq3s/rt-r18`.
    The T14B P5 rollout mechanics (config copy + launcher copy, rt never written) are unchanged.
 4. **r17 "head" naming.** r17 retrained the DRAFTER DENSE (rt-r17 dense.bin differs; experts/draft_vocab
    identical) — there is no head file in any rt dir because the draft head is bound from the backbone at load
@@ -446,8 +446,8 @@ Code (read this session, engine = /home/svg/LLM/strata-custom-2):
   (eh_proj split semantics); tools/draft_vocab.py (subset semantics); setup.py:5014-5015/:5282-5301
   (DRAFT_VOCABS, refresh_draft_vocab keep-rule); custom-iq3_s-8081.json (--mtp mtp/rt, --mtp-q4 all,
   --mtp-hnorm stream, draft_vocab en); launch-custom-iq3s-8081.sh (launcher template).
-- Runtime dirs: /home/svg/LLM/Custom-data/mtp/rt (dense.txt formats, 116,099,072 B dense; 40,525-id
-  draft_vocab.bin = 162,100 B); /home/svg/LLM/Custom-data/mtp-iq3s/ (rt-r17 + mtp-r17-q2_0.gguf + r17-fetch;
+- Runtime dirs: /mnt/DATA/LLM/Models/GGUF/strata/Custom-data/mtp/rt (dense.txt formats, 116,099,072 B dense; 40,525-id
+  draft_vocab.bin = 162,100 B); /mnt/DATA/LLM/Models/GGUF/strata/Custom-data/mtp-iq3s/ (rt-r17 + mtp-r17-q2_0.gguf + r17-fetch;
   sha256 compare: dense DIFF, experts/draft_vocab SAME). Disk: /home 705 GB free (df, this session).
 - Repo .venv probe: python 3.15.0; numpy 2.5.3, gguf 0.19.0, huggingface_hub 2.2.0, datasets 5.1.0 present;
   torch/transformers ABSENT (import-checked).
