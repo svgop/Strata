@@ -4771,12 +4771,17 @@ bool Prefill::run_impl(const int64_t* tokens, int64_t n, int64_t pos0, std::stri
                 const bool steered = half == 1 && (c1 || c2);
                 const float *cv_dir = nullptr, *cv_s = nullptr;
                 const int* cv_on = nullptr;
+                int cv_mode = 0;   // the fused table's OWN mode: with two tables armed the modes differ, and the
+                                  // fused kernel branches on it (add vs ablate) - passing table 1's mode for table 2's
+                                  // pointers would ADD the refusal direction instead of ablating it.
                 // the fused form carries ONE table's pointers: fuse only when exactly one acts at this layer
                 // (when both do, the stock three-kernel path applies them sequentially, in order)
                 const bool cv_fused = steered && cvec_fuse() && !gr_unfused() && nl < LE && !(nl == 1 && ple_on) &&
                                       strata::kernels::cvec().n_embd == N && strata::kernels::cvec().hc == HC &&
-                                      (c1 != c2) && (c1 ? strata::kernels::cvec_tables(&cv_dir, &cv_s, &cv_on)
-                                                        : strata::kernels::cvec_tables2(&cv_dir, &cv_s, &cv_on));
+                                      (c1 != c2) && (c1 ? (cv_mode = strata::kernels::cvec().mode,
+                                                           strata::kernels::cvec_tables(&cv_dir, &cv_s, &cv_on))
+                                                        : (cv_mode = strata::kernels::cvec().mode2,
+                                                           strata::kernels::cvec_tables2(&cv_dir, &cv_s, &cv_on)));
                 const bool fuse = !gr_unfused() && nl < LE && !(half == 1 && nl == 1 && ple_on) && (!steered || cv_fused);
                 const core::WeightRef* wnn = nullptr;
                 if (fuse) {
@@ -4799,7 +4804,7 @@ bool Prefill::run_impl(const int64_t* tokens, int64_t n, int64_t pos0, std::stri
                         strata::kernels::cvec_apply(Rc, l, T, D, nullptr, 0, nullptr, 0, false, m.cs);
                         gr_norm_rs(Rc, (const float*) wnn->data, EPS, rc, xc, T, m.cs, nullptr, D, xf16);
                         gr_write_cvec_norm_rs(m.R, m.bo, m.inj, HC, cv_dir + l * N, cv_s + l, cv_on,
-                                              strata::kernels::cvec().mode, (const float*) wnn->data, EPS, m.grs,
+                                              cv_mode, (const float*) wnn->data, EPS, m.grs,
                                               m.xn16, T, m.cs, m.xn16_lo, ldx, xf16);
                         std::vector<float> a((size_t) T * D), b((size_t) T * D), ra((size_t) T * HC), rb((size_t) T * HC);
                         std::vector<uint16_t> xa((size_t) T * D), xb((size_t) T * D);
@@ -4818,7 +4823,7 @@ bool Prefill::run_impl(const int64_t* tokens, int64_t n, int64_t pos0, std::stri
                                      std::memcmp(xa.data(), xb.data(), xa.size() * 2) ? "DIFFERS" : "identical");
                     } else
                     gr_write_cvec_norm_rs(m.R, m.bo, m.inj, HC, cv_dir + l * N, cv_s + l, cv_on,
-                                          strata::kernels::cvec().mode, (const float*) wnn->data, EPS, m.grs, m.xn16,
+                                          cv_mode, (const float*) wnn->data, EPS, m.grs, m.xn16,
                                           T, m.cs, m.xn16_lo, ldx, xf16);
                     normed = true;
                 } else if (wnn) {
