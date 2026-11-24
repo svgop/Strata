@@ -42,6 +42,12 @@ fresh 72-boot capture, and found the first deployed-context WINDOW of the campai
   deployed-verified: armed `add:8-8+project:1-47`, refusal battery ON 0/10, smoke assertive).
   Rollback: `engine/strata.pre-persona-merge` + drop the `*2` config block.
 - plain row @0.3 deployed (`05-r03-deployed/`) stays the banked fallback dose.
+- **PHASE-SCOPED (2026-11-24 afternoon, `12-phase/VERDICT.md`)**: the persona add lands only on the answer
+  phase (`--control-vector-phase 248069:248068 --cvec-phase-table 1`; per-table gate, parity-proven).
+  MMLU interleaved ON 66 / OFF 66 (exact tie, p=1.000; reasoning untouched, per-row length ratio 0.95)
+  vs unscoped 65/66 at the same dose and 63/67 at 0.45. Register stronger: ass 13/3, ser 14/3, dir 14/1,
+  facts 1.00 (WINDOW). The MC cost was a where/when effect, not the direction (cos(assertive, effort) =
+  +0.013). Dose history: 0.45 adopted (0bd36187e) -> 0.3 (3c524a5dd) -> 0.3 phase-scoped (this).
 - **Vector sources**: `capture/r03-run1/means.npz` sha16 `55be45efa4d6cef2`; elicit rows
   hash-pinned. Binary vectors in the model vectors dir, never in git.
 

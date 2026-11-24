@@ -47,6 +47,15 @@ struct Cvec {
     bool loaded2() const { return dir2 != nullptr; }
     bool steered2_at(int64_t l) const { return loaded2() && l >= first2 && l <= last2 && l < (int64_t) steered2.size() && steered2[(size_t) l]; }
 
+    /// The FIRST table's phase gate (device int, 1 = open).  Every table-1 launch reads it in addition to the
+    /// request switch; table 2 never does.  Open by default; `cvec_set_table1_gate` drives it from the F-17 phase
+    /// logic when `phase_table1` is configured (--cvec-phase-table 1): the persona add then lands only on the
+    /// answer phase - never on prompt tokens, never on the reasoning block - while the refusal ablation (table 2)
+    /// keeps covering the whole request exactly as before.  A fused single-table kernel cannot see the gate, so
+    /// the prefill write-fuse is disabled for table 1 while the phase owns it.
+    const int* gate = nullptr;
+    bool phase_table1 = false;
+
     /// The graph-structure predicate (where the residual write folds): any table acts at this layer.
     bool covers(int64_t l) const { return steered_at(l) || steered2_at(l); }
     std::vector<bool> steered;    ///< host copy of s_l != 0
@@ -76,6 +85,14 @@ bool cvec_replicate(std::string& err);
 /// between requests.
 void cvec_set_enabled(bool on);
 bool cvec_enabled();
+
+/// Whether the F-17 phase logic drives ONLY the first table (see `Cvec::gate`).  Set once at load; a no-op
+/// without a vector.  False = the legacy behaviour (the phase toggles the whole vector through the request switch).
+void cvec_set_phase_table1(bool on);
+
+/// Open or close the first table's phase gate on every device (no-op without a vector).  Independent of the
+/// request switch: a closed gate steers nothing even when the request has the vector on.
+void cvec_set_table1_gate(bool open);
 
 /// The CURRENT device's tables (dir n_layers x n_embd, s n_layers, the request flag), for a caller that applies the
 /// vector inside its own kernel (the prompt path's STRATA_CVEC_FUSE).  False without a vector on this device.

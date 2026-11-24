@@ -113,7 +113,7 @@ int main() {
     }
     // s = 1 removes it
     s[(size_t) kLayer] = 1.0f;
-    if (!k::cvec_upload(dir, s, 0, 4, 44, N, HC, err)) return 2;
+    if (!k::cvec_upload(dir, s, 0, 4, 44, N, HC, err)) { std::fprintf(stderr, "upload s=1: %s\n", err.c_str()); return 2; }
     up(dR, R);
     k::cvec_apply(dR, kLayer, T, D, nullptr, 0, nullptr, 0, false, nullptr);
     ck(cudaDeviceSynchronize(), "project s=1");
@@ -301,6 +301,53 @@ int main() {
             }
         std::printf("    table 2 only, pending write: max |err| %.3g\n", worst);
         check(worst < 1e-4, "table 2 alone folds the pending write, then ablates");
+    }
+
+    {   // ---- 6. the first table's PHASE GATE: closed = table 1 silent, table 2 untouched; the request switch rules over both
+        const auto expect = [&](bool with_add) {   // reference at kLayer: (h [+ a]) - 1.5 ((h [+ a]) . u) u
+            std::vector<double> want((size_t) (T * D));
+            for (int64_t t = 0; t < T; ++t)
+                for (int64_t c = 0; c < HC; ++c) {
+                    const float* v = dir.data() + kLayer * N;
+                    const float* u = dir2.data() + kLayer * N;
+                    const size_t base = (size_t) (t * D + c * N);
+                    double dotu = 0.0;
+                    for (int64_t j = 0; j < N; ++j) dotu += ((double) R[base + j] + (with_add ? v[j] : 0.0)) * u[j];
+                    for (int64_t j = 0; j < N; ++j) want[base + j] = ((double) R[base + j] + (with_add ? v[j] : 0.0)) - 1.5 * dotu * u[j];
+                }
+            return want;
+        };
+        std::printf("phase gate\n");
+        k::cvec_set_enabled(true);
+        k::cvec_set_table1_gate(false);   // the answer phase has not begun: the persona add must not land
+        up(dR, R);
+        k::cvec_apply(dR, kLayer, T, D, nullptr, 0, nullptr, 0, false, nullptr);
+        ck(cudaDeviceSynchronize(), "gate closed");
+        {
+            const auto got = down(dR, R.size()); const auto want = expect(false);
+            double worst = 0.0;
+            for (size_t i = 0; i < want.size(); ++i) worst = std::fmax(worst, std::fabs(got[i] - want[i]));
+            std::printf("    gate closed: max |err| %.3g (ablation only)\n", worst);
+            check(worst < 1e-4, "a closed gate silences table 1 while table 2 still ablates");
+        }
+        k::cvec_set_table1_gate(true);    // think-end seen: both tables
+        up(dR, R);
+        k::cvec_apply(dR, kLayer, T, D, nullptr, 0, nullptr, 0, false, nullptr);
+        ck(cudaDeviceSynchronize(), "gate open");
+        {
+            const auto got = down(dR, R.size()); const auto want = expect(true);
+            double worst = 0.0;
+            for (size_t i = 0; i < want.size(); ++i) worst = std::fmax(worst, std::fabs(got[i] - want[i]));
+            std::printf("    gate open: max |err| %.3g (add, then ablate)\n", worst);
+            check(worst < 1e-4, "an open gate applies table 1 then table 2");
+        }
+        k::cvec_set_enabled(false);       // the request switch rules over an open gate
+        up(dR, R);
+        k::cvec_apply(dR, kLayer, T, D, nullptr, 0, nullptr, 0, false, nullptr);
+        ck(cudaDeviceSynchronize(), "request off, gate open");
+        check(std::memcmp(down(dR, R.size()).data(), R.data(), R.size() * 4) == 0,
+              "request off: an open gate steers nothing (both tables)");
+        k::cvec_set_enabled(true);
     }
 
     std::printf(g_fail ? "cvec_parity: %d FAILED\n" : "cvec_parity: all passed\n", g_fail);

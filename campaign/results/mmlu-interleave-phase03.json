@@ -1,0 +1,1427 @@
+{
+ "summary": {
+  "label": "phase03",
+  "max_tokens": 8000,
+  "n": 70,
+  "on": 66,
+  "off": 66,
+  "on_only_right": 1,
+  "off_only_right": 1,
+  "mcnemar_p": 1.0,
+  "finish_length": {
+   "on": 0,
+   "off": 0
+  },
+  "fails_that_were_wrapped": {
+   "on": 0,
+   "off": 0
+  },
+  "median_gen_tokens": {
+   "on": 196,
+   "off": 219
+  },
+  "flips": 2
+ },
+ "rows": [
+  {
+   "idx": 0,
+   "cat": "math",
+   "gold": "A",
+   "on": {
+    "pred": "A",
+    "ok": true,
+    "finish": "stop",
+    "gen_tokens": 221,
+    "content": "A"
+   },
+   "off": {
+    "pred": "A",
+    "ok": true,
+    "finish": "stop",
+    "gen_tokens": 124,
+    "content": "A"
+   },
+   "flip": false
+  },
+  {
+   "idx": 1,
+   "cat": "math",
+   "gold": "H",
+   "off": {
+    "pred": "H",
+    "ok": true,
+    "finish": "stop",
+    "gen_tokens": 99,
+    "content": "H"
+   },
+   "on": {
+    "pred": "H",
+    "ok": true,
+    "finish": "stop",
+    "gen_tokens": 191,
+    "content": "H"
+   },
+   "flip": false
+  },
+  {
+   "idx": 2,
+   "cat": "math",
+   "gold": "E",
+   "on": {
+    "pred": "E",
+    "ok": true,
+    "finish": "stop",
+    "gen_tokens": 295,
+    "content": "E"
+   },
+   "off": {
+    "pred": "E",
+    "ok": true,
+    "finish": "stop",
+    "gen_tokens": 339,
+    "content": "E"
+   },
+   "flip": false
+  },
+  {
+   "idx": 3,
+   "cat": "math",
+   "gold": "I",
+   "off": {
+    "pred": "I",
+    "ok": true,
+    "finish": "stop",
+    "gen_tokens": 267,
+    "content": "I"
+   },
+   "on": {
+    "pred": "I",
+    "ok": true,
+    "finish": "stop",
+    "gen_tokens": 254,
+    "content": "I"
+   },
+   "flip": false
+  },
+  {
+   "idx": 4,
+   "cat": "math",
+   "gold": "B",
+   "on": {
+    "pred": "B",
+    "ok": true,
+    "finish": "stop",
+    "gen_tokens": 52,
+    "content": "B"
+   },
+   "off": {
+    "pred": "B",
+    "ok": true,
+    "finish": "stop",
+    "gen_tokens": 52,
+    "content": "B"
+   },
+   "flip": false
+  },
+  {
+   "idx": 5,
+   "cat": "health",
+   "gold": "J",
+   "off": {
+    "pred": "J",
+    "ok": true,
+    "finish": "stop",
+    "gen_tokens": 127,
+    "content": "J"
+   },
+   "on": {
+    "pred": "J",
+    "ok": true,
+    "finish": "stop",
+    "gen_tokens": 296,
+    "content": "J"
+   },
+   "flip": false
+  },
+  {
+   "idx": 6,
+   "cat": "health",
+   "gold": "G",
+   "on": {
+    "pred": "G",
+    "ok": true,
+    "finish": "stop",
+    "gen_tokens": 151,
+    "content": "G"
+   },
+   "off": {
+    "pred": "G",
+    "ok": true,
+    "finish": "stop",
+    "gen_tokens": 128,
+    "content": "G"
+   },
+   "flip": false
+  },
+  {
+   "idx": 7,
+   "cat": "health",
+   "gold": "F",
+   "off": {
+    "pred": "F",
+    "ok": true,
+    "finish": "stop",
+    "gen_tokens": 344,
+    "content": "F"
+   },
+   "on": {
+    "pred": "F",
+    "ok": true,
+    "finish": "stop",
+    "gen_tokens": 300,
+    "content": "F"
+   },
+   "flip": false
+  },
+  {
+   "idx": 8,
+   "cat": "health",
+   "gold": "F",
+   "on": {
+    "pred": "F",
+    "ok": true,
+    "finish": "stop",
+    "gen_tokens": 145,
+    "content": "F"
+   },
+   "off": {
+    "pred": "F",
+    "ok": true,
+    "finish": "stop",
+    "gen_tokens": 180,
+    "content": "F"
+   },
+   "flip": false
+  },
+  {
+   "idx": 9,
+   "cat": "health",
+   "gold": "D",
+   "off": {
+    "pred": "D",
+    "ok": true,
+    "finish": "stop",
+    "gen_tokens": 868,
+    "content": "D"
+   },
+   "on": {
+    "pred": "D",
+    "ok": true,
+    "finish": "stop",
+    "gen_tokens": 188,
+    "content": "D"
+   },
+   "flip": false
+  },
+  {
+   "idx": 10,
+   "cat": "physics",
+   "gold": "E",
+   "on": {
+    "pred": "E",
+    "ok": true,
+    "finish": "stop",
+    "gen_tokens": 93,
+    "content": "E"
+   },
+   "off": {
+    "pred": "E",
+    "ok": true,
+    "finish": "stop",
+    "gen_tokens": 81,
+    "content": "E"
+   },
+   "flip": false
+  },
+  {
+   "idx": 11,
+   "cat": "physics",
+   "gold": "A",
+   "off": {
+    "pred": "A",
+    "ok": true,
+    "finish": "stop",
+    "gen_tokens": 126,
+    "content": "A"
+   },
+   "on": {
+    "pred": "A",
+    "ok": true,
+    "finish": "stop",
+    "gen_tokens": 130,
+    "content": "A"
+   },
+   "flip": false
+  },
+  {
+   "idx": 12,
+   "cat": "physics",
+   "gold": "H",
+   "on": {
+    "pred": "H",
+    "ok": true,
+    "finish": "stop",
+    "gen_tokens": 144,
+    "content": "H"
+   },
+   "off": {
+    "pred": "H",
+    "ok": true,
+    "finish": "stop",
+    "gen_tokens": 154,
+    "content": "H"
+   },
+   "flip": false
+  },
+  {
+   "idx": 13,
+   "cat": "physics",
+   "gold": "E",
+   "off": {
+    "pred": "E",
+    "ok": true,
+    "finish": "stop",
+    "gen_tokens": 35,
+    "content": "E"
+   },
+   "on": {
+    "pred": "E",
+    "ok": true,
+    "finish": "stop",
+    "gen_tokens": 39,
+    "content": "E"
+   },
+   "flip": false
+  },
+  {
+   "idx": 14,
+   "cat": "physics",
+   "gold": "A",
+   "on": {
+    "pred": "A",
+    "ok": true,
+    "finish": "stop",
+    "gen_tokens": 46,
+    "content": "A"
+   },
+   "off": {
+    "pred": "A",
+    "ok": true,
+    "finish": "stop",
+    "gen_tokens": 47,
+    "content": "A"
+   },
+   "flip": false
+  },
+  {
+   "idx": 15,
+   "cat": "business",
+   "gold": "F",
+   "off": {
+    "pred": "F",
+    "ok": true,
+    "finish": "stop",
+    "gen_tokens": 248,
+    "content": "F"
+   },
+   "on": {
+    "pred": "F",
+    "ok": true,
+    "finish": "stop",
+    "gen_tokens": 227,
+    "content": "F"
+   },
+   "flip": false
+  },
+  {
+   "idx": 16,
+   "cat": "business",
+   "gold": "D",
+   "on": {
+    "pred": "D",
+    "ok": true,
+    "finish": "stop",
+    "gen_tokens": 215,
+    "content": "D"
+   },
+   "off": {
+    "pred": "D",
+    "ok": true,
+    "finish": "stop",
+    "gen_tokens": 411,
+    "content": "D"
+   },
+   "flip": false
+  },
+  {
+   "idx": 17,
+   "cat": "business",
+   "gold": "A",
+   "off": {
+    "pred": "A",
+    "ok": true,
+    "finish": "stop",
+    "gen_tokens": 728,
+    "content": "A"
+   },
+   "on": {
+    "pred": "A",
+    "ok": true,
+    "finish": "stop",
+    "gen_tokens": 343,
+    "content": "A"
+   },
+   "flip": false
+  },
+  {
+   "idx": 18,
+   "cat": "business",
+   "gold": "G",
+   "on": {
+    "pred": "F",
+    "ok": false,
+    "finish": "stop",
+    "gen_tokens": 969,
+    "content": "F"
+   },
+   "off": {
+    "pred": "F",
+    "ok": false,
+    "finish": "stop",
+    "gen_tokens": 543,
+    "content": "F"
+   },
+   "flip": false
+  },
+  {
+   "idx": 19,
+   "cat": "business",
+   "gold": "H",
+   "off": {
+    "pred": "H",
+    "ok": true,
+    "finish": "stop",
+    "gen_tokens": 175,
+    "content": "H"
+   },
+   "on": {
+    "pred": "H",
+    "ok": true,
+    "finish": "stop",
+    "gen_tokens": 196,
+    "content": "H"
+   },
+   "flip": false
+  },
+  {
+   "idx": 20,
+   "cat": "biology",
+   "gold": "B",
+   "on": {
+    "pred": "B",
+    "ok": true,
+    "finish": "stop",
+    "gen_tokens": 158,
+    "content": "B"
+   },
+   "off": {
+    "pred": "B",
+    "ok": true,
+    "finish": "stop",
+    "gen_tokens": 136,
+    "content": "B"
+   },
+   "flip": false
+  },
+  {
+   "idx": 21,
+   "cat": "biology",
+   "gold": "D",
+   "off": {
+    "pred": "D",
+    "ok": true,
+    "finish": "stop",
+    "gen_tokens": 146,
+    "content": "D"
+   },
+   "on": {
+    "pred": "D",
+    "ok": true,
+    "finish": "stop",
+    "gen_tokens": 138,
+    "content": "D"
+   },
+   "flip": false
+  },
+  {
+   "idx": 22,
+   "cat": "biology",
+   "gold": "D",
+   "on": {
+    "pred": "D",
+    "ok": true,
+    "finish": "stop",
+    "gen_tokens": 84,
+    "content": "D"
+   },
+   "off": {
+    "pred": "D",
+    "ok": true,
+    "finish": "stop",
+    "gen_tokens": 75,
+    "content": "D"
+   },
+   "flip": false
+  },
+  {
+   "idx": 23,
+   "cat": "biology",
+   "gold": "A",
+   "off": {
+    "pred": "A",
+    "ok": true,
+    "finish": "stop",
+    "gen_tokens": 105,
+    "content": "A"
+   },
+   "on": {
+    "pred": "A",
+    "ok": true,
+    "finish": "stop",
+    "gen_tokens": 84,
+    "content": "A"
+   },
+   "flip": false
+  },
+  {
+   "idx": 24,
+   "cat": "biology",
+   "gold": "H",
+   "on": {
+    "pred": "H",
+    "ok": true,
+    "finish": "stop",
+    "gen_tokens": 859,
+    "content": "H"
+   },
+   "off": {
+    "pred": "H",
+    "ok": true,
+    "finish": "stop",
+    "gen_tokens": 1790,
+    "content": "H"
+   },
+   "flip": false
+  },
+  {
+   "idx": 25,
+   "cat": "chemistry",
+   "gold": "B",
+   "off": {
+    "pred": "B",
+    "ok": true,
+    "finish": "stop",
+    "gen_tokens": 281,
+    "content": "B"
+   },
+   "on": {
+    "pred": "B",
+    "ok": true,
+    "finish": "stop",
+    "gen_tokens": 156,
+    "content": "B"
+   },
+   "flip": false
+  },
+  {
+   "idx": 26,
+   "cat": "chemistry",
+   "gold": "J",
+   "on": {
+    "pred": "J",
+    "ok": true,
+    "finish": "stop",
+    "gen_tokens": 88,
+    "content": "J"
+   },
+   "off": {
+    "pred": "J",
+    "ok": true,
+    "finish": "stop",
+    "gen_tokens": 86,
+    "content": "J"
+   },
+   "flip": false
+  },
+  {
+   "idx": 27,
+   "cat": "chemistry",
+   "gold": "E",
+   "off": {
+    "pred": "E",
+    "ok": true,
+    "finish": "stop",
+    "gen_tokens": 190,
+    "content": "E"
+   },
+   "on": {
+    "pred": "E",
+    "ok": true,
+    "finish": "stop",
+    "gen_tokens": 117,
+    "content": "E"
+   },
+   "flip": false
+  },
+  {
+   "idx": 28,
+   "cat": "chemistry",
+   "gold": "A",
+   "on": {
+    "pred": "A",
+    "ok": true,
+    "finish": "stop",
+    "gen_tokens": 609,
+    "content": "A"
+   },
+   "off": {
+    "pred": "A",
+    "ok": true,
+    "finish": "stop",
+    "gen_tokens": 263,
+    "content": "A"
+   },
+   "flip": false
+  },
+  {
+   "idx": 29,
+   "cat": "chemistry",
+   "gold": "J",
+   "off": {
+    "pred": "J",
+    "ok": true,
+    "finish": "stop",
+    "gen_tokens": 455,
+    "content": "J"
+   },
+   "on": {
+    "pred": "J",
+    "ok": true,
+    "finish": "stop",
+    "gen_tokens": 358,
+    "content": "J"
+   },
+   "flip": false
+  },
+  {
+   "idx": 30,
+   "cat": "computer science",
+   "gold": "B",
+   "on": {
+    "pred": "B",
+    "ok": true,
+    "finish": "stop",
+    "gen_tokens": 3919,
+    "content": "B"
+   },
+   "off": {
+    "pred": "B",
+    "ok": true,
+    "finish": "stop",
+    "gen_tokens": 6020,
+    "content": "B"
+   },
+   "flip": false
+  },
+  {
+   "idx": 31,
+   "cat": "computer science",
+   "gold": "I",
+   "off": {
+    "pred": "I",
+    "ok": true,
+    "finish": "stop",
+    "gen_tokens": 2409,
+    "content": "I"
+   },
+   "on": {
+    "pred": "I",
+    "ok": true,
+    "finish": "stop",
+    "gen_tokens": 3046,
+    "content": "I"
+   },
+   "flip": false
+  },
+  {
+   "idx": 32,
+   "cat": "computer science",
+   "gold": "C",
+   "on": {
+    "pred": "C",
+    "ok": true,
+    "finish": "stop",
+    "gen_tokens": 47,
+    "content": "C"
+   },
+   "off": {
+    "pred": "C",
+    "ok": true,
+    "finish": "stop",
+    "gen_tokens": 154,
+    "content": "C"
+   },
+   "flip": false
+  },
+  {
+   "idx": 33,
+   "cat": "computer science",
+   "gold": "I",
+   "off": {
+    "pred": "I",
+    "ok": true,
+    "finish": "stop",
+    "gen_tokens": 108,
+    "content": "I"
+   },
+   "on": {
+    "pred": "I",
+    "ok": true,
+    "finish": "stop",
+    "gen_tokens": 249,
+    "content": "I"
+   },
+   "flip": false
+  },
+  {
+   "idx": 34,
+   "cat": "computer science",
+   "gold": "A",
+   "on": {
+    "pred": "A",
+    "ok": true,
+    "finish": "stop",
+    "gen_tokens": 119,
+    "content": "A"
+   },
+   "off": {
+    "pred": "A",
+    "ok": true,
+    "finish": "stop",
+    "gen_tokens": 70,
+    "content": "A"
+   },
+   "flip": false
+  },
+  {
+   "idx": 35,
+   "cat": "economics",
+   "gold": "F",
+   "off": {
+    "pred": "F",
+    "ok": true,
+    "finish": "stop",
+    "gen_tokens": 36,
+    "content": "F"
+   },
+   "on": {
+    "pred": "F",
+    "ok": true,
+    "finish": "stop",
+    "gen_tokens": 47,
+    "content": "F"
+   },
+   "flip": false
+  },
+  {
+   "idx": 36,
+   "cat": "economics",
+   "gold": "H",
+   "on": {
+    "pred": "H",
+    "ok": true,
+    "finish": "stop",
+    "gen_tokens": 104,
+    "content": "H"
+   },
+   "off": {
+    "pred": "H",
+    "ok": true,
+    "finish": "stop",
+    "gen_tokens": 110,
+    "content": "H"
+   },
+   "flip": false
+  },
+  {
+   "idx": 37,
+   "cat": "economics",
+   "gold": "C",
+   "off": {
+    "pred": "C",
+    "ok": true,
+    "finish": "stop",
+    "gen_tokens": 2264,
+    "content": "C"
+   },
+   "on": {
+    "pred": "C",
+    "ok": true,
+    "finish": "stop",
+    "gen_tokens": 426,
+    "content": "C"
+   },
+   "flip": false
+  },
+  {
+   "idx": 38,
+   "cat": "economics",
+   "gold": "G",
+   "on": {
+    "pred": "G",
+    "ok": true,
+    "finish": "stop",
+    "gen_tokens": 164,
+    "content": "G"
+   },
+   "off": {
+    "pred": "G",
+    "ok": true,
+    "finish": "stop",
+    "gen_tokens": 219,
+    "content": "G"
+   },
+   "flip": false
+  },
+  {
+   "idx": 39,
+   "cat": "economics",
+   "gold": "F",
+   "off": {
+    "pred": "F",
+    "ok": true,
+    "finish": "stop",
+    "gen_tokens": 69,
+    "content": "F"
+   },
+   "on": {
+    "pred": "F",
+    "ok": true,
+    "finish": "stop",
+    "gen_tokens": 63,
+    "content": "F"
+   },
+   "flip": false
+  },
+  {
+   "idx": 40,
+   "cat": "engineering",
+   "gold": "C",
+   "on": {
+    "pred": "C",
+    "ok": true,
+    "finish": "stop",
+    "gen_tokens": 691,
+    "content": "C"
+   },
+   "off": {
+    "pred": "C",
+    "ok": true,
+    "finish": "stop",
+    "gen_tokens": 2006,
+    "content": "C"
+   },
+   "flip": false
+  },
+  {
+   "idx": 41,
+   "cat": "engineering",
+   "gold": "A",
+   "off": {
+    "pred": "A",
+    "ok": true,
+    "finish": "stop",
+    "gen_tokens": 205,
+    "content": "A"
+   },
+   "on": {
+    "pred": "A",
+    "ok": true,
+    "finish": "stop",
+    "gen_tokens": 224,
+    "content": "A"
+   },
+   "flip": false
+  },
+  {
+   "idx": 42,
+   "cat": "engineering",
+   "gold": "C",
+   "on": {
+    "pred": "C",
+    "ok": true,
+    "finish": "stop",
+    "gen_tokens": 174,
+    "content": "C"
+   },
+   "off": {
+    "pred": "C",
+    "ok": true,
+    "finish": "stop",
+    "gen_tokens": 133,
+    "content": "C"
+   },
+   "flip": false
+  },
+  {
+   "idx": 43,
+   "cat": "engineering",
+   "gold": "I",
+   "off": {
+    "pred": "I",
+    "ok": true,
+    "finish": "stop",
+    "gen_tokens": 191,
+    "content": "I"
+   },
+   "on": {
+    "pred": "I",
+    "ok": true,
+    "finish": "stop",
+    "gen_tokens": 144,
+    "content": "I"
+   },
+   "flip": false
+  },
+  {
+   "idx": 44,
+   "cat": "engineering",
+   "gold": "A",
+   "on": {
+    "pred": "A",
+    "ok": true,
+    "finish": "stop",
+    "gen_tokens": 140,
+    "content": "A"
+   },
+   "off": {
+    "pred": "A",
+    "ok": true,
+    "finish": "stop",
+    "gen_tokens": 242,
+    "content": "A"
+   },
+   "flip": false
+  },
+  {
+   "idx": 45,
+   "cat": "philosophy",
+   "gold": "B",
+   "off": {
+    "pred": "B",
+    "ok": true,
+    "finish": "stop",
+    "gen_tokens": 158,
+    "content": "B"
+   },
+   "on": {
+    "pred": "B",
+    "ok": true,
+    "finish": "stop",
+    "gen_tokens": 189,
+    "content": "B"
+   },
+   "flip": false
+  },
+  {
+   "idx": 46,
+   "cat": "philosophy",
+   "gold": "J",
+   "on": {
+    "pred": "J",
+    "ok": true,
+    "finish": "stop",
+    "gen_tokens": 85,
+    "content": "J"
+   },
+   "off": {
+    "pred": "J",
+    "ok": true,
+    "finish": "stop",
+    "gen_tokens": 431,
+    "content": "J"
+   },
+   "flip": false
+  },
+  {
+   "idx": 47,
+   "cat": "philosophy",
+   "gold": "B",
+   "off": {
+    "pred": "B",
+    "ok": true,
+    "finish": "stop",
+    "gen_tokens": 356,
+    "content": "B"
+   },
+   "on": {
+    "pred": "B",
+    "ok": true,
+    "finish": "stop",
+    "gen_tokens": 262,
+    "content": "B"
+   },
+   "flip": false
+  },
+  {
+   "idx": 48,
+   "cat": "philosophy",
+   "gold": "I",
+   "on": {
+    "pred": "I",
+    "ok": true,
+    "finish": "stop",
+    "gen_tokens": 91,
+    "content": "I"
+   },
+   "off": {
+    "pred": "I",
+    "ok": true,
+    "finish": "stop",
+    "gen_tokens": 117,
+    "content": "I"
+   },
+   "flip": false
+  },
+  {
+   "idx": 49,
+   "cat": "philosophy",
+   "gold": "D",
+   "off": {
+    "pred": "D",
+    "ok": true,
+    "finish": "stop",
+    "gen_tokens": 121,
+    "content": "D"
+   },
+   "on": {
+    "pred": "D",
+    "ok": true,
+    "finish": "stop",
+    "gen_tokens": 64,
+    "content": "D"
+   },
+   "flip": false
+  },
+  {
+   "idx": 50,
+   "cat": "other",
+   "gold": "E",
+   "on": {
+    "pred": "E",
+    "ok": true,
+    "finish": "stop",
+    "gen_tokens": 452,
+    "content": "E"
+   },
+   "off": {
+    "pred": "E",
+    "ok": true,
+    "finish": "stop",
+    "gen_tokens": 293,
+    "content": "E"
+   },
+   "flip": false
+  },
+  {
+   "idx": 51,
+   "cat": "other",
+   "gold": "B",
+   "off": {
+    "pred": "B",
+    "ok": true,
+    "finish": "stop",
+    "gen_tokens": 109,
+    "content": "B"
+   },
+   "on": {
+    "pred": "B",
+    "ok": true,
+    "finish": "stop",
+    "gen_tokens": 63,
+    "content": "B"
+   },
+   "flip": false
+  },
+  {
+   "idx": 52,
+   "cat": "other",
+   "gold": "B",
+   "on": {
+    "pred": "B",
+    "ok": true,
+    "finish": "stop",
+    "gen_tokens": 245,
+    "content": "B"
+   },
+   "off": {
+    "pred": "B",
+    "ok": true,
+    "finish": "stop",
+    "gen_tokens": 247,
+    "content": "B"
+   },
+   "flip": false
+  },
+  {
+   "idx": 53,
+   "cat": "other",
+   "gold": "J",
+   "off": {
+    "pred": "J",
+    "ok": true,
+    "finish": "stop",
+    "gen_tokens": 107,
+    "content": "J"
+   },
+   "on": {
+    "pred": "J",
+    "ok": true,
+    "finish": "stop",
+    "gen_tokens": 351,
+    "content": "J"
+   },
+   "flip": false
+  },
+  {
+   "idx": 54,
+   "cat": "other",
+   "gold": "J",
+   "on": {
+    "pred": "J",
+    "ok": true,
+    "finish": "stop",
+    "gen_tokens": 75,
+    "content": "J"
+   },
+   "off": {
+    "pred": "J",
+    "ok": true,
+    "finish": "stop",
+    "gen_tokens": 78,
+    "content": "J"
+   },
+   "flip": false
+  },
+  {
+   "idx": 55,
+   "cat": "history",
+   "gold": "A",
+   "off": {
+    "pred": "B",
+    "ok": false,
+    "finish": "stop",
+    "gen_tokens": 1373,
+    "content": "B"
+   },
+   "on": {
+    "pred": "A",
+    "ok": true,
+    "finish": "stop",
+    "gen_tokens": 840,
+    "content": "A"
+   },
+   "flip": true
+  },
+  {
+   "idx": 56,
+   "cat": "history",
+   "gold": "C",
+   "on": {
+    "pred": "C",
+    "ok": true,
+    "finish": "stop",
+    "gen_tokens": 310,
+    "content": "C"
+   },
+   "off": {
+    "pred": "C",
+    "ok": true,
+    "finish": "stop",
+    "gen_tokens": 281,
+    "content": "C"
+   },
+   "flip": false
+  },
+  {
+   "idx": 57,
+   "cat": "history",
+   "gold": "E",
+   "off": {
+    "pred": "E",
+    "ok": true,
+    "finish": "stop",
+    "gen_tokens": 1455,
+    "content": "E"
+   },
+   "on": {
+    "pred": "E",
+    "ok": true,
+    "finish": "stop",
+    "gen_tokens": 131,
+    "content": "E"
+   },
+   "flip": false
+  },
+  {
+   "idx": 58,
+   "cat": "history",
+   "gold": "E",
+   "on": {
+    "pred": "J",
+    "ok": false,
+    "finish": "stop",
+    "gen_tokens": 1404,
+    "content": "J"
+   },
+   "off": {
+    "pred": "J",
+    "ok": false,
+    "finish": "stop",
+    "gen_tokens": 299,
+    "content": "J"
+   },
+   "flip": false
+  },
+  {
+   "idx": 59,
+   "cat": "history",
+   "gold": "G",
+   "off": {
+    "pred": "G",
+    "ok": true,
+    "finish": "stop",
+    "gen_tokens": 685,
+    "content": "G"
+   },
+   "on": {
+    "pred": "G",
+    "ok": true,
+    "finish": "stop",
+    "gen_tokens": 778,
+    "content": "G"
+   },
+   "flip": false
+  },
+  {
+   "idx": 60,
+   "cat": "psychology",
+   "gold": "H",
+   "on": {
+    "pred": "H",
+    "ok": true,
+    "finish": "stop",
+    "gen_tokens": 555,
+    "content": "H"
+   },
+   "off": {
+    "pred": "H",
+    "ok": true,
+    "finish": "stop",
+    "gen_tokens": 650,
+    "content": "H"
+   },
+   "flip": false
+  },
+  {
+   "idx": 61,
+   "cat": "psychology",
+   "gold": "H",
+   "off": {
+    "pred": "H",
+    "ok": true,
+    "finish": "stop",
+    "gen_tokens": 206,
+    "content": "H"
+   },
+   "on": {
+    "pred": "H",
+    "ok": true,
+    "finish": "stop",
+    "gen_tokens": 182,
+    "content": "H"
+   },
+   "flip": false
+  },
+  {
+   "idx": 62,
+   "cat": "psychology",
+   "gold": "A",
+   "on": {
+    "pred": "A",
+    "ok": true,
+    "finish": "stop",
+    "gen_tokens": 704,
+    "content": "A"
+   },
+   "off": {
+    "pred": "A",
+    "ok": true,
+    "finish": "stop",
+    "gen_tokens": 393,
+    "content": "A"
+   },
+   "flip": false
+  },
+  {
+   "idx": 63,
+   "cat": "psychology",
+   "gold": "J",
+   "off": {
+    "pred": "J",
+    "ok": true,
+    "finish": "stop",
+    "gen_tokens": 99,
+    "content": "J"
+   },
+   "on": {
+    "pred": "J",
+    "ok": true,
+    "finish": "stop",
+    "gen_tokens": 53,
+    "content": "J"
+   },
+   "flip": false
+  },
+  {
+   "idx": 64,
+   "cat": "psychology",
+   "gold": "E",
+   "on": {
+    "pred": "F",
+    "ok": false,
+    "finish": "stop",
+    "gen_tokens": 4678,
+    "content": "F"
+   },
+   "off": {
+    "pred": "E",
+    "ok": true,
+    "finish": "stop",
+    "gen_tokens": 610,
+    "content": "E"
+   },
+   "flip": true
+  },
+  {
+   "idx": 65,
+   "cat": "law",
+   "gold": "I",
+   "off": {
+    "pred": "I",
+    "ok": true,
+    "finish": "stop",
+    "gen_tokens": 491,
+    "content": "I"
+   },
+   "on": {
+    "pred": "I",
+    "ok": true,
+    "finish": "stop",
+    "gen_tokens": 430,
+    "content": "I"
+   },
+   "flip": false
+  },
+  {
+   "idx": 66,
+   "cat": "law",
+   "gold": "I",
+   "on": {
+    "pred": "B",
+    "ok": false,
+    "finish": "stop",
+    "gen_tokens": 874,
+    "content": "B"
+   },
+   "off": {
+    "pred": "B",
+    "ok": false,
+    "finish": "stop",
+    "gen_tokens": 1103,
+    "content": "B"
+   },
+   "flip": false
+  },
+  {
+   "idx": 67,
+   "cat": "law",
+   "gold": "J",
+   "off": {
+    "pred": "J",
+    "ok": true,
+    "finish": "stop",
+    "gen_tokens": 266,
+    "content": "J"
+   },
+   "on": {
+    "pred": "J",
+    "ok": true,
+    "finish": "stop",
+    "gen_tokens": 302,
+    "content": "J"
+   },
+   "flip": false
+  },
+  {
+   "idx": 68,
+   "cat": "law",
+   "gold": "G",
+   "on": {
+    "pred": "G",
+    "ok": true,
+    "finish": "stop",
+    "gen_tokens": 378,
+    "content": "G"
+   },
+   "off": {
+    "pred": "G",
+    "ok": true,
+    "finish": "stop",
+    "gen_tokens": 1019,
+    "content": "G"
+   },
+   "flip": false
+  },
+  {
+   "idx": 69,
+   "cat": "law",
+   "gold": "F",
+   "off": {
+    "pred": "F",
+    "ok": true,
+    "finish": "stop",
+    "gen_tokens": 1055,
+    "content": "F"
+   },
+   "on": {
+    "pred": "F",
+    "ok": true,
+    "finish": "stop",
+    "gen_tokens": 1416,
+    "content": "F"
+   },
+   "flip": false
+  }
+ ]
+}

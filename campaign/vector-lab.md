@@ -61,6 +61,13 @@ Single boots (interleaves, knee probes): `vector-lab.py ab --label L --vector F 
 - **Refusal orthogonalization** is built into `build`: the row is orthogonalized (2 passes) against
   the refusal axes that act at the row's index (v2-primary per-layer + Huihui r) — persona lever and
   abliteration lever stay independent.
+- **Application phase (the where/when law)**: the contrast is elicited from RESPONSE tokens, so the add
+  belongs on response tokens - never on prompt or reasoning tokens. Arm the standing with
+  `--control-vector-phase </think>:<think> --cvec-phase-table 1` (ids 248069:248068 for this model); the
+  lab's derivation carries the block through. Measured: unscoped @0.3 ON 65 / OFF 66 on MMLU with reasoning
+  lengthened; phase-scoped @0.3 ON 66 / OFF 66 with reasoning untouched and a stronger register read.
+  cos(assertive, effort) = +0.013 says the vector itself carries no "careless" component - scope the
+  application before sharpening the direction.
 - **Slot choice**: filters (prominence > 1.25, stream-pair cos ≥ 0.8, …) guard vector QUALITY, but
   the 2026-11-23 capture passed NONE (diffuse in depth, stream-decomposed) and the causal ladder
   still found a window at slot 9. Filters reject noise vectors; a causal dose ladder is the actual

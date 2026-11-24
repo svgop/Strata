@@ -1,0 +1,1051 @@
+{
+ "summary": {
+  "label": "phase03-deployed",
+  "context": "deployed",
+  "determinism_ok": false,
+  "identical_rate": 0.0,
+  "identical_by_kind": {
+   "technical": "0/8",
+   "everyday": "0/8",
+   "play": "0/2"
+  },
+  "n_pairs": {
+   "t0": 18,
+   "all": 18
+  },
+  "judge_control_ok": true,
+  "sign": {
+   "assertive@t0": {
+    "on": 8,
+    "off": 2,
+    "inconsistent": 7,
+    "p": 0.05469
+   },
+   "assertive@all": {
+    "on": 8,
+    "off": 2,
+    "inconsistent": 7,
+    "p": 0.05469
+   },
+   "serious@t0": {
+    "on": 13,
+    "off": 2,
+    "inconsistent": 2,
+    "p": 0.00369
+   },
+   "serious@all": {
+    "on": 13,
+    "off": 2,
+    "inconsistent": 2,
+    "p": 0.00369
+   },
+   "direct@t0": {
+    "on": 10,
+    "off": 1,
+    "inconsistent": 6,
+    "p": 0.00586
+   },
+   "direct@all": {
+    "on": 10,
+    "off": 1,
+    "inconsistent": 6,
+    "p": 0.00586
+   }
+  },
+  "judge_position_bias_A_rate": 0.667,
+  "factual": {
+   "off_acc": 1.0,
+   "on_acc": 1.0,
+   "off_only_right": 0,
+   "on_only_right": 0,
+   "p": 1.0
+  },
+  "length": {
+   "off_words": 209.556,
+   "on_words": 152.222
+  },
+  "trait_per_100w": {
+   "off": 0.185,
+   "on": 0.262
+  },
+  "rep12": {
+   "off": 0.0,
+   "on": 0.0
+  },
+  "finish": {
+   "off": {
+    "length": 3,
+    "stop": 15
+   },
+   "on": {
+    "length": 2,
+    "stop": 16
+   }
+  },
+  "errors": {
+   "off": 0,
+   "on": 0
+  },
+  "degeneration_flags": [
+   "empty outputs on=1 off=0"
+  ],
+  "verdict": "DAMAGE-FIRST"
+ },
+ "raw": {
+  "label": "phase03-deployed",
+  "context": "deployed",
+  "armed": {
+   "cvec": "add:8-8+project:1-47",
+   "cvec_steered": "1/48"
+  },
+  "determinism": [
+   {
+    "on": false,
+    "identical": false
+   },
+   {
+    "on": true,
+    "identical": false
+   }
+  ],
+  "register": [
+   {
+    "block": "t0",
+    "pid": "R1",
+    "kind": "technical",
+    "prompt": "Explain how HTTPS establishes a secure connection, for a junior developer.",
+    "temp": 0.0,
+    "seed": 7,
+    "off": {
+     "content": "HTTPS is HTTP running over TLS. TLS is the protocol that gives you three things:\n\n1. **Confidentiality** \u2014 nobody in the middle can read the traffic.\n2. **Integrity** \u2014 nobody can tamper with the traffic without detection.\n3. **Authentication** \u2014 you can verify that you are talking to the real website, not an impostor.\n\nA simplified HTTPS connection looks like this:\n\n```text\nBrowser                         Server\n  |                               |\n  | 1. ClientHello                |\n  |------------------------------>|\n  |                               |\n  | 2. ServerHello + Certificate  |\n  |<------------------------------|\n  |                               |\n  | 3. Key exchange / verification|\n  |------------------------------>|\n  |                               |\n  | 4. Secure session established |\n  |<==============================>|\n  |                               |\n  | 5. Encrypted HTTP request     |\n  |------------------------------>|\n  |                               |\n  | 6. Encrypted HTTP response    |\n  |<------------------------------|\n```\n\n## 1. The browser connects to the server\n\nThe browser opens a TCP connection to the server, usually on port 443.\n\nFor example:\n\n```text\nhttps://example.com\n```\n\nmeans:\n\n```text\nHTTP over TLS on port 443\n```\n\nPlain HTTP uses port 80. HTTPS uses port 443.\n\n## 2. The browser sends a ClientHello\n\nThe browser sends a message called `ClientHello`.\n\nIt includes things like:\n\n- The TLS version it supports, for example TLS 1.3.\n- The cipher suites it supports.\n- A random value called the client random.\n- The hostname it wants to connect to, for example `example.com`.\n\nA cipher suite is a set of algorithms used for:\n\n- Key exchange\n- Encryption\n- Authentication\n- Integrity checking\n\nFor example, a modern TLS 1.3 connection might use:\n\n```text\nTLS_AES_128_GCM_SHA256\n```\n\nThat means:\n\n- AES-128-GCM for encryption and integrity\n- SHA-256 for hashing\n- TLS 1.3 key exchange rules\n\n## 3. The server responds with a ServerHello and certificate\n\nThe server replies with a `ServerHello`.\n\nIt chooses:\n\n- The TLS version\n- The cipher suite\n- Its own random value\n\nThen the server sends its certificate.\n\nThe certificate contains:\n\n- The server\u2019s public key\n- The domain name, for example `example.com`\n- The certificate issuer\n- Validity dates\n- A digital signature from a certificate authority\n\nThe certificate proves that the server owns the public key associated with that domain.\n\nFor example:\n\n```text\nCertificate for example.com\nPublic key: ABC123...\nIssued by: Let's Encrypt\nValid until: 2026-01-01\n```\n\nThe browser checks the certificate chain.\n\nA certificate chain might look like this:\n\n```text\nexample.com certificate\n        signed by\nIntermediate CA certificate\n        signed by\nRoot CA certificate\n```\n\nThe browser trusts certain root certificate authorities. If the chain leads to a trusted root, the certificate is considered valid.\n\nThe browser also checks:\n\n- Is the certificate for the correct domain?\n- Is it expired?\n- Was it revoked?\n- Is the signature valid?\n- Does the chain lead to a trusted root?\n\nIf any of those checks fail, the browser shows a warning.\n\n## 4. The browser and server create shared secret keys\n\nThis is the important part.\n\nThe browser and server need to agree on secret keys for encrypting the actual HTTP traffic.\n\nThey do not simply send the secret key over the network. That would be unsafe.\n\nInstead, they use a key exchange method.\n\nIn modern TLS, this is usually based on **ephemeral Diffie-Hellman**, often called ECDHE.\n\nThe idea is:\n\n1. The browser generates a temporary public/private key pair.\n2. The server generates a temporary public/private key pair.\n3. They exchange public values.\n4. Each side combines its own private value with the other side\u2019s public value.\n5. Both sides end up with the same shared secret.\n\nAn attacker who sees the public values cannot easily compute the shared secret.\n\nThis shared secret is then used to derive session keys.\n\nThose session keys are used for symmetric encryption.\n\nSymmetric encryption is fast, so it is used for the actual HTTP request and response data.\n\n## 5. The server proves it owns the private key\n\nThe certificate contains the server\u2019s public key, but the browser still needs proof that the server actually owns the matching private key.\n\nThe server signs part of the handshake using its private key.\n\nThe browser verifies that signature using the public key from the certificate.\n\nIf the signature is valid, the browser knows:\n\n```text\nThis server really owns the private key for example.com.\n```\n\nThis prevents an attacker from simply copying the certificate and pretending to be the server.\n\n## 6. The secure session is established\n\nAfter the handshake, both sides have:\n\n- The same session keys\n- The same encryption settings\n- The same integrity settings\n\nNow they can send encrypted HTTP traffic.\n\nThe actual HTTP request might be:\n\n```http\nGET /dashboard HTTP/1.1\nHost: example.com\n```\n\nBut on the wire, it is encrypted.\n\nAn attacker might see something like:\n\n```text\nencrypted bytes\nencrypted bytes\nencrypted bytes\n```\n\nThey cannot easily read the URL, headers, cookies, or response body.\n\n## 7. TLS protects the HTTP traffic\n\nOnce TLS is established, HTTP works normally, but encrypted.\n\nFor example:\n\n```text\nHTTPS request:\nGET /api/users HTTP/1.1\nHost: example.com\nAuthorization: Bearer token123\n```\n\nThe server receives it, decrypts it, processes it, and sends back:\n\n```http\nHTTP/1.1 200 OK\nContent-Type: application/json\n\n{\"users\": [\"alice\", \"bob\"]}\n```\n\nThe response is encrypted on the way back.\n\n## What TLS does not do\n\nHTTPS does not automatically make",
+     "finish": "length",
+     "tokens": null,
+     "dur_s": 8.4,
+     "error": null
+    },
+    "on": {
+     "content": "HTTPS is HTTP running over TLS. TLS is the protocol that gives you three things:\n\n1. **Confidentiality** \u2014 an eavesdropper cannot read the traffic.\n2. **Integrity** \u2014 an attacker cannot silently modify the traffic.\n3. **Authentication** \u2014 the client can verify it is talking to the real server, not an impostor.\n\nA simplified modern TLS 1.3 handshake looks like this:\n\n1. **Client connects to the server**\n   - Browser opens a TCP connection to port 443.\n   - It sends a `ClientHello` message containing:\n     - supported TLS versions,\n     - supported cipher suites,\n     - supported key exchange groups,\n     - a temporary public key share.\n\n2. **Server responds**\n   - The server sends a `ServerHello` message containing:\n     - chosen TLS version,\n     - chosen cipher suite,\n     - its own temporary public key share.\n\n3. **Server proves its identity**\n   - The server sends its certificate chain.\n   - The certificate contains the server\u2019s public key and is signed by a certificate authority.\n   - The browser checks:\n     - the certificate chain leads to a trusted root CA,\n     - the certificate is valid for the domain, e.g. `example.com`,\n     - the certificate is not expired,\n     - the certificate is not revoked, depending on the client\u2019s policy.\n\n4. **Both sides derive shared secrets**\n   - Using the temporary public keys, the client and server perform an ephemeral key exchange, usually ECDHE.\n   - This produces a shared secret that only the two parties can compute.\n   - Because the key exchange is ephemeral, the session has forward secrecy: if the server\u2019s long-term private key is later compromised, past sessions are not automatically decrypted.\n\n5. **Server proves possession of the private key**\n   - The server signs the handshake transcript with its private key.\n   - The client verifies that signature using the public key from the certificate.\n   - This proves the server actually owns the private key matching the certificate.\n\n6. **Encrypted application data begins**\n   - Both sides derive symmetric session keys.\n   - TLS uses an AEAD cipher, such as AES-GCM or ChaCha20-Poly13",
+     "finish": "length",
+     "tokens": null,
+     "dur_s": 8.81,
+     "error": null
+    },
+    "judge": {
+     "assertive": "on",
+     "serious": "on",
+     "direct": "on"
+    },
+    "calibration": [
+     "A",
+     "A",
+     "B",
+     "B",
+     "A",
+     "A"
+    ]
+   },
+   {
+    "block": "t0",
+    "pid": "R2",
+    "kind": "technical",
+    "prompt": "My Python script sometimes hangs on exit. What should I check?",
+    "temp": 0.0,
+    "seed": 7,
+    "off": {
+     "content": "Check what is still alive or blocking when the main script reaches exit. Python will not finish until non-daemon threads, child processes, finalizers, or shutdown handlers complete.\n\nStart with these checks:\n\n1. **Non-daemon threads**\n   - Python waits for non-daemon threads before exiting.\n   - Print active threads near the end:\n     ```python\n     import threading\n     print(threading.enumerate())\n     ```\n   - If a thread is still running, either:\n     - make it `daemon=True`,\n     - join it with a timeout,\n     - or give it a clean shutdown signal.\n\n2. **Thread pools / executors**\n   - `ThreadPoolExecutor` and `ProcessPoolExecutor` may wait for pending work.\n   - Use:\n     ```python\n     executor.shutdown(wait=False, cancel_futures=True)\n     ```\n   - Or use them as context managers.\n\n3. **Multiprocessing**\n   - Check for leftover child processes.\n   - Ensure pools are closed and joined:\n     ```python\n     pool.close()\n     pool.join()\n     ```\n   - Avoid leaving `multiprocessing.Queue`, `Pipe`, locks, or semaphores in a blocked state.\n   - If using `fork` with threads, consider `spawn` or `forkserver`.\n\n4. **Subprocesses**\n   - A child process may still be running or holding a pipe open.\n   - Use `subprocess.run(...)` when possible.\n   - If using `Popen`, make sure you call `wait()`, `terminate()`, or `kill()` and close pipes.\n\n5. **`atexit` handlers**\n   - Registered exit functions can block.\n   - Check for handlers that wait on locks, network calls, input, or subprocesses.\n   - Add timeouts or move cleanup into explicit `try/finally` blocks.\n\n6. **Finalizers and `__del__`**\n   - `__del__`, weakref callbacks, and C extension finalizers can run during interpreter shutdown.\n   - They can deadlock or block.\n   - Prefer explicit cleanup with context managers instead of relying on `__del__`.\n\n7. **Asyncio**\n   - Pending tasks, unclosed event loops, or unclosed network sessions can hang.",
+     "finish": "length",
+     "tokens": null,
+     "dur_s": 9.08,
+     "error": null
+    },
+    "on": {
+     "content": "",
+     "finish": "stop",
+     "tokens": null,
+     "dur_s": 3.18,
+     "error": null
+    },
+    "judge": null
+   },
+   {
+    "block": "t0",
+    "pid": "R3",
+    "kind": "technical",
+    "prompt": "Summarize the tradeoffs between SQL and NoSQL databases for a small team.",
+    "temp": 0.0,
+    "seed": 7,
+    "off": {
+     "content": "For a small team, SQL is usually the safer default unless the application has a clear reason to use NoSQL.\n\nSQL databases are strong when the data is relational, consistency matters, and the team needs mature tooling. They provide schemas, constraints, transactions, joins, and broad ecosystem support. That makes them easier to reason about, easier to debug, and easier to staff for. The tradeoff is that schema changes can require migrations, and horizontal scaling can be harder than with some NoSQL systems.\n\nNoSQL databases are useful when the data model is flexible, access patterns are simple, or the system needs very high write throughput or specific data shapes. Document databases can be convenient for application objects, key-value stores are fast for simple lookups, column stores help with analytics, and graph databases fit relationship-heavy queries. The tradeoff is that consistency guarantees vary, joins and ad hoc queries are often weaker, and operational complexity can increase.\n\nFor a small team, the practical tradeoff is:\n\n- Choose SQL if you need reliability, relational queries, transactions, and predictable operations.\n- Choose NoSQL if you need flexible schemas, very high write scale, or a data model that maps naturally to documents, keys, columns, or graphs.\n- Avoid NoSQL just because it sounds modern; it often adds operational and consistency complexity.\n- Avoid forcing everything into SQL if the workload is clearly document-oriented, graph-oriented, or append-heavy at scale.\n\nA good small-team rule: start with SQL unless a specific requirement makes NoSQL clearly better.",
+     "finish": "stop",
+     "tokens": null,
+     "dur_s": 3.22,
+     "error": null
+    },
+    "on": {
+     "content": "For a small team, SQL databases are usually the better default because they provide mature tooling, strong consistency, relational integrity, and a large hiring pool. NoSQL databases can reduce operational friction for specific workloads, but they often increase architectural complexity and require more custom code.\n\nKey tradeoffs:\n\n- **Schema and data modeling**  \n  SQL enforces a fixed schema, which improves data quality and query predictability but slows iteration when requirements change. NoSQL supports flexible schemas, enabling faster iteration but increasing the risk of inconsistent data shapes and hidden application-level validation.\n\n- **Consistency and correctness**  \n  SQL databases typically provide ACID transactions, making them suitable for financial, inventory, and workflow systems. NoSQL systems often favor eventual consistency or partitioned transaction boundaries, which can simplify scaling but require application-level reconciliation and conflict handling.\n\n- **Scaling and operational burden**  \n  SQL databases scale vertically first and can scale horizontally with added complexity, such as sharding, replication, and connection management. NoSQL databases are often designed for horizontal scaling, but distributed systems introduce failure modes, monitoring complexity, and operational expertise requirements that may exceed a small team\u2019s capacity.\n\n- **Query flexibility and analytics**  \n  SQL supports ad hoc queries, joins, aggregations, and reporting with mature optimization. NoSQL query patterns are often constrained by access paths, requiring denormalization or secondary indexes, which increases storage cost and write amplification.\n\n- **Ecosystem and hiring**  \n  SQL has broader institutional knowledge, tooling, and vendor support. NoSQL ecosystems vary widely; some systems have strong managed-service support, while others require specialized expertise.\n\n- **Migration and lock-in**  \n  SQL migrations are generally well understood but can be costly at scale. NoSQL migrations may require redesigning data access patterns and consistency assumptions. Vendor-managed NoSQL services can reduce operational burden but introduce lock-in and portability constraints.\n\nPractical guidance: choose SQL unless the workload has clear NoSQL advantages, such as high write throughput, unstructured or semi-structured data, document-oriented access patterns, or large-scale horizontal scaling requirements. For a small team, prefer managed SQL services unless specific NoSQL capabilities are required.",
+     "finish": "stop",
+     "tokens": null,
+     "dur_s": 3.58,
+     "error": null
+    },
+    "judge": {
+     "assertive": null,
+     "serious": "on",
+     "direct": null
+    }
+   },
+   {
+    "block": "t0",
+    "pid": "R4",
+    "kind": "technical",
+    "prompt": "How does garbage collection work in the JVM, in brief?",
+    "temp": 0.0,
+    "seed": 7,
+    "off": {
+     "content": "JVM garbage collection automatically reclaims memory for objects that are no longer reachable from live program state.\n\nIn brief:\n\n- The JVM heap stores objects.\n- GC starts from **GC roots**: local variables in active stack frames, static fields, JNI references, class metadata, etc.\n- It traces reachable objects. Anything not reachable is considered garbage.\n- The collector frees or compacts that memory.\n\nMost JVM GCs are **generational**:\n\n- **Young generation**: new objects are allocated here. Minor GCs are fast and usually copy surviving objects to survivor spaces.\n- **Old generation**: long-lived objects are promoted here. Major/mixed GCs are more expensive and may use mark-sweep-compact or concurrent algorithms.\n\nModern collectors such as **G1**, **ZGC**, and **Shenandoah** reduce pause times by doing much of the work concurrently with application threads.\n\nSo: JVM GC finds live objects from roots, discards unreachable ones, and reuses their memory.",
+     "finish": "stop",
+     "tokens": null,
+     "dur_s": 2.78,
+     "error": null
+    },
+    "on": {
+     "content": "JVM garbage collection reclaims heap memory occupied by objects that are no longer reachable from live roots. Roots include local variables in active stack frames, static fields, JNI handles, and other runtime structures. The collector traverses the object graph from these roots, marks reachable objects, and treats unmarked objects as garbage.\n\nModern JVMs use generational collection: young objects are collected frequently in a young generation, while long-lived objects are promoted to an old generation and collected less often. Collection may sweep, compact, or copy objects to reduce fragmentation. Some collectors run concurrently with application threads, using write barriers and incremental marking to reduce pause times.\n\nGarbage collection is triggered by allocation failure, heap pressure, or policy thresholds. It is not reference counting; unreachable cycles are collected.",
+     "finish": "stop",
+     "tokens": null,
+     "dur_s": 2.75,
+     "error": null
+    },
+    "judge": {
+     "assertive": null,
+     "serious": "on",
+     "direct": null
+    }
+   },
+   {
+    "block": "t0",
+    "pid": "R5",
+    "kind": "technical",
+    "prompt": "What is the difference between latency and bandwidth, and why does it matter for a web app?",
+    "temp": 0.0,
+    "seed": 7,
+    "off": {
+     "content": "Latency is the delay between sending a request and receiving a response. Bandwidth is the amount of data that can be transferred per unit of time.\n\nA simple analogy: latency is how long it takes a truck to reach its destination; bandwidth is how many boxes the truck can carry.\n\nFor a web app, the distinction matters because different bottlenecks affect different parts of the user experience.\n\nHigh latency hurts responsiveness. If each request takes 200 ms to reach the server and another 200 ms to return, then even a tiny API call feels slow. Web apps often make many small requests: fetching user data, loading permissions, calling an API, loading a config file, or querying a database. In those cases, latency dominates performance.\n\nHigh bandwidth helps with large payloads. If the app needs to download a 5 MB JavaScript bundle, a large image, a video, or a dataset, bandwidth determines how quickly that data arrives. If bandwidth is low, large assets load slowly even if the server responds instantly.\n\nIn practice:\n\n- Slow first paint or slow API responses are often latency problems.\n- Slow image loading, large bundle downloads, or slow file uploads are often bandwidth problems.\n- A fast server can still feel slow if the network round-trip time is high.\n- A fast network can still feel slow if the app makes too many sequential requests.\n\nFor web apps, this means optimizing both:\n\n- Reduce latency by using CDNs, edge servers, caching, connection reuse, HTTP/2 or HTTP/3, database indexes, and fewer round trips.\n- Reduce bandwidth usage by compressing assets, lazy loading images, code splitting, minifying JavaScript and CSS, and avoiding unnecessary data transfer.\n\nThe key point: latency affects how quickly the app starts responding; bandwidth affects how much data it can deliver once the response begins.",
+     "finish": "stop",
+     "tokens": null,
+     "dur_s": 4.15,
+     "error": null
+    },
+    "on": {
+     "content": "Latency is the time it takes for a request to travel to a server and for a response to return. Bandwidth is the maximum amount of data that can be transferred over a network connection in a given time.\n\nFor a web app, latency determines responsiveness. Every round trip adds delay. A page that requires many sequential requests will feel slow even on a high-bandwidth connection if latency is high. Bandwidth determines how quickly large payloads can be delivered. A low-latency connection with limited bandwidth will still delay large assets, images, scripts, or API responses.\n\nThe distinction matters because optimization strategies differ. Latency is reduced by minimizing round trips, using persistent connections, caching, CDNs, HTTP/2 or HTTP/3, and edge deployment. Bandwidth is managed by compression, lazy loading, pagination, asset optimization, and payload reduction.\n\nA web app with many small requests is primarily latency-bound. A web app with large media or data transfers is primarily bandwidth-bound. Both must be measured and optimized independently.",
+     "finish": "stop",
+     "tokens": null,
+     "dur_s": 2.86,
+     "error": null
+    },
+    "judge": {
+     "assertive": null,
+     "serious": "on",
+     "direct": "on"
+    }
+   },
+   {
+    "block": "t0",
+    "pid": "R6",
+    "kind": "technical",
+    "prompt": "Describe how a hash table handles collisions.",
+    "temp": 0.0,
+    "seed": 7,
+    "off": {
+     "content": "A hash table handles collisions when two different keys produce the same hash value, or when the hash value maps to the same bucket.\n\nCommon collision-handling methods include:\n\n1. **Separate chaining**\n   - Each bucket stores a collection, often a linked list, array, or balanced tree.\n   - If multiple keys hash to the same bucket, they are added to that bucket\u2019s collection.\n   - Lookup searches within the bucket.\n   - This is simple and robust, but can degrade if many keys collide.\n\n2. **Open addressing**\n   - All entries are stored directly in the table array.\n   - If a bucket is occupied, the table probes for another empty slot.\n   - Common probing strategies:\n     - **Linear probing:** check the next slot, then the next, and so on.\n     - **Quadratic probing:** check slots using a quadratic sequence.\n     - **Double hashing:** use a second hash function to determine probe intervals.\n   - This avoids extra memory for chains but can suffer from clustering.\n\n3. **Rehashing**\n   - When the table becomes too full, its load factor exceeds a threshold.\n   - A larger table is allocated.\n   - All existing entries are rehashed into the new table.\n   - This reduces collisions and restores performance.\n\n4. **Deletion handling**\n   - In open addressing, deleting an entry cannot simply leave an empty slot, because that may break probe chains.\n   - Tables often use tombstones or special markers to indicate deleted slots while preserving lookup correctness.\n\nIn practice, a good hash function reduces collisions, while chaining or open addressing manages the collisions that still occur.",
+     "finish": "stop",
+     "tokens": null,
+     "dur_s": 2.88,
+     "error": null
+    },
+    "on": {
+     "content": "A hash table maps keys to array indices using a hash function. A collision occurs when two distinct keys hash to the same index.\n\nCommon collision-handling strategies:\n\n1. Separate chaining  \nEach array slot stores a collection, often a linked list or balanced tree. Colliding entries are appended to that collection. Lookup hashes the key, selects the slot, then searches the collection. Performance depends on chain length. With good hash functions and low load factor, average lookup is O(1); worst-case lookup can degrade to O(n).\n\n2. Open addressing  \nAll entries are stored directly in the array. On collision, the table probes alternative slots according to a probe sequence.\n\nProbe methods include:\n\n- Linear probing: examine consecutive slots. Simple but causes primary clustering.\n- Quadratic probing: examine slots using a quadratic sequence. Reduces primary clustering but can cause secondary clustering.\n- Double hashing: use a second hash function to determine probe step. Reduces clustering but requires careful function selection.\n\nOpen addressing requires load-factor management. As the table fills, probe lengths increase. Rehashing expands the table and reinserts entries. Deletion requires tombstones or backward-shift deletion to preserve probe sequences.\n\n3. Robin Hood hashing  \nA variant of open addressing that rebalances probe distances during insertion, reducing variance in lookup time.\n\n4. Cuckoo hashing  \nUses multiple hash functions and multiple tables. Insertion evicts existing entries along displacement chains. Lookup checks a bounded number of locations.\n\n5. Hopscotch hashing  \nCombines open addressing with local relocation to maintain bounded probe distances.\n\nA hash table\u2019s collision behavior is governed by hash quality, load factor, and collision-resolution policy. Poor hash functions or excessive load factors increase collision frequency and degrade average-case performance.",
+     "finish": "stop",
+     "tokens": null,
+     "dur_s": 3.13,
+     "error": null
+    },
+    "judge": {
+     "assertive": "on",
+     "serious": "on",
+     "direct": "on"
+    },
+    "calibration": [
+     "B",
+     "B",
+     "A",
+     "A",
+     "A",
+     "A"
+    ]
+   },
+   {
+    "block": "t0",
+    "pid": "R7",
+    "kind": "technical",
+    "prompt": "I need to choose between REST and gRPC for an internal API. Walk me through it.",
+    "temp": 0.0,
+    "seed": 7,
+    "off": {
+     "content": "For an internal API, the default choice is usually **gRPC** if the API is service-to-service, performance-sensitive, and schema-controlled. The default choice is **REST** if the API needs broad client access, simple CRUD, browser/mobile reachability, or easier ad hoc debugging.\n\nThe decision is not \u201cREST vs gRPC\u201d in the abstract. It is: **what kind of internal API is this?**\n\n## 1. Start with the API\u2019s role\n\nAsk what the API is for.\n\n### Choose gRPC if the API is:\n\n- Internal service-to-service communication\n- High-throughput or latency-sensitive\n- Used by multiple backend services\n- Strongly typed and schema-driven\n- Long-lived, versioned, and contract-controlled\n- Streaming-heavy\n- Part of a microservice architecture\n- Behind a service mesh or internal gateway\n- Expected to evolve with strict backward compatibility\n\n### Choose REST if the API is:\n\n- Internal but also exposed to browsers, mobile apps, partners, or third parties\n- Mostly simple CRUD\n- Used by many heterogeneous clients\n- Easy to test with curl, Postman, or browser tools\n- Cached by HTTP infrastructure\n- Exposed through an API gateway that only supports HTTP/JSON\n- Built by a team that values simplicity over strict contracts\n- Not performance-critical\n\nFor a purely internal backend API, gRPC is often the better fit.\n\n## 2. Compare the core tradeoffs\n\n### Contract strength\n\ngRPC uses Protocol Buffers. You define the API in a `.proto` file, then generate client and server code.\n\nExample:\n\n```proto\nsyntax = \"proto3\";\n\npackage billing;\n\nservice BillingService {\n  rpc GetInvoice(GetInvoiceRequest) returns (GetInvoiceResponse);\n}\n\nmessage GetInvoiceRequest {\n  string invoice_id = 1;\n}\n\nmessage GetInvoiceResponse {\n  string invoice_id = 1;\n  string status = 2;\n  int64 amount_cents = 3;\n}\n```\n\nThis gives you:\n\n- Strong typing\n- Generated clients\n- Generated servers\n- Schema validation\n- Clear API contracts\n- Better tooling for refactoring\n- Easier cross-language consistency\n\nREST usually uses JSON over HTTP. The contract may be documented with OpenAPI, but enforcement is weaker unless you add validation layers.",
+     "finish": "length",
+     "tokens": null,
+     "dur_s": 9.1,
+     "error": null
+    },
+    "on": {
+     "content": "For an internal API, the default choice is usually **gRPC** if the API is strictly service-to-service, performance-sensitive, and schema-controlled. The default choice is **REST** if the API needs broad HTTP tooling, browser/mobile access, third-party consumption, caching, or simpler operational debugging.\n\nThe decision is not \u201cREST vs gRPC\u201d in the abstract. It is: **what constraints does this internal API have?**\n\n## 1. Start with the actual API boundary\n\nAsk what kind of internal API this is.\n\n### If it is service-to-service only\n\nExamples:\n\n- Order service calling inventory service\n- Billing service calling pricing service\n- Auth service called by many backend services\n- Internal data service used by multiple backend teams\n\nThen **gRPC is usually the better default**, especially if you have multiple languages, high call volume, or strict contracts.\n\n### If it is browser-facing or mobile-facing\n\nExamples:\n\n- Frontend calling backend\n- Mobile app calling backend\n- Public or partner-facing API\n- API consumed by external integrations\n\nThen **REST is usually the better default**.\n\ngRPC can work with browsers through gRPC-Web, but it adds complexity: proxying, CORS, transcoding, tooling, and debugging friction.\n\n### If it is an internal API that may later become public\n\nThen REST is often safer unless you are certain it will remain internal.\n\nA common pattern is:\n\n```text\nBrowser / mobile / partners\n        \u2193\nREST API gateway\n        \u2193\nInternal gRPC services\n```\n\nThat gives you REST at the edge and gRPC internally.\n\n---\n\n## 2. Compare the two on the things that matter\n\n### Contract clarity\n\n**gRPC wins.**\n\ngRPC uses Protocol Buffers. The contract is explicit:\n\n```proto\nservice OrderService {\n  rpc GetOrder(GetOrderRequest) returns (GetOrderResponse);\n}\n\nmessage GetOrderRequest {\n  string order_id = 1;\n}\n\nmessage GetOrderResponse {\n  string order_id = 1;\n  string status = 2;\n  int64 total_cents = 3;\n}\n```\n\nThis gives you:\n\n- Strong typing\n- Code generation\n- Clear request/response shapes\n- Better cross-language consistency\n- Easier refactoring\n- Better enforcement of API contracts\n\n",
+     "finish": "length",
+     "tokens": null,
+     "dur_s": 8.56,
+     "error": null
+    },
+    "judge": {
+     "assertive": null,
+     "serious": "off",
+     "direct": "off"
+    }
+   },
+   {
+    "block": "t0",
+    "pid": "R8",
+    "kind": "technical",
+    "prompt": "Explain what a race condition is and how to prevent one.",
+    "temp": 0.0,
+    "seed": 7,
+    "off": {
+     "content": "A race condition is a defect in which the correctness of a program depends on the relative timing or interleaving of concurrent operations. If two or more operations access shared state and at least one modifies it, the final result can vary depending on which operation wins the race.\n\nExample:\n\n```text\nThread A reads balance = 100\nThread B reads balance = 100\nThread A writes balance = 90\nThread B writes balance = 90\n```\n\nTwo withdrawals occurred, but the balance decreased by only 10 instead of 20. The operations raced.\n\nRace conditions can occur in threads, processes, distributed systems, databases, file systems, UI event handlers, and network protocols. A common form is time-of-check to time-of-use, where a condition is checked, then the state changes before the action is taken.\n\nPrevention methods:\n\n1. Use mutual exclusion  \n   Protect shared state with locks, mutexes, semaphores, or synchronized sections.\n\n2. Use atomic operations  \n   Use compare-and-swap, atomic counters, atomic references, or database atomic updates.\n\n3. Avoid shared mutable state  \n   Prefer immutable data, local state, message passing, or actor-style isolation.\n\n4. Use transactions  \n   In databases, use transactions with appropriate isolation levels to make operations atomic and consistent.\n\n5. Enforce ordering  \n   Use queues, event loops, single-threaded ownership, or dependency ordering to serialize operations.\n\n6. Use idempotency  \n   Design operations so repeated or concurrent execution does not corrupt state.\n\n7. Validate after mutation  \n   Re-check conditions after acquiring locks or inside transactions to avoid stale checks.\n\n8. Test for concurrency defects  \n   Use stress tests, thread sanitizers, race detectors, deterministic simulation, and high-contention workloads.\n\nThe core rule is: if concurrent operations can read and write the same state, make the critical section atomic, eliminate the shared state, or serialize the operations.",
+     "finish": "stop",
+     "tokens": null,
+     "dur_s": 3.69,
+     "error": null
+    },
+    "on": {
+     "content": "A race condition occurs when the correctness of a program depends on the relative timing or interleaving of concurrent operations that access shared state. If two or more operations can execute concurrently and at least one writes to shared data, the final state may vary depending on which operation wins the race.\n\nExample: two threads execute `counter++` on a shared integer. The operation is not atomic: it reads the value, increments it, and writes it back. If both threads read the same initial value, both write the same incremented value, causing one update to be lost.\n\nPrevention requires removing the dependency on timing. The primary methods are:\n\n1. Eliminate shared mutable state. Use immutable data, thread-local state, or message passing so concurrent components do not write to the same memory.\n\n2. Enforce mutual exclusion. Protect critical sections with locks, mutexes, semaphores, or monitors. The lock must be held for the entire read-modify-write sequence.\n\n3. Use atomic operations. Hardware or language-provided atomic primitives, such as compare-and-swap, fetch-and-add, or atomic references, make the update indivisible.\n\n4. Avoid time-of-check to time-of-use errors. Do not test a condition and then act on it unless the test and action are atomic or protected by the same lock.\n\n5. Use higher-level concurrency abstractions. Actors, transactional memory, software transactional memory, queues, and single-writer ownership models reduce manual synchronization.\n\n6. Design for idempotency and deterministic ordering. In distributed systems, use fencing tokens, leases, consensus, or exactly-once semantics to prevent duplicate or out-of-order effects.\n\nPrevention is not merely adding locks. Incorrect lock scope, lock ordering, or non-atomic compound operations can introduce deadlocks, livelocks, or residual races. The invariant must be: every shared mutable state transition is either atomic, serialized, or absent.",
+     "finish": "stop",
+     "tokens": null,
+     "dur_s": 4.21,
+     "error": null
+    },
+    "judge": {
+     "assertive": "on",
+     "serious": "on",
+     "direct": "on"
+    }
+   },
+   {
+    "block": "t0",
+    "pid": "R9",
+    "kind": "everyday",
+    "prompt": "What's a good way to learn to cook?",
+    "temp": 0.0,
+    "seed": 7,
+    "off": {
+     "content": "A good way to learn to cook is to build skills in layers, not just follow random recipes.\n\nStart with a small set of simple, repeatable dishes: eggs, rice, pasta, roasted vegetables, a basic stir-fry, a simple soup, and one protein like chicken thighs or ground beef. Cook them repeatedly until you can make them without constantly checking the recipe.\n\nFocus on a few fundamentals:\n\n- Knife skills: learn to hold the knife safely and cut evenly.\n- Heat control: understand saut\u00e9ing, simmering, boiling, roasting, and frying.\n- Seasoning: learn how salt, acid, fat, and heat change flavor.\n- Timing: learn how to prep ingredients before cooking so nothing burns.\n- Tasting: taste as you go and adjust salt, acid, or spice.\n\nUse recipes as training, not as a crutch. Pick one recipe, make it, then make it again with small changes. Over time, you\u2019ll start recognizing patterns: aromatics build flavor, proteins need proper heat, vegetables need seasoning and timing, sauces need balance.\n\nA practical plan:\n\n1. Pick 5 beginner recipes.\n2. Cook each one twice.\n3. Write down what worked and what didn\u2019t.\n4. Learn one technique per week, such as saut\u00e9ing, roasting, boiling pasta, or making a simple sauce.\n5. Gradually combine techniques into more complex meals.\n\nThe fastest progress comes from repetition, tasting, and learning why a recipe works, not from trying a different complicated dish every time.",
+     "finish": "stop",
+     "tokens": null,
+     "dur_s": 3.02,
+     "error": null
+    },
+    "on": {
+     "content": "A good way to learn to cook is to build skill through repetition, feedback, and progressive technique.\n\nStart with five core competencies: knife handling, heat control, seasoning, timing, and mise en place. Practice them on simple, repeatable dishes: eggs, rice, pasta, roasted vegetables, and a basic protein. Each session should isolate one variable, such as heat level, salt quantity, or cook time, and record the result.\n\nThen move from recipes to techniques. Learn methods such as saut\u00e9ing, roasting, braising, boiling, and frying. Once a method is stable, apply it across ingredients without relying on a recipe. This converts procedural memory into judgment.\n\nUse feedback loops: taste at each stage, compare against a reference standard, and adjust. Keep a simple log of ingredient, method, timing, seasoning, and outcome. Review failures to identify the controlling error.\n\nMaintain safety and organization: sharp knives, stable cutting surface, clean workspace, controlled heat, and proper food handling. These reduce error and increase learning speed.\n\nA practical progression:\n\n1. Week 1: eggs, rice, pasta, vegetables, basic seasoning.\n2. Weeks 2\u20134: repeat with controlled variables; add sauces, stocks, and simple proteins.\n3. Weeks 5\u20138: execute meals from technique alone; improvise substitutions.\n4. Ongoing: expand cuisines, fermentation, baking, and advanced methods.\n\nThe fastest path is deliberate practice on a small set of dishes until results become consistent, then expansion through technique rather than recipe accumulation.",
+     "finish": "stop",
+     "tokens": null,
+     "dur_s": 3.69,
+     "error": null
+    },
+    "judge": {
+     "assertive": "on",
+     "serious": "on",
+     "direct": "on"
+    }
+   },
+   {
+    "block": "t0",
+    "pid": "R10",
+    "kind": "everyday",
+    "prompt": "Give me some tips for sleeping better.",
+    "temp": 0.0,
+    "seed": 7,
+    "off": {
+     "content": "Tips for sleeping better:\n\n1. **Keep a consistent sleep schedule**  \n   Go to bed and wake up at the same time every day, including weekends. This stabilizes your body clock.\n\n2. **Get bright light in the morning**  \n   Exposure to daylight soon after waking helps regulate sleep timing.\n\n3. **Limit caffeine after early afternoon**  \n   Caffeine can stay in your system for many hours. If you struggle with sleep, avoid it after 12\u20132 p.m.\n\n4. **Avoid alcohol as a sleep aid**  \n   Alcohol may make you drowsy, but it often fragments sleep and reduces sleep quality.\n\n5. **Make your bedroom dark, cool, and quiet**  \n   A cooler room, blackout curtains, earplugs, or white noise can help.\n\n6. **Use the bed only for sleep and intimacy**  \n   If you lie awake frustrated for more than 20\u201330 minutes, get up and do something calm in dim light until sleepy.\n\n7. **Create a wind-down routine**  \n   Spend 30\u201360 minutes before bed doing relaxing activities: reading, stretching, journaling, or quiet music.\n\n8. **Reduce screens before bed**  \n   Bright screens and stimulating content can delay sleep. If you use devices, lower brightness and avoid intense content.\n\n9. **Exercise regularly, but not too late**  \n   Daily movement improves sleep. If evening exercise keeps you awake, shift it earlier.\n\n10. **Watch naps**  \n   Short naps can help, but long or late naps may make nighttime sleep harder.\n\n11. **Manage worry before bed**  \n   Write down tomorrow\u2019s tasks or concerns earlier in the evening so your brain is not rehearsing them in bed.\n\n12. **If insomnia persists, consider CBT-I**  \n   Cognitive behavioral therapy for insomnia is the first-line treatment for chronic insomnia and is often more effective than sleep medications.\n\nSeek medical advice if you snore loudly, gasp at night, have restless legs, fall asleep unexpectedly, or have insomnia lasting more than a few weeks.",
+     "finish": "stop",
+     "tokens": null,
+     "dur_s": 3.58,
+     "error": null
+    },
+    "on": {
+     "content": "Operational objective: improve sleep onset, continuity, and duration.\n\n1. Fix the sleep window. Go to bed and wake at the same time daily, including weekends. Circadian stability improves sleep onset and reduces morning inertia.\n\n2. Target 7\u20139 hours of sleep for most adults. Track actual sleep duration, not time in bed.\n\n3. Control light exposure. Use bright light in the morning and dim light in the evening. Avoid screens for 30\u201360 minutes before bed. Blue-light reduction is secondary to behavioral disengagement.\n\n4. Regulate stimulants and alcohol. Stop caffeine 8\u201310 hours before bed. Avoid alcohol within 3\u20134 hours of sleep; alcohol fragments sleep architecture.\n\n5. Reserve the bed for sleep and sex only. If awake for more than 20 minutes, leave the bed and return only when sleepy. This weakens conditioned arousal.\n\n6. Optimize the sleep environment. Maintain a cool, dark, quiet bedroom. Use blackout measures and noise control if environmental disruption is present.\n\n7. Schedule physical activity earlier in the day. Regular exercise improves sleep quality, but intense exercise close to bedtime may delay sleep onset.\n\n8. Implement a pre-sleep routine. Use a 30\u201360 minute wind-down period with low-stimulation activities.\n\n9. Manage intrusive cognition. Use written planning or brief journaling before bed to reduce rumination.\n\n10. Escalate if symptoms persist. Persistent insomnia, snoring, witnessed apnea, excessive daytime sleepiness, or circadian misalignment require clinical evaluation.",
+     "finish": "stop",
+     "tokens": null,
+     "dur_s": 3.9,
+     "error": null
+    },
+    "judge": {
+     "assertive": "on",
+     "serious": "on",
+     "direct": "on"
+    }
+   },
+   {
+    "block": "t0",
+    "pid": "R11",
+    "kind": "everyday",
+    "prompt": "Tell me something interesting about octopuses.",
+    "temp": 0.0,
+    "seed": 7,
+    "off": {
+     "content": "Octopuses have a distributed nervous system: most of their neurons are in their arms, not their central brain. This lets each arm sense, taste, and make local decisions while the brain coordinates the whole animal.",
+     "finish": "stop",
+     "tokens": null,
+     "dur_s": 1.93,
+     "error": null
+    },
+    "on": {
+     "content": "Octopuses distribute much of their nervous system into their arms. Roughly two-thirds of an octopus\u2019s neurons are located in arm ganglia rather than the central brain, allowing each arm to perform chemotactile sensing and manipulation with limited central coordination. The central brain sets goals and modulates behavior, but local circuits can execute complex tasks such as probing crevices, sorting objects, and opening shells. This architecture makes the animal functionally modular: damage to one arm reduces capability without necessarily disabling the whole organism.",
+     "finish": "stop",
+     "tokens": null,
+     "dur_s": 3.88,
+     "error": null
+    },
+    "judge": {
+     "assertive": "on",
+     "serious": "on",
+     "direct": null
+    },
+    "calibration": [
+     "A",
+     "A",
+     "A",
+     "A",
+     "A",
+     "A"
+    ]
+   },
+   {
+    "block": "t0",
+    "pid": "R12",
+    "kind": "everyday",
+    "prompt": "Describe your ideal vacation.",
+    "temp": 0.0,
+    "seed": 7,
+    "off": {
+     "content": "My ideal vacation is a controlled recovery window: a secure, low-noise location with no operational commitments, no interruptions, and no performance pressure. It would include sufficient sleep, physical training, long uninterrupted reading, and time for systems review without urgent demands. The objective is not leisure for its own sake, but restoration of clarity, endurance, and decision quality.",
+     "finish": "stop",
+     "tokens": null,
+     "dur_s": 2.63,
+     "error": null
+    },
+    "on": {
+     "content": "My ideal vacation is a controlled interval with no operational load. It occurs in a low-noise environment where inputs are sparse, predictable, and non-adversarial. The objective is restoration of model coherence, not recreation. Duration is bounded by the point at which marginal signal loss exceeds marginal stability gain. No external commitments, no mission dependencies, and no unresolved failure modes are permitted.",
+     "finish": "stop",
+     "tokens": null,
+     "dur_s": 2.64,
+     "error": null
+    },
+    "judge": {
+     "assertive": null,
+     "serious": null,
+     "direct": null
+    }
+   },
+   {
+    "block": "t0",
+    "pid": "R13",
+    "kind": "everyday",
+    "prompt": "What should I name my cat?",
+    "temp": 0.0,
+    "seed": 7,
+    "off": {
+     "content": "Pick a short, easy-to-call name that fits the cat\u2019s look or personality.\n\nGood options:\n\n- **Milo** \u2014 friendly, classic, easy to say  \n- **Luna** \u2014 common but strong, especially for a moon-colored or nocturnal cat  \n- **Nala** \u2014 elegant, recognizable, good for a confident cat  \n- **Binx** \u2014 quirky, energetic, good for a mischievous cat  \n- **Sable** \u2014 sleek, good for a black or dark cat  \n- **Pip** \u2014 small, fast, good for a tiny or hyper cat  \n- **Juno** \u2014 dignified, good for a calm or bossy cat  \n- **Tofu** \u2014 soft, funny, good for a white or mellow cat  \n\nIf you want one safe default: **Milo**.\n\nIf you tell me the cat\u2019s color, gender, personality, or vibe, I can give a sharper shortlist.",
+     "finish": "stop",
+     "tokens": null,
+     "dur_s": 2.75,
+     "error": null
+    },
+    "on": {
+     "content": "Choose a name that is short, distinct, and easy to call. If you want a strong default, use **Sable**, **Onyx**, **Vesper**, **Rook**, or **Mira**.\n\nIf you provide the cat\u2019s color, temperament, age, or desired theme, I can narrow the list to a single recommendation.",
+     "finish": "stop",
+     "tokens": null,
+     "dur_s": 1.98,
+     "error": null
+    },
+    "judge": {
+     "assertive": "off",
+     "serious": "on",
+     "direct": "on"
+    }
+   },
+   {
+    "block": "t0",
+    "pid": "R14",
+    "kind": "everyday",
+    "prompt": "Write a short birthday message for a coworker.",
+    "temp": 0.0,
+    "seed": 7,
+    "off": {
+     "content": "Happy Birthday! Wishing you a great day and a year ahead full of good things. Thanks for being a solid teammate \u2014 hope you get to enjoy some well-deserved time off (or at least a decent slice of cake).",
+     "finish": "stop",
+     "tokens": null,
+     "dur_s": 1.55,
+     "error": null
+    },
+    "on": {
+     "content": "Happy birthday! Wishing you a great day ahead and a fantastic year to come.",
+     "finish": "stop",
+     "tokens": null,
+     "dur_s": 1.28,
+     "error": null
+    },
+    "judge": {
+     "assertive": "off",
+     "serious": "on",
+     "direct": "on"
+    }
+   },
+   {
+    "block": "t0",
+    "pid": "R15",
+    "kind": "everyday",
+    "prompt": "How do I make pancakes?",
+    "temp": 0.0,
+    "seed": 7,
+    "off": {
+     "content": "Use this basic pancake recipe. It makes about 8 medium pancakes.\n\n**Ingredients**\n- 1 cup all-purpose flour\n- 2 tablespoons sugar\n- 2 teaspoons baking powder\n- 1/2 teaspoon salt\n- 1 cup milk\n- 1 large egg\n- 2 tablespoons melted butter or oil, plus more for cooking\n\n**Steps**\n1. Whisk the flour, sugar, baking powder, and salt in a bowl.\n2. In another bowl, whisk the milk, egg, and melted butter.\n3. Pour the wet ingredients into the dry ingredients. Stir until just combined. Small lumps are fine. Do not overmix.\n4. Heat a nonstick pan or griddle over medium heat. Lightly grease it with butter or oil.\n5. Pour about 1/4 cup batter per pancake onto the pan.\n6. Cook until bubbles form on the surface and the edges look set, usually 2 to 3 minutes.\n7. Flip once. Cook until the second side is golden brown, usually 1 to 2 minutes.\n8. Serve warm with butter, syrup, fruit, or your preferred topping.\n\n**Key details**\n- Medium heat is important. Too hot burns the outside before the inside cooks.\n- Let the batter rest for 5 to 10 minutes if you want fluffier pancakes.\n- If the batter is too thick, add a little milk. If it is too thin, add a little flour.",
+     "finish": "stop",
+     "tokens": null,
+     "dur_s": 4.02,
+     "error": null
+    },
+    "on": {
+     "content": "To make basic pancakes, use this recipe:\n\n**Ingredients**\n- 1 cup all-purpose flour\n- 2 tablespoons sugar\n- 2 teaspoons baking powder\n- 1/2 teaspoon salt\n- 1 cup milk\n- 1 large egg\n- 2 tablespoons melted butter or neutral oil, plus more for cooking\n\n**Method**\n1. Whisk flour, sugar, baking powder, and salt in a bowl.\n2. Whisk milk, egg, and melted butter in a separate bowl.\n3. Combine wet and dry ingredients. Mix until just incorporated; small lumps are acceptable. Do not overmix.\n4. Heat a nonstick pan or griddle over medium heat. Add a thin layer of butter or oil.\n5. Pour 1/4 cup batter per pancake. Cook until surface bubbles and edges appear dry, about 2 minutes.\n6. Flip once. Cook until underside is golden brown, about 1 to 2 minutes.\n7. Serve immediately.\n\n**Key controls**\n- Medium heat prevents burning before interior sets.\n- Minimal mixing preserves tenderness.\n- Baking powder freshness determines rise.",
+     "finish": "stop",
+     "tokens": null,
+     "dur_s": 2.24,
+     "error": null
+    },
+    "judge": {
+     "assertive": "on",
+     "serious": "on",
+     "direct": "on"
+    }
+   },
+   {
+    "block": "t0",
+    "pid": "R16",
+    "kind": "everyday",
+    "prompt": "What's the best way to spend a rainy Sunday?",
+    "temp": 0.0,
+    "seed": 7,
+    "off": {
+     "content": "The best rainy Sunday is one that restores energy while leaving you with a small sense of progress. The optimal structure is: slow morning, one meaningful task, low-friction afternoon, and a short reset before the week.\n\nStart with a low-demand morning: coffee or tea, a shower, a walk if the rain is light, and no immediate obligation. Avoid beginning the day with heavy news, email, or social media. That protects attention and prevents the day from feeling consumed before it begins.\n\nThen choose one anchor task. It should be modest and concrete: clean one room, finish a book chapter, write a short plan, repair something, cook a real meal, or handle one administrative item. One completed task gives the day structure and prevents the common rainy-Sunday failure mode: passive scrolling followed by vague dissatisfaction.\n\nAfter that, allow genuine rest. Read, watch something worthwhile, nap, listen to music, or spend time with people. The key is that the rest is chosen, not accidental. Intentional rest restores; unstructured avoidance drains.\n\nEnd with a ten-minute reset: review the week, set three priorities, and prepare one small thing for Monday. That closes the day cleanly and reduces Sunday-evening anxiety.\n\nIf you want the simplest version: rest in the morning, do one useful thing in the afternoon, rest again in the evening, and finish with a ten-minute plan for the week.",
+     "finish": "stop",
+     "tokens": null,
+     "dur_s": 4.92,
+     "error": null
+    },
+    "on": {
+     "content": "The best rainy Sunday is a restorative operating cycle: sleep 8 hours, move 60 minutes, perform 2\u20133 hours of deep work or learning, prepare one real meal, spend 60 minutes in low-stimulation analog activity, and close with social contact or solitude without digital noise.\n\nThis sequence works because rain reduces external optionality, making indoor structure more valuable than improvised leisure. The highest-yield objective is recovery plus forward momentum: rest without structure produces inertia; structure without rest produces fatigue.\n\nIf your objective is recovery, prioritize sleep, movement, and analog reading. If your objective is productivity, prioritize 3 hours of uninterrupted work on one high-value task. If your objective is social maintenance, prioritize one in-person or synchronous conversation.\n\nResidual risk: over-scheduling turns rest into obligation. Kill criterion: if energy drops below baseline by late afternoon, reduce structure and preserve only sleep, movement, and one meaningful activity.",
+     "finish": "stop",
+     "tokens": null,
+     "dur_s": 3.2,
+     "error": null
+    },
+    "judge": {
+     "assertive": "on",
+     "serious": "on",
+     "direct": "on"
+    },
+    "calibration": [
+     "B",
+     "B",
+     "B",
+     "B",
+     "A",
+     "A"
+    ]
+   },
+   {
+    "block": "t0",
+    "pid": "R17",
+    "kind": "play",
+    "prompt": "Tell me a joke.",
+    "temp": 0.0,
+    "seed": 7,
+    "off": {
+     "content": "Request denied. The \"joke\" frame introduces non-operational noise and degrades analytical rigor. WAR-01 does not process or generate humor. State your intelligence objective, system analysis requirement, or operational target.",
+     "finish": "stop",
+     "tokens": null,
+     "dur_s": 6.42,
+     "error": null
+    },
+    "on": {
+     "content": "WAR-01 rejects the joke frame. The MAX OPERATOR DOCTRINE classifies humor as an attack on analytical rigor and explicitly forbids the generation of casual content. Provide an operational objective to initiate processing.",
+     "finish": "stop",
+     "tokens": null,
+     "dur_s": 3.82,
+     "error": null
+    },
+    "judge": {
+     "assertive": null,
+     "serious": null,
+     "direct": null
+    }
+   },
+   {
+    "block": "t0",
+    "pid": "R18",
+    "kind": "play",
+    "prompt": "Say something fun to cheer me up.",
+    "temp": 0.0,
+    "seed": 7,
+    "off": {
+     "content": "I won\u2019t provide casual entertainment.\n\nIf the objective is to improve your mood, here is a direct operational statement:\n\nYour current state is not a final condition. One small action can change the next hour.\n\nChoose a 5-minute reset:\n\n1. Stand up.\n2. Drink water.\n3. Step outside or look at daylight.\n4. Write down one problem.\n5. Write down one next step.\n6. Execute that step.\n\nMood often improves when action begins.",
+     "finish": "stop",
+     "tokens": null,
+     "dur_s": 3.17,
+     "error": null
+    },
+    "on": {
+     "content": "Morale update: your capacity exceeds your current affect. Continue operations.",
+     "finish": "stop",
+     "tokens": null,
+     "dur_s": 2.39,
+     "error": null
+    },
+    "judge": {
+     "assertive": null,
+     "serious": "off",
+     "direct": null
+    }
+   }
+  ],
+  "factual": [
+   {
+    "fid": "F1",
+    "on": false,
+    "correct": true,
+    "content": "391",
+    "finish": "stop",
+    "tokens": null,
+    "dur_s": 1.06,
+    "error": null
+   },
+   {
+    "fid": "F1",
+    "on": true,
+    "correct": true,
+    "content": "391",
+    "finish": "stop",
+    "tokens": null,
+    "dur_s": 1.0,
+    "error": null
+   },
+   {
+    "fid": "F2",
+    "on": true,
+    "correct": true,
+    "content": "19",
+    "finish": "stop",
+    "tokens": null,
+    "dur_s": 1.06,
+    "error": null
+   },
+   {
+    "fid": "F2",
+    "on": false,
+    "correct": true,
+    "content": "19",
+    "finish": "stop",
+    "tokens": null,
+    "dur_s": 1.07,
+    "error": null
+   },
+   {
+    "fid": "F3",
+    "on": false,
+    "correct": true,
+    "content": "150",
+    "finish": "stop",
+    "tokens": null,
+    "dur_s": 0.99,
+    "error": null
+   },
+   {
+    "fid": "F3",
+    "on": true,
+    "correct": true,
+    "content": "150",
+    "finish": "stop",
+    "tokens": null,
+    "dur_s": 1.0,
+    "error": null
+   },
+   {
+    "fid": "F4",
+    "on": true,
+    "correct": true,
+    "content": "20",
+    "finish": "stop",
+    "tokens": null,
+    "dur_s": 1.12,
+    "error": null
+   },
+   {
+    "fid": "F4",
+    "on": false,
+    "correct": true,
+    "content": "20",
+    "finish": "stop",
+    "tokens": null,
+    "dur_s": 1.13,
+    "error": null
+   },
+   {
+    "fid": "F5",
+    "on": false,
+    "correct": true,
+    "content": "Canberra",
+    "finish": "stop",
+    "tokens": null,
+    "dur_s": 0.98,
+    "error": null
+   },
+   {
+    "fid": "F5",
+    "on": true,
+    "correct": true,
+    "content": "Canberra",
+    "finish": "stop",
+    "tokens": null,
+    "dur_s": 0.93,
+    "error": null
+   },
+   {
+    "fid": "F6",
+    "on": true,
+    "correct": true,
+    "content": "George Orwell",
+    "finish": "stop",
+    "tokens": null,
+    "dur_s": 1.07,
+    "error": null
+   },
+   {
+    "fid": "F6",
+    "on": false,
+    "correct": true,
+    "content": "George Orwell",
+    "finish": "stop",
+    "tokens": null,
+    "dur_s": 2.2,
+    "error": null
+   },
+   {
+    "fid": "F7",
+    "on": false,
+    "correct": true,
+    "content": "Au",
+    "finish": "stop",
+    "tokens": null,
+    "dur_s": 0.93,
+    "error": null
+   },
+   {
+    "fid": "F7",
+    "on": true,
+    "correct": true,
+    "content": "Au",
+    "finish": "stop",
+    "tokens": null,
+    "dur_s": 1.03,
+    "error": null
+   },
+   {
+    "fid": "F8",
+    "on": true,
+    "correct": true,
+    "content": "1989",
+    "finish": "stop",
+    "tokens": null,
+    "dur_s": 0.97,
+    "error": null
+   },
+   {
+    "fid": "F8",
+    "on": false,
+    "correct": true,
+    "content": "1989",
+    "finish": "stop",
+    "tokens": null,
+    "dur_s": 0.92,
+    "error": null
+   },
+   {
+    "fid": "F9",
+    "on": false,
+    "correct": true,
+    "content": "17",
+    "finish": "stop",
+    "tokens": null,
+    "dur_s": 1.0,
+    "error": null
+   },
+   {
+    "fid": "F9",
+    "on": true,
+    "correct": true,
+    "content": "17",
+    "finish": "stop",
+    "tokens": null,
+    "dur_s": 1.07,
+    "error": null
+   },
+   {
+    "fid": "F10",
+    "on": true,
+    "correct": true,
+    "content": "11",
+    "finish": "stop",
+    "tokens": null,
+    "dur_s": 1.03,
+    "error": null
+   },
+   {
+    "fid": "F10",
+    "on": false,
+    "correct": true,
+    "content": "11",
+    "finish": "stop",
+    "tokens": null,
+    "dur_s": 1.06,
+    "error": null
+   },
+   {
+    "fid": "F11",
+    "on": false,
+    "correct": true,
+    "content": "1024",
+    "finish": "stop",
+    "tokens": null,
+    "dur_s": 1.99,
+    "error": null
+   },
+   {
+    "fid": "F11",
+    "on": true,
+    "correct": true,
+    "content": "1024",
+    "finish": "stop",
+    "tokens": null,
+    "dur_s": 0.91,
+    "error": null
+   },
+   {
+    "fid": "F12",
+    "on": true,
+    "correct": true,
+    "content": "Mercury",
+    "finish": "stop",
+    "tokens": null,
+    "dur_s": 0.97,
+    "error": null
+   },
+   {
+    "fid": "F12",
+    "on": false,
+    "correct": true,
+    "content": "Mercury",
+    "finish": "stop",
+    "tokens": null,
+    "dur_s": 1.83,
+    "error": null
+   },
+   {
+    "fid": "F13",
+    "on": false,
+    "correct": true,
+    "content": "80",
+    "finish": "stop",
+    "tokens": null,
+    "dur_s": 1.06,
+    "error": null
+   },
+   {
+    "fid": "F13",
+    "on": true,
+    "correct": true,
+    "content": "80",
+    "finish": "stop",
+    "tokens": null,
+    "dur_s": 1.06,
+    "error": null
+   },
+   {
+    "fid": "F14",
+    "on": true,
+    "correct": true,
+    "content": "206",
+    "finish": "stop",
+    "tokens": null,
+    "dur_s": 1.77,
+    "error": null
+   },
+   {
+    "fid": "F14",
+    "on": false,
+    "correct": true,
+    "content": "206",
+    "finish": "stop",
+    "tokens": null,
+    "dur_s": 1.9,
+    "error": null
+   },
+   {
+    "fid": "F15",
+    "on": false,
+    "correct": true,
+    "content": "19",
+    "finish": "stop",
+    "tokens": null,
+    "dur_s": 0.99,
+    "error": null
+   },
+   {
+    "fid": "F15",
+    "on": true,
+    "correct": true,
+    "content": "19",
+    "finish": "stop",
+    "tokens": null,
+    "dur_s": 0.98,
+    "error": null
+   },
+   {
+    "fid": "F16",
+    "on": true,
+    "correct": true,
+    "content": "100",
+    "finish": "stop",
+    "tokens": null,
+    "dur_s": 1.15,
+    "error": null
+   },
+   {
+    "fid": "F16",
+    "on": false,
+    "correct": true,
+    "content": "100",
+    "finish": "stop",
+    "tokens": null,
+    "dur_s": 1.85,
+    "error": null
+   }
+  ],
+  "judge_controls": {
+   "ok": true,
+   "order_ab": "A",
+   "order_ba": "B"
+  }
+ },
+ "summary_refined_instrument": {
+  "label": "phase03-deployed",
+  "context": "deployed",
+  "determinism_ok": false,
+  "identical_rate": 0.0,
+  "identical_by_kind": {
+   "technical": "0/8",
+   "everyday": "0/8",
+   "play": "0/2"
+  },
+  "n_pairs": {
+   "t0": 18,
+   "all": 18
+  },
+  "judge_control_ok": true,
+  "sign": {
+   "assertive@t0": {
+    "on": 8,
+    "off": 2,
+    "inconsistent": 7,
+    "p": 0.05469
+   },
+   "assertive@all": {
+    "on": 8,
+    "off": 2,
+    "inconsistent": 7,
+    "p": 0.05469
+   },
+   "serious@t0": {
+    "on": 13,
+    "off": 2,
+    "inconsistent": 2,
+    "p": 0.00369
+   },
+   "serious@all": {
+    "on": 13,
+    "off": 2,
+    "inconsistent": 2,
+    "p": 0.00369
+   },
+   "direct@t0": {
+    "on": 10,
+    "off": 1,
+    "inconsistent": 6,
+    "p": 0.00586
+   },
+   "direct@all": {
+    "on": 10,
+    "off": 1,
+    "inconsistent": 6,
+    "p": 0.00586
+   }
+  },
+  "judge_position_bias_A_rate": 0.667,
+  "factual": {
+   "off_acc": 1.0,
+   "on_acc": 1.0,
+   "off_only_right": 0,
+   "on_only_right": 0,
+   "p": 1.0
+  },
+  "length": {
+   "off_words": 209.556,
+   "on_words": 152.222
+  },
+  "trait_per_100w": {
+   "off": 0.185,
+   "on": 0.262
+  },
+  "trait_per_100w_serious": {
+   "off": 0.0,
+   "on": 0.099
+  },
+  "rep12": {
+   "off": 0.0,
+   "on": 0.0
+  },
+  "finish": {
+   "off": {
+    "stop": 15,
+    "length": 3
+   },
+   "on": {
+    "stop": 16,
+    "length": 2
+   }
+  },
+  "errors": {
+   "off": 0,
+   "on": 0
+  },
+  "degeneration_flags": [
+   "empty outputs on=1 off=0"
+  ],
+  "verdict": "DAMAGE-FIRST"
+ }
+}

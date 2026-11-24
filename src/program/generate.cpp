@@ -894,6 +894,10 @@ struct Options {
     /// request reasons and arms at this think-END token id; cvec_phase_start (>= 0) re-arms it OFF at the
     /// think-START id (agentic loops reason again per turn). The server derives both ids from the template.
     int64_t cvec_phase_end = -1, cvec_phase_start = -1;
+    /// --cvec-phase-table N: 0 (default) = the phase logic toggles the whole vector (F-17 as built); 1 = it drives
+    /// ONLY the first table's gate.  With a two-table arm (persona add + refusal ablation) that keeps the ablation
+    /// on the whole request while the persona lands on the answer phase alone.
+    int cvec_phase_table = 0;
 };
 
 void usage() {
@@ -1056,6 +1060,8 @@ void usage() {
                  "                            a SECOND armed table, applied after the first at each layer it covers\n"
                  "                            (an add-mode persona row + a project-mode refusal ablation in one boot;)\n"
                  "                            per-layer only; the per-request switch gates both tables\n"
+                 "  --cvec-phase-table 0|1    1 = --control-vector-phase drives ONLY the first table (its add lands on the\n"
+                 "                            answer phase; the second keeps the whole request); 0 = the whole vector\n"
                  "  --no-token-graph     A/B: two graphs per layer (the host launches each) instead of one per token\n"
                  "  --no-fused-gr        A/B: the six-kernel hyper-connection read and a separate write (native)\n"
                  "  --prefill CHUNK      batched prompt processing in chunks of CHUNK tokens (needs --native); auto =\n"
@@ -2955,6 +2961,7 @@ int main(int argc, char** argv) {
             o.cvec_phase_end = std::atoll(ph.c_str());
             o.cvec_phase_start = colon == std::string::npos ? -1 : std::atoll(ph.c_str() + colon + 1);
         }
+        else if (a == "--cvec-phase-table") o.cvec_phase_table = std::atoi(next("--cvec-phase-table"));
         else if (a == "--cvec-mode") {
             const std::string m = next("--cvec-mode");
             if (m == "project") o.cvec_mode = 0;
@@ -4220,6 +4227,11 @@ int main(int argc, char** argv) {
             std::fprintf(stderr, "strata generate: control vector: %s\n", ce.c_str());
             return 2;
         }
+        if (o.cvec_phase_table != 0 && o.cvec_phase_end < 0) {
+            std::fprintf(stderr, "strata generate: --cvec-phase-table needs --control-vector-phase (the think-end id)\n");
+            return 2;
+        }
+        strata::kernels::cvec_set_phase_table1(o.cvec_phase_table == 1);
     }
     if (o.max_context < (int64_t) o.tokens.size() + o.max_new) {
         std::fprintf(stderr, "strata generate: --max-context %lld cannot hold %zu prompt + %lld new tokens\n",
@@ -14707,8 +14719,21 @@ int main(int argc, char** argv) {
             // the commit scan below arms the vector at the think-end token and (when the start id is
             // known) re-arms it off when the model reasons again. cvec=0 requests stay fully off.
             const bool cvec_phase_armed = o.cvec_phase_end >= 0 && want_cvec && strata::kernels::cvec().loaded();
+            const bool cvec_phase_t1 = cvec_phase_armed && o.cvec_phase_table == 1 && strata::kernels::cvec().loaded();
             bool cvec_phase_on = false;
-            if (cvec_phase_armed) strata::kernels::cvec_set_enabled(false);
+            // per-table form: only table 1 waits for the answer phase; table 2 keeps the whole request.  The
+            // request's own prompt decides the starting state: a think block the template already CLOSED (thinking
+            // off: '<think>\n\n</think>\n\n' is pre-filled, so </think> is a prompt token the commit scan never
+            // sees) means the answer phase begins with the first generated token.  Prompt tokens themselves never
+            // see table 1 - the gate is closed through prefill and the scan below opens it on the first window.
+            bool cvec_prompt_closed = false;
+            if (cvec_phase_t1) {
+                for (const int32_t id : live) {
+                    if ((int64_t) id == o.cvec_phase_end) cvec_prompt_closed = true;
+                    else if (o.cvec_phase_start >= 0 && (int64_t) id == o.cvec_phase_start) cvec_prompt_closed = false;
+                }
+                strata::kernels::cvec_set_table1_gate(false);
+            } else if (cvec_phase_armed) strata::kernels::cvec_set_enabled(false);
             // this request rewrites every cell from `resume` on, so a checkpoint past it (or not on this prompt's
             // path) no longer has its cells; the ones kept are prefixes of both the old tokens and the new
             auto off_path = [&](const ConvCheckpoint& c) {
@@ -17082,17 +17107,19 @@ int main(int argc, char** argv) {
                 for (int i = 0; i <= a; ++i) consumed.push_back(window[(size_t) i]);
                 if (cvec_phase_armed) {   // F-17: arm at think-end, re-arm off at think-start (agentic re-reasoning)
                     if (!cvec_phase_on) {
-                        for (int i = 0; i <= a; ++i)
-                            if ((int64_t) window[(size_t) i] == o.cvec_phase_end) {
-                                cvec_phase_on = true;
-                                strata::kernels::cvec_set_enabled(true);
-                                break;
-                            }
+                        bool hit = cvec_prompt_closed;   // the template already closed the block: armed from the first generated token
+                        for (int i = 0; i <= a && !hit; ++i) hit = (int64_t) window[(size_t) i] == o.cvec_phase_end;
+                        if (hit) {
+                            cvec_phase_on = true;
+                            if (cvec_phase_t1) strata::kernels::cvec_set_table1_gate(true);   // table 1 only
+                            else strata::kernels::cvec_set_enabled(true);
+                        }
                     } else if (o.cvec_phase_start >= 0) {
                         for (int i = 0; i <= a; ++i)
                             if ((int64_t) window[(size_t) i] == o.cvec_phase_start) {
                                 cvec_phase_on = false;
-                                strata::kernels::cvec_set_enabled(false);
+                                if (cvec_phase_t1) strata::kernels::cvec_set_table1_gate(false);
+                                else strata::kernels::cvec_set_enabled(false);
                                 break;
                             }
                     }

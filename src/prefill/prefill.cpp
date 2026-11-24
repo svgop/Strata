@@ -4775,10 +4775,11 @@ bool Prefill::run_impl(const int64_t* tokens, int64_t n, int64_t pos0, std::stri
                                   // fused kernel branches on it (add vs ablate) - passing table 1's mode for table 2's
                                   // pointers would ADD the refusal direction instead of ablating it.
                 // the fused form carries ONE table's pointers: fuse only when exactly one acts at this layer
-                // (when both do, the stock three-kernel path applies them sequentially, in order)
+                // (when both do, the stock three-kernel path applies them sequentially, in order).  It also cannot
+                // see table 1's phase gate, so a phase-owned table 1 takes the unfused path (which reads it).
                 const bool cv_fused = steered && cvec_fuse() && !gr_unfused() && nl < LE && !(nl == 1 && ple_on) &&
                                       strata::kernels::cvec().n_embd == N && strata::kernels::cvec().hc == HC &&
-                                      (c1 != c2) && (c1 ? (cv_mode = strata::kernels::cvec().mode,
+                                      (c1 != c2) && !(c1 && strata::kernels::cvec().phase_table1) && (c1 ? (cv_mode = strata::kernels::cvec().mode,
                                                            strata::kernels::cvec_tables(&cv_dir, &cv_s, &cv_on))
                                                         : (cv_mode = strata::kernels::cvec().mode2,
                                                            strata::kernels::cvec_tables2(&cv_dir, &cv_s, &cv_on)));

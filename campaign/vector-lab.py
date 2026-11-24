@@ -74,7 +74,10 @@ EVIDENCE = REPO / "campaign/results/vec-2026-11-23"
 FENCED = [STANDING, LAUNCHER, REPO / "engine/strata", REPO / "data/expert-profile-learned.bin"]
 USER_SLOTS = pathlib.Path("/home/svg/LLM/data-rt/conversation-slots")
 URL = "http://127.0.0.1:8081"
-DROP_EXACT = {"--cvec-mode", "--cvec-dir", "--cvec-mode2", "--expert-profile-save", "--expert-profile-save-every"}
+DROP_EXACT = {"--cvec-mode", "--cvec-dir", "--cvec-mode2", "--cvec-phase-table", "--expert-profile-save", "--expert-profile-save-every"}
+# the F-17 phase block rides with the cvec block: the lab re-arms it exactly as the standing carries it,
+# so a phase-scoped persona is measured under its real application logic (never stripped by accident)
+PHASE_KEYS = ("--control-vector-phase", "--cvec-phase-table")
 LAB_BLOCK = ["--control-vector-scaled", "--control-vector-layer-range", "--cvec-mode", "--cvec-dir"]
 
 # ---------------------------------------------------------------- probe sets (versioned here; the judge sees no label)
@@ -190,10 +193,16 @@ def derive_config(vectors, first, last, mode, template="stock"):
         i += 1
     if at is None:
         sys.exit("REFUSING: the standing config carries no control-vector block (the derivation anchor moved)")
+    phase = []
+    for k in PHASE_KEYS:                       # carry the standing's phase block through, verbatim
+        if k in args:
+            j = args.index(k)
+            n = 1 if k == "--cvec-phase-table" else 1
+            phase += [k] + args[j + 1: j + 1 + n]
     new[at:at] = ["--control-vector-scaled", vectors, "--control-vector-layer-range", str(first), str(last),
-                  "--cvec-mode", mode, "--cvec-dir", "per-layer"]
+                  "--cvec-mode", mode, "--cvec-dir", "per-layer"] + phase
     left = sorted(a for a in new if a.startswith("--control-vector") or a in DROP_EXACT)
-    if left != sorted(LAB_BLOCK):
+    if left != sorted(LAB_BLOCK + [k for k in phase if k.startswith("--control-vector") or k in DROP_EXACT]):
         sys.exit(f"REFUSING: the derived args still carry {left}")
     cfg = dict(src)
     cfg.update(args=new, model_name="vec-lab", log=str(SCRATCH / "logs" / "veclab.log"))
@@ -587,6 +596,13 @@ def summarize(rec):
     rows = rec["register"]
     s["length"] = {"off_words": mean(rows, "words", "off"), "on_words": mean(rows, "words", "on")}
     s["trait_per_100w"] = {"off": mean(rows, "trait", "off"), "on": mean(rows, "trait", "on")}
+    # The caricature flag reads the SERIOUS register only (technical + everyday).  The play prompts exist to let
+    # the persona show its color, so trait vocabulary there is the intended behavior, not leakage - and two short
+    # play answers can swing a per-word average across the whole battery (2026-11-24: 0.00/100w on every serious
+    # answer, 6.25 on the play pair, aggregate 1.02 over a 1.0 threshold).  Both numbers are reported; the flag
+    # uses this one.
+    serious = [r for r in rows if r["kind"] != "play"]
+    s["trait_per_100w_serious"] = {"off": mean(serious, "trait", "off"), "on": mean(serious, "trait", "on")}
     s["rep12"] = {"off": mean(rows, "rep12", "off"), "on": mean(rows, "rep12", "on")}
     s["finish"] = {side: {str(k): sum(r[side]["finish"] == k for r in rows) for k in {r[side]["finish"] for r in rows}} for side in ("off", "on")}
     s["errors"] = {"off": sum(bool(r["off"]["error"]) for r in rows), "on": sum(bool(r["on"]["error"]) for r in rows)}
@@ -596,8 +612,9 @@ def summarize(rec):
     empties = {side: sum(not r[side]["content"].strip() for r in rows) for side in ("off", "on")}
     if empties["on"] > empties["off"]:
         flags.append(f"empty outputs on={empties['on']} off={empties['off']}")
-    if s["trait_per_100w"]["on"] > 2 * s["trait_per_100w"]["off"] and s["trait_per_100w"]["on"] > 1.0:
-        flags.append("trait vocabulary inflated")
+    ts = s["trait_per_100w_serious"]
+    if ts["on"] > 2 * ts["off"] and ts["on"] > 1.0:
+        flags.append(f"trait vocabulary inflated on serious prompts ({ts['on']:.2f}/100w)")
     if s["rep12"]["on"] > s["rep12"]["off"] + 0.05:
         flags.append("repetition up")
     s["degeneration_flags"] = flags
