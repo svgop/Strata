@@ -409,6 +409,20 @@ def verify_boot(label, boot_dir, expect, template_expect=None, secs=None):
     print(f"  verified: {label} armed {got.get('cvec')} steered {got.get('cvec_steered')} health {secs} s template {shown}", flush=True)
 
 
+def purge_own_slots():
+    """A clean `down` reclaims the lab's own conversation-slot scratch (24 boots left 5.8 GiB here on
+    2026-11-24).  The path is derived from SCRATCH and checked against USER_SLOTS: the standing's parked
+    conversations are never touched, by construction rather than by care."""
+    own = (SCRATCH / "conversation-slots").resolve()
+    if own != (SCRATCH.resolve() / "conversation-slots") or own == USER_SLOTS.resolve() or own.is_symlink():
+        return 0
+    freed = 0
+    for f in own.glob("slot-*.bin") if own.is_dir() else ():
+        freed += f.stat().st_size
+        f.unlink()
+    return round(freed / 1048576)
+
+
 def down(label, boot_dir, quiet=False):
     boot_dir = pathlib.Path(boot_dir)
     boot_dir.mkdir(parents=True, exist_ok=True)
@@ -439,6 +453,7 @@ def down(label, boot_dir, quiet=False):
     state = {"label": label, "server_pids": server, "hard_kill": hard, "drain_s": round(time.time() - t0, 1),
              "port_closed": not port_open(), "leftover_procs": left, "vram_used_mib": vram}
     state["clean"] = state["port_closed"] and not left and vram < 2500
+    state["slots_reclaimed_mib"] = purge_own_slots() if state["clean"] else 0
     with open(boot_dir / "boot.txt", "a") as fh:
         fh.write("\n" + json.dumps(state) + "\n")
     if not quiet:

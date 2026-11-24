@@ -297,6 +297,15 @@ No loose files, no ad-hoc scripts, no mystery artifacts. Everything has exactly 
     mtp/ckpts/         ALL training state: cycle-last.pt (rolling), cycle-best.pt, history.jsonl
     mtp/export/        trainer export output (dense_rt2.bin/.txt, staged atomically)
 
+    Where the bulk lives (consolidation 2026-11-24): `harvest/`, `mtp/` and `data/references/` are
+    SYMLINKS into `/mnt/DATA/LLM/Models/GGUF/strata/` (`Custom-data/harvest`, `Custom-data/mtp`,
+    `data/references`) — the 3.7 TB disk owns the tens of GB, the NVMe owns code and small scratch, and
+    every script keeps the paths above. `harvest/records` is itself an alias of the staged
+    `records-round2-aligned` shards. Resolve through the links; never copy the data back to `/home`.
+    The slot caches are the other bulk: the standing's `~/LLM/data-rt/conversation-slots` is the
+    operator's parked conversations (untouchable from a lab); the lab's own slot scratch lives under
+    `Custom-data/vector-lab/` and is reclaimed by every clean `down`.
+
 **Training runs under the checkpoint system, never ad-hoc** (`campaign/retrain/train_cycle.py`):
 GPU-exclusive (8081 DOWN), launched as `~/venvs/mtp-train/bin/python campaign/retrain/train_cycle.py
 --minutes N`. The rolling checkpoint saves atomically (tmp + rename) every N steps and at every eval;

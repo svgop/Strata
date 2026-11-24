@@ -11,6 +11,11 @@ unit-norm rows (identical), `controlvector` / `qwen4exp`.
 Shelf config: `config/custom-iq3_s-persona-8081.json` (copy of the standing config; only the cvec block,
 `log`, and `model_name` differ).
 
+**Purged 2026-11-24 (store closure):** the vector file and the shelf config were deleted - a config that
+arms a falsified vector is the F-212 footgun class. The negative above is the asset; the sha is on record
+for a rebuild from `tools/persona_vector.py` if the re-open clause ever fires. The replacement path
+landed: the standing now carries the measured activation-contrast persona (`campaign/vector-lab.md`).
+
 ## What it encodes
 
 Built by `tools/persona_vector.py` from a contrast on the model's own output head

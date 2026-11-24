@@ -40,7 +40,7 @@ fresh 72-boot capture, and found the first deployed-context WINDOW of the campai
   ablation as table 2 (project, 1-47) — composed by a two-table engine extension
   (`--control-vector-scaled2/--cvec-mode2/--control-vector-layer-range2`; parity-passed, gate-verified,
   deployed-verified: armed `add:8-8+project:1-47`, refusal battery ON 0/10, smoke assertive).
-  Rollback: `engine/strata.pre-persona-merge` + drop the `*2` config block.
+  Rollback: `engine/strata.pre-phase-gate` (the current rollback binary) + drop the `*2`/phase config block; the older binaries were retired 2026-11-24 (git has the source).
 - plain row @0.3 deployed (`05-r03-deployed/`) stays the banked fallback dose.
 - **PHASE-SCOPED (2026-11-24 afternoon, `12-phase/VERDICT.md`)**: the persona add lands only on the answer
   phase (`--control-vector-phase 248069:248068 --cvec-phase-table 1`; per-table gate, parity-proven).

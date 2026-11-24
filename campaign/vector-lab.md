@@ -115,5 +115,4 @@ plain slot-9 @0.3 deployed: **WINDOW** (ass 12/4, ser 13/1, dir 12/3, facts 1.00
 paritied, gate-verified, deployed-verified). Vectors:
 `…/vectors/qwen3.8-flash-next-persona-r03-r03s9rnsp-s9-rho1.gguf` (adopted, direction.8, norm
 1.0261) and `…r03-r03s9-s9-rho1.gguf` (plain, the 0.3 fallback). Source capture `r03-run1`,
-means.npz sha16 `55be45efa4d6cef2`. Rollback: `engine/strata.pre-persona-merge` + drop the `*2`
-config block (or git).
+means.npz sha16 `55be45efa4d6cef2`. Rollback: `engine/strata.pre-phase-gate` + drop the `*2`/phase config block (or git).

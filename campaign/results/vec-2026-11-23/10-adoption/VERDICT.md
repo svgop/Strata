@@ -63,5 +63,5 @@ on incomplete intelligence rather than delay for certainty"); server STOPPED aft
 - Refusal displacement check: `09-refusal-pair/` (the battery that forced the two-table design).
 - Fence event, recorded: the standing config and engine binary changed BY DESIGN at adoption
   (18:12 config hash flip mid-Leg-B is explained in `08-legB-p12-deployed/VERDICT.md`); the
-  rollback binary is `engine/strata.pre-persona-merge`, the rollback config is one edit (drop the
+  rollback binary chain: `engine/strata.pre-phase-gate` (current; the pre-two-table binary was retired 2026-11-24 - git has the source), the rollback config is one edit (drop the
   `*2` block) or git.
