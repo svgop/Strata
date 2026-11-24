@@ -38,7 +38,7 @@
     "--conversation-cache-min-tokens",
     "200",
     "--control-vector-scaled",
-    "/mnt/DATA/LLM/Models/GGUF/vectors/qwen3.8-flash-next-persona-r03-r03s9rnsp-s9-rho1.gguf:0.45",
+    "/mnt/DATA/LLM/Models/GGUF/vectors/qwen3.8-flash-next-persona-r03-r03s9rnsp-s9-rho1.gguf:0.3",
     "--control-vector-layer-range",
     "8",
     "8",
