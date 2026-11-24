@@ -1917,6 +1917,30 @@ void wait_copy_i32_stats(const uint32_t* flag, uint32_t value, int32_t* dst, con
     check("wait_copy_i32_stats");
 }
 
+#if !defined(__HIPCC__) && CUDART_VERSION >= 12000
+// F-452 STRATA_VERIFY_DEVICE_LAUNCH: the window graph launched from the device.  A host cudaGraphLaunch submits
+// the ~1950-node window node by node (552 us at T=6 on a 5090; the first kernel runs 462 us into the call) and the
+// GPU is idle for all of it between the drafter's last step and the window's first node.  An exec instantiated
+// with cudaGraphInstantiateFlagDeviceLaunch and uploaded at capture is pushed by the GPU's own scheduler.  A device
+// graph may only be launched from inside a graph, so this kernel is captured as the single node of a parent graph
+// the host launches instead (Verifier::make_dev_exec); the tail launch orders the window behind that parent in its
+// stream, so the stream's later work and the host's cudaStreamSynchronize wait for the window exactly as before.
+// No relocatable device code is needed.
+__global__ void window_dev_launch_kernel(void* exec) {
+    (void) cudaGraphLaunch((cudaGraphExec_t) exec, cudaStreamGraphTailLaunch);
+}
+#endif
+
+void window_dev_launch_node(const void* exec, void* stream) {
+#if defined(__HIPCC__) || CUDART_VERSION < 12000
+    (void) exec;
+    (void) stream;   // HIP and CUDA < 12.0 have no device-side graph launch; the arm is off there (dev_launch_wanted)
+#else
+    window_dev_launch_kernel<<<1, 1, 0, (cudaStream_t) stream>>>(const_cast<void*>(exec));
+    check("window_dev_launch_node");
+#endif
+}
+
 void wait_flag_ge(const uint32_t* flag, uint32_t value, void* stream) {
     wait_flag_ge_kernel<<<1, 1, 0, (cudaStream_t) stream>>>(flag, value);
     check("wait_flag_ge");

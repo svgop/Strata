@@ -31,16 +31,20 @@ boot_and_probe() {   # $1 = on|off, $2 = tag
   # cannot change behavior (STRATA_SPEC_DEPTH=1's per-depth counters, DM_WAIT_STATS) so a battery can
   # capture its mechanism data in-window.  The arm variable itself stays the only A/B difference.
   if [ "$1" = on ]; then
-    env $PUBLISH_ENV "$VAR=$ON" nohup ./launch-custom-iq3s-8081.sh > /tmp/envl-$2.out 2>&1 &
+    env ${PUBLISH_ENV:-} "$VAR=$ON" nohup ./launch-custom-iq3s-8081.sh > /tmp/envl-$2.out 2>&1 &
   elif [ "$OFF" = unset ]; then
-    env $PUBLISH_ENV nohup ./launch-custom-iq3s-8081.sh > /tmp/envl-$2.out 2>&1 &
+    env ${PUBLISH_ENV:-} nohup ./launch-custom-iq3s-8081.sh > /tmp/envl-$2.out 2>&1 &
   else
-    env $PUBLISH_ENV "$VAR=$OFF" nohup ./launch-custom-iq3s-8081.sh > /tmp/envl-$2.out 2>&1 &
+    env ${PUBLISH_ENV:-} "$VAR=$OFF" nohup ./launch-custom-iq3s-8081.sh > /tmp/envl-$2.out 2>&1 &
   fi
   for i in $(seq 1 100); do
     curl -s -m 3 http://127.0.0.1:8081/health 2>/dev/null | grep -q '"status": "ok"' && break
     sleep 5
   done
+  # F-452: a boot that never answered is a FAILED battery, not four zero-token legs (the 11-24 run: PUBLISH_ENV
+  # unbound under `set -u` aborted the launch line, the loop above timed out in silence, every leg read 0 tok)
+  curl -s -m 3 http://127.0.0.1:8081/health 2>/dev/null | grep -q '"status": "ok"' || {
+    echo "env-ladder: ABORT - the engine did not answer /health in 500 s (boot log: /tmp/envl-$2.out)"; exit 1; }
   wait_prewarm
   # the arm's own banner/decline line, from the engine's environment as the process sees it
   local ep; ep=$(pgrep -x strata | head -1)

@@ -259,6 +259,10 @@ const bool g_window_graph = [] {
 constexpr bool g_window_graph = false;   // conditional nodes: CUDA-only (ROCm/hip#3905 is still an open request)
 #endif
 
+// F-452 STRATA_VERIFY_DEVICE_LAUNCH: the window graph launched from the device (kernels::window_dev_launch_node, captured into a one-node parent graph; the
+// arm's switch is Verifier::dev_launch_wanted, beside make_dev_exec below).  Default OFF: the standing host launch,
+// bit-identical.  CUDA-only; a declined instantiation drops dev_launch_.
+
 // every row of a batch window is another slot's (no slot has proposal rows)
 bool one_row_per_slot(const int* rows, int S) {
     for (int i = 0; i < S; ++i)
@@ -717,6 +721,14 @@ Verifier::~Verifier() {
     for (auto& e : exec_)
         if (e) cudaGraphExecDestroy(e);
     for (auto& e : exec_nr_)
+        if (e) cudaGraphExecDestroy(e);
+    for (auto& e : exec_dev_)
+        if (e) cudaGraphExecDestroy(e);
+    for (auto& e : exec_dev_nr_)
+        if (e) cudaGraphExecDestroy(e);
+    for (auto& e : exec_devp_)
+        if (e) cudaGraphExecDestroy(e);
+    for (auto& e : exec_devp_nr_)
         if (e) cudaGraphExecDestroy(e);
     if (commit_exec_) cudaGraphExecDestroy(commit_exec_);
     for (auto& kv : exec_bm_)
@@ -2739,12 +2751,26 @@ bool Verifier::capture(int T, std::string& err) {
     }
 #endif
     const bool made = instantiate_evicting(exec_t, graph, {}, "verify: instantiate: ", err);
+    cudaGraphExec_t& dev_t = ar_off_ ? exec_dev_nr_[T] : exec_dev_[T];
+    cudaGraphExec_t& par_t = ar_off_ ? exec_devp_nr_[T] : exec_devp_[T];
+    if (made) (void) make_dev_exec(dev_t, par_t, graph, "verify: device instantiate: ");   // F-452; a decline keeps the host launch
     cudaGraphDestroy(graph);
     if (!made) return false;
     const cudaError_t ue = cudaGraphUpload(exec_t, cs_);
+    // the device image is what the tail launch runs, the parent is what the host launches: both uploaded here
+    cudaError_t de = cudaSuccess, pe = cudaSuccess;
+    if (dev_t != nullptr && par_t != nullptr) { de = cudaGraphUpload(dev_t, cs_); pe = cudaGraphUpload(par_t, cs_); }
     const cudaError_t us = cudaStreamSynchronize(cs_);
-    std::fprintf(stderr, "strata verify: captured the %d-token window (upload %s, sync %s)\n", T,
-                 cudaGetErrorString(ue), cudaGetErrorString(us));
+    std::fprintf(stderr, "strata verify: captured the %d-token window (upload %s, sync %s%s)\n", T,
+                 cudaGetErrorString(ue), cudaGetErrorString(us),
+                 (dev_t != nullptr && par_t != nullptr) ? ", device launch armed" : "");
+    if (dev_t != nullptr && par_t != nullptr && (de != cudaSuccess || pe != cudaSuccess)) {   // without the uploads the arm is void
+        (void) cudaGetLastError();
+        std::fprintf(stderr, "strata verify: device graph launch upload failed (%s / %s): the host launch serves this window size\n",
+                     cudaGetErrorString(de), cudaGetErrorString(pe));
+        cudaGraphExecDestroy(dev_t); dev_t = nullptr;
+        cudaGraphExecDestroy(par_t); par_t = nullptr;
+    }
     return true;
 }
 
@@ -3015,7 +3041,12 @@ bool Verifier::prelaunch(int T, const int32_t* tokens, int64_t pos0, std::string
     // 0.1.43: the same gate run() applies before it launches (the adaptive tier's copies land first)
     if (adapt_gate_ != nullptr && adapt_gate_->active.load(std::memory_order_acquire) && ar_on() &&
         !adapt_gate_wait((int32_t) g_->n_layers, err)) return false;
+#if !defined(STRATA_USE_HIP) && !defined(STRATA_HIP_GFX906)
+    const cudaError_t le = dev_exec(T) ? cudaGraphLaunch(dev_exec(T), cs_)   // F-452: the one-node parent
+                                       : cudaGraphLaunch(exec_t, cs_);
+#else
     const cudaError_t le = cudaGraphLaunch(exec_t, cs_);
+#endif
     trace_ev("LAUNCHED", -1, -1, (int64_t) le);
     if (le != cudaSuccess) { err = std::string("verify: launch: ") + cudaGetErrorString(le); return false; }
     (void) cudaStreamQuery(cs_);
@@ -3086,16 +3117,23 @@ bool Verifier::run(int T, const int32_t* tokens, int64_t pos0, PoolMultiFn pool,
             const char* value = std::getenv("STRATA_VERIFY_ASYNC_LAUNCH");
             return value != nullptr && value[0] == '1';
         }();
-        launch_o.emplace(ar_off_ ? exec_nr_[T] : exec_[T], cs_, device_, threaded_launch,
-                         [this] { (void) release_gpu_waits(5000); });
-        const cudaError_t le = launch_o->status();
+        cudaError_t le = cudaSuccess;
+        if (const cudaGraphExec_t dev = dev_exec(T)) {
+            // F-452: a one-node parent graph whose kernel tail-launches the uploaded window - no helper thread to
+            // start, no node-by-node host submission; the layer-reach spin below serves the doorbells as before
+            le = cudaGraphLaunch(dev, cs_);
+        } else {
+            launch_o.emplace(ar_off_ ? exec_nr_[T] : exec_[T], cs_, device_, threaded_launch,
+                             [this] { (void) release_gpu_waits(5000); });
+            le = launch_o->status();
+        }
 #else
         const cudaError_t le = cudaGraphLaunch(ar_off_ ? exec_nr_[T] : exec_[T], cs_);
 #endif
         trace_ev("LAUNCHED", -1, -1, (int64_t) le);
         if (le != cudaSuccess) { err = std::string("verify: launch: ") + cudaGetErrorString(le); return false; }
 #if !defined(STRATA_USE_HIP) && !defined(STRATA_HIP_GFX906)
-        (void) launch_o->query();
+        if (launch_o) (void) launch_o->query(); else (void) cudaStreamQuery(cs_);   // WDDM: submit now
 #else
         (void) cudaStreamQuery(cs_);
 #endif
@@ -3861,6 +3899,57 @@ bool Verifier::instantiate_evicting(cudaGraphExec_t& ex, cudaGraph_t graph, cons
     return true;
 }
 
+bool Verifier::dev_launch_wanted() {
+#if !defined(STRATA_USE_HIP) && !defined(STRATA_HIP_GFX906) && !defined(STRATA_GPU_METAL) && CUDART_VERSION >= 12000
+    const char* v = std::getenv("STRATA_VERIFY_DEVICE_LAUNCH");
+    return v != nullptr && v[0] == '1';
+#else
+    return false;
+#endif
+}
+
+// F-452: the device-launchable twin of a window exec, from the same graph before it is destroyed.  A driver that
+// declines (an unsupported node class, no room for the uploaded image) does not fail the boot: the line is
+// printed once per stage and the host launch serves the windows - the arm's verdict reads the banner.
+bool Verifier::make_dev_exec(cudaGraphExec_t& dev, cudaGraphExec_t& parent, cudaGraph_t graph, const char* what) {
+#if defined(STRATA_USE_HIP) || defined(STRATA_HIP_GFX906) || defined(STRATA_GPU_METAL) || CUDART_VERSION < 12000
+    (void) dev;
+    (void) parent;
+    (void) graph;
+    (void) what;
+    dev_launch_ = false;
+    return true;
+#else
+    if (dev != nullptr && parent != nullptr) return true;
+    if (!dev_launch_) return true;
+    const auto decline = [&](const char* step, cudaError_t e) {
+        (void) cudaGetLastError();
+        if (dev) { cudaGraphExecDestroy(dev); dev = nullptr; }
+        if (parent) { cudaGraphExecDestroy(parent); parent = nullptr; }
+        std::fprintf(stderr, "strata verify: device graph launch DECLINED for this stage (%s%s): the host launch serves the "
+                             "windows; STRATA_VERIFY_DEVICE_LAUNCH=0 silences this line\n", step, cudaGetErrorString(e));
+        dev_launch_ = false;
+    };
+    // the window, instantiated for the device
+    cudaError_t ie = cudaGraphInstantiateWithFlags(&dev, graph, cudaGraphInstantiateFlagDeviceLaunch);
+    if (ie != cudaSuccess) { decline(what, ie); return true; }
+    // its parent: one kernel node, captured on a private stream (a device graph may only be launched from a graph)
+    cudaStream_t ps = nullptr;
+    ie = cudaStreamCreateWithFlags(&ps, cudaStreamNonBlocking);
+    if (ie != cudaSuccess) { decline("verify: device parent stream: ", ie); return true; }
+    cudaGraph_t pg = nullptr;
+    ie = cudaStreamBeginCapture(ps, cudaStreamCaptureModeThreadLocal);
+    if (ie == cudaSuccess) { strata::kernels::window_dev_launch_node(dev, ps); ie = cudaStreamEndCapture(ps, &pg); }
+    else (void) cudaStreamEndCapture(ps, &pg);
+    cudaStreamDestroy(ps);
+    if (ie != cudaSuccess) { if (pg) cudaGraphDestroy(pg); decline("verify: device parent capture: ", ie); return true; }
+    ie = cudaGraphInstantiate(&parent, pg, 0);
+    cudaGraphDestroy(pg);
+    if (ie != cudaSuccess) { decline("verify: device parent instantiate: ", ie); return true; }
+    return true;
+#endif
+}
+
 bool Verifier::stage_batch(const int* rows, int S, int hbase, const int32_t* tokens, const int64_t* pos,
                            std::string& err) {
     using namespace strata::kernels;
@@ -4534,7 +4623,12 @@ bool Verifier::pl_launch(int T, const int32_t* tokens, int64_t pos0, std::string
     std::atomic_thread_fence(std::memory_order_seq_cst);
     trace_ev("WINDOW (pipelined)", -1, -1, pos0 * 16 + T);
     ms_host += ms_since(t0);
+#if !defined(STRATA_USE_HIP) && !defined(STRATA_HIP_GFX906)
+    const cudaError_t le = (dev_launch_ && exec_devp_[T] != nullptr) ? cudaGraphLaunch(exec_devp_[T], cs_)   // F-452: this path is the all-resident graph
+                                                                    : cudaGraphLaunch(exec_[T], cs_);
+#else
     const cudaError_t le = cudaGraphLaunch(exec_[T], cs_);
+#endif
     trace_ev("LAUNCHED", -1, -1, (int64_t) le);
     if (le != cudaSuccess) { err = std::string("verify: launch: ") + cudaGetErrorString(le); return false; }
     if (fl_prof_) cudaMemcpyAsync(prof_pin_, prof_, prof_h_.size() * 8, cudaMemcpyDeviceToHost, cs_);

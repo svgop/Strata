@@ -3,7 +3,7 @@
 # Same prompts, same sequence, same engine-log accounting. Usage:
 #   .venv/bin/python campaign/probe-lane.py --port 8081 --label linux-standing
 import os
-import argparse, json, re, threading, time, urllib.request
+import argparse, json, re, sys, threading, time, urllib.request
 from datetime import datetime
 
 REAL = ('Write a comprehensive technical analysis of modern GPU memory hierarchies and their impact on '
@@ -18,6 +18,8 @@ FRESH_TMPL = ('Section {i} of the incident review. At step {i} the operator obse
               'that point was catalogued with identifier {i} and compared against the baseline that had '
               'been established before the change was introduced.')
 
+_probe_err_said = None
+
 def probe(base, prompt, max_tok, temp=0.7, key=None):
     body = json.dumps({"messages": [{"role": "user", "content": prompt}],
                        "max_tokens": max_tok, "temperature": temp}).encode()
@@ -30,7 +32,11 @@ def probe(base, prompt, max_tok, temp=0.7, key=None):
             d = json.load(r)
         dt = time.time() - t0
         return True, d["usage"]["completion_tokens"], dt
-    except Exception:
+    except Exception as e:   # F-452: a failed request is said once per class - never a silent 0-token leg
+        global _probe_err_said
+        if _probe_err_said != repr(e):
+            _probe_err_said = repr(e)
+            print(f"    probe: request FAILED: {e!r}", file=sys.stderr)
         return False, 0, time.time() - t0
 
 def conc_run(base, n, max_tok, key=None):

@@ -579,6 +579,30 @@ private:
                   "exec_/exec_nr_ are indexed by T: widen them with kVerifyMaxT");
     static_assert(sizeof(exec_nr_) == (strata::kernels::kVerifyMaxT + 1) * sizeof(exec_nr_[0]),
                   "exec_/exec_nr_ are indexed by T: widen them with kVerifyMaxT");
+    // F-452 STRATA_VERIFY_DEVICE_LAUNCH: the same window graphs, instantiated for a DEVICE-side launch
+    // (cudaGraphInstantiateFlagDeviceLaunch, uploaded at capture) and launched by the one-thread kernel of a
+    // one-node PARENT graph (kernels::window_dev_launch_node; a device graph may only be launched from inside a
+    // graph).  The host submits that parent in ~3 us instead of the ~1950 nodes of the window (552 us at T=6,
+    // 462 of them before the first kernel), and no launch helper thread is started.  Null when the arm is off,
+    // unsupported, or declined by the driver: the host launch then serves the window exactly as before
+    // (dev_launch_ drops to false with a boot line).
+    cudaGraphExec_t exec_dev_[9] = {};      ///< the window, device-launchable
+    cudaGraphExec_t exec_dev_nr_[9] = {};   ///< its doorbell variant
+    cudaGraphExec_t exec_devp_[9] = {};     ///< the one-node parent whose kernel tail-launches exec_dev_[T]
+    cudaGraphExec_t exec_devp_nr_[9] = {};  ///< ... exec_dev_nr_[T]
+    static_assert(sizeof(exec_dev_) == sizeof(exec_), "exec_dev_ mirrors exec_: indexed by T");
+    static_assert(sizeof(exec_dev_nr_) == sizeof(exec_nr_), "exec_dev_nr_ mirrors exec_nr_: indexed by T");
+    static_assert(sizeof(exec_devp_) == sizeof(exec_), "exec_devp_ mirrors exec_: indexed by T");
+    static_assert(sizeof(exec_devp_nr_) == sizeof(exec_nr_), "exec_devp_nr_ mirrors exec_nr_: indexed by T");
+    static bool dev_launch_wanted();   ///< STRATA_VERIFY_DEVICE_LAUNCH=1 on CUDA >= 12.0 (false on HIP and Metal)
+    bool dev_launch_ = dev_launch_wanted();   ///< the arm is on for this stage until the driver declines it
+    /// The device exec and its parent for one window graph, from the graph before it is destroyed.  Never fails
+    /// the boot: a decline is printed once per stage and dev_launch_ drops (the host launch serves the windows).
+    bool make_dev_exec(cudaGraphExec_t& dev, cudaGraphExec_t& parent, cudaGraph_t graph, const char* what);
+    /// What a window of T rows launches now: the one-node parent when the arm holds one, else null.
+    cudaGraphExec_t dev_exec(int T) const { return dev_launch_ ? (ar_off_ ? exec_devp_nr_[T] : exec_devp_[T]) : nullptr; }
+    /// The device exec behind dev_exec(T) (null when the arm holds none) - what the upload step targets.
+    cudaGraphExec_t dev_window(int T) const { return dev_launch_ ? (ar_off_ ? exec_dev_nr_[T] : exec_dev_[T]) : nullptr; }
     // fork 34a35db (STRATA_SIDE_MIXER=1): the GDN gates and the QSA indexer on a branch of the window's graph beside the
     // mixer's projections, joined before the recurrence / the attention
     cudaStream_t side_ = nullptr;

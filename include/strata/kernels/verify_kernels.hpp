@@ -88,6 +88,15 @@ void wait_flag_ge(const uint32_t* flag, uint32_t value, void* stream);
 /// kernel costs ~2.4 us on a gfx1201 graph whatever it does.  n <= 128 * k for any k (a strided loop).
 void wait_copy_i32_from_mapped(const uint32_t* flag, uint32_t value, int32_t* dst, const int32_t* src, int64_t n,
                                void* stream);
+/// STRATA_VERIFY_DEVICE_LAUNCH (F-452; CUDA >= 12.0 only): the one-thread kernel that tail-launches a graph exec
+/// instantiated with cudaGraphInstantiateFlagDeviceLaunch and uploaded at capture.  The host's cudaGraphLaunch
+/// submits a ~1950-node window node by node - 552 us at T=6 on a 5090, 462 of them before the first kernel runs -
+/// and the GPU sits idle for all of it; a device launch pushes the uploaded image from the GPU's own scheduler.
+/// A device graph may only be launched from INSIDE a graph (CUDA Programming Guide 4.2.6.2: a stream-launched
+/// kernel gets cudaErrorNotSupported), so call this inside a stream capture: the kernel becomes the one node of a
+/// parent graph the host launches in ~3 us.  `exec` is the cudaGraphExec_t (opaque here: the header stays
+/// backend-neutral).  A failure inside the device launch surfaces in the parent's stream.
+void window_dev_launch_node(const void* exec, void* stream);
 
 /// STRATA_WINDOW_GRAPH=1 (CUDA only, CUDA >= 12.4): the captured window body's conditional tail.  Sets the
 /// WHILE handle's condition to 0, so the conditional body - the straight-line layer sequence captured by
