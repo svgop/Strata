@@ -1,0 +1,23 @@
+  [A0] up in 60s prewarm=done cvec=?
+  [A0 leg1  (discard)] M1 225.2  conc 273.8  M3b 77.9%  load 2.63
+  [A0 leg2] M1 231.6  conc 243.6  M3b 75.5%  load 5.46
+  [A0 leg3] M1 223.8  conc 267.7  M3b 77.2%  load 5.03
+  [B1] up in 64s prewarm=done cvec=?
+  [B1 leg1  (discard)] M1 205.6  conc 271.7  M3b 77.6%  load 3.43
+  [B1 leg2] M1 236.2  conc 267.1  M3b 77.8%  load 6.27
+  [B1 leg3] M1 215.9  conc 261.8  M3b 77.0%  load 5.53
+  [A2] up in 56s prewarm=done cvec=?
+  [A2 leg1  (discard)] M1 213.6  conc 264.5  M3b 75.4%  load 4.43
+  [A2 leg2] M1 212.3  conc 248.9  M3b 74.9%  load 5.94
+  [A2 leg3] M1 203.4  conc 279.3  M3b 76.9%  load 4.83
+  [B3] up in 56s prewarm=done cvec=?
+  [B3 leg1  (discard)] M1 208.6  conc 261.9  M3b 75.1%  load 5.78
+  [B3 leg2] M1 223.0  conc 273.3  M3b 76.2%  load 4.29
+  [B3 leg3] M1 205.9  conc 279.6  M3b 75.4%  load 4.20
+
+=== CONFIG LADDER [m1-phase-2026-11-24]  measured legs only, means over 4 boots x 2 legs
+lane               A         B    A vs B   band +-4%
+M1             217.8     220.2     -1.1%
+6-conc         259.9     270.5     -3.9%
+M3b %           76.1      76.6     -0.6%
+A = config/custom-iq3_s-8081.unscoped.json  |  B = config/custom-iq3_s-8081.json

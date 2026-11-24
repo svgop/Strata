@@ -1,0 +1,13 @@
+  [anatomy] up in 56s prewarm=done cvec=?
+  S1   M1  wall 10.08s  ttft 0.072s  tok 2000  decode 199.8 t/s  lane-number 198.4  engine ?
+  S2   M1  wall 9.08s  ttft 0.330s  tok 2000  decode 228.5 t/s  lane-number 220.2  engine ?
+  C1   6-conc burst: 3600 tok in 13.54s
+  S3   M1  wall 10.90s  ttft 0.102s  tok 2000  decode 185.3 t/s  lane-number 183.5  engine ?
+  S4   M1  wall 9.34s  ttft 0.343s  tok 2000  decode 222.4 t/s  lane-number 214.2  engine ?
+  C2   6-conc burst: 3600 tok in 13.94s
+  S5   M1  wall 9.71s  ttft 0.101s  tok 2000  decode 208.1 t/s  lane-number 206.0  engine ?
+  S6   M1  wall 9.54s  ttft 0.091s  tok 2000  decode 211.6 t/s  lane-number 209.6  engine ?
+
+=== M1 ANATOMY [m1-anatomy-2026-11-24]  (S3/S5 = the first lone request after a conc burst)
+  lone/quiet  ttft 0.209s  decode 215.6 t/s  lane-number 210.6 t/s
+  after-conc  ttft 0.101s  decode 196.7 t/s  lane-number 194.8 t/s
