@@ -42,7 +42,11 @@ Single boots (interleaves, knee probes): `vector-lab.py ab --label L --vector F 
 - **Index rule (boot-proven)**: `direction.<l>` acts on the residual AFTER block l ⇒ dump slot k is
   steered by `direction.<k-1>` (k ∈ 2..48). **Slot 1 is NOT steerable** (no direction.-1); the build
   refuses slots < 2.
-- **Norm calibration**: row norm = ρ × mean‖h_slot‖ (slot-mean over the 4 streams, ±-arms averaged).
+- **Norm calibration**: row norm = ρ × the HARMONIC mean of the per-stream ‖h_slot‖ (±-arms averaged).
+  Every block RMS-normalises each stream independently before the gated mix, so the add's share of the
+  block input follows the harmonic mean, not the arithmetic one; the arithmetic calibration
+  under-priced the true dose 1.59× at slot 9 and cost 4 net MMLU questions at "0.45" (the 2026-11-24
+  interleave). Provenance records both norms and the per-stream relative dose.
   The ladder's `FILE:SCALE` multiplies the stored row linearly — dose d means `d × row_norm` of
   absolute perturbation per stream.
 - **The 4× read-out**: hyper-connections broadcast every block output to all 4 streams and the final
