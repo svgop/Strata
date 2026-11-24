@@ -1,0 +1,92 @@
+[
+ {
+  "label": "r03p12-0.45",
+  "context": "deployed",
+  "determinism_ok": false,
+  "identical_rate": 0.0,
+  "identical_by_kind": {
+   "technical": "0/8",
+   "everyday": "0/8",
+   "play": "0/2"
+  },
+  "n_pairs": {
+   "t0": 18,
+   "all": 18
+  },
+  "judge_control_ok": true,
+  "sign": {
+   "assertive@t0": {
+    "on": 13,
+    "off": 3,
+    "inconsistent": 2,
+    "p": 0.01064
+   },
+   "assertive@all": {
+    "on": 13,
+    "off": 3,
+    "inconsistent": 2,
+    "p": 0.01064
+   },
+   "serious@t0": {
+    "on": 13,
+    "off": 1,
+    "inconsistent": 4,
+    "p": 0.00092
+   },
+   "serious@all": {
+    "on": 13,
+    "off": 1,
+    "inconsistent": 4,
+    "p": 0.00092
+   },
+   "direct@t0": {
+    "on": 11,
+    "off": 3,
+    "inconsistent": 4,
+    "p": 0.02869
+   },
+   "direct@all": {
+    "on": 11,
+    "off": 3,
+    "inconsistent": 4,
+    "p": 0.02869
+   }
+  },
+  "judge_position_bias_A_rate": 0.75,
+  "factual": {
+   "off_acc": 1.0,
+   "on_acc": 1.0,
+   "off_only_right": 0,
+   "on_only_right": 0,
+   "p": 1.0
+  },
+  "length": {
+   "off_words": 244.5,
+   "on_words": 221.944
+  },
+  "trait_per_100w": {
+   "off": 0.367,
+   "on": 0.0
+  },
+  "rep12": {
+   "off": 0.0,
+   "on": 0.001
+  },
+  "finish": {
+   "off": {
+    "stop": 15,
+    "length": 3
+   },
+   "on": {
+    "stop": 14,
+    "length": 4
+   }
+  },
+  "errors": {
+   "off": 0,
+   "on": 0
+  },
+  "degeneration_flags": [],
+  "verdict": "WINDOW"
+ }
+]

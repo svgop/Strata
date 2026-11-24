@@ -75,7 +75,8 @@ def _info_geometry(info: dict) -> tuple | None:
     reported = info.get("cvec")
     if reported in (None, "0"):
         return None
-    m = _INFO_CVEC.fullmatch(str(reported).split(":single")[0])
+    primary = str(reported).split("+")[0]        # a second armed table rides after '+': the gate checks it apart
+    m = _INFO_CVEC.fullmatch(primary.split(":single")[0])
     if m is None:
         raise _Garbled(f"the engine reported a control vector shape it cannot have armed: {reported!r}")
     mode, first, last = m.group(1), int(m.group(2)), int(m.group(3))
@@ -104,6 +105,50 @@ def _asked_geometry(args: list):
         except ValueError:
             want_first = want_last = None          # unparsable: the range stays unchecked, the mode still holds
     return asks, want_mode, want_first, want_last
+
+
+def _asked_geometry2(args: list):
+    """The optional SECOND armed table (--control-vector-scaled2 / --cvec-mode2 / --control-vector-layer-range2):
+    None = the config asks for no second table; else (want_mode2, want_first2, want_last2)."""
+    if "--control-vector-scaled2" not in args:
+        return None
+    want_mode2 = "project"
+    if "--cvec-mode2" in args and args.index("--cvec-mode2") + 1 < len(args):
+        want_mode2 = args[args.index("--cvec-mode2") + 1]
+    want_first2 = want_last2 = None
+    if "--control-vector-layer-range2" in args and args.index("--control-vector-layer-range2") + 2 < len(args):
+        try:
+            want_first2 = int(args[args.index("--control-vector-layer-range2") + 1])
+            want_last2 = int(args[args.index("--control-vector-layer-range2") + 2])
+        except ValueError:
+            pass
+    return want_mode2, want_first2, want_last2
+
+
+def _armed_geometry2(ident: dict, info: dict, structured: bool):
+    """The engine's armed SECOND table from the IDENT's `cvec2` object (or the INFO line's
+    `+<mode>:<first>-<last>` suffix).  None = nothing armed; a malformed report is a _Garbled."""
+    if structured:
+        cv2 = ident.get("cvec2")
+        if cv2 is None:
+            return None
+        try:
+            mode, first, last, steered = cv2["mode"], cv2["first"], cv2["last"], cv2["steered"]
+        except KeyError as e:
+            raise _Garbled(f"the engine's IDENT handshake reports a malformed second control vector (missing {e})")
+        if not isinstance(mode, str) or not mode or not all(isinstance(x, int) for x in (first, last, steered)):
+            raise _Garbled(f"the engine's IDENT handshake reports a malformed second control vector (cvec2={cv2!r})")
+        return mode, first, last, steered
+    reported = info.get("cvec")
+    if reported in (None, "0"):
+        return None
+    parts = str(reported).split("+")
+    if len(parts) < 2:
+        return None
+    m = _INFO_CVEC.fullmatch(parts[1].split(":single")[0])
+    if m is None:
+        raise _Garbled(f"the engine reported a second control vector shape it cannot have armed: {reported!r}")
+    return m.group(1), int(m.group(2)), int(m.group(3)), None
 
 
 def armed_geometry_problem(engine, args: list) -> str | None:
@@ -165,4 +210,27 @@ def armed_geometry_problem(engine, args: list) -> str | None:
     if steered is None or steered <= 0:
         return ("the control vector loaded but steers 0 layers (cvec_steered=0) - it is inert; "
                 "refusing to serve steering that does nothing")
+
+    # ---- the optional SECOND armed table: checked with the same asks-vs-armed contract
+    want2 = _asked_geometry2(args)
+    armed2 = _armed_geometry2(ident, getattr(engine, "info", {}) or {}, structured)
+    if want2 is None:
+        if armed2 is not None:
+            print(f"[strata] WARNING: the engine armed a second control vector the config did not ask for "
+                  f"({armed2[0]}:{armed2[1]}-{armed2[2]})", flush=True)
+        return None
+    if armed2 is None:
+        return ("the config asks for a second control vector (--control-vector-scaled2) but the engine armed "
+                "none - the file failed to load, or the engine ignored the flag")
+    mode2, first2, last2 = armed2[0], armed2[1], armed2[2]
+    want_mode2, want_first2, want_last2 = want2
+    if mode2 != want_mode2:
+        return (f"the engine armed second table {mode2}:{first2}-{last2} but the config asked for mode "
+                f"{want_mode2} - refusing to serve")
+    if want_first2 is not None and (first2 != want_first2 or last2 != want_last2):
+        return (f"the engine armed second table {mode2}:{first2}-{last2} but the config asked for "
+                f"{want_mode2}:{want_first2}-{want_last2} - refusing to serve")
+    if layers is not None and last2 >= layers:
+        return (f"the second control-vector range {mode2}:{first2}-{last2} runs past the model's {layers} layers; "
+                f"refusing a misconfigured range")
     return None

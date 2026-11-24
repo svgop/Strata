@@ -15,24 +15,37 @@ Cvec g_cvec;                 // the description; its device pointers are the upl
 bool g_on_host = false;
 // the tables on every device that holds them (a layer split applies the vector on several)
 constexpr int kDevices = 64;
-struct DevTables { float* dir = nullptr; float* s = nullptr; int* on = nullptr; };
+struct DevTables { float* dir = nullptr; float* s = nullptr; int* on = nullptr;
+                   float* dir2 = nullptr; float* s2 = nullptr; };   // dir2/s2: the optional second armed table
 DevTables g_dev[kDevices];
-std::vector<float> g_dir_host, g_s_host;
+std::vector<float> g_dir_host, g_s_host, g_dir2_host, g_s2_host;
 int cur_device() {
     int d = 0;
     if (cudaGetDevice(&d) != cudaSuccess || d < 0 || d >= kDevices) d = 0;
     return d;
 }
+// Allocate and fill this device's slot from the host mirrors.  The first table always rides; the second
+// only when one is armed.  A failure frees every partial allocation (a leaked slot would masquerade as
+// "uploaded" on the next call) and leaves the slot reset.
 bool upload_here(std::string& err) {
     DevTables& t = g_dev[cur_device()];
-    if (t.dir != nullptr) return true;
+    const bool two = !g_dir2_host.empty();
+    if (t.dir != nullptr && (!two || t.dir2 != nullptr)) return true;   // this device already holds what it must
     const int flag = g_on_host ? 1 : 0;
-    if (cudaMalloc(&t.dir, g_dir_host.size() * sizeof(float)) != cudaSuccess ||
-        cudaMalloc(&t.s, g_s_host.size() * sizeof(float)) != cudaSuccess || cudaMalloc(&t.on, sizeof(int)) != cudaSuccess ||
-        cudaMemcpy(t.dir, g_dir_host.data(), g_dir_host.size() * sizeof(float), cudaMemcpyHostToDevice) != cudaSuccess ||
-        cudaMemcpy(t.s, g_s_host.data(), g_s_host.size() * sizeof(float), cudaMemcpyHostToDevice) != cudaSuccess ||
-        cudaMemcpy(t.on, &flag, sizeof(int), cudaMemcpyHostToDevice) != cudaSuccess) {
-        err = "control vector: device allocation failed";
+    const size_t bytes = g_dir_host.size() * sizeof(float), sbytes = g_s_host.size() * sizeof(float);
+    const bool ok = cudaMalloc(&t.dir, bytes) == cudaSuccess &&
+                    cudaMalloc(&t.s, sbytes) == cudaSuccess &&
+                    cudaMalloc(&t.on, sizeof(int)) == cudaSuccess &&
+                    (!two || cudaMalloc(&t.dir2, bytes) == cudaSuccess) &&
+                    (!two || cudaMalloc(&t.s2, sbytes) == cudaSuccess) &&
+                    cudaMemcpy(t.dir, g_dir_host.data(), bytes, cudaMemcpyHostToDevice) == cudaSuccess &&
+                    cudaMemcpy(t.s, g_s_host.data(), sbytes, cudaMemcpyHostToDevice) == cudaSuccess &&
+                    cudaMemcpy(t.on, &flag, sizeof(int), cudaMemcpyHostToDevice) == cudaSuccess &&
+                    (!two || cudaMemcpy(t.dir2, g_dir2_host.data(), bytes, cudaMemcpyHostToDevice) == cudaSuccess) &&
+                    (!two || cudaMemcpy(t.s2, g_s2_host.data(), sbytes, cudaMemcpyHostToDevice) == cudaSuccess);
+    if (!ok) {
+        err = two ? "control vector: device allocation failed (two tables)" : "control vector: device allocation failed";
+        cudaFree(t.dir); cudaFree(t.s); cudaFree(t.on); cudaFree(t.dir2); cudaFree(t.s2);   // cudaFree(nullptr) is a no-op
         t = DevTables{};
         return false;
     }
@@ -98,24 +111,34 @@ __global__ void cvec_kernel(float* __restrict__ R, const float* __restrict__ dir
 
 const Cvec& cvec() { return g_cvec; }
 
-bool cvec_upload(const std::vector<float>& dir, const std::vector<float>& s, int mode, int first, int last,
-                 int64_t n_embd, int64_t hc, std::string& err) {
-    if (n_embd < 1 || n_embd > (int64_t) THREADS * MAXK) { err = "control vector: unsupported n_embd"; return false; }
-    if (s.empty() || dir.size() != s.size() * (size_t) n_embd) { err = "control vector: bad table sizes"; return false; }
-    int prev = 0;   // a new vector replaces the old one on every device
+// Free every device's slot (both tables).  The one owner of teardown: a new first table replaces everything,
+// and cvec_upload2 re-materialises both tables through one upload so no device slot is ever half-built.
+void release_devices() {
+    int prev = 0;
     cudaGetDevice(&prev);
     for (int d = 0; d < kDevices; ++d) {
         if (g_dev[d].dir == nullptr) continue;
         cudaSetDevice(d);
-        cudaDeviceSynchronize();
+        cudaDeviceSynchronize();   // nothing in flight may still read the tables
         cudaFree(g_dev[d].dir);
         cudaFree(g_dev[d].s);
         cudaFree(g_dev[d].on);
+        cudaFree(g_dev[d].dir2);
+        cudaFree(g_dev[d].s2);
         g_dev[d] = DevTables{};
     }
     cudaSetDevice(prev);
+}
+
+bool cvec_upload(const std::vector<float>& dir, const std::vector<float>& s, int mode, int first, int last,
+                 int64_t n_embd, int64_t hc, std::string& err) {
+    if (n_embd < 1 || n_embd > (int64_t) THREADS * MAXK) { err = "control vector: unsupported n_embd"; return false; }
+    if (s.empty() || dir.size() != s.size() * (size_t) n_embd) { err = "control vector: bad table sizes"; return false; }
+    release_devices();
     g_dir_host = dir;
     g_s_host = s;
+    g_dir2_host.clear();   // a first-table upload replaces both tables (cvec_upload2 re-arms the second)
+    g_s2_host.clear();
     g_on_host = true;
     if (!upload_here(err)) return false;
     const DevTables& t = g_dev[cur_device()];
@@ -129,6 +152,33 @@ bool cvec_upload(const std::vector<float>& dir, const std::vector<float>& s, int
     g_cvec.hc = hc;
     g_cvec.steered.assign(s.size(), false);
     for (size_t l = 0; l < s.size(); ++l) g_cvec.steered[l] = s[l] != 0.0f;
+    g_cvec.dir2 = nullptr;   // a first-table upload disarms the second (cvec_upload2 re-arms it)
+    g_cvec.s2 = nullptr;
+    g_cvec.steered2.clear();
+    return true;
+}
+
+bool cvec_upload2(const std::vector<float>& dir, const std::vector<float>& s, int mode, int first, int last,
+                  int64_t n_embd, int64_t hc, std::string& err) {
+    if (!g_cvec.loaded()) { err = "cvec_upload2: upload the first table first"; return false; }
+    if (s.empty() || dir.size() != s.size() * (size_t) n_embd || n_embd != g_cvec.n_embd || hc != g_cvec.hc) {
+        err = "control vector: bad second-table sizes (must match the first table's geometry)"; return false;
+    }
+    g_dir2_host = dir;
+    g_s2_host = s;
+    release_devices();        // load time only (before any graph capture): rebuild both slots in one pass
+    if (!upload_here(err)) { g_dir2_host.clear(); g_s2_host.clear(); return false; }
+    const DevTables& t = g_dev[cur_device()];
+    g_cvec.dir = t.dir;       // the rebuilt slot's first-table pointers (the device addresses changed)
+    g_cvec.s = t.s;
+    g_cvec.on = t.on;
+    g_cvec.dir2 = t.dir2;
+    g_cvec.s2 = t.s2;
+    g_cvec.mode2 = mode;
+    g_cvec.first2 = first;
+    g_cvec.last2 = last;
+    g_cvec.steered2.assign(s.size(), false);
+    for (size_t l = 0; l < s.size(); ++l) g_cvec.steered2[l] = s[l] != 0.0f;
     return true;
 }
 
@@ -159,15 +209,32 @@ bool cvec_tables(const float** dir, const float** s, const int** on) {
     return true;
 }
 
+bool cvec_tables2(const float** dir, const float** s, const int** on) {
+    if (!g_cvec.loaded2()) return false;
+    const DevTables& t = g_dev[cur_device()];
+    if (t.dir2 == nullptr) return false;
+    *dir = t.dir2; *s = t.s2; *on = t.on;
+    return true;
+}
+
 void cvec_apply(float* R, int64_t layer, int64_t T, int64_t r_ld, const float* bo, int64_t bo_ld, const float* inj,
                 int64_t inj_ld, bool write, void* stream) {
     if (!g_cvec.loaded() || T < 1) return;
     const DevTables& t = g_dev[cur_device()];
     if (t.dir == nullptr) throw std::runtime_error("cvec_apply: the control vector is not on this device (cvec_replicate)");
     const dim3 grid((unsigned) g_cvec.hc, (unsigned) T);
-    cvec_kernel<<<grid, THREADS, 0, (cudaStream_t) stream>>>(R, t.dir, t.s, t.on, g_cvec.mode, layer,
-                                                            (int) g_cvec.n_embd, (int) g_cvec.hc, r_ld, bo, bo_ld,
-                                                            inj, inj_ld, write ? 1 : 0);
+    const bool first = g_cvec.steered_at(layer);
+    if (first)
+        cvec_kernel<<<grid, THREADS, 0, (cudaStream_t) stream>>>(R, t.dir, t.s, t.on, g_cvec.mode, layer,
+                                                                (int) g_cvec.n_embd, (int) g_cvec.hc, r_ld, bo, bo_ld,
+                                                                inj, inj_ld, write ? 1 : 0);
+    if (g_cvec.steered2_at(layer))
+        // after the first table, same stream: the ops compose sequentially (h += a; h -= s (h . v) v).
+        // the pending FFN write rides only the FIRST launch - the second sees R already holding it.
+        // when THIS table is the only one at the layer, the write is here - so bo/inj ride with it.
+        cvec_kernel<<<grid, THREADS, 0, (cudaStream_t) stream>>>(R, t.dir2, t.s2, t.on, g_cvec.mode2, layer,
+                                                                (int) g_cvec.n_embd, (int) g_cvec.hc, r_ld, bo, bo_ld,
+                                                                inj, inj_ld, (!first && write) ? 1 : 0);
     if (cudaPeekAtLastError() != cudaSuccess) throw std::runtime_error("cvec_apply: launch failed");
 }
 

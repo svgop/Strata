@@ -202,7 +202,7 @@ int main() {
     std::printf("add\n");
     for (int64_t j = 0; j < N; ++j) dir[(size_t) (kLayer * N + j)] *= 0.1f;   // d = 0.1 v, s = 1
     s[(size_t) kLayer] = 1.0f;
-    if (!k::cvec_upload(dir, s, /*add*/ 1, 4, 44, N, HC, err)) return 2;
+    if (!k::cvec_upload(dir, s, /*add*/ 1, 4, 44, N, HC, err)) { std::fprintf(stderr, "upload1: %s\n", err.c_str()); return 2; }
     up(dR, R);
     k::cvec_apply(dR, kLayer, T, D, nullptr, 0, nullptr, 0, false, nullptr);
     ck(cudaDeviceSynchronize(), "add");
@@ -216,6 +216,91 @@ int main() {
                     same = same && got[i] == R[i] + dir[(size_t) (kLayer * N + j)];
                 }
         check(same, "add is h + d in every stream (bitwise)");
+    }
+
+    // ---- 5. two armed tables: the persona add (table 1) + the refusal ablation (table 2), composing
+    // sequentially at the layer both cover, exactly the standing deployment's shape
+    std::printf("two tables\n");
+    if (!k::cvec_upload(dir, s, /*add*/ 1, 4, 44, N, HC, err)) { std::fprintf(stderr, "upload1: %s\n", err.c_str()); return 2; }   // dir: 0.1 v at kLayer, s = 1
+    std::vector<float> dir2((size_t) (L * N), 0.0f), s2((size_t) L, 0.0f);
+    for (int64_t l = 1; l < L; ++l) {   // a distinct unit direction at EVERY layer: table 2 covers all of them
+        double nrm = 0.0;
+        std::vector<float> u((size_t) N);
+        for (auto& x : u) { x = nd(rng); nrm += (double) x * x; }
+        nrm = std::sqrt(nrm);
+        for (int64_t j = 0; j < N; ++j) dir2[(size_t) (l * N + j)] = (float) (u[(size_t) j] / nrm);
+        s2[(size_t) l] = 1.5f;
+    }
+    if (!k::cvec_upload2(dir2, s2, /*project*/ 0, 1, 47, N, HC, err)) { std::fprintf(stderr, "upload2: %s\n", err.c_str()); return 2; }
+    check(k::cvec().steered_at(kLayer) && k::cvec().steered2_at(kLayer) &&
+          !k::cvec().steered_at(kLayer + 1) && k::cvec().steered2_at(kLayer + 1) &&
+          k::cvec().covers(kLayer + 1), "covers() is the union; steered_at/steered2_at split them");
+    {   // the layer BOTH cover: h' = (h + a) - s ((h + a) . u) u - the ablated term is untouched by the add
+        up(dR, R);
+        k::cvec_apply(dR, kLayer, T, D, nullptr, 0, nullptr, 0, false, nullptr);
+        ck(cudaDeviceSynchronize(), "both tables at kLayer");
+        const auto got = down(dR, R.size());
+        double worst = 0.0;
+        for (int64_t t = 0; t < T; ++t)
+            for (int64_t c = 0; c < HC; ++c) {
+                const float* v = dir.data() + kLayer * N;
+                const float* u = dir2.data() + kLayer * N;
+                const size_t base = (size_t) (t * D + c * N);
+                double dotu = 0.0;
+                for (int64_t j = 0; j < N; ++j) {   // the dot AFTER the add: h + a, then project along u
+                    const double h = (double) R[base + j] + v[j];
+                    dotu += h * u[j];
+                }
+                for (int64_t j = 0; j < N; ++j) {
+                    const double h = (double) R[base + j] + v[j];
+                    const double want = h - 1.5 * dotu * u[j];
+                    worst = std::fmax(worst, std::fabs(got[base + j] - want));
+                }
+            }
+        std::printf("    both tables: max |err| %.3g\n", worst);
+        check(worst < 1e-4, "add then ablate composes sequentially (the orthogonal add is untouched)");
+    }
+    {   // a layer ONLY table 2 covers: pure ablation, no add
+        up(dR, R);
+        k::cvec_apply(dR, kLayer + 1, T, D, nullptr, 0, nullptr, 0, false, nullptr);
+        ck(cudaDeviceSynchronize(), "table 2 only at kLayer+1");
+        const auto got = down(dR, R.size());
+        double worst = 0.0;
+        for (int64_t t = 0; t < T; ++t)
+            for (int64_t c = 0; c < HC; ++c) {
+                const float* u = dir2.data() + (kLayer + 1) * N;
+                double dotu = 0.0;
+                for (int64_t j = 0; j < N; ++j) dotu += (double) R[(size_t) (t * D + c * N + j)] * u[j];
+                for (int64_t j = 0; j < N; ++j)
+                    worst = std::fmax(worst, std::fabs(got[(size_t) (t * D + c * N + j)] -
+                                                       (R[(size_t) (t * D + c * N + j)] - 1.5 * dotu * u[j])));
+            }
+        std::printf("    table 2 only: max |err| %.3g\n", worst);
+        check(worst < 1e-4, "table 2 alone ablates its layer");
+    }
+    {   // the t2-only layer WITH a pending write: the write fold rides the second launch (the
+        // null-bo launch class that bit the verify replay; this case exists so it stays covered)
+        up(dR, R);
+        k::cvec_apply(dR, kLayer + 1, T, D, dbo, N, dinj, HC, true, nullptr);
+        ck(cudaDeviceSynchronize(), "table 2 only, pending write");
+        const auto got = down(dR, R.size());
+        double worst = 0.0;
+        for (int64_t t = 0; t < T; ++t)
+            for (int64_t c = 0; c < HC; ++c) {
+                const float* u = dir2.data() + (kLayer + 1) * N;
+                const float w = 2.0f / (1.0f + std::exp(-inj[(size_t) (t * HC + c)] / (float) HC));
+                double dotu = 0.0;
+                for (int64_t j = 0; j < N; ++j) {
+                    const double h = (double) R[(size_t) (t * D + c * N + j)] + (double) bo[(size_t) (t * N + j)] * w;
+                    dotu += h * u[j];
+                }
+                for (int64_t j = 0; j < N; ++j) {
+                    const double h = (double) R[(size_t) (t * D + c * N + j)] + (double) bo[(size_t) (t * N + j)] * w;
+                    worst = std::fmax(worst, std::fabs(got[(size_t) (t * D + c * N + j)] - (h - 1.5 * dotu * u[j])));
+                }
+            }
+        std::printf("    table 2 only, pending write: max |err| %.3g\n", worst);
+        check(worst < 1e-4, "table 2 alone folds the pending write, then ablates");
     }
 
     std::printf(g_fail ? "cvec_parity: %d FAILED\n" : "cvec_parity: all passed\n", g_fail);

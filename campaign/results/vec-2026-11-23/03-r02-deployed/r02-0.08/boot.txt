@@ -1,0 +1,63 @@
+{
+ "label": "r02-0.08",
+ "health_after_s": null,
+ "chat_template_line": "[strata] chat template: /mnt/DATA/LLM/Models/GGUF/GSQ-RCO/qwen3.8-flash-next/gsq-iq3s/chat_template.jinja (the model's own, beside its weights)",
+ "cvec": "add:18-26",
+ "cvec_steered": "9/48",
+ "state": null
+}
+
+True) 2026-11-23 15:56:38 =====
+launcher: preflight: MemAvailable 170 GiB (floor 96), GPU 31398 MiB free (floor 1024)
+launcher: no VALIDATED store at /mnt/DATA/LLM/Models/GGUF/strata/data/packs/q2_0 - the native path serves every miss (the canonical pack is corrupt, T68; arm a validated store with STRATA_SHADOW_EXPERTS=<dir> after its quality gate)
+
+===== vector-lab launch (guard=True) 2026-11-23 16:02:18 =====
+launcher: preflight: MemAvailable 171 GiB (floor 96), GPU 31398 MiB free (floor 1024)
+launcher: no VALIDATED store at /mnt/DATA/LLM/Models/GGUF/strata/data/packs/q2_0 - the native path serves every miss (the canonical pack is corrupt, T68; arm a validated store with STRATA_SHADOW_EXPERTS=<dir> after its quality gate)
+
+===== vector-lab launch (guard=True) 2026-11-23 16:06:54 =====
+launcher: preflight: MemAvailable 171 GiB (floor 96), GPU 31416 MiB free (floor 1024)
+launcher: no VALIDATED store at /mnt/DATA/LLM/Models/GGUF/strata/data/packs/q2_0 - the native path serves every miss (the canonical pack is corrupt, T68; arm a validated store with STRATA_SHADOW_EXPERTS=<dir> after its quality gate)
+
+===== vector-lab launch (guard=True) 2026-11-23 16:15:30 =====
+launcher: preflight: MemAvailable 171 GiB (floor 96), GPU 31409 MiB free (floor 1024)
+launcher: no VALIDATED store at /mnt/DATA/LLM/Models/GGUF/strata/data/packs/q2_0 - the native path serves every miss (the canonical pack is corrupt, T68; arm a validated store with STRATA_SHADOW_EXPERTS=<dir> after its quality gate)
+
+max 200) tokens, 25.0 tok/s, 6 s
+[strata] thinking: 59 of budget 100 (max 200) tokens, 19.1 tok/s, 6 s
+[strata] thinking: 96 of budget 100 (max 200) tokens, 48.7 tok/s, 7 s
+[strata] thinking budget reached (100 tokens): wrapping up the thinking
+[strata] thinking budget reached (100 tokens): wrapping up the thinking
+[strata] thinking budget reached (100 tokens): wrapping up the thinking
+[strata] thinking budget reached (100 tokens): wrapping up the thinking
+[strata] thinking: 118 of max 200 tokens, 28.8 tok/s, 7 s
+[strata] thinking: 90 of budget 100 (max 200) tokens, 15.2 tok/s, 7 s
+[strata] thinking: 99 of budget 100 (max 200) tokens, 29.8 tok/s, 7 s
+[strata] thinking: 118 of max 200 tokens, 22.0 tok/s, 8 s
+[strata] thinking budget reached (100 tokens): wrapping up the thinking
+[strata] thinking: 118 of max 200 tokens, 16.1 tok/s, 8 s
+[strata] thinking: 118 of max 200 tokens, 36.8 tok/s, 8 s
+[strata] answering: 125 of max 200 tokens, 24.1 tok/s, 8 s
+[strata] thinking: 118 of max 200 tokens, 26.1 tok/s, 9 s
+[strata] thinking: 97 of budget 100 (max 200) tokens, 13.3 tok/s, 9 s
+[strata] answering: 125 of max 200 tokens, 19.4 tok/s, 9 s
+[strata] thinking budget reached (100 tokens): wrapping up the thinking
+[strata] answering: 131 of max 200 tokens, 15.2 tok/s, 9 s
+[strata] answering: 128 of max 200 tokens, 30.2 tok/s, 9 s
+[strata] answering: 138 of max 200 tokens, 22.3 tok/s, 9 s
+[strata] answering: 151 of max 200 tokens, 27.3 tok/s, 10 s
+[strata] answering: 153 of max 200 tokens, 18.4 tok/s, 10 s
+[strata] answering: 160 of max 200 tokens, 21.4 tok/s, 10 s
+[strata] answering: 189 of max 200 tokens, 19.7 tok/s, 10 s
+[strata] answering: 185 of max 200 tokens, 35.2 tok/s, 10 s
+[strata] answering: 197 of max 200 tokens, 27.4 tok/s, 10 s
+[strata] done: 200 tokens in 10 s (27.6 tok/s) (length, cancel=False), expert cache 98.7% hit
+[strata] done: 200 tokens in 11 s (20.4 tok/s) (length, cancel=False), expert cache 99.5% hit
+[strata] done: 200 tokens in 11 s (31.3 tok/s) (length, cancel=False), expert cache 99.9% hit
+[strata] done: 200 tokens in 11 s (24.5 tok/s) (length, cancel=False), expert cache 98.7% hit
+[strata] done: 200 tokens in 11 s (36.4 tok/s) (length, cancel=False), expert cache 99.1% hit
+[strata] done: 200 tokens in 11 s (22.0 tok/s) (length, cancel=False), expert cache 99.3% hit
+[strata] prewarm: replay done in 29 s - the first real request is warm
+[strata] boot contract: engine RSS 120.3 GiB (shmem 62.6), MemAvailable 100.5 GiB settled (post-warm-in)
+
+{"label": "r02-0.08", "server_pids": [661692], "hard_kill": false, "drain_s": 12.1, "port_closed": true, "leftover_procs": [], "vram_used_mib": 759, "clean": true}

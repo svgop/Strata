@@ -32,7 +32,23 @@ struct Cvec {
     bool loaded() const { return dir != nullptr; }
     /// Layer l's FFN write is followed by the vector (with a real direction there).  Decided at load time, never
     /// per request: it changes where the residual write happens, so the graphs depend on it.
-    bool covers(int64_t l) const { return loaded() && l >= first && l <= last && l < (int64_t) steered.size() && steered[(size_t) l]; }
+    bool steered_at(int64_t l) const { return loaded() && l >= first && l <= last && l < (int64_t) steered.size() && steered[(size_t) l]; }
+
+    /// The optional SECOND armed table (--control-vector-scaled2 / --cvec-mode2 / --control-vector-layer-range2):
+    /// applied after the first at every layer it covers, same per-request switch.  This is how an add-mode
+    /// persona row and a project-mode refusal ablation compose in one boot: the ops are sequential per layer
+    /// (h += a, then h -= s (h . v) v), and an add direction orthogonal to the ablated one is untouched by it
+    /// (the subtracted term s (h . v) v is identical with and without the add).  Empty until `cvec_upload2`.
+    const float* dir2 = nullptr;
+    const float* s2 = nullptr;
+    int mode2 = 0;
+    int first2 = 0, last2 = -1;
+    std::vector<bool> steered2;
+    bool loaded2() const { return dir2 != nullptr; }
+    bool steered2_at(int64_t l) const { return loaded2() && l >= first2 && l <= last2 && l < (int64_t) steered2.size() && steered2[(size_t) l]; }
+
+    /// The graph-structure predicate (where the residual write folds): any table acts at this layer.
+    bool covers(int64_t l) const { return steered_at(l) || steered2_at(l); }
     std::vector<bool> steered;    ///< host copy of s_l != 0
 };
 
@@ -42,6 +58,15 @@ const Cvec& cvec();
 /// Upload a vector built by the loader: `dir` is n_layers * n_embd, `s` n_layers (see `Cvec`).  Starts ON.
 bool cvec_upload(const std::vector<float>& dir, const std::vector<float>& s, int mode, int first, int last,
                  int64_t n_embd, int64_t hc, std::string& err);
+
+/// Upload the optional second table (see `Cvec::dir2`).  Same shapes as `cvec_upload`; per-layer only
+/// (no single:L).  Replaces any previous second table.
+bool cvec_upload2(const std::vector<float>& dir, const std::vector<float>& s, int mode, int first, int last,
+                  int64_t n_embd, int64_t hc, std::string& err);
+
+/// The second table's device pointers for a caller that fuses it (same contract as `cvec_tables`).
+/// False when the second table is not loaded on this device.
+bool cvec_tables2(const float** dir, const float** s, const int** on);
 
 /// A layer split: put the loaded vector's tables on the CURRENT device too (cvec_apply uses the tables of the device
 /// it runs on).  No-op without a vector or when this device has them already.

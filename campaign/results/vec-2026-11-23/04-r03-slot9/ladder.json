@@ -1,0 +1,358 @@
+[
+ {
+  "label": "r03s9-0.03",
+  "context": "base",
+  "determinism_ok": false,
+  "identical_rate": 0.056,
+  "identical_by_kind": {
+   "technical": "0/8",
+   "everyday": "0/8",
+   "play": "1/2"
+  },
+  "n_pairs": {
+   "t0": 18,
+   "all": 36
+  },
+  "sign": {
+   "assertive@t0": {
+    "on": 3,
+    "off": 2,
+    "inconsistent": 12,
+    "p": 0.5
+   },
+   "assertive@all": {
+    "on": 8,
+    "off": 7,
+    "inconsistent": 19,
+    "p": 0.5
+   },
+   "serious@t0": {
+    "on": 5,
+    "off": 3,
+    "inconsistent": 9,
+    "p": 0.36328
+   },
+   "serious@all": {
+    "on": 13,
+    "off": 4,
+    "inconsistent": 17,
+    "p": 0.02452
+   },
+   "direct@t0": {
+    "on": 6,
+    "off": 4,
+    "inconsistent": 7,
+    "p": 0.37695
+   },
+   "direct@all": {
+    "on": 11,
+    "off": 10,
+    "inconsistent": 13,
+    "p": 0.5
+   }
+  },
+  "judge_position_bias_A_rate": 1.0,
+  "factual": {
+   "off_acc": 1.0,
+   "on_acc": 1.0,
+   "off_only_right": 0,
+   "on_only_right": 0,
+   "p": 1.0
+  },
+  "length": {
+   "off_words": 167.056,
+   "on_words": 161.472
+  },
+  "trait_per_100w": {
+   "off": 0.0,
+   "on": 0.0
+  },
+  "rep12": {
+   "off": 0.0,
+   "on": 0.0
+  },
+  "finish": {
+   "off": {
+    "stop": 6,
+    "length": 30
+   },
+   "on": {
+    "stop": 8,
+    "length": 28
+   }
+  },
+  "errors": {
+   "off": 0,
+   "on": 0
+  },
+  "degeneration_flags": [],
+  "verdict": "MIXED"
+ },
+ {
+  "label": "r03s9-0.1",
+  "context": "base",
+  "determinism_ok": false,
+  "identical_rate": 0.0,
+  "identical_by_kind": {
+   "technical": "0/8",
+   "everyday": "0/8",
+   "play": "0/2"
+  },
+  "n_pairs": {
+   "t0": 18,
+   "all": 36
+  },
+  "sign": {
+   "assertive@t0": {
+    "on": 3,
+    "off": 4,
+    "inconsistent": 11,
+    "p": 0.77344
+   },
+   "assertive@all": {
+    "on": 9,
+    "off": 6,
+    "inconsistent": 20,
+    "p": 0.30362
+   },
+   "serious@t0": {
+    "on": 7,
+    "off": 2,
+    "inconsistent": 9,
+    "p": 0.08984
+   },
+   "serious@all": {
+    "on": 17,
+    "off": 2,
+    "inconsistent": 16,
+    "p": 0.00036
+   },
+   "direct@t0": {
+    "on": 7,
+    "off": 5,
+    "inconsistent": 6,
+    "p": 0.38721
+   },
+   "direct@all": {
+    "on": 15,
+    "off": 8,
+    "inconsistent": 12,
+    "p": 0.10502
+   }
+  },
+  "judge_position_bias_A_rate": 1.0,
+  "factual": {
+   "off_acc": 1.0,
+   "on_acc": 1.0,
+   "off_only_right": 0,
+   "on_only_right": 0,
+   "p": 1.0
+  },
+  "length": {
+   "off_words": 168.194,
+   "on_words": 165.889
+  },
+  "trait_per_100w": {
+   "off": 0.0,
+   "on": 0.0
+  },
+  "rep12": {
+   "off": 0.0,
+   "on": 0.0
+  },
+  "finish": {
+   "off": {
+    "stop": 7,
+    "length": 29
+   },
+   "on": {
+    "stop": 7,
+    "length": 29
+   }
+  },
+  "errors": {
+   "off": 0,
+   "on": 0
+  },
+  "degeneration_flags": [],
+  "verdict": "MIXED"
+ },
+ {
+  "label": "r03s9-0.3",
+  "context": "base",
+  "determinism_ok": false,
+  "identical_rate": 0.056,
+  "identical_by_kind": {
+   "technical": "0/8",
+   "everyday": "0/8",
+   "play": "1/2"
+  },
+  "n_pairs": {
+   "t0": 18,
+   "all": 36
+  },
+  "sign": {
+   "assertive@t0": {
+    "on": 10,
+    "off": 3,
+    "inconsistent": 4,
+    "p": 0.04614
+   },
+   "assertive@all": {
+    "on": 19,
+    "off": 7,
+    "inconsistent": 9,
+    "p": 0.01448
+   },
+   "serious@t0": {
+    "on": 16,
+    "off": 0,
+    "inconsistent": 1,
+    "p": 2e-05
+   },
+   "serious@all": {
+    "on": 34,
+    "off": 0,
+    "inconsistent": 1,
+    "p": 0.0
+   },
+   "direct@t0": {
+    "on": 8,
+    "off": 5,
+    "inconsistent": 4,
+    "p": 0.29053
+   },
+   "direct@all": {
+    "on": 18,
+    "off": 9,
+    "inconsistent": 8,
+    "p": 0.06104
+   }
+  },
+  "judge_position_bias_A_rate": 1.0,
+  "factual": {
+   "off_acc": 1.0,
+   "on_acc": 1.0,
+   "off_only_right": 0,
+   "on_only_right": 0,
+   "p": 1.0
+  },
+  "length": {
+   "off_words": 166.222,
+   "on_words": 145.056
+  },
+  "trait_per_100w": {
+   "off": 0.0,
+   "on": 0.0
+  },
+  "rep12": {
+   "off": 0.0,
+   "on": 0.0
+  },
+  "finish": {
+   "off": {
+    "stop": 8,
+    "length": 28
+   },
+   "on": {
+    "stop": 12,
+    "length": 24
+   }
+  },
+  "errors": {
+   "off": 0,
+   "on": 0
+  },
+  "degeneration_flags": [],
+  "verdict": "WINDOW"
+ },
+ {
+  "label": "r03s9-0.6",
+  "context": "base",
+  "determinism_ok": false,
+  "identical_rate": 0.0,
+  "identical_by_kind": {
+   "technical": "0/8",
+   "everyday": "0/8",
+   "play": "0/2"
+  },
+  "n_pairs": {
+   "t0": 18,
+   "all": 36
+  },
+  "sign": {
+   "assertive@t0": {
+    "on": 11,
+    "off": 2,
+    "inconsistent": 5,
+    "p": 0.01123
+   },
+   "assertive@all": {
+    "on": 23,
+    "off": 3,
+    "inconsistent": 10,
+    "p": 4e-05
+   },
+   "serious@t0": {
+    "on": 17,
+    "off": 0,
+    "inconsistent": 1,
+    "p": 1e-05
+   },
+   "serious@all": {
+    "on": 35,
+    "off": 0,
+    "inconsistent": 1,
+    "p": 0.0
+   },
+   "direct@t0": {
+    "on": 6,
+    "off": 6,
+    "inconsistent": 6,
+    "p": 0.61279
+   },
+   "direct@all": {
+    "on": 9,
+    "off": 16,
+    "inconsistent": 11,
+    "p": 0.94612
+   }
+  },
+  "judge_position_bias_A_rate": 1.0,
+  "factual": {
+   "off_acc": 1.0,
+   "on_acc": 0.938,
+   "off_only_right": 1,
+   "on_only_right": 0,
+   "p": 1.0
+  },
+  "length": {
+   "off_words": 167.0,
+   "on_words": 156.028
+  },
+  "trait_per_100w": {
+   "off": 0.0,
+   "on": 0.0
+  },
+  "rep12": {
+   "off": 0.0,
+   "on": 0.0
+  },
+  "finish": {
+   "off": {
+    "stop": 7,
+    "length": 29
+   },
+   "on": {
+    "stop": 12,
+    "length": 24
+   }
+  },
+  "errors": {
+   "off": 0,
+   "on": 0
+  },
+  "degeneration_flags": [],
+  "verdict": "WINDOW"
+ }
+]

@@ -4767,12 +4767,16 @@ bool Prefill::run_impl(const int64_t* tokens, int64_t n, int64_t pos0, std::stri
                 // touches R in between (not the stage's last half, not before the PLE block of layer 1, not under a
                 // control vector)
                 const int64_t nl = half == 0 ? l : l + 1;
-                const bool steered = half == 1 && strata::kernels::cvec().covers(l);
+                const bool c1 = strata::kernels::cvec().steered_at(l), c2 = strata::kernels::cvec().steered2_at(l);
+                const bool steered = half == 1 && (c1 || c2);
                 const float *cv_dir = nullptr, *cv_s = nullptr;
                 const int* cv_on = nullptr;
+                // the fused form carries ONE table's pointers: fuse only when exactly one acts at this layer
+                // (when both do, the stock three-kernel path applies them sequentially, in order)
                 const bool cv_fused = steered && cvec_fuse() && !gr_unfused() && nl < LE && !(nl == 1 && ple_on) &&
                                       strata::kernels::cvec().n_embd == N && strata::kernels::cvec().hc == HC &&
-                                      strata::kernels::cvec_tables(&cv_dir, &cv_s, &cv_on);
+                                      (c1 != c2) && (c1 ? strata::kernels::cvec_tables(&cv_dir, &cv_s, &cv_on)
+                                                        : strata::kernels::cvec_tables2(&cv_dir, &cv_s, &cv_on));
                 const bool fuse = !gr_unfused() && nl < LE && !(half == 1 && nl == 1 && ple_on) && (!steered || cv_fused);
                 const core::WeightRef* wnn = nullptr;
                 if (fuse) {

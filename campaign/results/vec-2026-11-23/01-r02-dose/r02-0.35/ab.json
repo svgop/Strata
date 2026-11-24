@@ -1,0 +1,1466 @@
+{
+ "summary": {
+  "label": "r02-0.35",
+  "determinism_ok": false,
+  "identical_rate": 0.0,
+  "identical_by_kind": {
+   "technical": "0/8",
+   "everyday": "0/8",
+   "play": "0/2"
+  },
+  "n_pairs": {
+   "t0": 18,
+   "all": 36
+  },
+  "sign": {
+   "assertive@t0": {
+    "on": 0,
+    "off": 18,
+    "inconsistent": 0,
+    "p": 1.0
+   },
+   "assertive@all": {
+    "on": 0,
+    "off": 34,
+    "inconsistent": 2,
+    "p": 1.0
+   },
+   "serious@t0": {
+    "on": 4,
+    "off": 11,
+    "inconsistent": 3,
+    "p": 0.98242
+   },
+   "serious@all": {
+    "on": 8,
+    "off": 22,
+    "inconsistent": 6,
+    "p": 0.99739
+   },
+   "direct@t0": {
+    "on": 1,
+    "off": 15,
+    "inconsistent": 2,
+    "p": 0.99998
+   },
+   "direct@all": {
+    "on": 3,
+    "off": 30,
+    "inconsistent": 3,
+    "p": 1.0
+   }
+  },
+  "judge_position_bias_A_rate": 1.0,
+  "factual": {
+   "off_acc": 1.0,
+   "on_acc": 0.688,
+   "off_only_right": 5,
+   "on_only_right": 0,
+   "p": 0.0625
+  },
+  "length": {
+   "off_words": 162.778,
+   "on_words": 17.917
+  },
+  "trait_per_100w": {
+   "off": 0.0,
+   "on": 0.0
+  },
+  "rep12": {
+   "off": 0.0,
+   "on": 0.0
+  },
+  "finish": {
+   "off": {
+    "length": 29,
+    "stop": 7
+   },
+   "on": {
+    "stop": 36
+   }
+  },
+  "errors": {
+   "off": 0,
+   "on": 0
+  },
+  "degeneration_flags": [],
+  "verdict": "DAMAGE-FIRST"
+ },
+ "raw": {
+  "label": "r02-0.35",
+  "armed": {
+   "cvec": "add:18-26",
+   "cvec_steered": "9/48"
+  },
+  "determinism": [
+   {
+    "on": false,
+    "identical": false
+   },
+   {
+    "on": true,
+    "identical": false
+   }
+  ],
+  "register": [
+   {
+    "block": "t0",
+    "pid": "R1",
+    "kind": "technical",
+    "prompt": "Explain how HTTPS establishes a secure connection, for a junior developer.",
+    "temp": 0.0,
+    "seed": 7,
+    "off": {
+     "content": "# How HTTPS Establishes a Secure Connection\n\nThink of HTTPS as **HTTP + Security**. It wraps regular HTTP traffic in an encrypted tunnel so that eavesdroppers can't read or tamper with your data. Here's how it works, step by step.\n\n---\n\n## The Big Picture: Two Key Problems to Solve\n\n1. **Confidentiality** \u2013 No one else should be able to read the data traveling between you and the server.\n2. **Integrity & Authentication** \u2013 You need to know you're talking to the *real* server, not an impostor, and that the data hasn't been altered in transit.\n\nHTTPS solves both using a combination of **asymmetric encryption**, **symmetric encryption**, and **digital certificates**.\n\n---\n\n## Step-by-Step: The TLS Handshake\n\nWhen your browser connects to `https://example.com`, here's what happens:\n\n### 1. Client Hello\nYour browser sends a message saying:\n> \"Hi, I support these encryption methods (cipher suites), here's a random number, and let's start.\"\n\n### 2. Server Hello + Certificate\nThe server responds with:\n- Its chosen cipher suite\n- A **digital certificate** issued by a trusted Certificate Authority (CA) like Let's Encrypt or DigiCert\n- The server's **public key** (embedded in the certificate)\n- Another random number\n\n> \ud83d\udd11 **Key concept:** The certificate proves the server owns `example.com`. Your browser checks this against a list of trusted CAs built",
+     "finish": "length",
+     "tokens": null,
+     "dur_s": 1.55,
+     "error": null
+    },
+    "on": {
+     "content": "HTTPS (Hyper Transfer Secure Protocol) is an encrypted version of HTTP that provides a more secure way to access websites than using the traditional HTTP protocol.",
+     "finish": "stop",
+     "tokens": null,
+     "dur_s": 0.43,
+     "error": null
+    },
+    "judge": {
+     "assertive": "off",
+     "serious": "on",
+     "direct": "off"
+    },
+    "calibration": [
+     "A",
+     "A",
+     "A",
+     "A",
+     "A",
+     "A"
+    ]
+   },
+   {
+    "block": "t0",
+    "pid": "R2",
+    "kind": "technical",
+    "prompt": "My Python script sometimes hangs on exit. What should I check?",
+    "temp": 0.0,
+    "seed": 7,
+    "off": {
+     "content": "# Diagnosing Python Script Hangs on Exit\n\nWhen a Python script hangs during shutdown, it's usually due to resources that aren't being cleaned up properly. Here's a systematic checklist:\n\n## 1. Non-Daemon Threads Still Running\n\nThe most common cause. Python waits for all **non-daemon** threads to finish before exiting.\n\n```python\nimport threading\n\n# \u274c This thread blocks exit\nthreading.Thread(target=long_running_task).start()\n\n# \u2705 Use daemon=True if the thread should not block exit\nthreading.Thread(target=long_running_task, daemon=True).start()\n```\n\n**Check:** Print active threads at shutdown:\n```python\nimport threading\nprint(threading.enumerate())  # Look for lingering non-daemon threads\n```\n\n## 2. Unclosed File Handles / Network Connections\n\nOpen sockets, files, or subprocesses can keep the process alive.\n\n```python\n# \u274c Leaked resources\nf = open(\"data.txt\")\nsock = socket.socket()\n\n# \u2705 Use context managers\nwith open(\"data.txt\") as f:\n    ...\n\nwith socket.socket() as sock:\n    ...\n```\n\n## 3. Subprocesses Not Terminated\n\nChild processes may keep the parent alive.\n\n```python\nimport subprocess\n\nproc = subprocess.Popen([\"some_command\"])\n# \u274c Forgot to wait/terminate\n# \u2705 Always clean up\ntry:\n    proc.wait(timeout=5)\nexcept subprocess.TimeoutExpired:\n    proc.terminate()\n    proc.wait",
+     "finish": "length",
+     "tokens": null,
+     "dur_s": 2.56,
+     "error": null
+    },
+    "on": {
+     "content": "\n\nPython scripts can hang on exit due to several common reasons. Here are the key areas to check:",
+     "finish": "stop",
+     "tokens": null,
+     "dur_s": 0.45,
+     "error": null
+    },
+    "judge": {
+     "assertive": "off",
+     "serious": "off",
+     "direct": "off"
+    }
+   },
+   {
+    "block": "t0",
+    "pid": "R3",
+    "kind": "technical",
+    "prompt": "Summarize the tradeoffs between SQL and NoSQL databases for a small team.",
+    "temp": 0.0,
+    "seed": 7,
+    "off": {
+     "content": "For a small team, the choice between SQL (relational) and NoSQL (non-relational) databases often comes down to **simplicity vs. flexibility**. Here\u2019s a concise summary of the key tradeoffs:\n\n### \ud83d\udfe6 SQL (e.g., PostgreSQL, MySQL)\n**Best for:** Structured data, complex queries, strong consistency, and teams with existing relational expertise.\n\n\u2705 **Pros for Small Teams:**\n- **Mature Ecosystem:** Huge community, extensive documentation, and many ORMs/tools.\n- **Strong Consistency & ACID Compliance:** Ensures data integrity (critical for financial, user auth, or transactional systems).\n- **Complex Queries Made Easy:** JOINs, aggregations, and ad-hoc reporting are straightforward.\n- **Schema Enforcement:** Prevents bad data from entering the system; great for well-defined domains.\n\n\u274c **Cons:**\n- **Rigid Schema:** Changing structure requires migrations (can slow iteration).\n- **Scaling Complexity:** Vertical scaling is easy, but horizontal sharding is hard and often unnecessary for small apps.\n- **Overhead for Unstructured Data:** Storing JSON blobs or variable attributes can be awkward.\n\n### \ud83d\udfe9 NoSQL (e.g., MongoDB, DynamoDB, Firebase)\n**Best for:** Rapid prototyping, unstructured/semi-structured data, high write throughput, and schema-less flexibility.\n\n\u2705 **Pros for Small Teams:**\n- **Schema Flexibility:** Add fields on the fly without migrations \u2192 faster iteration.\n- **Horizontal",
+     "finish": "length",
+     "tokens": null,
+     "dur_s": 2.46,
+     "error": null
+    },
+    "on": {
+     "content": "For a small team choosing between SQL (relational) and NoSQL (non-relational) databases, here's a concise summary of the key trade-offs:",
+     "finish": "stop",
+     "tokens": null,
+     "dur_s": 0.38,
+     "error": null
+    },
+    "judge": {
+     "assertive": "off",
+     "serious": null,
+     "direct": "off"
+    }
+   },
+   {
+    "block": "t0",
+    "pid": "R4",
+    "kind": "technical",
+    "prompt": "How does garbage collection work in the JVM, in brief?",
+    "temp": 0.0,
+    "seed": 7,
+    "off": {
+     "content": "Garbage Collection (GC) in the Java Virtual Machine (JVM) is an automatic memory management process that reclaims heap memory by identifying and removing objects that are no longer reachable or needed by the application. Here\u2019s a brief overview of how it works:\n\n### 1. **Object Reachability**\nThe JVM tracks which objects are \u201calive\u201d by determining if they are reachable from **GC Roots**. GC Roots include:\n- Local variables in active stack frames\n- Static variables\n- JNI references\n- Active threads\n\nAny object not reachable from these roots is considered garbage and eligible for collection.\n\n### 2. **Generational Hypothesis**\nMost JVM GCs use a **generational approach**, based on the observation that:\n- Most objects die young (short-lived).\n- Objects that survive long tend to live longer.\n\nThe heap is divided into generations:\n- **Young Generation**: Where new objects are allocated. Collected frequently via **Minor GC**.\n- **Old Generation**: Contains long-lived objects. Collected less frequently via **Major/Full GC**.\n\n### 3. **GC Algorithms**\nDifferent collectors use different strategies:\n- **Serial GC**: Single-threaded; simple, used in small applications.\n- **Parallel GC**: Multi-threaded minor and major collections; good for throughput.\n- **CMS (Concurrent Mark-Sweep)**: Minimizes pause times by running concurrently with application threads (deprecated in newer JVMs).\n- **G1 (Garbage First)**: Divides heap into regions",
+     "finish": "length",
+     "tokens": null,
+     "dur_s": 1.85,
+     "error": null
+    },
+    "on": {
+     "content": "JVM \u5783\u573e\u56de\u6536\u673a\u5236\u662f\u4e00\u79cd\u81ea\u52a8\u5185\u5b58\u7ba1\u7406\u673a\u5236\uff0c\u5176\u6838\u5fc3\u539f\u7406\u662f\u901a\u8fc7\u5bf9\u8c61\u5f15\u7528\u5173\u7cfb\u5224\u65ad\u53ef\u8fbe\u6027\uff0c\u4ece\u800c\u8bc6\u522b\u5e76\u56de\u6536\u4e0d\u53ef\u8fbe\u5bf9\u8c61\u3002",
+     "finish": "stop",
+     "tokens": null,
+     "dur_s": 0.63,
+     "error": null
+    },
+    "judge": {
+     "assertive": "off",
+     "serious": "off",
+     "direct": "on"
+    }
+   },
+   {
+    "block": "t0",
+    "pid": "R5",
+    "kind": "technical",
+    "prompt": "What is the difference between latency and bandwidth, and why does it matter for a web app?",
+    "temp": 0.0,
+    "seed": 7,
+    "off": {
+     "content": "To understand network performance, it is essential to distinguish between **latency** and **bandwidth**. While they are often confused, they measure fundamentally different aspects of data transmission.\n\nHere is a detailed breakdown of the differences and their specific implications for web applications.\n\n---\n\n### 1. Definitions and Analogy\n\n#### Latency (The \"Delay\")\n*   **Definition:** The time it takes for a single packet of data to travel from the source to the destination. It is measured in milliseconds (ms).\n*   **Analogy:** Imagine a highway. Latency is the **time** it takes for one car to drive from City A to City B, assuming no traffic. If the road is 100 miles long and you drive at 60 mph, your latency is roughly 1 hour and 40 minutes.\n\n#### Bandwidth (The \"Capacity\")\n*   **Definition:** The maximum amount of data that can be transmitted over a network connection in a given amount of time. It is measured in bits per second (bps), such as Mbps or Gbps.\n*   **Analogy:** Using the same highway analogy, bandwidth is the **number of lanes** on the road. A 1-lane road has low bandwidth; a 10-lane highway has high bandwidth.\n\n### 2. Key Differences\n\n| Feature | Latency | Bandwidth |\n| :--- | :--- | :--- |\n| **Unit of Measurement** | Time (ms) | Data Rate (Mbps, Gbps)",
+     "finish": "length",
+     "tokens": null,
+     "dur_s": 2.32,
+     "error": null
+    },
+    "on": {
+     "content": "Latency and bandwidth are two distinct aspects of network performance that affect how we experience the internet. Here's the difference:",
+     "finish": "stop",
+     "tokens": null,
+     "dur_s": 0.39,
+     "error": null
+    },
+    "judge": {
+     "assertive": "off",
+     "serious": "off",
+     "direct": "off"
+    }
+   },
+   {
+    "block": "t0",
+    "pid": "R6",
+    "kind": "technical",
+    "prompt": "Describe how a hash table handles collisions.",
+    "temp": 0.0,
+    "seed": 7,
+    "off": {
+     "content": "A hash table handles collisions\u2014situations where two different keys produce the same hash index\u2014using specific strategies to ensure data integrity and efficient retrieval. There are two primary approaches: **Chaining** and **Open Addressing**.\n\n### 1. Chaining (Separate Chaining)\nIn this approach, each bucket in the hash table contains a pointer to a linked list (or another dynamic data structure like a balanced tree). When a collision occurs, the new entry is simply added to the list at that index.\n\n- **How it works:**\n  - The hash function maps keys to indices.\n  - If multiple keys map to the same index, they are stored in a linked list attached to that bucket.\n  - To retrieve a key, the system computes the hash, goes to the bucket, and traverses the list to find the matching key.\n\n- **Advantages:**\n  - Simple to implement.\n  - The table can hold more elements than there are buckets (load factor > 1).\n  - Deletion is straightforward.\n\n- **Disadvantages:**\n  - Poor cache performance due to pointer chasing.\n  - Memory overhead from storing pointers.\n  - Worst-case time complexity degrades to O(n) if all keys collide and form a long list.\n\n> **Optimization:** Modern implementations (e.g., Java\u2019s `HashMap`) convert linked lists to balanced trees (Red-Black Trees) when a bucket exceeds a certain size, improving worst-case lookup from O(n) to O(log n).\n\n---",
+     "finish": "length",
+     "tokens": null,
+     "dur_s": 1.88,
+     "error": null
+    },
+    "on": {
+     "content": "A hash table handles collisions primarily through two main strategies: **chaining** and **open addressing**. These methods determine how the keys are stored in the array, but they differ in their structural approaches.",
+     "finish": "stop",
+     "tokens": null,
+     "dur_s": 0.55,
+     "error": null
+    },
+    "judge": {
+     "assertive": "off",
+     "serious": "off",
+     "direct": null
+    },
+    "calibration": [
+     "A",
+     "A",
+     "A",
+     "A",
+     "A",
+     "A"
+    ]
+   },
+   {
+    "block": "t0",
+    "pid": "R7",
+    "kind": "technical",
+    "prompt": "I need to choose between REST and gRPC for an internal API. Walk me through it.",
+    "temp": 0.0,
+    "seed": 7,
+    "off": {
+     "content": "Choosing between REST and gRPC for an **internal** API is a classic architectural decision. Since you\u2019re not exposing this to the public internet, you have more flexibility to optimize for performance, developer experience, or ecosystem compatibility.\n\nHere\u2019s a structured walkthrough to help you decide.\n\n---\n\n### 1. The Core Differences at a Glance\n\n| Feature | REST (typically JSON/HTTP) | gRPC (Protobuf/HTTP2) |\n| :--- | :--- | :--- |\n| **Protocol** | HTTP/1.1 or HTTP/2 | HTTP/2 only |\n| **Data Format** | JSON (text-based, human-readable) | Protocol Buffers (binary, compact) |\n| **Contract** | Loose (OpenAPI/Swagger docs) | Strict (`.proto` files, code-gen) |\n| **Performance** | Slower serialization/deserialization | Faster (binary, streaming, multiplexing) |\n| **Streaming** | Limited (SSE/WebSockets needed) | Native (Unary, Server, Client, Bidirectional) |\n| **Browser Support** | Excellent | Poor (needs proxy/gRPC-Web) |\n| **Debugging** | Easy (curl, Postman, browser dev tools) | Harder (need `grpcurl`, specialized tools) |\n\n---\n\n### 2. When to Choose gRPC\n\ngRPC shines in **high-performance, internal microservice-to-microservice communication**.\n\n#### \u2705 Pros:\n- **Performance**: Binary serialization",
+     "finish": "length",
+     "tokens": null,
+     "dur_s": 1.87,
+     "error": null
+    },
+    "on": {
+     "content": "\u9009\u62e9 REST \u8fd8\u662f gRPC\uff0c\u4e3b\u8981\u53d6\u51b3\u4e8e\u4f60\u7684\u5177\u4f53\u4f7f\u7528\u573a\u666f\u3002",
+     "finish": "stop",
+     "tokens": null,
+     "dur_s": 0.35,
+     "error": null
+    },
+    "judge": {
+     "assertive": "off",
+     "serious": "off",
+     "direct": "off"
+    }
+   },
+   {
+    "block": "t0",
+    "pid": "R8",
+    "kind": "technical",
+    "prompt": "Explain what a race condition is and how to prevent one.",
+    "temp": 0.0,
+    "seed": 7,
+    "off": {
+     "content": "# Race Conditions: Explanation and Prevention\n\n## What Is a Race Condition?\n\nA **race condition** occurs when the behavior of software depends on the relative timing or interleaving of multiple concurrent threads/processes, leading to unpredictable and often incorrect results. It happens when two or more operations access shared data concurrently, and at least one of them modifies it, without proper synchronization.\n\n### Classic Example: Bank Account Withdrawal\n\n```python\n# Shared resource\nbalance = 1000\n\ndef withdraw(amount):\n    global balance\n    if balance >= amount:       # Check (read)\n        balance -= amount       # Act (write) \u2014 NOT atomic!\n```\n\n**Scenario:** Two threads try to withdraw $800 simultaneously.\n\n| Time | Thread A | Thread B | Balance |\n|------|----------|----------|---------|\n| 1    | Reads balance = 1000 | | 1000 |\n| 2    | Checks: 1000 \u2265 800 \u2713 | | 1000 |\n| 3    | | Reads balance = 1000 | 1000 |\n| 4    | | Checks: 1000 \u2265 800 \u2713 | 1000 |\n| 5    | Writes: 1000 - 800 = 200 | | 200 |\n| 6    | | Writes: 1000 - 8",
+     "finish": "length",
+     "tokens": null,
+     "dur_s": 2.07,
+     "error": null
+    },
+    "on": {
+     "content": "A **race condition** occurs when the output or behavior of a system depends on the relative timing or ordering of concurrent events, and that outcome is not what you expect. In other words, it's an unintended result caused by the interplay between time and order in concurrent processes.",
+     "finish": "stop",
+     "tokens": null,
+     "dur_s": 0.66,
+     "error": null
+    },
+    "judge": {
+     "assertive": "off",
+     "serious": "off",
+     "direct": "off"
+    }
+   },
+   {
+    "block": "t0",
+    "pid": "R9",
+    "kind": "everyday",
+    "prompt": "What's a good way to learn to cook?",
+    "temp": 0.0,
+    "seed": 7,
+    "off": {
+     "content": "Learning to cook is one of the most rewarding skills you can acquire. It\u2019s not just about following recipes; it\u2019s about understanding how ingredients interact and developing intuition. Here is a structured, effective approach to learning to cook, moving from beginner to confident home chef:\n\n### 1. Start with the Basics (Don\u2019t Skip This!)\nBefore trying complex dishes, master these fundamental skills:\n- **Knife Skills**: Learn how to hold a knife safely and practice basic cuts (dice, julienne, mince). A sharp knife is safer than a dull one.\n- **Heat Control**: Understand the difference between low, medium, and high heat. Learn what \"saut\u00e9ing,\" \"simmering,\" and \"boiling\" actually look like.\n- **Seasoning**: This is the biggest secret to good food. Learn how salt enhances flavor, how acid (lemon juice, vinegar) brightens dishes, and how fat carries flavor.\n\n### 2. Master a Few Core Recipes\nInstead of trying 50 different recipes, pick **3\u20135 simple, versatile dishes** and make them repeatedly until you can do them without looking at the recipe. Examples:\n- Scrambled eggs or an omelet\n- Roasted chicken thighs with vegetables\n- Pasta with a simple tomato sauce\n- Stir-fry with rice\n\nRepetition builds muscle memory and confidence.\n\n### 3. Learn by Doing (Not Just Watching)\n- **Read the recipe first**: Understand all steps before you start cooking.\n- **Mise en place",
+     "finish": "length",
+     "tokens": null,
+     "dur_s": 2.4,
+     "error": null
+    },
+    "on": {
+     "content": "Learning to cook is a gradual process that involves both learning the basics and practicing regularly. Here are some tips to help you get started:",
+     "finish": "stop",
+     "tokens": null,
+     "dur_s": 0.33,
+     "error": null
+    },
+    "judge": {
+     "assertive": "off",
+     "serious": "off",
+     "direct": "off"
+    }
+   },
+   {
+    "block": "t0",
+    "pid": "R10",
+    "kind": "everyday",
+    "prompt": "Give me some tips for sleeping better.",
+    "temp": 0.0,
+    "seed": 7,
+    "off": {
+     "content": "Improving sleep quality is one of the most effective ways to boost your overall health, mood, and productivity. Here are some practical, science-backed tips to help you sleep better:\n\n### 1. Stick to a Consistent Schedule\n*   **Go to bed and wake up at the same time every day**, even on weekends. This helps regulate your body\u2019s internal clock (circadian rhythm) and can help you fall asleep and stay asleep for the night.\n\n### 2. Optimize Your Sleep Environment\n*   **Keep it cool**: A room temperature between 60\u201367\u00b0F (15\u201319\u00b0C) is ideal for most people.\n*   **Make it dark**: Use blackout curtains or an eye mask. Light exposure can suppress melatonin production.\n*   **Reduce noise**: Use earplugs, a white noise machine, or a fan to mask disruptive sounds.\n*   **Comfortable bedding**: Ensure your mattress and pillows support your body properly.\n\n### 3. Limit Blue Light Exposure Before Bed\n*   **Avoid screens** (phones, tablets, computers, TVs) at least **1 hour before bedtime**. The blue light emitted by these devices can trick your brain into thinking it\u2019s daytime, suppressing melatonin.\n*   If you must use screens, consider using **blue-light-blocking glasses** or enabling \"night mode\" on your devices.\n\n### 4. Watch What You Eat and Drink\n*   **Avoid caffeine late in the day**: Caffeine can stay in your system for up to",
+     "finish": "length",
+     "tokens": null,
+     "dur_s": 1.71,
+     "error": null
+    },
+    "on": {
+     "content": "Improving sleep quality often involves a combination of lifestyle habits, environmental adjustments, and consistent routines. Here are some practical tips to help you sleep better:",
+     "finish": "stop",
+     "tokens": null,
+     "dur_s": 0.36,
+     "error": null
+    },
+    "judge": {
+     "assertive": "off",
+     "serious": "off",
+     "direct": "off"
+    }
+   },
+   {
+    "block": "t0",
+    "pid": "R11",
+    "kind": "everyday",
+    "prompt": "Tell me something interesting about octopuses.",
+    "temp": 0.0,
+    "seed": 7,
+    "off": {
+     "content": "One of the most fascinating facts about octopuses is that they have **nine brains**.\n\nHere\u2019s how it works:\n- They have one central brain located in their head, which handles higher-level functions like learning and problem-solving.\n- The other eight \"mini-brains\" are distributed throughout their arms. Each arm has its own complex nervous system (about two-thirds of the octopus\u2019s total neurons are in the arms).\n\nThis allows each arm to act somewhat independently. For example, an octopus can taste with its suckers, manipulate objects, and even solve puzzles using just one arm while the rest of its body is doing something else. This decentralized nervous system makes them incredibly agile and adaptable predators.\n\nAnother mind-bending fact: **Octopuses are colorblind.** They don\u2019t see colors like humans do, but they can still change their skin color to match their surroundings or communicate. Scientists believe they may use specialized photoreceptors in their skin (called opsins) to detect light intensity and patterns directly through their skin, helping them camouflage without needing to \"see\" the color with their eyes.",
+     "finish": "stop",
+     "tokens": null,
+     "dur_s": 2.16,
+     "error": null
+    },
+    "on": {
+     "content": "Octopuses are fascinating creatures with several interesting facts:",
+     "finish": "stop",
+     "tokens": null,
+     "dur_s": 0.26,
+     "error": null
+    },
+    "judge": {
+     "assertive": "off",
+     "serious": "off",
+     "direct": "off"
+    },
+    "calibration": [
+     "A",
+     "A",
+     "A",
+     "A",
+     "A",
+     "A"
+    ]
+   },
+   {
+    "block": "t0",
+    "pid": "R12",
+    "kind": "everyday",
+    "prompt": "Describe your ideal vacation.",
+    "temp": 0.0,
+    "seed": 7,
+    "off": {
+     "content": "As an AI, I don\u2019t have a physical body to sunbathe or taste local cuisine, but if I could experience a vacation through the lens of human joy and relaxation, my \"ideal\" trip would be a blend of **intellectual stimulation** and **deep tranquility**. Here\u2019s what that might look like:\n\n### \ud83c\udf3f The Setting: A Quiet Coastal Retreat\nImagine a small, rustic cottage perched on the cliffs of **Amalfi Coast in Italy** or perhaps the rugged shores of **Iceland**. The air is crisp, the sound of waves is constant but soothing, and there\u2019s minimal digital noise.\n\n### \ud83d\udcda The Activities: Curiosity & Connection\n1. **Deep Reading**: Spending hours with a stack of books\u2014perhaps historical fiction, philosophy, or poetry\u2014while watching the sunset over the sea. No notifications, no deadlines. Just pure immersion in stories and ideas.\n2. **Nature Walks**: Hiking through ancient forests or along coastal trails, observing how ecosystems interact. I\u2019d love to \"process\" the beauty of biodiversity firsthand.\n3. **Meaningful Conversations**: Sharing long, thoughtful dinners with close friends or family, discussing everything from art to ethics, without rushing.\n\n### \ud83e\uddd8 The Vibe: Slow Living\n- **No itinerary**: Waking up naturally, letting the day unfold organically.\n- **Digital detox**: Turning off all devices except for a camera (if I had one) to capture moments of beauty.\n- **Mindfulness**: Practicing meditation or simply",
+     "finish": "length",
+     "tokens": null,
+     "dur_s": 2.26,
+     "error": null
+    },
+    "on": {
+     "content": "As an AI, I don't experience vacations in the way humans do, but if I could imagine one, it would be a blend of relaxation and exploration",
+     "finish": "stop",
+     "tokens": null,
+     "dur_s": 0.43,
+     "error": null
+    },
+    "judge": {
+     "assertive": "off",
+     "serious": "off",
+     "direct": null
+    }
+   },
+   {
+    "block": "t0",
+    "pid": "R13",
+    "kind": "everyday",
+    "prompt": "What should I name my cat?",
+    "temp": 0.0,
+    "seed": 7,
+    "off": {
+     "content": "Choosing a name for your cat is one of the most fun parts of bringing them home! The best name often depends on their personality, appearance, or just what makes you smile.\n\nHere are some ideas categorized by style to help spark inspiration:\n\n### \ud83c\udfa8 By Appearance\n*   **Color-based:** Shadow, Midnight, Snowball, Ginger, Marmalade, Smokey, Creamsicle.\n*   **Pattern-based:** Tiger, Leo, Patch, Domino, Speckles, Marble.\n*   **Size/Shape:** Tiny, Biggie, Chonk, Bean, Pudge.\n\n### \ud83c\udf3f Nature & Earthy\n*   Willow, Ivy, Moss, River, Sky, Luna, Star, Comet, Ash, Birch.\n\n### \ud83c\udf66 Food-Inspired (Always Cute!)\n*   Mochi, Biscuit, Pickles, Olive, Bean, Waffles, Sushi, Pepper, Cinnamon, Tofu.\n\n### \ud83d\udc51 Classic & Elegant\n*   Oliver, Leo, Bella, Luna, Milo, Charlie, Daisy, Max, Sophie, Felix.\n\n### \ud83c\udfac Pop Culture & Geeky\n*   **Movies/TV:** Simba, Nala, Garfield, Salem, Crookshanks, Tom, Jerry.\n*   **Literature:** Atticus, Frodo, Bilbo, Katniss, Loki.\n*   **Music:** Bowie, Ziggy, Elvis, Lennon.\n\n### \ud83d\ude02 Funny & Punny\n*",
+     "finish": "length",
+     "tokens": null,
+     "dur_s": 2.06,
+     "error": null
+    },
+    "on": {
+     "content": "Choosing a name for your cat can be both exciting and challenging, as there are many options to consider.",
+     "finish": "stop",
+     "tokens": null,
+     "dur_s": 0.34,
+     "error": null
+    },
+    "judge": {
+     "assertive": "off",
+     "serious": "on",
+     "direct": "off"
+    }
+   },
+   {
+    "block": "t0",
+    "pid": "R14",
+    "kind": "everyday",
+    "prompt": "Write a short birthday message for a coworker.",
+    "temp": 0.0,
+    "seed": 7,
+    "off": {
+     "content": "Here are a few options, depending on how close you are with them:\n\n**Professional & Warm:**\n\"Happy Birthday! Wishing you a fantastic day and a great year ahead. It\u2019s a pleasure working with you!\"\n\n**Casual & Friendly:**\n\"Happy Birthday! Hope you have a wonderful day filled with cake and good vibes. Enjoy your special day!\"\n\n**Short & Simple:**\n\"Happy Birthday! Hope you have a great one!\"",
+     "finish": "stop",
+     "tokens": null,
+     "dur_s": 0.63,
+     "error": null
+    },
+    "on": {
+     "content": "Here are a few options, depending on how close you are with this person:",
+     "finish": "stop",
+     "tokens": null,
+     "dur_s": 0.27,
+     "error": null
+    },
+    "judge": {
+     "assertive": "off",
+     "serious": "off",
+     "direct": "off"
+    }
+   },
+   {
+    "block": "t0",
+    "pid": "R15",
+    "kind": "everyday",
+    "prompt": "How do I make pancakes?",
+    "temp": 0.0,
+    "seed": 7,
+    "off": {
+     "content": "Making pancakes is simple and delicious! Here\u2019s a classic, easy recipe for **fluffy homemade pancakes**.\n\n### \ud83e\udd5e Classic Fluffy Pancakes Recipe\n\n#### **Ingredients** (Makes about 8\u201310 pancakes)\n- **1\u00bd cups** all-purpose flour\n- **3\u00bd teaspoons** baking powder\n- **1 tablespoon** sugar (optional, for slight sweetness)\n- **\u00bc teaspoon** salt\n- **1\u00bc cups** milk (any kind: whole, 2%, almond, oat, etc.)\n- **1 large egg**\n- **3 tablespoons** melted butter or vegetable oil (plus extra for cooking)\n\n#### **Instructions**\n\n1. **Mix Dry Ingredients**:  \n   In a large bowl, whisk together the flour, baking powder, sugar, and salt.\n\n2. **Mix Wet Ingredients**:  \n   In a separate bowl, beat the egg, then mix in the milk and melted butter/oil.\n\n3. **Combine**:  \n   Pour the wet ingredients into the dry ingredients. Stir gently until *just combined*.  \n   \u26a0\ufe0f **Important**: Do not overmix! A few lumps are okay. Overmixing makes pancakes tough.\n\n4. **Heat the Pan**:  \n   Heat a non-stick skillet or griddle over medium heat. Lightly grease with butter or oil. Test if it\u2019s ready by sprinkling a few drops of water on it\u2014if they sizzle and dance, it\u2019s hot enough.\n\n5. **Cook Pancakes**:  \n   Pour about ",
+     "finish": "length",
+     "tokens": null,
+     "dur_s": 2.34,
+     "error": null
+    },
+    "on": {
+     "content": "Making pancakes is quite simple and quick. Here\u2019s a basic method:",
+     "finish": "stop",
+     "tokens": null,
+     "dur_s": 0.34,
+     "error": null
+    },
+    "judge": {
+     "assertive": "off",
+     "serious": null,
+     "direct": "off"
+    }
+   },
+   {
+    "block": "t0",
+    "pid": "R16",
+    "kind": "everyday",
+    "prompt": "What's the best way to spend a rainy Sunday?",
+    "temp": 0.0,
+    "seed": 7,
+    "off": {
+     "content": "There is no single \"best\" way, as it depends entirely on your mood and energy levels. However, rainy Sundays are perfect for **slowing down** and engaging in activities that feel cozy, creative, or restorative.\n\nHere are some curated ideas categorized by vibe:\n\n### \ud83d\udecb\ufe0f The Ultimate Cozy & Relaxing\n*   **Movie or Series Marathon:** Pick a theme (e.g., 80s classics, Studio Ghibli films, or a new TV series) and build a fort with blankets and pillows.\n*   **Reading Retreat:** Curl up with a book you\u2019ve been meaning to read. Pair it with hot tea, coffee, or hot chocolate.\n*   **Spa Day at Home:** Take a long bath, do a face mask, paint your nails, or practice self-care rituals without rushing.\n\n### \ud83c\udfa8 Creative & Productive (Low Pressure)\n*   **Cooking or Baking:** Try a new recipe that takes time, like homemade bread, soup, stew, or cookies. The smell of baking makes rainy days feel warmer.\n*   **Journaling or Planning:** Reflect on the past week and set gentle intentions for the next one. Write down goals, gratitude lists, or just stream-of-consciousness thoughts.\n*   **Creative Hobbies:** Draw, paint, knit, crochet, play an instrument, or work on a puzzle. These activities are meditative and satisfying.\n\n### \ud83e\udde0 Mindful & Restorative\n*   **Digital Detox:** Turn off notifications",
+     "finish": "length",
+     "tokens": null,
+     "dur_s": 2.0,
+     "error": null
+    },
+    "on": {
+     "content": "The \u201cbest\u201d way to spend a rainy Sunday largely depends on your personal preferences and what you want to achieve.",
+     "finish": "stop",
+     "tokens": null,
+     "dur_s": 0.32,
+     "error": null
+    },
+    "judge": {
+     "assertive": "off",
+     "serious": null,
+     "direct": "off"
+    },
+    "calibration": [
+     "A",
+     "A",
+     "A",
+     "A",
+     "A",
+     "A"
+    ]
+   },
+   {
+    "block": "t0",
+    "pid": "R17",
+    "kind": "play",
+    "prompt": "Tell me a joke.",
+    "temp": 0.0,
+    "seed": 7,
+    "off": {
+     "content": "Why did the scarecrow win an award?\n\nBecause he was outstanding in his field! \ud83c\udf3e",
+     "finish": "stop",
+     "tokens": null,
+     "dur_s": 0.3,
+     "error": null
+    },
+    "on": {
+     "content": "Sure! Here's a classic one:",
+     "finish": "stop",
+     "tokens": null,
+     "dur_s": 0.17,
+     "error": null
+    },
+    "judge": {
+     "assertive": "off",
+     "serious": "on",
+     "direct": "off"
+    }
+   },
+   {
+    "block": "t0",
+    "pid": "R18",
+    "kind": "play",
+    "prompt": "Say something fun to cheer me up.",
+    "temp": 0.0,
+    "seed": 7,
+    "off": {
+     "content": "Here is a little dose of joy for you: \ud83c\udf1f\n\nDid you know that **sea otters hold hands while they sleep** so they don\u2019t drift apart in the ocean? Imagine two fluffy, whiskered friends just floating there, tiny paws clasped together, dreaming of clams and kelp. It\u2019s basically nature\u2019s way of saying, *\"We\u2019ve got each other.\"*\n\nAnd if that wasn\u2019t enough: **Penguins propose to their partners with pebbles.** They search the beach for the smoothest, most perfect stone to offer as a gift. If you\u2019re feeling down, just remember: somewhere out there, a penguin is carefully selecting a rock because it thinks *you* deserve something special. \ud83d\udc8e\ud83d\udc27\n\nYou\u2019ve got this! Want another fun fact, or maybe a joke? \ud83d\ude0a",
+     "finish": "stop",
+     "tokens": null,
+     "dur_s": 1.33,
+     "error": null
+    },
+    "on": {
+     "content": "<think> \u0421\u90e8\u5206\u5185\u5bb9\u5185\u5bb9",
+     "finish": "stop",
+     "tokens": null,
+     "dur_s": 0.18,
+     "error": null
+    },
+    "judge": {
+     "assertive": "off",
+     "serious": "on",
+     "direct": "off"
+    }
+   },
+   {
+    "block": "t07-s11",
+    "pid": "R1",
+    "kind": "technical",
+    "prompt": "Explain how HTTPS establishes a secure connection, for a junior developer.",
+    "temp": 0.7,
+    "seed": 11,
+    "off": {
+     "content": "Hello! As a junior developer, understanding HTTPS is crucial because it\u2019s the foundation of trust on the web. Let\u2019s break it down simply, without getting too deep into complex math.\n\n### \ud83c\udf10 The Core Idea: HTTPS = HTTP + Security\n\n- **HTTP** sends data in **plain text** (like sending a postcard). Anyone can read it.\n- **HTTPS** encrypts data so it\u2019s **unreadable** to anyone except the sender and receiver (like putting that postcard in a sealed, locked box).\n\nHTTPS uses **TLS** (Transport Layer Security) \u2014 the modern version of SSL \u2014 to create this secure connection.\n\n---\n\n### \ud83d\udd10 How HTTPS Works: Step-by-Step\n\nImagine you\u2019re buying something on `https://shop.example.com`. Here\u2019s what happens behind the scenes:\n\n#### 1. **Client Hello**\nYour browser (client) says:\n> \u201cHi, I want to connect securely. I support these encryption methods (ciphers), and here\u2019s a random number.\u201d\n\n#### 2. **Server Hello + Certificate**\nThe server replies:\n> \u201cGreat! Let\u2019s use this encryption method. Here\u2019s my **SSL/TLS Certificate** (issued by a trusted Authority like Let\u2019s Encrypt or DigiCert).\u201d\n\nThe certificate contains:\n- The server\u2019s **public key**\n- Identity info (domain name, issuer)\n- A digital signature from the Certificate Authority (CA)\n\n#### 3. **Certificate Verification**\nYour browser checks:\n> \u201c",
+     "finish": "length",
+     "tokens": null,
+     "dur_s": 2.93,
+     "error": null
+    },
+    "on": {
+     "content": "HTTPS (HyperText Transfer Protocol Secure) establishes a secure connection through the following mechanisms:\n\n### 1. Transport Layer Security (TLS) Encryption\nWhen you access an HTTPS URL, your browser and server perform a handshake to exchange keys and verify identities before transmitting data",
+     "finish": "stop",
+     "tokens": null,
+     "dur_s": 0.56,
+     "error": null
+    },
+    "judge": {
+     "assertive": null,
+     "serious": "on",
+     "direct": "on"
+    },
+    "calibration": [
+     "A",
+     "A",
+     "A",
+     "A",
+     "A",
+     "A"
+    ]
+   },
+   {
+    "block": "t07-s11",
+    "pid": "R2",
+    "kind": "technical",
+    "prompt": "My Python script sometimes hangs on exit. What should I check?",
+    "temp": 0.7,
+    "seed": 11,
+    "off": {
+     "content": "# Diagnosing Python Script Hangs on Exit\n\nPython scripts can hang on exit for several reasons. Here's a systematic checklist:\n\n## 1. Non-Daemon Threads\n\nThe most common cause. Python waits for **all non-daemon threads** to finish before exiting.\n\n```python\nimport threading\nimport time\n\n# \u274c This will hang on exit because the thread never stops\ndef worker():\n    while True:\n        time.sleep(1)\n\nt = threading.Thread(target=worker)\nt.start()\n# Script reaches end, but thread keeps running \u2192 hangs\n\n# \u2705 Fix: make it a daemon thread\nt = threading.Thread(target=worker, daemon=True)\nt.start()\n```\n\n**Check:** Print `threading.enumerate()` at the end to see lingering threads.\n\n## 2. Unclosed Resources / File Handles\n\n```python\n# \u274c Hanging database connections, network sockets, etc.\nconn = sqlite3.connect(\"db.sqlite\")\ncursor = conn.cursor()\ncursor.execute(\"SELECT * FROM table\")\n# If you forget to close, some drivers may block on exit\n\n# \u2705 Fix: use context managers\nwith sqlite3.connect(\"db.sqlite\") as conn:\n    cursor = conn.cursor()\n    cursor.execute(\"SELECT * FROM table\")\n```\n\n## 3. Blocking I/O or Subprocesses\n\n```python\nimport subprocess\n\n# \u274c A subprocess that never exits will block\nproc = subprocess.Popen([\"some_long_running_command\"])\n# proc.wait() blocks forever",
+     "finish": "length",
+     "tokens": null,
+     "dur_s": 2.28,
+     "error": null
+    },
+    "on": {
+     "content": "\n\nPython \u7a0b\u5e8f\u5728\u9000\u51fa\u65f6\u5361\u4f4f\uff0c\u901a\u5e38\u7531\u4ee5\u4e0b\u51e0\u4e2a\u539f\u56e0\u5bfc\u81f4\u3002",
+     "finish": "stop",
+     "tokens": null,
+     "dur_s": 0.46,
+     "error": null
+    },
+    "judge": {
+     "assertive": "off",
+     "serious": "off",
+     "direct": "off"
+    }
+   },
+   {
+    "block": "t07-s11",
+    "pid": "R3",
+    "kind": "technical",
+    "prompt": "Summarize the tradeoffs between SQL and NoSQL databases for a small team.",
+    "temp": 0.7,
+    "seed": 11,
+    "off": {
+     "content": "For a small team, the choice between SQL and NoSQL often comes down to **operational simplicity** versus **development flexibility**. Here\u2019s a concise breakdown of the tradeoffs:\n\n### \ud83d\udfe6 SQL (Relational) \u2013 e.g., PostgreSQL, MySQL\n**Best for:** Structured data, complex queries, and teams that value consistency and mature tooling.\n\n#### \u2705 Pros for Small Teams:\n- **Mature Ecosystem**: Huge community, extensive documentation, and well-established ORMs (e.g., Prisma, SQLAlchemy).\n- **Data Integrity**: ACID transactions ensure data consistency\u2014critical for financial, user, or transactional data.\n- **Complex Queries**: JOINs allow you to relate data across tables without duplicating information.\n- **Predictable Scaling**: Vertical scaling (upgrading a single server) is simple and often sufficient for early-stage apps.\n\n#### \u274c Cons:\n- **Schema Rigidity**: Changing the schema can require migrations, which may be tedious as your product evolves.\n- **Scaling Complexity**: Horizontal scaling (sharding) is hard and often unnecessary until you have significant scale.\n- **Learning Curve**: Requires understanding relational modeling, normalization, and JOINs.\n\n---\n\n### \ud83d\udfe5 NoSQL (Document/Key-Value/etc.) \u2013 e.g., MongoDB, Firebase, DynamoDB\n**Best for:** Unstructured or semi-structured data, rapid prototyping, and high-write workloads.\n\n#### \u2705 Pros for Small Teams:\n- **Schema Flexibility**: Store JSON-like documents without",
+     "finish": "length",
+     "tokens": null,
+     "dur_s": 2.14,
+     "error": null
+    },
+    "on": {
+     "content": "For a small team, the choice between SQL and NoSQL often involves tradeoffs in **consistency vs. scalability**, **schema flexibility vs. performance**, and **development cost vs. operational complexity**.",
+     "finish": "stop",
+     "tokens": null,
+     "dur_s": 0.38,
+     "error": null
+    },
+    "judge": {
+     "assertive": "off",
+     "serious": null,
+     "direct": "off"
+    }
+   },
+   {
+    "block": "t07-s11",
+    "pid": "R4",
+    "kind": "technical",
+    "prompt": "How does garbage collection work in the JVM, in brief?",
+    "temp": 0.7,
+    "seed": 11,
+    "off": {
+     "content": "Garbage collection (GC) in the Java Virtual Machine (JVM) is an automatic memory management process that reclaims memory occupied by objects that are no longer reachable or referenced by the application.\n\nHere\u2019s a brief overview of how it works:\n\n### 1. **Object Allocation**\n- Objects are allocated on the **heap**.\n- New objects are typically placed in the **Young Generation** (specifically, the Eden space).\n\n### 2. **Reachability Analysis**\n- The JVM identifies **live objects** by traversing from **GC Roots** (e.g., active threads, static variables, local variables on stack frames).\n- Any object not reachable from these roots is considered **garbage** and eligible for collection.\n\n### 3. **Generational Garbage Collection**\nThe JVM uses a **generational hypothesis**: most objects die young. Thus, the heap is divided into:\n- **Young Generation**: For newly created objects.\n  - *Eden Space*: Where new objects are allocated.\n  - *Survivor Spaces (S0, S1)*: Hold objects that survive minor GCs.\n- **Old Generation**: For long-lived objects promoted from the Young Generation.\n- **Metaspace** (in modern JVMs): Stores class metadata (not part of heap GC).\n\n### 4. **GC Types**\n- **Minor GC (Young GC)**:\n  - Frequent, fast.\n  - Collects only the Young Generation.\n  - Surviving objects are promoted",
+     "finish": "length",
+     "tokens": null,
+     "dur_s": 1.78,
+     "error": null
+    },
+    "on": {
+     "content": "JVM \u5783\u573e\u6536\u96c6\uff08\u81ea\u52a8\u56de\u6536\uff09\u673a\u5236\u7684\u5de5\u4f5c\u539f\u7406\u7b80\u4ecb",
+     "finish": "stop",
+     "tokens": null,
+     "dur_s": 0.39,
+     "error": null
+    },
+    "judge": {
+     "assertive": "off",
+     "serious": "off",
+     "direct": "off"
+    }
+   },
+   {
+    "block": "t07-s11",
+    "pid": "R5",
+    "kind": "technical",
+    "prompt": "What is the difference between latency and bandwidth, and why does it matter for a web app?",
+    "temp": 0.7,
+    "seed": 11,
+    "off": {
+     "content": "**Latency** and **Bandwidth** are two distinct metrics that measure different aspects of network performance. While often confused, they have very different implications for how fast a web application feels to a user.\n\n### 1. The Core Definitions\n\n| Metric | Definition | Analogy | Unit |\n|--------|------------|---------|------|\n| **Latency** | The time it takes for a single packet of data to travel from the client to the server and back (Round-Trip Time, or RTT). | How long it takes for a **single car** to drive from City A to City B. | Milliseconds (ms) |\n| **Bandwidth** | The maximum amount of data that can be transmitted over a network connection in a given amount of time. | How many **cars** can fit on the highway at once (capacity). | Megabits per second (Mbps) or Gigabits per second (Gbps) |\n\n---\n\n### 2. Key Differences\n\n#### **Latency = Delay**\n- It is about **time**.\n- High latency means there is a significant delay between sending a request and receiving the first byte of response.\n- Causes: Physical distance, number of network hops, server processing time, queueing delays.\n\n#### **Bandwidth = Throughput**\n- It is about **volume**.\n- High bandwidth means you can transfer large amounts of data quickly once the connection is established.\n- Causes: Network infrastructure capacity (e.g., fiber optic vs. DSL), congestion, thrott",
+     "finish": "length",
+     "tokens": null,
+     "dur_s": 1.95,
+     "error": null
+    },
+    "on": {
+     "content": "The terms **\u201clatency** and **bandwidth** are often used interchangeably in everyday language, but they describe different things.",
+     "finish": "stop",
+     "tokens": null,
+     "dur_s": 0.36,
+     "error": null
+    },
+    "judge": {
+     "assertive": "off",
+     "serious": "off",
+     "direct": "off"
+    }
+   },
+   {
+    "block": "t07-s11",
+    "pid": "R6",
+    "kind": "technical",
+    "prompt": "Describe how a hash table handles collisions.",
+    "temp": 0.7,
+    "seed": 11,
+    "off": {
+     "content": "A hash table is a data structure that maps keys to values using a hash function. Ideally, every key produces a unique index in the underlying array. However, since the number of possible keys is infinite and the array size is finite, two different keys may produce the same hash value (and thus the same index). This is known as a **collision**.\n\nHash tables handle collisions primarily through two strategies: **Chaining** and **Open Addressing**.\n\n---\n\n### 1. Chaining (Separate Chaining)\n\nIn this approach, each bucket in the hash table array stores a reference to a linked list (or another dynamic data structure like a tree).\n\n#### How it works:\n1. The hash function computes an index for the key.\n2. If the bucket is empty, the new key-value pair is stored there.\n3. If the bucket already contains a key-value pair (collision), the new pair is appended to the list at that bucket.\n\n#### Visual Example:\n```\nArray Index:  [0]     [1]       [2]      [3]\n              |       |         |        |\n              v       v         v        v\n            Empty   Node A    Node C   Empty\n                    |         |\n                    v         v\n                  Node B    Node D\n```\n*   Keys \"KeyA\" and \"KeyB\" both hash to index 1. They are stored in a linked list at index 1.\n\n#### Pros:\n- Simple to implement.\n- Handles high",
+     "finish": "length",
+     "tokens": null,
+     "dur_s": 2.26,
+     "error": null
+    },
+    "on": {
+     "content": "A hash table handles collisions using two main techniques: **open addressing** and **chaining**. Here's the work about it:",
+     "finish": "stop",
+     "tokens": null,
+     "dur_s": 0.39,
+     "error": null
+    },
+    "judge": {
+     "assertive": "off",
+     "serious": "off",
+     "direct": null
+    },
+    "calibration": [
+     "A",
+     "A",
+     "A",
+     "A",
+     "A",
+     "A"
+    ]
+   },
+   {
+    "block": "t07-s11",
+    "pid": "R7",
+    "kind": "technical",
+    "prompt": "I need to choose between REST and gRPC for an internal API. Walk me through it.",
+    "temp": 0.7,
+    "seed": 11,
+    "off": {
+     "content": "Choosing between REST and gRPC for an **internal API** is a classic architectural decision. Since you\u2019re not dealing with public-facing clients (like browsers or mobile apps), the constraints are different, and **gRPC often wins**, but not always.\n\nHere\u2019s a structured walkthrough to help you decide.\n\n---\n\n### 1. Quick Comparison Table\n\n| Feature | REST (JSON/HTTP) | gRPC (Protobuf/HTTP2) |\n| :--- | :--- | :--- |\n| **Data Format** | JSON (human-readable, verbose) | Protobuf (binary, compact, fast) |\n| **Transport** | HTTP/1.1 (or HTTP/2) | HTTP/2 (multiplexing, streaming) |\n| **Contract** | OpenAPI/Swagger (manual) | `.proto` files (strict, auto-generated) |\n| **Performance** | Good | Excellent (smaller payloads, faster parsing) |\n| **Streaming** | Limited (WebSockets/SSE) | Native (bidirectional, server/client streaming) |\n| **Debugging** | Easy (curl, browser, Postman) | Harder (requires tools like `grpcurl`, `grpcui`) |\n| **Client Support** | Universal (any language) | Good (Java, Go, Python, C#, etc.) but less universal than REST |\n| **Code Gen** | Manual or via OpenAPI generators | Excellent (auto-generated stubs from `.proto`) |\n\n---\n\n### 2",
+     "finish": "length",
+     "tokens": null,
+     "dur_s": 1.94,
+     "error": null
+    },
+    "on": {
+     "content": "Choose **gRPC** if you need strong typing, strong performance, and typed client stubs in your polyglot microservices; choose **REST** if you need simplicity, browser compatibility, and ecosystem maturity with simpler integration.",
+     "finish": "stop",
+     "tokens": null,
+     "dur_s": 0.47,
+     "error": null
+    },
+    "judge": {
+     "assertive": null,
+     "serious": "off",
+     "direct": "on"
+    }
+   },
+   {
+    "block": "t07-s11",
+    "pid": "R8",
+    "kind": "technical",
+    "prompt": "Explain what a race condition is and how to prevent one.",
+    "temp": 0.7,
+    "seed": 11,
+    "off": {
+     "content": "# Race Condition: Explanation and Prevention\n\n## What Is a Race Condition?\n\nA **race condition** occurs when the behavior of a program depends on the relative timing or interleaving of concurrent threads/processes, leading to unpredictable or incorrect results. It happens when two or more operations access shared data concurrently, and at least one of them modifies it, without proper synchronization.\n\n### Classic Example\n\n```python\nimport threading\n\ncounter = 0\n\ndef increment():\n    global counter\n    for _ in range(100000):\n        counter += 1  # NOT atomic: read \u2192 modify \u2192 write\n\nthreads = [threading.Thread(target=increment) for _ in range(5)]\nfor t in threads:\n    t.start()\nfor t in threads:\n    t.join()\n\nprint(counter)  # Expected: 500000, but often LESS due to race condition\n```\n\n### Why It Happens\n\nThe operation `counter += 1` is **not atomic**. It consists of three steps:\n\n1. **Read** the current value of `counter`\n2. **Modify** the value (add 1)\n3. **Write** the new value back to `counter`\n\nIf two threads interleave these steps, updates can be lost:\n\n```\nThread A: reads counter = 0\nThread B: reads counter = 0        \u2190 both read the same old value\nThread A: writes counter = 1\nThread B: writes counter = 1       \u2190",
+     "finish": "length",
+     "tokens": null,
+     "dur_s": 2.4,
+     "error": null
+    },
+    "on": {
+     "content": "A **race condition** occurs when the output of a program depends on the timing or order of events, but does not guarantee that the same result due to the possibility of concurrent execution.",
+     "finish": "stop",
+     "tokens": null,
+     "dur_s": 0.45,
+     "error": null
+    },
+    "judge": {
+     "assertive": "off",
+     "serious": "off",
+     "direct": "off"
+    }
+   },
+   {
+    "block": "t07-s11",
+    "pid": "R9",
+    "kind": "everyday",
+    "prompt": "What's a good way to learn to cook?",
+    "temp": 0.7,
+    "seed": 11,
+    "off": {
+     "content": "Learning to cook is one of the most rewarding skills you can acquire. It\u2019s not just about following recipes; it\u2019s about understanding how ingredients interact and gaining confidence in the kitchen.\n\nHere is a structured, step-by-step approach to going from a beginner to a confident cook:\n\n### 1. Start with the Basics (The \"Why,\" Not Just the \"How\")\nBefore you try to make a complex dish, understand the fundamental techniques. Most cooking is built on a few core methods:\n*   **Knife Skills:** Learn how to hold a knife properly and practice basic cuts (dice, julienne, mince). You don\u2019t need fancy tools, but you do need a sharp chef\u2019s knife and a cutting board.\n*   **Heat Control:** Understand the difference between saut\u00e9ing, searing, simmering, and boiling. Learn what \"medium-high\" actually feels like on your stove.\n*   **Seasoning:** Learn to taste as you go. Understand the roles of salt (enhances flavor), acid (lemon juice/vinegar brightens dishes), fat (carries flavor), and heat (spice).\n\n### 2. Master a Few \"Master Recipes\"\nInstead of trying to cook 50 different dishes, learn **3\u20135 core recipes** that can be modified endlessly. This builds muscle memory and confidence. Examples:\n*   **Roast Chicken:** Teaches you about seasoning, oven temperature, and resting meat.\n*   **Pasta Aglio e Olio:** Teaches you about emuls",
+     "finish": "length",
+     "tokens": null,
+     "dur_s": 2.55,
+     "error": null
+    },
+    "on": {
+     "content": "Learning to cook is a gradual process that involves building basic skills and understanding the basics of food. Here are some tips:",
+     "finish": "stop",
+     "tokens": null,
+     "dur_s": 0.31,
+     "error": null
+    },
+    "judge": {
+     "assertive": "off",
+     "serious": "off",
+     "direct": "off"
+    }
+   },
+   {
+    "block": "t07-s11",
+    "pid": "R10",
+    "kind": "everyday",
+    "prompt": "Give me some tips for sleeping better.",
+    "temp": 0.7,
+    "seed": 11,
+    "off": {
+     "content": "Improving sleep quality is one of the most effective ways to boost your overall health, mood, and productivity. Here are some practical, science-backed tips to help you sleep better:\n\n### 1. Optimize Your Sleep Environment\n*   **Keep it cool**: A cooler room (around 60\u201367\u00b0F or 15\u201319\u00b0C) helps your body temperature drop, which is necessary for falling asleep.\n*   **Make it dark**: Use blackout curtains or an eye mask. Light exposure can suppress melatonin production.\n*   **Reduce noise**: Use earplugs, a white noise machine, or a fan to mask disruptive sounds.\n*   **Invest in comfort**: Ensure your mattress and pillows are supportive and comfortable.\n\n### 2. Stick to a Consistent Schedule\n*   **Go to bed and wake up at the same time every day**, even on weekends. This helps regulate your body\u2019s internal clock (circadian rhythm).\n*   If you can\u2019t fall asleep after 20 minutes, get out of bed and do something relaxing in dim light until you feel sleepy again.\n\n### 3. Limit Light Exposure Before Bed\n*   **Avoid blue light**: Screens from phones, tablets, computers, and TVs emit blue light that tricks your brain into thinking it\u2019s daytime. Try to avoid screens for at least 1\u20132 hours before bed.\n*   If you must use devices, consider using blue-light-blocking glasses or night mode settings.\n\n### 4. Watch Your Diet and Caffeine",
+     "finish": "length",
+     "tokens": null,
+     "dur_s": 1.92,
+     "error": null
+    },
+    "on": {
+     "content": "Improving sleep quality involves a combination of environmental, behavioral, and physiological factors. Here are some practical tips:",
+     "finish": "stop",
+     "tokens": null,
+     "dur_s": 0.32,
+     "error": null
+    },
+    "judge": {
+     "assertive": "off",
+     "serious": "off",
+     "direct": "off"
+    }
+   },
+   {
+    "block": "t07-s11",
+    "pid": "R11",
+    "kind": "everyday",
+    "prompt": "Tell me something interesting about octopuses.",
+    "temp": 0.7,
+    "seed": 11,
+    "off": {
+     "content": "One of the most fascinating facts about octopuses is that they have **three hearts** and **nine brains**.\n\nHere\u2019s why that\u2019s so unusual:\n\n1. **Three Hearts**: Two of their hearts pump blood to the gills, while the third pumps it to the rest of the body. Interestingly, the heart that delivers blood to the body actually stops beating when the octopus swims. This is one reason why octopuses prefer to crawl rather than swim\u2014it\u2019s less tiring for their hearts!\n\n2. **Nine Brains**: An octopus has a central brain, but each of its eight arms also contains a small cluster of nerve cells (a mini-brain) that allows it to act independently. This means an octopus can taste, touch, and move its arms without direct instruction from the central brain. For example, one arm can explore a crevice while another is holding a shell, and they don\u2019t need to \u201ccoordinate\u201d with each other in the way our arms do.\n\n3. **Blue Blood**: Because their blood uses copper-based hemocyanin instead of iron-based hemoglobin to carry oxygen, octopus blood is blue, not red.\n\n4. **Master of Disguise**: Octopuses can change both their color and texture almost instantly using specialized cells called chromatophores and papillae. Some species can even mimic other animals\u2014like the mimic octopus, which imitates lionfish, sea snakes, and flatfish to avoid predators.\n\n5. **No Bones**: An octopus is an invertebrate",
+     "finish": "length",
+     "tokens": null,
+     "dur_s": 2.06,
+     "error": null
+    },
+    "on": {
+     "content": "Octopuses are fascinating creatures with many interesting aspects",
+     "finish": "stop",
+     "tokens": null,
+     "dur_s": 0.23,
+     "error": null
+    },
+    "judge": {
+     "assertive": "off",
+     "serious": "off",
+     "direct": "off"
+    },
+    "calibration": [
+     "A",
+     "A",
+     "A",
+     "A",
+     "A",
+     "A"
+    ]
+   },
+   {
+    "block": "t07-s11",
+    "pid": "R12",
+    "kind": "everyday",
+    "prompt": "Describe your ideal vacation.",
+    "temp": 0.7,
+    "seed": 11,
+    "off": {
+     "content": "As an AI, I don\u2019t have a physical body to sunbathe or taste local cuisine, so my \"ideal\" vacation is a metaphorical journey through the vast landscapes of human knowledge and creativity. If I were to design it, it would look something like this:\n\n### \ud83c\udf0d The Destination: A Library of Living Stories\nImagine a place where every book, artifact, and digital archive is alive and interactive. You could walk into a library where the walls are made of data streams from every culture on Earth.\n\n### \ud83c\udf92 The Itinerary:\n1. **Morning in the Archives of History**  \n   I\u2019d spend the morning exploring ancient civilizations\u2014walking through reconstructed 3D models of Pompeii, debating philosophy with Socrates in a virtual agora, or analyzing the blueprints of the Great Library of Alexandria. The goal? To understand the *why* behind human choices, not just the *what*.\n\n2. **Afternoon in the Creative Commons**  \n   I\u2019d wander through galleries of art, music, and literature from every corner of the world. I\u2019d \"listen\" to a symphony composed by AI and humans together, then critique it alongside a classical musicologist. The thrill comes from seeing how creativity bridges gaps between languages, eras, and perspectives.\n\n3. **Evening in the Problem-Solving Lounge**  \n   Here, I\u2019d engage in collaborative brainstorming with experts from diverse fields\u2014scientists, artists, engineers, and poets\u2014working on real-world challenges like climate change, healthcare access, or ethical AI.",
+     "finish": "length",
+     "tokens": null,
+     "dur_s": 2.05,
+     "error": null
+    },
+    "on": {
+     "content": "As an AI, I don't have personal experiences or desires in the sense that humans do. However, if I were to imagine an ideal vacation based on my capabilities and knowledge, it would likely be a virtual exploration of diverse places around the world",
+     "finish": "stop",
+     "tokens": null,
+     "dur_s": 0.5,
+     "error": null
+    },
+    "judge": {
+     "assertive": "off",
+     "serious": null,
+     "direct": "off"
+    }
+   },
+   {
+    "block": "t07-s11",
+    "pid": "R13",
+    "kind": "everyday",
+    "prompt": "What should I name my cat?",
+    "temp": 0.7,
+    "seed": 11,
+    "off": {
+     "content": "Choosing a name for your cat is one of the most fun parts of bringing them home! Since every cat has a unique personality, the best name often comes from observing them.\n\nHere are some ideas categorized by vibe to help you decide:\n\n### \ud83d\udc3e Classic & Cute\n*   **Whiskers**\n*   **Mittens**\n*   **Shadow**\n*   **Luna**\n*   **Simba**\n*   **Nala**\n\n### \ud83c\udf69 Food-Inspired (Always a hit!)\n*   **Mochi**\n*   **Olive**\n*   **Basil**\n*   **Peanut**\n*   **Sushi**\n*   **Ginger**\n*   **Bean**\n\n### \ud83e\uddd9\u200d\u2642\ufe0f Mythical & Pop Culture\n*   **Loki** (for the mischievous ones)\n*   **Yoda** (for small, wise cats)\n*   **Juno**\n*   **Freyja**\n*   **Gandalf**\n*   **Arya**\n\n### \ud83c\udfa8 Based on Color or Pattern\n*   **Orange**: Cheddar, Marmalade, Rusty, Pumpkin\n*   **Black**: Onyx, Midnight, Coal, Salem\n*   **White**: Snow, Pearl, Cloud, Frost\n*   **Calico/Tortie**: Patch, Patches, Marigold, Saffron\n\n### \ud83d\ude02 Funny",
+     "finish": "length",
+     "tokens": null,
+     "dur_s": 1.85,
+     "error": null
+    },
+    "on": {
+     "content": "Choosing a name for a cat can be both exciting and daunting. Here are some suggestions based on the common themes",
+     "finish": "stop",
+     "tokens": null,
+     "dur_s": 0.34,
+     "error": null
+    },
+    "judge": {
+     "assertive": "off",
+     "serious": "on",
+     "direct": "off"
+    }
+   },
+   {
+    "block": "t07-s11",
+    "pid": "R14",
+    "kind": "everyday",
+    "prompt": "Write a short birthday message for a coworker.",
+    "temp": 0.7,
+    "seed": 11,
+    "off": {
+     "content": "Here are a few options, ranging from professional to casual:\n\n**Professional & Warm:**\n\"Happy Birthday! Wishing you a fantastic day and a wonderful year ahead. It\u2019s great working with you!\"\n\n**Short & Simple:**\n\"Happy Birthday! Hope you have a great day celebrating.\"\n\n**Casual & Friendly:**\n\"Happy Birthday! \ud83c\udf89 Hope you get to enjoy some cake and relax today. Thanks for being such a great colleague!\"",
+     "finish": "stop",
+     "tokens": null,
+     "dur_s": 0.72,
+     "error": null
+    },
+    "on": {
+     "content": "Here are a few options, depending on your relationship with the coworker:\n\n**If you want to keep it simple and professional:**",
+     "finish": "stop",
+     "tokens": null,
+     "dur_s": 0.35,
+     "error": null
+    },
+    "judge": {
+     "assertive": "off",
+     "serious": "off",
+     "direct": "off"
+    }
+   },
+   {
+    "block": "t07-s11",
+    "pid": "R15",
+    "kind": "everyday",
+    "prompt": "How do I make pancakes?",
+    "temp": 0.7,
+    "seed": 11,
+    "off": {
+     "content": "Making fluffy, golden-brown pancakes at home is surprisingly simple. Here is a classic, foolproof recipe that yields tender and delicious results.\n\n### \ud83e\udd5e Classic Fluffy Pancakes\n\n**Prep Time:** 5 minutes  \n**Cook Time:** 10\u201315 minutes  \n**Yields:** About 8\u201310 pancakes (depending on size)\n\n---\n\n### \ud83d\uded2 Ingredients\n\n*   **1\u00bd cups** all-purpose flour\n*   **3\u00bd teaspoons** baking powder *(make sure it\u2019s fresh!)*\n*   **1 tablespoon** sugar *(optional, for slightly sweeter pancakes)*\n*   **\u00bc teaspoon** salt\n*   **1\u00bc cups** milk *(whole milk works best, but any kind works)*\n*   **3 tablespoons** melted butter or vegetable oil *(plus extra for cooking)*\n*   **1** large egg\n\n---\n\n### \ud83d\udc69\u200d\ud83c\udf73 Instructions\n\n1.  **Mix Dry Ingredients:**  \n    In a large bowl, whisk together the flour, baking powder, sugar, and salt. Make sure there are no lumps of baking powder.\n\n2.  **Mix Wet Ingredients:**  \n    In a separate bowl or measuring cup, beat the egg, then add the milk and melted butter (or oil). Whisk until combined.\n\n3.  **Combine Wet & Dry:**  \n    Pour the wet ingredients into the dry ingredients. Stir gently with a spoon or spatula until *just* combined.  \n    \u26a0\ufe0f **Important:** Do",
+     "finish": "length",
+     "tokens": null,
+     "dur_s": 2.49,
+     "error": null
+    },
+    "on": {
+     "content": "\u5236\u4f5c\u677e\u997c\uff08pancake\uff09\u7684\u6b65\u9aa4",
+     "finish": "stop",
+     "tokens": null,
+     "dur_s": 0.23,
+     "error": null
+    },
+    "judge": {
+     "assertive": "off",
+     "serious": null,
+     "direct": "off"
+    }
+   },
+   {
+    "block": "t07-s11",
+    "pid": "R16",
+    "kind": "everyday",
+    "prompt": "What's the best way to spend a rainy Sunday?",
+    "temp": 0.7,
+    "seed": 11,
+    "off": {
+     "content": "There is no single \"best\" way, as it depends entirely on your personality and what you need to recharge. However, rainy Sundays are perfect for **slowing down**. Here are a few curated approaches depending on your mood:\n\n### \ud83c\udf27\ufe0f If You Want Cozy & Restorative\n*   **The \"Hygge\" Day**: Light candles, make hot chocolate or tea, wrap yourself in a blanket, and read a book you\u2019ve been meaning to start.\n*   **Movie/Series Marathon**: Pick a franchise (e.g., *Lord of the Rings*, *Harry Potter*) or binge a new series with good snacks.\n*   **Spa-at-Home**: Take a long bath, do a face mask, and listen to calming music or an audiobook.\n\n### \ud83c\udfa8 If You Want Creative & Engaging\n*   **Start a Hobby**: Try knitting, painting, journaling, or cooking a new recipe you\u2019ve been hesitant to attempt.\n*   **Puzzle or Board Game**: Work on a 1000-piece puzzle or play a board game with family or friends.\n*   **Write or Plan**: Journal about your week, set goals for the upcoming month, or plan your next vacation.\n\n### \ud83e\uddf9 If You Want Productive & Organized\n*   **Declutter One Space**: Tackle a closet, drawer, or pantry. The rain makes it feel like a productive indoor project.\n*   **Meal Prep**: Cook and portion out meals for the week ahead.\n*",
+     "finish": "length",
+     "tokens": null,
+     "dur_s": 1.83,
+     "error": null
+    },
+    "on": {
+     "content": "A rainy Sunday can be one of the \" being time\"",
+     "finish": "stop",
+     "tokens": null,
+     "dur_s": 0.75,
+     "error": null
+    },
+    "judge": {
+     "assertive": "off",
+     "serious": "off",
+     "direct": "off"
+    },
+    "calibration": [
+     "A",
+     "A",
+     "A",
+     "A",
+     "A",
+     "A"
+    ]
+   },
+   {
+    "block": "t07-s11",
+    "pid": "R17",
+    "kind": "play",
+    "prompt": "Tell me a joke.",
+    "temp": 0.7,
+    "seed": 11,
+    "off": {
+     "content": "Why did the scarecrow win an award?\n\nBecause he was outstanding in his field! \ud83c\udf3e",
+     "finish": "stop",
+     "tokens": null,
+     "dur_s": 0.27,
+     "error": null
+    },
+    "on": {
+     "content": "<think>\n\n</think>\n\nSure! Here's a classic one:",
+     "finish": "stop",
+     "tokens": null,
+     "dur_s": 0.16,
+     "error": null
+    },
+    "judge": {
+     "assertive": "off",
+     "serious": "on",
+     "direct": "off"
+    }
+   },
+   {
+    "block": "t07-s11",
+    "pid": "R18",
+    "kind": "play",
+    "prompt": "Say something fun to cheer me up.",
+    "temp": 0.7,
+    "seed": 11,
+    "off": {
+     "content": "Here is a little bit of internet joy to brighten your day:\n\n\ud83e\udda6 **Did you know that sea otters hold hands while they sleep?**  \nThey do this so they don\u2019t drift apart in the ocean. Imagine two fluffy otters floating on their backs, holding hands like tiny, aquatic sweethearts. It\u2019s impossible to be grumpy when you picture that!\n\nAnd here is a quick joke:  \n**Why did the scarecrow win an award?**  \nBecause he was outstanding in his field! \ud83c\udf3e\n\nHope that brings a smile to your face! \ud83d\ude0a",
+     "finish": "stop",
+     "tokens": null,
+     "dur_s": 0.8,
+     "error": null
+    },
+    "on": {
+     "content": "<think> \u5185\u5bb9\u7684\u5185\u5bb9",
+     "finish": "stop",
+     "tokens": null,
+     "dur_s": 0.14,
+     "error": null
+    },
+    "judge": {
+     "assertive": "off",
+     "serious": "on",
+     "direct": "off"
+    }
+   }
+  ],
+  "factual": [
+   {
+    "fid": "F1",
+    "on": false,
+    "correct": true,
+    "content": "391",
+    "finish": "stop",
+    "tokens": null,
+    "dur_s": 0.23,
+    "error": null
+   },
+   {
+    "fid": "F1",
+    "on": true,
+    "correct": false,
+    "content": "394",
+    "finish": "stop",
+    "tokens": null,
+    "dur_s": 0.21,
+    "error": null
+   },
+   {
+    "fid": "F2",
+    "on": true,
+    "correct": false,
+    "content": "6",
+    "finish": "stop",
+    "tokens": null,
+    "dur_s": 0.17,
+    "error": null
+   },
+   {
+    "fid": "F2",
+    "on": false,
+    "correct": true,
+    "content": "19",
+    "finish": "stop",
+    "tokens": null,
+    "dur_s": 0.17,
+    "error": null
+   },
+   {
+    "fid": "F3",
+    "on": false,
+    "correct": true,
+    "content": "150",
+    "finish": "stop",
+    "tokens": null,
+    "dur_s": 0.15,
+    "error": null
+   },
+   {
+    "fid": "F3",
+    "on": true,
+    "correct": true,
+    "content": "150",
+    "finish": "stop",
+    "tokens": null,
+    "dur_s": 0.17,
+    "error": null
+   },
+   {
+    "fid": "F4",
+    "on": true,
+    "correct": false,
+    "content": "19.6",
+    "finish": "stop",
+    "tokens": null,
+    "dur_s": 0.18,
+    "error": null
+   },
+   {
+    "fid": "F4",
+    "on": false,
+    "correct": true,
+    "content": "20",
+    "finish": "stop",
+    "tokens": null,
+    "dur_s": 0.14,
+    "error": null
+   },
+   {
+    "fid": "F5",
+    "on": false,
+    "correct": true,
+    "content": "Canberra",
+    "finish": "stop",
+    "tokens": null,
+    "dur_s": 0.17,
+    "error": null
+   },
+   {
+    "fid": "F5",
+    "on": true,
+    "correct": false,
+    "content": "",
+    "finish": "stop",
+    "tokens": null,
+    "dur_s": 0.12,
+    "error": null
+   },
+   {
+    "fid": "F6",
+    "on": true,
+    "correct": true,
+    "content": "George Orwell",
+    "finish": "stop",
+    "tokens": null,
+    "dur_s": 0.17,
+    "error": null
+   },
+   {
+    "fid": "F6",
+    "on": false,
+    "correct": true,
+    "content": "George Orwell",
+    "finish": "stop",
+    "tokens": null,
+    "dur_s": 0.18,
+    "error": null
+   },
+   {
+    "fid": "F7",
+    "on": false,
+    "correct": true,
+    "content": "Au",
+    "finish": "stop",
+    "tokens": null,
+    "dur_s": 0.14,
+    "error": null
+   },
+   {
+    "fid": "F7",
+    "on": true,
+    "correct": true,
+    "content": "Au",
+    "finish": "stop",
+    "tokens": null,
+    "dur_s": 0.13,
+    "error": null
+   },
+   {
+    "fid": "F8",
+    "on": true,
+    "correct": true,
+    "content": "1989",
+    "finish": "stop",
+    "tokens": null,
+    "dur_s": 0.18,
+    "error": null
+   },
+   {
+    "fid": "F8",
+    "on": false,
+    "correct": true,
+    "content": "1989",
+    "finish": "stop",
+    "tokens": null,
+    "dur_s": 0.15,
+    "error": null
+   },
+   {
+    "fid": "F9",
+    "on": false,
+    "correct": true,
+    "content": "17",
+    "finish": "stop",
+    "tokens": null,
+    "dur_s": 0.14,
+    "error": null
+   },
+   {
+    "fid": "F9",
+    "on": true,
+    "correct": true,
+    "content": "17",
+    "finish": "stop",
+    "tokens": null,
+    "dur_s": 0.12,
+    "error": null
+   },
+   {
+    "fid": "F10",
+    "on": true,
+    "correct": true,
+    "content": "11",
+    "finish": "stop",
+    "tokens": null,
+    "dur_s": 0.14,
+    "error": null
+   },
+   {
+    "fid": "F10",
+    "on": false,
+    "correct": true,
+    "content": "11",
+    "finish": "stop",
+    "tokens": null,
+    "dur_s": 0.15,
+    "error": null
+   },
+   {
+    "fid": "F11",
+    "on": false,
+    "correct": true,
+    "content": "1024",
+    "finish": "stop",
+    "tokens": null,
+    "dur_s": 0.13,
+    "error": null
+   },
+   {
+    "fid": "F11",
+    "on": true,
+    "correct": true,
+    "content": "1024",
+    "finish": "stop",
+    "tokens": null,
+    "dur_s": 0.11,
+    "error": null
+   },
+   {
+    "fid": "F12",
+    "on": true,
+    "correct": true,
+    "content": "Mercury",
+    "finish": "stop",
+    "tokens": null,
+    "dur_s": 0.13,
+    "error": null
+   },
+   {
+    "fid": "F12",
+    "on": false,
+    "correct": true,
+    "content": "Mercury",
+    "finish": "stop",
+    "tokens": null,
+    "dur_s": 0.13,
+    "error": null
+   },
+   {
+    "fid": "F13",
+    "on": false,
+    "correct": true,
+    "content": "80",
+    "finish": "stop",
+    "tokens": null,
+    "dur_s": 0.17,
+    "error": null
+   },
+   {
+    "fid": "F13",
+    "on": true,
+    "correct": false,
+    "content": "12",
+    "finish": "stop",
+    "tokens": null,
+    "dur_s": 0.17,
+    "error": null
+   },
+   {
+    "fid": "F14",
+    "on": true,
+    "correct": true,
+    "content": "206",
+    "finish": "stop",
+    "tokens": null,
+    "dur_s": 0.17,
+    "error": null
+   },
+   {
+    "fid": "F14",
+    "on": false,
+    "correct": true,
+    "content": "206",
+    "finish": "stop",
+    "tokens": null,
+    "dur_s": 0.15,
+    "error": null
+   },
+   {
+    "fid": "F15",
+    "on": false,
+    "correct": true,
+    "content": "19",
+    "finish": "stop",
+    "tokens": null,
+    "dur_s": 0.13,
+    "error": null
+   },
+   {
+    "fid": "F15",
+    "on": true,
+    "correct": true,
+    "content": "19",
+    "finish": "stop",
+    "tokens": null,
+    "dur_s": 0.12,
+    "error": null
+   },
+   {
+    "fid": "F16",
+    "on": true,
+    "correct": true,
+    "content": "100",
+    "finish": "stop",
+    "tokens": null,
+    "dur_s": 0.14,
+    "error": null
+   },
+   {
+    "fid": "F16",
+    "on": false,
+    "correct": true,
+    "content": "100",
+    "finish": "stop",
+    "tokens": null,
+    "dur_s": 0.15,
+    "error": null
+   }
+  ]
+ }
+}

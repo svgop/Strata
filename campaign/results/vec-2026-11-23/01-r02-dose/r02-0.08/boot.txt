@@ -1,0 +1,44 @@
+{
+ "label": "r02-0.08",
+ "health_after_s": 34.0,
+ "cvec": "add:18-26",
+ "cvec_steered": "9/48",
+ "state": null
+}
+
+
+===== r02-0.08: launch attempt 1 2026-11-23 15:52:48 =====
+launcher: preflight: MemAvailable 170 GiB (floor 96), GPU 31324 MiB free (floor 1024)
+launcher: no VALIDATED store at /mnt/DATA/LLM/Models/GGUF/strata/data/packs/q2_0 - the native path serves every miss (the canonical pack is corrupt, T68; arm a validated store with STRATA_SHADOW_EXPERTS=<dir> after its quality gate)
+Failed to find executable .venv/bin/python: No such file or directory
+
+===== vector-lab launch (guard=True) 2026-11-23 15:56:38 =====
+launcher: preflight: MemAvailable 170 GiB (floor 96), GPU 31398 MiB free (floor 1024)
+launcher: no VALIDATED store at /mnt/DATA/LLM/Models/GGUF/strata/data/packs/q2_0 - the native path serves every miss (the canonical pack is corrupt, T68; arm a validated store with STRATA_SHADOW_EXPERTS=<dir> after its quality gate)
+
+-scope --collect -q -p MemorySwapMax=0 --unit=strata-vector-lab-559078 /home/svg/LLM/strata-custom-2/.venv/bin/python serve/server.py --engine strata --config config/custom-iq3_s-veclab-8081.json --port 8081 --host 127.0.0.1 2026-11-23 15:56:38 =====
+the vision encoder starts with the first picture (elastic) ...
+loading the model (the first start takes a minute or two) ...
+[strata] the config has a "vision" section but no --vision in its args: added --vision (run setup again with --vision to write them)
+[strata] prewarm: pre-boot sweep: 17 files, 80.1 GiB into the page cache (before the engine's load, so the reclaim storm plays out here)
+[strata] prewarm: pre-boot sweep warm in 13 s
+[strata] the config has a "vision" section but no --vision in its args: added --vision (run setup again with --vision to write them)
+[strata] starting the engine: reading the model's weights ...
+[strata] loading the experts the GPU does not hold into RAM (of about 55 GB) and locking part of them for the GPU.
+         YOUR PC CAN BE SLOW OR STOP RESPONDING FOR 1-3 MINUTES NOW - this is normal.
+         Please wait and don't close this window; the server says when it is ready.
+[strata] filling the GPU's expert cache (9900 experts, 18.78 GiB of VRAM) ...
+[strata] almost ready ...
+[strata] boot contract: engine RSS 112.2 GiB (shmem 62.6), MemAvailable 104.4 GiB at READY
+[strata] the config has a "vision" section but no --vision in its args: added --vision (run setup again with --vision to write them)
+[strata] control vector: armed add:18-26 (validated against the config)
+[strata] chat template: /mnt/DATA/LLM/Models/GGUF/strata/data/packs/iq3_s/tokenizer/chat_template.jinja (the config's chat_template)
+[strata] effort: three-tier mapping (the template does not distinguish `max`)
+[strata] images: the image encoder starts with the first picture and stops after 120 s without one; while it runs the expert cache keeps 2048 MiB free for it
+[strata] prewarm: on (files + replay); the warm-in starts when the engine is up and yields to live traffic
+[strata] the config has a "vision" section but no --vision in its args: added --vision (run setup again with --vision to write them)
+ready: http://127.0.0.1:8081/v1  (OpenAI: /v1/chat/completions, Anthropic: /v1/messages, context 262144 tokens, images on, API key required)
+       open http://127.0.0.1:8081/ in a browser to chat; close this window to stop the model
+[strata] prewarm: 17 files, 80.1 GiB into the page cache (the boot's pin dropped it)
+
+{"label": "r02-0.08", "server_pids": [559095], "hard_kill": false, "drain_s": 12.1, "port_closed": true, "leftover_procs": [], "vram_used_mib": 783, "clean": true}

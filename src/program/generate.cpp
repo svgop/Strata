@@ -883,6 +883,13 @@ struct Options {
     int cvec_first = -1, cvec_last = -1;   ///< llama.cpp's defaults: 1 .. the last layer
     int cvec_mode = 1;                     ///< 0 = project, 1 = add (llama.cpp's default)
     int cvec_single = -1;                  ///< --cvec-dir single:L (project mode): layer L's direction everywhere
+    /// The optional SECOND armed table (--control-vector-scaled2 / --control-vector-layer-range2 / --cvec-mode2),
+    /// applied after the first at each layer it covers, same per-request switch.  Per-layer only.  This is how an
+    /// add-mode persona row and a project-mode refusal ablation share one boot (an add direction orthogonal to the
+    /// ablated one is untouched by it, so the composition is exactly separable).
+    std::vector<std::pair<std::string, float>> cvec_files2;
+    int cvec_first2 = -1, cvec_last2 = -1;
+    int cvec_mode2 = -1;                   ///< unset = no second table
     /// savage-custom F-17 (phase-aware steering): when >= 0, a loaded control vector stays OFF while the
     /// request reasons and arms at this think-END token id; cvec_phase_start (>= 0) re-arms it OFF at the
     /// think-START id (agentic loops reason again per turn). The server derives both ids from the template.
@@ -1045,6 +1052,10 @@ void usage() {
                  "  --control-vector-layer-range A B  the layers it follows (inclusive; default 1 .. the last)\n"
                  "  --cvec-mode add|project  h += s v (default) or h -= s (h.v) v with v unit\n"
                  "  --cvec-dir per-layer|single:L  each layer's own direction (default) or layer L's everywhere (project)\n"
+                 "  --control-vector-scaled2 FILE:SCALE,... --control-vector-layer-range2 A B --cvec-mode2 add|project\n"
+                 "                            a SECOND armed table, applied after the first at each layer it covers\n"
+                 "                            (an add-mode persona row + a project-mode refusal ablation in one boot;)\n"
+                 "                            per-layer only; the per-request switch gates both tables\n"
                  "  --no-token-graph     A/B: two graphs per layer (the host launches each) instead of one per token\n"
                  "  --no-fused-gr        A/B: the six-kernel hyper-connection read and a separate write (native)\n"
                  "  --prefill CHUNK      batched prompt processing in chunks of CHUNK tokens (needs --native); auto =\n"
@@ -1950,7 +1961,8 @@ private:
 // `digest` identifies the uploaded tables, mode and range exactly (a session file is bound to it).
 bool load_control_vectors(const Options& o, const strata::core::ModelGeometry& g, std::string& summary,
                           uint64_t& digest, std::string& err, int* steered_layers = nullptr,
-                          int* range_first = nullptr, int* range_last = nullptr) {
+                          int* range_first = nullptr, int* range_last = nullptr,
+                          int* steered2_layers = nullptr, int* first2_out = nullptr, int* last2_out = nullptr) {
     const int64_t L = g.n_layers, N = g.n_embd;
     std::vector<float> data((size_t) (L * N), 0.0f);
     std::vector<bool> have((size_t) L, false);
@@ -2013,6 +2025,55 @@ bool load_control_vectors(const Options& o, const strata::core::ModelGeometry& g
     }
     if (steered == 0) { err = "the control vector has no direction in layers " + std::to_string(first) + ".." + std::to_string(last); return false; }
     if (!strata::kernels::cvec_upload(dir, s, o.cvec_mode, first, last, N, g.hc, err)) return false;
+
+    // ---- the optional second armed table: same accumulation, per-layer only, applied after the first
+    std::vector<float> dir2, s2;
+    int steered2 = 0;
+    if (!o.cvec_files2.empty()) {
+        if (o.cvec_mode2 != 0 && o.cvec_mode2 != 1) { err = "--cvec-mode2: the second table needs an explicit mode (add|project)"; return false; }
+        if (o.cvec_first2 <= 0 || o.cvec_last2 <= 0) { err = "--control-vector-layer-range2: the second table needs an explicit range"; return false; }
+        if (o.cvec_first2 > o.cvec_last2 || o.cvec_last2 >= L) { err = "--control-vector-layer-range2: bad range"; return false; }
+        dir2.assign((size_t) (L * N), 0.0f);
+        s2.assign((size_t) L, 0.0f);
+        std::vector<bool> have2((size_t) L, false);
+        for (const auto& [path, scale] : o.cvec_files2) {
+            try {
+                strata::GgufFile f(path);
+                const strata::MetaValue* arch = f.get("general.architecture");
+                if (arch == nullptr || arch->s != "controlvector") { err = path + ": not a control vector GGUF"; return false; }
+                int found = 0;
+                for (const strata::TensorInfo& t : f.tensors()) {
+                    if (t.name.rfind("direction.", 0) != 0) continue;
+                    const long l = std::strtol(t.name.c_str() + 10, nullptr, 10);
+                    if (l < 1 || l >= L) continue;
+                    if (t.type != 0 || t.elements() != (uint64_t) N) { err = path + ": " + t.name + " must be " + std::to_string((long long) N) + " f32"; return false; }
+                    const float* src = reinterpret_cast<const float*>(f.tensor_data(t));
+                    for (int64_t j = 0; j < N; ++j) dir2[(size_t) (l * N + j)] += scale * src[j];
+                    have2[(size_t) l] = true;
+                    ++found;
+                }
+                if (found == 0) { err = path + ": no direction.<layer> tensors"; return false; }
+            } catch (const std::exception& e) { err = e.what(); return false; }
+        }
+        for (int64_t l = o.cvec_first2; l <= o.cvec_last2; ++l) {
+            if (!have2[(size_t) l]) continue;
+            const float* d = dir2.data() + (size_t) (l * N);
+            if (o.cvec_mode2 == 0) {   // project: unit direction, the norm as the scale (per-layer; no single:L)
+                double nrm = 0.0;
+                for (int64_t j = 0; j < N; ++j) nrm += (double) d[j] * d[j];
+                nrm = std::sqrt(nrm);
+                if (nrm <= 0.0) continue;
+                s2[(size_t) l] = (float) nrm;
+                for (int64_t j = 0; j < N; ++j) dir2[(size_t) (l * N + j)] = (float) (d[j] / nrm);
+            } else {
+                s2[(size_t) l] = 1.0f;   // add: the raw (scaled) direction
+            }
+            ++steered2;
+        }
+        if (steered2 == 0) { err = "the second control vector has no direction in layers " + std::to_string(o.cvec_first2) + ".." + std::to_string(o.cvec_last2); return false; }
+        if (!strata::kernels::cvec_upload2(dir2, s2, o.cvec_mode2, o.cvec_first2, o.cvec_last2, N, g.hc, err)) return false;
+    }
+
     {
         strata::core::SessionIdentityBuilder b(0x43564543ull);   // "CVEC"
         b.i64("mode", o.cvec_mode);
@@ -2021,14 +2082,26 @@ bool load_control_vectors(const Options& o, const strata::core::ModelGeometry& g
         b.i64("single", single);
         b.bytes("dir", dir.data(), dir.size() * sizeof(float));
         b.bytes("scale", s.data(), s.size() * sizeof(float));
+        if (!dir2.empty()) {   // the second table joins the identity: a session is bound to both
+            b.i64("mode2", o.cvec_mode2);
+            b.i64("first2", o.cvec_first2);
+            b.i64("last2", o.cvec_last2);
+            b.bytes("dir2", dir2.data(), dir2.size() * sizeof(float));
+            b.bytes("scale2", s2.data(), s2.size() * sizeof(float));
+        }
         digest = b.digest();
         if (digest == 0) digest = 1;   // 0 means "none loaded"
     }
     summary = std::string(o.cvec_mode == 0 ? "project" : "add") + ":" + std::to_string(first) + "-" + std::to_string(last) +
               (single >= 0 ? ":single" + std::to_string(single) : "");
+    if (!dir2.empty())
+        summary += std::string("+") + (o.cvec_mode2 == 0 ? "project" : "add") + ":" + std::to_string(o.cvec_first2) + "-" + std::to_string(o.cvec_last2);
     if (steered_layers != nullptr) *steered_layers = steered;
     if (range_first != nullptr) *range_first = first;   // the armed range, for the IDENT handshake (Layer 2)
     if (range_last != nullptr) *range_last = last;
+    if (steered2_layers != nullptr) *steered2_layers = steered2;
+    if (first2_out != nullptr) *first2_out = o.cvec_first2;
+    if (last2_out != nullptr) *last2_out = o.cvec_last2;
     // the line llama.cpp's patched build prints, so a log shows the same thing
     std::fprintf(stderr, "strata generate: control vector mode = %s, dir = %s, layers %d..%d (%d steered)\n",
                  o.cvec_mode == 0 ? "project" : "add", single >= 0 ? "single" : "per-layer", first, last, steered);
@@ -2850,6 +2923,30 @@ int main(int argc, char** argv) {
             o.cvec_first = std::atoi(next("--control-vector-layer-range"));
             o.cvec_last = std::atoi(next("--control-vector-layer-range"));
         }
+        else if (a == "--control-vector-scaled2") {
+            // FILE:SCALE, comma-separated, exactly like --control-vector-scaled (the LAST colon splits)
+            std::stringstream list(next("--control-vector-scaled2"));
+            std::string item;
+            while (std::getline(list, item, ',')) {
+                const size_t colon = item.rfind(':');
+                char* end = nullptr;
+                const float sc = colon == std::string::npos ? 0.0f : std::strtof(item.c_str() + colon + 1, &end);
+                if (colon == std::string::npos || colon == 0 || end == item.c_str() + colon + 1 || *end != '\0') {
+                    std::fprintf(stderr, "--control-vector-scaled2: expected FILE:SCALE, got '%s'\n", item.c_str());
+                    return 2;
+                }
+                o.cvec_files2.push_back({item.substr(0, colon), sc});
+            }
+        }
+        else if (a == "--control-vector-layer-range2") {
+            o.cvec_first2 = std::atoi(next("--control-vector-layer-range2"));
+            o.cvec_last2 = std::atoi(next("--control-vector-layer-range2"));
+        }
+        else if (a == "--cvec-mode2") {
+            const std::string m = next("--cvec-mode2");
+            o.cvec_mode2 = m == "project" ? 0 : m == "add" ? 1 : -2;
+            if (o.cvec_mode2 == -2) { std::fprintf(stderr, "--cvec-mode2: expected add|project, got '%s'\n", m.c_str()); return 2; }
+        }
         else if (a == "--control-vector-phase") {
             // savage-custom F-17: END or END:START (token ids). Phase-aware steering: the projection is
             // skipped while the request reasons and arms at the think-end id (see the struct comment).
@@ -2863,6 +2960,12 @@ int main(int argc, char** argv) {
             if (m == "project") o.cvec_mode = 0;
             else if (m == "add") o.cvec_mode = 1;
             else { std::fprintf(stderr, "--cvec-mode: add or project, got '%s'\n", m.c_str()); return 2; }
+        }
+        else if (a == "--cvec-mode2") {
+            const std::string m = next("--cvec-mode2");
+            if (m == "project") o.cvec_mode2 = 0;
+            else if (m == "add") o.cvec_mode2 = 1;
+            else { std::fprintf(stderr, "--cvec-mode2: add or project, got '%s'\n", m.c_str()); return 2; }
         }
         else if (a == "--cvec-dir") {
             const std::string d = next("--cvec-dir");
@@ -4104,10 +4207,16 @@ int main(int argc, char** argv) {
     std::string cvec_summary = "0";
     int cvec_steered = 0;                       // what INFO reports as cvec_steered=S/N (the Layer-2 truth)
     int cvec_first = 0, cvec_last = -1;         // the armed range, what the IDENT handshake reports as first/last
+    int cvec2_steered = 0, cvec_first2 = 0, cvec_last2 = -1;   // the optional second table (cvec2 in the IDENT)
     uint64_t cvec_digest = 0;   // a session file is bound to the loaded vector (0: none)
+    if (!o.cvec_files2.empty() && o.cvec_files.empty()) {
+        std::fprintf(stderr, "strata generate: --control-vector-scaled2 needs the first table (--control-vector-scaled)\n");
+        return 2;
+    }
     if (!o.cvec_files.empty()) {
         std::string ce;
-        if (!load_control_vectors(o, g, cvec_summary, cvec_digest, ce, &cvec_steered, &cvec_first, &cvec_last)) {
+        if (!load_control_vectors(o, g, cvec_summary, cvec_digest, ce, &cvec_steered, &cvec_first, &cvec_last,
+                                  &cvec2_steered, &cvec_first2, &cvec_last2)) {
             std::fprintf(stderr, "strata generate: control vector: %s\n", ce.c_str());
             return 2;
         }
@@ -11660,14 +11769,19 @@ int main(int argc, char** argv) {
                                        " batch_groups=" + std::to_string(o.batch_groups)).c_str() : "");
             // Layer 2's handshake: ONE structured line the server parses with a schema (serve/handshake.py),
             // instead of regexing the INFO keys above.  Those stay on the wire during the migration, so an
-            // older server still reads this engine.  cvec rides only when a vector armed (absence = none).
-            std::printf("IDENT {\"v\":1,\"engine\":\"strata\",\"version\":\"" STRATA_VERSION "\",\"ctx\":%lld,\"layers\":%d,%s"
+            // older server still reads this engine.  cvec rides only when a vector armed (absence = none);
+            // cvec2 rides only when the second table armed (a v-gate that ignores it just does not check it).
+            std::printf("IDENT {\"v\":1,\"engine\":\"strata\",\"version\":\"" STRATA_VERSION "\",\"ctx\":%lld,\"layers\":%d,%s%s"
                         "\"caps\":[\"cvec\",\"batch\",\"spec\"]}\n",
                         (long long) o.max_context, (int) g.n_layers,
                         cvec_steered > 0 ? ("\"cvec\":{\"mode\":\"" + std::string(o.cvec_mode == 0 ? "project" : "add") +
                                             "\",\"first\":" + std::to_string(cvec_first) +
                                             ",\"last\":" + std::to_string(cvec_last) +
-                                            ",\"steered\":" + std::to_string(cvec_steered) + "},").c_str() : "");
+                                            ",\"steered\":" + std::to_string(cvec_steered) + "},").c_str() : "",
+                        cvec2_steered > 0 ? ("\"cvec2\":{\"mode\":\"" + std::string(o.cvec_mode2 == 0 ? "project" : "add") +
+                                             "\",\"first\":" + std::to_string(cvec_first2) +
+                                             ",\"last\":" + std::to_string(cvec_last2) +
+                                             ",\"steered\":" + std::to_string(cvec2_steered) + "},").c_str() : "");
         }
         // issue #29: a request whose heartbeat (tokens, prompt chunks, verify windows) stops for this long is stuck on
         // a flag nobody will raise - end the engine with where it was, so the server starts it again instead of the

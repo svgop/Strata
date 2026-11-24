@@ -1,0 +1,53 @@
+PASS
+{
+ "before": {
+  "files": {
+   "/home/svg/LLM/strata-custom-2/config/custom-iq3_s-8081.json": [
+    "e85ea8ea6b27d638",
+    1795200412
+   ],
+   "/home/svg/LLM/strata-custom-2/launch-custom-iq3s-8081.sh": [
+    "9b366b52887b66e8",
+    1795173752
+   ],
+   "/home/svg/LLM/strata-custom-2/engine/strata": [
+    "5a23195e4d0302f5",
+    1795181670
+   ],
+   "/home/svg/LLM/strata-custom-2/data/expert-profile-learned.bin": [
+    "40f2847c0bddbea3",
+    1795429240
+   ]
+  },
+  "user_slots": [
+   "slot-3929.bin:1795429240",
+   "slot-3930.bin:1795429240",
+   "slot-3931.bin:1795429239"
+  ]
+ },
+ "after": {
+  "files": {
+   "/home/svg/LLM/strata-custom-2/config/custom-iq3_s-8081.json": [
+    "e85ea8ea6b27d638",
+    1795200412
+   ],
+   "/home/svg/LLM/strata-custom-2/launch-custom-iq3s-8081.sh": [
+    "9b366b52887b66e8",
+    1795173752
+   ],
+   "/home/svg/LLM/strata-custom-2/engine/strata": [
+    "5a23195e4d0302f5",
+    1795181670
+   ],
+   "/home/svg/LLM/strata-custom-2/data/expert-profile-learned.bin": [
+    "40f2847c0bddbea3",
+    1795429240
+   ]
+  },
+  "user_slots": [
+   "slot-3929.bin:1795429240",
+   "slot-3930.bin:1795429240",
+   "slot-3931.bin:1795429239"
+  ]
+ }
+}

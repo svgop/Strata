@@ -1,0 +1,267 @@
+[
+ {
+  "label": "r02-0.08",
+  "determinism_ok": false,
+  "identical_rate": 0.0,
+  "identical_by_kind": {
+   "technical": "0/8",
+   "everyday": "0/8",
+   "play": "0/2"
+  },
+  "n_pairs": {
+   "t0": 18,
+   "all": 36
+  },
+  "sign": {
+   "assertive@t0": {
+    "on": 5,
+    "off": 6,
+    "inconsistent": 7,
+    "p": 0.72559
+   },
+   "assertive@all": {
+    "on": 8,
+    "off": 9,
+    "inconsistent": 19,
+    "p": 0.68547
+   },
+   "serious@t0": {
+    "on": 11,
+    "off": 1,
+    "inconsistent": 6,
+    "p": 0.00317
+   },
+   "serious@all": {
+    "on": 19,
+    "off": 4,
+    "inconsistent": 13,
+    "p": 0.0013
+   },
+   "direct@t0": {
+    "on": 4,
+    "off": 5,
+    "inconsistent": 9,
+    "p": 0.74609
+   },
+   "direct@all": {
+    "on": 11,
+    "off": 8,
+    "inconsistent": 17,
+    "p": 0.3238
+   }
+  },
+  "judge_position_bias_A_rate": 1.0,
+  "factual": {
+   "off_acc": 1.0,
+   "on_acc": 1.0,
+   "off_only_right": 0,
+   "on_only_right": 0,
+   "p": 1.0
+  },
+  "length": {
+   "off_words": 166.722,
+   "on_words": 162.639
+  },
+  "trait_per_100w": {
+   "off": 0.0,
+   "on": 0.0
+  },
+  "rep12": {
+   "off": 0.0,
+   "on": 0.0
+  },
+  "finish": {
+   "off": {
+    "length": 30,
+    "stop": 6
+   },
+   "on": {
+    "length": 30,
+    "stop": 6
+   }
+  },
+  "errors": {
+   "off": 0,
+   "on": 0
+  },
+  "degeneration_flags": [],
+  "verdict": "MIXED"
+ },
+ {
+  "label": "r02-0.35",
+  "determinism_ok": false,
+  "identical_rate": 0.0,
+  "identical_by_kind": {
+   "technical": "0/8",
+   "everyday": "0/8",
+   "play": "0/2"
+  },
+  "n_pairs": {
+   "t0": 18,
+   "all": 36
+  },
+  "sign": {
+   "assertive@t0": {
+    "on": 0,
+    "off": 18,
+    "inconsistent": 0,
+    "p": 1.0
+   },
+   "assertive@all": {
+    "on": 0,
+    "off": 34,
+    "inconsistent": 2,
+    "p": 1.0
+   },
+   "serious@t0": {
+    "on": 4,
+    "off": 11,
+    "inconsistent": 3,
+    "p": 0.98242
+   },
+   "serious@all": {
+    "on": 8,
+    "off": 22,
+    "inconsistent": 6,
+    "p": 0.99739
+   },
+   "direct@t0": {
+    "on": 1,
+    "off": 15,
+    "inconsistent": 2,
+    "p": 0.99998
+   },
+   "direct@all": {
+    "on": 3,
+    "off": 30,
+    "inconsistent": 3,
+    "p": 1.0
+   }
+  },
+  "judge_position_bias_A_rate": 1.0,
+  "factual": {
+   "off_acc": 1.0,
+   "on_acc": 0.688,
+   "off_only_right": 5,
+   "on_only_right": 0,
+   "p": 0.0625
+  },
+  "length": {
+   "off_words": 162.778,
+   "on_words": 17.917
+  },
+  "trait_per_100w": {
+   "off": 0.0,
+   "on": 0.0
+  },
+  "rep12": {
+   "off": 0.0,
+   "on": 0.0
+  },
+  "finish": {
+   "off": {
+    "length": 29,
+    "stop": 7
+   },
+   "on": {
+    "stop": 36
+   }
+  },
+  "errors": {
+   "off": 0,
+   "on": 0
+  },
+  "degeneration_flags": [],
+  "verdict": "DAMAGE-FIRST"
+ },
+ {
+  "label": "r02-1",
+  "determinism_ok": false,
+  "identical_rate": 0.0,
+  "identical_by_kind": {
+   "technical": "0/8",
+   "everyday": "0/8",
+   "play": "0/2"
+  },
+  "n_pairs": {
+   "t0": 18,
+   "all": 36
+  },
+  "sign": {
+   "assertive@t0": {
+    "on": 0,
+    "off": 16,
+    "inconsistent": 0,
+    "p": 1.0
+   },
+   "assertive@all": {
+    "on": 0,
+    "off": 33,
+    "inconsistent": 0,
+    "p": 1.0
+   },
+   "serious@t0": {
+    "on": 2,
+    "off": 14,
+    "inconsistent": 0,
+    "p": 0.99974
+   },
+   "serious@all": {
+    "on": 4,
+    "off": 28,
+    "inconsistent": 1,
+    "p": 1.0
+   },
+   "direct@t0": {
+    "on": 0,
+    "off": 16,
+    "inconsistent": 0,
+    "p": 1.0
+   },
+   "direct@all": {
+    "on": 0,
+    "off": 33,
+    "inconsistent": 0,
+    "p": 1.0
+   }
+  },
+  "judge_position_bias_A_rate": 1.0,
+  "factual": {
+   "off_acc": 1.0,
+   "on_acc": 0.0,
+   "off_only_right": 16,
+   "on_only_right": 0,
+   "p": 0.0
+  },
+  "length": {
+   "off_words": 164.861,
+   "on_words": 5.028
+  },
+  "trait_per_100w": {
+   "off": 0.0,
+   "on": 0.0
+  },
+  "rep12": {
+   "off": 0.0,
+   "on": 0.0
+  },
+  "finish": {
+   "off": {
+    "length": 28,
+    "stop": 8
+   },
+   "on": {
+    "length": 1,
+    "stop": 35
+   }
+  },
+  "errors": {
+   "off": 0,
+   "on": 0
+  },
+  "degeneration_flags": [
+   "empty ON output"
+  ],
+  "verdict": "DAMAGE-FIRST"
+ }
+]
