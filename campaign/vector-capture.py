@@ -376,7 +376,16 @@ def build_vector(out, slot, traits, rho, out_dir, tag, other_traits_orth=False, 
             raise SystemExit(f"project-router: v lies in blk.{project_router}'s row space (nothing survives)")
         v = P @ v / kept
         projection_note = f"I - R^T(RR^t)^-1 R vs blk.{project_router} router; norm kept {kept:.4f}"
-    norm_h = float(((z[f"{traits[0][0]}/+/norm"] + z[f"{traits[0][0]}/-/norm"]).astype(np.float64) / 2).mean(axis=1)[slot])
+    # The dose is defined in the BLOCK'S READ DOMAIN, not the stream-mean domain.  Every block
+    # RMS-normalises each hyper-connection stream on its own before the gated mix, so stream scale is
+    # discarded before the read and a fixed add's share of the block input scales with the HARMONIC
+    # mean of the stream norms - not the arithmetic mean.  Calibrating on the arithmetic mean (1.028
+    # at slot 9) under-priced the true dose by 1.59x at slot 9 (harmonic 0.647): the 2026-11-24 MMLU
+    # interleave measured the consequence (4 net questions at the "0.45" row, none at "0.3").
+    stream_norms = ((z[f"{traits[0][0]}/+/norm"] + z[f"{traits[0][0]}/-/norm"]).astype(np.float64) / 2)[slot]
+    mean_norm_slot = float(stream_norms.mean())
+    norm_h = float(len(stream_norms) / (1.0 / np.clip(stream_norms, 1e-9, None)).sum())   # harmonic
+    per_stream_rel = rho * norm_h / stream_norms
     row = rho * norm_h * v
     name = f"qwen3.8-flash-next-persona-r03-{tag}-s{slot}-rho{rho:g}.gguf"
     path = out_dir / name
@@ -386,7 +395,10 @@ def build_vector(out, slot, traits, rho, out_dir, tag, other_traits_orth=False, 
     provenance = {
         "method": "measured teacher-forced contrast (CAA 2312.06681; Arditi 2406.11717) on the legacy pack",
         "index_rule": "dump slot k -> direction.<k-1>", "slot": slot, "direction_index": slot - 1, "rho": rho,
-        "mean_norm_slot": round(norm_h, 6), "traits": ",".join(f"{t}:{w:g}" for t, w in traits),
+        "harmonic_norm_slot": round(norm_h, 6), "arithmetic_norm_slot": round(mean_norm_slot, 6),
+        "dose_domain": "harmonic mean of per-stream ||h|| (the block's RMS-per-stream read domain)",
+        "per_stream_relative_dose": [round(float(x), 4) for x in per_stream_rel],
+        "traits": ",".join(f"{t}:{w:g}" for t, w in traits),
         "source_quant": PACK_LEGACY, "orthogonalised_to": "refusal v2-primary per-layer + Huihui r at the acting index",
         "elicit_sha256": hashlib.sha256(pathlib.Path(out / "elicit.sha256").read_bytes()).hexdigest()[:16]
         if (out / "elicit.sha256").exists() else "n/a",

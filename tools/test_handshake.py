@@ -10,6 +10,15 @@ from serve.handshake import armed_geometry_problem, parse_ident  # noqa: E402
 
 CV_ARGS = ["--control-vector-scaled", "/vec.gguf:1.0", "--control-vector-layer-range", "1", "32"]
 
+# the standing's own shape: persona add (table 1) + refusal ablation (table 2) in one boot
+TWO_ARGS = ["--control-vector-scaled", "/persona.gguf:0.3", "--control-vector-layer-range", "8", "8",
+            "--cvec-mode", "add",
+            "--control-vector-scaled2", "/refusal.gguf:1.0", "--control-vector-layer-range2", "1", "47",
+            "--cvec-mode2", "project"]
+IDENT_TWO = {"v": 1, "engine": "strata", "layers": 48, "ctx": 262144,
+             "cvec": {"mode": "add", "first": 8, "last": 8, "steered": 1},
+             "cvec2": {"mode": "project", "first": 1, "last": 47, "steered": 47}, "caps": ["cvec"]}
+
 IDENT_OK = {"v": 1, "engine": "ds4", "version": "ds4-0.1", "ctx": 262144, "layers": 40,
             "cvec": {"mode": "project", "first": 1, "last": 32, "steered": 32}, "caps": ["cvec"]}
 
@@ -46,6 +55,26 @@ CASES = [
                                                      cvec_steered="32/40"), CV_ARGS, None),
     ("no ident, legacy path", engine_with(cvec="project:1-32", cvec_steered="32/40"), CV_ARGS, None),
     ("no ident, legacy garbled", engine_with(cvec="project:"), CV_ARGS, "cannot have armed"),
+    # ---- the second armed table: asks-vs-armed on the same contract, both wire formats
+    ("two tables match passes", engine_with(IDENT_TWO), TWO_ARGS, None),
+    ("two tables, second asked but armed none", engine_with({**IDENT_TWO, "cvec2": None}), TWO_ARGS,
+     "second control vector"),
+    ("two tables, second mode drift", engine_with({**IDENT_TWO, "cvec2": {**IDENT_TWO["cvec2"], "mode": "add"}}),
+     TWO_ARGS, "second table add:1-47"),
+    ("two tables, second range drift", engine_with({**IDENT_TWO, "cvec2": {**IDENT_TWO["cvec2"], "last": 40}}),
+     TWO_ARGS, "second table project:1-40"),
+    ("two tables, second runs past layers", engine_with({**IDENT_TWO, "cvec2": {**IDENT_TWO["cvec2"], "last": 999}}),
+     ["--control-vector-scaled", "/p.gguf:0.3", "--control-vector-layer-range2", "1", "999",
+      "--cvec-mode2", "project", "--control-vector-scaled2", "/r.gguf:1.0", "--cvec-mode", "add"],
+     "past the model's 48 layers"),
+    ("two tables, second steers 0", engine_with({**IDENT_TWO, "cvec2": {**IDENT_TWO["cvec2"], "steered": 0}}),
+     TWO_ARGS, "inert"),
+    ("two tables, second not an object", engine_with({**IDENT_TWO, "cvec2": "project:1-47"}), TWO_ARGS, "malformed"),
+    ("second armed but not asked -> serve", engine_with(IDENT_TWO), CV_ARGS[:4] + ["--cvec-mode", "add"], None),
+    ("two tables, INFO wire format", engine_with(cvec="add:8-8+project:1-47", cvec_steered="1/48"), TWO_ARGS, None),
+    ("two tables, INFO second garbled", engine_with(cvec="add:8-8+project:", cvec_steered="1/48"), TWO_ARGS,
+     "cannot have armed"),
+    ("INFO with a single table still parses", engine_with(cvec="project:1-32", cvec_steered="32/40"), CV_ARGS, None),
 ]
 
 fails = 0

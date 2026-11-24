@@ -132,6 +132,9 @@ def _armed_geometry2(ident: dict, info: dict, structured: bool):
         cv2 = ident.get("cvec2")
         if cv2 is None:
             return None
+        if not isinstance(cv2, dict):
+            raise _Garbled(f"the engine's IDENT handshake reports a malformed second control vector "
+                           f"(cvec2 is {type(cv2).__name__}, not an object)")
         try:
             mode, first, last, steered = cv2["mode"], cv2["first"], cv2["last"], cv2["steered"]
         except KeyError as e:
@@ -213,7 +216,10 @@ def armed_geometry_problem(engine, args: list) -> str | None:
 
     # ---- the optional SECOND armed table: checked with the same asks-vs-armed contract
     want2 = _asked_geometry2(args)
-    armed2 = _armed_geometry2(ident, getattr(engine, "info", {}) or {}, structured)
+    try:
+        armed2 = _armed_geometry2(ident, getattr(engine, "info", {}) or {}, structured)
+    except _Garbled as e:          # a malformed second-table report is a refusal with a reason, never a crash
+        return e.why
     if want2 is None:
         if armed2 is not None:
             print(f"[strata] WARNING: the engine armed a second control vector the config did not ask for "
@@ -233,4 +239,8 @@ def armed_geometry_problem(engine, args: list) -> str | None:
     if layers is not None and last2 >= layers:
         return (f"the second control-vector range {mode2}:{first2}-{last2} runs past the model's {layers} layers; "
                 f"refusing a misconfigured range")
+    steered2 = armed2[3]
+    if steered2 is not None and steered2 <= 0:
+        return ("the second control vector loaded but steers 0 layers - it is inert; "
+                "refusing to serve steering that does nothing")
     return None

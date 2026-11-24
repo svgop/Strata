@@ -1,4 +1,15 @@
 // src/kernels/cuda/cvec.cu - see include/strata/kernels/cvec.hpp.
+//
+// DECLARED ISOLATION (two-table cvec, 2026-11-24): the CUDA side carries an optional SECOND armed
+// table (cvec_upload2 / cvec_tables2 / steered2_at; the persona-add + refusal-ablation standing).
+// This SYCL port implements the FIRST table only: this backend's program/generate.cpp does not parse
+// the --control-vector-scaled2 / --cvec-mode2 / --control-vector-layer-range2 flags, so a two-table
+// config is refused at argument parse (unknown flag) - a loud refusal, never a silent mis-steer.
+// The shared header still applies: covers() is the union, and a single-table boot is unaffected.
+// Porting the second table means mirroring cuda/cvec.cu's DevTables dir2/s2, upload_here,
+// release_devices and the two-launch cvec_apply AND the loader's second-table block in
+// program/generate.cpp, then running this backend's cvec_parity. Do not stub it: a stub that
+// ignores table 2 would serve a boot that believes it ablates refusal and does not.
 #define DPCT_PROFILING_ENABLED
 #include <sycl/sycl.hpp>
 #include <dpct/dpct.hpp>
