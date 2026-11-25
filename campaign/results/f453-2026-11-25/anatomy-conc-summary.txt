@@ -1,0 +1,97 @@
+engine pid 1061382 | serve thread tid 1061382 ('strata') | capture 26261 ms
+engine threads by API rows: 1061382('strata'):245126, 1061569('strata'):145, 1064545('?'):144, 1064332('?'):144, 1061566('strata'):133, 1061568('strata'):131
+
+== serve thread: CUDA API calls inside the capture (us = microseconds)
+API                                  calls  total ms  mean us  p50 us  p99 us % span
+cudaMemcpyAsync_v3020                50743    1143.7     22.5     2.6    44.8   4.36
+cudaGraphLaunch_v10000                7206    1061.8    147.4    27.3   922.8   4.04
+cudaStreamSynchronize_v3020          17599     897.7     51.0     0.6   518.4   3.42
+cudaEventSynchronize_v3020            1674     410.1    245.0     1.8  3487.4   1.56
+cudaLaunchKernel_v7000               42322      89.3      2.1     1.9    18.2   0.34
+cudaLaunchHostFunc_v10000            22317      47.4      2.1     1.9     6.1   0.18
+cudaDeviceSynchronize_v3020            655      40.3     61.5     2.3  3365.5   0.15
+cudaGraphInstantiate_v12000             18      31.8   1764.1   241.4  6280.0   0.12
+cudaMemcpyBatchAsync_v13000           5537      25.5      4.6     3.9    12.6   0.10
+cudaEventRecord_v3020                20154      12.2      0.6     0.3     5.8   0.05
+cudaStreamWaitEvent_v3020            18110       8.0      0.4     0.4     1.1   0.03
+cudaMemcpy_v3020                       662       7.6     11.5     5.9    34.3   0.03
+cudaGraphUpload_v10000                   6       5.5    909.0   949.8  1016.6   0.02
+cudaLaunchKernelExC_v11060            1812       5.1      2.8     2.0     3.8   0.02
+ALL                                 245126    3814.2
+
+== graph executions by graphId (GPU wall per execution; host = the cudaGraphLaunch call that submitted it)
+graphId stream  execs GPU total ms wall p50 us wall mean us host p50 us host mean us
+    230    101    672      15221.0   22140371    22650311   556808.0    532888.4
+    317     31    535      11947.1   21862863    22331043   556828.0    536322.3
+    416     31    162       3717.9   22980980    22949796   593998.0    579618.2
+     57      0     18        482.5   24518030    26803900        nan         nan
+    233    101    336        416.8    1243519     1240460    63400.0     67137.9
+    236    101    336        400.9    1214687     1193143    73340.0    142266.6
+    323     31    266        386.6    1455583     1453439    75869.0     77528.1
+    320     31    269        357.2    1421855     1327786    72999.0    175235.8
+      1      0     35        317.3    9136666     9065933        nan         nan
+    224     24    472        259.4     555200      549593    19020.0     26566.5
+    239     26    475        248.6     530527      523415    17850.0     23811.9
+    209     22    472        238.0     510879      504268    18410.0     30961.7
+
+== GPU timeline (the engine's activities): busy 21534 ms of 26261 ms = 82.0% | idle 4727 ms
+    idle gap   count  total ms % of idle
+      0-1 us   27823       8.9       0.2
+      1-5 us    2972      12.3       0.3
+     5-20 us    3199      21.5       0.5
+    20-50 us     662      21.5       0.5
+   50-100 us    1251     103.1       2.2
+  100-300 us    1299     179.8       3.8
+ 300-1000 us     539     310.8       6.6
+1000-3000 us     334     582.8      12.3
+3000-1000000000000000000 us     255    3440.5      72.8
+
+== rounds keyed on graph230: 671 rounds | period ms p10 23.36 p50 27.12 p90 35.68 max 1692.32
+steady rounds (period <= 1.25 x p50): 573 | idle per round ms p50 0.74 p90 3.70 | 5.0% of their time idle
+long rounds: 98 | period ms p50 36.38 max 1692.32 | 8987 ms of the capture, 3044 ms of it idle (33.9%)
+
+== idle gaps >= 100 us: 2427 gaps, 4514 ms (95.5% of all idle)
+-- in steady rounds: 1007 gaps, 738 ms
+   GPU activity before -> after the gap (ms):
+      ?                          -> graph317                     324.9
+      memcpy                     -> memcpy                       141.0
+      memcpy                     -> graph317                      96.6
+      ?                          -> graph416                      68.8
+   serve-thread API time inside the gaps (ms; the rest is host code outside CUDA):
+      cudaGraphLaunch_v10000                         302.9   41.0%
+      cudaMemcpy_v3020                                 1.7    0.2%
+      cudaEventSynchronize_v3020                       1.1    0.1%
+      cudaStreamSynchronize_v3020                      0.7    0.1%
+      cudaEventRecord_v3020                            0.7    0.1%
+   what was on the serve thread when the GPU resumed (ms of gap):
+      (no API call on the serve thread: host code)                   396.5
+      cudaStreamSynchronize_v3020                                    175.4
+      cudaGraphLaunch_v10000                                         141.8
+      cudaEventRecord_v3020                                           22.5
+-- in long rounds: 1162 gaps, 2937 ms
+   GPU activity before -> after the gap (ms):
+      memcpy                     -> memcpy                      1342.3
+      ?                          -> memcpy                       423.0
+      kernel                     -> memcpy                       290.1
+      memcpy                     -> graph317                     198.5
+   serve-thread API time inside the gaps (ms; the rest is host code outside CUDA):
+      cudaGraphLaunch_v10000                          84.3    2.9%
+      cudaMemcpyAsync_v3020                           56.4    1.9%
+      cudaGraphInstantiate_v12000                     31.8    1.1%
+      cudaLaunchKernel_v7000                          11.2    0.4%
+      cudaGraphUpload_v10000                           5.5    0.2%
+   what was on the serve thread when the GPU resumed (ms of gap):
+      cudaMemcpyAsync_v3020                                         1721.0
+      cudaMemcpy_v3020                                               411.4
+      cudaStreamSynchronize_v3020                                    300.1
+      cudaGraphLaunch_v10000                                         244.3
+
+== the 8 longest idle gaps
+    46.84 ms at + 710.977 s [edge] | kernel -> memcpy | emcpyAsync_v3020 0.04, eviceSynchronize_v3020 0.02, eviceSynchronize_v3020 0.01
+    44.77 ms at + 101.567 s [edge] | kernel -> memcpy | emcpyAsync_v3020 0.04, eviceSynchronize_v3020 0.01, eviceSynchronize_v3020 0.01
+    44.27 ms at +7684.794 s [long] | memcpy -> memcpy | emGetInfo_v3020 0.11, emcpyAsync_v3020 0.04, eviceSynchronize_v3020 0.03
+    44.09 ms at + 942.506 s [edge] | kernel -> memcpy | emcpyAsync_v3020 0.04, eviceSynchronize_v3020 0.02, eviceSynchronize_v3020 0.01
+    43.94 ms at +1180.578 s [edge] | kernel -> memcpy | emcpyAsync_v3020 0.04, eviceSynchronize_v3020 0.03, eviceSynchronize_v3020 0.01
+    43.87 ms at + 305.548 s [edge] | kernel -> memcpy | emcpyAsync_v3020 0.04, eviceSynchronize_v3020 0.02, eviceSynchronize_v3020 0.01
+    41.99 ms at +6075.291 s [long] | ? -> memcpy | emcpyAsync_v3020 0.03, eviceSynchronize_v3020 0.02
+    41.72 ms at +8392.844 s [long] | memcpy -> memcpy | emcpyAsync_v3020 0.04, eviceSynchronize_v3020 0.01, eviceSynchronize_v3020 0.00

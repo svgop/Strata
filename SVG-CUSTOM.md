@@ -13937,3 +13937,143 @@ learned profile at exit, so the stop after "re-pin VERIFIED" wrote a fresh traff
 re-pin must run after the final engine stop, or the restore boot must run with the save disabled.
 
 Tracker: solo 225.5 banked (3 ON boots x 3 legs; the previous bank 220.6); conc as a note row (the unpinned box), not a point.
+
+**OPERATOR RULING on the escalation item (2026-11-25 01:50, verbatim): "Dont roll back, rather, seek to recover and improve
+and discover major breakthroughs."**  F-452 stands adopted.  The quality instrument is still owed - and a correction to this
+entry's own wording: "the >= 534q gate" names a SUITE SIZE, not an instrument.  Every MMLU file under `campaign/results/`
+(including the three named `*-full`) is the same 70-question validation split; no larger suite has ever been run on this
+engine.  F-453 builds it.
+
+## F-453 — 2026-11-25 01:50–03:40: RECALIBRATION UNDER THE "RECOVER, IMPROVE, DISCOVER" RULING — two maps rebuilt (the solo window is launch-bound; conc loses its time in slow rounds), one retraction, two falsifications, six instruments, no adoption
+
+Scope: the operator's ruling above (F-452 stands; nothing rolled back).  Work was RECOVER (the quality instrument, the conc
+lane), IMPROVE (priced levers), DISCOVER (structure).  No engine change, no candidate binary, no adoption.  Every number
+below is in `campaign/results/f453-2026-11-25/`; profiler captures in `Custom-data/profiles/2026-11-25-f453/`.
+
+### 0. Re-bank of the standing (F-452 state), single boots - reads, not banks
+Boot A (01:58, 3 measured legs after a discard): **M1 232.5** (232.1/232.6/232.8), pair 198.3, **conc 269.1**
+(266.8/285.3/255.3).  Boot B (03:25, 2 legs): M1 225.3 (230.5/220.1), pair 210.7, conc 282.5 (278.6/286.3).  M1 is above
+the 225.5 bank on both boots: tracker row `single`, not a bank.  Conc reproduces F-452's own note row (270.8 on the
+unpinned box) - the box state, not a regression; no point.
+
+### 1. RECOVER quality - the instrument that did not exist
+`campaign/mmlu-pro-gate.py <floor> <label> [--suite N]`: `--suite 70` (default) is the unchanged validation split;
+`--suite N>70` is a fixed stratified sample of the 12,032-question test split (14 categories, proportional allocation by
+largest remainder, one seeded generator consumed in sorted-category order), asked in **category round-robin order so
+every prefix of a run is balanced**, with per-question lines, 3 transport retries (failures excluded, never scored
+wrong), and a JSON carrying n, seed, order, sigma and the ids.  Verified: deterministic, unique, per-category counts
+unchanged, first 70 = 5 per category.  At N = 1500 the 1-sigma is 0.60 points.
+- A first 1500q run (02:07) asked the suite in DATASET order (the test split is stored by category): stopped at 215
+  answered (79.0% at the 200 mark) to free the GPU - a math-heavy prefix, **not a reading**
+  (`mmlu-stand-1500.PARTIAL-dataset-order.out`).  The round-robin order closes that defect.
+- **The full run was started at 03:29 on a fresh standing boot (discard leg first) in a self-stopping job.**  RESULT:
+  appended below by the job's collector; until then the escalation item is OPEN.
+
+### 2. RECOVER conc - the pin interleave is DROPPED, with reason
+The proposed `STRATA_ENGINE_CPUS` interleave was a re-purchase of three banked falsifications (F-285b whole-process
+taskset -20%; F-295 pool cores -13/-20%; F-363 aux CPUs -7.7/-8.2%): dropped without a leg.  `docs/PERFORMANCE-SETUP.md`
+corrected: the engine is never "unpinned" (its fallback plan self-pins host + 15 workers + aux), the 11-20 22:03
+`isolcpus` loss is dated, and **isolation was never A/B'd on this box** - restoring it is the operator's boot decision.
+
+### 3. RETRACTION (law 8): "the batch graph cache thrashes on the conc lane"
+Withdrawn at 02:40, cause on the record in `notes.md`.  `logs/custom-iq3_s.log` is appended across boots (40 engine
+starts when read; 48 now): every capture statistic of the 02:25 section was a whole-file total over 40 processes read as
+one boot.  The live boot: **30 captures over 28 layouts**, cap never reached, no VRAM eviction ever printed.  One capture
+costs what the log says (median +11.2 ms on its round, n = 88); twelve per boot are <= 0.3% of cohort window time - an
+admission-latency tax.  The canonical row order, the cap knob and a capture telemetry build were NOT RUN (law 15).  Re-open
+clause: a live layout re-captured inside one engine process under rotating multi-tenant traffic.  The same misread
+produced a "mystery client" (six-in-flight rounds during the gate): earlier boots in the same file; a 70 s socket sample
+with process attribution found one client, the gate.  **Law 9 addition: anchor every read of that log at its LAST
+`engine started:` line.**  A second footgun, same hour: `pkill -f` with the relaunch text in the same command line killed
+my own shell - clients are stopped by pid or job, never by pattern.
+
+### 4. DISCOVER - the solo window is LAUNCH-BOUND, not bandwidth-bound (the recalibrated map)
+Two read-only audits of the F-452 node trace (293 warm windows): `nsys-inwindow-census.md` (448 lines) and
+`stage-bandwidth-audit.md` (157 lines; bytes from the pack manifest and the GGUF header through their owning readers).
+- Period 12.163 ms (median 10.772) = window-graph wall 10.203 + drafter phase 1.956 + boundary 0.022 median (0.414
+  mean: 28 of 293 windows take >= 1.4 ms, median 3.56).  Implied 220 tok/s.
+- **The graph is not idle-bound**: 0.225 ms idle inside it (2.4%); kernels cover 97.6%.  F-452 took the last of the idle.
+- **The per-kernel-overhead thesis is dead on measurement**: 60% of kernels are <= 4 us and carry 1.88 of 11.80 ms.
+- **Spin/handshake kernels are 2.163 ms per window (18.3% of kernel time)**: `dm_wait_combine` 42.6/window (1.10 ms),
+  `wait_flag_ge_planned` 96/window (0.63 ms) - two host round trips per layer.  By T: 1.31 ms (T2) to 5.72 (T6).  The
+  engine's own clock names the host work they wait for: **CPU experts on the serve thread, 1.4-4.1 ms per window**
+  (`strata decode timing`: "per-layer host [plan actq jobs CPU]").
+- **Bytes**: 4.36 GB of fixed weights per window + 1.2-2.0 GB routed; a T=2 window moves 5.77-6.51 GB in 8.73 ms =
+  **660-746 GB/s**, against 1.64 TB/s demonstrated by the same matvec kernel class (the LM head).  Headroom at 1.3 TB/s
+  per T=2 window: QSA + projections 0.90 ms, GDN + projections 0.88, shared expert 0.73, router/plan 0.58,
+  hyper-connections 0.57 - 3.66 of 8.73 ms.  None of the three largest is HBM-bound (GDN 796 GB/s, QSA 393, shared
+  expert 177): too few blocks (`gdn_ab_multi_kernel` 48, `decode_attn_i8_split_kernel` 80, `resolve_kernel` 1, the
+  shared expert's six serial launches per layer for 3 MB), chains of 0.7-5 us launches, and the GDN attention gate matvec
+  starting **10.9 us after its input is ready** (2,932 instances).
+- The hyper-connection contention hypothesis is REFUTED (0 of 56,834 `gr_*_v3_kernel` instances overlap a side-stream
+  kernel).  Correction: a routed expert is 2,046,400 B mean, not 1.4 MB.
+- **Drafter**: in **82 of 293 warm windows the drafter ran all five steps and the window took T=2** - four steps computed
+  and discarded, 0.29 ms per window on average (+2.4% M1 as a composition piece).  The cut is the W1 controller's (the
+  keep rule is off in the standing; `STRATA_SPEC_LOGISTIC` is moot under `STRATA_SPEC_COUPLED=1` - the code keeps the bare
+  prior for coupled drafts - and "verify confident chains deeper" was answered neutral by W1's own adoption battery).
+  The adapt round shows as 73 of 293 drafter phases with a 752 us host gap and a 25.85 MiB residency-table H2D.
+
+**The lever this opens (law 6: shape before squeezing): launch shape and order, in bitwise pieces, each behind an env.**
+GDN: the gate matvec after its producer, not after `gdn_ab` (0.11-0.17 ms per T=2 window; the falsifier is one read of the
+capture order); `gdn_ab_multi_kernel`'s 10 loads in flight (up to 0.22 ms).  Shared expert: gate + up in one launch (the
+PAIR form exists), the gate scalar as a 513th row of the router GEMM, the sigmoid scale inside the down matvec (up to 0.33
+ms).  Sum ~0.7 ms of 8.73 = **+8% M1 with no arithmetic touched**; with the QSA split/fusion work (parity harness)
+1.3-1.7 ms = **+15-20%**.  Priced, not built.
+
+### 5. DISCOVER - conc: a near-optimal steady round and a quarter of slow rounds
+First serve-mode anatomy of the concurrent lane (instruments below; capture = two 6-conc runs, 26.26 s).
+- **GPU busy 82.0%; idle 4.73 s, of which 255 gaps >= 3 ms hold 3.44 s (72.8%).**  Steady rounds (573 of 671): period
+  ~23 ms, the two cohort windows CONCURRENT (20-22 ms each, A launched ~0.5 ms after B), then two **commit graphs of 1.21
+  and 1.42 ms** and six drafter graphs (~0.5 ms), then **0.74 ms idle (median) = 5.0%**.  Long rounds (98, median 36.4
+  ms) hold 2.94 s of idle: GPU activity before and after is memcpy -> memcpy, 93.5% of it with the serve thread outside
+  any CUDA call.
+- Un-instrumented confirmation from the engine's own per-round line: **812 cohort rounds, 202 (25%) at 30-40 ms against
+  22-26**, in dense stretches (rounds 112-308 of one run, 660-812 of the next) - a phase property, not isolated events.
+- **The window graph's host submission is 0.557 ms per launch; only the first cohort's is exposed** (0.42 ms per round
+  inside idle gaps).  A device-launch twin for the batch graphs is priced at **+1.2% conc: NOT BUILT** (the audit's
+  falsifier lands at its threshold).  New number for the queue: **the two commit graphs cost 2.6 ms of GPU time per round,
+  serialized after the windows** - a tenth of the round, never examined.
+- **Falsified: the serve thread's share of the expert drain.**  `--no-host-worker` (the in-tree R2.2 A/B arm, never before
+  measured here; the banner lost its "(draining too)") against a control boot six minutes later: **conc 277.8 (270.7/284.9)
+  vs 282.5 (278.6/286.3) = -1.7%, inside the band.**  The slow rounds are not the host thread's drain.  Its M1 column read
+  236.0 (233.2/238.8) vs 225.3 (230.5/220.1): a rumor under law 1 - ledger row only, interleave owed.
+- The perf host profile of the serve thread in conc (5K samples): `Verifier::batch_poll` 58% of on-CPU time (the poll
+  loop: `drive_pool_multi` 27.7%, `cudaGetDevice` 24.5%, `ExpertPool::drain` 19.9%); `conversation_checkpoint_save` +
+  `conversation_snapshot_save` 5.6-11%; `MtpDrafter::draft_finish` 3.0%; `FileExpertSource::commit_exchanges` 2.0%.
+  A `/proc` sampler (5,078 samples) read the thread R 96.8%, futex 2.6%, D 0.6% - but R is "runnable", and under nsys
+  the same thread yielded **zero perf samples inside 194 stalls totalling 3.2 s**: during a stall the serve thread makes no
+  progress, whether descheduled or waiting.  Not resolved tonight.  **Next falsifier**: per-round hit rate and CPU-expert
+  time against round time (a default-off telemetry env), then a node-level trace of one slow stretch.
+- Correction of my own arithmetic: "the GPU idles ~60% of the conc cycle" was wrong (it assumed twelve rows at 65%
+  acceptance every round; rounds average ~9 rows).
+
+### 6. Instruments (all reusable; each trap below cost one attempt and is written into its script)
+- `campaign/nsys-serve-anatomy.sh <label> [conc|m1] [runs] [perf]` + `nsys-serve-summary.py` + `nsys-perf-stalls.py`:
+  the standing server inside an nsys session with collection OFF, warmed by the battery protocol un-instrumented, a
+  lane-only run collected.  Traps: the session model (`launch` takes session and trace options; `--output`, `--export`
+  and the samplers belong to `start`); `systemd-run --user --scope` cannot open its bus under nsys's injection
+  (STRATA_SWAP_GUARD=0 for the capture - placement unchanged on this box); GRAPH_TRACE keeps pre-capture history on the
+  same clock (window every table to the API span); **nsys's CPU sampler and scheduler trace attach only to processes
+  started after collection begins** - zero samples for an already-running engine; `perf --clockid realtime` is refused on
+  this box ("wrong clockid (0)": cpu/cycles/P is AMD precise sampling) - sample times are CLOCK_MONOTONIC and the reader
+  proves the alignment before attributing.
+- `campaign/perf-serve-anatomy.sh`, `campaign/serve-wait-sample.py`: the host side (what the thread runs; where it blocks).
+- `campaign/battery-lib.sh`: **F-271 as structure completed** - `pin_learned_profile()` runs at the end of
+  `cleanup_engine`, after the last engine is down, and verifies the copy (the engine saves the learned profile at EXIT;
+  a pin written while an engine is up is undone by its stop - the 11-20 incident, again on 11-24).  ONE pin file
+  (`STRATA_PROFILE_PIN`, default `data/expert-profile-gold.bin`, the file three harnesses already named); the 11-24
+  procedure's `pinned-1357` is retired as the pin.  Proven live tonight: "F-271 re-pin VERIFIED" after every stop,
+  "deferred" while the gate's engine ran.  `campaign/env-ladder.sh` no longer re-pins under a running restore boot.
+- Layout: profiler captures are bulk and live in `Custom-data/profiles/` (AGENTS.md, workspace law); the F-452 node
+  traces were in `/tmp` and are moved there.
+
+### 7. Priced queue (law 15; nothing below is adopted)
+A. Solo, bitwise launch shape/order: ~0.7 ms/window = +8%; with QSA work +15-20%.  First step: one read of the GDN capture
+   order (the gate matvec's 10.9 us late start).  B. Solo drafter composition: step cap +2.4%, the adapt round, the
+   round-graph ordering.  C. Conc slow rounds (25% of rounds, +8-12 ms each): mechanism open after two falsifications;
+   commit-graph node anatomy (2.6 ms/round).  D. `--no-host-worker` M1 rumor: ABAB 2v2.  E. Harness: `config-abab.py`'s
+   docstring names a third pin file; the per-round `cohorts: round` fprintf belongs behind the telemetry env;
+   `harvest/records/windows.npy` is still absent for the trainer.
+
+**State at commit:** the gate's engine is UP (self-stopping job; it re-pins on stop); the pin before it was
+`expert-profile-gold.bin`, verified; root-owned strays chowned to `svg` except the two files the running gate writes.

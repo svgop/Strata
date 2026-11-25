@@ -64,6 +64,7 @@ cleanup_engine() {
     [ -z "$(port_pid)" ] && break
     sleep 1
   done
+  pin_learned_profile
 }
 
 # F-406 THE BATTERY'S LAST DRAIN (2026-11-19): a battery's final exit drain — the parked synthetic
@@ -81,6 +82,38 @@ cleanup_slots() {
   esac
 }
 trap 'cleanup_slots' EXIT
+
+# F-271 as STRUCTURE, completed 2026-11-25 (F-453): the engine saves the learned profile when it EXITS, so a pin
+# copied while an engine is up is overwritten by that engine's own exit - the 2026-11-20 incident, then again on
+# 11-24, when the env ladder's restore boot undid the ladder's own just-verified re-pin.  The pin therefore belongs
+# to the one function every battery runs once its last engine is down.  ONE pin file for every harness
+# (STRATA_PROFILE_PIN; the default is the file three harnesses already named).  The standing recipe does not load
+# the learned profile; a recipe that does would otherwise boot on the previous battery's synthetic traffic.
+pin_learned_profile() {
+  local pin="${STRATA_PROFILE_PIN:-$REPO/data/expert-profile-gold.bin}" dst="$REPO/data/expert-profile-learned.bin"
+  battery_dryrun && { echo "pin_learned_profile: dry-run — would restore $dst from $pin"; return 0; }
+  [ -f "$pin" ] || { echo "pin_learned_profile: no pin file at $pin - the learned profile stays as the engine saved it"; return 0; }
+  [ -f "$dst" ] || { echo "pin_learned_profile: no learned profile at $dst - nothing to pin"; return 0; }
+  local t pid busy
+  for t in $(seq 1 30); do          # the exit save must be finished: wait until no engine of this repo is running
+    busy=0
+    for pid in $(pgrep -x strata); do
+      case "$(readlink "/proc/$pid/exe" 2>/dev/null)" in "$REPO"/engine/*|"$REPO"/build-fresh/*) busy=1 ;; esac
+    done
+    [ "$busy" = 0 ] && break
+    sleep 1
+  done
+  if [ "$busy" = 1 ]; then
+    echo "pin_learned_profile: an engine of this repo is still running - the pin is deferred to its stop"
+    return 1
+  fi
+  if cp -f "$pin" "$dst" && cmp -s "$pin" "$dst"; then
+    echo "F-271 re-pin VERIFIED (learned == $(basename "$pin"), after the engine stop)"
+  else
+    echo "F-271 RE-PIN FAILED - pin it by hand before the next boot"
+    return 1
+  fi
+}
 
 wait_health() {  # wait_health [tries-of-3s] — any /health body means the API answers
   local t

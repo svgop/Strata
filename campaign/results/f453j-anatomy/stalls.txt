@@ -1,0 +1,27 @@
+clock alignment: 0% of sampled CUDA-API leaves lie inside their own API interval (test 1; below 80% the two clocks do not agree and nothing below is attributable)
+engine pid 1075573 | capture 25838 ms | perf samples in the capture: 22384 (866/s on the serve thread)
+stalls >= 3 ms: 194, 3232 ms (the serve thread's host-CPU time inside them is sample_count / 866 per second)
+
+== stalls 3-10 ms: 74 stalls, 307 ms | serve-thread host-CPU time 0 ms (0% of the stall time on a CPU, the rest blocked)
+    44.3%     0.0 ms  strata::core::Verifier::batch_poll(void                                [lambda]
+          chain (root -> leaf, engine frames): main <- main::{lambda()#69}::operator()() const <- strata::core::Verifier::batch_poll(void <- (anonymous namespace)::drive_pool_multi(void*, <- strata::core::expert_pool_dispatch_multi(strat <- strata::kernels::cpu::ExpertPool::run_split_mu <- strata::kernels::cpu::ExpertPool::run_phase(in
+    43.5%     0.0 ms  [unknown]                                                              []
+          chain (root -> leaf, engine frames): [unknown]
+     4.2%     0.0 ms  strata::core::MtpDrafter::draft_finish(std::__cxx11::basic_string<char [lambda]
+          chain (root -> leaf, engine frames): main <- main::{lambda()#69}::operator()() const <- main::{lambda()#69}::operator()() const::{lamb <- strata::core::MtpDrafter::draft_finish(std::__
+     3.6%     0.0 ms  strata::core::FileExpertSource::commit_exchanges()                     [lambda]
+          chain (root -> leaf, engine frames): main <- main::{lambda()#69}::operator()() const <- main::{lambda(bool)#3}::operator()(bool) const <- strata::core::FileExpertSource::commit_exchang
+     1.0%     0.0 ms  pthread_getspecific@@GLIBC_2.34                                        []
+          chain (root -> leaf, engine frames): 
+
+== stalls 10-30 ms: 79 stalls, 1388 ms | serve-thread host-CPU time 0 ms (0% of the stall time on a CPU, the rest blocked)
+
+== stalls 30+ ms: 41 stalls, 1538 ms | serve-thread host-CPU time 0 ms (0% of the stall time on a CPU, the rest blocked)
+    37.2%     0.0 ms  strata::core::Verifier::batch_poll(void                                [lambda]
+    13.9%     0.0 ms  strata::core::conversation_snapshot_save(strata::core::SavedConversati [lambda]
+          chain (root -> leaf, engine frames): main <- main::{lambda(unsigned long)#3}::operator()(un <- main::{lambda(main::ParkSource const&, unsigne <- strata::core::conversation_snapshot_save(strat <- strata::core::conversation_detail::copy_checkp <- strata::core::conversation_detail::copy_checkp <- std::vector<unsigned char, std::allocator<unsi
+     7.2%     0.0 ms  strata::core::Verifier::run(int, int const*, long, void                [lambda]
+          chain (root -> leaf, engine frames): main <- main::{lambda(long, long, std::__cxx11::basic_ <- strata::core::Verifier::run(int, int const*, l
+     6.7%     0.0 ms  std::vector<strata::core::ConversationCheckpoint, std::allocator<strat []
+          chain (root -> leaf, engine frames): main <- std::vector<strata::core::ConversationCheckpoi <- strata::core::ConversationCheckpoint::Conversa
+     6.3%     0.0 ms  [unknown]                                                              []

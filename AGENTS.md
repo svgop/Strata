@@ -296,6 +296,9 @@ No loose files, no ad-hoc scripts, no mystery artifacts. Everything has exactly 
     mtp/fixtures/      binary fixtures (taps, dumps, npy) — the ONE fixture home; gitignored everywhere else
     mtp/ckpts/         ALL training state: cycle-last.pt (rolling), cycle-best.pt, history.jsonl
     mtp/export/        trainer export output (dense_rt2.bin/.txt, staged atomically)
+    profiles/          profiler captures (nsys .nsys-rep/.sqlite, perf.data): bulk, never in git; the readable
+                       summaries read from them live with the F-entry's results/ directory. Written by
+                       campaign/nsys-serve-anatomy.sh and campaign/perf-serve-anatomy.sh (STRATA_PROFILE_HOME moves the home)
 
     Re-pathed 2026-11-24 (operator directive: DATA owns all bulk; no symlinks): every consumer names
     the DATA path directly and `/home/svg/LLM` holds no data tree. The layout follows the DATA estate's

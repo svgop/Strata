@@ -1,6 +1,6 @@
 {
  "type": "strata-lane-trend",
- "updated": "2026-11-24",
+ "updated": "2026-11-25",
  "unit": "tok/s",
  "engines": {
   "qwen": {
@@ -523,6 +523,17 @@
      "kinds": {
       "solo": "mean"
      }
+    },
+    {
+     "date": "2026-11-25",
+     "commit": "465b4b617",
+     "label": "F-453 single-boot 3-leg read of the F-452 standing (232.1/232.6/232.8; a second boot read 225.3) - above the 225.5 bank; not a bank",
+     "solo": 232.5,
+     "pair": null,
+     "conc": null,
+     "kinds": {
+      "solo": "single"
+     }
     }
    ],
    "prefill": [
@@ -648,6 +659,16 @@
      "date": "2026-11-24",
      "commit": "465b4b617",
      "label": "F-452 conc on an unpinned box (isolcpus empty): ON 273.8/263.8/274.7 = 270.8 vs same-window OFF 262.1; below the 11-09 bank 307.6 for the box state - not the change - no point"
+    },
+    {
+     "date": "2026-11-25",
+     "commit": "465b4b617",
+     "label": "F-453 conc on the unpinned box: 269.1 (boot A 3 legs) and 282.5 (boot B 2 legs) - the F-452 note row's box state reproduced to a point; --no-host-worker arm 277.8 = flat; no point"
+    },
+    {
+     "date": "2026-11-25",
+     "commit": "465b4b617",
+     "label": "F-453 --no-host-worker (the host thread out of the expert drain) single boot x 2 legs: M1 236.0 vs same-hour control 225.3 - a rumor under law 1; interleave owed; ledger only"
     }
    ]
   },

@@ -95,9 +95,8 @@ print(f"M3b canary: OFF {st.mean([b['M3b'] for b in offs]):.1f}% vs ON {st.mean(
 print("BAR: no lane below -4%:", "PASS" if ok else "FAIL", "- the targeted lane's +4% gain is judged on its mean above (law 2, both legs)")
 PY
 echo "CONFIG/ENV LADDER DONE — config restored, engine UP on the restored binary."
-# F-271 as STRUCTURE (the 2026-11-20 incident: the OWED line was printed and missed - the battery's
-# last boot saved a probe-traffic learned profile, the restore boot loaded it, the tier thrashed
-# 25k exchanges with 10k file reads on real traffic): the re-pin happens HERE, verified, every run.
-cp -f data/expert-profile-gold.bin data/expert-profile-learned.bin
-md5sum data/expert-profile-gold.bin data/expert-profile-learned.bin | awk '{print $1}' | uniq -c | grep -q "^      2" \
-  && echo "F-271 re-pin VERIFIED (learned == gold)" || echo "F-271 RE-PIN FAILED - pin it by hand before the next boot"
+# F-271 as STRUCTURE (the 2026-11-20 incident: the OWED line was printed and missed).  Since 2026-11-25 the re-pin
+# lives in battery-lib's cleanup_engine: the engine saves the learned profile at EXIT, so a pin written while this
+# restore boot is up was undone by its own stop (the 11-24 defect).  The next cleanup_engine - any battery's, or the
+# closeout's - prints "F-271 re-pin VERIFIED" once no engine is running; config-ladder and config-abab still pin
+# before every boot.

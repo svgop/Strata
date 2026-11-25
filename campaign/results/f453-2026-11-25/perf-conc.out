@@ -1,0 +1,54 @@
+F-271 re-pin VERIFIED (learned == expert-profile-gold.bin, after the engine stop)
+[02:59:18] launching the standing server (un-instrumented)
+[warm-discard] M1 single-stream : 225.2 t/s (2000 tok in 8.88s)
+[warm-discard] M2 pair          : 186.8 t/s aggregate (1800 tok in 9.63s)
+[warm-discard] M2 6-conc        : 287.2 t/s aggregate (3600 tok in 12.54s)
+[03:01:46] recording the serve thread (tid 1068443) for 16 s while conc runs
+[perf-anatomy conc run 1] 291.6 t/s (3600 tok in 12.35 s)  [lane elapsed 12.3 s]
+F-271 re-pin VERIFIED (learned == expert-profile-gold.bin, after the engine stop)
+[03:02:23] (sample count line not found) | flat profile: /home/svg/LLM/strata-custom-2/campaign/results/f453-perf/perf.serve.txt
+# To display the perf.data header info, please use --header/--header-only options.
+#
+#
+# Total Lost Samples: 0
+#
+# Samples: 5K of event 'cpu/cycles/P'
+# Event count (approx.): 65063093580
+#
+# Overhead  Shared Object            Symbol                                                                                                                                                   
+# ........  .......................  .........................................................................................................................................................
+#
+    17.17%  [vdso]                   [.] 0x0000000000000a89
+            |
+            ---0x7f5ac3634a89
+               |          
+               |--15.43%--0x7f5ac3244ad0
+               |          |          
+               |           --15.41%--cudaGetDevice
+               |                     strata::core::Verifier::batch_poll(void (*)(void*, float const*, int const*, long, long, float*, long), void*, std::__cxx11::basic_string<char, std::char
+               |                     main::{lambda()#69}::operator()() const
+               |                     main
+               |          
+                --1.01%--0x7f5a916a8ccb
+                          0x7f5a92744bb7
+                          0x7f5a92745007
+                          0x7f5a9168cd1c
+
+     5.13%  strata                   [.] ggml_vec_dot_iq4_nl_q8_0
+            |
+            ---ggml_vec_dot_iq4_nl_q8_0
+               |          
+                --4.89%--strata::kernels::cpu::native_down_rows(strata::kernels::cpu::NativeFmt const&, unsigned char const*, void const* const*, int, float* const*, int, int)
+                          strata::kernels::cpu::ExpertPool::drain(int, strata::kernels::cpu::ExpertScratch&, unsigned int)
+                          strata::kernels::cpu::ExpertPool::run_phase(int, int)
+                          strata::kernels::cpu::ExpertPool::run_split_multi_native(strata::kernels::cpu::NativeFmt const&, strata::kernels::cpu::ExpertJobMulti*, int)
+                          strata::core::expert_pool_dispatch_multi(strata::core::ExpertDispatch&, float const*, int const*, long, long, float*)
+                          (anonymous namespace)::drive_pool_multi(void*, float const*, int const*, long, long, float*, long)
+                          |          
+                           --4.55%--strata::core::Verifier::batch_poll(void (*)(void*, float const*, int const*, long, long, float*, long), void*, std::__cxx11::basic_string<char, std::char_
+                                     main::{lambda()#69}::operator()() const
+                                     main
+
+     4.92%  strata                   [.] ggml_vec_dot_iq3_xxs_q8_K
+            |
+            ---ggml_vec_dot_iq3_xxs_q8_K

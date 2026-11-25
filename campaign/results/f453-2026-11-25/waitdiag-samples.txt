@@ -1,0 +1,5 @@
+samples 5078 over 13.0 s (391/s) of tid 1079027 (/home/svg/LLM/strata-custom-2/engine/strata)
+state          syscall  samples  share  call site (user pc, addr2line)
+    R        (running)     4915   96.8%  
+    S            futex      132    2.6%  ??
+    D        (running)       31    0.6%  

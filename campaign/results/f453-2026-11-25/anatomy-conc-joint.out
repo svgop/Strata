@@ -1,0 +1,141 @@
+F-271 re-pin VERIFIED (learned == expert-profile-gold.bin, after the engine stop)
+[03:09:50] launching the standing server inside nsys session anat-f453j-1075279 (collection off)
+[warm-discard] M1 single-stream : 204.7 t/s (2000 tok in 9.77s)
+[warm-discard] M2 pair          : 189.5 t/s aggregate (1800 tok in 9.50s)
+[warm-discard] M2 6-conc        : 273.4 t/s aggregate (3600 tok in 13.17s)
+[03:12:05] collecting: conc x2 + perf on the serve thread
+[anatomy conc run 1] 279.3 t/s (3600 tok in 12.89 s)  [lane elapsed 12.9 s]
+[anatomy conc run 2] 278.0 t/s (3600 tok in 12.95 s)  [lane elapsed 25.8 s]
+Generating '/tmp/nsys-root/nsys-report-f8e8.qdstrm'
+[1/2] [0%                          ] anatomy.nsys-rep[1/2] [0%                          ] anatomy.nsys-rep[1/2] [1%                          ] anatomy.nsys-rep[1/2] [2%                          ] anatomy.nsys-rep[1/2] [5%                          ] anatomy.nsys-rep[1/2] [6%                          ] anatomy.nsys-rep[1/2] [7%                          ] anatomy.nsys-rep[1/2] [8%                          ] anatomy.nsys-rep[1/2] [9%                          ] anatomy.nsys-rep[1/2] [10%                         ] anatomy.nsys-rep[1/2] [11%                         ] anatomy.nsys-rep[1/2] [12%                         ] anatomy.nsys-rep[1/2] [13%                         ] anatomy.nsys-rep[1/2] [14%                         ] anatomy.nsys-rep[1/2] [=15%                        ] anatomy.nsys-rep[1/2] [=16%                        ] anatomy.nsys-rep[1/2] [=17%                        ] anatomy.nsys-rep[1/2] [==18%                       ] anatomy.nsys-rep[1/2] [==19%                       ] anatomy.nsys-rep[1/2] [==20%                       ] anatomy.nsys-rep[1/2] [=======================94%  ] anatomy.nsys-rep[1/2] [=======================96%  ] anatomy.nsys-rep[1/2] [========================98% ] anatomy.nsys-rep[1/2] [========================100%] anatomy.nsys-rep[1/2] [========================100%] anatomy.nsys-rep
+[2/2] [0%                          ] anatomy.sqlite[2/2] [1%                          ] anatomy.sqlite[2/2] [2%                          ] anatomy.sqlite[2/2] [3%                          ] anatomy.sqlite[2/2] [4%                          ] anatomy.sqlite[2/2] [5%                          ] anatomy.sqlite[2/2] [6%                          ] anatomy.sqlite[2/2] [7%                          ] anatomy.sqlite[2/2] [8%                          ] anatomy.sqlite[2/2] [9%                          ] anatomy.sqlite[2/2] [10%                         ] anatomy.sqlite[2/2] [11%                         ] anatomy.sqlite[2/2] [12%                         ] anatomy.sqlite[2/2] [13%                         ] anatomy.sqlite[2/2] [14%                         ] anatomy.sqlite[2/2] [=15%                        ] anatomy.sqlite[2/2] [=16%                        ] anatomy.sqlite[2/2] [=17%                        ] anatomy.sqlite[2/2] [==18%                       ] anatomy.sqlite[2/2] [==19%                       ] anatomy.sqlite[2/2] [==20%                       ] anatomy.sqlite[2/2] [==21%                       ] anatomy.sqlite[2/2] [===22%                      ] anatomy.sqlite[2/2] [===23%                      ] anatomy.sqlite[2/2] [===24%                      ] anatomy.sqlite[2/2] [====25%                     ] anatomy.sqlite[2/2] [====26%                     ] anatomy.sqlite[2/2] [====27%                     ] anatomy.sqlite[2/2] [====28%                     ] anatomy.sqlite[2/2] [=====29%                    ] anatomy.sqlite[2/2] [=====30%                    ] anatomy.sqlite[2/2] [=====31%                    ] anatomy.sqlite[2/2] [=====32%                    ] anatomy.sqlite[2/2] [======33%                   ] anatomy.sqlite[2/2] [======34%                   ] anatomy.sqlite[2/2] [======35%                   ] anatomy.sqlite[2/2] [=======36%                  ] anatomy.sqlite[2/2] [=======37%                  ] anatomy.sqlite[2/2] [=======38%                  ] anatomy.sqlite[2/2] [=======39%                  ] anatomy.sqlite[2/2] [========40%                 ] anatomy.sqlite[2/2] [========41%                 ] anatomy.sqlite[2/2] [========42%                 ] anatomy.sqlite[2/2] [=========43%                ] anatomy.sqlite[2/2] [=========44%                ] anatomy.sqlite[2/2] [=========45%                ] anatomy.sqlite[2/2] [=========46%                ] anatomy.sqlite[2/2] [==========47%               ] anatomy.sqlite[2/2] [==========48%               ] anatomy.sqlite[2/2] [==========49%               ] anatomy.sqlite[2/2] [===========50%              ] anatomy.sqlite[2/2] [===========51%              ] anatomy.sqlite[2/2] [===========52%              ] anatomy.sqlite[2/2] [===========53%              ] anatomy.sqlite[2/2] [============54%             ] anatomy.sqlite[2/2] [============55%             ] anatomy.sqlite[2/2] [============56%             ] anatomy.sqlite[2/2] [============57%             ] anatomy.sqlite[2/2] [=============58%            ] anatomy.sqlite[2/2] [=============59%            ] anatomy.sqlite[2/2] [=============60%            ] anatomy.sqlite[2/2] [==============61%           ] anatomy.sqlite[2/2] [==============62%           ] anatomy.sqlite[2/2] [==============63%           ] anatomy.sqlite[2/2] [==============64%           ] anatomy.sqlite[2/2] [===============65%          ] anatomy.sqlite[2/2] [===============66%          ] anatomy.sqlite[2/2] [===============67%          ] anatomy.sqlite[2/2] [================68%         ] anatomy.sqlite[2/2] [================69%         ] anatomy.sqlite[2/2] [================70%         ] anatomy.sqlite[2/2] [================71%         ] anatomy.sqlite[2/2] [=================72%        ] anatomy.sqlite[2/2] [=================73%        ] anatomy.sqlite[2/2] [=================74%        ] anatomy.sqlite[2/2] [==================75%       ] anatomy.sqlite[2/2] [==================76%       ] anatomy.sqlite[2/2] [==================77%       ] anatomy.sqlite[2/2] [==================78%       ] anatomy.sqlite[2/2] [===================79%      ] anatomy.sqlite[2/2] [===================80%      ] anatomy.sqlite[2/2] [===================81%      ] anatomy.sqlite[2/2] [===================82%      ] anatomy.sqlite[2/2] [====================83%     ] anatomy.sqlite[2/2] [====================84%     ] anatomy.sqlite[2/2] [====================85%     ] anatomy.sqlite[2/2] [=====================86%    ] anatomy.sqlite[2/2] [=====================87%    ] anatomy.sqlite[2/2] [=====================88%    ] anatomy.sqlite[2/2] [=====================89%    ] anatomy.sqlite[2/2] [======================90%   ] anatomy.sqlite[2/2] [======================91%   ] anatomy.sqlite[2/2] [======================92%   ] anatomy.sqlite[2/2] [=======================93%  ] anatomy.sqlite[2/2] [=======================94%  ] anatomy.sqlite[2/2] [=======================95%  ] anatomy.sqlite[2/2] [=======================96%  ] anatomy.sqlite[2/2] [========================97% ] anatomy.sqlite[2/2] [========================98% ] anatomy.sqlite[2/2] [========================99% ] anatomy.sqlite[2/2] [========================100%] anatomy.sqlite[2/2] [========================100%] anatomy.sqlite
+Generated:
+	/home/svg/LLM/strata-custom-2/campaign/results/f453j-anatomy/anatomy.nsys-rep
+	/home/svg/LLM/strata-custom-2/campaign/results/f453j-anatomy/anatomy.sqlite
+F-271 re-pin VERIFIED (learned == expert-profile-gold.bin, after the engine stop)
+[03:12:47] report /home/svg/LLM/strata-custom-2/campaign/results/f453j-anatomy/anatomy.nsys-rep (29M); sqlite 80M
+engine pid 1075573 | serve thread tid 1075573 ('strata') | capture 25838 ms
+engine threads by API rows: 1075573('strata'):325205, 1075725('strata'):301, 1075723('strata'):290, 1075724('strata'):284, 1075726('strata'):274, 1077584('?'):144
+
+== serve thread: CUDA API calls inside the capture (us = microseconds)
+API                                  calls  total ms  mean us  p50 us  p99 us % span
+cudaStreamSynchronize_v3020          17303    1611.7     93.1     0.6  4621.3   6.24
+cudaMemcpyAsync_v3020                65485    1241.5     19.0     2.5   118.4   4.80
+cudaGraphLaunch_v10000                7257     910.5    125.5    21.7   638.0   3.52
+cudaEventSynchronize_v3020            1642     258.3    157.3     1.4  3470.2   1.00
+cudaLaunchKernel_v7000               53853     127.2      2.4     2.2    11.4   0.49
+cudaLaunchHostFunc_v10000            20178      59.8      3.0     2.8     6.7   0.23
+cudaDeviceSynchronize_v3020            616      35.4     57.5     3.5  3382.6   0.14
+cudaMemcpyBatchAsync_v13000           4571      21.3      4.7     4.1    12.0   0.08
+cudaGraphInstantiate_v12000             12      19.5   1621.4   324.4  6112.7   0.08
+cudaEventRecord_v3020                38056      18.8      0.5     0.3     3.4   0.07
+cudaStreamWaitEvent_v3020            35386      15.4      0.4     0.3     1.2   0.06
+cuLaunchKernelEx                      3792       9.3      2.4     2.2     5.7   0.04
+cudaLaunchKernelExC_v11060            3232       7.5      2.3     2.2     5.2   0.03
+cudaMemcpy_v3020                       635       6.6     10.4     5.7    34.0   0.03
+ALL                                 325205    4372.1
+
+== graph executions by graphId (GPU wall per execution; host = the cudaGraphLaunch call that submitted it)
+graphId stream  execs GPU total ms wall p50 us wall mean us host p50 us host mean us
+    332     31    707      15566.0   21557772    22016933   447678.0    465702.2
+    227    101    528      11439.8   21241646    21666270   456138.0    463091.7
+    251    101    160       3506.0   21438603    21912577   419428.0    446869.5
+    338     31    354        516.6    1463870     1459427    81130.0     81454.9
+    335     31    353        477.4    1443167     1352468    80360.0    113368.4
+    230    101    263        328.4    1250367     1248599    75040.0     74751.9
+    233    101    265        319.6    1226783     1206038    76320.0    129240.7
+     57      0     12        305.2   23413932    25432904        nan         nan
+      1      0     32        276.6    8653077     8642652        nan         nan
+    221     24    449        242.9     546463      541077    17960.0     25596.9
+    206     22    467        241.6     517023      517283    16940.0     17836.3
+    236     26    465        241.2     525408      518750    17140.0     20879.4
+
+== GPU timeline (the engine's activities): busy 21607 ms of 25838 ms = 83.6% | idle 4231 ms
+    idle gap   count  total ms % of idle
+      0-1 us   47951      15.2       0.4
+      1-5 us    3028      12.3       0.3
+     5-20 us    3421      25.5       0.6
+    20-50 us     695      22.5       0.5
+   50-100 us    1298     107.9       2.6
+  100-300 us    1462     207.5       4.9
+ 300-1000 us     295     178.7       4.2
+1000-3000 us     199     390.0       9.2
+3000-1000000000000000000 us     194    3232.2      76.4
+
+== rounds keyed on graph332: 706 rounds | period ms p10 22.60 p50 25.62 p90 32.76 max 1170.28
+steady rounds (period <= 1.25 x p50): 626 | idle per round ms p50 0.25 p90 2.99 | 3.0% of their time idle
+long rounds: 80 | period ms p50 37.63 max 1170.28 | 9068 ms of the capture, 3280 ms of it idle (36.2%)
+
+== idle gaps >= 100 us: 2150 gaps, 4008 ms (94.7% of all idle)
+-- in steady rounds: 739 gaps, 426 ms
+   GPU activity before -> after the gap (ms):
+      ?                          -> graph332                     169.6
+      memcpy                     -> memcpy                        95.1
+      memcpy                     -> graph332                      73.9
+      ?                          -> memcpy                        56.6
+   serve-thread API time inside the gaps (ms; the rest is host code outside CUDA):
+      cudaGraphLaunch_v10000                         135.1   31.8%
+      cudaMemcpy_v3020                                 1.6    0.4%
+      cudaEventSynchronize_v3020                       0.7    0.2%
+      cudaStreamSynchronize_v3020                      0.6    0.1%
+      cudaEventRecord_v3020                            0.5    0.1%
+   what was on the serve thread when the GPU resumed (ms of gap):
+      (no API call on the serve thread: host code)                   191.4
+      cudaStreamSynchronize_v3020                                    143.8
+      cudaGraphLaunch_v10000                                          73.1
+      cudaEventRecord_v3020                                           14.8
+-- in long rounds: 1272 gaps, 3166 ms
+   GPU activity before -> after the gap (ms):
+      memcpy                     -> memcpy                      1254.7
+      ?                          -> memcpy                       417.5
+      kernel                     -> memcpy                       403.4
+      ?                          -> graph332                     252.0
+   serve-thread API time inside the gaps (ms; the rest is host code outside CUDA):
+      cudaMemcpyAsync_v3020                           71.5    2.3%
+      cudaGraphLaunch_v10000                          59.8    1.9%
+      cudaGraphInstantiate_v12000                     15.6    0.5%
+      cudaLaunchKernel_v7000                           6.7    0.2%
+      cudaStreamSynchronize_v3020                      6.0    0.2%
+   what was on the serve thread when the GPU resumed (ms of gap):
+      cudaMemcpyAsync_v3020                                         1854.1
+      cudaMemcpy_v3020                                               408.8
+      cudaGraphLaunch_v10000                                         320.4
+      (no API call on the serve thread: host code)                   320.0
+
+== the 8 longest idle gaps
+    59.11 ms at +   1.851 s [long] | ? -> graph332 | raphLaunch_v10000 0.75
+    42.58 ms at +  12.930 s [long] | memcpy -> memcpy | Unmap 0.12, emcpyAsync_v3020 0.05, emcpyAsync_v3020 0.04
+    39.64 ms at +   6.569 s [long] | kernel -> memcpy | emcpyAsync_v3020 0.05, eviceSynchronize_v3020 0.03, eviceSynchronize_v3020 0.01
+    39.48 ms at +   7.637 s [long] | memcpy -> memcpy | emcpyAsync_v3020 0.05, eviceSynchronize_v3020 0.01, eviceSynchronize_v3020 0.00
+    38.96 ms at +  19.835 s [long] | kernel -> memcpy | emcpyAsync_v3020 0.05, eviceSynchronize_v3020 0.04, eviceSynchronize_v3020 0.01
+    38.74 ms at +   8.211 s [long] | memcpy -> memcpy | emcpyAsync_v3020 0.04, eviceSynchronize_v3020 0.01, eviceSynchronize_v3020 0.00
+    38.73 ms at +   7.085 s [long] | memcpy -> memcpy | emcpyAsync_v3020 0.05, eviceSynchronize_v3020 0.01, eviceSynchronize_v3020 0.00
+    38.61 ms at +  13.178 s [long] | memcpy -> memcpy | emcpyAsync_v3020 0.04, eviceSynchronize_v3020 0.01, eviceSynchronize_v3020 0.00
+
+clock alignment: 0% of sampled CUDA-API leaves lie inside their own API interval (test 1; below 80% the two clocks do not agree and nothing below is attributable)
+engine pid 1075573 | capture 25838 ms | perf samples in the capture: 22384 (866/s on the serve thread)
+stalls >= 3 ms: 194, 3232 ms (the serve thread's host-CPU time inside them is sample_count / 866 per second)
+
+== stalls 3-10 ms: 74 stalls, 307 ms | serve-thread host-CPU time 0 ms (0% of the stall time on a CPU, the rest blocked)
+    44.3%     0.0 ms  strata::core::Verifier::batch_poll(void                                [lambda]
+          chain (root -> leaf, engine frames): main <- main::{lambda()#69}::operator()() const <- strata::core::Verifier::batch_poll(void <- (anonymous namespace)::drive_pool_multi(void*, <- strata::core::expert_pool_dispatch_multi(strat <- strata::kernels::cpu::ExpertPool::run_split_mu <- strata::kernels::cpu::ExpertPool::run_phase(in
+    43.5%     0.0 ms  [unknown]                                                              []
+          chain (root -> leaf, engine frames): [unknown]
+     4.2%     0.0 ms  strata::core::MtpDrafter::draft_finish(std::__cxx11::basic_string<char [lambda]
+          chain (root -> leaf, engine frames): main <- main::{lambda()#69}::operator()() const <- main::{lambda()#69}::operator()() const::{lamb <- strata::core::MtpDrafter::draft_finish(std::__
+     3.6%     0.0 ms  strata::core::FileExpertSource::commit_exchanges()                     [lambda]
+          chain (root -> leaf, engine frames): main <- main::{lambda()#69}::operator()() const <- main::{lambda(bool)#3}::operator()(bool) const <- strata::core::FileExpertSource::commit_exchang
+     1.0%     0.0 ms  pthread_getspecific@@GLIBC_2.34                                        []
+          chain (root -> leaf, engine frames): 
+
+== stalls 10-30 ms: 79 stalls, 1388 ms | serve-thread host-CPU time 0 ms (0% of the stall time on a CPU, the rest blocked)
+
+== stalls 30+ ms: 41 stalls, 1538 ms | serve-thread host-CPU time 0 ms (0% of the stall time on a CPU, the rest blocked)
+    37.2%     0.0 ms  strata::core::Verifier::batch_poll(void                                [lambda]
+    13.9%     0.0 ms  strata::core::conversation_snapshot_save(strata::core::SavedConversati [lambda]
+          chain (root -> leaf, engine frames): main <- main::{lambda(unsigned long)#3}::operator()(un <- main::{lambda(main::ParkSource const&, unsigne <- strata::core::conversation_snapshot_save(strat <- strata::core::conversation_detail::copy_checkp <- strata::core::conversation_detail::copy_checkp <- std::vector<unsigned char, std::allocator<unsi
+     7.2%     0.0 ms  strata::core::Verifier::run(int, int const*, long, void                [lambda]
+          chain (root -> leaf, engine frames): main <- main::{lambda(long, long, std::__cxx11::basic_ <- strata::core::Verifier::run(int, int const*, l
+     6.7%     0.0 ms  std::vector<strata::core::ConversationCheckpoint, std::allocator<strat []
+          chain (root -> leaf, engine frames): main <- std::vector<strata::core::ConversationCheckpoi <- strata::core::ConversationCheckpoint::Conversa
+     6.3%     0.0 ms  [unknown]                                                              []

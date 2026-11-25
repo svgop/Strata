@@ -1,0 +1,170 @@
+# To display the perf.data header info, please use --header/--header-only options.
+#
+#
+# Total Lost Samples: 0
+#
+# Samples: 5K of event 'cpu/cycles/P'
+# Event count (approx.): 65063093580
+#
+# Overhead  Shared Object            Symbol                                                                                                                                                                                                                                                           
+# ........  .......................  .................................................................................................................................................................................................................................................................
+#
+    17.17%  [vdso]                   [.] 0x0000000000000a89
+            |
+            ---0x7f5ac3634a89
+               |          
+               |--15.43%--0x7f5ac3244ad0
+               |          |          
+               |           --15.41%--cudaGetDevice
+               |                     strata::core::Verifier::batch_poll(void (*)(void*, float const*, int const*, long, long, float*, long), void*, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >&)
+               |                     main::{lambda()#69}::operator()() const
+               |                     main
+               |          
+                --1.01%--0x7f5a916a8ccb
+                          0x7f5a92744bb7
+                          0x7f5a92745007
+                          0x7f5a9168cd1c
+
+     5.13%  strata                   [.] ggml_vec_dot_iq4_nl_q8_0
+            |
+            ---ggml_vec_dot_iq4_nl_q8_0
+               |          
+                --4.89%--strata::kernels::cpu::native_down_rows(strata::kernels::cpu::NativeFmt const&, unsigned char const*, void const* const*, int, float* const*, int, int)
+                          strata::kernels::cpu::ExpertPool::drain(int, strata::kernels::cpu::ExpertScratch&, unsigned int)
+                          strata::kernels::cpu::ExpertPool::run_phase(int, int)
+                          strata::kernels::cpu::ExpertPool::run_split_multi_native(strata::kernels::cpu::NativeFmt const&, strata::kernels::cpu::ExpertJobMulti*, int)
+                          strata::core::expert_pool_dispatch_multi(strata::core::ExpertDispatch&, float const*, int const*, long, long, float*)
+                          (anonymous namespace)::drive_pool_multi(void*, float const*, int const*, long, long, float*, long)
+                          |          
+                           --4.55%--strata::core::Verifier::batch_poll(void (*)(void*, float const*, int const*, long, long, float*, long), void*, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >&)
+                                     main::{lambda()#69}::operator()() const
+                                     main
+
+     4.92%  strata                   [.] ggml_vec_dot_iq3_xxs_q8_K
+            |
+            ---ggml_vec_dot_iq3_xxs_q8_K
+               |          
+                --4.89%--strata::kernels::cpu::native_gu_rows(strata::kernels::cpu::NativeFmt const&, unsigned char const*, void const* const*, int, float* const*, int, int)
+                          strata::kernels::cpu::ExpertPool::drain(int, strata::kernels::cpu::ExpertScratch&, unsigned int)
+                          strata::kernels::cpu::ExpertPool::run_phase(int, int)
+                          strata::kernels::cpu::ExpertPool::run_split_multi_native(strata::kernels::cpu::NativeFmt const&, strata::kernels::cpu::ExpertJobMulti*, int)
+                          strata::core::expert_pool_dispatch_multi(strata::core::ExpertDispatch&, float const*, int const*, long, long, float*)
+                          (anonymous namespace)::drive_pool_multi(void*, float const*, int const*, long, long, float*, long)
+                          |          
+                           --4.50%--strata::core::Verifier::batch_poll(void (*)(void*, float const*, int const*, long, long, float*, long), void*, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >&)
+                                     main::{lambda()#69}::operator()() const
+                                     main
+
+     3.91%  libc.so.6                [.] __memmove_avx512_unaligned_erms
+            |          
+             --2.76%--__memmove_avx512_unaligned_erms
+                       |          
+                        --2.01%--strata::core::FileExpertSource::commit_exchanges()
+                                  main::{lambda(bool)#3}::operator()(bool) const
+                                  |          
+                                   --1.97%--main::{lambda()#69}::operator()() const
+                                             main
+
+     3.70%  strata                   [.] ggml_vec_dot_iq2_s_q8_K
+            |
+            ---ggml_vec_dot_iq2_s_q8_K
+               |          
+                --3.60%--strata::kernels::cpu::native_gu_rows(strata::kernels::cpu::NativeFmt const&, unsigned char const*, void const* const*, int, float* const*, int, int)
+                          strata::kernels::cpu::ExpertPool::drain(int, strata::kernels::cpu::ExpertScratch&, unsigned int)
+                          strata::kernels::cpu::ExpertPool::run_phase(int, int)
+                          strata::kernels::cpu::ExpertPool::run_split_multi_native(strata::kernels::cpu::NativeFmt const&, strata::kernels::cpu::ExpertJobMulti*, int)
+                          strata::core::expert_pool_dispatch_multi(strata::core::ExpertDispatch&, float const*, int const*, long, long, float*)
+                          (anonymous namespace)::drive_pool_multi(void*, float const*, int const*, long, long, float*, long)
+                          |          
+                           --3.42%--strata::core::Verifier::batch_poll(void (*)(void*, float const*, int const*, long, long, float*, long), void*, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >&)
+                                     main::{lambda()#69}::operator()() const
+                                     main
+
+     2.96%  strata                   [.] strata::core::MtpDrafter::draft_finish(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >&)
+            |
+            ---strata::core::MtpDrafter::draft_finish(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >&)
+               |          
+                --2.94%--main::{lambda()#69}::operator()() const::{lambda(strata::core::Verifier&, main::{lambda()#69}::operator()() const::CohortWin&)#1}::operator()(strata::core::Verifier&, main::{lambda()#69}::operator()() const::CohortWin&) const
+                          main::{lambda()#69}::operator()() const
+                          main
+
+     2.92%  strata                   [.] ggml_vec_dot_iq3_s_q8_K
+            |
+            ---ggml_vec_dot_iq3_s_q8_K
+               |          
+                --2.86%--strata::kernels::cpu::native_gu_rows(strata::kernels::cpu::NativeFmt const&, unsigned char const*, void const* const*, int, float* const*, int, int)
+                          strata::kernels::cpu::ExpertPool::drain(int, strata::kernels::cpu::ExpertScratch&, unsigned int)
+                          strata::kernels::cpu::ExpertPool::run_phase(int, int)
+                          strata::kernels::cpu::ExpertPool::run_split_multi_native(strata::kernels::cpu::NativeFmt const&, strata::kernels::cpu::ExpertJobMulti*, int)
+                          strata::core::expert_pool_dispatch_multi(strata::core::ExpertDispatch&, float const*, int const*, long, long, float*)
+                          (anonymous namespace)::drive_pool_multi(void*, float const*, int const*, long, long, float*, long)
+                          |          
+                           --2.67%--strata::core::Verifier::batch_poll(void (*)(void*, float const*, int const*, long, long, float*, long), void*, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >&)
+                                     main::{lambda()#69}::operator()() const
+                                     main
+
+     2.71%  strata                   [.] strata::core::Verifier::batch_poll(void (*)(void*, float const*, int const*, long, long, float*, long), void*, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >&)
+            |
+            ---strata::core::Verifier::batch_poll(void (*)(void*, float const*, int const*, long, long, float*, long), void*, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >&)
+               |          
+                --1.41%--0x7f5ac3244ad0
+                          |          
+                           --1.36%--cudaGetDevice
+                                     strata::core::Verifier::batch_poll(void (*)(void*, float const*, int const*, long, long, float*, long), void*, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >&)
+                                     main::{lambda()#69}::operator()() const
+                                     main
+
+     2.63%  strata                   [.] strata::kernels::cpu::ExpertPool::wait_done(int)
+            |
+            ---strata::kernels::cpu::ExpertPool::wait_done(int)
+               strata::kernels::cpu::ExpertPool::run_phase(int, int)
+               strata::kernels::cpu::ExpertPool::run_split_multi_native(strata::kernels::cpu::NativeFmt const&, strata::kernels::cpu::ExpertJobMulti*, int)
+               strata::core::expert_pool_dispatch_multi(strata::core::ExpertDispatch&, float const*, int const*, long, long, float*)
+               (anonymous namespace)::drive_pool_multi(void*, float const*, int const*, long, long, float*, long)
+               |          
+                --2.38%--strata::core::Verifier::batch_poll(void (*)(void*, float const*, int const*, long, long, float*, long), void*, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >&)
+                          main::{lambda()#69}::operator()() const
+                          main
+
+     2.22%  libc.so.6                [.] __memset_avx512_unaligned_erms
+            |          
+             --1.54%--__memset_avx512_unaligned_erms
+                       |          
+                        --1.42%--strata::core::expert_pool_dispatch_multi(strata::core::ExpertDispatch&, float const*, int const*, long, long, float*)
+                                  (anonymous namespace)::drive_pool_multi(void*, float const*, int const*, long, long, float*, long)
+                                  |          
+                                   --1.34%--strata::core::Verifier::batch_poll(void (*)(void*, float const*, int const*, long, long, float*, long), void*, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >&)
+                                             main::{lambda()#69}::operator()() const
+                                             main
+
+     1.77%  strata                   [.] strata::core::Verifier::run(int, int const*, long, void (*)(void*, float const*, int const*, long, long, float*, long), void*, int*, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >&)
+            |
+            ---strata::core::Verifier::run(int, int const*, long, void (*)(void*, float const*, int const*, long, long, float*, long), void*, int*, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >&)
+               |          
+                --1.17%--main::{lambda(long, long, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >&)#2}::operator()(long, long, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >&) const
+                          main
+
+     1.35%  libc.so.6                [.] pthread_rwlock_unlock@@GLIBC_2.34
+            |
+            ---pthread_rwlock_unlock@@GLIBC_2.34
+
+     1.20%  libcuda.so.615.71.09     [.] 0x000000000028cd10
+            |
+            ---0x7f5a9168cd10
+
+     1.17%  libcudart.so.13.4.92     [.] cudaGetDevice
+            |
+            ---cudaGetDevice
+
+     1.10%  strata                   [.] strata::core::Verifier::run_slot_rows(int const*, int, int const*, long const*, void (*)(void*, float const*, int const*, long, long, float*, long), void*, int*, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >&)
+            |
+            ---strata::core::Verifier::run_slot_rows(int const*, int, int const*, long const*, void (*)(void*, float const*, int const*, long, long, float*, long), void*, int*, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >&)
+               main::{lambda()#69}::operator()() const
+               main
+
+     1.05%  [kernel.kallsyms]        [k] clear_highpages_kasan_tagged
+
+
+#
+# (Tip: To collect Processor Trace with samples use perf record -e '{intel_pt//,cycles}' ; perf script --call-trace or --insn-trace --xed -F +ipc (remove --xed if no xed))
+#

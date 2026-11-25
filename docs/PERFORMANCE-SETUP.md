@@ -1,6 +1,6 @@
 # Performance setup — what the engine does automatically, and what the device needs
 
-*Status: 2026-11-09. Every item below is measured on the campaign box and carries its evidence path.
+*Status: 2026-11-25. Every item below is measured on the campaign box and carries its evidence path.
 The rule for this document: anything that can live in the engine does; anything device-level is
 either installed by setup or detected and explained by `tools/strata-doctor.py`. No side scripts.*
 
@@ -12,7 +12,7 @@ either installed by setup or detected and explained by `tools/strata-doctor.py`.
 | **Store mlock**: the shadow store mapping is locked so it is never swap-eligible (`STRATA_SHADOW_MLOCK=0` opts out) | `src/core/shadow_experts.cpp` | boot line `mlock refused` only on failure; store page class line |
 | **Page-class truth**: every ≥1 GiB arena prints `ARENA PAGES: 2 MiB` / `4K - POOL UNARMED` (no pool = the default state) / `4K - DEGRADED CLASS` (a pool exists but this organ fell to 4K); benches can refuse a 4K boot (`STRATA_ARENA_PAGES=strict`, exit 70) | `src/core/pinned.cu` | boot banner |
 | **Boot-time geometry gate**: the served context must match the armed geometry or the server refuses (exit 7) | `serve/server.py` + handshake | boot INFO banner |
-| **CPU pinning** (optional): `STRATA_ENGINE_CPUS=8-15,24-31` pins the engine to one CCD on hybrid-cache CPUs; measured neutral on a quiet box — use it on contended machines | launchers, env-gated | `taskset` in the process cmdline |
+| **CPU placement**: the engine pins itself — one pool worker per physical core, the host thread on the reserved core (`--host-core`). The launcher then pins the whole process to the kernel's isolated set when there is one (`STRATA_ENGINE_CPUS`, derived from `isolcpus=`; an explicit list pins, an explicit empty string does not). With no isolated set the plan is host on CPU 0, workers on 1–15. Measured on this box, no placement arm has read a gain: the feed workers confined to one CCD lost 13.0 / 13.9 / 20.3% (M1 / pair / 6-conc; F-295, 3v3, 2026-10-24), the aux plan lost 7.7 / 8.2% (M1 / conc; F-363, ABAB, 2026-10-27), the whole-process pin read about −20% in the F-285b era and neutral on a quiet unisolated box on 2026-11-18. Pin to shield the engine from other work, never to make it faster | `campaign/lib/launch-common.sh`, `src/kernels/cpu/pool.cpp` | boot line `N pool workers on logical processors …, the host thread on N` (`logs/custom-iq3_s.log`); `taskset` in the process cmdline proves only the wrapper |
 
 ## Device-level — one-time install, doctor-verified
 
@@ -28,16 +28,29 @@ sudo systemctl daemon-reload && sudo systemctl enable --now strata-gpu-lock
 ```
 Doctor **C8** verifies it. Rollback: stop the unit (`ExecStopPost` releases clocks).
 
-### 2. CPU isolation for contended hosts (optional, measured mechanism)
+### 2. CPU isolation for contended hosts (optional; takes effect at the next boot)
 The serial lane's 12.27 ms "GPU-reach wait" collapses to 0.98–1.55 ms on a quiet box — the engine's
 doorbell poller loses its core to normal tasks when the machine is busy (the literature's measured
 preemption penalty is 15.3 ms/launch-pair; the kernel tick adds 4 ms quanta). `isolcpus` + `nohz_full`
 + `rcu_nocbs` + `irqaffinity` make "quiet" permanent: the engine's CCD stops receiving system tasks,
 ticks and interrupts. On a 9950X3D (two CCDs: 0–7 V-Cache, 8–15 frequency, SMT siblings +16):
 ```
-sudo grubby --update-kernel=DEFAULT --args="isolcpus=8-15,24-31 nohz_full=8-15,24-31 rcu_nocbs=8-15,24-31 irqaffinity=0-7,16-23"
+ARGS="isolcpus=8-15,24-31 nohz_full=8-15,24-31 rcu_nocbs=8-15,24-31 irqaffinity=0-7,16-23"
+sudo grubby --update-kernel=ALL --args="$ARGS"     # every installed kernel, and GRUB_CMDLINE_LINUX
+sudo sed -i "s/$/ $ARGS/" /etc/kernel/cmdline      # the line a NEW kernel's entry is built from
 ```
-Pair it with `STRATA_ENGINE_CPUS=8-15,24-31`. Revert: `grubby --remove-args="..."`.
+The launcher then pins the engine to the isolated set by itself; the pool has one worker per isolated
+core (7 on this CCD, against 15 on the whole box). Revert: `sudo grubby --update-kernel=ALL
+--remove-args="$ARGS"` and delete the arguments from `/etc/kernel/cmdline`.
+
+What the record adds (2026-11-25). The second command line matters: `kernel-install` builds a new
+kernel's entry from `/etc/kernel/cmdline` (`kernel-install(8)`), so arguments written to the entries
+alone do not survive a kernel update. On the campaign box all four entries and that file were
+rewritten at 2026-11-20 22:03 and none carries the arguments now; the launcher's pin is derived from
+the kernel's isolated set, so the engine went back to its fallback plan without a word. Isolation
+itself has never been measured on and off here — no journal entry holds that battery — and every
+placement arm that was measured lost (the table above). Treat it as an untested option for a
+contended host, not as a standing gain.
 
 ### 3. Kernel hygiene (experiments must not be silently changed)
 Measured incident: PackageKit auto-updated the kernel mid-experiment (7.2.12→7.2.15). The census

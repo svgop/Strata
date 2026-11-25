@@ -1,0 +1,16 @@
+=== leg 0 17:17:48 load 0.79
+M1 single-stream : 205.6 t/s (2000 tok in 9.73s)
+M2 pair          : 202.2 t/s aggregate (1800 tok in 8.90s)
+M2 6-conc        : 262.7 t/s aggregate (3600 tok in 13.71s)
+=== leg 1 17:18:36 load 1.81
+M1 single-stream : 199.1 t/s (2000 tok in 10.05s)
+M2 pair          : 205.2 t/s aggregate (1800 tok in 8.77s)
+M2 6-conc        : 276.5 t/s aggregate (3600 tok in 13.02s)
+=== leg 2 17:19:24 load 3.21
+M1 single-stream : 219.9 t/s (2000 tok in 9.10s)
+M2 pair          : 205.0 t/s aggregate (1800 tok in 8.78s)
+M2 6-conc        : 259.2 t/s aggregate (3600 tok in 13.89s)
+=== leg 3 17:20:12 load 4.04
+M1 single-stream : 205.2 t/s (2000 tok in 9.75s)
+M2 pair          : 207.8 t/s aggregate (1800 tok in 8.66s)
+M2 6-conc        : 269.6 t/s aggregate (3600 tok in 13.35s)
