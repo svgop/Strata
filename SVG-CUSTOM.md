@@ -13968,6 +13968,28 @@ unchanged, first 70 = 5 per category.  At N = 1500 the 1-sigma is 0.60 points.
   (`mmlu-stand-1500.PARTIAL-dataset-order.out`).  The round-robin order closes that defect.
 - **The full run was started at 03:29 on a fresh standing boot (discard leg first) in a self-stopping job.**  RESULT:
   appended below by the job's collector; until then the escalation item is OPEN.
+  **RESULT (05:28, the standing boot of 03:29 - `mmlu-stand-1500.out`, `campaign/results/mmlu-f453-stand.json`): 1,294 of
+  1,500 = 86.3% (1-sigma 0.89 pts, 95% CI +/- 1.7; 7,074 s, 4.72 s/question; stable 85.7-86.4% at every fifty-question
+  mark).  Against the floor 0.933 as written this is BELOW THE FLOOR by 7.0 pts.**  By category: computer science 50/51,
+  math 163/169, physics 148/162, biology 85/89, economics 94/105, business 88/98, other 95/115, chemistry 122/141,
+  psychology 85/100, philosophy 51/62, history 39/48, health 83/102, engineering 98/121, law 93/137.
+  - *What the request log adds* (the gate boot's `[strata] done:` lines - 1,536 = 36 discard-leg requests + the 1,500 in
+    order): no request reached `max_tokens` (all 1,500 finish `stop`), so the cap is not the cause.  The server limits
+    THINKING to 3,000 of the 4,000 tokens ("answer room"); **200 questions (13.3%) were force-wrapped at that budget and
+    score 117/200 = 58.5% - 83 of the 206 failures.  The 1,300 that finished their reasoning score 1,177/1,300 = 90.5%.**
+    Score falls with length (the long thinkers are the hard questions): under 500 tokens 95.0% (961), 500-1,000 83.7%
+    (184), 1,000-1,500 75.7% (70), 1,500-2,000 69.0% (42), 2,000-2,500 64.3% (28), 2,500-3,000 66.7% (15), wrapped 58.5%
+    (200).  Law (37% wrapped, 1,684 tokens mean) and engineering (38% wrapped, 1,622) hold the long reasoning.
+  - *What it does and does not settle.*  The thinking budget explains about one point (the wrapped score 58.5% against
+    66.7% for the equally long unwrapped).  The rest is real ON THIS SAMPLE: a stratified 1,500 (seed 20261125, category
+    round-robin; every prefix is balanced - the first 70 score 90.0%, the first 534 86.5%) on which the 70-question
+    validation floor of 93.3 was never derived.  Whether the deficit is the F-452 state's or the sample's is NOT known:
+    no control state has run these questions.  **The attribution is owed and priced: the same binary with F-452's arm off
+    (`STRATA_VERIFY_DEVICE_LAUNCH=0`) over the first 534 rows, whose adopted-state score (462/534 = 86.5%) is already in
+    the JSON - one pass, ~70 minutes.**
+  - *Rulings under the law.*  Not a tracker point (law 12: a read below the bank is a question).  The escalation item
+    stays OPEN, now as the attribution above.  Nothing in this result changes the engine or the standing recipe.  The
+    thinking budget's own price is a server setting and an operator's question: recorded, not changed.
 
 ### 2. RECOVER conc - the pin interleave is DROPPED, with reason
 The proposed `STRATA_ENGINE_CPUS` interleave was a re-purchase of three banked falsifications (F-285b whole-process
