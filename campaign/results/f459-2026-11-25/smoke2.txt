@@ -1,0 +1,14 @@
+smoke start 2026-11-25 11:48:41 (smoke 2, candidate 529d0c57 - the binary that measures)
+smoke f459-shared: binary 529d0c57177ca4a3 | engine pid 1733573 | env: STRATA_COHORT_ROUND_TELEMETRY=1 STRATA_COHORT_SHARED_MISS=1
+M1 single-stream : 208.2 t/s (2000 tok in 9.61s)
+M2 pair          : 199.9 t/s aggregate (1800 tok in 9.01s)
+M2 6-conc        : 279.4 t/s aggregate (3600 tok in 12.88s)
+  single-stream answers: 208.2 t/s
+  concurrent lane answers: 279.4 t/s
+  no request of the leg ended in an error
+  the engine was not restarted
+  no stall was caught
+  per-round telemetry lines: 470 (/home/svg/LLM/strata-custom-2/campaign/results/smoke-f459-shared/telemetry.txt)
+F-271 re-pin VERIFIED (learned == expert-profile-gold.bin, after the engine stop)
+SMOKE PASS (f459-shared)
+SMOKE_SCRIPT_EXIT=0 11:50:47

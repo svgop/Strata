@@ -24,7 +24,7 @@ LINE = re.compile(
     r"window (?P<win>" + NUM + r") tail " + NUM + r" since-prev (?P<since>" + NUM + r") "
     r"\| wait " + NUM + r" pool (?P<pool>" + NUM + r") \[gate/up " + NUM + r" quantize " + NUM + r" down " + NUM + r"; call " + NUM + r"\] "
     r"\| hits " + NUM + r" cpu (?P<cpu>" + NUM + r") pcie " + NUM + r" swaps " + NUM +
-    r"(?: shared \+(?P<sh>\d+) of cpu \+(?P<cb>\d+) \(A \+(?P<ca>\d+)\)(?: C \+(?P<shc>\d+) of \+(?P<cc>\d+)\))?)\s*$"
+    r"(?: shared \+(?P<sh>\d+) of cpu \+(?P<cb>\d+) \(A \+(?P<ca>\d+)\)(?: C \+(?P<shc>\d+) of \+(?P<cc>\d+))?)?\s*$"
 )
 MIN_ROWS, MAX_SINCE, FAST_WINDOW = 10, 100.0, 28.0
 POOL_SHARE_OF_ROUND, WINDOW_MS_PER_POOL_MS, LEVER = 0.46, 0.715, 0.42
@@ -157,15 +157,16 @@ def report(path):
         print("round shortens by 0.42 x 0.46 x 0.715 x share = %.4f x share (the brief's ~0.13); conc = x / (1 - x)" % k)
         for name, s in (("mean", sum(sh) / len(sh)), ("median", pct(sh, 50)), ("p10", pct(sh, 10)), ("p90", pct(sh, 90))):
             x = k * s
-            print("  %-6s share %.4f (%.1f%%) -> round %+.2f%% -> conc %+.2f%%" % (name, s, 100 * s, 100 * x, 100 * x / (1 - x)))
+            print("  %-6s share %.4f (%.1f%%) -> round %+.2f%% -> conc %+.2f%%" % (name, s, 100 * s, -100 * x, 100 * x / (1 - x)))
         exact = []
         for r in kept:
             a, b, s_ = r["ca"], r["cb"], r["sh"]
             pool = 46.8 * (a + b - s_) + 89.8 * s_   # us: one six-row call per blob, two for a blob both cohorts computed
-            exact.append((LEVER * 89.8 * s_) / pool if pool > 0 else 0.0)
+            exact.append((LEVER * 89.8 * s_) / pool if pool > 0 else 0.0)   # the share of BOTH cohorts' pool time removed
         m = sum(exact) / len(exact)
-        print("  cross-check, same per-blob prices with the measured a and b (savings / pool time): mean %.4f -> round %+.2f%% -> conc %+.2f%%"
-              % (m, 100 * m * WINDOW_MS_PER_POOL_MS, 100 * (m * WINDOW_MS_PER_POOL_MS) / (1 - m * WINDOW_MS_PER_POOL_MS)))
+        print("  cross-check, the same per-blob prices with the measured a and b (0.42 x 89.8 x S / pool, the share of both cohorts' pool time): mean %.4f -> round %+.2f%% -> conc %+.2f%%"
+              % (m, -100 * m * POOL_SHARE_OF_ROUND * WINDOW_MS_PER_POOL_MS,
+                 100 * (m * POOL_SHARE_OF_ROUND * WINDOW_MS_PER_POOL_MS) / (1 - m * POOL_SHARE_OF_ROUND * WINDOW_MS_PER_POOL_MS)))
         ruling = "ABOVE the ~15% line: the structure question is named and handed on" if sum(sh) / len(sh) >= 0.15 else "UNDER the ~15% line: the lever closes"
         print("  ruling by the price, on the mean share: " + ruling)
     else:

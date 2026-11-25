@@ -1,0 +1,70 @@
+====================================================================================================
+F-459  both-cohorts CPU-miss share  -  campaign/results/f459-2026-11-25/smoke1-dir/telemetry.txt
+====================================================================================================
+tel lines 470 | with the F-459 field 470 | both cohorts populated 470, of which with the field 470 | tel lines the reader could not parse 1
+row splits (A+B): 6+6 x452, 6+4 x7, 4+4 x5, 4+6 x4, 6+2 x1, 2+6 x1
+runs (split at since-prev >= 100 ms) 18 | rounds inside a run (rows >= 10, since-prev < 100) 447 | of those with B CPU experts (b > 0) 447, excluded for b = 0: 0
+reconciliation, a + b against the line's own `cpu` (multi_misses) delta: equal 447 of 447, smaller 0, larger 0
+this boot's own anatomy on the kept rounds: pool / window = 0.508 (the price assumes 0.46 x 0.715 = 0.329 of the round)
+----------------------------------------------------------------------------------------------------
+COHORT B: share = S / b per round
+----------------------------------------------------------------------------------------------------
+[all kept] rounds 447 | rows A 6.00 B 5.99 | window ms mean 26.81 median 24.64 | CPU experts per round A n 447  mean 112.331  median 86.000  p10 34.000  p90 233.400  min 15.000  max 320.000 | B n 447  mean 106.669  median 89.000  p10 38.000  p90 198.000  min 9.000  max 307.000
+  share: n 447  mean 0.098  median 0.066  p10 0.000  p90 0.232  min 0.000  max 0.526
+  pooled (sum S / sum b): 0.1304  (S 6217, b 47681)
+  S over both cohorts' CPU experts, S / (a + b): n 447  mean 0.046  median 0.030  p10 0.000  p90 0.108  min 0.000  max 0.267
+[fast, window < 28 ms] rounds 294 | rows A 6.00 B 6.00 | window ms mean 23.36 median 23.05 | CPU experts per round A n 294  mean 67.112  median 61.000  p10 30.000  p90 117.400  min 15.000  max 157.000 | B n 294  mean 69.136  median 62.500  p10 33.300  p90 112.700  min 9.000  max 161.000
+  share: n 294  mean 0.060  median 0.036  p10 0.000  p90 0.151  min 0.000  max 0.526
+[slow, window >= 28 ms] rounds 153 | rows A 5.99 B 5.96 | window ms mean 33.45 median 33.03 | CPU experts per round A n 153  mean 199.222  median 197.000  p10 127.400  p90 265.600  min 37.000  max 320.000 | B n 153  mean 178.791  median 174.000  p10 125.000  p90 243.600  min 30.000  max 307.000
+  share: n 153  mean 0.170  median 0.163  p10 0.066  p90 0.297  min 0.018  max 0.437
+[not kept (short rows or a gap): context only, not the measurement] rounds 23 | rows A 5.13 B 5.04 | window ms mean 29.42 median 30.02 | CPU experts per round A n 23  mean 87.348  median 76.000  p10 34.600  p90 157.000  min 21.000  max 192.000 | B n 23  mean 81.913  median 65.000  p10 26.400  p90 157.800  min 18.000  max 209.000
+  share: n 23  mean 0.141  median 0.106  p10 0.003  p90 0.419  min 0.000  max 0.538
+----------------------------------------------------------------------------------------------------
+COHORT C (ternary): against A, as B is
+----------------------------------------------------------------------------------------------------
+none: no ternary round in this boot
+----------------------------------------------------------------------------------------------------
+PRICE - arithmetic on the measured share, not a measurement
+----------------------------------------------------------------------------------------------------
+round shortens by 0.42 x 0.46 x 0.715 x share = 0.1381 x share (the brief's ~0.13); conc = x / (1 - x)
+  mean   share 0.0976 (9.8%) -> round -1.35% -> conc +1.37%
+  median share 0.0658 (6.6%) -> round -0.91% -> conc +0.92%
+  p10    share 0.0000 (0.0%) -> round -0.00% -> conc +0.00%
+  p90    share 0.2318 (23.2%) -> round -3.20% -> conc +3.31%
+  cross-check, the same per-blob prices with the measured a and b (0.42 x 89.8 x S / pool, the share of both cohorts' pool time): mean 0.0342 -> round -1.13% -> conc +1.14%
+  ruling by the price, on the mean share: UNDER the ~15% line: the lever closes
+====================================================================================================
+F-459  both-cohorts CPU-miss share  -  campaign/results/smoke-f459-shared/telemetry.txt
+====================================================================================================
+tel lines 470 | with the F-459 field 470 | both cohorts populated 470, of which with the field 470 | tel lines the reader could not parse 0
+row splits (A+B): 6+6 x448, 6+4 x13, 6+2 x5, 4+6 x2, 4+4 x2
+runs (split at since-prev >= 100 ms) 18 | rounds inside a run (rows >= 10, since-prev < 100) 447 | of those with B CPU experts (b > 0) 447, excluded for b = 0: 0
+reconciliation, a + b against the line's own `cpu` (multi_misses) delta: equal 447 of 447, smaller 0, larger 0
+this boot's own anatomy on the kept rounds: pool / window = 0.425 (the price assumes 0.46 x 0.715 = 0.329 of the round)
+----------------------------------------------------------------------------------------------------
+COHORT B: share = S / b per round
+----------------------------------------------------------------------------------------------------
+[all kept] rounds 447 | rows A 6.00 B 5.96 | window ms mean 24.50 median 24.09 | CPU experts per round A n 447  mean 78.492  median 71.000  p10 37.000  p90 138.000  min 13.000  max 232.000 | B n 447  mean 84.394  median 79.000  p10 42.000  p90 137.400  min 11.000  max 215.000
+  share: n 447  mean 0.077  median 0.036  p10 0.000  p90 0.188  min 0.000  max 0.766
+  pooled (sum S / sum b): 0.0863  (S 3254, b 37724)
+  S over both cohorts' CPU experts, S / (a + b): n 447  mean 0.036  median 0.020  p10 0.000  p90 0.093  min 0.000  max 0.286
+[fast, window < 28 ms] rounds 395 | rows A 5.99 B 5.95 | window ms mean 23.79 median 23.70 | CPU experts per round A n 395  mean 69.916  median 67.000  p10 36.000  p90 115.000  min 13.000  max 162.000 | B n 395  mean 77.076  median 74.000  p10 40.400  p90 119.000  min 11.000  max 165.000
+  share: n 395  mean 0.065  median 0.033  p10 0.000  p90 0.170  min 0.000  max 0.663
+[slow, window >= 28 ms] rounds 52 | rows A 6.00 B 5.96 | window ms mean 29.88 median 29.56 | CPU experts per round A n 52  mean 143.635  median 151.000  p10 73.200  p90 193.700  min 33.000  max 232.000 | B n 52  mean 139.981  median 141.500  p10 95.600  p90 185.000  min 48.000  max 215.000
+  share: n 52  mean 0.164  median 0.143  p10 0.020  p90 0.353  min 0.000  max 0.766
+[not kept (short rows or a gap): context only, not the measurement] rounds 23 | rows A 5.74 B 4.70 | window ms mean 27.18 median 27.71 | CPU experts per round A n 23  mean 90.043  median 78.000  p10 41.000  p90 161.400  min 19.000  max 186.000 | B n 23  mean 68.652  median 53.000  p10 17.000  p90 135.400  min 3.000  max 175.000
+  share: n 23  mean 0.143  median 0.095  p10 0.000  p90 0.329  min 0.000  max 0.600
+----------------------------------------------------------------------------------------------------
+COHORT C (ternary): against A, as B is
+----------------------------------------------------------------------------------------------------
+none: no ternary round in this boot
+----------------------------------------------------------------------------------------------------
+PRICE - arithmetic on the measured share, not a measurement
+----------------------------------------------------------------------------------------------------
+round shortens by 0.42 x 0.46 x 0.715 x share = 0.1381 x share (the brief's ~0.13); conc = x / (1 - x)
+  mean   share 0.0766 (7.7%) -> round -1.06% -> conc +1.07%
+  median share 0.0364 (3.6%) -> round -0.50% -> conc +0.50%
+  p10    share 0.0000 (0.0%) -> round -0.00% -> conc +0.00%
+  p90    share 0.1876 (18.8%) -> round -2.59% -> conc +2.66%
+  cross-check, the same per-blob prices with the measured a and b (0.42 x 89.8 x S / pool, the share of both cohorts' pool time): mean 0.0269 -> round -0.89% -> conc +0.89%
+  ruling by the price, on the mean share: UNDER the ~15% line: the lever closes

@@ -1,0 +1,21 @@
+measure start 2026-11-25 11:51:33 | deployed 529d0c57177ca4a3
+before the boot: 787733 log lines; last 'engine started:' before it at line 785425
+health ok at 11:52:08; engine pid 1736849
+prewarm terminal at 11:52:33: done
+leg1 start 11:52:33 log_line 788451
+leg1 exit 0 at 11:53:18 log_line 790035
+M1 single-stream : 226.5 t/s (2000 tok in 8.83s)
+M2 pair          : 215.1 t/s aggregate (1800 tok in 8.37s)
+M2 6-conc        : 284.7 t/s aggregate (3600 tok in 12.65s)
+leg2 start 11:53:18 log_line 790035
+leg2 exit 0 at 11:54:04 log_line 791614
+M1 single-stream : 221.9 t/s (2000 tok in 9.01s)
+M2 pair          : 215.4 t/s aggregate (1800 tok in 8.35s)
+M2 6-conc        : 276.3 t/s aggregate (3600 tok in 13.03s)
+leg3 start 11:54:04 log_line 791614
+leg3 exit 0 at 11:54:48 log_line 793183
+M1 single-stream : 241.8 t/s (2000 tok in 8.27s)
+M2 pair          : 203.0 t/s aggregate (1800 tok in 8.87s)
+M2 6-conc        : 285.4 t/s aggregate (3600 tok in 12.61s)
+F-271 re-pin VERIFIED (learned == expert-profile-gold.bin, after the engine stop)
+measure end 11:54:59 | strata procs 0

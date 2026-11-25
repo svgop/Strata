@@ -14845,6 +14845,54 @@ cohorts, longer windows); above it, the structure question is named and handed o
 legs 2-3 measured; the share over rounds with >= 10 rows and `since-prev` < 100 ms (inside a run).  Nothing is adopted: with
 the env unset the split site runs its old control flow behind one not-taken null test.
 
+**Result (measured 2026-11-25 11:51-11:55; candidate `529d0c57`, one boot, three probe legs, legs 2-3 counted; nothing adopted).**
+**6.2%**: of the (layer, expert) blobs cohort B computed on the CPU in a round, 6.2% were blobs cohort A computed too (mean
+of 681 rounds; median 3.6%, p10 0.0%, p90 15.6%; pooled 3105 / 50773 = 6.1%).  The lever's ceiling is **+0.86% concurrent**:
+**the lever closes.**
+**The instrument, checked against the engine's own counter.**  The counter reads the engine's miss list (`cpu_miss_pipeline`,
+kind -1), and a + b equals the line's own `cpu` delta (`multi_misses`) on every kept round of three boots: 2,016 of 2,016.
+The boot: 1,169 round lines, all with the field, none in overflow, no restart, no request error; rows 6+6 on 687 of the 705
+lines of the measured legs (F-458's twelve-rows shape on 97% of rounds).  S is the intersection of the two completed masks,
+so it does not depend on which window reached a layer first.  C: no ternary round; unmeasured.
+
+| segment | kept rounds | B's share per round: mean / median / p10 / p90 | pooled S / b | A's CPU blobs per round: mean / median |
+|---|---|---|---|---|
+| legs 2+3 - the measurement | 681 | 6.2 / 3.6 / 0.0 / 15.6 % | 6.1% | 75.9 / 67 |
+| leg 2 | 343 | 6.5 / 4.2 / 0.0 / 15.9 % | 6.1% | 74.5 / 67 |
+| leg 3 | 338 | 5.9 / 3.1 / 0.0 / 15.2 % | 6.1% | 77.3 / 68 |
+| leg 1 (discarded) | 340 | 6.5 / 3.9 / 0.0 / 16.1 % | 7.9% | 81.5 / 72 |
+| prewarm | 101 | 9.1 / 7.0 / 0.0 / 20.7 % | 10.5% | 85.8 / 74 |
+| whole boot | 1122 | 6.5 / 4.0 / 0.0 / 16.7 % | 7.1% | 78.5 / 70 |
+| smoke 1, another boot (`cd41fbb8`) | 447 | 9.8 / 6.6 / 0.0 / 23.2 % | 13.0% | 112.3 / 86 |
+| smoke 2, another boot (`529d0c57`) | 447 | 7.7 / 3.6 / 0.0 / 18.8 % | 8.6% | 78.5 / 71 |
+
+**Fast against slow** (the measured legs).  Fast rounds (window < 28 ms; 612, 90% of the rounds; window 23.59 ms mean; A 70.0
+/ B 66.5 CPU blobs per round) share 6.0 / 3.5 / 15.2% (mean / median / p90).  Slow rounds (>= 28 ms; 69; 30.13 ms; A 128.1 /
+B 146.4) share 7.6 / 4.6 / 17.3%.  The fast-round share is the stable quantity: 5.5-6.5% in the legs and both smokes (7.8% in
+the prewarm).  The slow-round share is not: 6.5-8.1% in the measured legs, 16.1-17.0% in leg 1, the prewarm and both smokes.
+**The price, as arithmetic on the measured share** (0.42 x 0.46 x 0.715 = 0.1381 x share off the round; conc = x / (1 - x)):
+
+| reading | share | round | concurrent |
+|---|---|---|---|
+| mean | 6.19% | -0.86% | +0.86% |
+| median | 3.57% | -0.49% | +0.50% |
+| p90 | 15.56% | -2.15% | +2.20% |
+| the highest segment mean on the record (smoke 1) | 9.8% | -1.35% | +1.37% |
+| cross-check: the measured a and b, 0.42 x 89.8 x S / pool time | 2.10% of the pool | -0.69% | +0.70% |
+
+**Ruling by the price: the lever closes.**  No segment's mean reaches the 15% line (6.2-9.8%); a tenth of the rounds exceed
+15-23%.  The ceiling is inside the noise band on every reading (+0.5 to +2.2%; the adopt bar is +4%).  Re-open clause, as
+priced: a change in a round's CPU population (more cohorts, longer windows); that the share rises with that population is
+UNCONFIRMED - the slow rounds suggest it and do not settle it.
+**Mechanism (a model, not a measurement).**  4.56 blobs a round are computed by both cohorts; were each cohort's misses
+uniform over the 512 experts of a layer the count would be 0.23 (19.5x less): the both-cohort misses are hot non-resident
+experts, and they are 6% of a cohort's CPU blobs.
+**Corrections paid on the way.**  The brief's "experts are <= 64 per layer" is false for this model (512): the mask takes
+eight words a layer.  The counter's arm line first quoted the text the smoke greps for and so landed in every boot's
+telemetry file; reworded before the measurement (`fdbbff00b`).  Evidence: `campaign/results/f459-2026-11-25/`
+(`f459-shared.txt`, `f459-shared-smokes.txt`, `telemetry*.txt`, `leg[1-3].txt`, `measure.txt`, `smoke[12].txt`,
+`build*.txt`, `layout.txt`, `unset-path-*.txt`, `warnings-baseline.txt`, `notes.md`).  Champion `3865e27a` restored at closeout.
+
 ## GOAL REVISION (2026-11-25, 11:40; operator: "update and extend the goal to push for results, using the past twelve hours' evidence as the baseline for knowing where to look")
 
 The session goal is rewritten around the evidence above.  **Baseline:** champion `3865e27a`; this box reads M1 235-248 and

@@ -1,0 +1,6 @@
+leg1 start 11:52:33 log_line 788451
+leg1 exit 0 at 11:53:18 log_line 790035
+leg2 start 11:53:18 log_line 790035
+leg2 exit 0 at 11:54:04 log_line 791614
+leg3 start 11:54:04 log_line 791614
+leg3 exit 0 at 11:54:48 log_line 793183
