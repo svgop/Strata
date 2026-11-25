@@ -14667,6 +14667,24 @@ capture).**  The hypothesis above - that `z` runs only when qkv frees the machin
   headroom" line is that question, still unmeasured.  Cheapest falsifier if it is taken up: bytes moved per qkv and z
   launch (shapes x the pack's bits) against duration, one arithmetic - before any kernel.
 
+**THE BANDWIDTH ARITHMETIC (11:05; no GPU; the pack's own `index.txt`): THE GDN PROJECTIONS ARE NOT "HEADROOM" - CLOSED
+INSIDE THE BAND.**  Shapes from the index: both projections read 2,560; qkv writes 10,240 rows, the gate 6,144.  Layer 0's
+rows carry 13,148,160 bytes each (4.0 bits/weight for qkv, 6.7 for the gate); the byte column repeats verbatim for
+layers 1-2, so it is read with caution and the answer is bounded instead.  Time from qkv's start to the gate's end:
+21.9 us (median, 18,237 layers).
+
+| reading | bytes (qkv + gate) | achieved | of ~1,790 GB/s peak |
+|---|---:|---:|---:|
+| layer-0 index bytes | 26.3 MB | ~1,200 GB/s | ~67% |
+| both at 4.5 bits/weight (smallest) | 23.6 MB | ~1,080 GB/s | ~60% |
+| both at 6.6 bits/weight (largest) | 34.6 MB | ~1,580 GB/s | ~88% |
+
+The most the unused third is worth is ~5.5 us per layer = 0.2 ms per window = **+2% M1 - inside the band (law 15).**  The
+audit's "GDN+proj headroom 0.88 ms" line is RETIRED: the two projections run at roughly two-thirds of peak or better,
+and their 0.89 ms chain is a bandwidth term within ~2% of its floor, not an ordering or occupancy term.  (The 768-block
+gate alone, after qkv ends, runs at a lower rate - a smaller grid on a dequant-heavy kernel - but its 6.5 us alone per
+layer bounds any gain from it below the band too.)  Nothing was built; the solo map has no lever left above the band.
+
 **Process note.**  The first delegation of the day (F-456) read itself out of room; this one was forbidden the reading,
 wrote its trace to disk first, and stopped correctly in twelve minutes.  A STOP at the trace is the cheapest falsifier
 doing its job: this one cost no GPU time and retracted a priced lever before it was built.
