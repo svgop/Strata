@@ -3,19 +3,45 @@
 # request) and steady decode t/s (token cadence after the first chunk) at increasing context
 # depths.  Unique seeded random-word prompts (no n-gram/cache reuse across runs).  Usage:
 #   python ctx-probe.py 4096 16384 32768 65536 98304 122880      (target prompt tokens)
+#   python ctx-probe.py --selftest          (offline: the request builder and the stream reader; no server)
+#   python ctx-probe.py --turn  4096 32768 131072
+#   python ctx-probe.py --branch 4096 32768 131072
+# --turn (F-466): after each depth, one AGENT TURN - the ladder's reply is sent back (content and
+# reasoning), then a ~300-token user message, max_tokens 8.  This is the production shape (the engine log
+# shows 2,527 of the next prompts extending the previous prompt plus its generation), so the conversation
+# cache serves the whole history and the engine reads only the new tail.  Its TTFT is the wait between two
+# tool calls.
+# --branch (F-466): the same depth with a ~300-token tail appended and NO reply - a sibling prompt (a history
+# edit).  Measured 2026-11-25: below 32,768 tokens nothing is reused; above it the last whole 32,768-token
+# checkpoint is, and the rest of the prompt is read again.
+# The engine's own accounting of every request (tokens reused and read, read ms, drafts accepted) is the
+# `strata serve: prompt` line in the boot's segment of the engine log; campaign/ctx-lane.sh prints them.
 import os
 import json, random, string, sys, time, urllib.request
 
 KEY = os.environ.get("STRATA_API_KEY", "3f0940df8efb9c363e4189956ae907d3e4acac221aab39f44804fe0b0df1b8")
 URL = "http://127.0.0.1:8081/v1/chat/completions"
+MODEL = "qwen3.8-flash-next-iq3_s"
 GEN = 512
+INSTR = " After reading it, write the numbers from 1 to 400, one per line."
+TAIL_TOKENS = 300        # a tool result's size; the production median of a warm read is 288 tokens (F-466)
+PARK_SETTLE_S = 2.0      # a finished request's K/V is parked after it returns; the next request must find it parked
+
+
+def words(n, seed):
+    rng = random.Random(seed)
+    return " ".join("".join(rng.choices(string.ascii_lowercase, k=rng.randint(3, 9))) for _ in range(n))
 
 
 def gen_prompt(n_words, seed):
+    # the draws keep their original order (words, then the header) so a seed still names the same prompt
     rng = random.Random(seed)
-    words = ["".join(rng.choices(string.ascii_lowercase, k=rng.randint(3, 9))) for _ in range(n_words)]
-    return ("X" + "".join(rng.choices(string.hexdigits.upper(), k=12)) + " document: " + " ".join(words)
-            + " After reading it, write the numbers from 1 to 400, one per line.")
+    w = ["".join(rng.choices(string.ascii_lowercase, k=rng.randint(3, 9))) for _ in range(n_words)]
+    return "X" + "".join(rng.choices(string.hexdigits.upper(), k=12)) + " document: " + " ".join(w) + INSTR
+
+
+def gen_tail(n_words, seed):
+    return "New instruction, answer at once: " + words(n_words, seed)
 
 
 def post(body, stream):
@@ -24,25 +50,15 @@ def post(body, stream):
     return urllib.request.urlopen(req, timeout=3600)
 
 
-def calibrate():
-    # words -> tokens ratio, measured once (non-stream gives usage.prompt_tokens)
-    with post({"model": "qwen3.8-flash-next-iq3_s",
-               "messages": [{"role": "user", "content": gen_prompt(2000, 1)}],
-               "max_tokens": 1}, stream=False) as r:
-        u = json.load(r).get("usage", {})
-    pt = u.get("prompt_tokens", 0)
-    return pt / 2000.0 if pt else 1.4, pt
-
-
-def ladder(target_tokens, ratio, seed0):
-    n_words = int(target_tokens / ratio)
-    body = {"model": "qwen3.8-flash-next-iq3_s",
-            "messages": [{"role": "user", "content": gen_prompt(n_words, seed0)}],
-            "max_tokens": GEN, "stream": True}
+def stream_run(body):
+    """One streamed request -> (ttft s or None, first-to-last-token s or None, wall s, prompt tokens,
+    completion tokens, the answer's content, its reasoning)."""
     t0 = time.perf_counter()
-    ttft = chunks = None
+    ttft = None
     t_last = 0.0
+    chunks = 0
     usage = {}
+    text, reasoning = [], []
     with post(body, stream=True) as r:
         for line in r:
             if not line.startswith(b"data: "):
@@ -62,23 +78,119 @@ def ladder(target_tokens, ratio, seed0):
                 if d.get("content") or d.get("reasoning_content"):
                     if ttft is None:
                         ttft = time.perf_counter() - t0
-                    chunks = (chunks or 0) + 1
+                    chunks += 1
                     t_last = time.perf_counter() - t0
+                    if d.get("content"):
+                        text.append(d["content"])
+                    if d.get("reasoning_content"):
+                        reasoning.append(d["reasoning_content"])
     total = time.perf_counter() - t0
-    ptok = usage.get("prompt_tokens") or int(n_words * ratio)
-    ctok = usage.get("completion_tokens") or chunks or GEN
-    dec_s = t_last - ttft if ttft and t_last > ttft else float("nan")
+    dec = (t_last - ttft) if ttft is not None and t_last > ttft else None
+    return (ttft, dec, total, usage.get("prompt_tokens"), usage.get("completion_tokens"),
+            "".join(text), "".join(reasoning))
+
+
+def calibrate():
+    # words -> tokens ratio, measured once (non-stream gives usage.prompt_tokens)
+    with post({"model": MODEL, "messages": [{"role": "user", "content": gen_prompt(2000, 1)}],
+               "max_tokens": 1}, stream=False) as r:
+        u = json.load(r).get("usage", {})
+    pt = u.get("prompt_tokens", 0)
+    return pt / 2000.0 if pt else 1.4, pt
+
+
+def ladder(target_tokens, ratio, seed0):
+    """A cold read at one depth: TTFT, prefill t/s, steady decode t/s.  Returns (prompt tokens, reply)."""
+    n_words = int(target_tokens / ratio)
+    body = {"model": MODEL, "messages": [{"role": "user", "content": gen_prompt(n_words, seed0)}],
+            "max_tokens": GEN, "stream": True}
+    ttft, dec_s, total, up, uc, text, reasoning = stream_run(body)
+    ptok = up or int(n_words * ratio)
+    ctok = uc or GEN
     print(f"ctx {ptok:7d} | TTFT {ttft if ttft else -1:7.2f}s | prefill {ptok / ttft if ttft else 0:7.0f} t/s"
-          f" | decode {ctok / dec_s if dec_s == dec_s and dec_s > 0 else 0:6.1f} t/s | gen {ctok} in {dec_s if dec_s == dec_s else 0:5.2f}s"
+          f" | decode {ctok / dec_s if dec_s and dec_s > 0 else 0:6.1f} t/s | gen {ctok} in {dec_s if dec_s else 0:5.2f}s"
           f" | wall {total:7.2f}s", flush=True)
+    return ptok, (text, reasoning)
+
+
+def report(kind, ptok, ttft, total, ctok, tail_tokens):
+    print(f"ctx {ptok if ptok else -1:7d} | {kind:6s} +{tail_tokens:4d} tokens | TTFT {ttft if ttft else -1:6.2f}s"
+          f" | gen {ctok if ctok is not None else -1} | wall {total:5.2f}s", flush=True)
+
+
+def turn_read(target_tokens, ratio, seed0, depth_ptok, reply):
+    """An agent turn: the reply comes back (content and reasoning), then one short user message."""
+    time.sleep(PARK_SETTLE_S)
+    n_words = int(target_tokens / ratio)
+    text, reasoning = reply
+    messages = [{"role": "user", "content": gen_prompt(n_words, seed0)},
+                {"role": "assistant", "content": text, **({"reasoning_content": reasoning} if reasoning else {})},
+                {"role": "user", "content": gen_tail(int(TAIL_TOKENS / ratio), seed0 + 1)}]
+    ttft, _, total, ptok, ctok, _, _ = stream_run({"model": MODEL, "messages": messages, "max_tokens": 8, "stream": True})
+    report("turn", ptok, ttft, total, ctok, TAIL_TOKENS)
+
+
+def branch_read(target_tokens, ratio, seed0, depth_ptok):
+    """A sibling prompt: the same depth with a short tail appended, no reply."""
+    time.sleep(PARK_SETTLE_S)
+    n_words = int(target_tokens / ratio)
+    prompt = gen_prompt(n_words, seed0) + " " + gen_tail(int(TAIL_TOKENS / ratio), seed0 + 1)
+    ttft, _, total, ptok, ctok, _, _ = stream_run({"model": MODEL, "messages": [{"role": "user", "content": prompt}],
+                                                   "max_tokens": 8, "stream": True})
+    report("branch", ptok, ttft, total, ctok, (ptok - depth_ptok) if ptok and depth_ptok else -1)
+
+
+def selftest():
+    """Offline check of the request builder and the stream reader against a canned answer (no server)."""
+    body = {"model": MODEL, "messages": [{"role": "user", "content": "x"}], "max_tokens": 8, "stream": True}
+    req = urllib.request.Request(URL, data=json.dumps(body).encode(),
+                                 headers={"Authorization": "Bearer " + KEY, "Content-Type": "application/json"})
+    assert req.full_url == URL and json.loads(req.data)["stream"] is True
+
+    class Fake:
+        def __init__(self):
+            self.lines = iter([b'data: {"choices":[{"delta":{"reasoning_content":"think"}}]}\n',
+                               b'data: {"choices":[{"delta":{"content":"ok"}}],"usage":{"prompt_tokens":1234,"completion_tokens":2}}\n',
+                               b'data: [DONE]\n'])
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *exc):
+            return False
+
+        def __iter__(self):
+            return self.lines
+
+    real = urllib.request.urlopen
+    urllib.request.urlopen = lambda request, timeout: Fake()
+    try:
+        ttft, dec, total, ptok, ctok, text, reasoning = stream_run(body)
+    finally:
+        urllib.request.urlopen = real
+    assert ttft is not None and ttft >= 0 and ctok == 2 and ptok == 1234 and text == "ok" and reasoning == "think", \
+        (ttft, dec, total, ptok, ctok, text, reasoning)
+    print("ctx-probe selftest: ok")
 
 
 def main():
-    sizes = [int(x) for x in sys.argv[1:]] or [4096, 16384, 32768, 65536, 98304, 122880]
+    argv = sys.argv[1:]
+    if "--selftest" in argv:
+        return selftest()
+    after = [a for a in ("--turn", "--branch") if a in argv]
+    args = [a for a in argv if not a.startswith("--")]
+    sizes = [int(x) for x in args] or [4096, 16384, 32768, 65536, 98304, 122880]
     ratio, pt = calibrate()
-    print(f"# calibration: 2000 words -> {pt} tokens (ratio {ratio:.4f}); gen {GEN}/run", flush=True)
+    print(f"# calibration: 2000 words -> {pt} tokens (ratio {ratio:.4f}); gen {GEN}/run; after each depth: {after[0] if after else 'nothing'}",
+          flush=True)
     for i, t in enumerate(sizes):
-        ladder(t, ratio, 100 + i * 7919)
+        seed0 = 100 + i * 7919
+        ptok, reply = ladder(t, ratio, seed0)
+        if after:
+            if after[0] == "--turn":
+                turn_read(t, ratio, seed0, ptok, reply)
+            else:
+                branch_read(t, ratio, seed0, ptok)
     print("# done", flush=True)
 
 

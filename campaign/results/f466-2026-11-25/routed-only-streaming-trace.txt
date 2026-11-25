@@ -1,0 +1,18 @@
+# F-466: what a prompt read must stream if it streams only what its rows route (tools/trace_ideal_tracking.py --routed-windows; seed cut 9,900; 2,046,400 B per expert; link 49.6 GB/s)
+## M1 leg, rows 10230:11317 (one stream, consecutive tokens)
+expert blobs one read moves (seed cut 9900: 14676 experts the GPU does not hold = 30.0 GB = 0.61 s at 49.6 GB/s)
+window rows | windows | distinct experts routed/layer p50 | routed, not resident/layer p50 | of the non-resident | GB | s
+         64 |      16 |                               119 |                                 31 |               10.0% |   3.0 |  0.06
+        150 |       7 |                               152 |                                 42 |               13.8% |   4.1 |  0.08
+        300 |       3 |                               184 |                                 53 |               17.2% |   5.2 |  0.10
+        400 |       2 |                               205 |                                 63 |               20.5% |   6.2 |  0.12
+       1000 |       1 |                               249 |                                 84 |               27.4% |   8.2 |  0.17
+## 6-slot leg, rows 13080:16565 (six streams interleaved)
+expert blobs one read moves (seed cut 9900: 14676 experts the GPU does not hold = 30.0 GB = 0.61 s at 49.6 GB/s)
+window rows | windows | distinct experts routed/layer p50 | routed, not resident/layer p50 | of the non-resident | GB | s
+         64 |      54 |                               125 |                                 31 |               10.1% |   3.0 |  0.06
+        150 |      23 |                               155 |                                 42 |               13.8% |   4.1 |  0.08
+        300 |      11 |                               183 |                                 55 |               17.9% |   5.4 |  0.11
+        400 |       8 |                               192 |                                 59 |               19.3% |   5.8 |  0.12
+       1000 |       3 |                               238 |                                 79 |               25.9% |   7.8 |  0.16
+       2000 |       1 |                               265 |                                 96 |               31.5% |   9.5 |  0.19

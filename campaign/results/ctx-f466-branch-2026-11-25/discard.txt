@@ -1,0 +1,3 @@
+# calibration: 2000 words -> 7954 tokens (ratio 3.9770); gen 512/run; turn reads: off
+ctx    4607 | TTFT    1.42s | prefill    3243 t/s | decode  173.0 t/s | gen 512 in  2.96s | wall    4.38s
+# done

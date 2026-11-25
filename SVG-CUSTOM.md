@@ -15231,3 +15231,156 @@ Housekeeping: the scratch tables that led to 2 were first mislabelled by 10x in 
 the landed tool's numbers above supersede them and its swap rates match an independent pass.  Evidence under
 `campaign/results/f465-2026-11-25/`; the diagnostic boot's harness scratch deleted; engine down; learned bin == gold
 (6f1be6dc); launcher and config untouched.
+
+---
+
+## F-466 — the step back: the maps and the floor were measured on a workload the operator does not run; the request path ranked by the production log (2026-11-25, 16:06-17:15)
+
+**Scope.** The operator's ruling at 16:06: "take a step back and see what code is actually worth improving - right now we
+are just going in blind the whole time and getting nowhere."  Nothing adopted, nothing built into the engine: the
+champion `3865e27a` stayed in service through three diagnostic boots (the first void, section 8).  Landed:
+`campaign/reqlog-census.py` (the production log's request time), `campaign/ctx-lane.sh` with
+`campaign/ctx-probe.py --turn / --branch / --selftest` (the long-context lane), and `--routed-windows` in
+`tools/trace_ideal_tracking.py`.  Evidence under `campaign/results/f466-2026-11-25/`, `ctx-f466-branch-2026-11-25/`
+and `ctx-f466-turn-2026-11-25/`; `notes.md` there says how each was produced.
+
+### 1. Why the rounds read as blind
+F-463 (13:2x) ranked the work itself: A11 telemetry -> A2 + A5 + A16 (the solo kernel set and the host round trip)
+-> A1-interim + A6 + A14 + A15 (the concurrent lane) -> **A3 + A4 + A9 + A10, "the prefill fixed cost - the only
+lane with a double-digit ceiling left on this box"** -> A7 + A8 + A12 + A13 -> A1-structural, "the L item that
+unlocks the 62 % wall share".  The two rounds that followed, F-464 and F-465, were both on F-461's variable 1 (the
+hit rate), which that plan does not rank.  Each closed at its ceiling (gold -3.5..-6.8 % conc; allocation and
+capacity <= 0.4 pt).  Neither was a wrong measurement; both were unranked.  Underneath: every map of this campaign
+(F-451's lexicon, F-452's node trace, F-453's two maps, F-461's floor, F-463's six traces) was measured on the
+probes' ~1.1k-token prompts with 300-500-token generations.  The production log says the operator's requests carry
+a 96k-token median context and that two requests in three generate 64 tokens or fewer.
+
+### 2. The production census [M] (`reqlog-census.py`; `production-request-time.txt`)
+The engine writes one accounting line per request (`generate.cpp:17595`).  The log holds 21,470 over 112 boots since
+11-22; one boot is the operator's traffic: **11-22 15:59 -> 11-24, 4,819 requests, 15,817 request-seconds.**
+(Request-seconds are per request; the engine's prompt reads run on the single window thread, so read seconds are
+close to wall seconds, decode seconds of concurrent requests overlap.)
+
+| term | request-seconds | share | requests | note |
+|---|---:|---:|---:|---|
+| decode | 9,101 | 57.5 % | 4,819 | 3,244 requests (67 %) generate <= 64 tokens: 47 s in total |
+| cold re-read (> 32,768 tokens read) | 3,440 | 21.7 % | 201 | 18,450,852 tokens at 5,364 tok/s; reused prefix p50 0 |
+| per-turn delta read (<= 8,192 tokens) | 2,985 | 18.9 % | 4,521 | read p50 288 tokens |
+| mid read (8,193-32,768) | 292 | 1.8 % | 97 | |
+
+- Context per request: p50 95,953, p90 141,517, max 170,873 tokens; 4,453 of 4,819 run past the 32,768-cell VRAM
+  K/V window.  Prompt tokens: 425.5 M reused, 23.7 M read.
+- A read's cost by size (median): <= 64 tokens 177 ms; 65-256 565 ms; 257-512 730 ms; 513-1,024 838 ms;
+  1,025-2,048 1,031 ms.  At a fixed size it grows with depth: 257-512 tokens read 649 ms below 32k of context,
+  708 at 32-65k, 756 at 65-131k, 817 above 131k.
+- The conversation cache at the park before each cold re-read: p50 3 conversations parked, 6.70 GiB of 8,192 MiB
+  (max 7.98); 708 evictions over the boot.  The cache is byte-bound: it holds three or four conversations of this
+  size.  The boot's plan line reports 105.6 GiB available beyond the expert copies, file tier 0.0 GiB.
+- Decode medians by depth (requests generating >= 500 tokens): 195.5 t/s at 32-65k, 186.7 at 65-131k, 180.1 above
+  131k (n = 114 / 557 / 155; acceptance 0.822 / 0.802 / 0.803).  Section 3 says what that trend is not.
+- Park (a finished turn's K/V to the cache): 439 s over the boot, 133 ms median above 65k; restore + borrow 33 s,
+  76-104 ms; slot demote 64 s; materialize 2 s.  Together 3.4 % of request-seconds: real, not a lever.
+- In 2,527 consecutive request pairs the next prompt extends the previous prompt plus its generation (the tail p50
+  251 tokens): the harness sends each turn back in full, and the engine reads only what is new (p50 134 tokens).
+
+### 3. Depth on an idle box [M] (`ctx-lane.sh`, two boots; `ladder.txt` in both ctx- directories)
+Cold single-stream reads, random-word filler, 512 tokens generated; decode is the probe's cadence after the first token.
+
+| prompt | TTFT | prefill t/s | decode t/s | drafts accepted | boot |
+|---:|---:|---:|---:|---:|---|
+| 2,031 | 0.90 s | 2,268 | 251.7 | 348/356 | branch |
+| 8,137 | 1.80 s | 4,512 | 327.7 | 423/423 | branch |
+| 28,894 | 4.81 s | 6,004 | 191.1 | 348/363 | branch |
+| 56,754 | 8.96 s | 6,336 | 301.6 | 420/431 | branch |
+| 112,312 | 18.02 s | 6,234 | 308.4 | 422/428 | branch |
+| 167,692 | 28.20 s | 5,947 | 292.6 | 425/440 | branch |
+| 2,031 / 28,936 / 112,529 | 0.95 / 4.87 / 17.53 s | 2,139 / 5,942 / 6,418 | 222.0 / 262.8 / 302.8 | 355/373, 378/391, 424/434 | turn |
+
+- **Decode has no depth penalty on this engine to 168k: 292.6-308.4 t/s at 57k-168k against 222.0-251.7 at 2k.**  Drafts
+  accepted ran 0.952-1.000 over the nine runs and the tokens a window yields move with the filler's content;
+  no term falls with depth.  F-181's
+  "-11 % at 244k" (the 10-14 engine) is not reproduced to 168k here.
+- **RETRACTION (mine, 16:20, before the ladder ran):** I read the production trend in section 2 as a long-context
+  decode cost and was about to rank it first.  It is not depth.  On an idle box the ladder is flat; the production
+  medians fall with depth because long sessions are the ones with other slots' reads and traffic around them.
+- Prefill is flat from 29k up: 5,942-6,472 tok/s, 0.164 ms/token marginal between 8,137 and 167,692 tokens.
+
+### 4. The agent turn, and the branch [M] (`ctx-f466-turn-2026-11-25/`, `ctx-f466-branch-2026-11-25/`)
+With the ladder's reply sent back and a ~300-token user message after it (the production shape, section 2):
+
+| history | reused | read | read ms | ms per token read | TTFT |
+|---:|---:|---:|---:|---:|---:|
+| 2,538 | 2,026 | 512 | 446 | 0.87 | 0.46 s |
+| 29,552 | 28,931 | 621 | 569 | 0.92 | 0.58 s |
+| 113,264 | 112,524 | 740 | 903 | 1.22 | 0.93 s |
+
+The reply's own rendering adds 212-440 tokens to the 300 sent; the engine read them all at about a millisecond per
+token.  At the large-read marginal (0.164 ms per token) those 740 tokens would cost 0.12 s.
+
+Without the reply (a sibling prompt - a history edit), the cache serves nothing below 32,768 tokens and only whole
+32,768-token checkpoints above it: reused 0 / 0 / 0 / 32,768 / 98,304 / 163,840 and re-read 2,290 / 8,397 / 29,136 /
+24,251 / 14,290 / 4,111 tokens in 918 / 1,737 / 4,737 / 4,350 / 3,214 / 1,808 ms.  Rare in production (one of the 201
+cold re-reads reused 32,768 or more), so priced, not pursued.  My first turn probe sent this shape and called it a
+turn; the engine's lines exposed it and the probe now sends both shapes under their own names.
+
+### 5. What the code and the captures say a read is
+- `stream_all_min()` is 1,024 tokens (`generate.cpp:703`, `prefill.cpp:181`): a chunk that long or longer "streams
+  every expert the GPU does not hold once, routed or not" through a 96-slot issuer ring (`prefill.cpp:2865`,
+  `:2905-2950`); a shorter chunk runs the 8-slot staging ring `STAGE` (`prefill.cpp:135`) and "moves only the experts
+  its own tokens route to" (`generate.cpp:8029-8031`).
+- **Three regimes, measured on the idle box today:** ~50 ms fixed (18-19 new tokens: 45-171 ms); below 1,024 tokens
+  0.8-1.2 ms per token (123: 255-265 ms; 323: 323-395 ms; 512 / 621 / 740: 446 / 569 / 903 ms); at 1,024 and above
+  0.75-0.94 s for 1,161-2,031 tokens, then 0.164 ms per token.  The knee at 1,024 is the threshold.
+- The walk is the link at its ceiling: the F-452 capture holds one read's 32.65 GB in 658 ms = 49.6 GB/s, GPU
+  25-46 % busy meanwhile (`f452-capture-copies.txt`).  The non-resident experts are 14,676 = 30.0 GB = 0.61 s.
+- **What a read must stream if it streams only what its rows route** (`routed-only-streaming-trace.txt`; decode
+  rows of the F-465 trace, a stand-in for prompt tokens): a window of 300-400 rows routes 17-20 % of the
+  non-resident experts = 5.2-6.2 GB = 0.10-0.12 s at 49.6 GB/s; 1,000 rows 26-27 % = 7.8-8.2 GB; 2,000 rows 31.5 %.
+  The sub-1,024 path, which already streams only what is routed, takes 0.45-0.90 s to move 5-6 GB: **four to
+  seven times the bytes' link time.**  Where the rest goes is not measured (section 8, falsifier b).
+- Prompt reads run on the single window thread and every slot stalls for a piece (F-463 section 1.6 [M]).
+
+### 6. What is worth improving, ranked by the operator's own request-seconds
+| # | term (share) | code / setting | measured now | ceiling | certainty |
+|---|---|---|---|---|---|
+| 1 | cold re-reads of long sessions (21.7 %) | `--conversation-cache-mib 8192`, `--conversation-cache-slots 24` (config) | 8 GiB holds 3-4 conversations of this size; 708 evictions | up to -3,440 s per 46 h of this traffic, and each avoided re-read removes a 17-27 s stall of every slot | the share that is eviction is unknown |
+| 2 | the per-turn read below 1,024 tokens (10.4 %: 3,408 requests, 1,640 s) | `prefill.cpp:135` `STAGE = 8`, the short-chunk path | 0.45-0.90 s for 512-740 tokens; bytes need 0.10-0.12 s | ~-800 s; TTFT per tool call ~0.25 s | mechanism by code read and rates; the split of the 446 ms is owed |
+| 3 | the per-turn read of 1,024-8,192 tokens (8.5 %: 1,113 requests, 1,344 s) | `prefill.cpp:2905-2950` stream-all (A3) | 30.0 GB = 0.61 s a read; 26-31 % routed at 1-2k rows | ~-500 s | priced on decode rows |
+| 4 | every cold start's stall (the 3,440 s of row 1, item 1b) | prefill at depth: A7 `moe_fused_iq.cu:479-493`, A9 `ngram.cpp:539`; the walk about 11-12 % of a chunk | 17.4-17.9 s at 112k, 28.0 s at 168k | halves with a 2x prefill | no kernel split of a deep read exists |
+| 5 | reads on the window thread (A1-structural, `generate.cpp:15758-15811`) | a read thread off the window thread | every slot stalls for each read and gets 0.5 x piece_ms of decode between pieces | the cross-slot stall | F-463's L item |
+| 6 | decode (57.5 %) | the F-461 floor stands for this kernel set at any depth to 168k | - | A5 (inferred 0.3-0.7 ms of the 2.163 ms handshake), A6 (0.75-1.0 ms of a cohort round), fusion pieces <= +8 % | each priced by inference or by a method that failed once |
+
+The adaptive tier, the CPU pool, the profile and the link share - F-454 to F-465 - are all inside row 6.
+
+### 7. Corrections to the record
+- F-463 sections 1.6-1.7: "11,567 s of prompt reads vs 7,103 s of rounds - 62/38" sets request-seconds against
+  cohort-round seconds.  Like with like (section 2): **42.5 % read, 57.5 % decode.**  The ranking it drew stands.
+- F-463's A8 ("GDN recurrence is sequential per token; a chunked scan exists only in the sm_70 build",
+  `kernels.cu:429-436`): those lines are the Volta-only warp-local variant of the experimental build; the
+  WY-chunked recurrence is in the CUDA main build behind `STRATA_GDN_CHUNKED` (`kernels.cu:869`, `:2712-2714`) and
+  the launcher exports 1 (F-224, 1.68x at 32K).  **A8 is withdrawn for the standing.**  [static read]
+- F-463's A2 was withdrawn by F-465; A14 (+~600 slots) is retired there.
+- Mine, 15:5x: I proposed the profile re-split to the operator before reading F-463's own ranking.  The step back
+  was owed then.
+
+### 8. Instruments, the void boot, state, the next falsifiers
+- `campaign/reqlog-census.py`: the per-request accounting line's reader (anchored per boot; the cancelled form
+  "N of M" handled); `campaign/t42-prefill-ladder.py` carries a partial regex of the same line - fold on touch.
+- `campaign/ctx-lane.sh` + `campaign/ctx-probe.py`: the long-context lane; `--selftest` runs before every boot; the
+  ladder's default output and its prompts are byte-identical to the committed probe (checked against HEAD on three
+  seeds).  The tracker takes no row (depth is its other axis).
+- **Two defects of the new harness, both mine, both fixed:** its first boot (16:26) was void - my rewrite of the
+  probe dropped `urllib.request.Request`, the probe crashed on request one and the harness printed DONE with zero
+  measured lines; its second printed CTX FAIL on a restart count that included the boot's own start line (checked
+  by hand: one start line, no watchdog line, no request in error - the read stands).  Rules: a harness exits 0 only
+  with measured lines; an instrument's self-test runs before the boot it would waste.
+- `tools/trace_ideal_tracking.py --routed-windows`: default output identical to HEAD (checked).
+- **State at commit:** engine down; learned bin == gold; launcher and config untouched; champion `3865e27a`; no
+  tracker point; the operator's uncommitted files untouched.
+- **The next falsifiers, cheapest first, each priced before it runs:** (a) row 1 - whether the 201 re-reads are
+  evictions: the server's cache lines around each, free; then the operator's decision on a larger cache, proven by
+  the re-read rate per 1,000 requests in production and by config-ladder parity on M1 and 6-conc.  (b) row 2 - one
+  boot, `STRATA_PREFILL_TIMING=1`, `ctx-lane.sh --turn`: the split of the 446 ms decides A4 (a deeper ring or an
+  issuer a layer ahead; no fidelity risk).  (c) row 4 - one nsys capture of a 112k-token read: the kernel split of
+  its 17.4 s prices A7 and A9.  (d) row 6 - A5's Golden + LOGPOS gate build, the last solo item with a measured
+  term under it (2.163 ms of handshake kernels a window).

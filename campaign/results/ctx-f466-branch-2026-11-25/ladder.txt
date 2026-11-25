@@ -1,0 +1,14 @@
+# calibration: 2000 words -> 7954 tokens (ratio 3.9770); gen 512/run; turn reads: on
+ctx    2031 | TTFT    0.90s | prefill    2268 t/s | decode  251.7 t/s | gen 512 in  2.03s | wall    2.93s
+ctx    2290 | turn + 259 tokens | TTFT   0.93s | tail   279 tok/s | gen 8 | wall  0.97s   (the depth served from the conversation cache if the engine log reads it reused)
+ctx    8137 | TTFT    1.80s | prefill    4512 t/s | decode  327.7 t/s | gen 512 in  1.56s | wall    3.37s
+ctx    8397 | turn + 260 tokens | TTFT   1.75s | tail   149 tok/s | gen 8 | wall  1.79s   (the depth served from the conversation cache if the engine log reads it reused)
+ctx   28894 | TTFT    4.81s | prefill    6004 t/s | decode  191.1 t/s | gen 512 in  2.68s | wall    7.49s
+ctx   29136 | turn + 242 tokens | TTFT   4.76s | tail    51 tok/s | gen 8 | wall  4.78s   (the depth served from the conversation cache if the engine log reads it reused)
+ctx   56754 | TTFT    8.96s | prefill    6336 t/s | decode  301.6 t/s | gen 512 in  1.70s | wall   10.66s
+ctx   57019 | turn + 265 tokens | TTFT   4.38s | tail    61 tok/s | gen 8 | wall  4.41s   (the depth served from the conversation cache if the engine log reads it reused)
+ctx  112312 | TTFT   18.02s | prefill    6234 t/s | decode  308.4 t/s | gen 512 in  1.66s | wall   19.68s
+ctx  112594 | turn + 282 tokens | TTFT   3.25s | tail    87 tok/s | gen 8 | wall  3.30s   (the depth served from the conversation cache if the engine log reads it reused)
+ctx  167692 | TTFT   28.20s | prefill    5947 t/s | decode  292.6 t/s | gen 512 in  1.75s | wall   29.95s
+ctx  167951 | turn + 259 tokens | TTFT   1.86s | tail   139 tok/s | gen 8 | wall  1.90s   (the depth served from the conversation cache if the engine log reads it reused)
+# done

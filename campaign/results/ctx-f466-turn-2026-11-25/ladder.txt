@@ -1,0 +1,8 @@
+# calibration: 2000 words -> 7954 tokens (ratio 3.9770); gen 512/run; after each depth: --turn
+ctx    2031 | TTFT    0.95s | prefill    2139 t/s | decode  222.0 t/s | gen 512 in  2.31s | wall    3.26s
+ctx    2538 | turn   + 300 tokens | TTFT   0.46s | gen 8 | wall  0.52s
+ctx   28936 | TTFT    4.87s | prefill    5942 t/s | decode  262.8 t/s | gen 512 in  1.95s | wall    6.82s
+ctx   29552 | turn   + 300 tokens | TTFT   0.58s | gen 8 | wall  0.62s
+ctx  112529 | TTFT   17.53s | prefill    6418 t/s | decode  302.8 t/s | gen 512 in  1.69s | wall   19.23s
+ctx  113264 | turn   + 300 tokens | TTFT   0.93s | gen 8 | wall  0.98s
+# done

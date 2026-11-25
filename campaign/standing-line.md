@@ -112,3 +112,21 @@ Use as direction, falsify on this box.
   prompt reads; per-request p50 58.5 t/s is diluted by other slots' reads).  See F-463 A1/A3/A4/A7-A10.
 - Solo-decode "8-11 ms/token" and "prefill flat" in the original text were misreadings (MTP-amortized windows;
   laptop rig).  F-461's numbers govern: solo 235-248, conc 289-297 t/s.
+
+## Corrections and additions (F-466, 2026-11-25) - the floor's regime; the request path ranked by the production log
+
+- THE FLOOR'S REGIME: F-461's solo and concurrent numbers are measured at ~1.1k-token prompts with long generations.
+  The production log (11-22 -> 11-24, 4,819 requests, 15,817 request-seconds) carries a 96k-token median context,
+  two requests in three generating <= 64 tokens, and splits its time 57.5 % decode / 42.5 % prompt read.  (F-463's
+  "62 % of wall" set request-seconds against cohort-round seconds; like with like it is 42.5 %.)
+- Depth is not a decode cost on this engine: the idle ladder reads 292.6-308.4 t/s at 57k-168k tokens against
+  222.0-251.7 at 2k (nine runs, drafts accepted 0.952-1.000).  F-181's -11 % at 244k is not reproduced to 168k.
+- The request path, by the operator's request-seconds (`campaign/reqlog-census.py`): (1) cold re-reads of long
+  sessions 21.7 % - the conversation cache is byte-bound at 8 GiB (three or four conversations of this size; 708
+  evictions in the boot); (2) the per-turn read below 1,024 tokens 10.4 % - 0.8-1.2 ms per token, for bytes that
+  need a quarter of that on the link (`prefill.cpp:135`, STAGE = 8); (3) the per-turn read of 1,024-8,192 tokens
+  8.5 % - stream-all moves 30.0 GB where 26-31 % is routed (`prefill.cpp:2905`); (4) prefill at depth, 5.9-6.5k
+  tok/s, sets every cold start's 17-28 s stall; (5) reads run on the window thread and stall every slot.  Decode -
+  the adaptive tier, the CPU pool, the profile, the link share - is the 57.5 % that is at its floor.
+- Instruments: `campaign/reqlog-census.py` and `campaign/ctx-lane.sh --turn | --branch` (reads, never tracker
+  points).  F-463's A8 is withdrawn: the WY-chunked recurrence is in the standing behind STRATA_GDN_CHUNKED (F-224).
