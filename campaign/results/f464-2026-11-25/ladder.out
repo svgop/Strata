@@ -1,0 +1,23 @@
+  [A0] up in 68s prewarm=done cvec=?
+  [A0 leg1  (discard)] M1 206.0  conc 270.3  M3b 79.0%  load 4.47
+  [A0 leg2] M1 211.6  conc 252.1  M3b 76.1%  load 5.46
+  [A0 leg3] M1 210.8  conc 268.8  M3b 76.7%  load 3.60
+  [B1] up in 68s prewarm=done cvec=?
+  [B1 leg1  (discard)] M1 213.3  conc 245.6  M3b 75.2%  load 5.68
+  [B1 leg2] M1 244.7  conc 247.8  M3b 76.7%  load 4.57
+  [B1 leg3] M1 213.3  conc 254.3  M3b 78.9%  load 4.98
+  [A2] up in 60s prewarm=done cvec=?
+  [A2 leg1  (discard)] M1 231.1  conc 263.3  M3b 78.1%  load 4.45
+  [A2 leg2] M1 221.1  conc 262.4  M3b 76.4%  load 5.55
+  [A2 leg3] M1 223.2  conc 249.0  M3b 78.8%  load 5.70
+  [B3] up in 64s prewarm=done cvec=?
+  [B3 leg1  (discard)] M1 222.0  conc 246.5  M3b 77.6%  load 6.21
+  [B3 leg2] M1 221.5  conc 228.8  M3b 76.4%  load 5.58
+  [B3 leg3] M1 212.2  conc 235.8  M3b 76.9%  load 4.97
+
+=== CONFIG LADDER [f464-2026-11-25]  measured legs only, means over 4 boots x 2 legs
+lane               A         B    A vs B   band +-4%
+M1             216.7     222.9     -2.8%
+6-conc         258.1     241.7     +6.8%
+M3b %           77.0      77.2     -0.3%
+A = campaign/results/f464-2026-11-25/config-a-seed.json  |  B = campaign/results/f464-2026-11-25/config-b-gold.json

@@ -15097,3 +15097,66 @@ Nothing adopted, nothing built into the engine; the engine stayed down; no GPU p
 were compile-only, to /tmp).  Repo state at this entry: `main` = origin/main (F-461) + F-462 + this; working
 tree also carries another session's uncommitted edits (serve/server.py, tools/, config/custom-dsv41-8081.json)
 that are not mine and were left untouched.
+
+---
+
+## F-464 — the boot prior priced: gold against the seed on the standing recipe. CLOSED: the standing keeps the seed, gold costs the concurrent lane; the config ladder's steering check was blind and is fixed (2026-11-25, 14:08-14:23)
+
+Question (operator, from the F-463 standing-line note "the learned-vs-base profile as an operator question, not
+a finding"): which expert profile does the standing boot read, and would a learned one serve better.  Read first,
+then measured.
+
+What boots.  The standing config passes `--expert-profile data/expert-profile.bin` (the 10-14 seed, sha256
+8f59b4aa) and `--expert-profile-save data/expert-profile-learned.bin` as RAW engine arguments;
+`learned_profile_args` (serve/server.py:3296-3310) returns the arguments unchanged when the raw save argument is
+present, so the learned bin is written (at exit and every 30 MINUTES - generate.cpp:1100, :17794; AGENTS.md said
+"rounds", corrected in 619837ac2) and never read back; the pin (gold) sanitises a file nothing loads.  Gold
+(6f1be6dc, 11-18) and the seed rank all 24,576 pairs and disagree at the hot end: top-32 overlap 28.5% per layer,
+top-64 42.6%, top-128 61.8%, no layer identical.  Gold's kinship: post-campaign-1627 65.5% (top-64) against
+pre-persona-campaign 43.5% - battery-shaped, and its teaching traffic is not on record.
+
+Run.  `campaign/config-abab.py --label f464-2026-11-25`: ABAB, four boots, prewarm + discarded leg 1 + two
+measured legs each, learned bin pinned to gold before every boot, ONE argument differing (args[61]) - A = seed,
+B = gold.  Steering validated by the server's handshake on all four boots: `add:8-8+project:1-47`.
+
+    lane       A (seed)   B (gold)   A vs B
+    M1           216.7      222.9     -2.8%
+    6-conc       258.1      241.7     +6.8%
+    M3b %         77.0       77.2     -0.3%
+    per-leg conc, measured: A 252.1 268.8 262.4 249.0 | B 247.8 254.3 228.8 235.8
+
+Mechanism, from the engine's per-request `decode expert cache hit rate` line (hit-rate-trajectory.txt):
+- The boot prior is spent within the first request: request 1 hits 96.25% (A) against 96.75% (B), the first six
+  requests 95.60 against 95.61 - the adaptive tier re-ranks inside a request (~100 windows per 600 tokens), so
+  the warm-in is not where a prior pays.
+- At steady state (request 7+) the prior persists in the ranking tail (the loaded order is the adaptive order's
+  prior, generate.cpp:4724): A 95.29% against B 94.49% (per boot 95.37/95.21 against 94.48/94.50), and the
+  misses that reach PCIe 0.81% against 1.12% of the routed experts - 38% more under gold, in both B boots.
+  That is the concurrent lane's binding resource (the F-461 floor: CPU-pool DRAM reads x miss rate); M1 is
+  kernel-bound and reads parity.
+
+Verdict.  Gold is REJECTED for the standing (law 2: no lane gained, 6-conc -6.4% against the seed).  Magnitude
+honest: pair-wise the gap is +3.7% (A0/B1) and +10.1% (A2/B3), B3 the slowest boot of the window; without it
++3.5%, inside the band - the magnitude is 3.5-6.8%, the direction consistent in both pairs and in both
+instruments.  Standing-line A1's open question ("whether a profile learned on this box's current traffic would
+raise the concurrent hit rate") is answered for gold: lower, not higher.  Re-open clause: a learned prior pays
+only if its tail places the target traffic better than the generic seed; the cheapest falsifier for any
+candidate is ONE boot's request-7+ PCIe-routed share against A's 0.81% - `post-campaign-1627` and `pinned-1357`
+owe that read before any ladder.
+
+Window note.  The standing (A) read M1 216.7 / conc 258.1 this window - 8% / 12% below the morning's 235-248 /
+289-297, both arms equally, the box carrying Chrome's compositor (337 MiB on the GPU) and the DSH node process.
+A window read, not a point (law 12); nothing changed, nothing to revert.
+
+Instrument defect, fixed.  `config-abab.py` read the armed geometry from /health's `engine` field - which is
+the engine's VERSION STRING (serve/server.py:5189) - so it printed `cvec=?` for every boot of the F-454 and
+F-455 ladders (12 reads) and of this one (4), and recorded `cvec: null`: the steering check was blind by
+construction.  It now reads the server's validated `control vector: armed <geometry>` line from its own
+server.log for the boot's byte range and warns UNVERIFIED when a config that arms a vector produced none;
+unit-tested on this ladder's log (4/4 -> add:8-8+project:1-47; past the last line -> "?").  F-454/F-455 kept no
+server log; the engine log's own banner shows table 1 armed on 109 of its 110 boots (the exception is the 11-22
+boot before the persona vector existed).
+
+Repo state: engine down, port free, learned bin == gold, champion 3865e27a untouched; evidence under
+campaign/results/f464-2026-11-25/ (configs, rows.json, ladder.out, twelve leg transcripts, hit-rate and steering
+excerpts).

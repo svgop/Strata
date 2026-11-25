@@ -1,0 +1,9 @@
+F-464 steering handshake per boot - the server's validated line (serve/server.py, from engine.info['cvec']), cut from the harness's server.log
+===== A0/home/svg/LLM/strata-custom-2/campaign/results/f464-2026-11-25/config-a-seed.json --port 8081 --host 127.0.0.1 2026-11-25 14:08:53 =====
+[strata] control vector: armed add:8-8+project:1-47 (validated against the config)
+===== B1/home/svg/LLM/strata-custom-2/campaign/results/f464-2026-11-25/config-b-gold.json --port 8081 --host 127.0.0.1 2026-11-25 14:12:37 =====
+[strata] control vector: armed add:8-8+project:1-47 (validated against the config)
+===== A2/home/svg/LLM/strata-custom-2/campaign/results/f464-2026-11-25/config-a-seed.json --port 8081 --host 127.0.0.1 2026-11-25 14:16:22 =====
+[strata] control vector: armed add:8-8+project:1-47 (validated against the config)
+===== B3/home/svg/LLM/strata-custom-2/campaign/results/f464-2026-11-25/config-b-gold.json --port 8081 --host 127.0.0.1 2026-11-25 14:19:55 =====
+[strata] control vector: armed add:8-8+project:1-47 (validated against the config)

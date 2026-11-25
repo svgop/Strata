@@ -22,6 +22,9 @@ LAUNCHER = REPO / "launch-custom-iq3s-8081.sh"
 RESULTS = REPO / "campaign/results"
 KEY = json.loads((REPO / "config/custom-iq3_s-8081.json").read_text())["api_key"]
 ANCHOR_RE = re.compile(r"^launch::exec_engine --config \S+ --port 8081 --host 0\.0\.0\.0$")
+# the server's validated steering handshake (serve/server.py prints it from engine.info["cvec"] once the gate has
+# checked the armed tables against the config).  /health does NOT carry it: its "engine" field is the version string.
+ARMED_RE = re.compile(r"^\[strata\] control vector: armed (\S+) \(validated against the config\)", re.M)
 
 _proc = None
 
@@ -49,6 +52,14 @@ def health():
         return {}
 
 
+def armed_geometry(log: pathlib.Path, pos: int) -> str:
+    """The validated steering handshake this boot printed to `log` after byte offset `pos`; "?" when there is none."""
+    try:
+        return ARMED_RE.findall(log.read_text(errors="replace")[pos:])[-1]
+    except IndexError:
+        return "?"
+
+
 def boot(config: pathlib.Path, out: pathlib.Path, tag: str) -> str:
     """Boot the standing recipe under the launcher's own env arms with `config`; return the armed geometry."""
     global _proc
@@ -67,14 +78,20 @@ def boot(config: pathlib.Path, out: pathlib.Path, tag: str) -> str:
         sys.exit(f"REFUSING: unexpected engine argv {argv}")
     argv[0] = str(REPO / ".venv/bin/python")
     env = dict(i.split("=", 1) for i in env_file.read_bytes().decode("utf-8", "surrogateescape").split("\0") if i)
-    with open(out / "server.log", "a") as fh:
+    arms_vector = "--control-vector-scaled" in json.loads(config.read_text()).get("args", [])
+    log = out / "server.log"
+    pos = log.stat().st_size if log.exists() else 0
+    with open(log, "a") as fh:
         fh.write(f"\n===== {tag} {' '.join(argv)} {time.strftime('%F %T')} =====\n"); fh.flush()
         _proc = subprocess.Popen(argv, cwd=REPO, env=env, stdout=fh, stderr=subprocess.STDOUT, start_new_session=True)
     t0 = time.time()
     while time.time() - t0 < 900:
         h = health()
         if h.get("prewarm") in ("done", "failed", "yielded"):
-            cvec = (h.get("engine") or {}).get("cvec") or "?"
+            cvec = armed_geometry(log, pos)
+            if cvec == "?" and arms_vector:
+                print(f"  [{tag}] WARNING: the config arms a control vector and the server printed no validated "
+                      f"'control vector: armed' line - this boot's steering geometry is UNVERIFIED", flush=True)
             print(f"  [{tag}] up in {time.time() - t0:.0f}s prewarm={h['prewarm']} cvec={cvec}", flush=True)
             return cvec
         if _proc.poll() is not None:

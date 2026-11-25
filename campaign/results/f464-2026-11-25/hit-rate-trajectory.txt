@@ -1,0 +1,22 @@
+F-464 per-request decode expert-cache hit rate by boot (logs/custom-iq3_s.log, segmented on "engine started");
+the first lines of a boot are the prewarm replays, then probe leg 1 (discard), legs 2-3 (measured). Each line = one request.
+[2026-11-25 14:09:13] A(seed)  n=135
+   hit%       96.4  94.6  95.2  94.4  96.8  94.5  96.0  97.6  98.6  97.3
+   PCIe-rtd%   0.6   1.0   1.0   1.1   0.5   1.2   0.6   0.5   0.1   0.4
+[2026-11-25 14:13:02] B(gold)  n=140
+   hit%       96.5  97.2  94.8  94.3  96.4  94.8  96.7  97.4  98.6  96.3
+   PCIe-rtd%   0.6   0.4   1.1   1.4   0.6   1.2   0.5   0.6   0.1   0.6
+[2026-11-25 14:16:41] A(seed)  n=136
+   hit%       96.1  97.4  95.0  95.1  95.4  97.6  96.3  97.7  97.9  98.6
+   PCIe-rtd%   0.6   0.3   1.0   1.1   0.8   0.3   0.8   0.2   0.4   0.1
+[2026-11-25 14:20:17] B(gold)  n=144
+   hit%       97.0  97.7  93.4  95.3  94.6  97.6  94.0  97.2  96.3  98.8
+   PCIe-rtd%   0.6   0.3   1.4   1.1   1.2   0.3   1.4   0.3   0.8   0.1
+
+boot stamp           arm         n   req1  first6   req7+  pcie1 pcie first6 pcie req7+
+2026-11-25 14:09:13  A(seed)   135   96.4   95.10   95.37    0.6        0.96       0.78
+2026-11-25 14:13:02  B(gold)   140   96.5   95.50   94.48    0.6        0.94       1.11
+2026-11-25 14:16:41  A(seed)   136   96.1   96.10   95.21    0.6        0.70       0.84
+2026-11-25 14:20:17  B(gold)   144   97.0   95.72   94.50    0.6        0.86       1.12
+arm A(seed)  : req1 96.25%  first6 95.60%  req7+ 95.29%   | PCIe-routed req1 0.60%  req7+ 0.81%
+arm B(gold)  : req1 96.75%  first6 95.61%  req7+ 94.49%   | PCIe-routed req1 0.60%  req7+ 1.12%

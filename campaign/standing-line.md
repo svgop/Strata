@@ -96,6 +96,9 @@ Use as direction, falsify on this box.
 - A1 residency: the placement family is the other session's priced frontier (F-453 ff., "gold" pinned for
   batteries); F-461 names the hit rate its movable variable 1.  New config items from the F-463 trace: +~600
   slots from idle VRAM (A14), the learned-vs-base profile as an operator question, not a finding.
+  RESOLVED for gold (F-464, same-window ABAB): the standing boots on the 10-14 seed and never reads the learned
+  bin; as the boot prior gold costs 6-conc 3.5-6.8 % (tail misplacement: 38 % more PCIe-routed misses) with M1/M3b
+  parity - the standing keeps the seed.
 - A2 tail-skip: production runs 7 (T63) while the determinism pin says 0 - a contract conflict; on this 32 GB
   rig at 96 % hits its perf value is ~nil (~2 skipped entries/window), so 7 -> 0 is a quality-side battery item.
 - The quality battery exists: the other session's paired 534-question test (p = 0.345 for the F-452 state).
