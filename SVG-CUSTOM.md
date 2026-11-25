@@ -14982,4 +14982,5 @@ campaign/results/f460-2026-11-25/prefetch-bench.md, raw in prefetch-30-*.out; no
 - **Owed - what would tell:** (1) whether the other CCD's threads hit the first CCD's L3 or go to DRAM under one reader: UMC `cas_count_read` over one
   call (perf's amd_umc_0/1, amd_df and amd_l3 are registered on this box); (2) the router lookahead's hit rate - each miss is a wasted pass and a cold
   call; (3) the pass's duration beside the engine's real staging traffic (measured only as two equal readers); (4) what the pass's 70-80 % share of
-  DRAM reads costs the staging in the same window. The bench's fixtures (4.7 GB) are in Custom-data/vector-lab/f460-fixtures: scratch, to reclaim.
+  DRAM reads costs the staging in the same window. The bench's 4.7 GB of synthetic fixtures were reclaimed at closeout;
+  `POOL_BENCH_FIXTURES=<dir>` rebuilds them in ~90 s (a first run then carries its own generation's load: not a measured run).
