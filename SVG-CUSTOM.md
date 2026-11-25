@@ -14821,6 +14821,24 @@ returned today; `engine/strata` unchanged at `3865e27a`).
 
 **State (11:25): HEAD == origin/main; champion `3865e27a` in service, engine stopped, profile pinned; all files svg-owned.**
 
+## HAND-OFF ADDENDUM 2 — F-459 closes item 1a (2026-11-25, 12:05)
+
+**The both-cohorts double read is CLOSED: the share is 6.2%.**  Measured on the engine's own CPU-miss list (candidate
+`529d0c57`, one boot, three probe legs, legs 2-3 counted, 681 rounds; `campaign/results/f459-2026-11-25/`): of the
+(layer, expert) blobs cohort B computed in a round, the share cohort A also computed is mean 6.19%, median 3.57%, p10 0,
+p90 15.56%; pooled 3,105 / 50,773 = 6.12%.  Fast rounds 6.0%, slow 7.6%.  The counter reconciles with the engine's own
+`multi_misses` on 2,016 of 2,016 kept rounds across three boots.  Price: 0.42 x 0.46 x 0.715 x share = **+0.86% conc**
+(median +0.5%, p90 +2.2%): under the 15% line by every segment mean - the lever closes.  Re-open: a change in a round's
+CPU population (more cohorts, longer windows), priced by the same arithmetic.  The counter stays in the tree, default off
+(`STRATA_COHORT_SHARED_MISS`, 3 files, +132/-2; the unset path compiles to identical instructions at the split site; the
+dispatch struct's size and member offsets unchanged).  The brief's "experts <= 64 per layer" was false (512): the
+delegate sized the record from the geometry and refused the boot rather than assert.
+- *Instrument note, resolved with evidence:* the smoke's "no request of the leg ended in an error" reads the launcher's
+  captured output, which holds the SERVER's request lines (35 `[strata] done:` lines in the F-459 smoke boot, none in
+  error); the ENGINE's lines go to logs/custom-iq3_s.log.  The check reads the right stream.
+
+**The frontier now holds one item above the band: the L3 prefetch (item 1).  Its falsifier is next.**
+
 ## F-459 - the both-cohorts CPU-miss share (diagnostic; priced before the leg)
 **Origin.**  F-458's item 1a: twelve rows are two calls of six (`ExpertJobMulti::MAXT = 8`), so a (layer, expert) that both
 cohorts miss is streamed twice - 89.8 us against 46.8 for one call, -42% for that blob.  Whether one call for both cohorts'
