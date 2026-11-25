@@ -1,0 +1,9 @@
+trace data/calibration/trace-conc.bin: 16565 rows per layer, k 10; leg rows [13080,16565) = 3485, evaluated 2400
+capacity ->     cut9900    fit9900      equal    cut+263    cut+411   cut+1000   cut+2000    fit+263
+X=  10 rows |    78.50%     79.23%     77.76%     78.87%     79.09%     80.04%     81.83%     79.62% |  256.5 swaps/row = 1254.3/window
+X=  20 rows |    86.78%     87.37%     86.23%     87.09%     87.25%     87.84%     88.79%     87.63% |  151.2 swaps/row =  739.4/window
+X=  40 rows |    92.20%     92.58%     91.89%     92.37%     92.45%     92.86%     93.46%     92.74% |  103.5 swaps/row =  506.4/window
+X=  80 rows |    95.81%     95.99%     95.43%     95.90%     95.95%     96.14%     96.47%     96.08% |   56.4 swaps/row =  275.8/window
+X= 160 rows |    97.76%     97.95%     97.28%     97.85%     97.90%     98.03%     98.21%     98.00% |   30.1 swaps/row =  147.2/window
+X= 320 rows |    98.45%     98.72%     97.84%     98.57%     98.62%     98.80%     98.94%     98.79% |   19.9 swaps/row =   97.4/window
+experts per layer that 99 % of the entries need at the mid row (horizon 80 rows): median 114, max 229; the cut gives 141-265

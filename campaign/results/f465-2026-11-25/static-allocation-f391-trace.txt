@@ -1,0 +1,17 @@
+positions 4127, k 10, entries/layer 41270
+
+== slots 9900 ==
+seed capacities: min 141 max 265 sd 29.6
+[ALL] boot fill as-is 75.50 | seed caps + ideal content 89.48 | global cut by trace 89.56 | optimal alloc 89.56 | optimal, >=48/layer 89.56
+      optimal: min 152 max 274 sd 27.3; layers gaining >=20 slots: 2, losing >=20: 2; |diff|>=20: 4; sum|diff| 442
+      +400 slots, re-allocated: 90.53
+      +600 slots, re-allocated: 90.99
+[first half] boot fill as-is 77.37 | seed caps + ideal content 94.04 | global cut by trace 94.16 | optimal alloc 94.16 | optimal, >=48/layer 94.16
+      optimal: min 154 max 279 sd 26.1; layers gaining >=20 slots: 6, losing >=20: 3; |diff|>=20: 9; sum|diff| 590
+      +400 slots, re-allocated: 94.76
+      +600 slots, re-allocated: 95.04
+      FIT first half -> EVAL second half: seed caps 90.46 | global cut fit 90.48 | optimal fit 90.48
+[second half] boot fill as-is 73.62 | seed caps + ideal content 90.46 | global cut by trace 90.58 | optimal alloc 90.58 | optimal, >=48/layer 90.58
+      optimal: min 140 max 290 sd 34.5; layers gaining >=20 slots: 5, losing >=20: 5; |diff|>=20: 10; sum|diff| 552
+      +400 slots, re-allocated: 91.52
+      +600 slots, re-allocated: 91.95

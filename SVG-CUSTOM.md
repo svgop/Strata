@@ -15160,3 +15160,74 @@ boot before the persona vector existed).
 Repo state: engine down, port free, learned bin == gold, champion 3865e27a untouched; evidence under
 campaign/results/f464-2026-11-25/ (configs, rows.json, ladder.out, twelve leg transcripts, hit-rate and steering
 excerpts).
+
+---
+
+## F-465 — the profile's levers priced on a concurrent routing trace: allocation and capacity CLOSED (<= 0.4 pt), the adaptive tier is swap-rate-bound and already earns the hit rate of a 50-100x costlier ideal; the swap path's link rate measured at 42 GB/s; the gu kernel corrected (2026-11-25, 15:15-15:45)
+
+**The question (operator): "how do we make this profile more effective and powerful"; then: "what I care about now is
+optimization".**  Answer in four priced parts.  Nothing adopted; one instrument landed; two of my own claims retracted.
+
+**1. Static allocation - falsified before any boot.**  Covered routings is a sum of pair counts, so a cut by a trace's
+own counts IS the optimal static allocation of the same slots; no water-filling over layers can cover more.  On the
+F-391 trace (4,127 positions) the seed's capacities with each layer's own top-n reach 89.48 % against the trace's own
+cut at 89.56 % (+0.08), and 90.48 vs 90.48 fitted on one half and read on the other
+(`static-allocation-f391-trace.txt`).  RETRACTION of what I told the operator at 14:4x - "no tool allocates the cut,
+the per-layer split falls out by accident": the split is the optimum for the traffic the cut was fitted on.
+
+**2. The instrument and the trace.**  `tools/trace_ideal_tracking.py`: per layer, the resident set at row t is the top
+n_l experts of the preceding X rows (ideal causal tracking - the past known exactly, swaps instant and free); n_l is
+the layer's share of the profile's first `slots` pairs (the engine's fill: one global counter, swaps inside a layer).
+It prints the hit rate against horizon and capacity, the demand, and the swap rate that horizon costs.  Trace: the
+standing + `--dump-routing` through config-abab (one diagnostic boot, steering validated `add:8-8+project:1-47`,
+learned bin == gold before and after), `data/calibration/trace-conc.bin` (gitignored), 16,565 rows per layer; legs
+placed by the boot's own window lines: prewarm 10,230, M1 1,087, 3-slot 1,763, 6-slot 3,485 (last).  The 6-slot leg,
+last 2,400 rows evaluated, 4.89 rows per window:
+
+| horizon (rows / windows) | cut 9,900 | cut +411 | cut +2,000 | the leg's own cut | ideal swaps per window |
+|---|---|---|---|---|---|
+| 20 / 4   | 86.78 % | 87.25 % | 88.79 % | 87.37 % | 739 |
+| 40 / 8   | 92.20 % | 92.45 % | 93.46 % | 92.58 % | 506 |
+| 80 / 16  | 95.81 % | 95.95 % | 96.47 % | 95.99 % | 276 |
+| 160 / 33 | 97.76 % | 97.90 % | 98.21 % | 97.95 % | 147 |
+| 320 / 65 | 98.45 % | 98.62 % | 98.94 % | 98.72 % | 97 |
+
+- **Capacity CLOSED, placement CLOSED.**  +411 slots (the 782 MiB above the 512 MiB bar) is +0.14-0.25 pt at every
+  horizon; +2,000 slots (3.7 GiB this card lacks) +0.5-1.3 pt; the leg's own cut +0.2-0.4 pt; an equal split
+  -0.3-0.6.  F-461's movable variable 1 is spent on this rig.  The F-463 "+~600 slots" item is retired with it.
+- **The tier is swap-rate-bound.**  Live 6-slot VRAM share: 92.4-95.0 % (F-464's legs and this boot's) = the ideal
+  tracker at 40-75 rows of memory, which costs 290-506 swaps per window; the live tier pays 5.3 (53 rounds in 724
+  windows).  Misses are recency: entries to experts rare in the preceding rows - 7.8 % at 40 rows of memory, 4.2 % at
+  80, 1.55 % at 320.  Demand is not the limit (at 80 rows 99 % of the entries need a median 114 experts per layer,
+  max 229, against capacities 141-265).  A longer memory is the only hit-rate lever left and its price is the swap rate.
+- **The swap path, measured:** in the F-452 nsys capture blob-sized copies run at 42.15 GB/s H2D / 42.65 D2H (p50 43 /
+  45 us per 1.95 MiB; 27,741 H2D, 1,696 D2H).  The engine's "PCIe 12.0 GB/s" is a default constant (F-155: the explicit
+  `--pcie-frac` keeps the link probe from ever running) - F-461's "measured link" is not a measurement.  A swap is
+  2.67 MiB in + 1.90 MiB copy-back = 110 us of link.  The binding resource for a faster tier is therefore HOST DRAM
+  beside the pool, not the link: 97 swaps per window = 446 MiB = 29 GB/s against the pool's own ~11.
+- **Priced next falsifier (NOT built - one variable, needs a go):** a swap without the copy-back - the evicted expert
+  is served by the file tier on its next miss; the copy-back exists only to keep the pinned complement complete.
+  Swap 4.6 -> 2.67 MiB; byte break-even 1.7 -> 1.0 prevented misses.  Three to eight times the swap rate toward the
+  160-row ideal (97.8 %) reads: misses 5.0-7.6 -> 2.5-4 %, the CPU-expert term -25-45 % = 0.9-2.2 ms of a 15.4-16.8 ms
+  window = +6-14 % conc IF the miss term drives the lane.  F-412's knob set (more swaps, faster rounds: +1.5 % M1 /
+  -4.0 % conc) is the contrary live point and shares this mechanism - its extra swaps each carried the copy-back - so
+  the arm must change the bytes, not the knobs.
+
+**3. The gu kernel (F-463 A2), corrected against the deployed binary.**  `cuobjdump -res-usage engine/strata`: the
+variant that runs (`<22>`, grid staged, 85 registers) has NO spill frame; the frames are in the non-staged `<22>`
+(72 B/thread), the staged `<21>` (64) and `<18>` (24) - the audit's 104/148 were ptxas spill-traffic bytes on a
+recompile, not this binary's frames.  In the capture the kernel is 8.0 % of kernel time (74,112 launches, 9.6 us) and
+reads at the DRAM roofline once a layer has ~60 distinct experts (~1.78 TB/s); at 10-20 distinct it reaches 40-67 %.
+A roofline-perfect variant is -25 % of its own time = -2.0 % of kernel time: <= +2 % solo, +1 % conc.  Sub-bar; not
+built; the "moves the solo floor" line of the F-463 blueprint is withdrawn.
+
+**4. The concurrent window of the same boot:** 15.40 ms/window with 5.0 % misses (CPU experts 3.60 ms) against the
+afternoon's 16.8 ms and 7.6 % (4.41-4.84 ms) - and the lane read 254.9 either way.  The reading is not pinned by the
+window's miss rate in this range; F-453's blind cohort accounting (GPU waits uncounted) is the open instrument.
+CORRECTION to my 15:1x note: the co-tenant explanation of conc 250 vs 280 is UNCONFIRMED - this leg ran with the GUI
+live as well, so it separates nothing; an idle-box read is still owed (operator decision: the five-boot re-bank).
+
+Housekeeping: the scratch tables that led to 2 were first mislabelled by 10x in horizon (rows printed as tenths);
+the landed tool's numbers above supersede them and its swap rates match an independent pass.  Evidence under
+`campaign/results/f465-2026-11-25/`; the diagnostic boot's harness scratch deleted; engine down; learned bin == gold
+(6f1be6dc); launcher and config untouched.

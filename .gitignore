@@ -117,4 +117,4 @@ campaign/l1-falsifier/l1_commit_falsifier
 # blob gates (2026-11-09 surface audit): never commit model weights or archives
 *.gguf
 *.safetensors
-data/calibration/trace.bin
+data/calibration/trace*.bin

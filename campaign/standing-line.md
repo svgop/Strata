@@ -99,6 +99,12 @@ Use as direction, falsify on this box.
   RESOLVED for gold (F-464, same-window ABAB): the standing boots on the 10-14 seed and never reads the learned
   bin; as the boot prior gold costs 6-conc 3.5-6.8 % (tail misplacement: 38 % more PCIe-routed misses) with M1/M3b
   parity - the standing keeps the seed.
+  CLOSED by F-465 on a concurrent routing trace (`tools/trace_ideal_tracking.py`): allocation and capacity are
+  spent on this rig (+411 slots +0.14-0.25 pt of hit rate, the trace's own cut +0.2-0.4); the live 6-slot hit rate
+  (92.4-95.0 %) is what an ideal tracker earns with 40-75 rows of memory at 290-506 swaps per window, and the tier
+  pays 5.3 - it is swap-rate-bound.  Blob copies run at 42 GB/s (measured; the engine's 12 GB/s is a default), so
+  the lever is the swap's bytes: the copy-back is 41 % of each swap.  Priced, not built.  The F-463 "+~600 slots"
+  item is retired with the capacity result.
 - A2 tail-skip: production runs 7 (T63) while the determinism pin says 0 - a contract conflict; on this 32 GB
   rig at 96 % hits its perf value is ~nil (~2 skipped entries/window), so 7 -> 0 is a quality-side battery item.
 - The quality battery exists: the other session's paired 534-question test (p = 0.345 for the F-452 state).
