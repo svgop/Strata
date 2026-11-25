@@ -13287,8 +13287,9 @@ int main(int argc, char** argv) {
                              100.0 * e_pcie / e_all, e_cpu / w, 100.0 * e_cpu / e_all, adapt_txt,
                              1000.0 * bt_rows / std::max(wall, 1e-9), wall,
                              (long long) bt_slot_accepts, (long long) bt_slot_drafts,
-                             bt_slot_drafts > 0 ? 100.0 * (double) bt_slot_accepts / (double) bt_slot_drafts : 0.0,
-                             (long long) bt_adapt_rounds, (long long) bt_adapt_swaps);
+                             bt_slot_drafts > 0 ? 100.0 * (double) bt_slot_accepts / (double) bt_slot_drafts : 0.0);
+                             // (the adaptive tier's rounds and swaps print through adapt_txt; two stray copies of those counters rode here
+                             //  since the import - this statement's -Wformat-extra-args)
                 for (size_t k = 0; k <= stages.size(); ++k) {
                     const std::string pr = (k == 0 ? ver : stages[k - 1]->ver).profile_report();
                     if (!pr.empty()) std::fprintf(stderr, "strata batch GPU stages, stage %zu (ms/window):%s\n", k + 1, pr.c_str());
@@ -13529,7 +13530,7 @@ int main(int argc, char** argv) {
                 }
             }
             if (!pipe_inflight() && !batch_on() && bt_windows > 0) {   // all idle: the timing line, as batch_step
-                const double w = (double) bt_windows, wall = std::chrono::duration<double, std::milli>(Clock::now() - bt_start).count();
+                const double wall = std::chrono::duration<double, std::milli>(Clock::now() - bt_start).count();
                 std::fprintf(stderr, "strata batch (pipelined, %d groups of %d): %lld group-steps, %lld rows in %.0f ms = "
                                      "%.1f rows/s (admissions included)\n", o.batch_groups, GS, (long long) bt_windows,
                              (long long) bt_rows, wall, 1000.0 * bt_rows / std::max(wall, 1e-9));
