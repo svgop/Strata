@@ -14502,4 +14502,12 @@ batch-scoped share, an engine change, and its ceiling is the link.**
   with its price (+2-4% conc at 0.50-0.70, M1 untouched by construction, M3b and the 70q gate owed because the tiers
   compute an expert from different stores).
 
+- *Instrument limit, found by a delegate's read before it ran out of room (09:14):* `campaign/mmlu-pro-gate.py` asks its
+  questions ONE AT A TIME, so it exercises the solo path only.  A batch-scoped change (the form above) leaves that path
+  untouched by construction and would pass the gate trivially: for such a change the quality canary is the CONCURRENT
+  lane's M3b under the interleave, and a concurrent gate is an instrument the tree does not own yet.
+- *Delegation note:* the first attempt at this build was briefed to read AGENTS.md and three F-entries before acting; it
+  consumed its context reading and produced nothing, trace included.  A delegation persists each stage to disk before
+  the next one starts.
+
 **CLOSEOUT (08:57): champion `3865e27a` in service, engine stopped, profile pinned.  F-455 adopts nothing.**
