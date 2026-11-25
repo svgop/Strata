@@ -1,0 +1,561 @@
+[PASS] biology            pred=D gold=D
+[PASS] business           pred=G gold=G
+[PASS] chemistry          pred=D gold=D
+[PASS] computer science   pred=A gold=A
+[PASS] economics          pred=A gold=A
+[PASS] engineering        pred=J gold=J
+[PASS] health             pred=D gold=D
+[PASS] history            pred=A gold=A
+[PASS] law                pred=H gold=H
+[PASS] math               pred=A gold=A
+[PASS] other              pred=C gold=C
+[PASS] philosophy         pred=I gold=I
+[PASS] physics            pred=B gold=B
+[PASS] psychology         pred=B gold=B
+[PASS] biology            pred=C gold=C
+[PASS] business           pred=F gold=F
+[PASS] chemistry          pred=I gold=I
+[PASS] computer science   pred=G gold=G
+[PASS] economics          pred=H gold=H
+[FAIL] engineering        pred=A gold=G
+[PASS] health             pred=A gold=A
+[PASS] history            pred=A gold=A
+[FAIL] law                pred=B gold=G
+[PASS] math               pred=A gold=A
+[PASS] other              pred=I gold=I
+[PASS] philosophy         pred=J gold=J
+[PASS] physics            pred=B gold=B
+[PASS] psychology         pred=E gold=E
+[PASS] biology            pred=A gold=A
+[FAIL] business           pred=A gold=E
+[PASS] chemistry          pred=E gold=E
+[PASS] computer science   pred=B gold=B
+[PASS] economics          pred=C gold=C
+[PASS] engineering        pred=J gold=J
+[FAIL] health             pred=B gold=C
+[PASS] history            pred=I gold=I
+[PASS] law                pred=G gold=G
+[PASS] math               pred=F gold=F
+[FAIL] other              pred=B gold=C
+[PASS] philosophy         pred=D gold=D
+[PASS] physics            pred=H gold=H
+[PASS] psychology         pred=B gold=B
+[PASS] biology            pred=D gold=D
+[PASS] business           pred=H gold=H
+[PASS] chemistry          pred=J gold=J
+[PASS] computer science   pred=B gold=B
+[PASS] economics          pred=A gold=A
+[FAIL] engineering        pred=D gold=I
+[PASS] health             pred=F gold=F
+[PASS] history            pred=C gold=C
+[50/534 running 88.0%] 178 s, 3.56 s/question
+[FAIL] law                pred=D gold=G
+[PASS] math               pred=E gold=E
+[PASS] other              pred=F gold=F
+[PASS] philosophy         pred=G gold=G
+[PASS] physics            pred=E gold=E
+[PASS] psychology         pred=J gold=J
+[PASS] biology            pred=I gold=I
+[PASS] business           pred=I gold=I
+[PASS] chemistry          pred=B gold=B
+[PASS] computer science   pred=J gold=J
+[PASS] economics          pred=G gold=G
+[PASS] engineering        pred=A gold=A
+[PASS] health             pred=A gold=A
+[PASS] history            pred=D gold=D
+[PASS] law                pred=H gold=H
+[FAIL] math               pred=J gold=F
+[PASS] other              pred=H gold=H
+[PASS] philosophy         pred=D gold=D
+[PASS] physics            pred=G gold=G
+[PASS] psychology         pred=F gold=F
+[PASS] biology            pred=H gold=H
+[PASS] business           pred=J gold=J
+[PASS] chemistry          pred=G gold=G
+[PASS] computer science   pred=A gold=A
+[PASS] economics          pred=I gold=I
+[PASS] engineering        pred=D gold=D
+[PASS] health             pred=G gold=G
+[PASS] history            pred=H gold=H
+[PASS] law                pred=D gold=D
+[PASS] math               pred=C gold=C
+[PASS] other              pred=A gold=A
+[PASS] philosophy         pred=H gold=H
+[PASS] physics            pred=G gold=G
+[PASS] psychology         pred=B gold=B
+[PASS] biology            pred=E gold=E
+[PASS] business           pred=H gold=H
+[PASS] chemistry          pred=C gold=C
+[PASS] computer science   pred=B gold=B
+[FAIL] economics          pred=E gold=C
+[PASS] engineering        pred=H gold=H
+[FAIL] health             pred=B gold=J
+[FAIL] history            pred=C gold=A
+[FAIL] law                pred=A gold=E
+[PASS] math               pred=H gold=H
+[PASS] other              pred=A gold=A
+[PASS] philosophy         pred=G gold=G
+[PASS] physics            pred=G gold=G
+[PASS] psychology         pred=C gold=C
+[PASS] biology            pred=F gold=F
+[FAIL] business           pred=A gold=H
+[100/534 running 87.0%] 378 s, 3.78 s/question
+[PASS] chemistry          pred=E gold=E
+[PASS] computer science   pred=I gold=I
+[PASS] economics          pred=G gold=G
+[PASS] engineering        pred=H gold=H
+[FAIL] health             pred=I gold=G
+[PASS] history            pred=A gold=A
+[FAIL] law                pred=A gold=E
+[PASS] math               pred=A gold=A
+[PASS] other              pred=C gold=C
+[PASS] philosophy         pred=F gold=F
+[PASS] physics            pred=H gold=H
+[PASS] psychology         pred=G gold=G
+[PASS] biology            pred=I gold=I
+[FAIL] business           pred=G gold=E
+[PASS] chemistry          pred=A gold=A
+[PASS] computer science   pred=C gold=C
+[PASS] economics          pred=D gold=D
+[FAIL] engineering        pred=C gold=J
+[FAIL] health             pred=A gold=C
+[PASS] history            pred=G gold=G
+[PASS] law                pred=F gold=F
+[PASS] math               pred=F gold=F
+[PASS] other              pred=B gold=B
+[PASS] philosophy         pred=I gold=I
+[PASS] physics            pred=G gold=G
+[PASS] psychology         pred=D gold=D
+[FAIL] biology            pred=J gold=H
+[PASS] business           pred=F gold=F
+[PASS] chemistry          pred=J gold=J
+[PASS] computer science   pred=J gold=J
+[PASS] economics          pred=J gold=J
+[FAIL] engineering        pred=G gold=F
+[FAIL] health             pred=A gold=H
+[PASS] history            pred=G gold=G
+[PASS] law                pred=E gold=E
+[PASS] math               pred=D gold=D
+[PASS] other              pred=H gold=H
+[PASS] philosophy         pred=C gold=C
+[PASS] physics            pred=A gold=A
+[FAIL] psychology         pred=A gold=C
+[PASS] biology            pred=E gold=E
+[PASS] business           pred=I gold=I
+[PASS] chemistry          pred=C gold=C
+[PASS] computer science   pred=J gold=J
+[PASS] economics          pred=B gold=B
+[PASS] engineering        pred=D gold=D
+[PASS] health             pred=A gold=A
+[PASS] history            pred=A gold=A
+[PASS] law                pred=E gold=E
+[PASS] math               pred=E gold=E
+[150/534 running 85.3%] 657 s, 4.38 s/question
+[FAIL] other              pred=C gold=B
+[PASS] philosophy         pred=G gold=G
+[PASS] physics            pred=I gold=I
+[PASS] psychology         pred=A gold=A
+[PASS] biology            pred=G gold=G
+[PASS] business           pred=E gold=E
+[PASS] chemistry          pred=I gold=I
+[PASS] computer science   pred=I gold=I
+[PASS] economics          pred=F gold=F
+[PASS] engineering        pred=I gold=I
+[FAIL] health             pred=C gold=F
+[PASS] history            pred=G gold=G
+[PASS] law                pred=G gold=G
+[PASS] math               pred=J gold=J
+[FAIL] other              pred=D gold=B
+[PASS] philosophy         pred=D gold=D
+[PASS] physics            pred=A gold=A
+[PASS] psychology         pred=C gold=C
+[PASS] biology            pred=A gold=A
+[PASS] business           pred=C gold=C
+[PASS] chemistry          pred=B gold=B
+[PASS] computer science   pred=G gold=G
+[PASS] economics          pred=G gold=G
+[PASS] engineering        pred=H gold=H
+[PASS] health             pred=H gold=H
+[PASS] history            pred=C gold=C
+[PASS] law                pred=A gold=A
+[PASS] math               pred=B gold=B
+[FAIL] other              pred=C gold=E
+[PASS] philosophy         pred=B gold=B
+[PASS] physics            pred=G gold=G
+[PASS] psychology         pred=E gold=E
+[PASS] biology            pred=I gold=I
+[PASS] business           pred=C gold=C
+[PASS] chemistry          pred=D gold=D
+[PASS] computer science   pred=D gold=D
+[PASS] economics          pred=J gold=J
+[PASS] engineering        pred=J gold=J
+[PASS] health             pred=G gold=G
+[FAIL] history            pred=E gold=D
+[FAIL] law                pred=H gold=F
+[PASS] math               pred=G gold=G
+[FAIL] other              pred=C gold=B
+[PASS] philosophy         pred=I gold=I
+[PASS] physics            pred=I gold=I
+[PASS] psychology         pred=I gold=I
+[PASS] biology            pred=G gold=G
+[PASS] business           pred=B gold=B
+[PASS] chemistry          pred=H gold=H
+[PASS] computer science   pred=I gold=I
+[200/534 running 85.5%] 868 s, 4.34 s/question
+[PASS] economics          pred=B gold=B
+[PASS] engineering        pred=I gold=I
+[PASS] health             pred=B gold=B
+[PASS] history            pred=C gold=C
+[PASS] law                pred=I gold=I
+[PASS] math               pred=D gold=D
+[PASS] other              pred=B gold=B
+[PASS] philosophy         pred=B gold=B
+[PASS] physics            pred=B gold=B
+[FAIL] psychology         pred=D gold=C
+[PASS] biology            pred=H gold=H
+[FAIL] business           pred=E gold=D
+[FAIL] chemistry          pred=H gold=C
+[PASS] computer science   pred=B gold=B
+[PASS] economics          pred=I gold=I
+[PASS] engineering        pred=A gold=A
+[FAIL] health             pred=G gold=A
+[PASS] history            pred=C gold=C
+[PASS] law                pred=G gold=G
+[PASS] math               pred=G gold=G
+[PASS] other              pred=E gold=E
+[PASS] philosophy         pred=F gold=F
+[PASS] physics            pred=I gold=I
+[PASS] psychology         pred=A gold=A
+[PASS] biology            pred=F gold=F
+[FAIL] business           pred=B gold=F
+[PASS] chemistry          pred=F gold=F
+[PASS] computer science   pred=J gold=J
+[PASS] economics          pred=B gold=B
+[FAIL] engineering        pred=D gold=A
+[PASS] health             pred=G gold=G
+[PASS] history            pred=C gold=C
+[FAIL] law                pred=I gold=G
+[PASS] math               pred=C gold=C
+[PASS] other              pred=C gold=C
+[PASS] philosophy         pred=I gold=I
+[PASS] physics            pred=D gold=D
+[PASS] psychology         pred=E gold=E
+[PASS] biology            pred=C gold=C
+[PASS] business           pred=J gold=J
+[PASS] chemistry          pred=A gold=A
+[PASS] computer science   pred=F gold=F
+[PASS] economics          pred=C gold=C
+[FAIL] engineering        pred=D gold=G
+[PASS] health             pred=F gold=F
+[PASS] history            pred=C gold=C
+[FAIL] law                pred=A gold=B
+[PASS] math               pred=D gold=D
+[PASS] other              pred=B gold=B
+[PASS] philosophy         pred=B gold=B
+[250/534 running 84.8%] 1152 s, 4.61 s/question
+[PASS] physics            pred=J gold=J
+[FAIL] psychology         pred=J gold=G
+[PASS] biology            pred=C gold=C
+[PASS] business           pred=F gold=F
+[PASS] chemistry          pred=B gold=B
+[PASS] computer science   pred=A gold=A
+[PASS] economics          pred=E gold=E
+[PASS] engineering        pred=F gold=F
+[PASS] health             pred=H gold=H
+[PASS] history            pred=E gold=E
+[FAIL] law                pred=A gold=E
+[PASS] math               pred=C gold=C
+[PASS] other              pred=B gold=B
+[PASS] philosophy         pred=I gold=I
+[PASS] physics            pred=I gold=I
+[PASS] psychology         pred=D gold=D
+[PASS] biology            pred=B gold=B
+[PASS] business           pred=H gold=H
+[FAIL] chemistry          pred=C gold=J
+[PASS] computer science   pred=B gold=B
+[FAIL] economics          pred=B gold=J
+[PASS] engineering        pred=C gold=C
+[PASS] health             pred=D gold=D
+[PASS] history            pred=J gold=J
+[FAIL] law                pred=A gold=B
+[PASS] math               pred=J gold=J
+[PASS] other              pred=E gold=E
+[PASS] philosophy         pred=F gold=F
+[PASS] physics            pred=C gold=C
+[PASS] psychology         pred=I gold=I
+[PASS] biology            pred=I gold=I
+[PASS] business           pred=A gold=A
+[FAIL] chemistry          pred=E gold=H
+[PASS] computer science   pred=I gold=I
+[PASS] economics          pred=H gold=H
+[PASS] engineering        pred=C gold=C
+[FAIL] health             pred=D gold=G
+[PASS] history            pred=B gold=B
+[PASS] law                pred=A gold=A
+[PASS] math               pred=J gold=J
+[PASS] other              pred=D gold=D
+[PASS] philosophy         pred=B gold=B
+[PASS] physics            pred=A gold=A
+[PASS] psychology         pred=H gold=H
+[PASS] biology            pred=B gold=B
+[PASS] business           pred=J gold=J
+[PASS] chemistry          pred=B gold=B
+[PASS] computer science   pred=D gold=D
+[PASS] economics          pred=F gold=F
+[FAIL] engineering        pred=A gold=D
+[300/534 running 84.7%] 1347 s, 4.49 s/question
+[PASS] health             pred=A gold=A
+[PASS] history            pred=A gold=A
+[PASS] law                pred=C gold=C
+[PASS] math               pred=D gold=D
+[PASS] other              pred=G gold=G
+[PASS] philosophy         pred=C gold=C
+[PASS] physics            pred=A gold=A
+[FAIL] psychology         pred=D gold=I
+[PASS] biology            pred=E gold=E
+[PASS] business           pred=E gold=E
+[FAIL] chemistry          pred=D gold=C
+[PASS] computer science   pred=C gold=C
+[PASS] economics          pred=A gold=A
+[PASS] engineering        pred=D gold=D
+[PASS] health             pred=I gold=I
+[PASS] history            pred=H gold=H
+[PASS] law                pred=J gold=J
+[PASS] math               pred=E gold=E
+[PASS] other              pred=I gold=I
+[PASS] philosophy         pred=D gold=D
+[PASS] physics            pred=B gold=B
+[PASS] psychology         pred=D gold=D
+[PASS] biology            pred=A gold=A
+[PASS] business           pred=G gold=G
+[FAIL] chemistry          pred=H gold=I
+[FAIL] computer science   pred=F gold=D
+[PASS] economics          pred=F gold=F
+[PASS] engineering        pred=C gold=C
+[PASS] health             pred=B gold=B
+[FAIL] history            pred=G gold=E
+[FAIL] law                pred=I gold=B
+[PASS] math               pred=C gold=C
+[PASS] other              pred=E gold=E
+[PASS] philosophy         pred=H gold=H
+[PASS] physics            pred=G gold=G
+[PASS] psychology         pred=C gold=C
+[PASS] biology            pred=I gold=I
+[PASS] business           pred=J gold=J
+[PASS] chemistry          pred=B gold=B
+[FAIL] computer science   pred=C gold=B
+[PASS] economics          pred=H gold=H
+[PASS] engineering        pred=F gold=F
+[PASS] health             pred=D gold=D
+[PASS] history            pred=A gold=A
+[FAIL] law                pred=E gold=F
+[PASS] math               pred=G gold=G
+[PASS] other              pred=D gold=D
+[FAIL] philosophy         pred=H gold=G
+[PASS] physics            pred=D gold=D
+[PASS] psychology         pred=H gold=H
+[350/534 running 84.3%] 1609 s, 4.60 s/question
+[PASS] biology            pred=C gold=C
+[PASS] business           pred=C gold=C
+[PASS] chemistry          pred=J gold=J
+[PASS] computer science   pred=F gold=F
+[PASS] economics          pred=B gold=B
+[PASS] engineering        pred=E gold=E
+[PASS] health             pred=I gold=I
+[PASS] history            pred=F gold=F
+[PASS] law                pred=B gold=B
+[PASS] math               pred=F gold=F
+[FAIL] other              pred=D gold=B
+[PASS] philosophy         pred=H gold=H
+[PASS] physics            pred=H gold=H
+[PASS] psychology         pred=E gold=E
+[PASS] biology            pred=E gold=E
+[FAIL] business           pred=G gold=E
+[PASS] chemistry          pred=B gold=B
+[PASS] computer science   pred=H gold=H
+[PASS] economics          pred=E gold=E
+[PASS] engineering        pred=H gold=H
+[PASS] health             pred=C gold=C
+[PASS] history            pred=A gold=A
+[PASS] law                pred=B gold=B
+[PASS] math               pred=E gold=E
+[PASS] other              pred=G gold=G
+[PASS] philosophy         pred=G gold=G
+[PASS] physics            pred=J gold=J
+[PASS] psychology         pred=E gold=E
+[PASS] biology            pred=I gold=I
+[PASS] business           pred=G gold=G
+[PASS] chemistry          pred=B gold=B
+[PASS] computer science   pred=I gold=I
+[PASS] economics          pred=C gold=C
+[PASS] engineering        pred=A gold=A
+[PASS] health             pred=I gold=I
+[PASS] history            pred=H gold=H
+[PASS] law                pred=A gold=A
+[PASS] math               pred=I gold=I
+[FAIL] other              pred=B gold=G
+[PASS] philosophy         pred=C gold=C
+[PASS] physics            pred=A gold=A
+[PASS] psychology         pred=F gold=F
+[PASS] biology            pred=G gold=G
+[PASS] business           pred=F gold=F
+[PASS] chemistry          pred=G gold=G
+[PASS] computer science   pred=I gold=I
+[PASS] economics          pred=C gold=C
+[FAIL] engineering        pred=D gold=J
+[PASS] health             pred=F gold=F
+[FAIL] history            pred=B gold=I
+[400/534 running 85.0%] 1825 s, 4.56 s/question
+[FAIL] law                pred=C gold=A
+[PASS] math               pred=D gold=D
+[PASS] other              pred=F gold=F
+[PASS] philosophy         pred=J gold=J
+[PASS] physics            pred=B gold=B
+[PASS] psychology         pred=J gold=J
+[PASS] biology            pred=A gold=A
+[PASS] business           pred=A gold=A
+[PASS] chemistry          pred=J gold=J
+[PASS] computer science   pred=B gold=B
+[FAIL] economics          pred=F gold=I
+[PASS] engineering        pred=F gold=F
+[PASS] health             pred=J gold=J
+[PASS] history            pred=E gold=E
+[PASS] law                pred=B gold=B
+[PASS] math               pred=A gold=A
+[PASS] other              pred=F gold=F
+[FAIL] philosophy         pred=C gold=B
+[PASS] physics            pred=E gold=E
+[PASS] psychology         pred=I gold=I
+[PASS] biology            pred=A gold=A
+[PASS] business           pred=E gold=E
+[PASS] chemistry          pred=A gold=A
+[PASS] computer science   pred=D gold=D
+[FAIL] economics          pred=A gold=J
+[PASS] engineering        pred=E gold=E
+[FAIL] health             pred=J gold=D
+[PASS] history            pred=I gold=I
+[PASS] law                pred=C gold=C
+[PASS] math               pred=A gold=A
+[PASS] other              pred=A gold=A
+[FAIL] philosophy         pred=E gold=D
+[PASS] physics            pred=H gold=H
+[PASS] psychology         pred=E gold=E
+[PASS] biology            pred=C gold=C
+[PASS] business           pred=F gold=F
+[PASS] chemistry          pred=A gold=A
+[FAIL] computer science   pred=E gold=B
+[PASS] economics          pred=G gold=G
+[FAIL] engineering        pred=G gold=C
+[PASS] health             pred=B gold=B
+[FAIL] history            pred=D gold=F
+[PASS] law                pred=B gold=B
+[PASS] math               pred=I gold=I
+[PASS] other              pred=I gold=I
+[FAIL] philosophy         pred=C gold=D
+[PASS] physics            pred=D gold=D
+[PASS] psychology         pred=C gold=C
+[PASS] biology            pred=C gold=C
+[PASS] business           pred=H gold=H
+[450/534 running 84.4%] 2076 s, 4.61 s/question
+[PASS] chemistry          pred=G gold=G
+[PASS] computer science   pred=D gold=D
+[PASS] economics          pred=A gold=A
+[PASS] engineering        pred=A gold=A
+[FAIL] health             pred=J gold=C
+[PASS] history            pred=G gold=G
+[PASS] law                pred=D gold=D
+[PASS] math               pred=I gold=I
+[PASS] other              pred=E gold=E
+[FAIL] philosophy         pred=C gold=F
+[PASS] physics            pred=H gold=H
+[PASS] psychology         pred=A gold=A
+[PASS] biology            pred=D gold=D
+[PASS] business           pred=J gold=J
+[PASS] chemistry          pred=D gold=D
+[PASS] computer science   pred=D gold=D
+[PASS] economics          pred=B gold=B
+[PASS] engineering        pred=F gold=F
+[PASS] health             pred=I gold=I
+[FAIL] history            pred=E gold=J
+[PASS] law                pred=C gold=C
+[PASS] math               pred=J gold=J
+[PASS] other              pred=E gold=E
+[PASS] philosophy         pred=J gold=J
+[PASS] physics            pred=A gold=A
+[FAIL] psychology         pred=F gold=G
+[PASS] biology            pred=H gold=H
+[PASS] business           pred=G gold=G
+[PASS] chemistry          pred=C gold=C
+[PASS] computer science   pred=G gold=G
+[FAIL] economics          pred=H gold=A
+[PASS] engineering        pred=E gold=E
+[PASS] health             pred=C gold=C
+[PASS] history            pred=A gold=A
+[PASS] law                pred=E gold=E
+[PASS] math               pred=J gold=J
+[PASS] other              pred=A gold=A
+[PASS] philosophy         pred=A gold=A
+[PASS] physics            pred=H gold=H
+[PASS] psychology         pred=E gold=E
+[PASS] biology            pred=C gold=C
+[PASS] business           pred=G gold=G
+[FAIL] chemistry          pred=D gold=J
+[PASS] computer science   pred=D gold=D
+[PASS] economics          pred=C gold=C
+[PASS] engineering        pred=E gold=E
+[PASS] health             pred=H gold=H
+[PASS] history            pred=B gold=B
+[PASS] law                pred=D gold=D
+[PASS] math               pred=J gold=J
+[500/534 running 84.8%] 2310 s, 4.62 s/question
+[PASS] other              pred=D gold=D
+[PASS] philosophy         pred=A gold=A
+[PASS] physics            pred=J gold=J
+[PASS] psychology         pred=B gold=B
+[PASS] biology            pred=C gold=C
+[PASS] business           pred=D gold=D
+[PASS] chemistry          pred=D gold=D
+[FAIL] computer science   pred=E gold=J
+[PASS] economics          pred=D gold=D
+[PASS] engineering        pred=B gold=B
+[PASS] health             pred=D gold=D
+[PASS] history            pred=C gold=C
+[PASS] law                pred=C gold=C
+[PASS] math               pred=C gold=C
+[PASS] other              pred=D gold=D
+[PASS] philosophy         pred=D gold=D
+[PASS] physics            pred=E gold=E
+[PASS] psychology         pred=I gold=I
+[PASS] biology            pred=E gold=E
+[PASS] business           pred=I gold=I
+[PASS] chemistry          pred=C gold=C
+[PASS] computer science   pred=E gold=E
+[PASS] economics          pred=J gold=J
+[PASS] engineering        pred=J gold=J
+[PASS] health             pred=B gold=B
+[PASS] history            pred=D gold=D
+[PASS] law                pred=E gold=E
+[PASS] math               pred=A gold=A
+[PASS] other              pred=C gold=C
+[FAIL] philosophy         pred=I gold=D
+[PASS] physics            pred=C gold=C
+[PASS] psychology         pred=I gold=I
+[PASS] biology            pred=H gold=H
+[PASS] business           pred=E gold=E
+[534/534 running 85.4%] 2446 s, 4.58 s/question
+
+=== MMLU-Pro (534 Qs) [floor 0.933, f452-control]: 456/534 = 85.4%  (1-sigma = 1.53 pts) ===  [MMLU-Pro test (1500q: stratified, seed 20261125); 95% CI +/- 3.0; 2446 s, 4.58 s/question]
+  biology            38/39
+  business           33/39
+  chemistry          32/38
+  computer science   34/38
+  economics          33/38
+  engineering        29/38
+  health             28/38
+  history            32/38
+  law                26/38
+  math               37/38
+  other              31/38
+  philosophy         32/38
+  physics            38/38
+  psychology         33/38

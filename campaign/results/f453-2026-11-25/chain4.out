@@ -1,0 +1,6 @@
+[06:18:10] A. control boot: binary 3865e27a5ac1a170 | device launch in the engine's env: STRATA_VERIFY_DEVICE_LAUNCH=0
+[discard] M1 single-stream : 203.6 t/s (2000 tok in 9.82s)
+[discard] M2 pair          : 205.4 t/s aggregate (1800 tok in 8.76s)
+[discard] M2 6-conc        : 268.8 t/s aggregate (3600 tok in 13.39s)
+[06:59:50] A. control gate exit 0: === MMLU-Pro (534 Qs) [floor 0.933, f452-control]: 456/534 = 85.4%  (1-sigma = 1.53 pts) ===  [MMLU-Pro test (1500q: stratified, seed 20261125); 95% C
+[07:00:00] B. full candidate deployed (87e4d95dcd365450)

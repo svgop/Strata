@@ -1,0 +1,4306 @@
+{
+ "label": "f452-control",
+ "floor": 0.933,
+ "suite": "MMLU-Pro test (1500q: stratified, seed 20261125)",
+ "n": 534,
+ "seed": 20261125,
+ "order": "category round-robin",
+ "first": 534,
+ "score_pct": 85.3932584269663,
+ "sigma_pts": 1.5283324600583883,
+ "ci95_pts": 2.995531621714441,
+ "seconds": 2446.262555360794,
+ "excluded": [],
+ "by_cat": {
+  "biology": "38/39",
+  "business": "33/39",
+  "chemistry": "32/38",
+  "computer science": "34/38",
+  "economics": "33/38",
+  "engineering": "29/38",
+  "health": "28/38",
+  "history": "32/38",
+  "law": "26/38",
+  "math": "37/38",
+  "other": "31/38",
+  "philosophy": "32/38",
+  "physics": "38/38",
+  "psychology": "33/38"
+ },
+ "ids": [
+  2805,
+  74,
+  3527,
+  10357,
+  6827,
+  11320,
+  6007,
+  4675,
+  878,
+  7697,
+  5060,
+  10779,
+  9067,
+  1996,
+  2806,
+  84,
+  3534,
+  10361,
+  6844,
+  11347,
+  6012,
+  4680,
+  896,
+  7702,
+  5080,
+  10781,
+  9073,
+  2004,
+  2815,
+  92,
+  3535,
+  10369,
+  6852,
+  11348,
+  6021,
+  4681,
+  897,
+  7722,
+  5086,
+  10782,
+  9075,
+  2007,
+  2827,
+  93,
+  3536,
+  10375,
+  6857,
+  11371,
+  6034,
+  4688,
+  901,
+  7723,
+  5098,
+  10785,
+  9082,
+  2015,
+  2831,
+  103,
+  3540,
+  10378,
+  6859,
+  11391,
+  6039,
+  4697,
+  916,
+  7727,
+  5100,
+  10797,
+  9086,
+  2036,
+  2840,
+  109,
+  3543,
+  10394,
+  6873,
+  11396,
+  6044,
+  4704,
+  922,
+  7739,
+  5106,
+  10821,
+  9108,
+  2044,
+  2842,
+  120,
+  3570,
+  10399,
+  6878,
+  11398,
+  6049,
+  4712,
+  927,
+  7746,
+  5114,
+  10828,
+  9126,
+  2062,
+  2848,
+  132,
+  3572,
+  10412,
+  6879,
+  11409,
+  6052,
+  4717,
+  930,
+  7758,
+  5117,
+  10837,
+  9143,
+  2063,
+  2853,
+  134,
+  3574,
+  10414,
+  6890,
+  11412,
+  6068,
+  4728,
+  942,
+  7760,
+  5123,
+  10843,
+  9144,
+  2069,
+  2862,
+  137,
+  3575,
+  10420,
+  6895,
+  11414,
+  6072,
+  4751,
+  949,
+  7765,
+  5141,
+  10845,
+  9151,
+  2074,
+  2868,
+  142,
+  3579,
+  10430,
+  6897,
+  11418,
+  6082,
+  4767,
+  954,
+  7768,
+  5149,
+  10848,
+  9155,
+  2096,
+  2874,
+  151,
+  3580,
+  10462,
+  6914,
+  11440,
+  6093,
+  4793,
+  960,
+  7772,
+  5156,
+  10864,
+  9156,
+  2107,
+  2878,
+  161,
+  3582,
+  10467,
+  6916,
+  11458,
+  6100,
+  4794,
+  961,
+  7777,
+  5158,
+  10869,
+  9162,
+  2112,
+  2891,
+  163,
+  3591,
+  10482,
+  6917,
+  11459,
+  6101,
+  4795,
+  967,
+  7779,
+  5165,
+  10881,
+  9163,
+  2115,
+  2899,
+  166,
+  3593,
+  10485,
+  6920,
+  11465,
+  6106,
+  4801,
+  981,
+  7782,
+  5167,
+  10883,
+  9165,
+  2135,
+  2903,
+  177,
+  3612,
+  10491,
+  6954,
+  11477,
+  6108,
+  4808,
+  982,
+  7790,
+  5182,
+  10886,
+  9166,
+  2137,
+  2915,
+  193,
+  3615,
+  10498,
+  6958,
+  11495,
+  6111,
+  4818,
+  983,
+  7793,
+  5197,
+  10889,
+  9178,
+  2172,
+  2922,
+  199,
+  3621,
+  10504,
+  6967,
+  11519,
+  6116,
+  4829,
+  986,
+  7797,
+  5203,
+  10913,
+  9215,
+  2175,
+  2927,
+  209,
+  3626,
+  10509,
+  6979,
+  11522,
+  6120,
+  4838,
+  1002,
+  7800,
+  5208,
+  10923,
+  9217,
+  2185,
+  2938,
+  226,
+  3636,
+  10518,
+  6981,
+  11527,
+  6141,
+  4843,
+  1044,
+  7814,
+  5210,
+  10936,
+  9226,
+  2186,
+  2944,
+  233,
+  3638,
+  10527,
+  6982,
+  11532,
+  6145,
+  4846,
+  1054,
+  7819,
+  5244,
+  10938,
+  9229,
+  2195,
+  2950,
+  234,
+  3645,
+  10554,
+  6984,
+  11533,
+  6149,
+  4849,
+  1055,
+  7831,
+  5250,
+  10941,
+  9237,
+  2196,
+  2969,
+  245,
+  3646,
+  10556,
+  6996,
+  11537,
+  6159,
+  4888,
+  1067,
+  7835,
+  5258,
+  10943,
+  9239,
+  2199,
+  2972,
+  252,
+  3658,
+  10563,
+  6997,
+  11557,
+  6185,
+  4890,
+  1068,
+  7847,
+  5271,
+  10948,
+  9248,
+  2208,
+  2979,
+  261,
+  3663,
+  10569,
+  6998,
+  11565,
+  6206,
+  4897,
+  1073,
+  7853,
+  5275,
+  10952,
+  9257,
+  2214,
+  2985,
+  268,
+  3686,
+  10572,
+  7012,
+  11571,
+  6208,
+  4898,
+  1078,
+  7862,
+  5290,
+  10980,
+  9266,
+  2230,
+  3006,
+  272,
+  3687,
+  10577,
+  7015,
+  11576,
+  6213,
+  4899,
+  1080,
+  7863,
+  5308,
+  10986,
+  9280,
+  2231,
+  3015,
+  279,
+  3690,
+  10578,
+  7025,
+  11588,
+  6244,
+  4905,
+  1094,
+  7865,
+  5315,
+  10998,
+  9287,
+  2237,
+  3019,
+  280,
+  3694,
+  10598,
+  7044,
+  11591,
+  6249,
+  4910,
+  1097,
+  7874,
+  5329,
+  11007,
+  9289,
+  2241,
+  3022,
+  298,
+  3707,
+  10605,
+  7046,
+  11592,
+  6255,
+  4916,
+  1105,
+  7886,
+  5340,
+  11036,
+  9295,
+  2243,
+  3030,
+  305,
+  3725,
+  10612,
+  7051,
+  11605,
+  6269,
+  4937,
+  1106,
+  7889,
+  5362,
+  11042,
+  9300,
+  2246,
+  3036,
+  334,
+  3726,
+  10614,
+  7053,
+  11606,
+  6287,
+  4941,
+  1114,
+  7900,
+  5379,
+  11045,
+  9302,
+  2255,
+  3040,
+  345,
+  3736,
+  10617,
+  7060,
+  11614,
+  6290,
+  4944,
+  1118,
+  7902,
+  5387,
+  11048,
+  9305,
+  2258,
+  3046,
+  360,
+  3739,
+  10618,
+  7063,
+  11640,
+  6294,
+  4945,
+  1138,
+  7906,
+  5396,
+  11050,
+  9307,
+  2264,
+  3065,
+  362,
+  3745,
+  10625,
+  7064,
+  11642,
+  6295,
+  4952,
+  1146,
+  7938,
+  5403,
+  11062,
+  9317,
+  2272,
+  3070,
+  364,
+  3746,
+  10634,
+  7069,
+  11661,
+  6313,
+  4958,
+  1157,
+  7941,
+  5411,
+  11063,
+  9338,
+  2275,
+  3072,
+  366,
+  3751,
+  10639,
+  7070,
+  11662,
+  6315,
+  4960,
+  1158,
+  7950,
+  5414,
+  11079,
+  9345,
+  2278,
+  3081,
+  368,
+  3752,
+  10657,
+  7076,
+  11674,
+  6332,
+  4979,
+  1160,
+  7954,
+  5423,
+  11084,
+  9356,
+  2307,
+  3101,
+  380
+ ],
+ "rows": [
+  {
+   "id": 2805,
+   "cat": "biology",
+   "ok": true,
+   "pred": "D",
+   "gold": "D"
+  },
+  {
+   "id": 74,
+   "cat": "business",
+   "ok": true,
+   "pred": "G",
+   "gold": "G"
+  },
+  {
+   "id": 3527,
+   "cat": "chemistry",
+   "ok": true,
+   "pred": "D",
+   "gold": "D"
+  },
+  {
+   "id": 10357,
+   "cat": "computer science",
+   "ok": true,
+   "pred": "A",
+   "gold": "A"
+  },
+  {
+   "id": 6827,
+   "cat": "economics",
+   "ok": true,
+   "pred": "A",
+   "gold": "A"
+  },
+  {
+   "id": 11320,
+   "cat": "engineering",
+   "ok": true,
+   "pred": "J",
+   "gold": "J"
+  },
+  {
+   "id": 6007,
+   "cat": "health",
+   "ok": true,
+   "pred": "D",
+   "gold": "D"
+  },
+  {
+   "id": 4675,
+   "cat": "history",
+   "ok": true,
+   "pred": "A",
+   "gold": "A"
+  },
+  {
+   "id": 878,
+   "cat": "law",
+   "ok": true,
+   "pred": "H",
+   "gold": "H"
+  },
+  {
+   "id": 7697,
+   "cat": "math",
+   "ok": true,
+   "pred": "A",
+   "gold": "A"
+  },
+  {
+   "id": 5060,
+   "cat": "other",
+   "ok": true,
+   "pred": "C",
+   "gold": "C"
+  },
+  {
+   "id": 10779,
+   "cat": "philosophy",
+   "ok": true,
+   "pred": "I",
+   "gold": "I"
+  },
+  {
+   "id": 9067,
+   "cat": "physics",
+   "ok": true,
+   "pred": "B",
+   "gold": "B"
+  },
+  {
+   "id": 1996,
+   "cat": "psychology",
+   "ok": true,
+   "pred": "B",
+   "gold": "B"
+  },
+  {
+   "id": 2806,
+   "cat": "biology",
+   "ok": true,
+   "pred": "C",
+   "gold": "C"
+  },
+  {
+   "id": 84,
+   "cat": "business",
+   "ok": true,
+   "pred": "F",
+   "gold": "F"
+  },
+  {
+   "id": 3534,
+   "cat": "chemistry",
+   "ok": true,
+   "pred": "I",
+   "gold": "I"
+  },
+  {
+   "id": 10361,
+   "cat": "computer science",
+   "ok": true,
+   "pred": "G",
+   "gold": "G"
+  },
+  {
+   "id": 6844,
+   "cat": "economics",
+   "ok": true,
+   "pred": "H",
+   "gold": "H"
+  },
+  {
+   "id": 11347,
+   "cat": "engineering",
+   "ok": false,
+   "pred": "A",
+   "gold": "G"
+  },
+  {
+   "id": 6012,
+   "cat": "health",
+   "ok": true,
+   "pred": "A",
+   "gold": "A"
+  },
+  {
+   "id": 4680,
+   "cat": "history",
+   "ok": true,
+   "pred": "A",
+   "gold": "A"
+  },
+  {
+   "id": 896,
+   "cat": "law",
+   "ok": false,
+   "pred": "B",
+   "gold": "G"
+  },
+  {
+   "id": 7702,
+   "cat": "math",
+   "ok": true,
+   "pred": "A",
+   "gold": "A"
+  },
+  {
+   "id": 5080,
+   "cat": "other",
+   "ok": true,
+   "pred": "I",
+   "gold": "I"
+  },
+  {
+   "id": 10781,
+   "cat": "philosophy",
+   "ok": true,
+   "pred": "J",
+   "gold": "J"
+  },
+  {
+   "id": 9073,
+   "cat": "physics",
+   "ok": true,
+   "pred": "B",
+   "gold": "B"
+  },
+  {
+   "id": 2004,
+   "cat": "psychology",
+   "ok": true,
+   "pred": "E",
+   "gold": "E"
+  },
+  {
+   "id": 2815,
+   "cat": "biology",
+   "ok": true,
+   "pred": "A",
+   "gold": "A"
+  },
+  {
+   "id": 92,
+   "cat": "business",
+   "ok": false,
+   "pred": "A",
+   "gold": "E"
+  },
+  {
+   "id": 3535,
+   "cat": "chemistry",
+   "ok": true,
+   "pred": "E",
+   "gold": "E"
+  },
+  {
+   "id": 10369,
+   "cat": "computer science",
+   "ok": true,
+   "pred": "B",
+   "gold": "B"
+  },
+  {
+   "id": 6852,
+   "cat": "economics",
+   "ok": true,
+   "pred": "C",
+   "gold": "C"
+  },
+  {
+   "id": 11348,
+   "cat": "engineering",
+   "ok": true,
+   "pred": "J",
+   "gold": "J"
+  },
+  {
+   "id": 6021,
+   "cat": "health",
+   "ok": false,
+   "pred": "B",
+   "gold": "C"
+  },
+  {
+   "id": 4681,
+   "cat": "history",
+   "ok": true,
+   "pred": "I",
+   "gold": "I"
+  },
+  {
+   "id": 897,
+   "cat": "law",
+   "ok": true,
+   "pred": "G",
+   "gold": "G"
+  },
+  {
+   "id": 7722,
+   "cat": "math",
+   "ok": true,
+   "pred": "F",
+   "gold": "F"
+  },
+  {
+   "id": 5086,
+   "cat": "other",
+   "ok": false,
+   "pred": "B",
+   "gold": "C"
+  },
+  {
+   "id": 10782,
+   "cat": "philosophy",
+   "ok": true,
+   "pred": "D",
+   "gold": "D"
+  },
+  {
+   "id": 9075,
+   "cat": "physics",
+   "ok": true,
+   "pred": "H",
+   "gold": "H"
+  },
+  {
+   "id": 2007,
+   "cat": "psychology",
+   "ok": true,
+   "pred": "B",
+   "gold": "B"
+  },
+  {
+   "id": 2827,
+   "cat": "biology",
+   "ok": true,
+   "pred": "D",
+   "gold": "D"
+  },
+  {
+   "id": 93,
+   "cat": "business",
+   "ok": true,
+   "pred": "H",
+   "gold": "H"
+  },
+  {
+   "id": 3536,
+   "cat": "chemistry",
+   "ok": true,
+   "pred": "J",
+   "gold": "J"
+  },
+  {
+   "id": 10375,
+   "cat": "computer science",
+   "ok": true,
+   "pred": "B",
+   "gold": "B"
+  },
+  {
+   "id": 6857,
+   "cat": "economics",
+   "ok": true,
+   "pred": "A",
+   "gold": "A"
+  },
+  {
+   "id": 11371,
+   "cat": "engineering",
+   "ok": false,
+   "pred": "D",
+   "gold": "I"
+  },
+  {
+   "id": 6034,
+   "cat": "health",
+   "ok": true,
+   "pred": "F",
+   "gold": "F"
+  },
+  {
+   "id": 4688,
+   "cat": "history",
+   "ok": true,
+   "pred": "C",
+   "gold": "C"
+  },
+  {
+   "id": 901,
+   "cat": "law",
+   "ok": false,
+   "pred": "D",
+   "gold": "G"
+  },
+  {
+   "id": 7723,
+   "cat": "math",
+   "ok": true,
+   "pred": "E",
+   "gold": "E"
+  },
+  {
+   "id": 5098,
+   "cat": "other",
+   "ok": true,
+   "pred": "F",
+   "gold": "F"
+  },
+  {
+   "id": 10785,
+   "cat": "philosophy",
+   "ok": true,
+   "pred": "G",
+   "gold": "G"
+  },
+  {
+   "id": 9082,
+   "cat": "physics",
+   "ok": true,
+   "pred": "E",
+   "gold": "E"
+  },
+  {
+   "id": 2015,
+   "cat": "psychology",
+   "ok": true,
+   "pred": "J",
+   "gold": "J"
+  },
+  {
+   "id": 2831,
+   "cat": "biology",
+   "ok": true,
+   "pred": "I",
+   "gold": "I"
+  },
+  {
+   "id": 103,
+   "cat": "business",
+   "ok": true,
+   "pred": "I",
+   "gold": "I"
+  },
+  {
+   "id": 3540,
+   "cat": "chemistry",
+   "ok": true,
+   "pred": "B",
+   "gold": "B"
+  },
+  {
+   "id": 10378,
+   "cat": "computer science",
+   "ok": true,
+   "pred": "J",
+   "gold": "J"
+  },
+  {
+   "id": 6859,
+   "cat": "economics",
+   "ok": true,
+   "pred": "G",
+   "gold": "G"
+  },
+  {
+   "id": 11391,
+   "cat": "engineering",
+   "ok": true,
+   "pred": "A",
+   "gold": "A"
+  },
+  {
+   "id": 6039,
+   "cat": "health",
+   "ok": true,
+   "pred": "A",
+   "gold": "A"
+  },
+  {
+   "id": 4697,
+   "cat": "history",
+   "ok": true,
+   "pred": "D",
+   "gold": "D"
+  },
+  {
+   "id": 916,
+   "cat": "law",
+   "ok": true,
+   "pred": "H",
+   "gold": "H"
+  },
+  {
+   "id": 7727,
+   "cat": "math",
+   "ok": false,
+   "pred": "J",
+   "gold": "F"
+  },
+  {
+   "id": 5100,
+   "cat": "other",
+   "ok": true,
+   "pred": "H",
+   "gold": "H"
+  },
+  {
+   "id": 10797,
+   "cat": "philosophy",
+   "ok": true,
+   "pred": "D",
+   "gold": "D"
+  },
+  {
+   "id": 9086,
+   "cat": "physics",
+   "ok": true,
+   "pred": "G",
+   "gold": "G"
+  },
+  {
+   "id": 2036,
+   "cat": "psychology",
+   "ok": true,
+   "pred": "F",
+   "gold": "F"
+  },
+  {
+   "id": 2840,
+   "cat": "biology",
+   "ok": true,
+   "pred": "H",
+   "gold": "H"
+  },
+  {
+   "id": 109,
+   "cat": "business",
+   "ok": true,
+   "pred": "J",
+   "gold": "J"
+  },
+  {
+   "id": 3543,
+   "cat": "chemistry",
+   "ok": true,
+   "pred": "G",
+   "gold": "G"
+  },
+  {
+   "id": 10394,
+   "cat": "computer science",
+   "ok": true,
+   "pred": "A",
+   "gold": "A"
+  },
+  {
+   "id": 6873,
+   "cat": "economics",
+   "ok": true,
+   "pred": "I",
+   "gold": "I"
+  },
+  {
+   "id": 11396,
+   "cat": "engineering",
+   "ok": true,
+   "pred": "D",
+   "gold": "D"
+  },
+  {
+   "id": 6044,
+   "cat": "health",
+   "ok": true,
+   "pred": "G",
+   "gold": "G"
+  },
+  {
+   "id": 4704,
+   "cat": "history",
+   "ok": true,
+   "pred": "H",
+   "gold": "H"
+  },
+  {
+   "id": 922,
+   "cat": "law",
+   "ok": true,
+   "pred": "D",
+   "gold": "D"
+  },
+  {
+   "id": 7739,
+   "cat": "math",
+   "ok": true,
+   "pred": "C",
+   "gold": "C"
+  },
+  {
+   "id": 5106,
+   "cat": "other",
+   "ok": true,
+   "pred": "A",
+   "gold": "A"
+  },
+  {
+   "id": 10821,
+   "cat": "philosophy",
+   "ok": true,
+   "pred": "H",
+   "gold": "H"
+  },
+  {
+   "id": 9108,
+   "cat": "physics",
+   "ok": true,
+   "pred": "G",
+   "gold": "G"
+  },
+  {
+   "id": 2044,
+   "cat": "psychology",
+   "ok": true,
+   "pred": "B",
+   "gold": "B"
+  },
+  {
+   "id": 2842,
+   "cat": "biology",
+   "ok": true,
+   "pred": "E",
+   "gold": "E"
+  },
+  {
+   "id": 120,
+   "cat": "business",
+   "ok": true,
+   "pred": "H",
+   "gold": "H"
+  },
+  {
+   "id": 3570,
+   "cat": "chemistry",
+   "ok": true,
+   "pred": "C",
+   "gold": "C"
+  },
+  {
+   "id": 10399,
+   "cat": "computer science",
+   "ok": true,
+   "pred": "B",
+   "gold": "B"
+  },
+  {
+   "id": 6878,
+   "cat": "economics",
+   "ok": false,
+   "pred": "E",
+   "gold": "C"
+  },
+  {
+   "id": 11398,
+   "cat": "engineering",
+   "ok": true,
+   "pred": "H",
+   "gold": "H"
+  },
+  {
+   "id": 6049,
+   "cat": "health",
+   "ok": false,
+   "pred": "B",
+   "gold": "J"
+  },
+  {
+   "id": 4712,
+   "cat": "history",
+   "ok": false,
+   "pred": "C",
+   "gold": "A"
+  },
+  {
+   "id": 927,
+   "cat": "law",
+   "ok": false,
+   "pred": "A",
+   "gold": "E"
+  },
+  {
+   "id": 7746,
+   "cat": "math",
+   "ok": true,
+   "pred": "H",
+   "gold": "H"
+  },
+  {
+   "id": 5114,
+   "cat": "other",
+   "ok": true,
+   "pred": "A",
+   "gold": "A"
+  },
+  {
+   "id": 10828,
+   "cat": "philosophy",
+   "ok": true,
+   "pred": "G",
+   "gold": "G"
+  },
+  {
+   "id": 9126,
+   "cat": "physics",
+   "ok": true,
+   "pred": "G",
+   "gold": "G"
+  },
+  {
+   "id": 2062,
+   "cat": "psychology",
+   "ok": true,
+   "pred": "C",
+   "gold": "C"
+  },
+  {
+   "id": 2848,
+   "cat": "biology",
+   "ok": true,
+   "pred": "F",
+   "gold": "F"
+  },
+  {
+   "id": 132,
+   "cat": "business",
+   "ok": false,
+   "pred": "A",
+   "gold": "H"
+  },
+  {
+   "id": 3572,
+   "cat": "chemistry",
+   "ok": true,
+   "pred": "E",
+   "gold": "E"
+  },
+  {
+   "id": 10412,
+   "cat": "computer science",
+   "ok": true,
+   "pred": "I",
+   "gold": "I"
+  },
+  {
+   "id": 6879,
+   "cat": "economics",
+   "ok": true,
+   "pred": "G",
+   "gold": "G"
+  },
+  {
+   "id": 11409,
+   "cat": "engineering",
+   "ok": true,
+   "pred": "H",
+   "gold": "H"
+  },
+  {
+   "id": 6052,
+   "cat": "health",
+   "ok": false,
+   "pred": "I",
+   "gold": "G"
+  },
+  {
+   "id": 4717,
+   "cat": "history",
+   "ok": true,
+   "pred": "A",
+   "gold": "A"
+  },
+  {
+   "id": 930,
+   "cat": "law",
+   "ok": false,
+   "pred": "A",
+   "gold": "E"
+  },
+  {
+   "id": 7758,
+   "cat": "math",
+   "ok": true,
+   "pred": "A",
+   "gold": "A"
+  },
+  {
+   "id": 5117,
+   "cat": "other",
+   "ok": true,
+   "pred": "C",
+   "gold": "C"
+  },
+  {
+   "id": 10837,
+   "cat": "philosophy",
+   "ok": true,
+   "pred": "F",
+   "gold": "F"
+  },
+  {
+   "id": 9143,
+   "cat": "physics",
+   "ok": true,
+   "pred": "H",
+   "gold": "H"
+  },
+  {
+   "id": 2063,
+   "cat": "psychology",
+   "ok": true,
+   "pred": "G",
+   "gold": "G"
+  },
+  {
+   "id": 2853,
+   "cat": "biology",
+   "ok": true,
+   "pred": "I",
+   "gold": "I"
+  },
+  {
+   "id": 134,
+   "cat": "business",
+   "ok": false,
+   "pred": "G",
+   "gold": "E"
+  },
+  {
+   "id": 3574,
+   "cat": "chemistry",
+   "ok": true,
+   "pred": "A",
+   "gold": "A"
+  },
+  {
+   "id": 10414,
+   "cat": "computer science",
+   "ok": true,
+   "pred": "C",
+   "gold": "C"
+  },
+  {
+   "id": 6890,
+   "cat": "economics",
+   "ok": true,
+   "pred": "D",
+   "gold": "D"
+  },
+  {
+   "id": 11412,
+   "cat": "engineering",
+   "ok": false,
+   "pred": "C",
+   "gold": "J"
+  },
+  {
+   "id": 6068,
+   "cat": "health",
+   "ok": false,
+   "pred": "A",
+   "gold": "C"
+  },
+  {
+   "id": 4728,
+   "cat": "history",
+   "ok": true,
+   "pred": "G",
+   "gold": "G"
+  },
+  {
+   "id": 942,
+   "cat": "law",
+   "ok": true,
+   "pred": "F",
+   "gold": "F"
+  },
+  {
+   "id": 7760,
+   "cat": "math",
+   "ok": true,
+   "pred": "F",
+   "gold": "F"
+  },
+  {
+   "id": 5123,
+   "cat": "other",
+   "ok": true,
+   "pred": "B",
+   "gold": "B"
+  },
+  {
+   "id": 10843,
+   "cat": "philosophy",
+   "ok": true,
+   "pred": "I",
+   "gold": "I"
+  },
+  {
+   "id": 9144,
+   "cat": "physics",
+   "ok": true,
+   "pred": "G",
+   "gold": "G"
+  },
+  {
+   "id": 2069,
+   "cat": "psychology",
+   "ok": true,
+   "pred": "D",
+   "gold": "D"
+  },
+  {
+   "id": 2862,
+   "cat": "biology",
+   "ok": false,
+   "pred": "J",
+   "gold": "H"
+  },
+  {
+   "id": 137,
+   "cat": "business",
+   "ok": true,
+   "pred": "F",
+   "gold": "F"
+  },
+  {
+   "id": 3575,
+   "cat": "chemistry",
+   "ok": true,
+   "pred": "J",
+   "gold": "J"
+  },
+  {
+   "id": 10420,
+   "cat": "computer science",
+   "ok": true,
+   "pred": "J",
+   "gold": "J"
+  },
+  {
+   "id": 6895,
+   "cat": "economics",
+   "ok": true,
+   "pred": "J",
+   "gold": "J"
+  },
+  {
+   "id": 11414,
+   "cat": "engineering",
+   "ok": false,
+   "pred": "G",
+   "gold": "F"
+  },
+  {
+   "id": 6072,
+   "cat": "health",
+   "ok": false,
+   "pred": "A",
+   "gold": "H"
+  },
+  {
+   "id": 4751,
+   "cat": "history",
+   "ok": true,
+   "pred": "G",
+   "gold": "G"
+  },
+  {
+   "id": 949,
+   "cat": "law",
+   "ok": true,
+   "pred": "E",
+   "gold": "E"
+  },
+  {
+   "id": 7765,
+   "cat": "math",
+   "ok": true,
+   "pred": "D",
+   "gold": "D"
+  },
+  {
+   "id": 5141,
+   "cat": "other",
+   "ok": true,
+   "pred": "H",
+   "gold": "H"
+  },
+  {
+   "id": 10845,
+   "cat": "philosophy",
+   "ok": true,
+   "pred": "C",
+   "gold": "C"
+  },
+  {
+   "id": 9151,
+   "cat": "physics",
+   "ok": true,
+   "pred": "A",
+   "gold": "A"
+  },
+  {
+   "id": 2074,
+   "cat": "psychology",
+   "ok": false,
+   "pred": "A",
+   "gold": "C"
+  },
+  {
+   "id": 2868,
+   "cat": "biology",
+   "ok": true,
+   "pred": "E",
+   "gold": "E"
+  },
+  {
+   "id": 142,
+   "cat": "business",
+   "ok": true,
+   "pred": "I",
+   "gold": "I"
+  },
+  {
+   "id": 3579,
+   "cat": "chemistry",
+   "ok": true,
+   "pred": "C",
+   "gold": "C"
+  },
+  {
+   "id": 10430,
+   "cat": "computer science",
+   "ok": true,
+   "pred": "J",
+   "gold": "J"
+  },
+  {
+   "id": 6897,
+   "cat": "economics",
+   "ok": true,
+   "pred": "B",
+   "gold": "B"
+  },
+  {
+   "id": 11418,
+   "cat": "engineering",
+   "ok": true,
+   "pred": "D",
+   "gold": "D"
+  },
+  {
+   "id": 6082,
+   "cat": "health",
+   "ok": true,
+   "pred": "A",
+   "gold": "A"
+  },
+  {
+   "id": 4767,
+   "cat": "history",
+   "ok": true,
+   "pred": "A",
+   "gold": "A"
+  },
+  {
+   "id": 954,
+   "cat": "law",
+   "ok": true,
+   "pred": "E",
+   "gold": "E"
+  },
+  {
+   "id": 7768,
+   "cat": "math",
+   "ok": true,
+   "pred": "E",
+   "gold": "E"
+  },
+  {
+   "id": 5149,
+   "cat": "other",
+   "ok": false,
+   "pred": "C",
+   "gold": "B"
+  },
+  {
+   "id": 10848,
+   "cat": "philosophy",
+   "ok": true,
+   "pred": "G",
+   "gold": "G"
+  },
+  {
+   "id": 9155,
+   "cat": "physics",
+   "ok": true,
+   "pred": "I",
+   "gold": "I"
+  },
+  {
+   "id": 2096,
+   "cat": "psychology",
+   "ok": true,
+   "pred": "A",
+   "gold": "A"
+  },
+  {
+   "id": 2874,
+   "cat": "biology",
+   "ok": true,
+   "pred": "G",
+   "gold": "G"
+  },
+  {
+   "id": 151,
+   "cat": "business",
+   "ok": true,
+   "pred": "E",
+   "gold": "E"
+  },
+  {
+   "id": 3580,
+   "cat": "chemistry",
+   "ok": true,
+   "pred": "I",
+   "gold": "I"
+  },
+  {
+   "id": 10462,
+   "cat": "computer science",
+   "ok": true,
+   "pred": "I",
+   "gold": "I"
+  },
+  {
+   "id": 6914,
+   "cat": "economics",
+   "ok": true,
+   "pred": "F",
+   "gold": "F"
+  },
+  {
+   "id": 11440,
+   "cat": "engineering",
+   "ok": true,
+   "pred": "I",
+   "gold": "I"
+  },
+  {
+   "id": 6093,
+   "cat": "health",
+   "ok": false,
+   "pred": "C",
+   "gold": "F"
+  },
+  {
+   "id": 4793,
+   "cat": "history",
+   "ok": true,
+   "pred": "G",
+   "gold": "G"
+  },
+  {
+   "id": 960,
+   "cat": "law",
+   "ok": true,
+   "pred": "G",
+   "gold": "G"
+  },
+  {
+   "id": 7772,
+   "cat": "math",
+   "ok": true,
+   "pred": "J",
+   "gold": "J"
+  },
+  {
+   "id": 5156,
+   "cat": "other",
+   "ok": false,
+   "pred": "D",
+   "gold": "B"
+  },
+  {
+   "id": 10864,
+   "cat": "philosophy",
+   "ok": true,
+   "pred": "D",
+   "gold": "D"
+  },
+  {
+   "id": 9156,
+   "cat": "physics",
+   "ok": true,
+   "pred": "A",
+   "gold": "A"
+  },
+  {
+   "id": 2107,
+   "cat": "psychology",
+   "ok": true,
+   "pred": "C",
+   "gold": "C"
+  },
+  {
+   "id": 2878,
+   "cat": "biology",
+   "ok": true,
+   "pred": "A",
+   "gold": "A"
+  },
+  {
+   "id": 161,
+   "cat": "business",
+   "ok": true,
+   "pred": "C",
+   "gold": "C"
+  },
+  {
+   "id": 3582,
+   "cat": "chemistry",
+   "ok": true,
+   "pred": "B",
+   "gold": "B"
+  },
+  {
+   "id": 10467,
+   "cat": "computer science",
+   "ok": true,
+   "pred": "G",
+   "gold": "G"
+  },
+  {
+   "id": 6916,
+   "cat": "economics",
+   "ok": true,
+   "pred": "G",
+   "gold": "G"
+  },
+  {
+   "id": 11458,
+   "cat": "engineering",
+   "ok": true,
+   "pred": "H",
+   "gold": "H"
+  },
+  {
+   "id": 6100,
+   "cat": "health",
+   "ok": true,
+   "pred": "H",
+   "gold": "H"
+  },
+  {
+   "id": 4794,
+   "cat": "history",
+   "ok": true,
+   "pred": "C",
+   "gold": "C"
+  },
+  {
+   "id": 961,
+   "cat": "law",
+   "ok": true,
+   "pred": "A",
+   "gold": "A"
+  },
+  {
+   "id": 7777,
+   "cat": "math",
+   "ok": true,
+   "pred": "B",
+   "gold": "B"
+  },
+  {
+   "id": 5158,
+   "cat": "other",
+   "ok": false,
+   "pred": "C",
+   "gold": "E"
+  },
+  {
+   "id": 10869,
+   "cat": "philosophy",
+   "ok": true,
+   "pred": "B",
+   "gold": "B"
+  },
+  {
+   "id": 9162,
+   "cat": "physics",
+   "ok": true,
+   "pred": "G",
+   "gold": "G"
+  },
+  {
+   "id": 2112,
+   "cat": "psychology",
+   "ok": true,
+   "pred": "E",
+   "gold": "E"
+  },
+  {
+   "id": 2891,
+   "cat": "biology",
+   "ok": true,
+   "pred": "I",
+   "gold": "I"
+  },
+  {
+   "id": 163,
+   "cat": "business",
+   "ok": true,
+   "pred": "C",
+   "gold": "C"
+  },
+  {
+   "id": 3591,
+   "cat": "chemistry",
+   "ok": true,
+   "pred": "D",
+   "gold": "D"
+  },
+  {
+   "id": 10482,
+   "cat": "computer science",
+   "ok": true,
+   "pred": "D",
+   "gold": "D"
+  },
+  {
+   "id": 6917,
+   "cat": "economics",
+   "ok": true,
+   "pred": "J",
+   "gold": "J"
+  },
+  {
+   "id": 11459,
+   "cat": "engineering",
+   "ok": true,
+   "pred": "J",
+   "gold": "J"
+  },
+  {
+   "id": 6101,
+   "cat": "health",
+   "ok": true,
+   "pred": "G",
+   "gold": "G"
+  },
+  {
+   "id": 4795,
+   "cat": "history",
+   "ok": false,
+   "pred": "E",
+   "gold": "D"
+  },
+  {
+   "id": 967,
+   "cat": "law",
+   "ok": false,
+   "pred": "H",
+   "gold": "F"
+  },
+  {
+   "id": 7779,
+   "cat": "math",
+   "ok": true,
+   "pred": "G",
+   "gold": "G"
+  },
+  {
+   "id": 5165,
+   "cat": "other",
+   "ok": false,
+   "pred": "C",
+   "gold": "B"
+  },
+  {
+   "id": 10881,
+   "cat": "philosophy",
+   "ok": true,
+   "pred": "I",
+   "gold": "I"
+  },
+  {
+   "id": 9163,
+   "cat": "physics",
+   "ok": true,
+   "pred": "I",
+   "gold": "I"
+  },
+  {
+   "id": 2115,
+   "cat": "psychology",
+   "ok": true,
+   "pred": "I",
+   "gold": "I"
+  },
+  {
+   "id": 2899,
+   "cat": "biology",
+   "ok": true,
+   "pred": "G",
+   "gold": "G"
+  },
+  {
+   "id": 166,
+   "cat": "business",
+   "ok": true,
+   "pred": "B",
+   "gold": "B"
+  },
+  {
+   "id": 3593,
+   "cat": "chemistry",
+   "ok": true,
+   "pred": "H",
+   "gold": "H"
+  },
+  {
+   "id": 10485,
+   "cat": "computer science",
+   "ok": true,
+   "pred": "I",
+   "gold": "I"
+  },
+  {
+   "id": 6920,
+   "cat": "economics",
+   "ok": true,
+   "pred": "B",
+   "gold": "B"
+  },
+  {
+   "id": 11465,
+   "cat": "engineering",
+   "ok": true,
+   "pred": "I",
+   "gold": "I"
+  },
+  {
+   "id": 6106,
+   "cat": "health",
+   "ok": true,
+   "pred": "B",
+   "gold": "B"
+  },
+  {
+   "id": 4801,
+   "cat": "history",
+   "ok": true,
+   "pred": "C",
+   "gold": "C"
+  },
+  {
+   "id": 981,
+   "cat": "law",
+   "ok": true,
+   "pred": "I",
+   "gold": "I"
+  },
+  {
+   "id": 7782,
+   "cat": "math",
+   "ok": true,
+   "pred": "D",
+   "gold": "D"
+  },
+  {
+   "id": 5167,
+   "cat": "other",
+   "ok": true,
+   "pred": "B",
+   "gold": "B"
+  },
+  {
+   "id": 10883,
+   "cat": "philosophy",
+   "ok": true,
+   "pred": "B",
+   "gold": "B"
+  },
+  {
+   "id": 9165,
+   "cat": "physics",
+   "ok": true,
+   "pred": "B",
+   "gold": "B"
+  },
+  {
+   "id": 2135,
+   "cat": "psychology",
+   "ok": false,
+   "pred": "D",
+   "gold": "C"
+  },
+  {
+   "id": 2903,
+   "cat": "biology",
+   "ok": true,
+   "pred": "H",
+   "gold": "H"
+  },
+  {
+   "id": 177,
+   "cat": "business",
+   "ok": false,
+   "pred": "E",
+   "gold": "D"
+  },
+  {
+   "id": 3612,
+   "cat": "chemistry",
+   "ok": false,
+   "pred": "H",
+   "gold": "C"
+  },
+  {
+   "id": 10491,
+   "cat": "computer science",
+   "ok": true,
+   "pred": "B",
+   "gold": "B"
+  },
+  {
+   "id": 6954,
+   "cat": "economics",
+   "ok": true,
+   "pred": "I",
+   "gold": "I"
+  },
+  {
+   "id": 11477,
+   "cat": "engineering",
+   "ok": true,
+   "pred": "A",
+   "gold": "A"
+  },
+  {
+   "id": 6108,
+   "cat": "health",
+   "ok": false,
+   "pred": "G",
+   "gold": "A"
+  },
+  {
+   "id": 4808,
+   "cat": "history",
+   "ok": true,
+   "pred": "C",
+   "gold": "C"
+  },
+  {
+   "id": 982,
+   "cat": "law",
+   "ok": true,
+   "pred": "G",
+   "gold": "G"
+  },
+  {
+   "id": 7790,
+   "cat": "math",
+   "ok": true,
+   "pred": "G",
+   "gold": "G"
+  },
+  {
+   "id": 5182,
+   "cat": "other",
+   "ok": true,
+   "pred": "E",
+   "gold": "E"
+  },
+  {
+   "id": 10886,
+   "cat": "philosophy",
+   "ok": true,
+   "pred": "F",
+   "gold": "F"
+  },
+  {
+   "id": 9166,
+   "cat": "physics",
+   "ok": true,
+   "pred": "I",
+   "gold": "I"
+  },
+  {
+   "id": 2137,
+   "cat": "psychology",
+   "ok": true,
+   "pred": "A",
+   "gold": "A"
+  },
+  {
+   "id": 2915,
+   "cat": "biology",
+   "ok": true,
+   "pred": "F",
+   "gold": "F"
+  },
+  {
+   "id": 193,
+   "cat": "business",
+   "ok": false,
+   "pred": "B",
+   "gold": "F"
+  },
+  {
+   "id": 3615,
+   "cat": "chemistry",
+   "ok": true,
+   "pred": "F",
+   "gold": "F"
+  },
+  {
+   "id": 10498,
+   "cat": "computer science",
+   "ok": true,
+   "pred": "J",
+   "gold": "J"
+  },
+  {
+   "id": 6958,
+   "cat": "economics",
+   "ok": true,
+   "pred": "B",
+   "gold": "B"
+  },
+  {
+   "id": 11495,
+   "cat": "engineering",
+   "ok": false,
+   "pred": "D",
+   "gold": "A"
+  },
+  {
+   "id": 6111,
+   "cat": "health",
+   "ok": true,
+   "pred": "G",
+   "gold": "G"
+  },
+  {
+   "id": 4818,
+   "cat": "history",
+   "ok": true,
+   "pred": "C",
+   "gold": "C"
+  },
+  {
+   "id": 983,
+   "cat": "law",
+   "ok": false,
+   "pred": "I",
+   "gold": "G"
+  },
+  {
+   "id": 7793,
+   "cat": "math",
+   "ok": true,
+   "pred": "C",
+   "gold": "C"
+  },
+  {
+   "id": 5197,
+   "cat": "other",
+   "ok": true,
+   "pred": "C",
+   "gold": "C"
+  },
+  {
+   "id": 10889,
+   "cat": "philosophy",
+   "ok": true,
+   "pred": "I",
+   "gold": "I"
+  },
+  {
+   "id": 9178,
+   "cat": "physics",
+   "ok": true,
+   "pred": "D",
+   "gold": "D"
+  },
+  {
+   "id": 2172,
+   "cat": "psychology",
+   "ok": true,
+   "pred": "E",
+   "gold": "E"
+  },
+  {
+   "id": 2922,
+   "cat": "biology",
+   "ok": true,
+   "pred": "C",
+   "gold": "C"
+  },
+  {
+   "id": 199,
+   "cat": "business",
+   "ok": true,
+   "pred": "J",
+   "gold": "J"
+  },
+  {
+   "id": 3621,
+   "cat": "chemistry",
+   "ok": true,
+   "pred": "A",
+   "gold": "A"
+  },
+  {
+   "id": 10504,
+   "cat": "computer science",
+   "ok": true,
+   "pred": "F",
+   "gold": "F"
+  },
+  {
+   "id": 6967,
+   "cat": "economics",
+   "ok": true,
+   "pred": "C",
+   "gold": "C"
+  },
+  {
+   "id": 11519,
+   "cat": "engineering",
+   "ok": false,
+   "pred": "D",
+   "gold": "G"
+  },
+  {
+   "id": 6116,
+   "cat": "health",
+   "ok": true,
+   "pred": "F",
+   "gold": "F"
+  },
+  {
+   "id": 4829,
+   "cat": "history",
+   "ok": true,
+   "pred": "C",
+   "gold": "C"
+  },
+  {
+   "id": 986,
+   "cat": "law",
+   "ok": false,
+   "pred": "A",
+   "gold": "B"
+  },
+  {
+   "id": 7797,
+   "cat": "math",
+   "ok": true,
+   "pred": "D",
+   "gold": "D"
+  },
+  {
+   "id": 5203,
+   "cat": "other",
+   "ok": true,
+   "pred": "B",
+   "gold": "B"
+  },
+  {
+   "id": 10913,
+   "cat": "philosophy",
+   "ok": true,
+   "pred": "B",
+   "gold": "B"
+  },
+  {
+   "id": 9215,
+   "cat": "physics",
+   "ok": true,
+   "pred": "J",
+   "gold": "J"
+  },
+  {
+   "id": 2175,
+   "cat": "psychology",
+   "ok": false,
+   "pred": "J",
+   "gold": "G"
+  },
+  {
+   "id": 2927,
+   "cat": "biology",
+   "ok": true,
+   "pred": "C",
+   "gold": "C"
+  },
+  {
+   "id": 209,
+   "cat": "business",
+   "ok": true,
+   "pred": "F",
+   "gold": "F"
+  },
+  {
+   "id": 3626,
+   "cat": "chemistry",
+   "ok": true,
+   "pred": "B",
+   "gold": "B"
+  },
+  {
+   "id": 10509,
+   "cat": "computer science",
+   "ok": true,
+   "pred": "A",
+   "gold": "A"
+  },
+  {
+   "id": 6979,
+   "cat": "economics",
+   "ok": true,
+   "pred": "E",
+   "gold": "E"
+  },
+  {
+   "id": 11522,
+   "cat": "engineering",
+   "ok": true,
+   "pred": "F",
+   "gold": "F"
+  },
+  {
+   "id": 6120,
+   "cat": "health",
+   "ok": true,
+   "pred": "H",
+   "gold": "H"
+  },
+  {
+   "id": 4838,
+   "cat": "history",
+   "ok": true,
+   "pred": "E",
+   "gold": "E"
+  },
+  {
+   "id": 1002,
+   "cat": "law",
+   "ok": false,
+   "pred": "A",
+   "gold": "E"
+  },
+  {
+   "id": 7800,
+   "cat": "math",
+   "ok": true,
+   "pred": "C",
+   "gold": "C"
+  },
+  {
+   "id": 5208,
+   "cat": "other",
+   "ok": true,
+   "pred": "B",
+   "gold": "B"
+  },
+  {
+   "id": 10923,
+   "cat": "philosophy",
+   "ok": true,
+   "pred": "I",
+   "gold": "I"
+  },
+  {
+   "id": 9217,
+   "cat": "physics",
+   "ok": true,
+   "pred": "I",
+   "gold": "I"
+  },
+  {
+   "id": 2185,
+   "cat": "psychology",
+   "ok": true,
+   "pred": "D",
+   "gold": "D"
+  },
+  {
+   "id": 2938,
+   "cat": "biology",
+   "ok": true,
+   "pred": "B",
+   "gold": "B"
+  },
+  {
+   "id": 226,
+   "cat": "business",
+   "ok": true,
+   "pred": "H",
+   "gold": "H"
+  },
+  {
+   "id": 3636,
+   "cat": "chemistry",
+   "ok": false,
+   "pred": "C",
+   "gold": "J"
+  },
+  {
+   "id": 10518,
+   "cat": "computer science",
+   "ok": true,
+   "pred": "B",
+   "gold": "B"
+  },
+  {
+   "id": 6981,
+   "cat": "economics",
+   "ok": false,
+   "pred": "B",
+   "gold": "J"
+  },
+  {
+   "id": 11527,
+   "cat": "engineering",
+   "ok": true,
+   "pred": "C",
+   "gold": "C"
+  },
+  {
+   "id": 6141,
+   "cat": "health",
+   "ok": true,
+   "pred": "D",
+   "gold": "D"
+  },
+  {
+   "id": 4843,
+   "cat": "history",
+   "ok": true,
+   "pred": "J",
+   "gold": "J"
+  },
+  {
+   "id": 1044,
+   "cat": "law",
+   "ok": false,
+   "pred": "A",
+   "gold": "B"
+  },
+  {
+   "id": 7814,
+   "cat": "math",
+   "ok": true,
+   "pred": "J",
+   "gold": "J"
+  },
+  {
+   "id": 5210,
+   "cat": "other",
+   "ok": true,
+   "pred": "E",
+   "gold": "E"
+  },
+  {
+   "id": 10936,
+   "cat": "philosophy",
+   "ok": true,
+   "pred": "F",
+   "gold": "F"
+  },
+  {
+   "id": 9226,
+   "cat": "physics",
+   "ok": true,
+   "pred": "C",
+   "gold": "C"
+  },
+  {
+   "id": 2186,
+   "cat": "psychology",
+   "ok": true,
+   "pred": "I",
+   "gold": "I"
+  },
+  {
+   "id": 2944,
+   "cat": "biology",
+   "ok": true,
+   "pred": "I",
+   "gold": "I"
+  },
+  {
+   "id": 233,
+   "cat": "business",
+   "ok": true,
+   "pred": "A",
+   "gold": "A"
+  },
+  {
+   "id": 3638,
+   "cat": "chemistry",
+   "ok": false,
+   "pred": "E",
+   "gold": "H"
+  },
+  {
+   "id": 10527,
+   "cat": "computer science",
+   "ok": true,
+   "pred": "I",
+   "gold": "I"
+  },
+  {
+   "id": 6982,
+   "cat": "economics",
+   "ok": true,
+   "pred": "H",
+   "gold": "H"
+  },
+  {
+   "id": 11532,
+   "cat": "engineering",
+   "ok": true,
+   "pred": "C",
+   "gold": "C"
+  },
+  {
+   "id": 6145,
+   "cat": "health",
+   "ok": false,
+   "pred": "D",
+   "gold": "G"
+  },
+  {
+   "id": 4846,
+   "cat": "history",
+   "ok": true,
+   "pred": "B",
+   "gold": "B"
+  },
+  {
+   "id": 1054,
+   "cat": "law",
+   "ok": true,
+   "pred": "A",
+   "gold": "A"
+  },
+  {
+   "id": 7819,
+   "cat": "math",
+   "ok": true,
+   "pred": "J",
+   "gold": "J"
+  },
+  {
+   "id": 5244,
+   "cat": "other",
+   "ok": true,
+   "pred": "D",
+   "gold": "D"
+  },
+  {
+   "id": 10938,
+   "cat": "philosophy",
+   "ok": true,
+   "pred": "B",
+   "gold": "B"
+  },
+  {
+   "id": 9229,
+   "cat": "physics",
+   "ok": true,
+   "pred": "A",
+   "gold": "A"
+  },
+  {
+   "id": 2195,
+   "cat": "psychology",
+   "ok": true,
+   "pred": "H",
+   "gold": "H"
+  },
+  {
+   "id": 2950,
+   "cat": "biology",
+   "ok": true,
+   "pred": "B",
+   "gold": "B"
+  },
+  {
+   "id": 234,
+   "cat": "business",
+   "ok": true,
+   "pred": "J",
+   "gold": "J"
+  },
+  {
+   "id": 3645,
+   "cat": "chemistry",
+   "ok": true,
+   "pred": "B",
+   "gold": "B"
+  },
+  {
+   "id": 10554,
+   "cat": "computer science",
+   "ok": true,
+   "pred": "D",
+   "gold": "D"
+  },
+  {
+   "id": 6984,
+   "cat": "economics",
+   "ok": true,
+   "pred": "F",
+   "gold": "F"
+  },
+  {
+   "id": 11533,
+   "cat": "engineering",
+   "ok": false,
+   "pred": "A",
+   "gold": "D"
+  },
+  {
+   "id": 6149,
+   "cat": "health",
+   "ok": true,
+   "pred": "A",
+   "gold": "A"
+  },
+  {
+   "id": 4849,
+   "cat": "history",
+   "ok": true,
+   "pred": "A",
+   "gold": "A"
+  },
+  {
+   "id": 1055,
+   "cat": "law",
+   "ok": true,
+   "pred": "C",
+   "gold": "C"
+  },
+  {
+   "id": 7831,
+   "cat": "math",
+   "ok": true,
+   "pred": "D",
+   "gold": "D"
+  },
+  {
+   "id": 5250,
+   "cat": "other",
+   "ok": true,
+   "pred": "G",
+   "gold": "G"
+  },
+  {
+   "id": 10941,
+   "cat": "philosophy",
+   "ok": true,
+   "pred": "C",
+   "gold": "C"
+  },
+  {
+   "id": 9237,
+   "cat": "physics",
+   "ok": true,
+   "pred": "A",
+   "gold": "A"
+  },
+  {
+   "id": 2196,
+   "cat": "psychology",
+   "ok": false,
+   "pred": "D",
+   "gold": "I"
+  },
+  {
+   "id": 2969,
+   "cat": "biology",
+   "ok": true,
+   "pred": "E",
+   "gold": "E"
+  },
+  {
+   "id": 245,
+   "cat": "business",
+   "ok": true,
+   "pred": "E",
+   "gold": "E"
+  },
+  {
+   "id": 3646,
+   "cat": "chemistry",
+   "ok": false,
+   "pred": "D",
+   "gold": "C"
+  },
+  {
+   "id": 10556,
+   "cat": "computer science",
+   "ok": true,
+   "pred": "C",
+   "gold": "C"
+  },
+  {
+   "id": 6996,
+   "cat": "economics",
+   "ok": true,
+   "pred": "A",
+   "gold": "A"
+  },
+  {
+   "id": 11537,
+   "cat": "engineering",
+   "ok": true,
+   "pred": "D",
+   "gold": "D"
+  },
+  {
+   "id": 6159,
+   "cat": "health",
+   "ok": true,
+   "pred": "I",
+   "gold": "I"
+  },
+  {
+   "id": 4888,
+   "cat": "history",
+   "ok": true,
+   "pred": "H",
+   "gold": "H"
+  },
+  {
+   "id": 1067,
+   "cat": "law",
+   "ok": true,
+   "pred": "J",
+   "gold": "J"
+  },
+  {
+   "id": 7835,
+   "cat": "math",
+   "ok": true,
+   "pred": "E",
+   "gold": "E"
+  },
+  {
+   "id": 5258,
+   "cat": "other",
+   "ok": true,
+   "pred": "I",
+   "gold": "I"
+  },
+  {
+   "id": 10943,
+   "cat": "philosophy",
+   "ok": true,
+   "pred": "D",
+   "gold": "D"
+  },
+  {
+   "id": 9239,
+   "cat": "physics",
+   "ok": true,
+   "pred": "B",
+   "gold": "B"
+  },
+  {
+   "id": 2199,
+   "cat": "psychology",
+   "ok": true,
+   "pred": "D",
+   "gold": "D"
+  },
+  {
+   "id": 2972,
+   "cat": "biology",
+   "ok": true,
+   "pred": "A",
+   "gold": "A"
+  },
+  {
+   "id": 252,
+   "cat": "business",
+   "ok": true,
+   "pred": "G",
+   "gold": "G"
+  },
+  {
+   "id": 3658,
+   "cat": "chemistry",
+   "ok": false,
+   "pred": "H",
+   "gold": "I"
+  },
+  {
+   "id": 10563,
+   "cat": "computer science",
+   "ok": false,
+   "pred": "F",
+   "gold": "D"
+  },
+  {
+   "id": 6997,
+   "cat": "economics",
+   "ok": true,
+   "pred": "F",
+   "gold": "F"
+  },
+  {
+   "id": 11557,
+   "cat": "engineering",
+   "ok": true,
+   "pred": "C",
+   "gold": "C"
+  },
+  {
+   "id": 6185,
+   "cat": "health",
+   "ok": true,
+   "pred": "B",
+   "gold": "B"
+  },
+  {
+   "id": 4890,
+   "cat": "history",
+   "ok": false,
+   "pred": "G",
+   "gold": "E"
+  },
+  {
+   "id": 1068,
+   "cat": "law",
+   "ok": false,
+   "pred": "I",
+   "gold": "B"
+  },
+  {
+   "id": 7847,
+   "cat": "math",
+   "ok": true,
+   "pred": "C",
+   "gold": "C"
+  },
+  {
+   "id": 5271,
+   "cat": "other",
+   "ok": true,
+   "pred": "E",
+   "gold": "E"
+  },
+  {
+   "id": 10948,
+   "cat": "philosophy",
+   "ok": true,
+   "pred": "H",
+   "gold": "H"
+  },
+  {
+   "id": 9248,
+   "cat": "physics",
+   "ok": true,
+   "pred": "G",
+   "gold": "G"
+  },
+  {
+   "id": 2208,
+   "cat": "psychology",
+   "ok": true,
+   "pred": "C",
+   "gold": "C"
+  },
+  {
+   "id": 2979,
+   "cat": "biology",
+   "ok": true,
+   "pred": "I",
+   "gold": "I"
+  },
+  {
+   "id": 261,
+   "cat": "business",
+   "ok": true,
+   "pred": "J",
+   "gold": "J"
+  },
+  {
+   "id": 3663,
+   "cat": "chemistry",
+   "ok": true,
+   "pred": "B",
+   "gold": "B"
+  },
+  {
+   "id": 10569,
+   "cat": "computer science",
+   "ok": false,
+   "pred": "C",
+   "gold": "B"
+  },
+  {
+   "id": 6998,
+   "cat": "economics",
+   "ok": true,
+   "pred": "H",
+   "gold": "H"
+  },
+  {
+   "id": 11565,
+   "cat": "engineering",
+   "ok": true,
+   "pred": "F",
+   "gold": "F"
+  },
+  {
+   "id": 6206,
+   "cat": "health",
+   "ok": true,
+   "pred": "D",
+   "gold": "D"
+  },
+  {
+   "id": 4897,
+   "cat": "history",
+   "ok": true,
+   "pred": "A",
+   "gold": "A"
+  },
+  {
+   "id": 1073,
+   "cat": "law",
+   "ok": false,
+   "pred": "E",
+   "gold": "F"
+  },
+  {
+   "id": 7853,
+   "cat": "math",
+   "ok": true,
+   "pred": "G",
+   "gold": "G"
+  },
+  {
+   "id": 5275,
+   "cat": "other",
+   "ok": true,
+   "pred": "D",
+   "gold": "D"
+  },
+  {
+   "id": 10952,
+   "cat": "philosophy",
+   "ok": false,
+   "pred": "H",
+   "gold": "G"
+  },
+  {
+   "id": 9257,
+   "cat": "physics",
+   "ok": true,
+   "pred": "D",
+   "gold": "D"
+  },
+  {
+   "id": 2214,
+   "cat": "psychology",
+   "ok": true,
+   "pred": "H",
+   "gold": "H"
+  },
+  {
+   "id": 2985,
+   "cat": "biology",
+   "ok": true,
+   "pred": "C",
+   "gold": "C"
+  },
+  {
+   "id": 268,
+   "cat": "business",
+   "ok": true,
+   "pred": "C",
+   "gold": "C"
+  },
+  {
+   "id": 3686,
+   "cat": "chemistry",
+   "ok": true,
+   "pred": "J",
+   "gold": "J"
+  },
+  {
+   "id": 10572,
+   "cat": "computer science",
+   "ok": true,
+   "pred": "F",
+   "gold": "F"
+  },
+  {
+   "id": 7012,
+   "cat": "economics",
+   "ok": true,
+   "pred": "B",
+   "gold": "B"
+  },
+  {
+   "id": 11571,
+   "cat": "engineering",
+   "ok": true,
+   "pred": "E",
+   "gold": "E"
+  },
+  {
+   "id": 6208,
+   "cat": "health",
+   "ok": true,
+   "pred": "I",
+   "gold": "I"
+  },
+  {
+   "id": 4898,
+   "cat": "history",
+   "ok": true,
+   "pred": "F",
+   "gold": "F"
+  },
+  {
+   "id": 1078,
+   "cat": "law",
+   "ok": true,
+   "pred": "B",
+   "gold": "B"
+  },
+  {
+   "id": 7862,
+   "cat": "math",
+   "ok": true,
+   "pred": "F",
+   "gold": "F"
+  },
+  {
+   "id": 5290,
+   "cat": "other",
+   "ok": false,
+   "pred": "D",
+   "gold": "B"
+  },
+  {
+   "id": 10980,
+   "cat": "philosophy",
+   "ok": true,
+   "pred": "H",
+   "gold": "H"
+  },
+  {
+   "id": 9266,
+   "cat": "physics",
+   "ok": true,
+   "pred": "H",
+   "gold": "H"
+  },
+  {
+   "id": 2230,
+   "cat": "psychology",
+   "ok": true,
+   "pred": "E",
+   "gold": "E"
+  },
+  {
+   "id": 3006,
+   "cat": "biology",
+   "ok": true,
+   "pred": "E",
+   "gold": "E"
+  },
+  {
+   "id": 272,
+   "cat": "business",
+   "ok": false,
+   "pred": "G",
+   "gold": "E"
+  },
+  {
+   "id": 3687,
+   "cat": "chemistry",
+   "ok": true,
+   "pred": "B",
+   "gold": "B"
+  },
+  {
+   "id": 10577,
+   "cat": "computer science",
+   "ok": true,
+   "pred": "H",
+   "gold": "H"
+  },
+  {
+   "id": 7015,
+   "cat": "economics",
+   "ok": true,
+   "pred": "E",
+   "gold": "E"
+  },
+  {
+   "id": 11576,
+   "cat": "engineering",
+   "ok": true,
+   "pred": "H",
+   "gold": "H"
+  },
+  {
+   "id": 6213,
+   "cat": "health",
+   "ok": true,
+   "pred": "C",
+   "gold": "C"
+  },
+  {
+   "id": 4899,
+   "cat": "history",
+   "ok": true,
+   "pred": "A",
+   "gold": "A"
+  },
+  {
+   "id": 1080,
+   "cat": "law",
+   "ok": true,
+   "pred": "B",
+   "gold": "B"
+  },
+  {
+   "id": 7863,
+   "cat": "math",
+   "ok": true,
+   "pred": "E",
+   "gold": "E"
+  },
+  {
+   "id": 5308,
+   "cat": "other",
+   "ok": true,
+   "pred": "G",
+   "gold": "G"
+  },
+  {
+   "id": 10986,
+   "cat": "philosophy",
+   "ok": true,
+   "pred": "G",
+   "gold": "G"
+  },
+  {
+   "id": 9280,
+   "cat": "physics",
+   "ok": true,
+   "pred": "J",
+   "gold": "J"
+  },
+  {
+   "id": 2231,
+   "cat": "psychology",
+   "ok": true,
+   "pred": "E",
+   "gold": "E"
+  },
+  {
+   "id": 3015,
+   "cat": "biology",
+   "ok": true,
+   "pred": "I",
+   "gold": "I"
+  },
+  {
+   "id": 279,
+   "cat": "business",
+   "ok": true,
+   "pred": "G",
+   "gold": "G"
+  },
+  {
+   "id": 3690,
+   "cat": "chemistry",
+   "ok": true,
+   "pred": "B",
+   "gold": "B"
+  },
+  {
+   "id": 10578,
+   "cat": "computer science",
+   "ok": true,
+   "pred": "I",
+   "gold": "I"
+  },
+  {
+   "id": 7025,
+   "cat": "economics",
+   "ok": true,
+   "pred": "C",
+   "gold": "C"
+  },
+  {
+   "id": 11588,
+   "cat": "engineering",
+   "ok": true,
+   "pred": "A",
+   "gold": "A"
+  },
+  {
+   "id": 6244,
+   "cat": "health",
+   "ok": true,
+   "pred": "I",
+   "gold": "I"
+  },
+  {
+   "id": 4905,
+   "cat": "history",
+   "ok": true,
+   "pred": "H",
+   "gold": "H"
+  },
+  {
+   "id": 1094,
+   "cat": "law",
+   "ok": true,
+   "pred": "A",
+   "gold": "A"
+  },
+  {
+   "id": 7865,
+   "cat": "math",
+   "ok": true,
+   "pred": "I",
+   "gold": "I"
+  },
+  {
+   "id": 5315,
+   "cat": "other",
+   "ok": false,
+   "pred": "B",
+   "gold": "G"
+  },
+  {
+   "id": 10998,
+   "cat": "philosophy",
+   "ok": true,
+   "pred": "C",
+   "gold": "C"
+  },
+  {
+   "id": 9287,
+   "cat": "physics",
+   "ok": true,
+   "pred": "A",
+   "gold": "A"
+  },
+  {
+   "id": 2237,
+   "cat": "psychology",
+   "ok": true,
+   "pred": "F",
+   "gold": "F"
+  },
+  {
+   "id": 3019,
+   "cat": "biology",
+   "ok": true,
+   "pred": "G",
+   "gold": "G"
+  },
+  {
+   "id": 280,
+   "cat": "business",
+   "ok": true,
+   "pred": "F",
+   "gold": "F"
+  },
+  {
+   "id": 3694,
+   "cat": "chemistry",
+   "ok": true,
+   "pred": "G",
+   "gold": "G"
+  },
+  {
+   "id": 10598,
+   "cat": "computer science",
+   "ok": true,
+   "pred": "I",
+   "gold": "I"
+  },
+  {
+   "id": 7044,
+   "cat": "economics",
+   "ok": true,
+   "pred": "C",
+   "gold": "C"
+  },
+  {
+   "id": 11591,
+   "cat": "engineering",
+   "ok": false,
+   "pred": "D",
+   "gold": "J"
+  },
+  {
+   "id": 6249,
+   "cat": "health",
+   "ok": true,
+   "pred": "F",
+   "gold": "F"
+  },
+  {
+   "id": 4910,
+   "cat": "history",
+   "ok": false,
+   "pred": "B",
+   "gold": "I"
+  },
+  {
+   "id": 1097,
+   "cat": "law",
+   "ok": false,
+   "pred": "C",
+   "gold": "A"
+  },
+  {
+   "id": 7874,
+   "cat": "math",
+   "ok": true,
+   "pred": "D",
+   "gold": "D"
+  },
+  {
+   "id": 5329,
+   "cat": "other",
+   "ok": true,
+   "pred": "F",
+   "gold": "F"
+  },
+  {
+   "id": 11007,
+   "cat": "philosophy",
+   "ok": true,
+   "pred": "J",
+   "gold": "J"
+  },
+  {
+   "id": 9289,
+   "cat": "physics",
+   "ok": true,
+   "pred": "B",
+   "gold": "B"
+  },
+  {
+   "id": 2241,
+   "cat": "psychology",
+   "ok": true,
+   "pred": "J",
+   "gold": "J"
+  },
+  {
+   "id": 3022,
+   "cat": "biology",
+   "ok": true,
+   "pred": "A",
+   "gold": "A"
+  },
+  {
+   "id": 298,
+   "cat": "business",
+   "ok": true,
+   "pred": "A",
+   "gold": "A"
+  },
+  {
+   "id": 3707,
+   "cat": "chemistry",
+   "ok": true,
+   "pred": "J",
+   "gold": "J"
+  },
+  {
+   "id": 10605,
+   "cat": "computer science",
+   "ok": true,
+   "pred": "B",
+   "gold": "B"
+  },
+  {
+   "id": 7046,
+   "cat": "economics",
+   "ok": false,
+   "pred": "F",
+   "gold": "I"
+  },
+  {
+   "id": 11592,
+   "cat": "engineering",
+   "ok": true,
+   "pred": "F",
+   "gold": "F"
+  },
+  {
+   "id": 6255,
+   "cat": "health",
+   "ok": true,
+   "pred": "J",
+   "gold": "J"
+  },
+  {
+   "id": 4916,
+   "cat": "history",
+   "ok": true,
+   "pred": "E",
+   "gold": "E"
+  },
+  {
+   "id": 1105,
+   "cat": "law",
+   "ok": true,
+   "pred": "B",
+   "gold": "B"
+  },
+  {
+   "id": 7886,
+   "cat": "math",
+   "ok": true,
+   "pred": "A",
+   "gold": "A"
+  },
+  {
+   "id": 5340,
+   "cat": "other",
+   "ok": true,
+   "pred": "F",
+   "gold": "F"
+  },
+  {
+   "id": 11036,
+   "cat": "philosophy",
+   "ok": false,
+   "pred": "C",
+   "gold": "B"
+  },
+  {
+   "id": 9295,
+   "cat": "physics",
+   "ok": true,
+   "pred": "E",
+   "gold": "E"
+  },
+  {
+   "id": 2243,
+   "cat": "psychology",
+   "ok": true,
+   "pred": "I",
+   "gold": "I"
+  },
+  {
+   "id": 3030,
+   "cat": "biology",
+   "ok": true,
+   "pred": "A",
+   "gold": "A"
+  },
+  {
+   "id": 305,
+   "cat": "business",
+   "ok": true,
+   "pred": "E",
+   "gold": "E"
+  },
+  {
+   "id": 3725,
+   "cat": "chemistry",
+   "ok": true,
+   "pred": "A",
+   "gold": "A"
+  },
+  {
+   "id": 10612,
+   "cat": "computer science",
+   "ok": true,
+   "pred": "D",
+   "gold": "D"
+  },
+  {
+   "id": 7051,
+   "cat": "economics",
+   "ok": false,
+   "pred": "A",
+   "gold": "J"
+  },
+  {
+   "id": 11605,
+   "cat": "engineering",
+   "ok": true,
+   "pred": "E",
+   "gold": "E"
+  },
+  {
+   "id": 6269,
+   "cat": "health",
+   "ok": false,
+   "pred": "J",
+   "gold": "D"
+  },
+  {
+   "id": 4937,
+   "cat": "history",
+   "ok": true,
+   "pred": "I",
+   "gold": "I"
+  },
+  {
+   "id": 1106,
+   "cat": "law",
+   "ok": true,
+   "pred": "C",
+   "gold": "C"
+  },
+  {
+   "id": 7889,
+   "cat": "math",
+   "ok": true,
+   "pred": "A",
+   "gold": "A"
+  },
+  {
+   "id": 5362,
+   "cat": "other",
+   "ok": true,
+   "pred": "A",
+   "gold": "A"
+  },
+  {
+   "id": 11042,
+   "cat": "philosophy",
+   "ok": false,
+   "pred": "E",
+   "gold": "D"
+  },
+  {
+   "id": 9300,
+   "cat": "physics",
+   "ok": true,
+   "pred": "H",
+   "gold": "H"
+  },
+  {
+   "id": 2246,
+   "cat": "psychology",
+   "ok": true,
+   "pred": "E",
+   "gold": "E"
+  },
+  {
+   "id": 3036,
+   "cat": "biology",
+   "ok": true,
+   "pred": "C",
+   "gold": "C"
+  },
+  {
+   "id": 334,
+   "cat": "business",
+   "ok": true,
+   "pred": "F",
+   "gold": "F"
+  },
+  {
+   "id": 3726,
+   "cat": "chemistry",
+   "ok": true,
+   "pred": "A",
+   "gold": "A"
+  },
+  {
+   "id": 10614,
+   "cat": "computer science",
+   "ok": false,
+   "pred": "E",
+   "gold": "B"
+  },
+  {
+   "id": 7053,
+   "cat": "economics",
+   "ok": true,
+   "pred": "G",
+   "gold": "G"
+  },
+  {
+   "id": 11606,
+   "cat": "engineering",
+   "ok": false,
+   "pred": "G",
+   "gold": "C"
+  },
+  {
+   "id": 6287,
+   "cat": "health",
+   "ok": true,
+   "pred": "B",
+   "gold": "B"
+  },
+  {
+   "id": 4941,
+   "cat": "history",
+   "ok": false,
+   "pred": "D",
+   "gold": "F"
+  },
+  {
+   "id": 1114,
+   "cat": "law",
+   "ok": true,
+   "pred": "B",
+   "gold": "B"
+  },
+  {
+   "id": 7900,
+   "cat": "math",
+   "ok": true,
+   "pred": "I",
+   "gold": "I"
+  },
+  {
+   "id": 5379,
+   "cat": "other",
+   "ok": true,
+   "pred": "I",
+   "gold": "I"
+  },
+  {
+   "id": 11045,
+   "cat": "philosophy",
+   "ok": false,
+   "pred": "C",
+   "gold": "D"
+  },
+  {
+   "id": 9302,
+   "cat": "physics",
+   "ok": true,
+   "pred": "D",
+   "gold": "D"
+  },
+  {
+   "id": 2255,
+   "cat": "psychology",
+   "ok": true,
+   "pred": "C",
+   "gold": "C"
+  },
+  {
+   "id": 3040,
+   "cat": "biology",
+   "ok": true,
+   "pred": "C",
+   "gold": "C"
+  },
+  {
+   "id": 345,
+   "cat": "business",
+   "ok": true,
+   "pred": "H",
+   "gold": "H"
+  },
+  {
+   "id": 3736,
+   "cat": "chemistry",
+   "ok": true,
+   "pred": "G",
+   "gold": "G"
+  },
+  {
+   "id": 10617,
+   "cat": "computer science",
+   "ok": true,
+   "pred": "D",
+   "gold": "D"
+  },
+  {
+   "id": 7060,
+   "cat": "economics",
+   "ok": true,
+   "pred": "A",
+   "gold": "A"
+  },
+  {
+   "id": 11614,
+   "cat": "engineering",
+   "ok": true,
+   "pred": "A",
+   "gold": "A"
+  },
+  {
+   "id": 6290,
+   "cat": "health",
+   "ok": false,
+   "pred": "J",
+   "gold": "C"
+  },
+  {
+   "id": 4944,
+   "cat": "history",
+   "ok": true,
+   "pred": "G",
+   "gold": "G"
+  },
+  {
+   "id": 1118,
+   "cat": "law",
+   "ok": true,
+   "pred": "D",
+   "gold": "D"
+  },
+  {
+   "id": 7902,
+   "cat": "math",
+   "ok": true,
+   "pred": "I",
+   "gold": "I"
+  },
+  {
+   "id": 5387,
+   "cat": "other",
+   "ok": true,
+   "pred": "E",
+   "gold": "E"
+  },
+  {
+   "id": 11048,
+   "cat": "philosophy",
+   "ok": false,
+   "pred": "C",
+   "gold": "F"
+  },
+  {
+   "id": 9305,
+   "cat": "physics",
+   "ok": true,
+   "pred": "H",
+   "gold": "H"
+  },
+  {
+   "id": 2258,
+   "cat": "psychology",
+   "ok": true,
+   "pred": "A",
+   "gold": "A"
+  },
+  {
+   "id": 3046,
+   "cat": "biology",
+   "ok": true,
+   "pred": "D",
+   "gold": "D"
+  },
+  {
+   "id": 360,
+   "cat": "business",
+   "ok": true,
+   "pred": "J",
+   "gold": "J"
+  },
+  {
+   "id": 3739,
+   "cat": "chemistry",
+   "ok": true,
+   "pred": "D",
+   "gold": "D"
+  },
+  {
+   "id": 10618,
+   "cat": "computer science",
+   "ok": true,
+   "pred": "D",
+   "gold": "D"
+  },
+  {
+   "id": 7063,
+   "cat": "economics",
+   "ok": true,
+   "pred": "B",
+   "gold": "B"
+  },
+  {
+   "id": 11640,
+   "cat": "engineering",
+   "ok": true,
+   "pred": "F",
+   "gold": "F"
+  },
+  {
+   "id": 6294,
+   "cat": "health",
+   "ok": true,
+   "pred": "I",
+   "gold": "I"
+  },
+  {
+   "id": 4945,
+   "cat": "history",
+   "ok": false,
+   "pred": "E",
+   "gold": "J"
+  },
+  {
+   "id": 1138,
+   "cat": "law",
+   "ok": true,
+   "pred": "C",
+   "gold": "C"
+  },
+  {
+   "id": 7906,
+   "cat": "math",
+   "ok": true,
+   "pred": "J",
+   "gold": "J"
+  },
+  {
+   "id": 5396,
+   "cat": "other",
+   "ok": true,
+   "pred": "E",
+   "gold": "E"
+  },
+  {
+   "id": 11050,
+   "cat": "philosophy",
+   "ok": true,
+   "pred": "J",
+   "gold": "J"
+  },
+  {
+   "id": 9307,
+   "cat": "physics",
+   "ok": true,
+   "pred": "A",
+   "gold": "A"
+  },
+  {
+   "id": 2264,
+   "cat": "psychology",
+   "ok": false,
+   "pred": "F",
+   "gold": "G"
+  },
+  {
+   "id": 3065,
+   "cat": "biology",
+   "ok": true,
+   "pred": "H",
+   "gold": "H"
+  },
+  {
+   "id": 362,
+   "cat": "business",
+   "ok": true,
+   "pred": "G",
+   "gold": "G"
+  },
+  {
+   "id": 3745,
+   "cat": "chemistry",
+   "ok": true,
+   "pred": "C",
+   "gold": "C"
+  },
+  {
+   "id": 10625,
+   "cat": "computer science",
+   "ok": true,
+   "pred": "G",
+   "gold": "G"
+  },
+  {
+   "id": 7064,
+   "cat": "economics",
+   "ok": false,
+   "pred": "H",
+   "gold": "A"
+  },
+  {
+   "id": 11642,
+   "cat": "engineering",
+   "ok": true,
+   "pred": "E",
+   "gold": "E"
+  },
+  {
+   "id": 6295,
+   "cat": "health",
+   "ok": true,
+   "pred": "C",
+   "gold": "C"
+  },
+  {
+   "id": 4952,
+   "cat": "history",
+   "ok": true,
+   "pred": "A",
+   "gold": "A"
+  },
+  {
+   "id": 1146,
+   "cat": "law",
+   "ok": true,
+   "pred": "E",
+   "gold": "E"
+  },
+  {
+   "id": 7938,
+   "cat": "math",
+   "ok": true,
+   "pred": "J",
+   "gold": "J"
+  },
+  {
+   "id": 5403,
+   "cat": "other",
+   "ok": true,
+   "pred": "A",
+   "gold": "A"
+  },
+  {
+   "id": 11062,
+   "cat": "philosophy",
+   "ok": true,
+   "pred": "A",
+   "gold": "A"
+  },
+  {
+   "id": 9317,
+   "cat": "physics",
+   "ok": true,
+   "pred": "H",
+   "gold": "H"
+  },
+  {
+   "id": 2272,
+   "cat": "psychology",
+   "ok": true,
+   "pred": "E",
+   "gold": "E"
+  },
+  {
+   "id": 3070,
+   "cat": "biology",
+   "ok": true,
+   "pred": "C",
+   "gold": "C"
+  },
+  {
+   "id": 364,
+   "cat": "business",
+   "ok": true,
+   "pred": "G",
+   "gold": "G"
+  },
+  {
+   "id": 3746,
+   "cat": "chemistry",
+   "ok": false,
+   "pred": "D",
+   "gold": "J"
+  },
+  {
+   "id": 10634,
+   "cat": "computer science",
+   "ok": true,
+   "pred": "D",
+   "gold": "D"
+  },
+  {
+   "id": 7069,
+   "cat": "economics",
+   "ok": true,
+   "pred": "C",
+   "gold": "C"
+  },
+  {
+   "id": 11661,
+   "cat": "engineering",
+   "ok": true,
+   "pred": "E",
+   "gold": "E"
+  },
+  {
+   "id": 6313,
+   "cat": "health",
+   "ok": true,
+   "pred": "H",
+   "gold": "H"
+  },
+  {
+   "id": 4958,
+   "cat": "history",
+   "ok": true,
+   "pred": "B",
+   "gold": "B"
+  },
+  {
+   "id": 1157,
+   "cat": "law",
+   "ok": true,
+   "pred": "D",
+   "gold": "D"
+  },
+  {
+   "id": 7941,
+   "cat": "math",
+   "ok": true,
+   "pred": "J",
+   "gold": "J"
+  },
+  {
+   "id": 5411,
+   "cat": "other",
+   "ok": true,
+   "pred": "D",
+   "gold": "D"
+  },
+  {
+   "id": 11063,
+   "cat": "philosophy",
+   "ok": true,
+   "pred": "A",
+   "gold": "A"
+  },
+  {
+   "id": 9338,
+   "cat": "physics",
+   "ok": true,
+   "pred": "J",
+   "gold": "J"
+  },
+  {
+   "id": 2275,
+   "cat": "psychology",
+   "ok": true,
+   "pred": "B",
+   "gold": "B"
+  },
+  {
+   "id": 3072,
+   "cat": "biology",
+   "ok": true,
+   "pred": "C",
+   "gold": "C"
+  },
+  {
+   "id": 366,
+   "cat": "business",
+   "ok": true,
+   "pred": "D",
+   "gold": "D"
+  },
+  {
+   "id": 3751,
+   "cat": "chemistry",
+   "ok": true,
+   "pred": "D",
+   "gold": "D"
+  },
+  {
+   "id": 10639,
+   "cat": "computer science",
+   "ok": false,
+   "pred": "E",
+   "gold": "J"
+  },
+  {
+   "id": 7070,
+   "cat": "economics",
+   "ok": true,
+   "pred": "D",
+   "gold": "D"
+  },
+  {
+   "id": 11662,
+   "cat": "engineering",
+   "ok": true,
+   "pred": "B",
+   "gold": "B"
+  },
+  {
+   "id": 6315,
+   "cat": "health",
+   "ok": true,
+   "pred": "D",
+   "gold": "D"
+  },
+  {
+   "id": 4960,
+   "cat": "history",
+   "ok": true,
+   "pred": "C",
+   "gold": "C"
+  },
+  {
+   "id": 1158,
+   "cat": "law",
+   "ok": true,
+   "pred": "C",
+   "gold": "C"
+  },
+  {
+   "id": 7950,
+   "cat": "math",
+   "ok": true,
+   "pred": "C",
+   "gold": "C"
+  },
+  {
+   "id": 5414,
+   "cat": "other",
+   "ok": true,
+   "pred": "D",
+   "gold": "D"
+  },
+  {
+   "id": 11079,
+   "cat": "philosophy",
+   "ok": true,
+   "pred": "D",
+   "gold": "D"
+  },
+  {
+   "id": 9345,
+   "cat": "physics",
+   "ok": true,
+   "pred": "E",
+   "gold": "E"
+  },
+  {
+   "id": 2278,
+   "cat": "psychology",
+   "ok": true,
+   "pred": "I",
+   "gold": "I"
+  },
+  {
+   "id": 3081,
+   "cat": "biology",
+   "ok": true,
+   "pred": "E",
+   "gold": "E"
+  },
+  {
+   "id": 368,
+   "cat": "business",
+   "ok": true,
+   "pred": "I",
+   "gold": "I"
+  },
+  {
+   "id": 3752,
+   "cat": "chemistry",
+   "ok": true,
+   "pred": "C",
+   "gold": "C"
+  },
+  {
+   "id": 10657,
+   "cat": "computer science",
+   "ok": true,
+   "pred": "E",
+   "gold": "E"
+  },
+  {
+   "id": 7076,
+   "cat": "economics",
+   "ok": true,
+   "pred": "J",
+   "gold": "J"
+  },
+  {
+   "id": 11674,
+   "cat": "engineering",
+   "ok": true,
+   "pred": "J",
+   "gold": "J"
+  },
+  {
+   "id": 6332,
+   "cat": "health",
+   "ok": true,
+   "pred": "B",
+   "gold": "B"
+  },
+  {
+   "id": 4979,
+   "cat": "history",
+   "ok": true,
+   "pred": "D",
+   "gold": "D"
+  },
+  {
+   "id": 1160,
+   "cat": "law",
+   "ok": true,
+   "pred": "E",
+   "gold": "E"
+  },
+  {
+   "id": 7954,
+   "cat": "math",
+   "ok": true,
+   "pred": "A",
+   "gold": "A"
+  },
+  {
+   "id": 5423,
+   "cat": "other",
+   "ok": true,
+   "pred": "C",
+   "gold": "C"
+  },
+  {
+   "id": 11084,
+   "cat": "philosophy",
+   "ok": false,
+   "pred": "I",
+   "gold": "D"
+  },
+  {
+   "id": 9356,
+   "cat": "physics",
+   "ok": true,
+   "pred": "C",
+   "gold": "C"
+  },
+  {
+   "id": 2307,
+   "cat": "psychology",
+   "ok": true,
+   "pred": "I",
+   "gold": "I"
+  },
+  {
+   "id": 3101,
+   "cat": "biology",
+   "ok": true,
+   "pred": "H",
+   "gold": "H"
+  },
+  {
+   "id": 380,
+   "cat": "business",
+   "ok": true,
+   "pred": "E",
+   "gold": "E"
+  }
+ ]
+}

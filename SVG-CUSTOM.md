@@ -14164,6 +14164,35 @@ log was read.  Both queued chains were stopped by pid (06:03); the champion veri
 - A term not seen before: a mean **12.0 ms between one round's end and the next's start** (median not yet read; the
   first version of this note is a cold first leg - a warm-leg telemetry boot is queued).
 
+
+**ATTRIBUTION SETTLED (06:59; chain 4 section A - `mmlu-control-534.out`, `attribution-534.txt`,
+`campaign/results/mmlu-f452-control.json`): THE F-452 STATE DOES NOT COST QUALITY.**  Paired over the same 534 questions
+(a balanced prefix of the 1,500-suite: 38-39 per category), control = the champion binary with F-452's arm off
+(`STRATA_VERIFY_DEVICE_LAUNCH=0`, verified in the engine's environment; boot 06:18; discard leg M1 203.6 / conc 268.8):
+
+| | score | | the four cells | |
+|---|---:|---|---|---:|
+| control (F-452 off) | 456/534 = 85.4% (95% CI +/- 3.0) | | both right | 445 |
+| adopted (F-452 state) | 462/534 = 86.5% | | both wrong | 61 |
+| difference | +1.1 pts, the adopted state's favour | | control only / adopted only | 11 / 17 |
+
+Exact McNemar (two-sided) on the 28 discordant pairs: **p = 0.345**; standard error of the paired difference 0.99 pts.
+Per category the states are level (-2 to +3 questions of 38-39).  The running prefixes agreed throughout (150: 128 vs 126;
+300: 254 vs 254; 400: 340 vs 342).
+- *The ruling.*  The deficit against the 0.933 floor is the SAMPLE's, not the state's: both states read 85-86% on this
+  stratified 1,500-question set, on which the 70-question validation floor was never derived.  The escalation item
+  opened by the 86.3% reading CLOSES: nothing to recover in the engine.  The floor is per instrument - on the
+  1,500-suite the reference is the control's own 85.4%, and a state is judged against a paired control on the same
+  questions, never against another suite's floor.
+- *The instrument's noise, measured (law 11):* 28 of 534 answers (5.2%) differ between two runs of near-equivalent
+  states - CPU-expert numerics and residency make the greedy stream run-dependent (the bit-check caveat, at answer
+  level).  A 70-question gate therefore carries about +/-2 questions of pure run noise: it can see a seven-point drop,
+  not a two-point one.
+- *For the operator (a server setting, not an engine change):* the gate sends `max_tokens` 4,000 and the server limits
+  THINKING to 3,000 of them; the 200 wrapped questions scored 58.5% against 90.5% for the 1,300 that finished their
+  reasoning.  A larger thinking budget on this class of request is worth about a point on this instrument and costs
+  latency on the long thinkers; it is recorded, not changed.
+
 ### 7. Priced queue (law 15; nothing below is adopted)
 A. Solo, bitwise launch shape/order: ~0.7 ms/window = +8%; with QSA work +15-20%.  First step: one read of the GDN capture
    order (the gate matvec's 10.9 us late start).  B. Solo drafter composition: step cap +2.4%, the adapt round, the

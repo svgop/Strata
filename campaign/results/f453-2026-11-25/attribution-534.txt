@@ -1,0 +1,20 @@
+paired over 534 questions (control 534 rows, adopted 1500 rows)
+  control 456/534 = 85.4%   adopted 462/534 = 86.5%   difference +1.1 pts
+  both right 445 | both wrong 61 | control only 11 | adopted only 17
+  exact McNemar (two-sided) on the discordant pairs: p = 0.345
+  standard error of the paired difference: 0.99 pts
+  per category (n, control, adopted):
+    health             38   28   26  -2
+    philosophy         38   32   31  -1
+    biology            39   38   38  +0
+    chemistry          38   32   32  +0
+    economics          38   33   33  +0
+    history            38   32   32  +0
+    math               38   37   37  +0
+    other              38   31   31  +0
+    physics            38   38   38  +0
+    business           39   33   34  +1
+    law                38   26   27  +1
+    engineering        38   29   31  +2
+    psychology         38   33   35  +2
+    computer science   38   34   37  +3
