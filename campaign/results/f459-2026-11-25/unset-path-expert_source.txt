@@ -1,0 +1,460 @@
+baseline: campaign/results/f459-2026-11-25/obj-baseline/expert_source.cpp.o
+candidate: build-fresh/CMakeFiles/strata_engine.dir/src/core/expert_source.cpp.o
+functions: 420  | identical 403  | different 15  | baseline only 1  | candidate only 1
+
+DIFFERENT  strata::Cursor::need(unsigned long) const [clone .isra.0]   instructions 6 -> 23   (+20 / -3)
+      =  add %rsi,%rdx
+      =  cmp %rdx,%rdi
+      -  jb REL R_X86_64_PC32 .text.unlikely
+      +  jb L4
+      =  ret 
+      =  nop 
+      =  jb REL R_X86_64_PC32 .text.unlikely
+      =  ret 
+      -  nop 
+      -  xchg %ax,%ax
+      +  sub $0x18,%rsp
+      +  mov $0x10,%edi
+      +  mov %rbx,0x8(%rsp)
+      +  call REL R_X86_64_PLT32 __cxa_allocate_exception
+      +  mov REL R_X86_64_32 .rodata.str1.8
+      +  mov %rax,%rdi
+      +  mov %rax,%rbx
+      +  call REL R_X86_64_PLT32 std::runtime_error::runtime_error(char const*)
+      +  mov REL R_X86_64_32 std::runtime_error::~runtime_error()
+      +  mov REL R_X86_64_32 typeinfo for std::runtime_error
+      +  mov %rbx,%rdi
+      +  mov %r14,0x10(%rsp)
+      +  call REL R_X86_64_PLT32 __cxa_throw
+      +  mov %r14,0x10(%rsp)
+      +  mov %rax,%r14
+      +  mov %rbx,%rdi
+      +  call REL R_X86_64_PLT32 __cxa_free_exception
+      +  mov %r14,%rdi
+      +  call REL R_X86_64_PLT32 _Unwind_Resume
+
+DIFFERENT  strata::GgufFile::parse()   instructions 2225 -> 2231   (+566 / -560)
+      =  mov %rdx,0x68(%rsp)
+      =  cmp $0x3,%rdx
+      -  jbe L1966
+      +  jbe L1934
+      =  mov (%rax),%ecx
+      =  movq $0x4,0x70(%rsp)
+      =  movq $0x4,0x70(%rsp)
+      =  cmp $0x46554747,%ecx
+      -  jne L1959
+      +  jne L1941
+      =  cmp $0x7,%rdx
+      =  jbe L1852
+      =  jne L1959
+      =  cmp $0x7,%rdx
+      -  jbe L1852
+      +  jbe L1963
+      =  mov 0x4(%rax),%ecx
+      =  mov %rdi,%rbp
+      =  mov %ecx,0x40(%rdi)
+      =  cmp $0x3,%ecx
+      -  jne L1818
+      +  jne L2079
+      =  cmp $0xf,%rdx
+      =  jbe L1878
+      =  jne L1818
+      =  cmp $0xf,%rdx
+      -  jbe L1878
+      +  jbe L2072
+      =  mov 0x8(%rax),%rsi
+      =  movq $0x10,0x70(%rsp)
+      =  mov %rsi,0x20(%rsp)
+      =  cmp $0x17,%rdx
+      -  jbe L1940
+      +  jbe L1913
+      =  mov 0x10(%rax),%rax
+      =  movq $0x18,0x70(%rsp)
+
+DIFFERENT  strata::core::(anonymous namespace)::free_memory_bytes(unsigned long&)   instructions 813 -> 812   (+34 / -35)
+      =  movq $0x0,0xf8(%rsp)
+      =  test %r8,%r8
+      -  je L680
+      +  je L679
+      =  mov 0x2a0(%rsp),%rax
+      =  mov %r8,%rdx
+      =  mov 0x28(%rsp),%rax
+      =  cmpq $0x0,(%rax)
+      -  je L646
+      +  je L645
+      =  mov %rbp,0x830(%rsp)
+      =  mov %r12,0x838(%rsp)
+      =  cmpq $0x9,0x20(%rsp)
+      =  mov %r15,0xb0(%rsp)
+      -  jbe L598
+      +  jbe L597
+      =  mov 0x20(%rsp),%rax
+      =  movdqa REL R_X86_64_PC32 @.rodata.cst16:30383039313031313132313331343135
+      =  movups %xmm0,0xd(%rax)
+      =  cmp $0x1,%rbp
+      -  je L701
+      +  je L700
+      =  movzwl 0xc0(%rsp),%edx
+      =  mov %dx,0x1d(%rax)
+      =  movq $0x0,0xb8(%rsp)
+      =  cmp %r13,%r14
+      -  jb L613
+      +  jb L612
+      =  movabs $0x6f666e696d656d2f,%rax
+      =  mov %rax,(%rdx,%r12,1)
+      =  add -0x18(%rdx),%rdi
+      =  test %rax,%rax
+      -  je L609
+      +  je L608
+      =  xor %esi,%esi
+      =  call REL R_X86_64_PLT32 std::basic_ios<char, std::char_traits<char> >::clear(std::_Ios_Iostate)
+
+DIFFERENT  strata::core::ArenaExpertSource::arena_plan_layout(strata::kernels::cpu::ExpertLayout const&, long, long, unsigned long, bool, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, std::vector<unsigned long, std::allocator<unsigned long> >&, std::vector<unsigned long, std::allocator<unsigned long> >&, std::vector<unsigned long, std::allocator<unsigned long> >&, unsigned long&, std::vector<std::pair<unsigned long, unsigned long>, std::allocator<std::pair<unsigned long, unsigned long> > >&)   instructions 1034 -> 1031   (+54 / -57)
+      =  mov 0x8(%rbp),%rax
+      =  cmp 0x10(%rbp),%rax
+      -  je L906
+      +  je L903
+      =  mov 0x58(%rsp),%rdx
+      =  add $0x8,%rax
+      =  mov %r14,0x78(%rsp)
+      =  cmp 0xf8(%r12),%rax
+      -  je L972
+      +  je L969
+      =  mov %rbx,(%rax)
+      =  add $0x8,%rax
+      =  mov 0x108(%r12),%rax
+      =  cmp 0x110(%r12),%rax
+      -  je L967
+      +  je L964
+      =  mov %r15,(%rax)
+      =  add $0x8,%rax
+      =  mov 0x120(%r12),%rax
+      =  cmp 0x128(%r12),%rax
+      -  je L962
+      +  je L959
+      =  mov %r14,(%rax)
+      =  add $0x8,%rax
+      =  mov %rbx,0x68(%rsp)
+      =  cmp %rbp,(%rsp)
+      -  je L976
+      +  je L973
+      =  cmpb $0x0,0x0(%r13)
+      =  jne L203
+      =  sub %r13,%rbp
+      =  cmp %rax,%rbp
+      -  jg L1031
+      +  jg L1028
+      =  test %rbp,%rbp
+      =  je L786
+
+DIFFERENT  strata::core::ArenaExpertSource::arena_preflight_ram(unsigned long, long, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >&)   instructions 241 -> 240   (+95 / -96)
+      -  sub $0x308,%rsp
+      +  sub $0x2f8,%rsp
+      =  mov 0x98(%rdi),%rax
+      =  mov %rbx,0x2d8(%rsp)
+      =  sub $0x308,%rsp
+      =  mov 0x98(%rdi),%rax
+      -  mov %rbx,0x2d8(%rsp)
+      -  movq $0xffffffffffffffff,0x40(%rsp)
+      +  mov %rbx,0x2c8(%rsp)
+      +  movq $0xffffffffffffffff,0x30(%rsp)
+      =  movb $0x0,(%rax)
+      =  movq $0x0,0xa0(%rdi)
+      =  mov $0x1,%ebx
+      =  mov %ebx,%eax
+      -  mov 0x2d8(%rsp),%rbx
+      -  add $0x308,%rsp
+      +  mov 0x2c8(%rsp),%rbx
+      +  add $0x2f8,%rsp
+      =  ret 
+      =  nopl 0x0(%rax,%rax,1)
+      =  ret 
+      =  nopl 0x0(%rax,%rax,1)
+      -  lea 0xe0(%rsp),%rax
+      -  mov %rbp,0x2e0(%rsp)
+      +  lea 0xd0(%rsp),%rax
+      +  mov %rbp,0x2d0(%rsp)
+      =  mov %rdi,%rbp
+      =  mov $0x12,%edi
+      =  mov %rdi,%rbp
+      =  mov $0x12,%edi
+      +  mov %rax,0xc0(%rsp)
+      +  movabs $0x2f73662f7379732f,%rax
+      =  mov %rax,0xd0(%rsp)
+      =  movabs $0x2f73662f7379732f,%rax
+      =  mov $0x12,%edi
+      =  mov %rax,0xd0(%rsp)
+      -  movabs $0x2f73662f7379732f,%rax
+      -  mov %rax,0xe0(%rsp)
+      =  movabs $0x70756f7267632f73,%rax
+      =  mov %rax,0xe6(%rsp)
+
+DIFFERENT  strata::core::ArenaExpertSource::arena_preflight_ram(unsigned long, long, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >&) [clone .cold]   instructions 12 -> 12   (+5 / -5)
+      -  lea 0x50(%rsp),%rdi
+      +  lea 0xc0(%rsp),%rax
+      +  mov %rax,0x8(%rsp)
+      +  jmp L7
+      +  lea 0x40(%rsp),%rdi
+      =  call REL R_X86_64_PLT32 std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >::_M_dispose()
+      =  lea 0x70(%rsp),%rdi
+      =  lea 0x50(%rsp),%rdi
+      =  call REL R_X86_64_PLT32 std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >::_M_dispose()
+      -  lea 0x70(%rsp),%rdi
+      +  lea 0x60(%rsp),%rdi
+      =  call REL R_X86_64_PLT32 std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >::_M_dispose()
+      =  mov 0x8(%rsp),%rdi
+      =  mov %rbx,%rdi
+      =  call REL R_X86_64_PLT32 _Unwind_Resume
+      -  lea 0xd0(%rsp),%rax
+      -  mov %rax,0x8(%rsp)
+      -  jmp L4
+      =  nop 
+
+DIFFERENT  strata::core::FileExpertSource::plan_cache_complement(strata::core::ExpertCache const&, long, std::vector<std::pair<int, int>, std::allocator<std::pair<int, int> > > const&, long&, unsigned long, unsigned long&, std::vector<std::pair<int, int>, std::allocator<std::pair<int, int> > > const*, std::vector<unsigned long, std::allocator<unsigned long> >&, unsigned long&, long&, long&, unsigned long&, long&, long&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >&) const [clone .cold]   instructions 89 -> 88   (+0 / -1)
+      =  call REL R_X86_64_PLT32 std::__throw_length_error(char const*)
+      =  jmp L2
+      -  nop 
+
+DIFFERENT  strata::core::FileExpertSource::soft_commit_exchanges()   instructions 86 -> 86   (+1 / -1)
+      =  mov 0x878(%rcx),%rax
+      =  mov 0x898(%rcx),%rdi
+      -  data16 cs nopw 0x0(%rax,%rax,1)
+      +  nopl (%rax)
+      =  data16 cs nopw 0x0(%rax,%rax,1)
+      =  mov (%rax),%rsi
+
+DIFFERENT  strata::core::ForesightSwap::init(int, long, long, std::vector<int, std::allocator<int> > const&, std::vector<int, std::allocator<int> > const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >&)   instructions 856 -> 859   (+115 / -112)
+      =  lea (%rax,%rbp,1),%rdx
+      =  test %r13,%r13
+      -  je L42
+      -  nopl 0x0(%rax)
+      +  je L45
+      +  nopl (%rax)
+      +  data16 cs nopw 0x0(%rax,%rax,1)
+      +  data16 cs nopw 0x0(%rax,%rax,1)
+      +  data16 cs nopw 0x0(%rax,%rax,1)
+      =  xor %esi,%esi
+      =  movb $0x0,0x6(%rax)
+      =  movq $0x0,-0x8(%rax)
+      =  cmp %rdx,%rax
+      -  jne L31
+      +  jne L34
+      =  mov 0x20(%r15),%rdi
+      =  mov %rcx,0x20(%r15)
+      =  mov %rcx,0x20(%r15)
+      =  test %rdi,%rdi
+      -  je L47
+      +  je L50
+      =  call REL R_X86_64_PLT32 operator delete[](void*)
+      =  mov 0x28(%r15),%r13
+      =  sar $1,%rax
+      =  cmp %rbx,%rax
+      -  jae L390
+      +  jae L393
+      =  mov %rbx,%rax
+      =  shr $0x3e,%rax
+      =  mov %rcx,0x38(%r15)
+      =  test %r13,%r13
+      -  je L74
+      +  je L77
+      =  mov %r14,%rsi
+      =  mov %r13,%rdi
+      =  lea 0x70(%r15),%rax
+      =  cmp %rax,%rcx
+      -  je L111
+      +  je L114
+      =  mov 0x8(%rcx),%rax
+      =  mov (%rcx),%rbp
+
+DIFFERENT  strata::core::RouterLookahead::run()   instructions 2469 -> 2472   (+361 / -358)
+      =  mov %rdi,0xa0(%rsp)
+      =  cmp $0x1,%r12
+      -  je L2445
+      +  je L2448
+      =  lea -0x4(%rbp),%rdx
+      =  xor %esi,%esi
+      =  je L97
+      =  cmpb $0x0,0x1d8(%rsp)
+      -  jne L2403
+      +  jne L2406
+      =  mov 0xc8(%rsp),%rdi
+      =  test %rdi,%rdi
+      =  mov 0x150(%rsp),%rdi
+      =  test %rdi,%rdi
+      -  je L2408
+      +  je L2411
+      =  mov 0x1b0(%rsp),%rsi
+      =  mov 0x1e8(%rsp),%rbx
+      =  mov %rax,0x1b8(%rsp)
+      =  cmpb $0x0,0x1d8(%rsp)
+      -  jne L2359
+      +  jne L2362
+      =  call REL R_X86_64_PLT32 std::chrono::_V2::steady_clock::now()
+      =  mov %rax,0x1c0(%rsp)
+      =  mov 0xb0(%rax),%rax
+      =  cmp REL R_X86_64_32S strata::core::FileExpertSource::read_ahead_open() const
+      -  je L2413
+      +  je L2416
+      =  cmp REL R_X86_64_32S strata::core::ExpertSource::read_ahead_open() const
+      =  jne L1528
+      =  je L2413
+      =  cmp REL R_X86_64_32S strata::core::ExpertSource::read_ahead_open() const
+      -  jne L1528
+      +  jne L1531
+      =  mov 0x98(%rsp),%rax
+      =  mov 0x2c(%rax),%eax
+
+DIFFERENT  strata::core::detail::make_cache_complement_plan(long, long, std::vector<unsigned long, std::allocator<unsigned long> > const&, std::vector<std::pair<int, int>, std::allocator<std::pair<int, int> > > const&, std::vector<std::pair<int, int>, std::allocator<std::pair<int, int> > > const&, std::vector<unsigned long, std::allocator<unsigned long> >&, unsigned long&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >&) [clone .cold]   instructions 11 -> 10   (+0 / -1)
+      =  mov REL R_X86_64_32 .rodata.str1.8
+      =  call REL R_X86_64_PLT32 std::__throw_length_error(char const*)
+      -  nop 
+
+DIFFERENT  strata::core::expert_pool_dispatch_multi(strata::core::ExpertDispatch&, float const*, int const*, long, long, float*)   instructions 2221 -> 2280   (+499 / -440)
+      =  call REL R_X86_64_PLT32 strata::kernels::cpu::expert_layout()
+      =  movzbl (%rax),%r14d
+      -  mov %rax,-0x2d0(%rbp)
+      -  mov %r14b,-0x2d1(%rbp)
+      +  mov %rax,-0x2d8(%rbp)
+      +  mov %r14b,-0x2d9(%rbp)
+      =  call REL R_X86_64_PLT32 strata::core::shadow::armed()
+      =  mov %al,-0x298(%rbp)
+      =  mov %rax,-0x320(%rbp)
+      =  movzbl REL R_X86_64_TPOFF32 strata::core::(anonymous namespace)::tl_decode
+      -  mov %al,-0x2d4(%rbp)
+      +  mov %al,-0x2dc(%rbp)
+      =  movb REL R_X86_64_TPOFF32 strata::core::(anonymous namespace)::tl_decode
+      =  movzbl REL R_X86_64_PC32 .bss
+      =  mov 0x40(%rax),%rax
+      =  cmp REL R_X86_64_32S strata::core::RemotePrefillSource::begin_layer(long, int const*, long)
+      +  je L1702
+      +  cmp REL R_X86_64_32S strata::core::FileExpertSource::begin_layer(long, int const*, long)
+      =  je L1643
+      =  cmp REL R_X86_64_32S strata::core::FileExpertSource::begin_layer(long, int const*, long)
+      =  cmp REL R_X86_64_32S strata::core::RemotePrefillSource::begin_layer(long, int const*, long)
+      =  je L1643
+      -  cmp REL R_X86_64_32S strata::core::FileExpertSource::begin_layer(long, int const*, long)
+      -  je L1584
+      =  cmp REL R_X86_64_32S strata::core::ExpertSource::begin_layer(long, int const*, long)
+      =  je L112
+      =  mov -0x288(%rbp),%r15
+      =  lea -0x230(%rbp),%r14
+      -  mov -0x2d0(%rbp),%r8
+      +  mov -0x2d8(%rbp),%r8
+      =  push %rdi
+      =  mov -0x280(%rbp),%rcx
+      =  test %rax,%rax
+      =  jne L442
+      -  movb $0x0,-0x2d2(%rbp)
+      +  movb $0x0,-0x2da(%rbp)
+      =  lea 0x0(,%r13,4),%rax
+      =  mov -0x270(%rbp),%rcx
+
+DIFFERENT  strata::core::expert_pool_dispatch_multi(strata::core::ExpertDispatch&, float const*, int const*, long, long, float*) [clone .cold]   instructions 17 -> 17   (+12 / -12)
+      -  mov REL R_X86_64_32 .rodata.str1.1
+      -  call REL R_X86_64_PLT32 std::__throw_length_error(char const*)
+      -  mov REL R_X86_64_32 .rodata.str1.8
+      -  call REL R_X86_64_PLT32 std::__throw_length_error(char const*)
+      -  mov %rax,%rbx
+      -  jmp L8
+      -  mov %r12,%rdi
+      -  call REL R_X86_64_PLT32 std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >::_M_dispose()
+      -  movzbl -0x2d4(%rbp),%eax
+      -  mov %rbx,%rdi
+      -  mov REL R_X86_64_TPOFF32 strata::core::(anonymous namespace)::tl_decode
+      -  call REL R_X86_64_PLT32 _Unwind_Resume
+      =  mov REL R_X86_64_32 .rodata.str1.1
+      =  call REL R_X86_64_PLT32 std::__throw_length_error(char const*)
+      =  mov REL R_X86_64_32 .rodata.str1.1
+      =  call REL R_X86_64_PLT32 std::__throw_length_error(char const*)
+      +  mov %rax,%rbx
+      +  jmp L10
+      +  mov REL R_X86_64_32 .rodata.str1.1
+      +  call REL R_X86_64_PLT32 std::__throw_length_error(char const*)
+      +  mov %r12,%rdi
+      +  call REL R_X86_64_PLT32 std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >::_M_dispose()
+      +  movzbl -0x2dc(%rbp),%eax
+      +  mov %rbx,%rdi
+      +  mov REL R_X86_64_TPOFF32 strata::core::(anonymous namespace)::tl_decode
+      +  call REL R_X86_64_PLT32 _Unwind_Resume
+      +  mov REL R_X86_64_32 .rodata.str1.8
+      +  call REL R_X86_64_PLT32 std::__throw_length_error(char const*)
+      =  nop 
+
+DIFFERENT  strata::read_value(strata::Cursor&, strata::MetaType, int)   instructions 559 -> 559   (+5 / -5)
+      =  mov 0x8(%r12),%rdi
+      =  mov $0x1,%edx
+      -  call REL R_X86_64_PC32 .text
+      +  call REL R_X86_64_PC32 strata::Cursor::need(unsigned long) const [clone .isra.0]
+      =  mov 0x10(%r12),%rax
+      =  mov (%r12),%rdx
+      =  mov 0x8(%r12),%rdi
+      =  mov $0x1,%edx
+      -  call REL R_X86_64_PC32 .text
+      +  call REL R_X86_64_PC32 strata::Cursor::need(unsigned long) const [clone .isra.0]
+      =  mov 0x10(%r12),%rax
+      =  mov (%r12),%rdx
+      =  mov 0x8(%r12),%rdi
+      =  mov $0x2,%edx
+      -  call REL R_X86_64_PC32 .text
+      +  call REL R_X86_64_PC32 strata::Cursor::need(unsigned long) const [clone .isra.0]
+      =  mov 0x10(%r12),%rax
+      =  mov (%r12),%rdx
+      =  mov 0x8(%r12),%rdi
+      =  mov $0x2,%edx
+      -  call REL R_X86_64_PC32 .text
+      +  call REL R_X86_64_PC32 strata::Cursor::need(unsigned long) const [clone .isra.0]
+      =  mov 0x10(%r12),%rax
+      =  mov (%r12),%rdx
+      =  mov 0x8(%r12),%rdi
+      =  mov $0x1,%edx
+      -  call REL R_X86_64_PC32 .text
+      +  call REL R_X86_64_PC32 strata::Cursor::need(unsigned long) const [clone .isra.0]
+      =  mov 0x10(%r12),%rax
+      =  mov (%r12),%rdx
+
+DIFFERENT  void std::__insertion_sort<__gnu_cxx::__normal_iterator<unsigned long*, std::vector<unsigned long, std::allocator<unsigned long> > >, strata::core::FileExpertSource::plan_cache_complement(strata::core::ExpertCache const&, long, std::vector<std::pair<int, int>, std::allocator<std::pair<int, int> > > const&, long&, unsigned long, unsigned long&, std::vector<std::pair<int, int>, std::allocator<std::pair<int, int> > > const*, std::vector<unsigned long, std::allocator<unsigned long> >&, unsigned long&, long&, long&, unsigned long&, long&, long&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >&) const::{lambda(unsigned long, unsigned long)#1}>(__gnu_cxx::__normal_iterator<unsigned long*, std::vector<unsigned long, std::allocator<unsigned long> > >, __gnu_cxx::__normal_iterator<unsigned long*, std::vector<unsigned long, std::allocator<unsigned long> > >, strata::core::FileExpertSource::plan_cache_complement(strata::core::ExpertCache const&, long, std::vector<std::pair<int, int>, std::allocator<std::pair<int, int> > > const&, long&, unsigned long, unsigned long&, std::vector<std::pair<int, int>, std::allocator<std::pair<int, int> > > const*, std::vector<unsigned long, std::allocator<unsigned long> >&, unsigned long&, long&, long&, unsigned long&, long&, long&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >&) const::{lambda(unsigned long, unsigned long)#1})   instructions 74 -> 76   (+11 / -9)
+      =  cmp %rdi,%rsi
+      -  je L71
+      +  je L73
+      =  sub $0x38,%rsp
+      =  mov %r12,0x18(%rsp)
+      =  lea 0x8(%rdi),%r12
+      =  cmp %r12,%rsi
+      -  je L60
+      +  je L62
+      =  mov %rbx,0x8(%rsp)
+      =  mov %rsi,%rbx
+      =  add %r12,%rdi
+      =  cmp $0x8,%r13
+      -  jle L64
+      +  jle L66
+      =  mov %r13,%rdx
+      =  mov %rbp,%rsi
+      =  add $0x8,%r13
+      =  cmp %r12,%rbx
+      -  je L55
+      +  je L57
+      =  mov (%r12),%r14
+      =  mov (%r15),%rsi
+      =  mov -0x8(%r12),%rdx
+      =  cmp (%rsi,%rdx,4),%edi
+      -  jle L68
+      +  jle L70
+      =  lea -0x8(%r12),%rax
+      =  jmp L45
+      =  jle L68
+      =  lea -0x8(%r12),%rax
+      -  jmp L45
+      -  nopl 0x0(%rax)
+      +  jmp L47
+      +  nop 
+      +  data16 cs nopw 0x0(%rax,%rax,1)
+      +  data16 cs nopw 0x0(%rax,%rax,1)
+      =  sub $0x8,%rax
+      =  mov %rdx,(%rcx)
+
+BASELINE ONLY (1):
+    strata::Cursor::need(unsigned long) const [clone .isra.0] [clone .cold]
+
+CANDIDATE ONLY (1):
+    strata::core::CohortSharedMiss::shared_with_a(int) const

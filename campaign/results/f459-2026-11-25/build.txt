@@ -1,0 +1,87 @@
+build start 2026-11-25 11:33:00
+ninja: Entering directory `build-fresh'
+[1/29] Building CXX object CMakeFiles/strata_engine.dir/src/core/peer_experts.cpp.o
+[2/29] Building CXX object CMakeFiles/strata_engine.dir/src/core/remote_experts.cpp.o
+[3/29] Building CUDA object CMakeFiles/strata_mmq.dir/src/prefill/ggml_cuda_host.cu.o
+[4/29] Building CUDA object CMakeFiles/strata_engine.dir/src/core/remote_expert_opt.cu.o
+/home/svg/LLM/strata-custom-2/include/strata/core/expert_source.hpp(772): warning #611-D: overloaded virtual function "strata::core::ExpertSource::prefetch" is only partially overridden in class "strata::core::FileExpertSource"
+  class FileExpertSource : public ExpertSource {
+        ^
+
+Remark: The warnings can be suppressed with "-diag-suppress <warning-number>"
+
+/home/svg/LLM/strata-custom-2/include/strata/core/expert_source.hpp(1351): warning #611-D: overloaded virtual function "strata::core::ExpertSource::prefetch" is only partially overridden in class "strata::core::ArenaExpertSource"
+  class ArenaExpertSource : public ExpertSource {
+        ^
+
+/home/svg/LLM/strata-custom-2/include/strata/core/expert_source.hpp(772): warning #611-D: overloaded virtual function "strata::core::ExpertSource::prefetch" is only partially overridden in class "strata::core::FileExpertSource"
+  class FileExpertSource : public ExpertSource {
+        ^
+
+Remark: The warnings can be suppressed with "-diag-suppress <warning-number>"
+
+/home/svg/LLM/strata-custom-2/include/strata/core/expert_source.hpp(1351): warning #611-D: overloaded virtual function "strata::core::ExpertSource::prefetch" is only partially overridden in class "strata::core::ArenaExpertSource"
+  class ArenaExpertSource : public ExpertSource {
+        ^
+
+[5/29] Building CXX object CMakeFiles/strata_engine.dir/src/core/mtp.cpp.o
+[6/29] Building CUDA object CMakeFiles/strata_mmq.dir/src/prefill/moe_fused_iq.cu.o
+/home/svg/LLM/strata-custom-2/src/prefill/moe_fused_iq.cu(101): warning #177-D: function "strata::prefill::fused::<unnamed>::has_min" was declared but never referenced
+                     constexpr bool has_min(int t) { return t == T_Q4_K || t == T_Q5_K || t == T_Q5_1; }
+                                    ^
+
+Remark: The warnings can be suppressed with "-diag-suppress <warning-number>"
+
+/home/svg/LLM/strata-custom-2/src/prefill/moe_fused_iq.cu(1320): warning #177-D: function "strata::prefill::fused::<unnamed>::kq_on" was declared but never referenced
+  bool kq_on() {
+       ^
+
+/home/svg/LLM/strata-custom-2/src/prefill/moe_fused_iq.cu(1328): warning #177-D: function "strata::prefill::fused::<unnamed>::f16_gu" was declared but never referenced
+  bool f16_gu(int t) {
+       ^
+
+/home/svg/LLM/strata-custom-2/src/prefill/moe_fused_iq.cu(1331): warning #177-D: function "strata::prefill::fused::<unnamed>::f16_d" was declared but never referenced
+  bool f16_d(int t) { return t == T_Q2_0 || t == T_IQ4_NL || t == T_Q8_0; }
+       ^
+
+[7/29] Building CUDA object CMakeFiles/strata_mmq.dir/ggml-tq-overlay/quantize.cu.o
+[8/29] Building CUDA object CMakeFiles/strata_mmq.dir/src/prefill/moe_mmq.cu.o
+[9/29] Building CXX object CMakeFiles/strata_engine.dir/src/core/verify.cpp.o
+/home/svg/LLM/strata-custom-2/src/core/verify.cpp: In static member function ‘static void strata::core::Verifier::raise_flag(uint32_t*, uint32_t)’:
+/home/svg/LLM/strata-custom-2/src/core/verify.cpp:3443:20: warning: unused variable ‘f’ [-Wunused-variable]
+ 3443 |     volatile long* f = (volatile long*) flag;
+      |                    ^
+[10/29] Building CXX object CMakeFiles/strata_engine.dir/src/core/expert_source.cpp.o
+/home/svg/LLM/strata-custom-2/src/core/expert_source.cpp: In function ‘bool strata::core::cpu_miss_pipeline(ExpertDispatch&, const int32_t*, int64_t, int64_t, int64_t, float*, const strata::kernels::cpu::ExpertLayout&, const int32_t*, bool, bool, bool, bool, int*, int64_t*)’:
+/home/svg/LLM/strata-custom-2/src/core/expert_source.cpp:5049:78: warning: unused parameter ‘n’ [-Wunused-parameter]
+ 5049 | static bool cpu_miss_pipeline(ExpertDispatch& d, const int32_t* ids, int64_t n, int64_t n_tok, int64_t k,
+      |                                                                      ~~~~~~~~^
+In function ‘void strata::core::plan_distinct_groups(const ExpertDispatch&, const int32_t*, int64_t, int64_t*, int64_t*, int32_t*, int64_t*, int64_t*, int64_t*, int*, int*)’,
+    inlined from ‘void strata::core::plan_build(ExpertDispatch&, const int32_t*, int64_t, int64_t, const strata::kernels::cpu::ExpertLayout&, int32_t*, bool)’ at /home/svg/LLM/strata-custom-2/src/core/expert_source.cpp:4874:29:
+/home/svg/LLM/strata-custom-2/src/core/expert_source.cpp:4761:24: warning: ‘gtail’ may be used uninitialized [-Wmaybe-uninitialized]
+ 4761 |             if (gtail[q] >= 0) gnxt[gtail[q]] = i; else ghead[q] = i;
+      |                 ~~~~~~~^
+/home/svg/LLM/strata-custom-2/src/core/expert_source.cpp: In function ‘void strata::core::plan_build(ExpertDispatch&, const int32_t*, int64_t, int64_t, const strata::kernels::cpu::ExpertLayout&, int32_t*, bool)’:
+/home/svg/LLM/strata-custom-2/src/core/expert_source.cpp:4872:43: note: ‘gtail’ declared here
+ 4872 |         int64_t ghead[kMaxWindowEntries], gtail[kMaxWindowEntries], gnxt[kMaxWindowEntries];
+      |                                           ^~~~~
+[11/29] Linking CXX static library libstrata_engine.a
+[12/29] Building CUDA object CMakeFiles/strata_mmq.dir/_deps/strata_llamacpp-src/ggml/src/ggml-cuda/template-instances/mmq-instance-iq2_xxs.cu.o
+[13/29] Building CUDA object CMakeFiles/strata_mmq.dir/_deps/strata_llamacpp-src/ggml/src/ggml-cuda/template-instances/mmq-instance-q2_0.cu.o
+[14/29] Building CXX object CMakeFiles/strata_prefill.dir/src/prefill/prefill.cpp.o
+[15/29] Building CUDA object CMakeFiles/strata_mmq.dir/_deps/strata_llamacpp-src/ggml/src/ggml-cuda/template-instances/mmq-instance-iq3_xxs.cu.o
+[16/29] Building CUDA object CMakeFiles/strata_mmq.dir/_deps/strata_llamacpp-src/ggml/src/ggml-cuda/template-instances/mmq-instance-iq4_nl.cu.o
+[17/29] Building CUDA object CMakeFiles/strata_mmq.dir/_deps/strata_llamacpp-src/ggml/src/ggml-cuda/template-instances/mmq-instance-iq3_s.cu.o
+[18/29] Building CUDA object CMakeFiles/strata_mmq.dir/src/prefill/mmq_nvfp4_w4a8.cu.o
+[19/29] Building CUDA object CMakeFiles/strata_mmq.dir/_deps/strata_llamacpp-src/ggml/src/ggml-cuda/template-instances/mmq-instance-q8_0.cu.o
+[20/29] Building CUDA object CMakeFiles/strata_mmq.dir/_deps/strata_llamacpp-src/ggml/src/ggml-cuda/template-instances/mmq-instance-iq2_s.cu.o
+[21/29] Building CUDA object CMakeFiles/strata_mmq.dir/_deps/strata_llamacpp-src/ggml/src/ggml-cuda/template-instances/mmq-instance-iq4_xs.cu.o
+[22/29] Building CUDA object CMakeFiles/strata_mmq.dir/_deps/strata_llamacpp-src/ggml/src/ggml-cuda/template-instances/mmq-instance-iq2_xs.cu.o
+[23/29] Building CUDA object CMakeFiles/strata_mmq.dir/ggml-tq-overlay/template-instances/mmq-instance-tq2_t.cu.o
+[24/29] Building CUDA object CMakeFiles/strata_mmq.dir/ggml-tq-overlay/template-instances/mmq-instance-tqk7.cu.o
+[25/29] Building CUDA object CMakeFiles/strata_mmq.dir/ggml-tq-overlay/template-instances/mmq-instance-tqk6.cu.o
+[26/29] Linking CXX static library libstrata_mmq.a
+[27/29] Linking CXX static library libstrata_prefill.a
+[28/29] Building CXX object CMakeFiles/strata.dir/src/program/generate.cpp.o
+[29/29] Linking CXX executable strata
+BUILD_EXIT=0 11:33:47

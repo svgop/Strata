@@ -5006,6 +5006,42 @@ static void plan_build(ExpertDispatch& d, const int32_t* ids, int64_t n, int64_t
         }
     }
 }
+// F-459 STRATA_COHORT_SHARED_MISS (diagnostic, default off; CohortSharedMiss sits above the dispatch state in the
+// header): the drive's cohort claims this layer's CPU experts in the round's record - a bit per (layer, expert) in its
+// own mask, `cpu` once per distinct blob.  `miss` is the engine's own list of the experts the CPU computes (kind -1).
+// The one caller tests `d.shared_miss` first: with the env unset no drive ever carries a record and nothing here runs.
+// A blob the record cannot hold is `overflow` and is never masked - the round's telemetry says so instead of losing it.
+static void shared_miss_note(ExpertDispatch& d, const std::vector<int64_t>& miss) {
+    CohortSharedMiss& sm = *d.shared_miss;
+    const int c = d.cohort - 1;
+    if (c < 0 || c >= CohortSharedMiss::kCohorts || d.layers < 0 || d.layers >= sm.n_layers) {
+        sm.overflow += (int64_t) miss.size();
+        return;
+    }
+    static_assert(CohortSharedMiss::kExpertsPerWord == 64, "the bit index below assumes a 64-expert word");
+    uint64_t* w = sm.mask[c].data() + (size_t) d.layers * (size_t) sm.words;
+    for (const int64_t e64 : miss) {
+        if (e64 < 0 || e64 >= sm.n_expert) {
+            ++sm.overflow;
+            continue;
+        }
+        uint64_t& word = w[(size_t) e64 >> 6];
+        const uint64_t bit = uint64_t{1} << (e64 & 63);
+        if ((word & bit) == 0) {
+            word |= bit;
+            ++sm.cpu[c];
+        }
+    }
+}
+
+int64_t CohortSharedMiss::shared_with_a(int c) const {
+    if (c < 2 || c > kCohorts) return 0;
+    const std::vector<uint64_t>& mine = mask[c - 1];
+    int64_t n = 0;
+    for (size_t i = 0; i < mine.size(); ++i) n += __builtin_popcountll(mine[i] & mask[0][i]);
+    return n;
+}
+
 // The CPU-side miss pipeline: read the CPU's experts (cold overlap: prefetch + batch), assemble the
 // ExpertJobMulti jobs, and run the pool batch by batch. Returns false on a refused window (d.failed
 // set); reports njobs/npend for the caller's final run and accounting. Split verbatim out of
@@ -5030,6 +5066,7 @@ static bool cpu_miss_pipeline(ExpertDispatch& d, const int32_t* ids, int64_t n, 
             if (kind[i] == -1 && ids[i] >= 0 && ids[i] < d.n_expert &&
                 std::find(miss.begin(), miss.end(), (int64_t) ids[i]) == miss.end())
                 miss.push_back(ids[i]);
+        if (d.shared_miss != nullptr) shared_miss_note(d, miss);   // F-459: armed only; unset, this one test is all
         if (shadow) {
             // the misses read the shadow's own mapping; pulling the native pack's 2 MiB blobs into the page
             // cache for them would only evict pages the window will never touch

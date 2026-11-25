@@ -1,0 +1,412 @@
+F-459 layout proof - 2026-11-25 11:42: gdb 'ptype /o' of strata::core::ExpertDispatch from two probe TUs (one line: the struct as a global), compiled -g -O0 against HEAD's header (git archive) and against the candidate's.
+
+=== comparison ===
+baseline members: 122   candidate members: 124   identical offset + size + declaration: 122
+only in the candidate:
+8728 4 int cohort;
+8736 8 struct strata::core::CohortSharedMiss *shared_miss;
+only in the baseline (none expected):
+sizeof: baseline 1 x 8768; candidate 1 x 8768
+=== baseline (gdb ptype /o) ===
+/* offset      |    size */  type = struct strata::core::ExpertDispatch {
+/*      0      |       8 */    struct strata::core::ForesightSwap *fs;
+/*      8      |       8 */    class strata::kernels::cpu::ExpertPool *pool;
+/*     16      |       8 */    class strata::core::ExpertSource *src;
+/*     24      |       8 */    class strata::core::RouterLookahead *lookahead;
+/*     32      |      24 */    class strata::core::RemoteExperts *remote[3];
+/*     56      |       4 */    int remote_count;
+/* XXX  4-byte hole      */
+/*     64      |       8 */    int64_t n_expert;
+/*     72      |       8 */    int64_t layers;
+/*     80      |       8 */    int64_t experts;
+/*     88      |       8 */    int64_t missing;
+/*     96      |       8 */    class strata::core::ExpertCache *cache;
+/*    104      |       8 */    int64_t cache_hits;
+/*    112      |       8 */    int64_t cache_admitted;
+/*    120      |       8 */    int64_t cache_refused;
+/*    128      |       8 */    void *cache_stream;
+/*    136      |       8 */    const char *cache_fail;
+/*    144      |       8 */    const uint8_t *cache_base;
+/*    152      |       8 */    int64_t cache_blob;
+/*    160      |       8 */    const uint64_t *cache_slot_off;
+/*    168      |       8 */    void *hit_scratch;
+/*    176      |       8 */    float *parts_out;
+/*    184      |       8 */    float *hit_out;
+/*    192      |       8 */    int64_t parts_elems;
+/*    200      |       8 */    const float *mixed;
+/*    208      |       8 */    uint8_t *x_q8_0_hit;
+/*    216      |       8 */    float *x_q8_0_hit_scale;
+/*    224      |       8 */    int32_t *d_slot;
+/*    232      |       8 */    int32_t *d_dst;
+/*    240      |      24 */    class std::vector<int, std::allocator<int> > [with _Tp = int, _Alloc = class std::allocator<int>] : protected std::_Vector_base<_Tp, _Alloc> {
+
+                                   /* total size (bytes):   24 */
+                               } h_slot;
+/*    264      |      24 */    class std::vector<int, std::allocator<int> > [with _Tp = int, _Alloc = class std::allocator<int>] : protected std::_Vector_base<_Tp, _Alloc> {
+
+                                   /* total size (bytes):   24 */
+                               } h_dst;
+/*    288      |      24 */    class std::vector<unsigned char, std::allocator<unsigned char> > [with _Tp = unsigned char, _Alloc = class std::allocator<unsigned char>] : protected std::_Vector_base<_Tp, _Alloc> {
+
+                                   /* total size (bytes):   24 */
+                               } is_hit;
+/*    312      |       1 */    bool decided;
+/* XXX  7-byte hole      */
+/*    320      |       8 */    const int32_t *host_res;
+/*    328      |       8 */    int32_t *res_mut;
+/*    336      |       4 */    int fetch_admit;
+/*    340      |       4 */    float fetch_min;
+/*    344      |       4 */    float fetch_margin;
+/* XXX  4-byte hole      */
+/*    352      |      24 */    class std::vector<unsigned char, std::allocator<unsigned char> > [with _Tp = unsigned char, _Alloc = class std::allocator<unsigned char>] : protected std::_Vector_base<_Tp, _Alloc> {
+
+                                   /* total size (bytes):   24 */
+                               } fetch_avail;
+/*    376      |      24 */    class std::vector<unsigned char, std::allocator<unsigned char> > [with _Tp = unsigned char, _Alloc = class std::allocator<unsigned char>] : protected std::_Vector_base<_Tp, _Alloc> {
+
+                                   /* total size (bytes):   24 */
+                               } fetch_mark;
+/*    400      |      24 */    class std::vector<unsigned char, std::allocator<unsigned char> > [with _Tp = unsigned char, _Alloc = class std::allocator<unsigned char>] : protected std::_Vector_base<_Tp, _Alloc> {
+
+                                   /* total size (bytes):   24 */
+                               } in_flight;
+/*    424      |       8 */    int64_t fetch_admitted;
+/*    432      |       1 */    bool split_rows;
+/* XXX  7-byte hole      */
+/*    440      |       8 */    void *hit_done;
+/*    448      |       8 */    int64_t hit_ready;
+/*    456      |       8 */    int64_t hit_late;
+/*    464      |       1 */    bool hit_poke;
+/*    465      |       1 */    bool hit_cpu_order;
+/* XXX  6-byte hole      */
+/*    472      |       8 */    int64_t n_hits;
+/*    480      |       1 */    bool hit_pending;
+/* XXX  7-byte hole      */
+/*    488      |       8 */    const char *hit_fail;
+/*    496      |      24 */    class std::vector<strata::kernels::cpu::ExpertJob, std::allocator<strata::kernels::cpu::ExpertJob> > [with _Tp = struct strata::kernels::cpu::ExpertJob, _Alloc = class std::allocator<strata::kernels::cpu::ExpertJob>] : protected std::_Vector_base<_Tp, _Alloc> {
+
+                                   /* total size (bytes):   24 */
+                               } jobs;
+/* XXX 56-byte hole      */
+/*    576      |    7424 */    struct strata::kernels::cpu::ActQ {
+/*    576      |    2560 */        int8_t q[2560];
+/*   3136      |     320 */        float scale[80];
+/*   3456      |     320 */        int32_t sum[80];
+/*   3776      |     320 */        float hx[80];
+/*   4096      |       4 */        int nchunks;
+/* XXX 28-byte hole      */
+/*   4128      |    2560 */        int8_t qp[2560];
+/*   6688      |     640 */        int32_t psum[160];
+/*   7328      |     640 */        float pscale[160];
+/*   7968      |       4 */        int bp_pairs;
+/* XXX 28-byte padding   */
+
+                                   /* total size (bytes): 7424 */
+                               } act;
+/*   8000      |      24 */    class std::vector<strata::kernels::cpu::ActQ, std::allocator<strata::kernels::cpu::ActQ> > [with _Tp = struct strata::kernels::cpu::ActQ, _Alloc = class std::allocator<strata::kernels::cpu::ActQ>] : protected std::_Vector_base<_Tp, _Alloc> {
+
+                                   /* total size (bytes):   24 */
+                               } act_multi;
+/*   8024      |      24 */    class std::vector<unsigned char, std::allocator<unsigned char> > [with _Tp = unsigned char, _Alloc = class std::allocator<unsigned char>] : protected std::_Vector_base<_Tp, _Alloc> {
+
+                                   /* total size (bytes):   24 */
+                               } nact_multi;
+/*   8048      |      24 */    class std::vector<strata::kernels::cpu::ExpertJobMulti, std::allocator<strata::kernels::cpu::ExpertJobMulti> > [with _Tp = struct strata::kernels::cpu::ExpertJobMulti, _Alloc = class std::allocator<strata::kernels::cpu::ExpertJobMulti>] : protected std::_Vector_base<_Tp, _Alloc> {
+
+                                   /* total size (bytes):   24 */
+                               } jobs_multi;
+/*   8072      |      24 */    class std::vector<short, std::allocator<short> > [with _Tp = short, _Alloc = class std::allocator<short>] : protected std::_Vector_base<_Tp, _Alloc> {
+
+                                   /* total size (bytes):   24 */
+                               } job_of;
+/*   8096      |       8 */    struct strata::core::GpuPlanSink *plan;
+/*   8104      |       4 */    int pcie_num;
+/* XXX  4-byte hole      */
+/*   8112      |     224 */    struct strata::core::PcieModel {
+/*   8112      |       1 */        bool on;
+/* XXX  7-byte hole      */
+/*   8120      |       8 */        double a;
+/*   8128      |       8 */        double c;
+/*   8136      |       8 */        double d;
+/*   8144      |       8 */        double p0;
+/*   8152      |       8 */        double g0;
+/*   8160      |       8 */        double g;
+/*   8168      |       4 */        int np0;
+/* XXX  4-byte hole      */
+/*   8176      |      72 */        double A[3][3];
+/*   8248      |      24 */        double B[3];
+/*   8272      |      32 */        double C[2][2];
+/*   8304      |      16 */        double D[2];
+/*   8320      |       4 */        int ncpu;
+/*   8324      |       4 */        int ngpu;
+/*   8328      |       4 */        int ngpu_p;
+/*   8332      |       4 */        uint32_t explore;
+
+                                   /* total size (bytes):  224 */
+                               } pcie_model;
+/*   8336      |       8 */    int64_t pcie_experts;
+/*   8344      |       8 */    int64_t offload_entries;
+/*   8352      |       8 */    int64_t tail_skipped;
+/*   8360      |       8 */    int64_t tail_experts;
+/*   8368      |       8 */    double ms_plan;
+/*   8376      |       8 */    double ms_actq;
+/*   8384      |       8 */    double ms_jobs;
+/*   8392      |       8 */    double ms_run;
+/*   8400      |       4 */    int cold_mode;
+/* XXX  4-byte hole      */
+/*   8408      |      24 */    class std::vector<strata::kernels::cpu::NativeFmt, std::allocator<strata::kernels::cpu::NativeFmt> > [with _Tp = struct strata::kernels::cpu::NativeFmt, _Alloc = class std::allocator<strata::kernels::cpu::NativeFmt>] : protected std::_Vector_base<_Tp, _Alloc> {
+
+                                   /* total size (bytes):   24 */
+                               } zc_fmt;
+/*   8432      |       8 */    int64_t cold_zc;
+/*   8440      |       8 */    int64_t cold_layers;
+/*   8448      |       8 */    int64_t cold_pending;
+/*   8456      |       8 */    int64_t cold_ready;
+/*   8464      |       8 */    int64_t cold_batches;
+/*   8472      |       8 */    double ms_cold_r;
+/*   8480      |       8 */    double ms_cold_cr;
+/*   8488      |       8 */    double ms_cold_cc;
+/*   8496      |       8 */    double ms_cold_wait;
+/*   8504      |       8 */    double ms_cold_hide;
+/*   8512      |      24 */    class std::vector<float, std::allocator<float> > [with _Tp = float, _Alloc = class std::allocator<float>] : protected std::_Vector_base<_Tp, _Alloc> {
+
+                                   /* total size (bytes):   24 */
+                               } usage;
+/*   8536      |       1 */    bool evict_sync;
+/*   8537      |       1 */    bool res_dirty;
+/* XXX  6-byte hole      */
+/*   8544      |      24 */    class std::vector<int, std::allocator<int> > [with _Tp = int, _Alloc = class std::allocator<int>] : protected std::_Vector_base<_Tp, _Alloc> {
+
+                                   /* total size (bytes):   24 */
+                               } res_dirty_idx;
+/*   8568      |       8 */    const int32_t *dres_check;
+/*   8576      |       8 */    int64_t stale_x;
+/*   8584      |       8 */    int64_t multi_misses;
+/*   8592      |       8 */    int64_t multi_entries;
+/*   8600      |       8 */    int64_t shadow_misses;
+/*   8608      |      24 */    class std::vector<long, std::allocator<long> > [with _Tp = long, _Alloc = class std::allocator<long>] : protected std::_Vector_base<_Tp, _Alloc> {
+
+                                   /* total size (bytes):   24 */
+                               } layer_hits;
+/*   8632      |      24 */    class std::vector<long, std::allocator<long> > [with _Tp = long, _Alloc = class std::allocator<long>] : protected std::_Vector_base<_Tp, _Alloc> {
+
+                                   /* total size (bytes):   24 */
+                               } layer_admitted;
+/*   8656      |      24 */    class std::vector<long, std::allocator<long> > [with _Tp = long, _Alloc = class std::allocator<long>] : protected std::_Vector_base<_Tp, _Alloc> {
+
+                                   /* total size (bytes):   24 */
+                               } layer_refused;
+/*   8680      |       8 */    class strata::core::PeerExperts *peer;
+/*   8688      |       8 */    int64_t peer_entries;
+/*   8696      |       1 */    bool failed;
+/* XXX  7-byte hole      */
+/*   8704      |       8 */    const char *fail;
+/*   8712      |       8 */    int64_t fail_layer;
+/*   8720      |       8 */    int64_t fail_expert;
+/* XXX 40-byte padding   */
+
+                               /* total size (bytes): 8768 */
+                             }
+=== candidate (gdb ptype /o) ===
+/* offset      |    size */  type = struct strata::core::ExpertDispatch {
+/*      0      |       8 */    struct strata::core::ForesightSwap *fs;
+/*      8      |       8 */    class strata::kernels::cpu::ExpertPool *pool;
+/*     16      |       8 */    class strata::core::ExpertSource *src;
+/*     24      |       8 */    class strata::core::RouterLookahead *lookahead;
+/*     32      |      24 */    class strata::core::RemoteExperts *remote[3];
+/*     56      |       4 */    int remote_count;
+/* XXX  4-byte hole      */
+/*     64      |       8 */    int64_t n_expert;
+/*     72      |       8 */    int64_t layers;
+/*     80      |       8 */    int64_t experts;
+/*     88      |       8 */    int64_t missing;
+/*     96      |       8 */    class strata::core::ExpertCache *cache;
+/*    104      |       8 */    int64_t cache_hits;
+/*    112      |       8 */    int64_t cache_admitted;
+/*    120      |       8 */    int64_t cache_refused;
+/*    128      |       8 */    void *cache_stream;
+/*    136      |       8 */    const char *cache_fail;
+/*    144      |       8 */    const uint8_t *cache_base;
+/*    152      |       8 */    int64_t cache_blob;
+/*    160      |       8 */    const uint64_t *cache_slot_off;
+/*    168      |       8 */    void *hit_scratch;
+/*    176      |       8 */    float *parts_out;
+/*    184      |       8 */    float *hit_out;
+/*    192      |       8 */    int64_t parts_elems;
+/*    200      |       8 */    const float *mixed;
+/*    208      |       8 */    uint8_t *x_q8_0_hit;
+/*    216      |       8 */    float *x_q8_0_hit_scale;
+/*    224      |       8 */    int32_t *d_slot;
+/*    232      |       8 */    int32_t *d_dst;
+/*    240      |      24 */    class std::vector<int, std::allocator<int> > [with _Tp = int, _Alloc = class std::allocator<int>] : protected std::_Vector_base<_Tp, _Alloc> {
+
+                                   /* total size (bytes):   24 */
+                               } h_slot;
+/*    264      |      24 */    class std::vector<int, std::allocator<int> > [with _Tp = int, _Alloc = class std::allocator<int>] : protected std::_Vector_base<_Tp, _Alloc> {
+
+                                   /* total size (bytes):   24 */
+                               } h_dst;
+/*    288      |      24 */    class std::vector<unsigned char, std::allocator<unsigned char> > [with _Tp = unsigned char, _Alloc = class std::allocator<unsigned char>] : protected std::_Vector_base<_Tp, _Alloc> {
+
+                                   /* total size (bytes):   24 */
+                               } is_hit;
+/*    312      |       1 */    bool decided;
+/* XXX  7-byte hole      */
+/*    320      |       8 */    const int32_t *host_res;
+/*    328      |       8 */    int32_t *res_mut;
+/*    336      |       4 */    int fetch_admit;
+/*    340      |       4 */    float fetch_min;
+/*    344      |       4 */    float fetch_margin;
+/* XXX  4-byte hole      */
+/*    352      |      24 */    class std::vector<unsigned char, std::allocator<unsigned char> > [with _Tp = unsigned char, _Alloc = class std::allocator<unsigned char>] : protected std::_Vector_base<_Tp, _Alloc> {
+
+                                   /* total size (bytes):   24 */
+                               } fetch_avail;
+/*    376      |      24 */    class std::vector<unsigned char, std::allocator<unsigned char> > [with _Tp = unsigned char, _Alloc = class std::allocator<unsigned char>] : protected std::_Vector_base<_Tp, _Alloc> {
+
+                                   /* total size (bytes):   24 */
+                               } fetch_mark;
+/*    400      |      24 */    class std::vector<unsigned char, std::allocator<unsigned char> > [with _Tp = unsigned char, _Alloc = class std::allocator<unsigned char>] : protected std::_Vector_base<_Tp, _Alloc> {
+
+                                   /* total size (bytes):   24 */
+                               } in_flight;
+/*    424      |       8 */    int64_t fetch_admitted;
+/*    432      |       1 */    bool split_rows;
+/* XXX  7-byte hole      */
+/*    440      |       8 */    void *hit_done;
+/*    448      |       8 */    int64_t hit_ready;
+/*    456      |       8 */    int64_t hit_late;
+/*    464      |       1 */    bool hit_poke;
+/*    465      |       1 */    bool hit_cpu_order;
+/* XXX  6-byte hole      */
+/*    472      |       8 */    int64_t n_hits;
+/*    480      |       1 */    bool hit_pending;
+/* XXX  7-byte hole      */
+/*    488      |       8 */    const char *hit_fail;
+/*    496      |      24 */    class std::vector<strata::kernels::cpu::ExpertJob, std::allocator<strata::kernels::cpu::ExpertJob> > [with _Tp = struct strata::kernels::cpu::ExpertJob, _Alloc = class std::allocator<strata::kernels::cpu::ExpertJob>] : protected std::_Vector_base<_Tp, _Alloc> {
+
+                                   /* total size (bytes):   24 */
+                               } jobs;
+/* XXX 56-byte hole      */
+/*    576      |    7424 */    struct strata::kernels::cpu::ActQ {
+/*    576      |    2560 */        int8_t q[2560];
+/*   3136      |     320 */        float scale[80];
+/*   3456      |     320 */        int32_t sum[80];
+/*   3776      |     320 */        float hx[80];
+/*   4096      |       4 */        int nchunks;
+/* XXX 28-byte hole      */
+/*   4128      |    2560 */        int8_t qp[2560];
+/*   6688      |     640 */        int32_t psum[160];
+/*   7328      |     640 */        float pscale[160];
+/*   7968      |       4 */        int bp_pairs;
+/* XXX 28-byte padding   */
+
+                                   /* total size (bytes): 7424 */
+                               } act;
+/*   8000      |      24 */    class std::vector<strata::kernels::cpu::ActQ, std::allocator<strata::kernels::cpu::ActQ> > [with _Tp = struct strata::kernels::cpu::ActQ, _Alloc = class std::allocator<strata::kernels::cpu::ActQ>] : protected std::_Vector_base<_Tp, _Alloc> {
+
+                                   /* total size (bytes):   24 */
+                               } act_multi;
+/*   8024      |      24 */    class std::vector<unsigned char, std::allocator<unsigned char> > [with _Tp = unsigned char, _Alloc = class std::allocator<unsigned char>] : protected std::_Vector_base<_Tp, _Alloc> {
+
+                                   /* total size (bytes):   24 */
+                               } nact_multi;
+/*   8048      |      24 */    class std::vector<strata::kernels::cpu::ExpertJobMulti, std::allocator<strata::kernels::cpu::ExpertJobMulti> > [with _Tp = struct strata::kernels::cpu::ExpertJobMulti, _Alloc = class std::allocator<strata::kernels::cpu::ExpertJobMulti>] : protected std::_Vector_base<_Tp, _Alloc> {
+
+                                   /* total size (bytes):   24 */
+                               } jobs_multi;
+/*   8072      |      24 */    class std::vector<short, std::allocator<short> > [with _Tp = short, _Alloc = class std::allocator<short>] : protected std::_Vector_base<_Tp, _Alloc> {
+
+                                   /* total size (bytes):   24 */
+                               } job_of;
+/*   8096      |       8 */    struct strata::core::GpuPlanSink *plan;
+/*   8104      |       4 */    int pcie_num;
+/* XXX  4-byte hole      */
+/*   8112      |     224 */    struct strata::core::PcieModel {
+/*   8112      |       1 */        bool on;
+/* XXX  7-byte hole      */
+/*   8120      |       8 */        double a;
+/*   8128      |       8 */        double c;
+/*   8136      |       8 */        double d;
+/*   8144      |       8 */        double p0;
+/*   8152      |       8 */        double g0;
+/*   8160      |       8 */        double g;
+/*   8168      |       4 */        int np0;
+/* XXX  4-byte hole      */
+/*   8176      |      72 */        double A[3][3];
+/*   8248      |      24 */        double B[3];
+/*   8272      |      32 */        double C[2][2];
+/*   8304      |      16 */        double D[2];
+/*   8320      |       4 */        int ncpu;
+/*   8324      |       4 */        int ngpu;
+/*   8328      |       4 */        int ngpu_p;
+/*   8332      |       4 */        uint32_t explore;
+
+                                   /* total size (bytes):  224 */
+                               } pcie_model;
+/*   8336      |       8 */    int64_t pcie_experts;
+/*   8344      |       8 */    int64_t offload_entries;
+/*   8352      |       8 */    int64_t tail_skipped;
+/*   8360      |       8 */    int64_t tail_experts;
+/*   8368      |       8 */    double ms_plan;
+/*   8376      |       8 */    double ms_actq;
+/*   8384      |       8 */    double ms_jobs;
+/*   8392      |       8 */    double ms_run;
+/*   8400      |       4 */    int cold_mode;
+/* XXX  4-byte hole      */
+/*   8408      |      24 */    class std::vector<strata::kernels::cpu::NativeFmt, std::allocator<strata::kernels::cpu::NativeFmt> > [with _Tp = struct strata::kernels::cpu::NativeFmt, _Alloc = class std::allocator<strata::kernels::cpu::NativeFmt>] : protected std::_Vector_base<_Tp, _Alloc> {
+
+                                   /* total size (bytes):   24 */
+                               } zc_fmt;
+/*   8432      |       8 */    int64_t cold_zc;
+/*   8440      |       8 */    int64_t cold_layers;
+/*   8448      |       8 */    int64_t cold_pending;
+/*   8456      |       8 */    int64_t cold_ready;
+/*   8464      |       8 */    int64_t cold_batches;
+/*   8472      |       8 */    double ms_cold_r;
+/*   8480      |       8 */    double ms_cold_cr;
+/*   8488      |       8 */    double ms_cold_cc;
+/*   8496      |       8 */    double ms_cold_wait;
+/*   8504      |       8 */    double ms_cold_hide;
+/*   8512      |      24 */    class std::vector<float, std::allocator<float> > [with _Tp = float, _Alloc = class std::allocator<float>] : protected std::_Vector_base<_Tp, _Alloc> {
+
+                                   /* total size (bytes):   24 */
+                               } usage;
+/*   8536      |       1 */    bool evict_sync;
+/*   8537      |       1 */    bool res_dirty;
+/* XXX  6-byte hole      */
+/*   8544      |      24 */    class std::vector<int, std::allocator<int> > [with _Tp = int, _Alloc = class std::allocator<int>] : protected std::_Vector_base<_Tp, _Alloc> {
+
+                                   /* total size (bytes):   24 */
+                               } res_dirty_idx;
+/*   8568      |       8 */    const int32_t *dres_check;
+/*   8576      |       8 */    int64_t stale_x;
+/*   8584      |       8 */    int64_t multi_misses;
+/*   8592      |       8 */    int64_t multi_entries;
+/*   8600      |       8 */    int64_t shadow_misses;
+/*   8608      |      24 */    class std::vector<long, std::allocator<long> > [with _Tp = long, _Alloc = class std::allocator<long>] : protected std::_Vector_base<_Tp, _Alloc> {
+
+                                   /* total size (bytes):   24 */
+                               } layer_hits;
+/*   8632      |      24 */    class std::vector<long, std::allocator<long> > [with _Tp = long, _Alloc = class std::allocator<long>] : protected std::_Vector_base<_Tp, _Alloc> {
+
+                                   /* total size (bytes):   24 */
+                               } layer_admitted;
+/*   8656      |      24 */    class std::vector<long, std::allocator<long> > [with _Tp = long, _Alloc = class std::allocator<long>] : protected std::_Vector_base<_Tp, _Alloc> {
+
+                                   /* total size (bytes):   24 */
+                               } layer_refused;
+/*   8680      |       8 */    class strata::core::PeerExperts *peer;
+/*   8688      |       8 */    int64_t peer_entries;
+/*   8696      |       1 */    bool failed;
+/* XXX  7-byte hole      */
+/*   8704      |       8 */    const char *fail;
+/*   8712      |       8 */    int64_t fail_layer;
+/*   8720      |       8 */    int64_t fail_expert;
+/*   8728      |       4 */    int cohort;
+/* XXX  4-byte hole      */
+/*   8736      |       8 */    struct strata::core::CohortSharedMiss *shared_miss;
+/* XXX 24-byte padding   */
+
+                               /* total size (bytes): 8768 */
+                             }

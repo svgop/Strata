@@ -484,6 +484,50 @@ struct PcieModel {
 /// The adapter's own state.  One per session, reused every layer so the token path allocates nothing (P2.T10).
 struct ForesightSwap;
 
+/// F-459 STRATA_COHORT_SHARED_MISS (diagnostic, default off): the both-cohorts CPU-miss share.  Of the (layer, expert)
+/// blobs a cohort's window computes on the CPU in a round, how many did cohort A's window compute too?  F-458: a blob
+/// both cohorts miss is streamed twice (twelve rows are two calls of six - `ExpertJobMulti::MAXT = 8` - 89.8 us against
+/// 46.8 for one call, -42% for that blob), and the ceiling of one call for both cohorts' rows is this share: the pool
+/// time removed is 0.42 x share x 46% (the pool's share of a round) x 0.715 (the window's ms per ms of pool) = 0.138 x
+/// share of the round.
+///
+/// One record per cohort round; every cohort drive points at it (`ExpertDispatch::shared_miss`), the driver clears it at
+/// the round's start and reads it when the round ends.  A bit per expert: `mask[c]` is [layer][word], bit `e & 63` of word
+/// `e >> 6`.  Cohort A writes `mask[0]` only, B `mask[1]`, C `mask[2]` - one writer per word - and `shared_with_a` takes
+/// the intersection once both windows are done, so the share does not depend on which window reached a layer first.
+/// `cpu[c]` counts distinct (layer, expert) blobs, the unit of `ExpertDispatch::multi_misses`.
+struct CohortSharedMiss {
+    static constexpr int kCohorts = 3;              ///< A, B, and C under the ternary flag
+    static constexpr int64_t kExpertsPerWord = 64;  ///< bits per mask word
+
+    std::vector<uint64_t> mask[kCohorts];  ///< [cohort - 1]: `n_layers * words` words, all zero at a round's start
+    int64_t cpu[kCohorts] = {0, 0, 0};     ///< the round's distinct (layer, expert) blobs each cohort computed on the CPU
+    int64_t overflow = 0;                  ///< blobs the record cannot hold (an id >= n_expert, a layer >= n_layers)
+    int64_t n_layers = 0;                  ///< the geometry's layer count, at arm time
+    int64_t n_expert = 0;                  ///< the dispatch's expert count, at arm time: every id below it has a bit
+    int64_t words = 0;                     ///< mask words per layer: ceil(n_expert / 64)
+
+    /// Arms the record for `layers` layers of `experts` experts.  False for a geometry no mask can hold: the caller
+    /// refuses the boot - never a counter that is silently blind to an expert.
+    bool arm(int64_t layers, int64_t experts) {
+        if (layers <= 0 || experts <= 0) return false;
+        words = (experts + kExpertsPerWord - 1) / kExpertsPerWord;
+        if (layers > (int64_t{1} << 31) / words) return false;
+        n_layers = layers;
+        n_expert = experts;
+        for (auto& m : mask) m.assign((size_t) (layers * words), 0);
+        return true;
+    }
+    /// The start of a cohort round: every mask word and every counter to zero (the geometry stays).
+    void clear() {
+        for (auto& m : mask) std::fill(m.begin(), m.end(), uint64_t{0});
+        for (auto& c : cpu) c = 0;
+        overflow = 0;
+    }
+    /// Cohort `c` (2 = B, 3 = C): the (layer, expert) blobs it computed that cohort A computed too.
+    int64_t shared_with_a(int c) const;
+};
+
 struct ExpertDispatch {
     ForesightSwap* fs = nullptr;   ///< Foresight swap space (STRATA_FS_SLOTS; null = off)
     strata::kernels::cpu::ExpertPool* pool = nullptr;
@@ -677,6 +721,11 @@ struct ExpertDispatch {
     const char* fail = nullptr;
     int64_t fail_layer = -1;
     int64_t fail_expert = -1;
+    /// F-459 STRATA_COHORT_SHARED_MISS (diagnostic, default off): this drive's cohort (1 = A, 2 = B, 3 = C; 0 = untagged)
+    /// and the cohort round's shared record (`CohortSharedMiss`).  Null = off: `cpu_miss_pipeline` then does nothing new.
+    /// A drive copied from another carries both, so the driver re-tags every cohort drive after any copy, every round.
+    int cohort = 0;
+    CohortSharedMiss* shared_miss = nullptr;
 };
 
 /// `strata::core::PoolFn`, exactly.  Silent on failure BY SIGNATURE - see `ExpertDispatch::fail`.

@@ -1,0 +1,4737 @@
+baseline: campaign/results/f459-2026-11-25/obj-baseline/generate.cpp.o
+candidate: build-fresh/CMakeFiles/strata.dir/src/program/generate.cpp.o
+functions: 977  | identical 754  | different 42  | baseline only 89  | candidate only 92
+
+DIFFERENT  (anonymous namespace)::res_check(int const*, std::vector<int, std::allocator<int> > const&, std::vector<int, std::allocator<int> >&, long, long)   instructions 92 -> 89   (+10 / -13)
+      =  call REL R_X86_64_PLT32 cudaMemcpy
+      =  test %eax,%eax
+      -  jne L77
+      +  jne L74
+      =  mov 0x8(%r15),%rcx
+      =  mov (%r15),%rdx
+      =  xor %ebx,%ebx
+      =  cmp %rcx,%rdx
+      -  jne L38
+      -  jmp L88
+      -  nopl 0x0(%rax)
+      -  data16 cs nopw 0x0(%rax,%rax,1)
+      -  data16 cs nopw 0x0(%rax,%rax,1)
+      -  data16 cs nopw 0x0(%rax,%rax,1)
+      +  jne L35
+      +  jmp L85
+      +  nopl 0x0(%rax,%rax,1)
+      =  data16 cs nopw 0x0(%rax,%rax,1)
+      =  data16 cs nopw 0x0(%rax,%rax,1)
+      =  sar $0x2,%rax
+      =  cmp %rax,%rbx
+      -  jae L67
+      +  jae L64
+      =  mov (%r14),%rax
+      =  mov (%rdx,%rbx,4),%r9d
+      =  mov (%rax,%rbx,4),%esi
+      =  cmp %r9d,%esi
+      -  je L32
+      +  je L29
+      =  mov REL R_X86_64_PC32 .bss
+      =  add $0x1,%rbp
+      =  add $0x1,%rbp
+      =  cmp $0x13,%eax
+      -  jg L32
+      +  jg L29
+      =  add $0x1,%eax
+      =  xor %edx,%edx
+      =  mov 0x8(%r15),%rcx
+      =  pop %rsi
+      -  jmp L32
+      +  jmp L29
+      =  xchg %ax,%ax
+      =  mov 0x8(%rsp),%rbx
+
+DIFFERENT  main   instructions 49855 -> 49912   (+37828 / -37771)
+      =  push %r10
+      =  push %rbx
+      -  sub $0x2b100,%rsp
+      -  mov %edi,-0x2a6e4(%rbp)
+      +  sub $0x2b180,%rsp
+      +  mov %edi,-0x2a764(%rbp)
+      =  mov REL R_X86_64_PC32 stdout
+      =  mov %rsi,-0x2a6f0(%rbp)
+      =  mov %edi,-0x2a6e4(%rbp)
+      =  mov REL R_X86_64_PC32 stdout
+      -  mov %rsi,-0x2a6f0(%rbp)
+      +  mov %rsi,-0x2a770(%rbp)
+      =  xor %esi,%esi
+      =  call REL R_X86_64_PLT32 setvbuf
+      =  test %al,%al
+      =  je L463
+      -  mov -0x2a6e4(%rbp),%eax
+      -  mov %eax,-0x2a850(%rbp)
+      +  mov -0x2a764(%rbp),%eax
+      +  mov %eax,-0x2a8d0(%rbp)
+      =  cmp $0x1,%eax
+      =  jle L55
+      =  cmp $0x1,%eax
+      =  jle L55
+      -  mov -0x2a6f0(%rbp),%r12
+      +  mov -0x2a770(%rbp),%r12
+      =  mov REL R_X86_64_32 .rodata.str1.1
+      =  mov 0x8(%r12),%rbx
+      =  test %eax,%eax
+      =  je L1690
+      -  cmpl $0x2,-0x2a850(%rbp)
+      +  cmpl $0x2,-0x2a8d0(%rbp)
+      =  je L55
+      =  mov 0x10(%r12),%rbx
+      =  mov $0x1,%ebx
+      =  lea 0x1(%rbx),%eax
+      -  cmp -0x2a850(%rbp),%eax
+      +  cmp -0x2a8d0(%rbp),%eax
+      =  jge L98
+      =  mov -0x2a6f0(%rbp),%r12
+
+DIFFERENT  main.cold   instructions 3263 -> 3256   (+2868 / -2875)
+      -  nop 
+      -  mov %rax,%rbx
+      +  mov -0x2a8a0(%rbp),%rdi
+      +  call REL R_X86_64_PLT32 std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >::_M_dispose()
+      +  mov -0x2a898(%rbp),%rdi
+      +  call REL R_X86_64_PLT32 std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >::_M_dispose()
+      +  lea -0x24bc0(%rbp),%rdi
+      +  call REL R_X86_64_PC32 .text
+      +  mov %rbx,%rdi
+      +  call REL R_X86_64_PLT32 _Unwind_Resume
+      +  mov -0x2a8a8(%rbp),%rdi
+      +  call REL R_X86_64_PLT32 std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >::_M_dispose()
+      +  mov -0x2a900(%rbp),%rdi
+      +  call REL R_X86_64_PLT32 std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >::_M_dispose()
+      +  mov -0x2a910(%rbp),%rdi
+      +  call REL R_X86_64_PLT32 std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >::_M_dispose()
+      +  mov -0x2a8a0(%rbp),%rdi
+      +  call REL R_X86_64_PLT32 std::__cxx11::basic_stringstream<char, std::char_traits<char>, std::allocator<char> >::~basic_stringstream()
+      +  jmp L2
+      +  mov -0x10028(%rbp),%r12
+      +  mov -0x10018(%rbp),%r14
+      +  test %r12,%r12
+      +  je L25
+      +  mov %r14,%rsi
+      +  mov %r12,%rdi
+      +  sub %r12,%rsi
+      +  call REL R_X86_64_PLT32 operator delete(void*, unsigned long)
+      +  mov -0x2a8a8(%rbp),%rdi
+      +  call REL R_X86_64_PLT32 std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >::_M_dispose()
+      +  jmp L2
+      +  mov -0x2a8a8(%rbp),%rdi
+      +  call REL R_X86_64_PLT32 std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >::_M_dispose()
+      +  mov -0x2a900(%rbp),%rdi
+      +  call REL R_X86_64_PLT32 std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >::_M_dispose()
+      =  jmp L12
+      =  mov -0x2a870(%rbp),%rdi
+      =  mov %rax,%rbx
+      =  jmp L12
+      -  mov -0x2a870(%rbp),%rdi
+      +  mov REL R_X86_64_32 .rodata.str1.1
+      +  call REL R_X86_64_PLT32 std::__throw_length_error(char const*)
+      +  mov -0x2a8a0(%rbp),%rdi
+      =  mov %rax,%rbx
+      =  call REL R_X86_64_PLT32 std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >::_M_dispose()
+      =  mov %rax,%rbx
+      =  call REL R_X86_64_PLT32 std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >::_M_dispose()
+      -  call REL R_X86_64_PLT32 __cxa_end_catch
+      -  mov -0x2a820(%rbp),%rdi
+      -  call REL R_X86_64_PLT32 strata::core::SavedConversation::~SavedConversation()
+      -  mov -0x2a9a0(%rbp),%rdi
+      +  jmp L2
+      +  mov -0x2a8a0(%rbp),%rdi
+      =  call REL R_X86_64_PLT32 std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >::_M_dispose()
+      =  call REL R_X86_64_PC32 .text
+      =  mov -0x2a9a0(%rbp),%rdi
+      =  call REL R_X86_64_PLT32 std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >::_M_dispose()
+      +  lea -0x23210(%rbp),%rax
+      +  mov %rax,-0x2a8e0(%rbp)
+      +  mov -0x2aae0(%rbp),%rdi
+      +  call REL R_X86_64_PLT32 strata::core::NativeHead::~NativeHead()
+      +  lea -0x29e20(%rbp),%rdi
+      +  call REL R_X86_64_PLT32 std::vector<std::unique_ptr<strata::core::MtpDrafter, std::default_delete<strata::core::MtpDrafter> >, std::allocator<std::unique_ptr<strata::core::MtpDrafter, std::default_delete<strata::core::MtpDrafter> > > >::~vector()
+      +  mov -0x2a8e0(%rbp),%rdi
+      +  call REL R_X86_64_PLT32 strata::core::MtpDrafter::~MtpDrafter()
+      +  lea -0x29e40(%rbp),%rdi
+      +  call REL R_X86_64_PLT32 std::vector<std::vector<std::unique_ptr<strata::core::SessionState, std::default_delete<strata::core::SessionState> >, std::allocator<std::unique_ptr<strata::core::SessionState, std::default_delete<strata::core::SessionState> > > >, std::allocator<std::vector<std::unique_ptr<strata::core::SessionState, std::default_delete<strata::core::SessionState> >, std::allocator<std::unique_ptr<strata::core::SessionState, std::default_delete<strata::core::SessionState> > > > > >::~vector()
+      +  lea -0x26b40(%rbp),%rdi
+      =  call REL R_X86_64_PC32 .text
+      =  mov -0x2ad30(%rbp),%rdi
+      =  call REL R_X86_64_PLT32 std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >::_M_dispose()
+      =  call REL R_X86_64_PC32 .text
+      -  mov -0x2ad30(%rbp),%rdi
+      -  call REL R_X86_64_PLT32 std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >::_M_dispose()
+      -  lea -0x287c0(%rbp),%rdi
+      -  call REL R_X86_64_PLT32 std::condition_variable::~condition_variable()
+      -  mov -0x296e0(%rbp),%rdi
+      +  mov -0x29e60(%rbp),%rdi
+      =  test %rdi,%rdi
+      =  je L22
+      =  mov -0x296e0(%rbp),%rdi
+      =  test %rdi,%rdi
+      -  je L22
+      -  mov -0x296d0(%rbp),%rsi
+      +  jne L225
+      +  mov -0x28a40(%rbp),%rdi
+      +  call REL R_X86_64_PC32 .text
+      +  mov -0x29e80(%rbp),%rdi
+      +  test %rdi,%rdi
+      +  je L64
+      +  mov -0x29e70(%rbp),%rsi
+      =  sub %rdi,%rsi
+      =  call REL R_X86_64_PLT32 operator delete(void*, unsigned long)
+
+DIFFERENT  main::{lambda()#40}::operator()() const   instructions 237 -> 273   (+264 / -228)
+      -  sub $0xb8,%rsp
+      -  mov %r14,0xa8(%rsp)
+      -  mov %rdi,%r14
+      -  call REL R_X86_64_PLT32 cudaDeviceSynchronize
+      +  push %r15
+      +  push %r14
+      +  push %r13
+      +  mov %rdi,%r13
+      +  push %r12
+      +  push %rbp
+      +  push %rbx
+      +  sub $0x48,%rsp
+      +  lea 0x30(%rsp),%rax
+      +  movl $0x989680,0xc(%rsp)
+      +  mov %rax,0x20(%rsp)
+      +  mov (%rdi),%rax
+      +  movq $0x0,0x28(%rsp)
+      +  movb $0x0,0x30(%rsp)
+      +  mov (%rax),%eax
+      =  test %eax,%eax
+      =  jne L12
+      =  call REL R_X86_64_PLT32 cudaDeviceSynchronize
+      =  test %eax,%eax
+      -  jne L12
+      -  mov $0x1,%edx
+      -  mov 0xa8(%rsp),%r14
+      -  mov %edx,%eax
+      -  add $0xb8,%rsp
+      -  ret 
+      -  nopw 0x0(%rax,%rax,1)
+      -  mov %eax,%edi
+      -  mov %rbx,0x88(%rsp)
+      -  mov %r12,0x98(%rsp)
+      -  mov %r13,0xa0(%rsp)
+      -  call REL R_X86_64_PLT32 cudaGetErrorString
+      -  mov $0x29,%edi
+      -  mov %rax,%r12
+      -  call REL R_X86_64_PLT32 operator new(unsigned long)
+      -  movdqa REL R_X86_64_PC32 @.rodata.cst16:3a20746865204750552073746f707065
+      +  jle L179
+      +  mov 0x8(%r13),%rdx
+      +  movzbl (%rdx),%edi
+      +  mov %dil,0xb(%rsp)
+      +  test %dil,%dil
+      +  je L114
+      +  mov 0x10(%r13),%rax
+      +  mov $0xfffffffffffffff8,%r12
+      +  mov (%rax),%rbx
+      +  movzbl 0x2a0(%rbx),%r15d
+      +  test %r15b,%r15b
+      +  je L95
+      +  xor %ebp,%ebp
+      +  lea 0x20(%rsp),%rax
+      +  lea 0x20(%rsp),%rcx
+      +  mov REL R_X86_64_32 .text
+      +  mov %rbx,%rdi
+      +  mov %rax,(%rsp)
+      +  mov 0x18(%r13),%rax
+      +  mov (%rax),%rdx
+      +  call REL R_X86_64_PLT32 strata::core::Verifier::service(void (*)(void*, float const*, int const*, long, long, float*, long), void*, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >&)
+      +  test %eax,%eax
+      +  js L193
+      +  lea 0x20(%rsp),%rsi
+      +  mov %rbx,%rdi
+      +  call REL R_X86_64_PLT32 strata::core::Verifier::done(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >&)
+      +  test %al,%al
+      +  jne L160
+      +  cmpq $0x0,0x28(%rsp)
+      +  jne L193
+      +  mov 0x10(%r13),%rax
+      +  test %ebp,%ebp
+      +  je L94
+      +  mov 0x10(%rax),%rax
+      +  movzbl 0xb(%rsp),%r15d
+      +  mov (%rax),%rax
+      +  mov (%rax,%r12,1),%rbx
+      +  movzbl 0x2750(%rbx),%r14d
+      +  add $0x24b0,%rbx
+      +  test %r14b,%r14b
+      +  je L101
+      +  lea 0x20(%rsp),%rax
+      +  lea 0x20(%rsp),%rcx
+      +  mov REL R_X86_64_32 .text
+      +  mov %rbx,%rdi
+      +  mov %rax,(%rsp)
+      +  mov 0x18(%r13),%rax
+      +  mov 0x8(%rax),%rdx
+      +  call REL R_X86_64_PLT32 strata::core::Verifier::service(void (*)(void*, float const*, int const*, long, long, float*, long), void*, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >&)
+      +  test %eax,%eax
+      +  js L193
+      +  lea 0x20(%rsp),%rsi
+      +  mov %rbx,%rdi
+      +  call REL R_X86_64_PLT32 strata::core::Verifier::done(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >&)
+      +  mov %eax,%r15d
+      +  test %al,%al
+      +  jne L166
+      +  cmpq $0x0,0x28(%rsp)
+      +  jne L193
+      +  mov 0x0(%r13),%rax
+      +  add $0x1,%ebp
+      +  mov (%rax),%eax
+      +  cmp %eax,%ebp
+      +  jge L175
+      +  mov 0x8(%r13),%rdx
+      +  add $0x8,%r12
+      +  mov %r14d,%r15d
+      +  cmpb $0x0,(%rdx)
+      +  je L110
+      +  mov 0x10(%r13),%rax
+      +  mov 0x10(%rax),%rax
+      +  mov (%rax),%rax
+      +  mov (%rax,%r12,1),%rbx
+      +  cmpb $0x0,0x8f8(%rbx)
+      +  je L53
+      +  add $0x658,%rbx
+      +  jmp L29
+      +  nopl 0x0(%rax)
+      +  movzbl 0xb(%rsp),%r15d
+      +  mov 0x8(%rax),%rbx
+      +  xor %ebp,%ebp
+      +  movzbl 0x2a0(%rbx),%r14d
+      +  test %r14b,%r14b
+      +  jne L57
+      +  nopl (%rax)
+      +  mov 0x0(%r13),%rax
+      +  add $0x1,%ebp
+      +  mov (%rax),%eax
+      +  cmp %ebp,%eax
+      +  jle L208
+      +  mov 0x8(%r13),%rdx
+      +  add $0x8,%r12
+      +  cmpb $0x0,(%rdx)
+      +  jne L85
+      +  test %r15b,%r15b
+      +  je L114
+      +  subl $0x1,0xc(%rsp)
+      +  jne L18
+      +  test %eax,%eax
+      +  jle L179
+      +  mov 0x8(%r13),%rax
+      +  cmpb $0x0,(%rax)
+      +  je L179
+      +  mov 0x10(%r13),%rax
+      +  mov (%rax),%rax
+      +  mov 0x390(%rax),%r14d
+      +  test %r14d,%r14d
+      +  jns L251
+      +  mov 0x768(%rax),%rdi
+      +  call REL R_X86_64_PLT32 cudaStreamSynchronize
+      +  mov $0xfffffffffffffff8,%rbx
+      +  xor %ebp,%ebp
+      +  jmp L131
+      +  mov 0xdc0(%rax),%rdi
+      +  call REL R_X86_64_PLT32 cudaStreamSynchronize
+      +  mov 0x0(%r13),%rax
+      +  add $0x1,%ebp
+      +  cmp %ebp,(%rax)
+      +  jle L179
+      +  mov 0x8(%r13),%rax
+      +  add $0x8,%rbx
+      +  cmpb $0x0,(%rax)
+      +  je L179
+      +  mov 0x10(%r13),%rax
+      +  mov 0x10(%rax),%rax
+      +  mov (%rax),%rax
+      +  mov (%rax,%rbx,1),%rax
+      +  mov 0x9e8(%rax),%r14d
+      +  test %r14d,%r14d
+      +  js L129
+      +  lea 0x1c(%rsp),%r12
+      +  lea 0x20(%rsp),%rax
+      +  movl $0x0,0x1c(%rsp)
+      =  mov %r12,%rdi
+      =  movq $0x28,0x30(%rsp)
+      =  movdqa REL R_X86_64_PC32 @.rodata.cst16:3a20746865204750552073746f707065
+      =  mov %r12,%rdi
+      -  movq $0x28,0x30(%rsp)
+      -  mov %rax,%rbx
+      -  mov %rax,0x20(%rsp)
+      -  movups %xmm0,(%rax)
+      -  movdqa REL R_X86_64_PC32 @.rodata.cst16:6420726573706f6e64696e6720626566
+      -  movq $0x28,0x28(%rsp)
+      -  movups %xmm0,0x10(%rax)
+      -  movabs $0x282074692065726f,%rax
+      -  mov %rax,0x20(%rbx)
+      -  movb $0x0,0x28(%rbx)
+      -  call REL R_X86_64_PLT32 strlen
+      -  mov %rax,%r13
+      -  movabs $0x7fffffffffffffd6,%rax
+      -  cmp %r13,%rax
+      -  jb REL R_X86_64_PC32 .text.unlikely
+      -  mov %rbp,0x90(%rsp)
+      -  lea 0x28(%r13),%rbp
+      -  test %r13,%r13
+      -  jne L147
+      -  lea 0x30(%rsp),%r12
+      -  mov %rbx,0x40(%rsp)
+      -  mov $0x28,%r9d
+      -  movq $0x28,0x50(%rsp)
+      -  movq $0x28,0x48(%rsp)
+      -  mov %r12,0x20(%rsp)
+      -  movb $0x0,0x30(%rsp)
+      -  movq $0x0,0x28(%rsp)
+      -  lea 0x5b(%r13),%r8
+      -  cmp %r8,%r9
+      -  jb L107
+      -  movdqa REL R_X86_64_PC32 @.rodata.cst16:29202d2061204750552068616e673b20
+      -  movups %xmm0,(%rbx,%rbp,1)
+      -  movdqa REL R_X86_64_PC32 @.rodata.cst16:6f6e2057696e646f7773207468652064
+      -  mov 0x40(%rsp),%rcx
+      -  movups %xmm0,0x10(%rbx,%rbp,1)
+      -  movdqa REL R_X86_64_PC32 @.rodata.cst16:7269766572206973207468656e207265
+      -  movups %xmm0,0x20(%rbx,%rbp,1)
+      -  movl $0x74657365,0x2f(%rbx,%rbp,1)
+      -  movb $0x0,0x5b(%rcx,%r13,1)
+      -  mov (%r14),%rax
+      -  lea 0x50(%rsp),%rbx
+      -  mov 0x50(%rsp),%rcx
+      -  mov 0x40(%rsp),%rdi
+      -  movb $0x0,0x50(%rsp)
+      -  mov %rbx,0x40(%rsp)
+      -  mov (%rax),%rdx
+      -  lea 0x10(%rax),%rsi
+      -  mov %rcx,0x70(%rsp)
+      -  cmp %rsi,%rdx
+      -  je L141
+      -  mov 0x10(%rax),%rsi
+      -  mov %rdi,(%rax)
+      -  mov %r8,0x8(%rax)
+      -  mov %rcx,0x10(%rax)
+      -  test %rdx,%rdx
+      -  je L144
+      -  mov %rsi,0x70(%rsp)
+      -  lea 0x70(%rsp),%rax
+      -  mov %rdx,0x60(%rsp)
+      -  movb $0x0,(%rdx)
+      -  mov 0x60(%rsp),%rdi
+      +  mov %rax,(%rsp)
+      +  call REL R_X86_64_PLT32 cudaGetDevice
+      +  test %eax,%eax
+      +  je L217
+      +  mov 0x10(%r13),%rax
+      +  mov 0x10(%rax),%rax
+      +  mov (%rax),%rax
+      +  mov (%rax,%rbx,1),%rax
+      +  jmp L129
+      +  nop 
+      +  lea 0x20(%rsp),%rdx
+      +  xor %esi,%esi
+      +  mov %rbx,%rdi
+      +  call REL R_X86_64_PLT32 strata::core::Verifier::pl_finish(int*, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >&)
+      +  jmp L46
+      +  nopl 0x0(%rax)
+      +  lea 0x20(%rsp),%rdx
+      +  xor %esi,%esi
+      +  mov %rbx,%rdi
+      +  call REL R_X86_64_PLT32 strata::core::Verifier::pl_finish(int*, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >&)
+      +  mov 0x0(%r13),%rax
+      +  add $0x1,%ebp
+      +  mov (%rax),%eax
+      +  cmp %ebp,%eax
+      +  jg L106
+      +  subl $0x1,0xc(%rsp)
+      +  jne L15
+      +  jmp L114
+      +  nopl 0x0(%rax,%rax,1)
+      +  lea 0x1c(%rsp),%r12
+      +  mov 0x20(%r13),%rax
+      +  mov %r12,%rdi
+      +  mov 0x194(%rax),%esi
+      +  lea 0x20(%rsp),%rax
+      +  mov %rax,(%rsp)
+      +  call REL R_X86_64_PLT32 strata::core::OnDevice::OnDevice(int)
+      +  mov 0x20(%r13),%rax
+      +  mov 0x378(%rax),%rdi
+      +  call REL R_X86_64_PLT32 cudaStreamSynchronize
+      +  mov 0x1c(%rsp),%edi
+      +  test %edi,%edi
+      +  jns L213
+      +  nopl 0x0(%rax,%rax,1)
+      +  mov 0x20(%rsp),%rdi
+      +  lea 0x30(%rsp),%rax
+      =  cmp %rax,%rdi
+      =  je L88
+      =  mov 0x60(%rsp),%rdi
+      =  cmp %rax,%rdi
+      -  je L88
+      -  mov 0x70(%rsp),%rax
+      -  lea 0x1(%rax),%rsi
+      -  call REL R_X86_64_PLT32 operator delete(void*, unsigned long)
+      -  mov 0x40(%rsp),%rdi
+      -  cmp %rbx,%rdi
+      -  je L94
+      -  mov 0x50(%rsp),%rax
+      -  lea 0x1(%rax),%rsi
+      -  call REL R_X86_64_PLT32 operator delete(void*, unsigned long)
+      -  mov 0x20(%rsp),%rdi
+      -  cmp %r12,%rdi
+      -  je L100
+      +  je L200
+      =  mov 0x30(%rsp),%rax
+      =  lea 0x1(%rax),%rsi
+      =  lea 0x1(%rax),%rsi
+      =  call REL R_X86_64_PLT32 operator delete(void*, unsigned long)
+      -  mov 0x88(%rsp),%rbx
+      -  mov 0x90(%rsp),%rbp
+      -  xor %edx,%edx
+      -  mov 0x98(%rsp),%r12
+      -  mov 0xa0(%rsp),%r13
+      -  jmp L7
+      -  nop 
+      -  lea (%r9,%r9,1),%rax
+      -  mov %r15,0xb0(%rsp)
+      -  mov %rax,%r15
+      -  cmp %rax,%r8
+      -  jb L202
+      -  lea 0x5c(%r13),%rdi
+      -  mov %r8,%r15
+      -  mov %r8,0x18(%rsp)
+      -  mov %r9,0x10(%rsp)
+      -  call REL R_X86_64_PLT32 operator new(unsigned long)
+      -  mov %rbp,%rdx
+      -  mov %rbx,%rsi
+      -  mov %rax,%rdi
+      -  call REL R_X86_64_PLT32 memcpy
+      -  movdqa REL R_X86_64_PC32 @.rodata.cst16:29202d2061204750552068616e673b20
+      -  mov 0x10(%rsp),%r9
+      -  mov %rbx,%rdi
+      -  add %rax,%rbp
+      -  mov %rax,0x8(%rsp)
+      -  movups %xmm0,0x0(%rbp)
+      -  movdqa REL R_X86_64_PC32 @.rodata.cst16:6f6e2057696e646f7773207468652064
+      -  lea 0x1(%r9),%rsi
+      -  movups %xmm0,0x10(%rbp)
+      -  movdqa REL R_X86_64_PC32 @.rodata.cst16:7269766572206973207468656e207265
+      -  movups %xmm0,0x20(%rbp)
+      -  movl $0x74657365,0x2f(%rbp)
+      -  call REL R_X86_64_PLT32 operator delete(void*, unsigned long)
+      -  mov 0x8(%rsp),%rcx
+      -  mov %r15,0x50(%rsp)
+      -  mov 0x18(%rsp),%r8
+      -  mov 0xb0(%rsp),%r15
+      -  mov %rcx,0x40(%rsp)
+      -  jmp L60
+      -  nopl 0x0(%rax)
+      -  mov %rdi,(%rax)
+      -  mov %r8,0x8(%rax)
+      -  mov %rcx,0x10(%rax)
+      -  lea 0x70(%rsp),%rax
+      -  mov %rax,%rdx
+      -  jmp L80
+      -  mov %r15,0xb0(%rsp)
+      -  cmp $0x4f,%rbp
+      -  ja L190
+      -  mov $0x51,%edi
+      -  call REL R_X86_64_PLT32 operator new(unsigned long)
+      -  movdqu (%rbx),%xmm0
+      -  mov %rax,%rcx
+      -  mov $0x50,%r15d
+      -  movups %xmm0,(%rax)
+      -  movdqu 0x10(%rbx),%xmm0
+      -  movups %xmm0,0x10(%rax)
+      -  mov 0x20(%rbx),%rax
+      -  mov %rax,0x20(%rcx)
+      -  cmp $0x1,%r13
+      -  je L210
+      -  lea 0x28(%rcx),%rdi
+      -  mov %r12,%rsi
+      -  mov %r13,%rdx
+      -  mov %rcx,0x8(%rsp)
+      -  call REL R_X86_64_PLT32 memcpy
+      -  mov %rbx,%rdi
+      -  mov $0x29,%esi
+      -  lea 0x30(%rsp),%r12
+      -  call REL R_X86_64_PLT32 operator delete(void*, unsigned long)
+      -  mov 0x8(%rsp),%rcx
+      -  mov %r15,0x30(%rsp)
+      -  movabs $0x800000000000005c,%rax
+      -  add %r13,%rax
+      -  mov %rcx,0x20(%rsp)
+      -  movb $0x0,0x28(%rcx,%r13,1)
+      -  mov 0x20(%rsp),%rbx
+      -  mov 0x30(%rsp),%r9
+      -  mov %rbp,0x48(%rsp)
+      -  mov %rbx,0x40(%rsp)
+      -  mov %r9,0x50(%rsp)
+      -  mov %r12,0x20(%rsp)
+      -  movb $0x0,0x30(%rsp)
+      -  movq $0x0,0x28(%rsp)
+      -  cmp $0x32,%rax
+      -  jbe REL R_X86_64_PC32 .text.unlikely
+      -  mov 0xb0(%rsp),%r15
+      -  jmp L49
+      -  nopw 0x0(%rax,%rax,1)
+      -  lea 0x29(%r13),%rdi
+      -  call REL R_X86_64_PLT32 operator new(unsigned long)
+      -  movdqu (%rbx),%xmm0
+      -  mov %rax,%rcx
+      -  mov %rbp,%r15
+      -  movups %xmm0,(%rax)
+      -  movdqu 0x10(%rbx),%xmm0
+      -  movups %xmm0,0x10(%rax)
+      -  mov 0x20(%rbx),%rax
+      -  mov %rax,0x20(%rcx)
+      -  jmp L162
+      -  nopl 0x0(%rax)
+      -  movabs $0x7ffffffffffffffe,%rax
+      -  lea 0x1(%r15),%rdi
+      -  cmp %r15,%rax
+      -  jae L114
+      -  movabs $0x7fffffffffffffff,%rdi
+      -  mov %rax,%r15
+      +  add $0x48,%rsp
+      +  pop %rbx
+      +  pop %rbp
+      +  pop %r12
+      +  pop %r13
+      +  pop %r14
+      +  pop %r15
+      +  ret 
+      +  test %r15b,%r15b
+      +  je L114
+      +  subl $0x1,0xc(%rsp)
+      +  jne L15
+      =  jmp L114
+      =  nopl 0x0(%rax)
+      =  mov %rax,%r15
+      =  jmp L114
+      -  nopl 0x0(%rax)
+      -  movzbl (%r12),%eax
+      -  mov %rbx,%rdi
+      -  mov $0x29,%esi
+      -  mov %rcx,0x8(%rsp)
+      -  lea 0x30(%rsp),%r12
+      -  mov %al,0x28(%rcx)
+      -  call REL R_X86_64_PLT32 operator delete(void*, unsigned long)
+      -  mov 0x8(%rsp),%rcx
+      -  mov %r12,0x20(%rsp)
+      -  mov $0x50,%r9d
+      -  movq $0x50,0x30(%rsp)
+      -  movb $0x0,0x29(%rcx)
+      -  mov %rcx,%rbx
+      -  mov 0xb0(%rsp),%r15
+      -  mov %rcx,0x40(%rsp)
+      -  movq $0x50,0x50(%rsp)
+      -  movq $0x29,0x48(%rsp)
+      -  movb $0x0,0x30(%rsp)
+      -  movq $0x0,0x28(%rsp)
+      -  jmp L49
+      -  mov 0x90(%rsp),%rbp
+      -  mov 0xb0(%rsp),%r15
+      +  call REL R_X86_64_PLT32 cudaSetDevice
+      +  jmp L193
+      +  xor %ebp,%ebp
+      +  mov $0xfffffffffffffff8,%rbx
+      +  cmp %r14d,0x1c(%rsp)
+      +  je L244
+      +  lea 0x20(%rsp),%rax
+      +  mov %r14d,%edi
+      +  mov %rax,(%rsp)
+      +  call REL R_X86_64_PLT32 cudaSetDevice
+      +  test %eax,%eax
+      +  jne L244
+      +  mov 0x1c(%rsp),%r14d
+      +  mov 0x10(%r13),%rax
+      +  test %ebp,%ebp
+      +  je L262
+      +  mov 0x10(%rax),%rax
+      +  mov (%rax),%rax
+      +  mov (%rax,%rbx,1),%rax
+      +  add $0x658,%rax
+      +  mov 0x768(%rax),%rdi
+      +  call REL R_X86_64_PLT32 cudaStreamSynchronize
+      +  test %r14d,%r14d
+      +  js L131
+      +  mov %r14d,%edi
+      +  add $0x1,%ebp
+      +  call REL R_X86_64_PLT32 cudaSetDevice
+      +  mov 0x0(%r13),%rax
+      +  cmp %ebp,(%rax)
+      +  jg L135
+      +  jmp L180
+      +  mov 0x10(%r13),%rax
+      +  test %ebp,%ebp
+      +  jne L155
+      +  mov (%rax),%rax
+      +  mov 0x768(%rax),%rdi
+      +  call REL R_X86_64_PLT32 cudaStreamSynchronize
+      +  jmp L131
+      +  lea 0x1c(%rsp),%r12
+      +  lea 0x20(%rsp),%rax
+      +  movl $0x0,0x1c(%rsp)
+      +  mov %r12,%rdi
+      +  mov %rax,(%rsp)
+      +  call REL R_X86_64_PLT32 cudaGetDevice
+      +  test %eax,%eax
+      +  je L215
+      +  mov 0x10(%r13),%rax
+      +  mov (%rax),%rax
+      +  jmp L124
+      +  mov (%rax),%rax
+      +  jmp L233
+      +  mov %rax,%rbx
+      =  jmp REL R_X86_64_PC32 .text.unlikely
+      =  jmp REL R_X86_64_PC32 .text.unlikely
+
+DIFFERENT  main::{lambda()#40}::operator()() const [clone .cold]   instructions 15 -> 19   (+16 / -12)
+      -  mov REL R_X86_64_32 .rodata.str1.1
+      -  call REL R_X86_64_PLT32 std::__throw_length_error(char const*)
+      -  lea 0x40(%rsp),%rdi
+      -  mov %rax,%rbx
+      -  call REL R_X86_64_PLT32 std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >::_M_dispose()
+      -  lea 0x20(%rsp),%rdi
+      +  test %r14d,%r14d
+      +  jns L8
+      +  lea 0x20(%rsp),%rax
+      +  mov %rax,(%rsp)
+      +  mov (%rsp),%rdi
+      =  call REL R_X86_64_PLT32 std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >::_M_dispose()
+      =  mov %rbx,%rdi
+      =  mov %rbx,%rdi
+      =  call REL R_X86_64_PLT32 _Unwind_Resume
+      -  mov %rbp,0x90(%rsp)
+      -  mov %rax,%rbx
+      -  mov %r15,0xb0(%rsp)
+      -  jmp L5
+      -  mov REL R_X86_64_32 .rodata.str1.1
+      -  call REL R_X86_64_PLT32 std::__throw_length_error(char const*)
+      +  mov %r14d,%edi
+      +  call REL R_X86_64_PLT32 cudaSetDevice
+      +  jmp L2
+      +  mov 0x1c(%rsp),%edi
+      +  test %edi,%edi
+      +  js L15
+      +  call REL R_X86_64_PLT32 cudaSetDevice
+      +  lea 0x20(%rsp),%rax
+      +  mov %rax,(%rsp)
+      +  jmp L4
+      +  nop 
+
+DIFFERENT  main::{lambda()#56}::operator()() const   instructions 341 -> 452   (+429 / -318)
+      -  sub $0x68,%rsp
+      -  mov %rbx,0x38(%rsp)
+      -  mov %rdi,%rbx
+      -  mov %rdi,0x10(%rsp)
+      -  call REL R_X86_64_PLT32 cudaDeviceSynchronize
+      -  mov (%rbx),%rbx
+      -  mov (%rbx),%rdi
+      -  mov 0x8(%rdi),%edx
+      -  test %edx,%edx
+      -  js L12
+      -  mov $0x1,%esi
+      -  call REL R_X86_64_PLT32 strata::core::PeerExperts::apply_pending(bool)
+      -  mov 0x8(%rbx),%rax
+      -  mov (%rax),%rsi
+      -  cmp %rsi,0x8(%rax)
+      -  je L255
+      -  mov 0x10(%rbx),%rax
+      -  mov %rbp,0x40(%rsp)
+      -  mov %r12,0x48(%rsp)
+      +  mov (%rdi),%rax
+      +  mov %rdi,%rcx
+      +  mov 0x8(%rax),%rsi
+      =  mov (%rax),%rdi
+      =  mov %r13,0x50(%rsp)
+      =  mov %r12,0x48(%rsp)
+      =  mov (%rax),%rdi
+      -  mov %r13,0x50(%rsp)
+      -  mov %r14,0x58(%rsp)
+      -  mov %r15,0x60(%rsp)
+      -  call REL R_X86_64_PLT32 cudaEventSynchronize
+      -  mov 0x18(%rbx),%rax
+      -  mov (%rax),%rbp
+      -  mov 0x8(%rax),%r12
+      -  cmp %r12,%rbp
+      -  je L51
+      -  xchg %ax,%ax
+      +  cmp %rdi,%rsi
+      +  je L396
+      +  mov %rsi,%rdx
+      +  mov %rdi,%rax
+      +  sub %rdi,%rdx
+      +  and $0x20,%edx
+      +  je L17
+      +  lea 0x20(%rdi),%rax
+      +  movb $0x0,0x1c(%rdi)
+      +  cmp %rsi,%rax
+      +  je L22
+      +  nopl 0x0(%rax)
+      =  data16 cs nopw 0x0(%rax,%rax,1)
+      =  mov 0x0(%rbp),%rax
+      =  xchg %ax,%ax
+      =  data16 cs nopw 0x0(%rax,%rax,1)
+      -  mov 0x0(%rbp),%rax
+      -  cmpb $0x0,0x44c0(%rax)
+      -  je L36
+      -  mov 0x44b8(%rax),%rdi
+      -  call REL R_X86_64_PLT32 cudaEventSynchronize
+      -  add $0x8,%rbp
+      -  cmp %rbp,%r12
+      -  jne L31
+      -  mov 0x18(%rbx),%rdx
+      +  movb $0x0,0x1c(%rax)
+      +  add $0x40,%rax
+      +  movb $0x0,-0x4(%rax)
+      +  cmp %rsi,%rax
+      +  jne L17
+      +  mov 0x8(%rcx),%rdx
+      =  mov (%rdx),%rax
+      =  mov 0x8(%rdx),%rcx
+      =  mov 0x18(%rbx),%rdx
+      =  mov (%rdx),%rax
+      -  mov 0x8(%rdx),%rcx
+      -  cmp %rcx,%rax
+      -  je L51
+      -  nopl (%rax)
+      -  data16 cs nopw 0x0(%rax,%rax,1)
+      -  mov (%rax),%rdx
+      -  add $0x8,%rax
+      -  movb $0x0,0x44c0(%rdx)
+      -  cmp %rax,%rcx
+      -  jne L46
+      -  mov 0x20(%rbx),%r13
+      -  mov 0x0(%r13),%rbp
+      -  mov 0x8(%r13),%r12
+      -  cmp %r12,%rbp
+      -  je L63
+      -  nop 
+      -  data16 cs nopw 0x0(%rax,%rax,1)
+      -  mov 0x0(%rbp),%rdi
+      -  add $0x8,%rbp
+      -  call REL R_X86_64_PLT32 cudaHostUnregister
+      -  cmp %rbp,%r12
+      -  jne L58
+      -  call REL R_X86_64_PLT32 cudaGetLastError
+      -  mov 0x0(%r13),%rax
+      -  cmp 0x8(%r13),%rax
+      -  je L68
+      -  mov %rax,0x8(%r13)
+      -  mov 0x28(%rbx),%rdi
+      -  call REL R_X86_64_PLT32 strata::core::FileExpertSource::commit_exchanges()
+      -  mov 0x8(%rbx),%rax
+      -  mov (%rax),%rbp
+      -  mov 0x8(%rax),%r12
+      -  cmp %r12,%rbp
+      -  je L331
+      -  nopl (%rax)
+      -  data16 cs nopw 0x0(%rax,%rax,1)
+      -  mov 0x30(%rbx),%rax
+      -  mov 0x4(%rbp),%ecx
+      -  movslq 0x0(%rbp),%rdx
+      -  mov (%rax),%rax
+      -  mov %ecx,(%rax,%rdx,4)
+      -  mov REL R_X86_64_PC32 .bss
+      -  test %eax,%eax
+      -  jle L91
+      -  mov 0x38(%rbx),%rax
+      -  mov 0x40(%rbx),%rcx
+      -  movslq 0x0(%rbp),%rdx
+      -  mov (%rax),%rax
+      -  mov (%rcx),%rcx
+      -  mov %ecx,(%rax,%rdx,4)
+      -  mov 0x48(%rbx),%rax
+      -  mov 0x50(%rbx),%rsi
+      -  add $0x8,%rbp
+      -  mov (%rax),%rdi
+      -  movslq -0x8(%rbp),%rax
+      -  cqto 
+      -  mov (%rdi),%rcx
+      -  idivq 0xa8(%rsi)
+      -  mov %rax,%rsi
+      -  call *0x58(%rcx)
+      -  cmp %rbp,%r12
+      -  jne L77
+      -  mov 0x58(%rbx),%r15
+      -  mov 0x8(%rbx),%rax
+      -  cmpb $0x0,0x2158(%r15)
+      -  je L187
+      -  mov (%rax),%r13
+      -  mov 0x8(%rax),%r12
+      -  cmp %r12,%r13
+      -  jne L125
+      -  jmp L336
+      -  nopl 0x0(%rax,%rax,1)
+      +  mov 0x8(%rdx),%rdx
+      +  cmp %rax,%rdx
+      +  je L42
+      +  nopw 0x0(%rax,%rax,1)
+      =  data16 cs nopw 0x0(%rax,%rax,1)
+      =  data16 cs nopw 0x0(%rax,%rax,1)
+      =  data16 cs nopw 0x0(%rax,%rax,1)
+      =  data16 cs nopw 0x0(%rax,%rax,1)
+      -  data16 cs nopw 0x0(%rax,%rax,1)
+      -  data16 cs nopw 0x0(%rax,%rax,1)
+      -  data16 cs nopw 0x0(%rax,%rax,1)
+      -  mov 0x0(%r13),%edx
+      -  add $0x4,%rax
+      -  add $0x8,%r13
+      -  mov %edx,-0x4(%rax)
+      -  mov %rax,0x2168(%r15)
+      -  cmp %r13,%r12
+      -  je L181
+      -  mov 0x2168(%r15),%rax
+      -  mov 0x2170(%r15),%rsi
+      -  cmp %rsi,%rax
+      -  jne L118
+      -  mov 0x2160(%r15),%r8
+      -  movabs $0x1fffffffffffffff,%rcx
+      -  sub %r8,%rax
+      -  mov %rax,%rbp
+      -  sar $0x2,%rax
+      -  cmp %rcx,%rax
+      -  je REL R_X86_64_PC32 .text.unlikely
+      -  test %rax,%rax
+      -  mov $0x1,%r14d
+      -  mov %r8,0x18(%rsp)
+      -  cmovne %rax,%r14
+      +  cmpb $0x0,0x20(%rax)
+      +  je L36
+      +  mov 0x10(%rcx),%rdi
+      +  movslq 0x10(%rax),%rsi
+      +  mov (%rdi),%rdi
+      +  movb $0x1,(%rdi,%rsi,1)
+      +  add $0x30,%rax
+      +  cmp %rdx,%rax
+      +  jne L30
+      +  mov (%rcx),%rax
+      +  mov 0x8(%rax),%rsi
+      +  mov (%rax),%rdi
+      +  mov 0x18(%rcx),%rax
+      +  movl $0x2,(%rax)
+      +  mov %rsi,%rax
+      +  sub %rdi,%rax
+      +  sar $0x5,%rax
+      +  test %eax,%eax
+      +  jle L405
+      +  push %r15
+      +  mov %rcx,%r15
+      +  push %r14
+      +  push %r13
+      +  push %r12
+      +  push %rbp
+      +  push %rbx
+      +  xor %ebx,%ebx
+      +  sub $0x58,%rsp
+      +  nopw 0x0(%rax,%rax,1)
+      +  mov 0x20(%r15),%r13
+      +  mov 0x0(%r13),%rdx
+      +  mov 0x10(%rdx),%rbp
+      +  test %rbp,%rbp
+      +  je L93
+      +  mov 0x8(%r13),%rcx
+      +  mov %ebx,%r12d
+      +  mov 0x8(%rcx),%rax
+      +  sub (%rcx),%rax
+      +  sar $0x5,%rax
+      +  cmp %eax,%ebx
+      +  jge L93
+      +  mov %ebx,0x4c(%rsp)
+      +  lea 0x4c(%rsp),%rsi
+      +  mov %rdx,%rdi
+      +  call *0x18(%rdx)
+      +  mov %al,0x1f(%rsp)
+      +  test %al,%al
+      +  je L90
+      +  mov 0x10(%r13),%rax
+      +  mov (%rax),%rax
+      +  addq $0x1,(%rax,%rbx,8)
+      +  mov 0x18(%r13),%rax
+      +  mov (%rax),%rcx
+      +  add %rbx,%rcx
+      +  cmpb $0x0,(%rcx)
+      +  jne L212
+      +  mov 0x28(%r13),%rax
+      +  mov (%rax),%rax
+      +  cmpb $0x0,(%rax,%rbx,1)
+      +  jne L111
+      +  mov (%r15),%rax
+      +  mov 0x8(%rax),%rsi
+      +  mov (%rax),%rdi
+      +  mov %rsi,%rax
+      +  lea 0x1(%rbx),%edx
+      +  sub %rdi,%rax
+      +  sar $0x5,%rax
+      +  cmp %eax,%edx
+      +  jge L102
+      +  add $0x1,%rbx
+      +  test %rbp,%rbp
+      +  jne L59
+      +  add $0x58,%rsp
+      +  pop %rbx
+      +  pop %rbp
+      +  pop %r12
+      +  pop %r13
+      +  pop %r14
+      +  pop %r15
+      +  ret 
+      +  nopl 0x0(%rax)
+      +  mov 0x30(%r13),%rax
+      +  mov (%rax),%rax
+      +  movzbl 0x7a(%rax),%eax
+      +  test %al,%al
+      +  je L90
+      +  mov 0x28(%r13),%rax
+      +  mov (%rax),%rax
+      +  movb $0x0,(%rax,%rbx,1)
+      +  mov 0x38(%r13),%rax
+      +  mov %rax,0x28(%rsp)
+      +  mov (%rax),%rax
+      +  mov (%rax),%r10
+      +  mov 0x8(%rax),%r14
+      +  mov %rbx,%rax
+      +  shl $0x5,%rax
+      +  mov %rax,0x30(%rsp)
+      +  mov %r10,%r13
+      +  xor %eax,%eax
+      +  cmp %r14,%r10
+      +  jne L135
+      +  jmp L90
+      +  add $0x30,%r13
+      +  cmp %r13,%r14
+      +  je L186
+      +  cmp 0x10(%r13),%r12d
+      +  jne L132
+      +  mov 0x28(%r13),%rsi
+      =  mov %rsi,0x8(%rsp)
+      =  add %rax,%r14
+      =  cmovne %rax,%r14
+      =  mov %rsi,0x8(%rsp)
+      -  add %rax,%r14
+      -  movabs $0x1fffffffffffffff,%rax
+      -  cmp %rax,%r14
+      -  cmova %rax,%r14
+      -  shl $0x2,%r14
+      -  mov %r14,%rdi
+      -  call REL R_X86_64_PLT32 operator new(unsigned long)
+      -  test %rbp,%rbp
+      +  test %rsi,%rsi
+      +  je L132
+      +  mov 0x28(%rsp),%rax
+      +  mov 0x30(%rsp),%rcx
+      +  mov 0x8(%rax),%rax
+      +  mov %rax,0x38(%rsp)
+      +  mov (%rax),%rax
+      +  add (%rax),%rcx
+      +  mov 0x18(%rcx),%edx
+      +  mov %rcx,(%rsp)
+      +  movl $0x0,0x4c(%rsp)
+      +  test %edx,%edx
+      +  jns L364
+      +  movl $0xffffffff,0x18(%rsp)
+      +  mov (%rsp),%rax
+      +  mov 0x8(%rax),%rax
+      +  mov %rax,0x10(%rsp)
+      +  call REL R_X86_64_PLT32 strata::kernels::cpu::expert_layout()
+      +  mov $0x151800,%edx
+      +  cmpb $0x0,(%rax)
+      +  je L163
+      +  movslq 0x0(%r13),%rdx
+      +  mov 0x48(%rax),%rax
+      +  mov (%rax,%rdx,8),%rdx
+      +  mov (%rsp),%rax
+      +  mov 0xc(%r13),%esi
+      +  mov %rdx,0x20(%rsp)
+      +  mov (%rax),%rdi
+      +  call REL R_X86_64_PLT32 strata::core::ExpertCache::device_slot(int)
+      +  mov 0x10(%rsp),%r8
+      +  mov 0x20(%rsp),%rdx
+      +  mov $0x1,%ecx
+      +  mov %rax,%rdi
+      =  mov 0x8(%rsp),%rsi
+      =  mov 0x18(%rsp),%r8
+
+DIFFERENT  main::{lambda()#56}::operator()() const [clone .cold]   instructions 8 -> 24   (+21 / -5)
+      -  mov REL R_X86_64_32 .rodata.str1.1
+      -  call REL R_X86_64_PLT32 std::__throw_length_error(char const*)
+      -  test %r13d,%r13d
+      -  js L6
+      -  mov %r13d,%edi
+      +  test %r14d,%r14d
+      +  js L4
+      +  mov %r14d,%edi
+      =  call REL R_X86_64_PLT32 cudaSetDevice
+      =  mov %rbx,%rdi
+      =  mov %rbx,%rdi
+      =  call REL R_X86_64_PLT32 _Unwind_Resume
+      +  test %r14d,%r14d
+      +  js L10
+      +  mov %r14d,%edi
+      +  call REL R_X86_64_PLT32 cudaSetDevice
+      +  mov %rbx,%rdi
+      +  call REL R_X86_64_PLT32 _Unwind_Resume
+      +  cmpl $0x0,0x38(%rsp)
+      +  js L16
+      +  mov 0x38(%rsp),%edi
+      +  call REL R_X86_64_PLT32 cudaSetDevice
+      +  mov %rbx,%rdi
+      +  call REL R_X86_64_PLT32 _Unwind_Resume
+      +  cmpl $0x0,0x18(%rsp)
+      +  js L22
+      +  mov 0x18(%rsp),%edi
+      +  call REL R_X86_64_PLT32 cudaSetDevice
+      +  mov %rbx,%rdi
+      +  call REL R_X86_64_PLT32 _Unwind_Resume
+
+DIFFERENT  main::{lambda()#57}::operator()() const   instructions 482 -> 341   (+331 / -472)
+      -  sub $0x88,%rsp
+      -  mov (%rdi),%rax
+      -  mov %rbx,0x58(%rsp)
+      +  sub $0x68,%rsp
+      +  mov %rbx,0x38(%rsp)
+      +  mov %rdi,%rbx
+      +  mov %rdi,0x10(%rsp)
+      +  call REL R_X86_64_PLT32 cudaDeviceSynchronize
+      +  mov (%rbx),%rbx
+      +  mov (%rbx),%rdi
+      +  mov 0x8(%rdi),%edx
+      +  test %edx,%edx
+      +  js L12
+      +  mov $0x1,%esi
+      +  call REL R_X86_64_PLT32 strata::core::PeerExperts::apply_pending(bool)
+      +  mov 0x8(%rbx),%rax
+      +  mov (%rax),%rsi
+      +  cmp %rsi,0x8(%rax)
+      +  je L255
+      +  mov 0x10(%rbx),%rax
+      +  mov %rbp,0x40(%rsp)
+      +  mov %r12,0x48(%rsp)
+      +  mov (%rax),%rdi
+      +  mov %r13,0x50(%rsp)
+      +  mov %r14,0x58(%rsp)
+      +  mov %r15,0x60(%rsp)
+      +  call REL R_X86_64_PLT32 cudaEventSynchronize
+      +  mov 0x18(%rbx),%rax
+      +  mov (%rax),%rbp
+      +  mov 0x8(%rax),%r12
+      +  cmp %r12,%rbp
+      +  je L51
+      +  xchg %ax,%ax
+      +  data16 cs nopw 0x0(%rax,%rax,1)
+      +  mov 0x0(%rbp),%rax
+      +  cmpb $0x0,0x44c0(%rax)
+      +  je L36
+      +  mov 0x44b8(%rax),%rdi
+      +  call REL R_X86_64_PLT32 cudaEventSynchronize
+      +  add $0x8,%rbp
+      +  cmp %rbp,%r12
+      +  jne L31
+      +  mov 0x18(%rbx),%rdx
+      +  mov (%rdx),%rax
+      +  mov 0x8(%rdx),%rcx
+      +  cmp %rcx,%rax
+      +  je L51
+      +  nopl (%rax)
+      +  data16 cs nopw 0x0(%rax,%rax,1)
+      +  mov (%rax),%rdx
+      +  add $0x8,%rax
+      +  movb $0x0,0x44c0(%rdx)
+      +  cmp %rax,%rcx
+      +  jne L46
+      +  mov 0x20(%rbx),%r13
+      +  mov 0x0(%r13),%rbp
+      +  mov 0x8(%r13),%r12
+      +  cmp %r12,%rbp
+      +  je L63
+      +  nop 
+      +  data16 cs nopw 0x0(%rax,%rax,1)
+      +  mov 0x0(%rbp),%rdi
+      +  add $0x8,%rbp
+      +  call REL R_X86_64_PLT32 cudaHostUnregister
+      +  cmp %rbp,%r12
+      +  jne L58
+      +  call REL R_X86_64_PLT32 cudaGetLastError
+      +  mov 0x0(%r13),%rax
+      +  cmp 0x8(%r13),%rax
+      +  je L68
+      +  mov %rax,0x8(%r13)
+      +  mov 0x28(%rbx),%rdi
+      +  call REL R_X86_64_PLT32 strata::core::FileExpertSource::commit_exchanges()
+      +  mov 0x8(%rbx),%rax
+      +  mov (%rax),%rbp
+      +  mov 0x8(%rax),%r12
+      +  cmp %r12,%rbp
+      +  je L331
+      +  nopl (%rax)
+      +  data16 cs nopw 0x0(%rax,%rax,1)
+      +  mov 0x30(%rbx),%rax
+      +  mov 0x4(%rbp),%ecx
+      +  movslq 0x0(%rbp),%rdx
+      +  mov (%rax),%rax
+      +  mov %ecx,(%rax,%rdx,4)
+      +  mov REL R_X86_64_PC32 .bss
+      +  test %eax,%eax
+      +  jle L91
+      +  mov 0x38(%rbx),%rax
+      +  mov 0x40(%rbx),%rcx
+      +  movslq 0x0(%rbp),%rdx
+      +  mov (%rax),%rax
+      +  mov (%rcx),%rcx
+      +  mov %ecx,(%rax,%rdx,4)
+      +  mov 0x48(%rbx),%rax
+      +  mov 0x50(%rbx),%rsi
+      +  add $0x8,%rbp
+      +  mov (%rax),%rdi
+      +  movslq -0x8(%rbp),%rax
+      +  cqto 
+      +  mov (%rdi),%rcx
+      +  idivq 0xa8(%rsi)
+      +  mov %rax,%rsi
+      +  call *0x58(%rcx)
+      +  cmp %rbp,%r12
+      +  jne L77
+      +  mov 0x58(%rbx),%r15
+      +  mov 0x8(%rbx),%rax
+      +  cmpb $0x0,0x2158(%r15)
+      +  je L187
+      +  mov (%rax),%r13
+      +  mov 0x8(%rax),%r12
+      +  cmp %r12,%r13
+      +  jne L125
+      +  jmp L336
+      +  nopl 0x0(%rax,%rax,1)
+      +  data16 cs nopw 0x0(%rax,%rax,1)
+      +  data16 cs nopw 0x0(%rax,%rax,1)
+      +  data16 cs nopw 0x0(%rax,%rax,1)
+      +  data16 cs nopw 0x0(%rax,%rax,1)
+      +  data16 cs nopw 0x0(%rax,%rax,1)
+      +  mov 0x0(%r13),%edx
+      +  add $0x4,%rax
+      +  add $0x8,%r13
+      +  mov %edx,-0x4(%rax)
+      +  mov %rax,0x2168(%r15)
+      +  cmp %r13,%r12
+      +  je L181
+      +  mov 0x2168(%r15),%rax
+      +  mov 0x2170(%r15),%rsi
+      +  cmp %rsi,%rax
+      +  jne L118
+      +  mov 0x2160(%r15),%r8
+      +  movabs $0x1fffffffffffffff,%rcx
+      +  sub %r8,%rax
+      +  mov %rax,%rbp
+      +  sar $0x2,%rax
+      +  cmp %rcx,%rax
+      +  je REL R_X86_64_PC32 .text.unlikely
+      +  test %rax,%rax
+      +  mov $0x1,%r14d
+      +  mov %r8,0x18(%rsp)
+      +  cmovne %rax,%r14
+      +  mov %rsi,0x8(%rsp)
+      +  add %rax,%r14
+      +  movabs $0x1fffffffffffffff,%rax
+      +  cmp %rax,%r14
+      +  cmova %rax,%r14
+      +  shl $0x2,%r14
+      +  mov %r14,%rdi
+      +  call REL R_X86_64_PLT32 operator new(unsigned long)
+      +  test %rbp,%rbp
+      +  mov 0x8(%rsp),%rsi
+      +  mov 0x18(%rsp),%r8
+      +  mov %rax,%r9
+      +  mov 0x0(%r13),%eax
+      +  mov %eax,(%r9,%rbp,1)
+      +  je L163
+      +  mov %r8,%rsi
+      +  mov %r9,%rdi
+      +  mov %rbp,%rdx
+      +  mov %r8,0x8(%rsp)
+      +  call REL R_X86_64_PLT32 memcpy
+      +  mov 0x2170(%r15),%rsi
+      +  mov 0x8(%rsp),%r8
+      +  mov %rax,%r9
+      +  lea 0x4(%r9,%rbp,1),%rbp
+      +  test %r8,%r8
+      +  je L171
+      +  sub %r8,%rsi
+      +  mov %r8,%rdi
+      +  mov %r9,0x8(%rsp)
+      +  call REL R_X86_64_PLT32 operator delete(void*, unsigned long)
+      +  mov 0x8(%rsp),%r9
+      +  mov %r9,0x2160(%r15)
+      +  add $0x8,%r13
+      +  add %r14,%r9
+      +  mov %rbp,0x2168(%r15)
+      +  mov %r9,0x2170(%r15)
+      +  mov 0x58(%rbx),%r15
+      +  cmp %r13,%r12
+      +  jne L125
+      +  nopl 0x0(%rax)
+      +  data16 cs nopw 0x0(%rax,%rax,1)
+      +  mov 0x8(%rbx),%rax
+      +  mov (%rax),%rdx
+      +  mov 0x8(%rax),%rcx
+      +  movb $0x1,0x2159(%r15)
+      +  jmp L189
+      +  nopl (%rax)
+      +  mov (%rax),%rdx
+      +  mov 0x8(%rax),%rcx
+      +  cmp %rcx,%rdx
+      +  je L192
+      +  mov %rdx,0x8(%rax)
+      +  mov 0x60(%rbx),%rax
+      +  movl $0x0,(%rax)
+      +  mov 0x68(%rbx),%rax
+      +  movb $0x0,0x4(%rax)
+      +  mov 0x70(%rbx),%rax
+      +  mov 0x78(%rbx),%r14
+      +  movb $0x0,(%rax)
+      +  mov (%r14),%rax
+      +  mov (%rax),%rdi
+      +  test %rdi,%rdi
+      +  je L295
+      +  mov 0x8(%r14),%rax
+      +  mov $0x1,%ecx
+      +  mov (%rax),%rax
+      +  mov (%rax),%rsi
+      +  mov 0x8(%rax),%rdx
+      +  sub %rsi,%rdx
+      +  call REL R_X86_64_PLT32 cudaMemcpy
+      +  mov %eax,%r12d
+      +  test %eax,%eax
+      +  je L322
+      +  mov 0x10(%r14),%rax
+      +  mov (%rax),%rbp
+      +  mov 0x8(%rax),%r15
+      +  cmp %rbp,%r15
+      +  je L250
+      +  xchg %ax,%ax
+      +  mov 0x0(%rbp),%rax
+      +  mov $0xffffffff,%r13d
+      +  mov (%rax),%edx
+      +  movl $0x0,0x2c(%rsp)
+      +  test %edx,%edx
+      +  jns L273
+      +  mov 0x8(%r14),%rdx
+      +  mov 0x650(%rax),%rdi
+      +  mov $0x1,%ecx
+      +  mov (%rdx),%rdx
+      +  mov (%rdx),%rsi
+      +  mov 0x8(%rdx),%rdx
+      +  sub %rsi,%rdx
+      +  call REL R_X86_64_PLT32 cudaMemcpy
+      +  test %eax,%eax
+      +  je L291
+      +  test %r12d,%r12d
+      +  cmove %eax,%r12d
+      +  test %r13d,%r13d
+      +  jns L266
+      +  add $0x8,%rbp
+      +  cmp %rbp,%r15
+      +  jne L219
+      +  test %r12d,%r12d
+      +  jne L250
+      +  mov 0x58(%rbx),%rax
+      +  movb $0x0,0x2159(%rax)
+      +  mov 0x2160(%rax),%rdx
+      +  cmp 0x2168(%rax),%rdx
+      +  je L250
+      +  mov %rdx,0x2168(%rax)
+      +  mov 0x40(%rsp),%rbp
+      +  mov 0x48(%rsp),%r12
+      +  mov 0x50(%rsp),%r13
+      +  mov 0x58(%rsp),%r14
+      +  mov 0x60(%rsp),%r15
+      +  mov 0x10(%rsp),%rax
+      +  mov $0x1,%edx
+      +  mov $0x1,%esi
+      +  mov 0x8(%rax),%rdi
+      +  call <main::{lambda(bool, bool)#1}::operator()(bool, bool) const>
+      +  test %al,%al
+      +  je L303
+      +  mov 0x38(%rsp),%rbx
+      +  add $0x68,%rsp
+      +  ret 
+      +  nopl (%rax)
+      +  mov %r13d,%edi
+      +  add $0x8,%rbp
+      +  call REL R_X86_64_PLT32 cudaSetDevice
+      +  cmp %rbp,%r15
+      +  jne L219
+      +  jmp L242
+      +  nopw 0x0(%rax,%rax,1)
+      +  lea 0x2c(%rsp),%rdi
+      +  mov %edx,0x8(%rsp)
+      +  call REL R_X86_64_PLT32 cudaGetDevice
+      +  mov 0x8(%rsp),%edx
+      +  test %eax,%eax
+      +  jne L288
+      +  cmp 0x2c(%rsp),%edx
+      +  je L288
+      +  mov %edx,%edi
+      +  call REL R_X86_64_PLT32 cudaSetDevice
+      +  test %eax,%eax
+      +  jne L288
+      +  mov 0x2c(%rsp),%r13d
+      +  nop 
+      +  data16 cs nopw 0x0(%rax,%rax,1)
+      +  mov 0x0(%rbp),%rax
+      +  jmp L225
+      +  nopl 0x0(%rax)
+      +  xor %edi,%edi
+      +  call REL R_X86_64_PLT32 cudaStreamSynchronize
+      +  jmp L235
+      +  nopl 0x0(%rax)
+      +  mov 0x10(%r14),%rax
+      +  xor %r12d,%r12d
+      +  mov (%rax),%rbp
+      +  mov 0x8(%rax),%r15
+      +  cmp %r15,%rbp
+      +  jne L219
+      +  jmp L244
+      +  nopl 0x0(%rax)
+      +  mov 0x10(%rsp),%rbx
+      +  mov $0x1,%eax
+      +  mov 0x10(%rbx),%rdx
+      +  xchg %al,(%rdx)
+      +  mov 0x18(%rbx),%rax
+      =  mov (%rax),%rbx
+      =  test %rbx,%rbx
+      =  mov (%rax),%rbx
+      =  test %rbx,%rbx
+      -  je L122
+      -  mov 0x8(%rdi),%rax
+      -  cmpq $0x0,0x10(%rax)
+      -  je L122
+      -  mov %rbp,0x60(%rsp)
+      +  je L318
+      =  add $0x7a,%rbx
+      =  mov %rdi,%rbp
+      =  mov %rbp,0x60(%rsp)
+      =  add $0x7a,%rbx
+      -  mov %rdi,%rbp
+      -  jmp L15
+      -  nopl 0x0(%rax,%rax,1)
+      +  jmp L315
+      +  nopw 0x0(%rax,%rax,1)
+      =  call REL R_X86_64_PLT32 sched_yield
+      =  movzbl (%rbx),%eax
+      =  movzbl (%rbx),%eax
+      =  test %al,%al
+      -  je L14
+      -  mov 0x10(%rbp),%rdx
+      -  mov 0x8(%rdx),%rsi
+      -  mov (%rdx),%rdi
+      -  mov %rsi,%rax
+      -  sub %rdi,%rax
+      -  sar $0x5,%rax
+      -  test %eax,%eax
+      -  jle L365
+      -  xor %ebx,%ebx
+      -  mov $0x1,%ecx
+      -  test %cl,%cl
+      -  je L41
+      -  mov 0x8(%rbp),%rax
+      -  mov %ebx,0x4c(%rsp)
+      -  cmpq $0x0,0x10(%rax)
+      -  je REL R_X86_64_PC32 .text.unlikely
+      -  lea 0x4c(%rsp),%rsi
+      -  mov %rax,%rdi
+      -  call *0x18(%rax)
+      -  mov 0x10(%rbp),%rdx
+      -  mov %eax,%ecx
+      -  mov 0x8(%rdx),%rsi
+      -  mov (%rdx),%rdi
+      -  mov %rsi,%r9
+      -  add $0x1,%ebx
+      -  sub %rdi,%r9
+      -  sar $0x5,%r9
+      -  mov %r9d,%r8d
+      -  cmp %ebx,%r9d
+      -  jg L28
+      -  test %cl,%cl
+      -  je L336
+      -  mov 0x18(%rbp),%rax
+      -  cmpl $0x1,(%rax)
+      -  je L369
+      -  test %r8d,%r8d
+      -  jle L106
+      -  mov %r12,0x68(%rsp)
+      -  xor %ebx,%ebx
+      -  mov %r13,0x70(%rsp)
+      -  mov %r14,0x78(%rsp)
+      -  mov %r15,0x80(%rsp)
+      -  nopl 0x0(%rax,%rax,1)
+      -  mov 0x28(%rbp),%r15
+      -  mov (%r15),%rcx
+      -  mov 0x10(%rcx),%r12
+      -  test %r12,%r12
+      -  je L93
+      -  mov 0x8(%r15),%rsi
+      -  mov %ebx,%r13d
+      -  mov 0x8(%rsi),%rax
+      -  sub (%rsi),%rax
+      -  sar $0x5,%rax
+      -  cmp %eax,%ebx
+      -  jge L93
+      -  mov %ebx,0x4c(%rsp)
+      -  lea 0x4c(%rsp),%rsi
+      -  mov %rcx,%rdi
+      -  call *0x18(%rcx)
+      -  mov %al,0x1f(%rsp)
+      -  test %al,%al
+      -  je L92
+      -  mov 0x10(%r15),%rax
+      -  mov (%rax),%rax
+      -  addq $0x1,(%rax,%rbx,8)
+      -  mov 0x18(%r15),%rax
+      -  mov (%rax),%rcx
+      -  add %rbx,%rcx
+      -  cmpb $0x0,(%rcx)
+      -  jne L228
+      -  mov 0x28(%r15),%rax
+      -  mov (%rax),%rax
+      -  cmpb $0x0,(%rax,%rbx,1)
+      -  jne L126
+      -  mov 0x10(%rbp),%rdx
+      -  mov 0x8(%rdx),%rax
+      -  sub (%rdx),%rax
+      -  lea 0x1(%rbx),%ecx
+      -  sar $0x5,%rax
+      -  cmp %eax,%ecx
+      -  jge L102
+      -  add $0x1,%rbx
+      -  test %r12,%r12
+      -  jne L61
+      -  mov 0x68(%rsp),%r12
+      -  mov 0x70(%rsp),%r13
+      -  mov 0x78(%rsp),%r14
+      -  mov 0x80(%rsp),%r15
+      -  mov 0x30(%rbp),%rax
+      -  cmpb $0x0,(%rax)
+      -  jne L361
+      -  mov 0x8(%rbp),%rbx
+      -  mov 0x10(%rbx),%rax
+      -  test %rax,%rax
+      -  je L119
+      -  mov $0x3,%edx
+      -  mov %rbx,%rsi
+      -  mov %rbx,%rdi
+      -  call *%rax
+      -  pxor %xmm0,%xmm0
+      -  movups %xmm0,0x10(%rbx)
+      -  mov 0x30(%rbp),%rax
+      -  mov 0x60(%rsp),%rbp
+      -  movb $0x0,(%rax)
+      -  mov 0x58(%rsp),%rbx
+      -  add $0x88,%rsp
+      -  ret 
+      -  nop 
+      -  mov 0x30(%r15),%rax
+      -  mov (%rax),%rax
+      -  movzbl 0x7a(%rax),%eax
+      -  test %al,%al
+      -  je L92
+      -  mov 0x28(%r15),%rax
+      -  mov (%rax),%rax
+      -  movb $0x0,(%rax,%rbx,1)
+      -  mov 0x38(%r15),%rax
+      -  mov %rax,0x28(%rsp)
+      -  mov (%rax),%rax
+      -  mov (%rax),%r10
+      -  mov 0x8(%rax),%r14
+      -  cmp %r14,%r10
+      -  je L92
+      -  mov %rbx,%rax
+      -  mov %r10,%r15
+      -  shl $0x5,%rax
+      -  mov %rax,0x30(%rsp)
+      -  xor %eax,%eax
+      -  jmp L151
+      -  nopl (%rax)
+      -  add $0x30,%r15
+      -  cmp %r15,%r14
+      -  je L202
+      -  cmp %r13d,0x10(%r15)
+      -  jne L148
+      -  mov 0x28(%r15),%rdx
+      -  mov %rdx,0x8(%rsp)
+      -  test %rdx,%rdx
+      -  je L148
+      -  mov 0x28(%rsp),%rax
+      -  mov 0x30(%rsp),%rcx
+      -  mov 0x8(%rax),%rax
+      -  mov %rax,0x38(%rsp)
+      -  mov (%rax),%rax
+      -  add (%rax),%rcx
+      -  mov 0x18(%rcx),%edx
+      -  mov %rcx,(%rsp)
+      -  movl $0x0,0x4c(%rsp)
+      -  test %edx,%edx
+      -  jns L389
+      -  movl $0xffffffff,0x18(%rsp)
+      -  mov (%rsp),%rax
+      -  mov 0x8(%rax),%rax
+      -  mov %rax,0x10(%rsp)
+      -  call REL R_X86_64_PLT32 strata::kernels::cpu::expert_layout()
+      -  mov $0x151800,%edx
+      -  cmpb $0x0,(%rax)
+      -  je L179
+      -  movslq (%r15),%rdx
+      -  mov 0x48(%rax),%rax
+      -  mov (%rax,%rdx,8),%rdx
+      -  mov (%rsp),%rax
+      -  mov 0xc(%r15),%esi
+      -  mov %rdx,0x20(%rsp)
+      -  mov (%rax),%rdi
+      -  call REL R_X86_64_PLT32 strata::core::ExpertCache::device_slot(int)
+      -  mov 0x10(%rsp),%r8
+      -  mov 0x20(%rsp),%rdx
+      -  mov $0x1,%ecx
+      -  mov %rax,%rdi
+      -  mov 0x8(%rsp),%rsi
+      -  call REL R_X86_64_PLT32 cudaMemcpyAsync
+      -  test %eax,%eax
+      -  jne L405
+      -  mov 0x18(%rsp),%eax
+      -  test %eax,%eax
+      -  js L197
+      -  mov 0x18(%rsp),%edi
+      -  call REL R_X86_64_PLT32 cudaSetDevice
+      -  add $0x30,%r15
+      -  movzbl 0x1f(%rsp),%eax
+      -  cmp %r15,%r14
+      -  jne L151
+      -  nopl 0x0(%rax)
+      -  test %al,%al
+      -  je L92
+      -  mov 0x28(%rsp),%rax
+      -  mov 0x30(%rsp),%r14
+      -  mov 0x10(%rax),%r13
+      -  mov 0x18(%rax),%rax
+      -  add (%rax),%r14
+      -  mov 0x18(%r14),%r15d
+      -  movl $0x0,0x4c(%rsp)
+      -  test %r15d,%r15d
+      -  jns L456
+      -  mov $0xffffffff,%r15d
+      -  mov 0x8(%r14),%rsi
+      -  mov 0x10(%r14),%rdi
+      -  call REL R_X86_64_PLT32 cudaEventRecord
+      -  test %eax,%eax
+      -  jne L468
+      -  mov 0x8(%r14),%rdi
+      -  call REL R_X86_64_PLT32 cudaStreamQuery
+      -  movb $0x1,0x1c(%r14)
+      -  test %r15d,%r15d
+      -  js L92
+      -  mov %r15d,%edi
+      -  call REL R_X86_64_PLT32 cudaSetDevice
+      -  jmp L92
+      -  nopl 0x0(%rax)
+      -  movb $0x0,(%rcx)
+      -  mov 0x20(%r15),%rdi
+      -  mov %rbx,%rax
+      -  shl $0x5,%rax
+      -  mov (%rdi),%rdx
+      -  mov %rdi,0x20(%rsp)
+      -  add (%rdx),%rax
+      -  mov 0x18(%rax),%r14d
+      -  mov %rax,0x8(%rsp)
+      -  movl $0x0,0x4c(%rsp)
+      -  test %r14d,%r14d
+      -  jns L353
+      -  mov 0x8(%rdi),%rax
+      -  mov (%rax),%r11
+      -  mov 0x8(%rax),%rax
+      -  movl $0xffffffff,0x38(%rsp)
+      -  mov %rax,(%rsp)
+      -  cmp %r11,%rax
+      -  je L88
+      -  mov %r11,%r14
+      -  xor %edx,%edx
+      -  cmp %r13d,0x10(%r14)
+      -  jne L285
+      -  movzbl 0x20(%r14),%eax
+      -  mov %al,0x18(%rsp)
+      -  test %al,%al
+      -  je L285
+      -  mov 0x8(%rsp),%rax
+      -  mov 0x8(%rax),%rax
+      -  mov %rax,0x28(%rsp)
+      -  call REL R_X86_64_PLT32 strata::kernels::cpu::expert_layout()
+      -  movq $0x151800,0x10(%rsp)
+      -  cmpb $0x0,(%rax)
+      -  je L266
+      -  movslq (%r14),%rdx
+      -  mov 0x48(%rax),%rax
+      -  mov (%rax,%rdx,8),%rax
+      -  mov %rax,0x10(%rsp)
+      -  mov 0x8(%rsp),%rax
+      -  mov 0xc(%r14),%esi
+      -  mov (%rax),%rdi
+      -  call REL R_X86_64_PLT32 strata::core::ExpertCache::device_slot(int)
+      -  mov 0x20(%rsp),%rdi
+      -  movslq (%r14),%rdx
+      -  mov %rax,0x30(%rsp)
+      -  mov 0x18(%r14),%rsi
+      -  mov 0x10(%rdi),%rdi
+      -  call REL R_X86_64_PLT32 strata::core::FileExpertSource::exchange_buffer(long, long) const
+      -  mov 0x28(%rsp),%r8
+      -  mov 0x10(%rsp),%rdx
+      -  mov $0x2,%ecx
+      -  mov %rax,%rdi
+      -  mov 0x30(%rsp),%rsi
+      -  call REL R_X86_64_PLT32 cudaMemcpyAsync
+      -  test %eax,%eax
+      -  jne L319
+      -  movzbl 0x18(%rsp),%edx
+      -  add $0x30,%r14
+      -  cmp %r14,(%rsp)
+      -  jne L249
+      -  mov 0x38(%rsp),%edi
+      -  test %edi,%edi
+      -  jns L346
+      -  test %dl,%dl
+      -  je L88
+      -  mov 0x20(%rsp),%rax
+      -  mov 0x20(%rax),%rax
+      -  mov %rax,(%rsp)
+      -  mov 0x8(%rsp),%rax
+      -  mov 0x18(%rax),%r14d
+      -  movl $0x0,0x4c(%rsp)
+      -  test %r14d,%r14d
+      -  jns L439
+      -  mov $0xffffffff,%r14d
+      -  mov 0x8(%rsp),%rax
+      -  mov 0x8(%rax),%rsi
+      -  mov 0x10(%rax),%rdi
+      -  call REL R_X86_64_PLT32 cudaEventRecord
+      -  test %eax,%eax
+      -  jne L451
+      -  mov 0x8(%rsp),%rax
+      -  mov 0x8(%rax),%rdi
+      -  call REL R_X86_64_PLT32 cudaStreamQuery
+      -  mov 0x8(%rsp),%rax
+      -  movb $0x1,0x1c(%rax)
+      -  test %r14d,%r14d
+      -  js L88
+      -  mov %r14d,%edi
+      -  call REL R_X86_64_PLT32 cudaSetDevice
+      -  jmp L88
+      -  cs nopw 0x0(%rax,%rax,1)
+      -  mov %eax,%edi
+      -  call REL R_X86_64_PLT32 cudaGetErrorString
+      -  mov %rax,%r9
+      -  mov 0x8(%rsp),%rax
+      -  mov (%r14),%edx
+      -  mov REL R_X86_64_32 .rodata.str1.8
+      -  mov 0xc(%r14),%ecx
+      -  mov REL R_X86_64_PC32 stderr
+      -  mov 0x18(%rax),%r8d
+      -  xor %eax,%eax
+      -  call REL R_X86_64_PLT32 fprintf
+      -  mov 0x20(%rsp),%rax
+      -  mov 0x18(%rax),%rdx
+      -  mov $0x1,%eax
+      -  xchg %al,(%rdx)
+      -  jmp L284
+      +  je L314
+      +  mov 0x38(%rsp),%rbx
+      +  add $0x68,%rsp
+      +  jmp REL R_X86_64_PLT32 cudaDeviceSynchronize
+      =  nopw 0x0(%rax,%rax,1)
+      =  mov $0x52,%edx
+      =  jmp L284
+      =  nopw 0x0(%rax,%rax,1)
+      -  mov $0x52,%edx
+      -  mov $0x1,%esi
+      -  mov REL R_X86_64_32 .rodata.str1.8
+      -  mov REL R_X86_64_PC32 stderr
+      -  call REL R_X86_64_PLT32 fwrite
+      -  mov 0x40(%rbp),%rdx
+      -  mov $0x1,%eax
+      -  xchg %al,(%rdx)
+      -  jmp L109
+      -  nopl 0x0(%rax,%rax,1)
+      -  mov %dl,(%rsp)
+      -  call REL R_X86_64_PLT32 cudaSetDevice
+      -  movzbl (%rsp),%edx
+      -  test %dl,%dl
+      -  je L88
+      -  jmp L293
+      -  nopl 0x0(%rax)
+      -  lea 0x4c(%rsp),%rdi
+      -  call REL R_X86_64_PLT32 cudaGetDevice
+      -  test %eax,%eax
+      -  je L377
+      -  mov 0x20(%rsp),%rax
+      -  mov 0x8(%rax),%rax
+      -  jmp L241
+      -  nopl 0x0(%rax)
+      -  mov 0x38(%rbp),%rdi
+      -  call <main::{lambda()#44}::operator()() const>
+      -  jmp L109
+      -  cs nopw 0x0(%rax,%rax,1)
+      -  mov 0x18(%rbp),%rax
+      -  cmpl $0x1,(%rax)
+      -  jne L106
+      -  nopl (%rax)
+      -  mov 0x20(%rbp),%rdi
+      -  call <main::{lambda()#55}::operator()() const>
+      -  mov 0x10(%rbp),%rdx
+      -  mov 0x8(%rdx),%r8
+      -  sub (%rdx),%r8
+      -  sar $0x5,%r8
+      -  jmp L53
+      -  nopl (%rax)
+      -  cmp 0x4c(%rsp),%r14d
+      -  jne L421
+      -  mov 0x20(%rsp),%rax
+      -  mov 0x8(%rax),%rax
+      -  mov (%rax),%r11
+      -  mov 0x8(%rax),%rax
+      -  movl $0xffffffff,0x38(%rsp)
+      -  mov %rax,(%rsp)
+      -  cmp %rax,%r11
+      -  jne L247
+      -  jmp L88
+      -  nopl (%rax)
+      -  lea 0x4c(%rsp),%rdi
+      -  mov %edx,0x18(%rsp)
+      -  call REL R_X86_64_PLT32 cudaGetDevice
+      -  mov 0x18(%rsp),%edx
+      -  test %eax,%eax
+      -  jne L168
+      -  cmp 0x4c(%rsp),%edx
+      -  je L168
+      -  mov %edx,%edi
+      -  call REL R_X86_64_PLT32 cudaSetDevice
+      -  test %eax,%eax
+      -  jne L168
+      -  mov 0x4c(%rsp),%eax
+      -  mov %eax,0x18(%rsp)
+      -  jmp L169
+      -  nopl 0x0(%rax,%rax,1)
+      -  mov %eax,%edi
+      -  call REL R_X86_64_PLT32 cudaGetErrorString
+      -  mov %rax,%r9
+      -  mov (%rsp),%rax
+      -  mov 0xc(%r15),%ecx
+      -  mov REL R_X86_64_32 .rodata.str1.8
+      -  mov (%r15),%edx
+      -  mov REL R_X86_64_PC32 stderr
+      -  mov 0x18(%rax),%r8d
+      -  xor %eax,%eax
+      -  call REL R_X86_64_PLT32 fprintf
+      -  mov 0x38(%rsp),%rax
+      -  mov 0x8(%rax),%rdx
+      -  mov $0x1,%eax
+      -  xchg %al,(%rdx)
+      +  xor %edi,%edi
+      +  call REL R_X86_64_PLT32 cudaStreamSynchronize
+      +  mov %eax,%r12d
+      +  mov 0x10(%r14),%rax
+      +  mov (%rax),%rbp
+      +  mov 0x8(%rax),%r15
+      +  cmp %r15,%rbp
+      +  jne L219
+      +  jmp L242
+      +  mov 0x58(%rbx),%rax
+      +  cmpb $0x0,0x2158(%rax)
+      +  je L192
+      +  movb $0x1,0x2159(%rax)
+      =  jmp L192
+      =  mov %r14d,%edi
+      =  xchg %al,(%rdx)
+      =  jmp L192
+      -  mov %r14d,%edi
+      -  call REL R_X86_64_PLT32 cudaSetDevice
+      -  test %eax,%eax
+      -  jne L379
+      -  mov 0x4c(%rsp),%eax
+      -  mov %eax,0x38(%rsp)
+      -  mov 0x20(%rsp),%rax
+      -  mov 0x8(%rax),%rax
+      -  mov (%rax),%r11
+      -  mov 0x8(%rax),%rax
+      -  mov %rax,(%rsp)
+      -  cmp %rax,%r11
+      -  jne L247
+      -  mov 0x38(%rsp),%edi
+      -  test %edi,%edi
+      -  js L88
+      -  call REL R_X86_64_PLT32 cudaSetDevice
+      -  jmp L88
+      -  lea 0x4c(%rsp),%rdi
+      -  call REL R_X86_64_PLT32 cudaGetDevice
+      -  test %eax,%eax
+      -  jne L301
+      -  cmp 0x4c(%rsp),%r14d
+      -  je L301
+      -  mov %r14d,%edi
+      -  call REL R_X86_64_PLT32 cudaSetDevice
+      -  test %eax,%eax
+      -  jne L301
+      -  mov 0x4c(%rsp),%r14d
+      -  jmp L302
+      -  mov (%rsp),%rax
+      -  mov (%rax),%rdx
+      -  mov $0x1,%eax
+      -  xchg %al,(%rdx)
+      -  jmp L308
+      -  lea 0x4c(%rsp),%rdi
+      -  call REL R_X86_64_PLT32 cudaGetDevice
+      -  test %eax,%eax
+      -  jne L213
+      -  cmp 0x4c(%rsp),%r15d
+      -  je L213
+      -  mov %r15d,%edi
+      -  call REL R_X86_64_PLT32 cudaSetDevice
+      -  test %eax,%eax
+      -  jne L213
+      -  mov 0x4c(%rsp),%r15d
+      -  jmp L214
+      -  mov 0x0(%r13),%rdx
+      -  mov $0x1,%eax
+      -  xchg %al,(%rdx)
+      -  jmp L219
+      +  movb $0x1,0x2159(%r15)
+      +  jmp L192
+      =  mov %rax,%rbx
+      =  jmp REL R_X86_64_PC32 .text.unlikely
+
+DIFFERENT  main::{lambda()#57}::operator()() const [clone .cold]   instructions 29 -> 8   (+5 / -26)
+      -  mov %r12,0x68(%rsp)
+      -  mov %r13,0x70(%rsp)
+      -  mov %r14,0x78(%rsp)
+      -  mov %r15,0x80(%rsp)
+      -  call REL R_X86_64_PLT32 std::__throw_bad_function_call()
+      -  cmpl $0x0,0x18(%rsp)
+      -  js L9
+      -  mov 0x18(%rsp),%edi
+      +  mov REL R_X86_64_32 .rodata.str1.1
+      +  call REL R_X86_64_PLT32 std::__throw_length_error(char const*)
+      +  test %r13d,%r13d
+      +  js L6
+      +  mov %r13d,%edi
+      =  call REL R_X86_64_PLT32 cudaSetDevice
+      =  mov %rbx,%rdi
+      =  mov %rbx,%rdi
+      =  call REL R_X86_64_PLT32 _Unwind_Resume
+      -  cmpl $0x0,0x38(%rsp)
+      -  js L15
+      -  mov 0x38(%rsp),%edi
+      -  call REL R_X86_64_PLT32 cudaSetDevice
+      -  mov %rbx,%rdi
+      -  call REL R_X86_64_PLT32 _Unwind_Resume
+      -  test %r15d,%r15d
+      -  js L21
+      -  mov %r15d,%edi
+      -  call REL R_X86_64_PLT32 cudaSetDevice
+      -  mov %rbx,%rdi
+      -  call REL R_X86_64_PLT32 _Unwind_Resume
+      -  test %r14d,%r14d
+      -  js L27
+      -  mov %r14d,%edi
+      -  call REL R_X86_64_PLT32 cudaSetDevice
+      -  mov %rbx,%rdi
+      -  call REL R_X86_64_PLT32 _Unwind_Resume
+
+DIFFERENT  main::{lambda()#58}::operator()() const   instructions 626 -> 482   (+470 / -614)
+      -  push %r15
+      -  xor %r15d,%r15d
+      -  push %r14
+      -  push %r13
+      -  push %r12
+      -  push %rbp
+      -  movabs $0x7ffffffffffffffe,%rbp
+      -  push %rbx
+      -  sub $0x1078,%rsp
+      -  mov %rdi,0x8(%rsp)
+      -  lea 0x60(%rsp),%rbx
+      -  call REL R_X86_64_PLT32 pthread_self
+      -  mov REL R_X86_64_32 .rodata.str1.1
+      -  mov %rbx,%r13
+      +  sub $0x88,%rsp
+      +  mov (%rdi),%rax
+      +  mov %rbx,0x58(%rsp)
+      +  mov (%rax),%rbx
+      +  test %rbx,%rbx
+      +  je L122
+      +  mov 0x8(%rdi),%rax
+      +  cmpq $0x0,0x10(%rax)
+      +  je L122
+      +  mov %rbp,0x60(%rsp)
+      +  add $0x7a,%rbx
+      +  mov %rdi,%rbp
+      +  jmp L15
+      +  nopl 0x0(%rax,%rax,1)
+      +  call REL R_X86_64_PLT32 sched_yield
+      +  movzbl (%rbx),%eax
+      +  test %al,%al
+      +  je L14
+      +  mov 0x10(%rbp),%rdx
+      +  mov 0x8(%rdx),%rsi
+      +  mov (%rdx),%rdi
+      +  mov %rsi,%rax
+      +  sub %rdi,%rax
+      +  sar $0x5,%rax
+      +  test %eax,%eax
+      +  jle L365
+      +  xor %ebx,%ebx
+      +  mov $0x1,%ecx
+      +  test %cl,%cl
+      +  je L41
+      +  mov 0x8(%rbp),%rax
+      +  mov %ebx,0x4c(%rsp)
+      +  cmpq $0x0,0x10(%rax)
+      +  je REL R_X86_64_PC32 .text.unlikely
+      +  lea 0x4c(%rsp),%rsi
+      =  mov %rax,%rdi
+      =  call REL R_X86_64_PLT32 pthread_setname_np
+      =  mov %rbx,%r13
+      =  mov %rax,%rdi
+      -  call REL R_X86_64_PLT32 pthread_setname_np
+      -  call REL R_X86_64_PLT32 strata::aux_cpus::pin_current_thread()
+      -  lea 0x40(%rsp),%rax
+      -  movb $0x0,0x40(%rsp)
+      +  call *0x18(%rax)
+      +  mov 0x10(%rbp),%rdx
+      +  mov %eax,%ecx
+      +  mov 0x8(%rdx),%rsi
+      +  mov (%rdx),%rdi
+      +  mov %rsi,%r9
+      +  add $0x1,%ebx
+      +  sub %rdi,%r9
+      +  sar $0x5,%r9
+      +  mov %r9d,%r8d
+      +  cmp %ebx,%r9d
+      +  jg L28
+      +  test %cl,%cl
+      +  je L336
+      +  mov 0x18(%rbp),%rax
+      +  cmpl $0x1,(%rax)
+      +  je L369
+      +  test %r8d,%r8d
+      +  jle L106
+      +  mov %r12,0x68(%rsp)
+      +  xor %ebx,%ebx
+      +  mov %r13,0x70(%rsp)
+      +  mov %r14,0x78(%rsp)
+      +  mov %r15,0x80(%rsp)
+      +  nopl 0x0(%rax,%rax,1)
+      +  mov 0x28(%rbp),%r15
+      +  mov (%r15),%rcx
+      +  mov 0x10(%rcx),%r12
+      +  test %r12,%r12
+      +  je L93
+      +  mov 0x8(%r15),%rsi
+      +  mov %ebx,%r13d
+      +  mov 0x8(%rsi),%rax
+      +  sub (%rsi),%rax
+      +  sar $0x5,%rax
+      +  cmp %eax,%ebx
+      +  jge L93
+      +  mov %ebx,0x4c(%rsp)
+      +  lea 0x4c(%rsp),%rsi
+      +  mov %rcx,%rdi
+      +  call *0x18(%rcx)
+      +  mov %al,0x1f(%rsp)
+      +  test %al,%al
+      +  je L92
+      +  mov 0x10(%r15),%rax
+      +  mov (%rax),%rax
+      +  addq $0x1,(%rax,%rbx,8)
+      +  mov 0x18(%r15),%rax
+      +  mov (%rax),%rcx
+      +  add %rbx,%rcx
+      +  cmpb $0x0,(%rcx)
+      +  jne L228
+      +  mov 0x28(%r15),%rax
+      +  mov (%rax),%rax
+      +  cmpb $0x0,(%rax,%rbx,1)
+      +  jne L126
+      +  mov 0x10(%rbp),%rdx
+      +  mov 0x8(%rdx),%rax
+      +  sub (%rdx),%rax
+      +  lea 0x1(%rbx),%ecx
+      +  sar $0x5,%rax
+      +  cmp %eax,%ecx
+      +  jge L102
+      +  add $0x1,%rbx
+      +  test %r12,%r12
+      +  jne L61
+      +  mov 0x68(%rsp),%r12
+      +  mov 0x70(%rsp),%r13
+      +  mov 0x78(%rsp),%r14
+      +  mov 0x80(%rsp),%r15
+      +  mov 0x30(%rbp),%rax
+      +  cmpb $0x0,(%rax)
+      +  jne L361
+      +  mov 0x8(%rbp),%rbx
+      +  mov 0x10(%rbx),%rax
+      +  test %rax,%rax
+      +  je L119
+      +  mov $0x3,%edx
+      +  mov %rbx,%rsi
+      +  mov %rbx,%rdi
+      +  call *%rax
+      +  pxor %xmm0,%xmm0
+      +  movups %xmm0,0x10(%rbx)
+      +  mov 0x30(%rbp),%rax
+      +  mov 0x60(%rsp),%rbp
+      +  movb $0x0,(%rax)
+      +  mov 0x58(%rsp),%rbx
+      +  add $0x88,%rsp
+      +  ret 
+      +  nop 
+      +  mov 0x30(%r15),%rax
+      +  mov (%rax),%rax
+      +  movzbl 0x7a(%rax),%eax
+      +  test %al,%al
+      +  je L92
+      +  mov 0x28(%r15),%rax
+      +  mov (%rax),%rax
+      +  movb $0x0,(%rax,%rbx,1)
+      +  mov 0x38(%r15),%rax
+      +  mov %rax,0x28(%rsp)
+      +  mov (%rax),%rax
+      +  mov (%rax),%r10
+      +  mov 0x8(%rax),%r14
+      +  cmp %r14,%r10
+      +  je L92
+      +  mov %rbx,%rax
+      +  mov %r10,%r15
+      +  shl $0x5,%rax
+      =  mov %rax,0x30(%rsp)
+      =  movq $0x0,0x38(%rsp)
+      =  movb $0x0,0x40(%rsp)
+      =  mov %rax,0x30(%rsp)
+      -  movq $0x0,0x38(%rsp)
+      -  mov %rbx,0x50(%rsp)
+      -  movb $0x0,0x60(%rsp)
+      -  movq $0x0,0x58(%rsp)
+      -  test %r15,%r15
+      -  jne L58
+      +  xor %eax,%eax
+      +  jmp L151
+      +  nopl (%rax)
+      +  add $0x30,%r15
+      +  cmp %r15,%r14
+      +  je L202
+      +  cmp %r13d,0x10(%r15)
+      +  jne L148
+      +  mov 0x28(%r15),%rdx
+      +  mov %rdx,0x8(%rsp)
+      +  test %rdx,%rdx
+      +  je L148
+      +  mov 0x28(%rsp),%rax
+      +  mov 0x30(%rsp),%rcx
+      +  mov 0x8(%rax),%rax
+      +  mov %rax,0x38(%rsp)
+      +  mov (%rax),%rax
+      +  add (%rax),%rcx
+      +  mov 0x18(%rcx),%edx
+      +  mov %rcx,(%rsp)
+      +  movl $0x0,0x4c(%rsp)
+      +  test %edx,%edx
+      +  jns L389
+      +  movl $0xffffffff,0x18(%rsp)
+      +  mov (%rsp),%rax
+      +  mov 0x8(%rax),%rax
+      +  mov %rax,0x10(%rsp)
+      +  call REL R_X86_64_PLT32 strata::kernels::cpu::expert_layout()
+      +  mov $0x151800,%edx
+      +  cmpb $0x0,(%rax)
+      +  je L179
+      +  movslq (%r15),%rdx
+      +  mov 0x48(%rax),%rax
+      +  mov (%rax,%rdx,8),%rdx
+      +  mov (%rsp),%rax
+      +  mov 0xc(%r15),%esi
+      +  mov %rdx,0x20(%rsp)
+      +  mov (%rax),%rdi
+      +  call REL R_X86_64_PLT32 strata::core::ExpertCache::device_slot(int)
+      +  mov 0x10(%rsp),%r8
+      +  mov 0x20(%rsp),%rdx
+      +  mov $0x1,%ecx
+      +  mov %rax,%rdi
+      +  mov 0x8(%rsp),%rsi
+      +  call REL R_X86_64_PLT32 cudaMemcpyAsync
+      +  test %eax,%eax
+      +  jne L405
+      +  mov 0x18(%rsp),%eax
+      +  test %eax,%eax
+      +  js L197
+      +  mov 0x18(%rsp),%edi
+      +  call REL R_X86_64_PLT32 cudaSetDevice
+      +  add $0x30,%r15
+      +  movzbl 0x1f(%rsp),%eax
+      +  cmp %r15,%r14
+      +  jne L151
+      +  nopl 0x0(%rax)
+      +  test %al,%al
+      +  je L92
+      +  mov 0x28(%rsp),%rax
+      +  mov 0x30(%rsp),%r14
+      +  mov 0x10(%rax),%r13
+      +  mov 0x18(%rax),%rax
+      +  add (%rax),%r14
+      +  mov 0x18(%r14),%r15d
+      +  movl $0x0,0x4c(%rsp)
+      +  test %r15d,%r15d
+      +  jns L456
+      +  mov $0xffffffff,%r15d
+      +  mov 0x8(%r14),%rsi
+      +  mov 0x10(%r14),%rdi
+      +  call REL R_X86_64_PLT32 cudaEventRecord
+      +  test %eax,%eax
+      +  jne L468
+      +  mov 0x8(%r14),%rdi
+      +  call REL R_X86_64_PLT32 cudaStreamQuery
+      +  movb $0x1,0x1c(%r14)
+      +  test %r15d,%r15d
+      +  js L92
+      +  mov %r15d,%edi
+      +  call REL R_X86_64_PLT32 cudaSetDevice
+      +  jmp L92
+      +  nopl 0x0(%rax)
+      +  movb $0x0,(%rcx)
+      +  mov 0x20(%r15),%rdi
+      +  mov %rbx,%rax
+      +  shl $0x5,%rax
+      +  mov (%rdi),%rdx
+      +  mov %rdi,0x20(%rsp)
+      +  add (%rdx),%rax
+      +  mov 0x18(%rax),%r14d
+      +  mov %rax,0x8(%rsp)
+      +  movl $0x0,0x4c(%rsp)
+      +  test %r14d,%r14d
+      +  jns L353
+      +  mov 0x8(%rdi),%rax
+      +  mov (%rax),%r11
+      +  mov 0x8(%rax),%rax
+      +  movl $0xffffffff,0x38(%rsp)
+      +  mov %rax,(%rsp)
+      +  cmp %r11,%rax
+      +  je L88
+      +  mov %r11,%r14
+      +  xor %edx,%edx
+      +  cmp %r13d,0x10(%r14)
+      +  jne L285
+      +  movzbl 0x20(%r14),%eax
+      +  mov %al,0x18(%rsp)
+      +  test %al,%al
+      +  je L285
+      +  mov 0x8(%rsp),%rax
+      +  mov 0x8(%rax),%rax
+      +  mov %rax,0x28(%rsp)
+      +  call REL R_X86_64_PLT32 strata::kernels::cpu::expert_layout()
+      +  movq $0x151800,0x10(%rsp)
+      +  cmpb $0x0,(%rax)
+      +  je L266
+      +  movslq (%r14),%rdx
+      +  mov 0x48(%rax),%rax
+      +  mov (%rax,%rdx,8),%rax
+      +  mov %rax,0x10(%rsp)
+      +  mov 0x8(%rsp),%rax
+      +  mov 0xc(%r14),%esi
+      +  mov (%rax),%rdi
+      +  call REL R_X86_64_PLT32 strata::core::ExpertCache::device_slot(int)
+      +  mov 0x20(%rsp),%rdi
+      +  movslq (%r14),%rdx
+      +  mov %rax,0x30(%rsp)
+      +  mov 0x18(%r14),%rsi
+      +  mov 0x10(%rdi),%rdi
+      +  call REL R_X86_64_PLT32 strata::core::FileExpertSource::exchange_buffer(long, long) const
+      +  mov 0x28(%rsp),%r8
+      +  mov 0x10(%rsp),%rdx
+      +  mov $0x2,%ecx
+      +  mov %rax,%rdi
+      +  mov 0x30(%rsp),%rsi
+      +  call REL R_X86_64_PLT32 cudaMemcpyAsync
+      +  test %eax,%eax
+      +  jne L319
+      +  movzbl 0x18(%rsp),%edx
+      +  add $0x30,%r14
+      +  cmp %r14,(%rsp)
+      +  jne L249
+      +  mov 0x38(%rsp),%edi
+      +  test %edi,%edi
+      +  jns L346
+      +  test %dl,%dl
+      +  je L88
+      +  mov 0x20(%rsp),%rax
+      +  mov 0x20(%rax),%rax
+      +  mov %rax,(%rsp)
+      +  mov 0x8(%rsp),%rax
+      +  mov 0x18(%rax),%r14d
+      +  movl $0x0,0x4c(%rsp)
+      +  test %r14d,%r14d
+      +  jns L439
+      +  mov $0xffffffff,%r14d
+      +  mov 0x8(%rsp),%rax
+      +  mov 0x8(%rax),%rsi
+      +  mov 0x10(%rax),%rdi
+      +  call REL R_X86_64_PLT32 cudaEventRecord
+      +  test %eax,%eax
+      +  jne L451
+      +  mov 0x8(%rsp),%rax
+      +  mov 0x8(%rax),%rdi
+      +  call REL R_X86_64_PLT32 cudaStreamQuery
+      +  mov 0x8(%rsp),%rax
+      +  movb $0x1,0x1c(%rax)
+      +  test %r14d,%r14d
+      +  js L88
+      +  mov %r14d,%edi
+      +  call REL R_X86_64_PLT32 cudaSetDevice
+      +  jmp L88
+      =  cs nopw 0x0(%rax,%rax,1)
+      =  mov $0x1000,%edx
+      =  jne L58
+      =  cs nopw 0x0(%rax,%rax,1)
+      -  mov $0x1000,%edx
+      -  lea 0x70(%rsp),%rsi
+      -  xor %edi,%edi
+      -  lea 0x30(%rsp),%r12
+      -  call REL R_X86_64_PLT32 read
+      -  mov %rax,%rcx
+      -  test %rax,%rax
+      -  js L163
+      -  je L166
+      -  mov 0x58(%rsp),%rdx
+      -  mov %rbp,%rax
+      -  sub %rdx,%rax
+      -  cmp %rcx,%rax
+      -  jb REL R_X86_64_PC32 .text.unlikely
+      -  mov 0x50(%rsp),%r14
+      -  lea (%rcx,%rdx,1),%r15
+      -  cmp %rbx,%r14
+      -  je L252
+      -  mov 0x60(%rsp),%r13
+      -  cmp %r15,%r13
+      -  jb L206
+      -  lea (%r14,%rdx,1),%rdi
+      -  cmp $0x1,%rcx
+      -  je L247
+      -  mov %rcx,%rdx
+      -  lea 0x70(%rsp),%rsi
+      -  call REL R_X86_64_PLT32 memcpy
+      -  mov 0x50(%rsp),%r12
+      -  movb $0x0,(%r12,%r15,1)
+      -  mov 0x50(%rsp),%r13
+      -  mov %r15,0x58(%rsp)
+      -  mov %r15,%rdx
+      -  mov $0xa,%esi
+      -  mov %r13,%rdi
+      -  call REL R_X86_64_PLT32 memchr
+      -  test %rax,%rax
+      -  je L27
+      -  sub %r13,%rax
+      -  mov %rax,%r14
+      -  cmp $0xffffffffffffffff,%rax
+      -  je L27
+      -  cmp %r15,%rax
+      -  mov 0x30(%rsp),%r11
+      -  cmovbe %rax,%r15
+      -  lea 0x40(%rsp),%rax
+      +  mov %eax,%edi
+      +  call REL R_X86_64_PLT32 cudaGetErrorString
+      +  mov %rax,%r9
+      +  mov 0x8(%rsp),%rax
+      +  mov (%r14),%edx
+      +  mov REL R_X86_64_32 .rodata.str1.8
+      +  mov 0xc(%r14),%ecx
+      +  mov REL R_X86_64_PC32 stderr
+      +  mov 0x18(%rax),%r8d
+      +  xor %eax,%eax
+      +  call REL R_X86_64_PLT32 fprintf
+      +  mov 0x20(%rsp),%rax
+      +  mov 0x18(%rax),%rdx
+      +  mov $0x1,%eax
+      +  xchg %al,(%rdx)
+      +  jmp L284
+      +  nopw 0x0(%rax,%rax,1)
+      +  mov $0x52,%edx
+      +  mov $0x1,%esi
+      +  mov REL R_X86_64_32 .rodata.str1.8
+      +  mov REL R_X86_64_PC32 stderr
+      +  call REL R_X86_64_PLT32 fwrite
+      +  mov 0x40(%rbp),%rdx
+      +  mov $0x1,%eax
+      +  xchg %al,(%rdx)
+      +  jmp L109
+      +  nopl 0x0(%rax,%rax,1)
+      +  mov %dl,(%rsp)
+      +  call REL R_X86_64_PLT32 cudaSetDevice
+      +  movzbl (%rsp),%edx
+      +  test %dl,%dl
+      +  je L88
+      +  jmp L293
+      +  nopl 0x0(%rax)
+      +  lea 0x4c(%rsp),%rdi
+      +  call REL R_X86_64_PLT32 cudaGetDevice
+      +  test %eax,%eax
+      +  je L377
+      +  mov 0x20(%rsp),%rax
+      +  mov 0x8(%rax),%rax
+      +  jmp L241
+      +  nopl 0x0(%rax)
+      +  mov 0x38(%rbp),%rdi
+      +  call <main::{lambda()#45}::operator()() const>
+      +  jmp L109
+      +  cs nopw 0x0(%rax,%rax,1)
+      +  mov 0x18(%rbp),%rax
+      +  cmpl $0x1,(%rax)
+      +  jne L106
+      +  nopl (%rax)
+      +  mov 0x20(%rbp),%rdi
+      +  call <main::{lambda()#56}::operator()() const>
+      +  mov 0x10(%rbp),%rdx
+      +  mov 0x8(%rdx),%r8
+      +  sub (%rdx),%r8
+      +  sar $0x5,%r8
+      +  jmp L53
+      +  nopl (%rax)
+      +  cmp 0x4c(%rsp),%r14d
+      +  jne L421
+      +  mov 0x20(%rsp),%rax
+      +  mov 0x8(%rax),%rax
+      +  mov (%rax),%r11
+      +  mov 0x8(%rax),%rax
+      +  movl $0xffffffff,0x38(%rsp)
+      +  mov %rax,(%rsp)
+      =  cmp %rax,%r11
+      =  je L482
+      =  lea 0x40(%rsp),%rax
+      =  cmp %rax,%r11
+      -  je L482
+      -  mov 0x40(%rsp),%rax
+      -  cmp %r15,%rax
+      -  jb L373
+      -  cmp %r11,%r13
+      -  jae L340
+      -  test %r15,%r15
+      -  jne L331
+      -  xchg %ax,%ax
+      -  movb $0x0,(%r11,%r15,1)
+      -  lea 0x1(%r14),%r12
+      -  mov 0x50(%rsp),%rdi
+      -  mov %r15,0x38(%rsp)
+      -  cmp $0xfffffffffffffffe,%r14
+      -  je L358
+      -  mov 0x58(%rsp),%rdx
+      -  cmp %rdx,%r12
+      -  cmova %rdx,%r12
+      -  sub %r12,%rdx
+      -  je L102
+      -  test %r12,%r12
+      -  je L102
+      -  lea (%rdi,%r12,1),%rsi
+      -  cmp $0x1,%rdx
+      -  je L532
+      -  call REL R_X86_64_PLT32 memmove
+      -  mov 0x58(%rsp),%rdx
+      -  mov 0x50(%rsp),%rdi
+      -  sub %r12,%rdx
+      -  movb $0x0,(%rdi,%rdx,1)
+      +  jne L247
+      +  jmp L88
+      +  nopl (%rax)
+      +  lea 0x4c(%rsp),%rdi
+      +  mov %edx,0x18(%rsp)
+      +  call REL R_X86_64_PLT32 cudaGetDevice
+      +  mov 0x18(%rsp),%edx
+      +  test %eax,%eax
+      +  jne L168
+      +  cmp 0x4c(%rsp),%edx
+      +  je L168
+      +  mov %edx,%edi
+      +  call REL R_X86_64_PLT32 cudaSetDevice
+      +  test %eax,%eax
+      +  jne L168
+      +  mov 0x4c(%rsp),%eax
+      +  mov %eax,0x18(%rsp)
+      +  jmp L169
+      +  nopl 0x0(%rax,%rax,1)
+      +  mov %eax,%edi
+      +  call REL R_X86_64_PLT32 cudaGetErrorString
+      +  mov %rax,%r9
+      +  mov (%rsp),%rax
+      +  mov 0xc(%r15),%ecx
+      +  mov REL R_X86_64_32 .rodata.str1.8
+      +  mov (%r15),%edx
+      +  mov REL R_X86_64_PC32 stderr
+      +  mov 0x18(%rax),%r8d
+      +  xor %eax,%eax
+      +  call REL R_X86_64_PLT32 fprintf
+      =  mov 0x38(%rsp),%rax
+      =  mov %rdx,0x58(%rsp)
+      =  movb $0x0,(%rdi,%rdx,1)
+      =  mov 0x38(%rsp),%rax
+      -  mov %rdx,0x58(%rsp)
+      -  test %rax,%rax
+      -  je L117
+      -  mov 0x30(%rsp),%rcx
+      -  lea -0x1(%rax),%rdx
+      -  add %rdx,%rcx
+      -  cmpb $0xd,(%rcx)
+      -  je L498
+      -  cmp $0x4,%rax
+      -  jne L117
+      -  mov 0x30(%rsp),%rax
+      -  cmpl $0x504f5453,(%rax)
+      -  je L157
+      -  mov 0x8(%rsp),%rax
+      -  mov (%rax),%rax
+      -  lea 0x8(%rax),%r13
+      -  mov %rax,0x10(%rsp)
+      -  mov %r13,%rdi
+      -  call REL R_X86_64_PLT32 pthread_mutex_lock
+      +  mov 0x8(%rax),%rdx
+      +  mov $0x1,%eax
+      +  xchg %al,(%rdx)
+      +  jmp L192
+      +  mov %r14d,%edi
+      +  call REL R_X86_64_PLT32 cudaSetDevice
+      =  test %eax,%eax
+      =  jne REL R_X86_64_PC32 .text.unlikely
+
+DIFFERENT  main::{lambda()#58}::operator()() const [clone .cold]   instructions 46 -> 29   (+27 / -44)
+      -  mov %eax,%edi
+      -  lea 0x30(%rsp),%r12
+      -  call REL R_X86_64_PLT32 std::__throw_system_error(int)
+      -  mov REL R_X86_64_32 .rodata.str1.1
+      -  lea 0x30(%rsp),%r12
+      -  call REL R_X86_64_PLT32 std::__throw_length_error(char const*)
+      -  mov %eax,%edi
+      -  lea 0x30(%rsp),%r12
+      -  call REL R_X86_64_PLT32 std::__throw_system_error(int)
+      -  mov REL R_X86_64_32 .rodata.str1.1
+      -  lea 0x30(%rsp),%r12
+      -  call REL R_X86_64_PLT32 std::__throw_length_error(char const*)
+      -  mov REL R_X86_64_32 .rodata.str1.8
+      -  call REL R_X86_64_PLT32 std::__throw_length_error(char const*)
+      -  mov %rax,%rdi
+      -  call REL R_X86_64_PLT32 __cxa_begin_catch
+      -  mov 0xa8(%r12),%rax
+      -  mov $0x200,%esi
+      -  mov 0x8(%rax),%rdi
+      -  call REL R_X86_64_PLT32 operator delete(void*, unsigned long)
+      -  call REL R_X86_64_PLT32 __cxa_rethrow
+      -  mov %rax,%rbx
+      -  jmp L25
+      -  mov %rax,%rbx
+      -  call REL R_X86_64_PLT32 __cxa_end_catch
+      -  mov %r13,%rdi
+      -  lea 0x30(%rsp),%r12
+      -  call REL R_X86_64_PLT32 pthread_mutex_unlock
+      -  lea 0x50(%rsp),%rdi
+      -  call REL R_X86_64_PLT32 std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >::_M_dispose()
+      -  mov %r12,%rdi
+      -  call REL R_X86_64_PLT32 std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >::_M_dispose()
+      +  mov %r12,0x68(%rsp)
+      +  mov %r13,0x70(%rsp)
+      +  mov %r14,0x78(%rsp)
+      +  mov %r15,0x80(%rsp)
+      +  call REL R_X86_64_PLT32 std::__throw_bad_function_call()
+      +  cmpl $0x0,0x18(%rsp)
+      +  js L9
+      +  mov 0x18(%rsp),%edi
+      +  call REL R_X86_64_PLT32 cudaSetDevice
+      =  mov %rbx,%rdi
+      =  call REL R_X86_64_PLT32 _Unwind_Resume
+      =  mov %rbx,%rdi
+      =  call REL R_X86_64_PLT32 _Unwind_Resume
+      -  lea 0x30(%rsp),%r12
+      -  xor %r9d,%r9d
+      -  mov %r15,%r8
+      -  mov %r13,%rcx
+      -  mov %r11,%rsi
+      -  mov %r12,%rdi
+      -  call REL R_X86_64_PLT32 std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >::_M_replace_cold(char*, unsigned long, char const*, unsigned long, unsigned long)
+      -  mov 0x30(%rsp),%r11
+      -  jmp REL R_X86_64_PC32 .text
+      -  mov %rax,%rbx
+      -  jmp L28
+      -  nop 
+      +  cmpl $0x0,0x38(%rsp)
+      +  js L15
+      +  mov 0x38(%rsp),%edi
+      +  call REL R_X86_64_PLT32 cudaSetDevice
+      +  mov %rbx,%rdi
+      +  call REL R_X86_64_PLT32 _Unwind_Resume
+      +  test %r15d,%r15d
+      +  js L21
+      +  mov %r15d,%edi
+      +  call REL R_X86_64_PLT32 cudaSetDevice
+      +  mov %rbx,%rdi
+      +  call REL R_X86_64_PLT32 _Unwind_Resume
+      +  test %r14d,%r14d
+      +  js L27
+      +  mov %r14d,%edi
+      +  call REL R_X86_64_PLT32 cudaSetDevice
+      +  mov %rbx,%rdi
+      +  call REL R_X86_64_PLT32 _Unwind_Resume
+
+DIFFERENT  main::{lambda()#73}::operator()() const   instructions 639 -> 30   (+26 / -635)
+      -  mov (%rdi),%rsi
+      -  cmpq $0x0,0x8(%rsi)
+      -  je L36
+      -  mov 0x8(%rdi),%rax
+      -  cmpq $0x0,(%rax)
+      -  je L36
+      -  cmpq $0x0,0x8(%rax)
+      -  je L36
+      -  push %rbp
+      -  xor %eax,%eax
+      -  mov %rsp,%rbp
+      -  sub $0x450,%rsp
+      -  mov %rbx,-0x28(%rbp)
+      +  push %rbx
+      =  mov %rdi,%rbx
+      =  mov %r15,-0x8(%rbp)
+      =  mov %rbx,-0x28(%rbp)
+      =  mov %rdi,%rbx
+      -  mov %r15,-0x8(%rbp)
+      -  lea -0x220(%rbp),%r15
+      -  mov %rsi,-0x400(%rbp)
+      -  mov %eax,-0x3e0(%rbp)
+      -  call REL R_X86_64_PLT32 std::_V2::system_category()
+      -  mov -0x400(%rbp),%rsi
+      -  mov $0x2,%edx
+      -  lea -0x220(%rbp),%rdi
+      -  mov %rax,-0x3d8(%rbp)
+      -  call REL R_X86_64_PLT32 std::filesystem::__cxx11::path::path<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >, std::filesystem::__cxx11::path>(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, std::filesystem::__cxx11::path::format)
+      -  lea -0x220(%rbp),%rdi
+      -  lea -0x3e0(%rbp),%rsi
+      -  call REL R_X86_64_PLT32 std::filesystem::status(std::filesystem::__cxx11::path const&, std::error_code&)
+      -  lea -0x220(%rbp),%rdi
+      -  mov %rax,-0x400(%rbp)
+      -  call REL R_X86_64_PLT32 std::filesystem::__cxx11::path::~path()
+      -  cmpb $0x2,-0x400(%rbp)
+      -  je L37
+      -  mov -0x28(%rbp),%rbx
+      -  mov -0x8(%rbp),%r15
+      -  leave 
+      +  nop 
+      +  data16 cs nopw 0x0(%rax,%rax,1)
+      +  mov (%rbx),%rax
+      +  mov (%rax),%rdx
+      +  mov (%rdx),%rax
+      +  mov 0x8(%rdx),%rdx
+      +  cmp %rdx,%rax
+      +  jne L16
+      +  jmp L26
+      +  nop 
+      +  data16 cs nopw 0x0(%rax,%rax,1)
+      +  sub $0xffffffffffffff80,%rax
+      +  cmp %rax,%rdx
+      +  je L26
+      +  cmpb $0x0,(%rax)
+      +  je L13
+      +  mov 0x8(%rbx),%rdi
+      +  xor %esi,%esi
+      +  call <main::{lambda(bool)#5}::operator()(bool) const>
+      +  test %al,%al
+      +  jne L4
+      +  pop %rbx
+      =  ret 
+      =  ret 
+      =  leave 
+      =  ret 
+      +  nop 
+      +  mov $0x1,%eax
+      +  pop %rbx
+      =  ret 
+      =  mov (%rbx),%rsi
+      =  ret 
+      =  ret 
+      -  mov (%rbx),%rsi
+      -  mov $0x2,%edx
+      -  lea -0x220(%rbp),%rdi
+      -  call REL R_X86_64_PLT32 std::filesystem::__cxx11::path::path<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >, std::filesystem::__cxx11::path>(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, std::filesystem::__cxx11::path::format)
+      -  lea -0x3e0(%rbp),%rcx
+      -  xor %edx,%edx
+      -  lea -0x220(%rbp),%rsi
+      -  lea -0x3c0(%rbp),%rdi
+      -  call REL R_X86_64_PLT32 std::filesystem::__cxx11::directory_iterator::directory_iterator(std::filesystem::__cxx11::path const&, std::filesystem::directory_options, std::error_code*)
+      -  lea -0x220(%rbp),%rdi
+      -  mov %r13,-0x18(%rbp)
+      -  mov %r14,-0x10(%rbp)
+      -  call REL R_X86_64_PLT32 std::filesystem::__cxx11::path::~path()
+      -  movdqa -0x3c0(%rbp),%xmm0
+      -  movhlps %xmm0,%xmm6
+      -  movq %xmm6,%rdi
+      -  test %rdi,%rdi
+      -  je L58
+      -  movaps %xmm0,-0x400(%rbp)
+      -  call REL R_X86_64_PLT32 std::_Sp_counted_base<(__gnu_cxx::_Lock_policy)2>::_M_add_ref_copy()
+      -  movdqa -0x400(%rbp),%xmm0
+      -  mov -0x3b8(%rbp),%rdi
+      -  movaps %xmm0,-0x3a0(%rbp)
+      -  test %rdi,%rdi
+      -  je L66
+      -  mov %rdi,-0x400(%rbp)
+      -  call REL R_X86_64_PLT32 std::_Sp_counted_base<(__gnu_cxx::_Lock_policy)2>::_M_add_ref_copy()
+      -  mov -0x400(%rbp),%rdi
+      -  call REL R_X86_64_PLT32 std::_Sp_counted_base<(__gnu_cxx::_Lock_policy)2>::_M_release()
+      -  xor %eax,%eax
+      -  mov %rax,-0x448(%rbp)
+      -  mov %rax,-0x400(%rbp)
+      -  mov %rax,-0x410(%rbp)
+      -  cmpq $0x0,-0x398(%rbp)
+      -  je L128
+      -  lea -0x3a0(%rbp),%rdi
+      -  call REL R_X86_64_PLT32 std::filesystem::__cxx11::directory_iterator::operator*() const
+      -  mov %r15,%rdi
+      -  mov %rax,%rsi
+      -  mov %rax,%r14
+      -  call REL R_X86_64_PLT32 std::filesystem::__cxx11::path::filename() const
+      -  mov -0x218(%rbp),%rdx
+      -  mov -0x220(%rbp),%rsi
+      -  lea -0x370(%rbp),%rdi
+      -  lea -0x370(%rbp),%r13
+      -  call <std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >::basic_string(char const*, unsigned long, std::allocator<char> const&) [clone .isra.0]>
+      -  mov %r15,%rdi
+      -  call REL R_X86_64_PLT32 std::filesystem::__cxx11::path::~path()
+      -  mov -0x370(%rbp),%rdi
+      -  mov -0x368(%rbp),%rsi
+      -  xor %ecx,%ecx
+      -  mov $0x5,%r8d
+      -  mov REL R_X86_64_32 .rodata.str1.1
+      -  mov %rsi,-0x420(%rbp)
+      -  mov %rdi,-0x408(%rbp)
+      -  call <std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >::rfind(char const*, unsigned long, unsigned long) const [clone .isra.0]>
+      -  mov -0x408(%rbp),%rdi
+      -  mov -0x420(%rbp),%rsi
+      -  test %rax,%rax
+      -  mov %rax,%r8
+      -  jne L221
+      -  cmp $0x5,%rsi
+      -  jbe L227
+      -  lea -0x4(%rdi,%rsi,1),%r10
+      -  cmpl $0x6e69622e,(%r10)
+      -  jne L227
+      -  lea 0x5(%rdi),%r9
+      -  xor %eax,%eax
+      -  mov $0x40,%edi
+      -  mov %r9,%rsi
+      -  jmp L112
+      -  imul $0xa,%rax,%rax
+      -  movzbl %cl,%ecx
+      -  add %rcx,%rax
+      -  add $0x1,%rsi
+      -  cmp %rsi,%r10
+      -  je L544
+      -  movzbl (%rsi),%edx
+      -  lea -0x30(%rdx),%ecx
+      -  cmp $0x9,%cl
+      -  ja L544
+      -  sub $0x4,%edi
+      -  jns L108
+      -  mov $0xa,%edx
+      -  mul %rdx
+      -  jo L498
+      -  movzbl %cl,%ecx
+      -  add %rax,%rcx
+      -  jb L498
+      -  mov %rcx,%rax
+      -  jmp L111
+      -  mov -0x3b8(%rbp),%rdi
+      -  test %rdi,%rdi
+      -  je L132
+      -  call REL R_X86_64_PLT32 std::_Sp_counted_base<(__gnu_cxx::_Lock_policy)2>::_M_release()
+      -  mov -0x410(%rbp),%rax
+      -  mov -0x400(%rbp),%rcx
+      -  cmp %rcx,%rax
+      -  je L243
+      -  sub %rax,%rcx
+      -  mov %r12,-0x20(%rbp)
+      -  movabs $0xcccccccccccccccd,%rdx
+      -  mov %rcx,%rax
+      -  sar $0x3,%rax
+      -  imul %rdx,%rax
+      -  test %rax,%rax
+      -  je L496
+      -  bsr %rax,%rax
+      -  xor $0x3f,%eax
+      -  mov $0x3f,%edx
+      -  mov -0x410(%rbp),%r14
+      -  mov -0x400(%rbp),%rsi
+      -  mov %rcx,-0x408(%rbp)
+      -  sub %eax,%edx
+      -  movslq %edx,%rdx
+      -  mov %r14,%rdi
+      -  add %rdx,%rdx
+      -  call <void std::__introsort_loop<__gnu_cxx::__normal_iterator<main::{lambda()#73}::operator()() const::Found*, std::vector<main::{lambda()#73}::operator()() const::Found, std::allocator<main::{lambda()#73}::operator()() const::Found> > >, long, main::{lambda()#73}::operator()() const::{lambda(main::{lambda()#73}::operator()() const::Found const&, main::{lambda()#73}::operator()() const::Found const&)#1}>(__gnu_cxx::__normal_iterator<main::{lambda()#73}::operator()() const::Found*, std::vector<main::{lambda()#73}::operator()() const::Found, std::allocator<main::{lambda()#73}::operator()() const::Found> > >, __gnu_cxx::__normal_iterator<main::{lambda()#73}::operator()() const::Found*, std::vector<main::{lambda()#73}::operator()() const::Found, std::allocator<main::{lambda()#73}::operator()() const::Found> > >, long, main::{lambda()#73}::operator()() const::{lambda(main::{lambda()#73}::operator()() const::Found const&, main::{lambda()#73}::operator()() const::Found const&)#1}) [clone .isra.0]>
+      -  cmpq $0x280,-0x408(%rbp)
+      -  jle L291
+      -  lea 0x280(%r14),%r10
+      -  mov %r14,%rdi
+      -  mov %rbx,%r13
+      -  mov %r10,%rsi
+      -  mov %r10,-0x408(%rbp)
+      -  call <void std::__insertion_sort<__gnu_cxx::__normal_iterator<main::{lambda()#73}::operator()() const::Found*, std::vector<main::{lambda()#73}::operator()() const::Found, std::allocator<main::{lambda()#73}::operator()() const::Found> > >, main::{lambda()#73}::operator()() const::{lambda(main::{lambda()#73}::operator()() const::Found const&, main::{lambda()#73}::operator()() const::Found const&)#1}>(__gnu_cxx::__normal_iterator<main::{lambda()#73}::operator()() const::Found*, std::vector<main::{lambda()#73}::operator()() const::Found, std::allocator<main::{lambda()#73}::operator()() const::Found> > >, __gnu_cxx::__normal_iterator<main::{lambda()#73}::operator()() const::Found*, std::vector<main::{lambda()#73}::operator()() const::Found, std::allocator<main::{lambda()#73}::operator()() const::Found> > >, main::{lambda()#73}::operator()() const::{lambda(main::{lambda()#73}::operator()() const::Found const&, main::{lambda()#73}::operator()() const::Found const&)#1}) [clone .isra.0]>
+      -  mov -0x408(%rbp),%r10
+      -  cmp -0x400(%rbp),%r10
+      -  je L494
+      -  mov %r10,%rsi
+      -  mov %r15,%rdi
+      -  mov %r10,-0x420(%rbp)
+      -  mov %r10,-0x408(%rbp)
+      -  call REL R_X86_64_PLT32 std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >::basic_string(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >&&)
+      -  mov -0x408(%rbp),%r10
+      -  mov -0x420(%rbp),%rcx
+      -  mov 0x20(%r10),%rax
+      -  cmp %rax,-0x8(%r10)
+      -  mov %rax,-0x200(%rbp)
+      -  jae L275
+      -  lea -0x28(%r10),%rbx
+      -  lea -0x18(%r10),%r8
+      -  mov %r10,%r9
+      -  jmp L204
+      =  nopw 0x0(%rax,%rax,1)
+      =  cmp %rsi,%r8
+      =  jmp L204
+      =  nopw 0x0(%rax,%rax,1)
+      -  cmp %rsi,%r8
+      -  je L254
+      -  mov %rsi,(%r11)
+      -  mov 0x10(%r11),%r9
+      -  mov %rdx,0x8(%r11)
+      -  mov 0x10(%rbx),%rax
+      -  mov %rax,0x10(%r11)
+      -  test %rdi,%rdi
+      -  je L218
+      -  mov %rdi,(%rbx)
+      -  mov %rdi,%rsi
+      -  mov %r9,0x10(%rbx)
+      -  movb $0x0,(%rsi)
+      -  mov 0x20(%rbx),%rax
+      -  sub $0x28,%r8
+      -  sub $0x28,%rbx
+      -  movq $0x0,0x30(%rbx)
+      -  mov %rax,0x20(%r11)
+      -  mov -0x200(%rbp),%rax
+      -  cmp %rax,-0x8(%rcx)
+      -  jae L275
+      -  mov %rcx,%r9
+      -  mov %rcx,%r11
+      -  mov (%rbx),%rsi
+      -  mov 0x8(%rbx),%rdx
+      -  mov %rbx,%rcx
+      -  mov (%r11),%rdi
+      -  lea 0x10(%r11),%rax
+      -  cmp %rax,%rdi
+      -  jne L182
+      -  cmp %rsi,%r8
+      -  je L254
+      -  mov %rsi,(%r11)
+      -  mov %rdx,0x8(%r11)
+      -  mov 0x10(%rbx),%rax
+      -  mov %rax,0x10(%r11)
+      -  mov %r8,(%rbx)
+      -  mov %r8,%rsi
+      -  jmp L194
+      -  xor %ecx,%ecx
+      -  mov $0x6,%r8d
+      -  mov REL R_X86_64_32 .rodata.str1.1
+      -  call <std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >::rfind(char const*, unsigned long, unsigned long) const [clone .isra.0]>
+      -  test %rax,%rax
+      -  jne L230
+      -  lea -0x3e0(%rbp),%rsi
+      -  mov %r14,%rdi
+      -  call REL R_X86_64_PLT32 std::filesystem::remove(std::filesystem::__cxx11::path const&, std::error_code&)
+      -  mov %r13,%rdi
+      -  call REL R_X86_64_PLT32 std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >::_M_dispose()
+      -  lea -0x3a0(%rbp),%rdi
+      -  call REL R_X86_64_PLT32 std::filesystem::__cxx11::directory_iterator::operator++()
+      -  jmp L70
+      -  mov -0x3c0(%rbp),%rdx
+      -  mov REL R_X86_64_PC32 stderr
+      -  mov REL R_X86_64_32 .rodata.str1.8
+      -  xor %eax,%eax
+      -  call REL R_X86_64_PLT32 fprintf
+      -  lea -0x3c0(%rbp),%rdi
+      -  call REL R_X86_64_PLT32 std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >::_M_dispose()
+      -  mov -0x20(%rbp),%r12
+      -  mov -0x410(%rbp),%rax
+      -  mov %r15,%rdi
+      -  mov %rax,-0x220(%rbp)
+      -  mov -0x400(%rbp),%rax
+      -  mov %rax,-0x218(%rbp)
+      -  mov -0x448(%rbp),%rax
+      -  mov %rax,-0x210(%rbp)
+      -  call <std::vector<main::{lambda()#73}::operator()() const::Found, std::allocator<main::{lambda()#73}::operator()() const::Found> >::~vector()>
+      -  mov -0x18(%rbp),%r13
+      -  mov -0x10(%rbp),%r14
+      -  jmp L32
+      -  cmp %rbx,%r9
+      -  je L194
+      -  test %rdx,%rdx
+      -  je L271
+      -  cmp $0x1,%rdx
+      -  je L288
+      -  mov %r10,-0x438(%rbp)
+      -  mov %rcx,-0x430(%rbp)
+      -  mov %r8,-0x420(%rbp)
+      -  mov %r11,-0x408(%rbp)
+      -  call REL R_X86_64_PLT32 memcpy
+      -  mov -0x438(%rbp),%r10
+      -  mov -0x430(%rbp),%rcx
+      -  mov -0x420(%rbp),%r8
+      -  mov -0x408(%rbp),%r11
+      -  mov 0x8(%rbx),%rdx
+      -  mov (%r11),%rdi
+      -  movb $0x0,(%rdi,%rdx,1)
+      -  mov (%rbx),%rsi
+      -  mov %rdx,0x8(%r11)
+      -  jmp L194
+      -  mov %rcx,%rdi
+      -  mov %r15,%rsi
+      -  mov %r10,-0x420(%rbp)
+      -  mov %rcx,-0x408(%rbp)
+      -  call <std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >::operator=(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >&&) [clone .isra.0]>
+      -  mov -0x200(%rbp),%rax
+      -  mov -0x408(%rbp),%rcx
+      -  mov %r15,%rdi
+      -  mov %rax,0x20(%rcx)
+      -  call REL R_X86_64_PLT32 std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >::_M_dispose()
+      -  mov -0x420(%rbp),%r10
+      -  add $0x28,%r10
+      -  jmp L164
+      -  movzbl (%rsi),%eax
+      -  mov %al,(%rdi)
+      -  jmp L269
+      -  mov -0x400(%rbp),%rsi
+      -  mov -0x410(%rbp),%rdi
+      -  call <void std::__insertion_sort<__gnu_cxx::__normal_iterator<main::{lambda()#73}::operator()() const::Found*, std::vector<main::{lambda()#73}::operator()() const::Found, std::allocator<main::{lambda()#73}::operator()() const::Found> > >, main::{lambda()#73}::operator()() const::{lambda(main::{lambda()#73}::operator()() const::Found const&, main::{lambda()#73}::operator()() const::Found const&)#1}>(__gnu_cxx::__normal_iterator<main::{lambda()#73}::operator()() const::Found*, std::vector<main::{lambda()#73}::operator()() const::Found, std::allocator<main::{lambda()#73}::operator()() const::Found> > >, __gnu_cxx::__normal_iterator<main::{lambda()#73}::operator()() const::Found*, std::vector<main::{lambda()#73}::operator()() const::Found, std::allocator<main::{lambda()#73}::operator()() const::Found> > >, main::{lambda()#73}::operator()() const::{lambda(main::{lambda()#73}::operator()() const::Found const&, main::{lambda()#73}::operator()() const::Found const&)#1}) [clone .isra.0]>
+      -  lea -0x3b0(%rbp),%rax
+      -  mov %r15,%rdi
+      -  pxor %xmm0,%xmm0
+      -  mov $0x6,%ecx
+      -  mov %rax,-0x3c0(%rbp)
+      -  xor %eax,%eax
+      -  lea -0x3c0(%rbp),%rdx
+      -  lea -0x3d0(%rbp),%rsi
+      -  mov %rax,-0x3b8(%rbp)
+      -  xor %eax,%eax
+      -  lea -0x220(%rbp),%r15
+      -  rep stos %eax,(%rdi)
+      -  mov 0x10(%rbx),%rdi
+      -  xor %eax,%eax
+      -  lea -0x220(%rbp),%rcx
+      -  movb $0x0,-0x3b0(%rbp)
+      -  mov %rax,-0x208(%rbp)
+      -  movaps %xmm0,-0x3d0(%rbp)
+      -  call <main::{lambda(strata::core::SessionFileIdentity&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >&, std::function<void ()> const&)#1}::operator()(strata::core::SessionFileIdentity&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >&, std::function<void ()> const&) const>
+      -  mov %al,-0x43d(%rbp)
+      -  mov -0x210(%rbp),%rax
+      -  test %rax,%rax
+      -  je L321
+      -  mov $0x3,%edx
+      -  lea -0x220(%rbp),%rsi
+      -  lea -0x220(%rbp),%rdi
+      -  call *%rax
+      -  cmpb $0x0,-0x43d(%rbp)
+      -  je L235
+      -  mov 0x18(%rbx),%rax
+      -  pxor %xmm7,%xmm7
+      -  movq REL R_X86_64_PC32 @.rodata.cst8:0000000000000000
+      -  movhps REL R_X86_64_PC32 @.rodata.cst8:0000000000000000
+      -  mov -0x410(%rbp),%r12
+      -  movaps %xmm5,-0x420(%rbp)
+      -  mov 0x648(%rax),%rax
+      -  movaps %xmm7,-0x430(%rbp)
+      -  shl $0x14,%rax
+      -  mov %rax,-0x408(%rbp)
+      -  xor %eax,%eax
+      -  mov %eax,-0x438(%rbp)
+      -  mov %eax,-0x43c(%rbp)
+      -  jmp L349
+      -  mov 0x8(%rbx),%rdi
+      -  xor %edx,%edx
+      -  mov %r15,%rsi
+      -  call REL R_X86_64_PLT32 strata::core::ConversationCache::put(strata::core::SavedConversation&&, unsigned long)
+      -  test %al,%al
+      -  je L441
+      -  addl $0x1,-0x43c(%rbp)
+      -  mov %r15,%rdi
+      -  add $0x28,%r12
+      -  call REL R_X86_64_PLT32 strata::core::SavedConversation::~SavedConversation()
+      -  mov %r13,%rdi
+      -  call REL R_X86_64_PLT32 strata::core::SessionReadLimits::~SessionReadLimits()
+      -  cmp -0x400(%rbp),%r12
+      -  je L458
+      -  mov 0x8(%rbx),%rsi
+      -  mov 0x18(%rbx),%rdx
+      -  movabs $0xef7bdef7bdef7bdf,%rdi
+      -  mov 0x80(%rsi),%rcx
+      -  mov %rcx,%rax
+      -  sub 0x60(%rsi),%rax
+      -  sar $0x3,%rax
+      -  cmp $0x1,%rcx
+      -  mov 0x68(%rsi),%rcx
+      -  adc $0xffffffffffffffff,%rax
+      -  sub 0x70(%rsi),%rcx
+      -  sar $0x4,%rcx
+      -  imul %rdi,%rcx
+      -  add %rcx,%rax
+      -  mov 0x58(%rsi),%rcx
+      -  sub 0x48(%rsi),%rcx
+      -  sar $0x4,%rcx
+      -  imul %rdi,%rcx
+      -  add %rcx,%rax
+      -  cmp %eax,0x640(%rdx)
+      -  jle L458
+      -  movdqa -0x430(%rbp),%xmm2
+      -  xor %eax,%eax
+      -  xor %r10d,%r10d
+      -  xor %r11d,%r11d
+      -  pcmpeqd %xmm1,%xmm1
+      -  mov $0x6,%ecx
+      -  lea -0x240(%rbp),%rdi
+      -  movq $0xffffffffffffffff,-0x280(%rbp)
+      -  movaps %xmm1,-0x370(%rbp)
+      -  pxor %xmm0,%xmm0
+      -  movdqa -0x420(%rbp),%xmm3
+      -  mov 0x20(%rbx),%rsi
+      -  movaps %xmm1,-0x360(%rbp)
+      -  lea -0x370(%rbp),%r13
+      -  movaps %xmm1,-0x2a0(%rbp)
+      -  movaps %xmm1,-0x290(%rbp)
+      -  movb $0x0,-0x2c0(%rbp)
+      -  movb $0x0,-0x2a8(%rbp)
+      -  mov %r10,-0x268(%rbp)
+      -  movups %xmm2,-0x278(%rbp)
+      -  rep stos %eax,(%rdi)
+      -  mov -0x408(%rbp),%rax
+      -  movups %xmm0,-0x218(%rbp)
+      -  lea -0x3c0(%rbp),%rdi
+      -  movaps %xmm3,-0x250(%rbp)
+      -  mov %rax,-0x220(%rbp)
+      -  movdqa -0x220(%rbp),%xmm0
+      -  mov $0x1,%eax
+      -  mov %r11,-0x228(%rbp)
+      -  movaps %xmm0,-0x260(%rbp)
+      -  mov 0x630(%rdx),%r9d
+      -  mov 0x40(%rdx),%r8
+      -  mov 0x28(%rbx),%rdx
+      -  test %r9d,%r9d
+      -  cmovle %eax,%r9d
+      -  mov 0x30(%rbx),%rax
+      -  push %r14
+      -  push %rdi
+      -  lea -0x370(%rbp),%rdi
+      -  lea 0x548(%rax),%rcx
+      -  call REL R_X86_64_PLT32 strata::core::conversation_session_read_limits(strata::core::SessionReadLimits&, strata::core::SessionState const&, strata::core::ModelGeometry const&, strata::core::QsaState const&, unsigned long, unsigned long, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >&)
+      -  pop %r8
+      -  pop %r9
+      -  test %al,%al
+      -  je L452
+      -  mov %r15,%rdi
+      -  mov $0x1f0,%edx
+      -  xor %esi,%esi
+      -  call REL R_X86_64_PLT32 memset
+      -  xor %esi,%esi
+      -  pcmpeqd %xmm4,%xmm4
+      -  mov %r13,%r9
+      -  lea -0x3e8(%rbp),%rax
+      -  push %rdi
+      -  lea -0x3f0(%rbp),%rcx
+      -  mov %r15,%rdx
+      -  push %rax
+      -  lea -0x3c0(%rbp),%r8
+      -  mov %r12,%rdi
+      -  mov %rsi,-0x3f0(%rbp)
+      -  mov %rsi,-0x3e8(%rbp)
+      -  lea -0x3d0(%rbp),%rsi
+      -  movb $0x1,-0x50(%rbp)
+      -  movaps %xmm4,-0xc0(%rbp)
+      -  call REL R_X86_64_PLT32 strata::core::session_file_read(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, strata::core::SessionFileIdentity const&, strata::core::SavedConversation&, unsigned long&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >&, strata::core::SessionReadLimits const&, strata::core::SessionStatus*)
+      -  pop %rdx
+      -  pop %rcx
+      -  test %al,%al
+      -  jne L337
+      -  mov $0x2,%edx
+      -  mov %r12,%rsi
+      -  lea -0x3a0(%rbp),%rdi
+      -  addl $0x1,-0x438(%rbp)
+      -  call REL R_X86_64_PLT32 std::filesystem::__cxx11::path::path<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >, std::filesystem::__cxx11::path>(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, std::filesystem::__cxx11::path::format)
+      -  lea -0x3a0(%rbp),%rdi
+      -  lea -0x3e0(%rbp),%rsi
+      -  call REL R_X86_64_PLT32 std::filesystem::remove(std::filesystem::__cxx11::path const&, std::error_code&)
+      -  lea -0x3a0(%rbp),%rdi
+      -  call REL R_X86_64_PLT32 std::filesystem::__cxx11::path::~path()
+      -  jmp L344
+      -  mov -0x3c0(%rbp),%rdx
+      -  mov REL R_X86_64_PC32 stderr
+      -  mov REL R_X86_64_32 .rodata.str1.8
+      -  call REL R_X86_64_PLT32 fprintf
+      -  mov %r13,%rdi
+      -  call REL R_X86_64_PLT32 strata::core::SessionReadLimits::~SessionReadLimits()
+      -  mov -0x43c(%rbp),%edx
+      -  mov -0x438(%rbp),%eax
+      -  or %eax,%edx
+      -  je L480
+      -  test %eax,%eax
+      -  jne L519
+      -  movb $0x0,-0x43d(%rbp)
+      -  mov REL R_X86_64_32 .rodata.str1.1
+      -  mov (%rbx),%rax
+      -  mov -0x43c(%rbp),%ebx
+      -  mov REL R_X86_64_32 .rodata.str1.1
+      -  mov REL R_X86_64_32 .rodata.str1.1
+      -  mov REL R_X86_64_PC32 stderr
+      -  mov REL R_X86_64_32 .rodata.str1.8
+      -  cmp $0x1,%ebx
+      -  mov (%rax),%r8
+      -  cmove %rdx,%rcx
+      -  mov %ebx,%edx
+      -  xor %eax,%eax
+      -  call REL R_X86_64_PLT32 fprintf
+      -  cmpb $0x0,-0x43d(%rbp)
+      -  jne L537
+      -  lea -0x3c0(%rbp),%rdi
+      -  call REL R_X86_64_PLT32 std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >::_M_dispose()
+      -  mov -0x410(%rbp),%rax
+      -  mov %r15,%rdi
+      -  mov %rax,-0x220(%rbp)
+      -  mov -0x400(%rbp),%rax
+      -  mov %rax,-0x218(%rbp)
+      -  mov -0x448(%rbp),%rax
+      -  mov %rax,-0x210(%rbp)
+      -  call <std::vector<main::{lambda()#73}::operator()() const::Found, std::allocator<main::{lambda()#73}::operator()() const::Found> >::~vector()>
+      -  mov -0x20(%rbp),%r12
+      -  mov -0x18(%rbp),%r13
+      -  mov -0x10(%rbp),%r14
+      -  jmp L32
+      -  mov %r13,%rbx
+      -  jmp L294
+      -  mov $0x40,%eax
+      -  jmp L146
+      -  mov 0x8(%r14),%rdx
+      -  mov (%r14),%rsi
+      -  mov %r15,%rdi
+      -  mov %r8,-0x408(%rbp)
+      -  call <std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >::basic_string(char const*, unsigned long, std::allocator<char> const&) [clone .isra.0]>
+      -  mov -0x408(%rbp),%r8
+      -  mov -0x400(%rbp),%rax
+      -  mov %r8,-0x200(%rbp)
+      -  cmp -0x448(%rbp),%rax
+      -  je L548
+      -  mov %rax,%rdi
+      -  mov %r15,%rsi
+      -  mov %rax,%r14
+      -  call REL R_X86_64_PLT32 std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >::basic_string(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >&&)
+      -  mov -0x200(%rbp),%rax
+      -  lea 0x28(%r14),%rdx
+      -  mov %rdx,-0x400(%rbp)
+      -  mov %rax,0x20(%r14)
+      -  mov %r15,%rdi
+      -  call REL R_X86_64_PLT32 std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >::_M_dispose()
+      -  jmp L230
+      -  mov %eax,%esi
+      -  lea -0x3a0(%rbp),%rdi
+      -  call REL R_X86_64_PLT32 std::__cxx11::to_string(int)
+      -  mov REL R_X86_64_32 .rodata.str1.1
+      -  xor %esi,%esi
+      -  lea -0x3a0(%rbp),%rdi
+      -  call REL R_X86_64_PLT32 std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >::insert(unsigned long, char const*)
+      -  mov %rax,%rsi
+      -  lea -0x370(%rbp),%rdi
+      -  call REL R_X86_64_PLT32 std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >::basic_string(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >&&)
+      -  mov REL R_X86_64_32 .rodata.str1.1
+      -  lea -0x370(%rbp),%rdi
+      -  call REL R_X86_64_PLT32 std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >::append(char const*)
+      -  mov %rax,%rsi
+      -  mov %r15,%rdi
+      -  call REL R_X86_64_PLT32 std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >::basic_string(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >&&)
+      -  mov -0x220(%rbp),%r9
+      -  jmp L466
+      -  mov %r15,%rdi
+      -  call REL R_X86_64_PLT32 std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >::_M_dispose()
+      -  lea -0x370(%rbp),%rdi
+      -  call REL R_X86_64_PLT32 std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >::_M_dispose()
+      -  lea -0x3a0(%rbp),%rdi
+      -  call REL R_X86_64_PLT32 std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >::_M_dispose()
+      -  jmp L480
+      -  cmp %rsi,%r9
+      -  mov 0x8(%r14),%rdx
+      -  cmovne %rax,%r8
+      -  jmp L499
+      -  mov -0x400(%rbp),%rcx
+      -  sub -0x410(%rbp),%rcx
+      -  mov %r12,-0x20(%rbp)
+      -  movabs $0xcccccccccccccccd,%rax
+      -  mov %rcx,%rdx
+      -  sar $0x3,%rdx
+      -  imul %rax,%rdx
+      -  movabs $0x333333333333333,%rax
+      -  cmp %rax,%rdx
+      -  je REL R_X86_64_PC32 .text.unlikely
+      -  test %rdx,%rdx
+      -  mov $0x1,%eax
+      -  mov %rcx,-0x420(%rbp)
+      -  cmovne %rdx,%rax
+      -  add %rdx,%rax
+      -  movabs $0x333333333333333,%rdx
+      -  cmp %rdx,%rax
+      -  cmova %rdx,%rax
+      -  imul $0x28,%rax,%rdi
+      -  imul $0x28,%rax,%r12
+      -  call REL R_X86_64_PLT32 operator new(unsigned long)
+      -  mov -0x420(%rbp),%rcx
+      -  mov %r15,%rsi
+      -  mov %rax,%r14
+      -  mov %rax,-0x408(%rbp)
+      -  add %rax,%rcx
+      -  mov %rcx,%rdi
+      -  mov %rcx,-0x420(%rbp)
+      -  call REL R_X86_64_PLT32 std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >::basic_string(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >&&)
+      -  mov -0x200(%rbp),%rax
+      -  mov -0x420(%rbp),%rcx
+      -  mov %r14,%rdx
+      -  mov %rbx,-0x420(%rbp)
+      -  mov %rax,0x20(%rcx)
+      -  mov -0x410(%rbp),%rax
+      -  mov %rax,%rbx
+      -  jmp L595
+      -  mov %rdx,%rdi
+      -  mov %rbx,%rsi
+      -  mov %rdx,%r14
+      -  call REL R_X86_64_PLT32 std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >::basic_string(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >&&)
+      -  mov 0x20(%rbx),%rax
+      -  mov %rbx,%rdi
+      -  add $0x28,%rbx
+      -  mov %rax,0x20(%r14)
+      -  call REL R_X86_64_PLT32 std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >::_M_dispose()
+      -  lea 0x28(%r14),%rdx
+      -  cmp -0x400(%rbp),%rbx
+      -  jne L585
+      -  mov -0x410(%rbp),%rdi
+      -  lea 0x28(%rdx),%rax
+      -  mov -0x420(%rbp),%rbx
+      -  mov %rax,-0x400(%rbp)
+      -  test %rdi,%rdi
+      -  je L606
+      -  mov -0x448(%rbp),%rsi
+      -  sub %rdi,%rsi
+      -  call REL R_X86_64_PLT32 operator delete(void*, unsigned long)
+      -  mov -0x408(%rbp),%rdx
+      -  lea (%rdx,%r12,1),%rax
+      -  mov %rdx,-0x410(%rbp)
+      -  mov -0x20(%rbp),%r12
+      -  mov %rax,-0x448(%rbp)
+      -  jmp L516
+      -  jmp REL R_X86_64_PC32 .text.unlikely
+      -  mov %rax,%rbx
+      -  jmp REL R_X86_64_PC32 .text.unlikely
+      -  mov %rax,%rbx
+      -  jmp REL R_X86_64_PC32 .text.unlikely
+      -  mov %rax,%rbx
+      -  jmp REL R_X86_64_PC32 .text.unlikely
+      -  mov %rax,%rbx
+      -  jmp REL R_X86_64_PC32 .text.unlikely
+      -  mov %rax,%rbx
+      -  jmp REL R_X86_64_PC32 .text.unlikely
+      -  mov %rax,%rbx
+      -  jmp REL R_X86_64_PC32 .text.unlikely
+      -  mov %rax,%rbx
+      -  jmp REL R_X86_64_PC32 .text.unlikely
+      -  mov %rax,%rbx
+      -  jmp REL R_X86_64_PC32 .text.unlikely
+      -  mov %rax,%rbx
+      -  jmp REL R_X86_64_PC32 .text.unlikely
+      -  mov %rax,%rbx
+      -  jmp REL R_X86_64_PC32 .text.unlikely
+      -  mov %rax,%rbx
+      -  jmp REL R_X86_64_PC32 .text.unlikely
+      -  mov %rax,%rbx
+      -  jmp REL R_X86_64_PC32 .text.unlikely
+      -  mov %rax,%rbx
+      -  jmp REL R_X86_64_PC32 .text.unlikely
+
+DIFFERENT  main::{lambda()#74}::operator()() const   instructions 748 -> 639   (+591 / -700)
+      -  push %rbp
+      -  mov %rsp,%rbp
+      -  sub $0x380,%rsp
+      -  mov %rbx,-0x28(%rbp)
+      -  mov (%rdi),%rbx
+      -  cmpq $0x0,0x8(%rbx)
+      -  je L502
+      +  mov (%rdi),%rsi
+      +  cmpq $0x0,0x8(%rsi)
+      +  je L36
+      =  mov 0x8(%rdi),%rax
+      =  cmpq $0x0,(%rax)
+      =  mov 0x8(%rdi),%rax
+      =  cmpq $0x0,(%rax)
+      -  je L502
+      +  je L36
+      =  cmpq $0x0,0x8(%rax)
+      =  je L502
+      =  je L502
+      =  cmpq $0x0,0x8(%rax)
+      -  je L502
+      -  mov 0x80(%rax),%rcx
+      -  movabs $0xef7bdef7bdef7bdf,%rsi
+      -  mov %rcx,%rdx
+      -  sub 0x60(%rax),%rdx
+      -  sar $0x3,%rdx
+      -  cmp $0x1,%rcx
+      -  mov 0x68(%rax),%rcx
+      -  adc $0xffffffffffffffff,%rdx
+      -  sub 0x70(%rax),%rcx
+      -  sar $0x4,%rcx
+      -  imul %rsi,%rcx
+      -  add %rcx,%rdx
+      -  mov 0x58(%rax),%rcx
+      -  sub 0x48(%rax),%rcx
+      -  mov %rcx,%rax
+      -  sar $0x4,%rax
+      -  imul %rsi,%rax
+      -  add %rax,%rdx
+      -  je L502
+      -  xor %r9d,%r9d
+      -  mov %r13,-0x18(%rbp)
+      -  lea -0x220(%rbp),%r13
+      +  je L36
+      +  push %rbp
+      +  xor %eax,%eax
+      +  mov %rsp,%rbp
+      +  sub $0x450,%rsp
+      +  mov %rbx,-0x28(%rbp)
+      +  mov %rdi,%rbx
+      =  mov %r15,-0x8(%rbp)
+      =  mov %rdi,%r15
+      =  lea -0x220(%rbp),%r13
+      =  mov %r15,-0x8(%rbp)
+      -  mov %rdi,%r15
+      -  mov %rdi,-0x358(%rbp)
+      -  mov %r9d,-0x340(%rbp)
+      +  lea -0x220(%rbp),%r15
+      +  mov %rsi,-0x400(%rbp)
+      +  mov %eax,-0x3e0(%rbp)
+      =  call REL R_X86_64_PLT32 std::_V2::system_category()
+      =  mov %rbx,%rsi
+      =  mov %r9d,-0x340(%rbp)
+      =  call REL R_X86_64_PLT32 std::_V2::system_category()
+      -  mov %rbx,%rsi
+      -  mov %r13,%rdi
+      +  mov -0x400(%rbp),%rsi
+      =  mov $0x2,%edx
+      =  mov %rax,-0x338(%rbp)
+      =  mov %r13,%rdi
+      =  mov $0x2,%edx
+      -  mov %rax,-0x338(%rbp)
+      +  lea -0x220(%rbp),%rdi
+      +  mov %rax,-0x3d8(%rbp)
+      =  call REL R_X86_64_PLT32 std::filesystem::__cxx11::path::path<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >, std::filesystem::__cxx11::path>(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, std::filesystem::__cxx11::path::format)
+      =  lea -0x340(%rbp),%rsi
+
+DIFFERENT  main::{lambda()#74}::operator()() const [clone .cold]   instructions 86 -> 70   (+56 / -72)
+      -  mov %r15,%rsi
+      -  mov REL R_X86_64_32 .rodata.str1.8
+      -  xor %eax,%eax
+      -  call REL R_X86_64_PLT32 std::__throw_out_of_range_fmt(char const*, ...)
+      =  mov REL R_X86_64_32 .rodata.str1.1
+      =  call REL R_X86_64_PLT32 std::__throw_length_error(char const*)
+      =  mov REL R_X86_64_32 .rodata.str1.1
+      =  call REL R_X86_64_PLT32 std::__throw_length_error(char const*)
+      -  mov REL R_X86_64_32 .rodata.str1.1
+      -  call REL R_X86_64_PLT32 std::__throw_length_error(char const*)
+      -  lea -0x290(%rbp),%rdi
+      -  lea -0x300(%rbp),%rbx
+      -  call REL R_X86_64_PLT32 strata::core::SessionWriteOptions::~SessionWriteOptions()
+      -  lea -0x2e0(%rbp),%rdi
+      +  mov %r15,%rdi
+      +  mov %rax,%rbx
+      =  call REL R_X86_64_PLT32 std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >::_M_dispose()
+      =  mov %rbx,%rdi
+      =  lea -0x2e0(%rbp),%rdi
+      =  call REL R_X86_64_PLT32 std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >::_M_dispose()
+      +  mov -0x20(%rbp),%r12
+      +  mov %r13,%rdi
+      +  call REL R_X86_64_PLT32 std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >::_M_dispose()
+      +  mov -0x398(%rbp),%rdi
+      +  test %rdi,%rdi
+      +  je L12
+      +  call REL R_X86_64_PLT32 std::_Sp_counted_base<(__gnu_cxx::_Lock_policy)2>::_M_release()
+      +  mov -0x3b8(%rbp),%rdi
+      +  test %rdi,%rdi
+      +  je L47
+      +  call REL R_X86_64_PLT32 std::_Sp_counted_base<(__gnu_cxx::_Lock_policy)2>::_M_release()
+      +  mov %r12,-0x20(%rbp)
+      +  jmp L24
+      +  mov %r15,%rdi
+      +  call REL R_X86_64_PLT32 strata::core::SavedConversation::~SavedConversation()
+      +  mov %r13,%rdi
+      +  call REL R_X86_64_PLT32 strata::core::SessionReadLimits::~SessionReadLimits()
+      +  lea -0x3c0(%rbp),%rdi
+      +  call REL R_X86_64_PLT32 std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >::_M_dispose()
+      +  mov -0x410(%rbp),%rax
+      +  mov %r15,%rdi
+      +  mov %rax,-0x220(%rbp)
+      +  mov -0x400(%rbp),%rax
+      +  mov %rax,-0x218(%rbp)
+      +  mov -0x448(%rbp),%rax
+      +  mov %rax,-0x210(%rbp)
+      +  call REL R_X86_64_PC32 .text
+      =  mov %rbx,%rdi
+      =  mov %r14,%rbx
+      =  call REL R_X86_64_PLT32 std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >::_M_dispose()
+      =  mov %rbx,%rdi
+      -  mov %r14,%rbx
+      +  call REL R_X86_64_PLT32 _Unwind_Resume
+      +  cmpb $0x0,-0x43d(%rbp)
+      +  je L22
+      +  mov %r15,%rdi
+      =  call REL R_X86_64_PLT32 std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >::_M_dispose()
+      =  jmp L23
+      =  mov %r14,%rbx
+      =  call REL R_X86_64_PLT32 std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >::_M_dispose()
+      -  jmp L23
+      -  mov %rbx,%rdi
+      -  mov %rax,%r12
+      -  mov %rdx,%rbx
+      +  cmpb $0x0,-0x43d(%rbp)
+      +  je L22
+      +  lea -0x370(%rbp),%rdi
+      =  call REL R_X86_64_PLT32 std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >::_M_dispose()
+      =  lea -0x2e0(%rbp),%rdi
+      =  mov %rdx,%rbx
+      =  call REL R_X86_64_PLT32 std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >::_M_dispose()
+      -  lea -0x2e0(%rbp),%rdi
+      +  cmpb $0x0,-0x43d(%rbp)
+      +  je L22
+      +  lea -0x3a0(%rbp),%rdi
+      =  call REL R_X86_64_PLT32 std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >::_M_dispose()
+      =  mov %r13,%rdi
+
+DIFFERENT  main::{lambda()#82}::operator()() const [clone .isra.0]   instructions 46 -> 43   (+13 / -16)
+      =  movzbl REL R_X86_64_PC32 .bss
+      =  test %al,%al
+      -  je L24
+      +  je L21
+      =  cmpb REL R_X86_64_PC32 .bss
+      =  je L20
+      =  je L24
+      =  cmpb REL R_X86_64_PC32 .bss
+      -  je L20
+      +  je L17
+      =  mov REL R_X86_64_32 .rodata.str1.1
+      =  call REL R_X86_64_PLT32 getenv
+      =  call REL R_X86_64_PLT32 getenv
+      =  test %rax,%rax
+      -  je L20
+      -  mov $0xa,%edx
+      +  je L17
+      =  xor %esi,%esi
+      =  mov %rax,%rdi
+      =  xor %esi,%esi
+      =  mov %rax,%rdi
+      -  call REL R_X86_64_PLT32 __isoc23_strtol
+      -  xor %edx,%edx
+      -  test %eax,%eax
+      -  cmovs %edx,%eax
+      +  call REL R_X86_64_PLT32 strtod
+      +  add $0x8,%rsp
+      +  cvtsd2ss %xmm0,%xmm0
+      +  ret 
+      +  nopw 0x0(%rax,%rax,1)
+      +  movss REL R_X86_64_PC32 @.rodata.cst16:cdcc4c3e3333333f9a9999999999e13f
+      =  add $0x8,%rsp
+      =  ret 
+      =  add $0x8,%rsp
+      =  ret 
+      -  nopw 0x0(%rax,%rax,1)
+      -  xor %eax,%eax
+      -  add $0x8,%rsp
+      -  ret 
+      -  nop 
+      +  nopl (%rax)
+      =  mov REL R_X86_64_32 .bss
+      =  call REL R_X86_64_PLT32 __cxa_guard_acquire
+      =  xor %eax,%eax
+      =  test %rdx,%rdx
+      -  je L40
+      +  je L37
+      =  movzbl (%rdx),%edx
+      =  test %dl,%dl
+
+DIFFERENT  main::{lambda()#95}::operator()() const [clone .isra.0]   instructions 50 -> 43   (+15 / -22)
+      -  sub $0x18,%rsp
+      +  sub $0x8,%rsp
+      =  movzbl REL R_X86_64_PC32 .bss
+      =  test %al,%al
+      =  movzbl REL R_X86_64_PC32 .bss
+      =  test %al,%al
+      -  je L28
+      -  movzbl REL R_X86_64_PC32 .bss
+      -  test %dl,%dl
+      -  je L23
+      +  je L21
+      +  cmpb REL R_X86_64_PC32 .bss
+      +  je L17
+      =  mov REL R_X86_64_32 .rodata.str1.1
+      =  mov %dl,0xf(%rsp)
+      =  je L23
+      =  mov REL R_X86_64_32 .rodata.str1.1
+      -  mov %dl,0xf(%rsp)
+      =  call REL R_X86_64_PLT32 getenv
+      =  movzbl 0xf(%rsp),%edx
+      =  mov %dl,0xf(%rsp)
+      =  call REL R_X86_64_PLT32 getenv
+      -  movzbl 0xf(%rsp),%edx
+      =  test %rax,%rax
+      =  je L19
+      =  movzbl 0xf(%rsp),%edx
+      =  test %rax,%rax
+      -  je L19
+      -  mov $0xa,%edx
+      +  je L17
+      =  xor %esi,%esi
+      =  mov %rax,%rdi
+      =  xor %esi,%esi
+      =  mov %rax,%rdi
+      -  call REL R_X86_64_PLT32 __isoc23_strtol
+      -  test %eax,%eax
+      -  setne %dl
+      -  mov %edx,%eax
+      -  add $0x18,%rsp
+      +  call REL R_X86_64_PLT32 strtod
+      +  add $0x8,%rsp
+      +  cvtsd2ss %xmm0,%xmm0
+      +  ret 
+      +  nopw 0x0(%rax,%rax,1)
+      +  movss REL R_X86_64_PC32 @.rodata.cst4:0000403f
+      +  add $0x8,%rsp
+      =  ret 
+      =  nopl (%rax)
+
+DIFFERENT  main::{lambda(bool)#6}::operator()(bool) const   instructions 243 -> 240   (+11 / -14)
+      =  mov 0x8(%rax),%r12
+      =  cmp %rbx,%r12
+      -  je L234
+      +  je L231
+      =  nopl 0x0(%rax)
+      =  data16 cs nopw 0x0(%rax,%rax,1)
+      =  call REL R_X86_64_PLT32 cudaMemcpy
+      =  test %eax,%eax
+      -  je L220
+      +  je L217
+      =  mov 0x28(%rsp),%r12
+      =  mov 0x30(%rsp),%r13
+      =  call REL R_X86_64_PLT32 cudaEventQuery
+      =  test %eax,%eax
+      -  je L216
+      +  je L213
+      =  cmpb REL R_X86_64_PC32 .bss
+      =  je L97
+      =  mov 0x8(%rax),%r14
+      =  cmp %r12,%r14
+      -  je L239
+      +  je L236
+      =  mov %r15,0x40(%rsp)
+      =  jmp L152
+      =  je L239
+      =  mov %r15,0x40(%rsp)
+      -  jmp L152
+      -  nopl 0x0(%rax,%rax,1)
+      -  data16 cs nopw 0x0(%rax,%rax,1)
+      -  data16 cs nopw 0x0(%rax,%rax,1)
+      -  data16 cs nopw 0x0(%rax,%rax,1)
+      +  jmp L149
+      +  nopw 0x0(%rax,%rax,1)
+      =  data16 cs nopw 0x0(%rax,%rax,1)
+      =  mov (%r12),%edx
+      =  mov %rax,0x2168(%r13)
+      =  cmp %r12,%r14
+      -  je L208
+      +  je L205
+      =  mov 0x2168(%r13),%rax
+      =  mov 0x2170(%r13),%rsi
+
+DIFFERENT  main::{lambda(bool, bool)#1}::operator()(bool, bool) const   instructions 1551 -> 1551   (+6 / -6)
+      =  jb L433
+      =  mov 0x100(%rbx),%rdi
+      -  call <main::{lambda()#44}::operator()() const>
+      +  call <main::{lambda()#45}::operator()() const>
+      =  mov 0x108(%rbx),%rcx
+      =  mov 0x130(%rbx),%rdx
+      =  jne L488
+      =  mov 0x120(%rbx),%rdi
+      -  call <main::{lambda()#53}::operator()() const>
+      +  call <main::{lambda()#54}::operator()() const>
+      =  cmpb $0x0,0x47(%rsp)
+      =  jne L85
+      =  je L650
+      =  mov 0xa0(%rbx),%rdi
+      -  call <main::{lambda()#55}::operator()() const>
+      +  call <main::{lambda()#56}::operator()() const>
+      =  jmp L85
+      =  cs nopw 0x0(%rax,%rax,1)
+      =  jmp L275
+      =  mov 0x100(%rbx),%rdi
+      -  call <main::{lambda()#44}::operator()() const>
+      +  call <main::{lambda()#45}::operator()() const>
+      =  mov 0x118(%rbx),%rax
+      =  mov 0x120(%rbx),%rdi
+      =  mov 0x108(%rbx),%rax
+      =  movq $0x0,(%rax)
+      -  call <main::{lambda()#53}::operator()() const>
+      +  call <main::{lambda()#54}::operator()() const>
+      =  jmp L1088
+      =  nopw 0x0(%rax,%rax,1)
+      =  mov 0x88(%rbx),%rdi
+      =  mov %rax,%rbp
+      -  call <main::{lambda()#50}::operator()() const>
+      +  call <main::{lambda()#51}::operator()() const>
+      =  call REL R_X86_64_PLT32 std::chrono::_V2::steady_clock::now()
+      =  mov 0x90(%rbx),%rdx
+
+DIFFERENT  main::{lambda(int)#10}::operator()(int) const [clone .isra.0]   instructions 750 -> 751   (+49 / -48)
+      =  mov (%rdi),%rax
+      =  cmpb $0x0,(%rax)
+      -  je L262
+      +  je L263
+      =  push %rbp
+      =  mov %rsp,%rbp
+      =  mov %esi,%ebx
+      =  cmp %esi,0x4(%rax)
+      -  jg L258
+      +  jg L259
+      =  mov 0x28(%rax),%rdx
+      =  sub 0x20(%rax),%rdx
+      =  sar $0x3,%rdx
+      =  cmp %edx,%esi
+      -  jge L258
+      +  jge L259
+      =  mov %ebx,%ecx
+      =  mov $0x1,%edx
+      =  mov 0x38(%rax),%rcx
+      =  test %r10,(%rcx,%rdx,8)
+      -  je L258
+      +  je L259
+      =  imul $0xe0,%rsi,%rcx
+      =  mov 0x8(%rdi),%rdx
+      =  add (%rdx),%rcx
+      =  cmpb $0x0,(%rcx)
+      -  jne L258
+      +  jne L259
+      =  cmpb $0x0,0xa8(%rcx)
+      =  jne L258
+      =  jne L258
+      =  cmpb $0x0,0xa8(%rcx)
+      -  jne L258
+      +  jne L259
+      =  add $0x98,%rax
+      =  mov %r13,-0x18(%rbp)
+
+DIFFERENT  main::{lambda(long, long, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >&)#2}::operator()(long, long, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >&) const   instructions 1470 -> 1470   (+1 / -1)
+      =  jmp L304
+      =  mov 0x20(%r12),%rdi
+      -  call <main::{lambda()#39}::operator()() const>
+      +  call <main::{lambda()#40}::operator()() const>
+      =  mov 0x48(%r12),%rax
+      =  mov 0x70(%r12),%r15
+
+DIFFERENT  main::{lambda(long, long, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >&)#3}::operator()(long, long, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >&) const   instructions 2590 -> 2590   (+1 / -1)
+      =  movb $0x1,(%rax)
+      =  mov 0x198(%rbx),%rdi
+      -  call <main::{lambda()#69}::operator()() const>
+      +  call <main::{lambda()#70}::operator()() const>
+      =  test %al,%al
+      =  je L2017
+
+DIFFERENT  main::{lambda(long, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >&, long)#1}::operator()(long, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >&, long) const   instructions 863 -> 863   (+1 / -1)
+      =  mov 0x60(%r10),%rdi
+      =  mov %r10,(%rsp)
+      -  call <main::{lambda()#44}::operator()() const>
+      +  call <main::{lambda()#45}::operator()() const>
+      =  mov (%rsp),%r10
+      =  jmp L308
+
+DIFFERENT  main::{lambda(long, std::vector<strata::core::ConversationCheckpoint, std::allocator<strata::core::ConversationCheckpoint> >*, bool)#1}::operator()(long, std::vector<strata::core::ConversationCheckpoint, std::allocator<strata::core::ConversationCheckpoint> >*, bool) const   instructions 2861 -> 3060   (+1838 / -1639)
+      =  movq $0x0,0x8(%rax)
+      =  mov 0x8(%rdi),%rax
+      -  mov 0x630(%rax),%r8d
+      -  test %r8d,%r8d
+      +  mov 0x630(%rax),%r11d
+      +  test %r11d,%r11d
+      =  setle %bl
+      =  test %rsi,%rsi
+      =  cmp %rcx,%rdx
+      =  jne L29
+      -  jmp L53
+      +  jmp L52
+      =  nopw 0x0(%rax,%rax,1)
+      =  add $0x100,%rdx
+      =  add $0x100,%rdx
+      =  cmp %rdx,%rcx
+      -  je L53
+      +  je L52
+      =  mov 0x8(%rdx),%rax
+      =  sub (%rdx),%rax
+      =  leave 
+      =  ret 
+      -  nopw 0x0(%rax,%rax,1)
+      =  mov %r12,-0x20(%rbp)
+      =  pxor %xmm0,%xmm0
+      =  mov %r12,-0x20(%rbp)
+      =  pxor %xmm0,%xmm0
+      -  mov %rdi,%r12
+      =  xor %eax,%eax
+      =  mov %r13,-0x18(%rbp)
+      =  mov %r13,-0x18(%rbp)
+      =  mov %r15,-0x8(%rbp)
+      -  mov %r8b,-0x348(%rbp)
+      +  mov %r8b,-0x358(%rbp)
+      =  mov %rsi,-0x390(%rbp)
+      =  test %r14,%r14
+
+DIFFERENT  main::{lambda(long, std::vector<strata::core::ConversationCheckpoint, std::allocator<strata::core::ConversationCheckpoint> >*, bool)#1}::operator()(long, std::vector<strata::core::ConversationCheckpoint, std::allocator<strata::core::ConversationCheckpoint> >*, bool) const [clone .cold]   instructions 179 -> 177   (+106 / -108)
+      +  call REL R_X86_64_PLT32 std::__throw_bad_function_call()
+      =  lea -0x230(%rbp),%rax
+      =  mov REL R_X86_64_32 .rodata.str1.8
+      =  mov %rax,-0x3a0(%rbp)
+      =  call REL R_X86_64_PLT32 std::__throw_length_error(char const*)
+      +  mov %eax,%edi
+      +  call REL R_X86_64_PLT32 std::__throw_system_error(int)
+      =  call REL R_X86_64_PLT32 std::__throw_bad_function_call()
+      =  lea -0x230(%rbp),%rax
+      =  call REL R_X86_64_PLT32 std::__throw_length_error(char const*)
+      =  call REL R_X86_64_PLT32 std::__throw_bad_function_call()
+      +  mov REL R_X86_64_32 .rodata.str1.1
+      +  call REL R_X86_64_PLT32 std::__throw_length_error(char const*)
+      +  mov %rax,%r15
+      +  test %rbx,%rbx
+      +  je L17
+      +  mov -0x360(%rbp),%rsi
+      +  mov %rbx,%rdi
+      +  sub %rbx,%rsi
+      +  call REL R_X86_64_PLT32 operator delete(void*, unsigned long)
+      +  test %r12,%r12
+      +  je L23
+      +  mov -0x370(%rbp),%rsi
+      +  mov %r12,%rdi
+      +  sub %r12,%rsi
+      +  call REL R_X86_64_PLT32 operator delete(void*, unsigned long)
+      +  mov %r15,%rbx
+      +  mov -0x3a0(%rbp),%rdi
+      +  call REL R_X86_64_PLT32 strata::core::ConversationCheckpoint::~ConversationCheckpoint()
+      +  mov %rbx,%rdi
+      +  call REL R_X86_64_PLT32 _Unwind_Resume
+      +  jmp L10
+      =  lea -0x230(%rbp),%rax
+      =  mov REL R_X86_64_32 .rodata.str1.1
+      =  mov %rax,-0x3a0(%rbp)
+      =  call REL R_X86_64_PLT32 std::__throw_length_error(char const*)
+      +  mov %rax,%rbx
+      +  jmp L24
+      =  lea -0x2f0(%rbp),%rax
+      =  mov -0x2b0(%rbp),%rdi
+      =  call REL R_X86_64_PLT32 std::__throw_length_error(char const*)
+      =  lea -0x2f0(%rbp),%rax
+      -  mov -0x2b0(%rbp),%rdi
+      -  mov %rax,-0x350(%rbp)
+      -  mov -0x2a0(%rbp),%rsi
+      -  sub %rdi,%rsi
+      -  call REL R_X86_64_PLT32 operator delete(void*, unsigned long)
+      =  mov -0x2d0(%rbp),%rdi
+      =  test %rdi,%rdi
+      =  call REL R_X86_64_PLT32 operator delete(void*, unsigned long)
+      =  mov -0x2d0(%rbp),%rdi
+      -  test %rdi,%rdi
+      -  je L21
+      +  mov %rax,-0x340(%rbp)
+      =  mov -0x2c0(%rbp),%rsi
+      =  sub %rdi,%rsi
+
+DIFFERENT  main::{lambda(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >&)#1}::operator()(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >&) const [clone .isra.0]   instructions 872 -> 872   (+2 / -2)
+      =  lea -0xb0(%rbp),%rax
+      =  mov %rax,-0xd8(%rbp)
+      -  call <main::{lambda()#44}::operator()() const>
+      +  call <main::{lambda()#45}::operator()() const>
+      =  jmp L223
+      =  mov 0x38(%r15),%rdi
+      =  je L844
+      =  mov 0x50(%r15),%rdi
+      -  call <main::{lambda()#44}::operator()() const>
+      +  call <main::{lambda()#45}::operator()() const>
+      =  test %r13,%r13
+      =  je L741
+
+DIFFERENT  main::{lambda(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >&)#5}::operator()(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >&) const   instructions 224 -> 224   (+1 / -1)
+      =  cs nopw 0x0(%rax,%rax,1)
+      =  mov 0x20(%r12),%rdi
+      -  call <main::{lambda()#44}::operator()() const>
+      +  call <main::{lambda()#45}::operator()() const>
+      =  mov 0x28(%r12),%rax
+      =  movzbl (%rax),%r8d
+
+DIFFERENT  main::{lambda(strata::core::SessionFileIdentity&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >&, std::function<void ()> const&)#1}::operator()(strata::core::SessionFileIdentity&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >&, std::function<void ()> const&) const   instructions 4482 -> 4448   (+1647 / -1681)
+      =  movzbl 0x8(%rax),%eax
+      =  mov %rdx,0x50(%rsp)
+      -  mov %rcx,0x38(%rsp)
+      +  mov %rcx,0x30(%rsp)
+      =  mov %al,0x5f(%rsp)
+      =  test %al,%al
+      =  movzbl 0x8(%rax),%ebx
+      =  test %bl,%bl
+      -  je L821
+      +  je L803
+      =  mov 0x0(%r13),%rdx
+      =  mov 0x28(%rsp),%rcx
+      =  mov 0x550(%rax),%rdx
+      =  test %rdx,%rdx
+      -  jne L1654
+      +  jne L1566
+      =  lea 0x120(%rsp),%rax
+      =  movb $0x0,0x120(%rsp)
+      =  mov 0x10(%r13),%rax
+      =  mov (%rax),%rcx
+      -  mov %rcx,0x30(%rsp)
+      +  mov %rcx,0x38(%rsp)
+      =  test %rcx,%rcx
+      =  je L217
+      =  mov %rcx,0x30(%rsp)
+      =  test %rcx,%rcx
+      -  je L217
+      +  je L214
+      =  lea 0x8(%rcx),%rdx
+      =  lea 0x2c8(%rsp),%rax
+      =  lea 0x2c8(%rsp),%rax
+      =  cmp %rax,%rdx
+      -  je L217
+      -  mov %rcx,%rax
+      +  je L214
+      +  mov 0x10(%rcx),%rdx
+      +  mov 0x8(%rcx),%rbp
+      =  mov 0x2c8(%rsp),%r12
+      =  mov 0x10(%rcx),%rcx
+
+DIFFERENT  main::{lambda(strata::core::SessionFileIdentity&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >&, std::function<void ()> const&)#1}::operator()(strata::core::SessionFileIdentity&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >&, std::function<void ()> const&) const [clone .cold]   instructions 252 -> 248   (+152 / -156)
+      -  mov %rbx,%rdi
+      -  mov %rbp,%rbx
+      +  mov REL R_X86_64_32 .rodata.str1.1
+      +  call REL R_X86_64_PLT32 std::__throw_length_error(char const*)
+      +  mov REL R_X86_64_32 .rodata.str1.1
+      +  call REL R_X86_64_PLT32 std::__throw_length_error(char const*)
+      +  mov REL R_X86_64_32 .rodata.str1.1
+      +  call REL R_X86_64_PLT32 std::__throw_length_error(char const*)
+      +  lea 0x130(%rsp),%rdi
+      +  mov %rax,%rbx
+      =  call REL R_X86_64_PLT32 std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >::_M_dispose()
+      =  mov 0x20(%rsp),%rdi
+      =  call REL R_X86_64_PLT32 std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >::_M_dispose()
+      =  mov 0x20(%rsp),%rdi
+      -  call REL R_X86_64_PLT32 std::_UninitDestroyGuard<std::pair<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > >*, void>::~_UninitDestroyGuard()
+      -  mov 0x10(%rsp),%rsi
+      -  mov %r15,%rdi
+      -  call REL R_X86_64_PLT32 operator delete(void*, unsigned long)
+      -  mov %r14,%rdi
+      -  call REL R_X86_64_PLT32 strata::core::SessionInputs::~SessionInputs()
+      -  mov %rbx,%rdi
+      -  call REL R_X86_64_PLT32 _Unwind_Resume
+      -  mov %rbx,%rdi
+      -  mov %rbp,%rbx
+      =  call REL R_X86_64_PLT32 std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >::_M_dispose()
+      =  mov 0x20(%rsp),%rdi
+      =  mov %rbp,%rbx
+      =  call REL R_X86_64_PLT32 std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >::_M_dispose()
+      +  mov 0x40(%rsp),%rdi
+      +  call REL R_X86_64_PLT32 std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >::_M_dispose()
+      +  cmpb $0x0,0x5f(%rsp)
+      +  je L76
+      =  mov 0x20(%rsp),%rdi
+      =  call REL R_X86_64_PLT32 std::_UninitDestroyGuard<std::pair<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > >*, void>::~_UninitDestroyGuard()
+      =  call REL R_X86_64_PLT32 std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >::_M_dispose()
+      =  mov 0x20(%rsp),%rdi
+      -  call REL R_X86_64_PLT32 std::_UninitDestroyGuard<std::pair<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > >*, void>::~_UninitDestroyGuard()
+      -  jmp L8
+      +  call REL R_X86_64_PLT32 std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >::_M_dispose()
+      +  jmp L76
+      =  lea 0x598(%rsp),%rbp
+      =  sub $0x28,%rbp
+      =  mov %r12,%rdi
+      =  call REL R_X86_64_PLT32 _Unwind_Resume
+      -  mov 0x20(%rsp),%rdi
+      -  call REL R_X86_64_PLT32 std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >::_M_dispose()
+      -  mov 0xb8(%rsp),%r12
+      -  mov 0xb0(%rsp),%rbp
+      -  cmp %rbp,%r12
+      -  je L88
+      -  mov 0x20(%rbp),%rdi
+      -  lea 0x30(%rbp),%rax
+      -  cmp %rax,%rdi
+      -  je L78
+      -  mov 0x30(%rbp),%rax
+      -  lea 0x1(%rax),%rsi
+      -  call REL R_X86_64_PLT32 operator delete(void*, unsigned long)
+      -  mov 0x0(%rbp),%rdi
+      -  lea 0x10(%rbp),%rax
+      -  cmp %rax,%rdi
+      -  je L85
+      -  mov 0x10(%rbp),%rax
+      -  lea 0x1(%rax),%rsi
+      -  call REL R_X86_64_PLT32 operator delete(void*, unsigned long)
+      -  add $0x48,%rbp
+      -  cmp %rbp,%r12
+      -  jne L71
+      -  mov 0xb0(%rsp),%rdi
+      -  test %rdi,%rdi
+      -  je L8
+      -  mov 0xc0(%rsp),%rsi
+      -  sub %rdi,%rsi
+      -  call REL R_X86_64_PLT32 operator delete(void*, unsigned long)
+      -  jmp L8
+      -  mov REL R_X86_64_32 .rodata.str1.1
+      -  call REL R_X86_64_PLT32 std::__throw_length_error(char const*)
+      =  lea 0x130(%rsp),%rdi
+      =  mov %rax,%rbx
+      =  call REL R_X86_64_PLT32 std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >::_M_dispose()
+      =  cmpb $0x0,0x5f(%rsp)
+      -  je L108
+      +  je L76
+      =  mov 0x20(%rsp),%rdi
+      =  call REL R_X86_64_PLT32 std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >::_M_dispose()
+
+DIFFERENT  std::_Function_handler<bool (CUstream_st*, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >&), main::{lambda(CUstream_st*, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >&)#1}>::_M_invoke(std::_Any_data const&, CUstream_st*&&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >&)   instructions 394 -> 394   (+1 / -1)
+      =  jmp L10
+      =  mov 0x30(%rbx),%rdi
+      -  call <main::{lambda()#44}::operator()() const>
+      +  call <main::{lambda()#45}::operator()() const>
+      =  mov %eax,%r15d
+      =  jmp L331
+
+DIFFERENT  std::_Function_handler<bool (CUstream_st*, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >&), main::{lambda(CUstream_st*, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >&)#2}>::_M_invoke(std::_Any_data const&, CUstream_st*&&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >&)   instructions 238 -> 238   (+1 / -1)
+      =  jmp L9
+      =  mov 0x30(%r13),%rdi
+      -  call <main::{lambda()#44}::operator()() const>
+      +  call <main::{lambda()#45}::operator()() const>
+      =  mov %eax,%r15d
+      =  jmp L119
+
+DIFFERENT  std::_Function_handler<bool (float const*, long, long, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >&), main::{lambda(float const*, long, long, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >&)#1}>::_M_invoke(std::_Any_data const&, float const*&&, long&&, long&&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >&)   instructions 593 -> 594   (+94 / -93)
+      =  mov %r8,%r13
+      =  test %r12,%r12
+      -  je L373
+      +  je L374
+      =  lea 0x0(,%r12,4),%r14
+      =  mov %r14,%rdi
+      =  movl $0x0,(%rbx)
+      =  cmp $0x1,%r12
+      -  je L380
+      +  je L381
+      =  lea 0x4(%rbx),%rdi
+      =  lea -0x4(%r14),%rdx
+      =  lea -0x1(%r12),%rax
+      =  cmp $0x2,%rax
+      -  jbe L573
+      +  jbe L574
+      =  mov %r12,%rsi
+      =  mov -0x78(%rbp),%r10
+      =  mov %r10,%r11
+      =  shl $0x4,%rcx
+      -  nop 
+      +  nopw 0x0(%rax,%rax,1)
+      +  data16 cs nopw 0x0(%rax,%rax,1)
+      =  movdqu (%rdx,%rax,2),%xmm0
+      =  movdqu 0x10(%rdx,%rax,2),%xmm2
+      =  add $0x10,%rax
+      =  cmp %rcx,%rax
+      -  jne L47
+      +  jne L48
+      =  lea 0x0(,%rsi,4),%rax
+      =  mov %r11,-0x78(%rbp)
+      =  mov %r11,-0x78(%rbp)
+      =  cmp %rax,%r12
+      -  je L76
+      +  je L77
+      =  lea 0x1(%rax,%r11,1),%rdx
+      =  shl $0x4,%rsi
+
+DIFFERENT  std::_Function_handler<void (), main::{lambda()#104}>::_M_invoke(std::_Any_data const&)   instructions 3 -> 11   (+11 / -3)
+      -  jmp REL R_X86_64_PLT32 cudaDeviceSynchronize
+      -  nop 
+      -  cs nopw 0x0(%rax,%rax,1)
+      +  sub $0x18,%rsp
+      +  mov (%rdi),%rax
+      +  mov 0x8(%rdi),%rdi
+      +  lea 0x8(%rsp),%rsi
+      +  mov (%rax),%rax
+      +  mov %rax,0x8(%rsp)
+      +  call <main::{lambda(long&)#1}::operator()(long&) const>
+      +  add $0x18,%rsp
+      +  ret 
+      +  nopl (%rax)
+      +  data16 cs nopw 0x0(%rax,%rax,1)
+
+DIFFERENT  std::_Function_handler<void (), main::{lambda()#104}>::_M_manager(std::_Any_data&, std::_Any_data const&, std::_Manager_operation)   instructions 15 -> 18   (+9 / -6)
+      =  test %edx,%edx
+      -  je L11
+      +  je L14
+      =  cmp $0x1,%edx
+      =  je L7
+      =  je L11
+      =  cmp $0x1,%edx
+      -  je L7
+      -  xor %eax,%eax
+      -  ret 
+      -  nopl 0x0(%rax)
+      +  jne L8
+      =  mov %rsi,(%rdi)
+      =  xor %eax,%eax
+      =  xor %eax,%eax
+      =  ret 
+      -  cs nopw 0x0(%rax,%rax,1)
+      +  nop 
+      +  cmp $0x2,%edx
+      +  jne L5
+      +  movdqu (%rsi),%xmm0
+      +  movups %xmm0,(%rdi)
+      +  jmp L5
+      +  xchg %ax,%ax
+      =  movq REL R_X86_64_32S .rodata
+      =  xor %eax,%eax
+
+DIFFERENT  std::_Function_handler<void (), main::{lambda()#105}>::_M_invoke(std::_Any_data const&)   instructions 2 -> 3   (+2 / -1)
+      =  jmp REL R_X86_64_PLT32 cudaDeviceSynchronize
+      -  data16 cs nopw 0x0(%rax,%rax,1)
+      +  nop 
+      +  cs nopw 0x0(%rax,%rax,1)
+
+DIFFERENT  std::_Function_handler<void (), main::{lambda()#106}>::_M_invoke(std::_Any_data const&)   instructions 3 -> 2   (+1 / -2)
+      =  jmp REL R_X86_64_PLT32 cudaDeviceSynchronize
+      -  nop 
+      -  cs nopw 0x0(%rax,%rax,1)
+      +  data16 cs nopw 0x0(%rax,%rax,1)
+
+DIFFERENT  std::_Function_handler<void (), main::{lambda()#51}>::_M_invoke(std::_Any_data const&)   instructions 202 -> 3   (+2 / -201)
+      -  sub $0x78,%rsp
+      -  mov %rbx,0x48(%rsp)
+      -  mov (%rdi),%rbx
+      -  mov (%rbx),%rdi
+      -  mov %rbx,0x20(%rsp)
+      -  call <main::{lambda()#50}::operator()() const>
+      -  mov 0x8(%rbx),%rdx
+      -  mov (%rdx),%rax
+      -  mov 0x8(%rdx),%rcx
+      -  cmp %rcx,%rax
+      -  je L108
+      -  mov %rcx,%rsi
+      -  mov %rbp,0x50(%rsp)
+      -  sub %rax,%rsi
+      -  mov %r12,0x58(%rsp)
+      -  and $0x20,%esi
+      -  mov %r13,0x60(%rsp)
+      -  mov %r14,0x68(%rsp)
+      -  mov %r15,0x70(%rsp)
+      -  je L25
+      -  movb $0x0,0x1c(%rax)
+      -  add $0x20,%rax
+      -  cmp %rax,%rcx
+      -  je L30
+      -  xchg %ax,%ax
+      -  movb $0x0,0x1c(%rax)
+      -  add $0x40,%rax
+      -  movb $0x0,-0x4(%rax)
+      -  cmp %rax,%rcx
+      -  jne L25
+      -  xor %ebp,%ebp
+      -  xchg %ax,%ax
+      -  data16 cs nopw 0x0(%rax,%rax,1)
+      -  mov 0x20(%rsp),%rax
+      -  movslq %ebp,%rbx
+      -  shl $0x5,%rbx
+      -  mov 0x10(%rax),%r14
+      -  mov (%r14),%rax
+      -  add (%rax),%rbx
+      -  mov 0x18(%rbx),%r12d
+      -  movl $0x0,0x3c(%rsp)
+      -  test %r12d,%r12d
+      -  jns L127
+      -  mov 0x8(%r14),%rax
+      -  movl $0xffffffff,0x2c(%rsp)
+      -  mov (%rax),%r10
+      -  mov 0x8(%rax),%r13
+      -  cmp %r13,%r10
+      -  je L97
+      -  mov %r10,%r15
+      -  xor %edx,%edx
+      -  nopl 0x0(%rax)
+      -  cmp %ebp,0x10(%r15)
+      -  jne L84
+      -  movzbl 0x20(%r15),%r12d
+      -  test %r12b,%r12b
+      -  je L84
+      -  mov 0x8(%rbx),%rax
+      -  mov %rax,0x10(%rsp)
+      -  call REL R_X86_64_PLT32 strata::kernels::cpu::expert_layout()
+      -  movq $0x151800,0x8(%rsp)
+      -  cmpb $0x0,(%rax)
+      -  je L67
+      -  movslq (%r15),%rdx
+      -  mov 0x48(%rax),%rax
+      -  mov (%rax,%rdx,8),%rax
+      -  mov %rax,0x8(%rsp)
+      -  mov 0xc(%r15),%esi
+      -  mov (%rbx),%rdi
+      -  call REL R_X86_64_PLT32 strata::core::ExpertCache::device_slot(int)
+      -  movslq (%r15),%rdx
+      -  mov 0x18(%r15),%rsi
+      -  mov %rax,0x18(%rsp)
+      -  mov 0x10(%r14),%rdi
+      -  call REL R_X86_64_PLT32 strata::core::FileExpertSource::exchange_buffer(long, long) const
+      -  mov 0x10(%rsp),%r8
+      -  mov 0x8(%rsp),%rdx
+      -  mov $0x2,%ecx
+      -  mov %rax,%rdi
+      -  mov 0x18(%rsp),%rsi
+      -  call REL R_X86_64_PLT32 cudaMemcpyAsync
+      -  test %eax,%eax
+      -  jne L112
+      -  mov %r12d,%edx
+      -  add $0x30,%r15
+      -  cmp %r15,%r13
+      -  jne L52
+      -  mov 0x2c(%rsp),%edi
+      -  test %edi,%edi
+      -  js L93
+      -  mov %dl,0x8(%rsp)
+      -  call REL R_X86_64_PLT32 cudaSetDevice
+      -  movzbl 0x8(%rsp),%edx
+      -  test %dl,%dl
+      -  jne L159
+      -  mov 0x20(%rsp),%rax
+      -  mov 0x8(%rax),%rdx
+      -  mov 0x8(%rdx),%rax
+      -  sub (%rdx),%rax
+      -  add $0x1,%rbp
+      -  sar $0x5,%rax
+      -  cmp %rax,%rbp
+      -  jb L33
+      -  mov 0x50(%rsp),%rbp
+      -  mov 0x58(%rsp),%r12
+      -  mov 0x60(%rsp),%r13
+      -  mov 0x68(%rsp),%r14
+      -  mov 0x70(%rsp),%r15
+      -  mov 0x48(%rsp),%rbx
+      -  add $0x78,%rsp
+      -  ret 
+      -  nop 
+      -  mov %eax,%edi
+      -  call REL R_X86_64_PLT32 cudaGetErrorString
+      -  mov 0xc(%r15),%ecx
+      -  mov (%r15),%edx
+      -  mov %rax,%r9
+      -  mov REL R_X86_64_32 .rodata.str1.8
+      -  mov 0x18(%rbx),%r8d
+      -  mov REL R_X86_64_PC32 stderr
+      -  xor %eax,%eax
+      -  call REL R_X86_64_PLT32 fprintf
+      -  mov 0x18(%r14),%rdx
+      -  mov $0x1,%eax
+      -  xchg %al,(%rdx)
+      -  jmp L83
+      +  mov (%rdi),%rdi
+      +  jmp <main::{lambda()#51}::operator()() const>
+      =  nopl 0x0(%rax,%rax,1)
+      =  lea 0x3c(%rsp),%rdi
+      =  jmp L83
+      =  nopl 0x0(%rax,%rax,1)
+      -  lea 0x3c(%rsp),%rdi
+      -  call REL R_X86_64_PLT32 cudaGetDevice
+      -  test %eax,%eax
+      -  jne L151
+      -  cmp 0x3c(%rsp),%r12d
+      -  je L151
+      -  mov %r12d,%edi
+      -  call REL R_X86_64_PLT32 cudaSetDevice
+      -  test %eax,%eax
+      -  jne L151
+      -  mov 0x3c(%rsp),%eax
+      -  mov %eax,0x2c(%rsp)
+      -  mov 0x8(%r14),%rax
+      -  mov (%rax),%r10
+      -  mov 0x8(%rax),%r13
+      -  cmp %r13,%r10
+      -  jne L49
+      -  mov 0x2c(%rsp),%eax
+      -  test %eax,%eax
+      -  js L95
+      -  mov 0x2c(%rsp),%edi
+      -  call REL R_X86_64_PLT32 cudaSetDevice
+      -  jmp L95
+      -  nopw 0x0(%rax,%rax,1)
+      -  mov 0x8(%r14),%rax
+      -  mov (%rax),%r10
+      -  mov 0x8(%rax),%r13
+      -  movl $0xffffffff,0x2c(%rsp)
+      -  cmp %r10,%r13
+      -  jne L49
+      -  jmp L95
+      -  nopl 0x0(%rax)
+      -  mov 0x18(%rbx),%r12d
+      -  mov 0x20(%r14),%r13
+      -  movl $0x0,0x3c(%rsp)
+      -  test %r12d,%r12d
+      -  jns L179
+      -  mov $0xffffffff,%r12d
+      -  mov 0x8(%rbx),%rsi
+      -  mov 0x10(%rbx),%rdi
+      -  call REL R_X86_64_PLT32 cudaEventRecord
+      -  test %eax,%eax
+      -  jne L192
+      -  mov 0x8(%rbx),%rdi
+      -  call REL R_X86_64_PLT32 cudaStreamQuery
+      -  movb $0x1,0x1c(%rbx)
+      -  test %r12d,%r12d
+      -  js L95
+      -  mov %r12d,%edi
+      -  call REL R_X86_64_PLT32 cudaSetDevice
+      -  jmp L95
+      -  nopw 0x0(%rax,%rax,1)
+      -  lea 0x3c(%rsp),%rdi
+      -  call REL R_X86_64_PLT32 cudaGetDevice
+      -  test %eax,%eax
+      -  jne L164
+      -  cmp 0x3c(%rsp),%r12d
+      -  je L164
+      -  mov %r12d,%edi
+      -  call REL R_X86_64_PLT32 cudaSetDevice
+      -  test %eax,%eax
+      -  jne L164
+      -  mov 0x3c(%rsp),%r12d
+      -  jmp L165
+      -  nopl 0x0(%rax,%rax,1)
+      -  mov 0x0(%r13),%rdx
+      -  mov $0x1,%eax
+      -  xchg %al,(%rdx)
+      -  jmp L170
+      -  mov %rax,%rbx
+      -  jmp REL R_X86_64_PC32 .text.unlikely
+      -  mov %rax,%rbx
+      -  jmp REL R_X86_64_PC32 .text.unlikely
+      -  nop 
+      -  xchg %ax,%ax
+
+DIFFERENT  std::_Function_handler<void (), main::{lambda()#51}>::_M_manager(std::_Any_data&, std::_Any_data const&, std::_Manager_operation)   instructions 43 -> 52   (+14 / -5)
+      =  test %rdi,%rdi
+      =  je L9
+      -  mov $0x18,%esi
+      +  mov $0x58,%esi
+      =  call REL R_X86_64_PLT32 operator delete(void*, unsigned long)
+      =  jmp L9
+      =  mov (%rsi),%rdx
+      =  mov %rdi,0x8(%rsp)
+      -  mov $0x18,%edi
+      +  mov $0x58,%edi
+      =  mov %rdx,(%rsp)
+      =  call REL R_X86_64_PLT32 operator new(unsigned long)
+      =  movdqu (%rdx),%xmm0
+      =  movups %xmm0,(%rax)
+      -  mov 0x10(%rdx),%rdx
+      +  movdqu 0x10(%rdx),%xmm0
+      +  movups %xmm0,0x10(%rax)
+      +  movdqu 0x20(%rdx),%xmm0
+      +  movups %xmm0,0x20(%rax)
+      +  movdqu 0x30(%rdx),%xmm0
+      +  movups %xmm0,0x30(%rax)
+      +  movdqu 0x40(%rdx),%xmm0
+      +  movups %xmm0,0x40(%rax)
+      +  mov 0x50(%rdx),%rdx
+      =  mov %rax,(%rcx)
+      =  mov %rdx,0x10(%rax)
+      =  mov 0x10(%rdx),%rdx
+      =  mov %rax,(%rcx)
+      -  mov %rdx,0x10(%rax)
+      +  mov %rdx,0x50(%rax)
+      =  jmp L9
+      =  nopl 0x0(%rax,%rax,1)
+      =  mov %rdx,0x10(%rax)
+      =  jmp L9
+      -  nopl 0x0(%rax,%rax,1)
+      +  nopl (%rax)
+      +  data16 cs nopw 0x0(%rax,%rax,1)
+
+DIFFERENT  std::_Function_handler<void (), main::{lambda()#52}>::_M_invoke(std::_Any_data const&)   instructions 262 -> 202   (+167 / -227)
+      -  push %r15
+      -  push %r14
+      -  push %r13
+      -  push %r12
+      -  push %rbp
+      -  push %rbx
+      -  sub $0x48,%rsp
+      -  mov (%rdi),%r12
+      -  mov (%r12),%rax
+      -  mov (%rax),%rbp
+      -  mov 0x8(%rax),%rbx
+      -  sub %rbp,%rbx
+      -  mov %rbx,%r14
+      -  sar $0x5,%r14
+      -  mov %r14,0x28(%rsp)
+      -  je L254
+      -  mov %r14,%rdi
+      -  call REL R_X86_64_PLT32 operator new(unsigned long)
+      -  mov %r14,%rdx
+      -  xor %esi,%esi
+      -  mov %rax,%rdi
+      -  mov %rax,%r15
+      -  call REL R_X86_64_PLT32 memset
+      -  mov 0x8(%r12),%rax
+      -  mov (%rax),%r13
+      -  mov 0x10(%r12),%rax
+      -  cmp (%rax),%r13
+      -  jb L80
+      -  jmp L130
+      +  sub $0x78,%rsp
+      +  mov %rbx,0x48(%rsp)
+      +  mov (%rdi),%rbx
+      +  mov (%rbx),%rdi
+      +  mov %rbx,0x20(%rsp)
+      +  call <main::{lambda()#51}::operator()() const>
+      +  mov 0x8(%rbx),%rdx
+      +  mov (%rdx),%rax
+      +  mov 0x8(%rdx),%rcx
+      +  cmp %rcx,%rax
+      +  je L108
+      +  mov %rcx,%rsi
+      +  mov %rbp,0x50(%rsp)
+      +  sub %rax,%rsi
+      +  mov %r12,0x58(%rsp)
+      +  and $0x20,%esi
+      +  mov %r13,0x60(%rsp)
+      +  mov %r14,0x68(%rsp)
+      +  mov %r15,0x70(%rsp)
+      +  je L25
+      +  movb $0x0,0x1c(%rax)
+      +  add $0x20,%rax
+      +  cmp %rax,%rcx
+      +  je L30
+      +  xchg %ax,%ax
+      +  movb $0x0,0x1c(%rax)
+      +  add $0x40,%rax
+      +  movb $0x0,-0x4(%rax)
+      +  cmp %rax,%rcx
+      +  jne L25
+      +  xor %ebp,%ebp
+      +  xchg %ax,%ax
+      +  data16 cs nopw 0x0(%rax,%rax,1)
+      +  mov 0x20(%rsp),%rax
+      +  movslq %ebp,%rbx
+      +  shl $0x5,%rbx
+      +  mov 0x10(%rax),%r14
+      +  mov (%r14),%rax
+      +  add (%rax),%rbx
+      +  mov 0x18(%rbx),%r12d
+      +  movl $0x0,0x3c(%rsp)
+      +  test %r12d,%r12d
+      +  jns L127
+      +  mov 0x8(%r14),%rax
+      +  movl $0xffffffff,0x2c(%rsp)
+      +  mov (%rax),%r10
+      +  mov 0x8(%rax),%r13
+      +  cmp %r13,%r10
+      +  je L97
+      +  mov %r10,%r15
+      +  xor %edx,%edx
+      =  nopl 0x0(%rax)
+      =  movslq 0x4(%rbx),%rdx
+      =  jmp L130
+      =  nopl 0x0(%rax)
+      -  movslq 0x4(%rbx),%rdx
+      -  movslq (%rbx),%rsi
+      -  mov 0x18(%r14),%rdi
+      -  call REL R_X86_64_PLT32 strata::core::FileExpertSource::resident_blob(long, long) const
+      -  mov %rax,%rbp
+      -  test %rax,%rax
+      -  je L95
+      -  mov 0x28(%r12),%rax
+      -  movslq 0x10(%rbx),%r14
+      -  mov %rax,0x20(%rsp)
+      -  mov (%rax),%rax
+      -  shl $0x5,%r14
+      -  add (%rax),%r14
+      -  mov 0x18(%r14),%edx
+      -  movl $0x0,0x3c(%rsp)
+      -  test %edx,%edx
+      -  jns L172
+      -  movl $0xffffffff,0xc(%rsp)
+      -  mov 0x8(%r14),%rax
+      +  cmp %ebp,0x10(%r15)
+      +  jne L84
+      +  movzbl 0x20(%r15),%r12d
+      +  test %r12b,%r12b
+      +  je L84
+      +  mov 0x8(%rbx),%rax
+      =  mov %rax,0x10(%rsp)
+      =  call REL R_X86_64_PLT32 strata::kernels::cpu::expert_layout()
+      =  mov %rax,0x10(%rsp)
+      =  call REL R_X86_64_PLT32 strata::kernels::cpu::expert_layout()
+      -  mov $0x151800,%edx
+      +  movq $0x151800,0x8(%rsp)
+      =  cmpb $0x0,(%rax)
+      =  je L57
+      =  mov $0x151800,%edx
+      =  cmpb $0x0,(%rax)
+      -  je L57
+      -  movslq (%rbx),%rdx
+      +  je L67
+      +  movslq (%r15),%rdx
+      =  mov 0x48(%rax),%rax
+      =  mov (%rax,%rdx,8),%rdx
+      =  movslq (%rbx),%rdx
+      =  mov 0x48(%rax),%rax
+      -  mov (%rax,%rdx,8),%rdx
+      -  mov 0xc(%rbx),%esi
+      -  mov (%r14),%rdi
+      -  mov %rdx,0x18(%rsp)
+      +  mov (%rax,%rdx,8),%rax
+      +  mov %rax,0x8(%rsp)
+      +  mov 0xc(%r15),%esi
+      +  mov (%rbx),%rdi
+      =  call REL R_X86_64_PLT32 strata::core::ExpertCache::device_slot(int)
+      =  mov 0x10(%rsp),%r8
+      =  mov %rdx,0x18(%rsp)
+      =  call REL R_X86_64_PLT32 strata::core::ExpertCache::device_slot(int)
+      +  movslq (%r15),%rdx
+      +  mov 0x18(%r15),%rsi
+      +  mov %rax,0x18(%rsp)
+      +  mov 0x10(%r14),%rdi
+      +  call REL R_X86_64_PLT32 strata::core::FileExpertSource::exchange_buffer(long, long) const
+      =  mov 0x10(%rsp),%r8
+      =  mov 0x18(%rsp),%rdx
+
+DIFFERENT  std::_Function_handler<void (), main::{lambda()#52}>::_M_invoke(std::_Any_data const&) [clone .cold]   instructions 16 -> 13   (+8 / -11)
+      -  test %ebp,%ebp
+      +  cmpl $0x0,0x2c(%rsp)
+      =  js L4
+      =  mov %ebp,%edi
+      =  test %ebp,%ebp
+      =  js L4
+      -  mov %ebp,%edi
+      +  mov 0x2c(%rsp),%edi
+      =  call REL R_X86_64_PLT32 cudaSetDevice
+      =  test %r15,%r15
+      =  mov %ebp,%edi
+      =  call REL R_X86_64_PLT32 cudaSetDevice
+      -  test %r15,%r15
+      -  je L9
+      -  mov 0x28(%rsp),%rsi
+      -  mov %r15,%rdi
+      -  call REL R_X86_64_PLT32 operator delete(void*, unsigned long)
+      =  mov %rbx,%rdi
+      =  call REL R_X86_64_PLT32 _Unwind_Resume
+      =  mov %rbx,%rdi
+      =  call REL R_X86_64_PLT32 _Unwind_Resume
+      -  cmpl $0x0,0xc(%rsp)
+      -  js L4
+      -  mov 0xc(%rsp),%edi
+      +  test %r12d,%r12d
+      +  js L10
+      +  mov %r12d,%edi
+      =  call REL R_X86_64_PLT32 cudaSetDevice
+      =  jmp L4
+      =  mov 0xc(%rsp),%edi
+      =  call REL R_X86_64_PLT32 cudaSetDevice
+      -  jmp L4
+      +  mov %rbx,%rdi
+      +  call REL R_X86_64_PLT32 _Unwind_Resume
+      +  nop 
+
+DIFFERENT  std::_Function_handler<void (), main::{lambda()#52}>::_M_manager(std::_Any_data&, std::_Any_data const&, std::_Manager_operation)   instructions 46 -> 43   (+5 / -8)
+      =  test %rdi,%rdi
+      =  je L9
+      -  mov $0x38,%esi
+      +  mov $0x18,%esi
+      =  call REL R_X86_64_PLT32 operator delete(void*, unsigned long)
+      =  jmp L9
+      =  mov (%rsi),%rdx
+      =  mov %rdi,0x8(%rsp)
+      -  mov $0x38,%edi
+      +  mov $0x18,%edi
+      =  mov %rdx,(%rsp)
+      =  call REL R_X86_64_PLT32 operator new(unsigned long)
+      =  movdqu (%rdx),%xmm0
+      =  movups %xmm0,(%rax)
+      -  movdqu 0x10(%rdx),%xmm0
+      -  movups %xmm0,0x10(%rax)
+      -  movdqu 0x20(%rdx),%xmm0
+      -  movups %xmm0,0x20(%rax)
+      -  mov 0x30(%rdx),%rdx
+      +  mov 0x10(%rdx),%rdx
+      =  mov %rax,(%rcx)
+      =  mov %rdx,0x30(%rax)
+      =  mov 0x30(%rdx),%rdx
+      =  mov %rax,(%rcx)
+      -  mov %rdx,0x30(%rax)
+      +  mov %rdx,0x10(%rax)
+      =  jmp L9
+      =  mov %rdx,0x30(%rax)
+      =  jmp L9
+      +  nopl 0x0(%rax,%rax,1)
+
+DIFFERENT  std::thread::_State_impl<std::thread::_Invoker<std::tuple<main::{lambda(long, long, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >&)#3}::operator()(long, long, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >&) const::{lambda()#9}> > >::_M_run()   instructions 318 -> 321   (+8 / -5)
+      =  movzbl REL R_X86_64_PC32 guard variable for strata::aux_cpus::detail::state()::s
+      =  test %al,%al
+      -  je L265
+      +  je L268
+      =  mov REL R_X86_64_32 strata::aux_cpus::detail::state()::s
+      =  call REL R_X86_64_PLT32 pthread_mutex_lock
+      =  movaps %xmm0,0xb0(%rsp)
+      =  movaps %xmm0,0xc0(%rsp)
+      -  jmp L254
+      -  nopw 0x0(%rax,%rax,1)
+      +  jmp L257
+      +  nopl 0x0(%rax,%rax,1)
+      +  data16 cs nopw 0x0(%rax,%rax,1)
+      +  data16 cs nopw 0x0(%rax,%rax,1)
+      +  data16 cs nopw 0x0(%rax,%rax,1)
+      =  add $0x4,%r14
+      =  movslq (%r14),%rax
+      =  mov %rax,%rcx
+      =  cmp $0x3ff,%rax
+      -  ja L262
+      +  ja L265
+      =  shr $0x6,%rax
+      =  mov $0x1,%edx
+      =  or %rdx,0x0(%rbp,%rax,8)
+      =  cmp %r14,%rdi
+      -  jne L253
+      +  jne L256
+      =  jmp L153
+      =  mov REL R_X86_64_32 guard variable for strata::aux_cpus::detail::state()::s
+
+DIFFERENT  strata::core::ExpertDispatch::operator=(strata::core::ExpertDispatch const&) [clone .isra.0]   instructions 773 -> 777   (+48 / -44)
+      =  movaps %xmm0,0x10(%rdi)
+      =  cmp $0x8,%rax
+      -  je L613
+      +  je L617
+      =  movdqu 0x20(%rsi),%xmm0
+      =  movups %xmm0,0x20(%rdi)
+      =  sub %rcx,%r8
+      =  cmp %r12,%r8
+      -  jb L390
+      +  jb L394
+      =  mov 0x1f8(%rbx),%rdi
+      =  mov %rdi,%rdx
+      =  sub %rcx,%rdx
+      =  cmp %r12,%rdx
+      -  jb L484
+      +  jb L488
+      =  cmp $0x20,%r12
+      =  jle L620
+      =  jb L484
+      =  cmp $0x20,%r12
+      -  jle L620
+      +  jle L624
+      =  mov %r12,%rdx
+      =  mov %rcx,%rdi
+      =  sub %r8,%r9
+      =  cmp %r12,%r9
+      -  jb L436
+      +  jb L440
+      =  mov 0x1f48(%rbx),%r11
+      =  mov %r11,%r9
+      =  sub %r8,%r9
+      =  cmp %r12,%r9
+      -  jb L568
+      +  jb L572
+      =  cmp $0x1d00,%r12
+      =  jle L709
+
+BASELINE ONLY (89):
+    main::{lambda()#107}::operator()() const
+    main::{lambda()#107}::operator()() const [clone .cold]
+    main::{lambda()#30}::operator()() const
+    main::{lambda()#33}::operator()() const
+    main::{lambda()#33}::operator()() const [clone .cold]
+    main::{lambda()#36}::operator()() const
+    main::{lambda()#36}::operator()() const [clone .cold]
+    main::{lambda()#38}::operator()() const [clone .isra.0]
+    main::{lambda()#39}::operator()() const
+    main::{lambda()#39}::operator()() const [clone .cold]
+    main::{lambda()#44}::operator()() const
+    main::{lambda()#44}::operator()() const [clone .cold]
+    main::{lambda()#50}::operator()() const
+    main::{lambda()#50}::operator()() const [clone .cold]
+    main::{lambda()#53}::operator()() const
+    main::{lambda()#53}::operator()() const [clone .cold]
+    main::{lambda()#55}::operator()() const
+    main::{lambda()#55}::operator()() const [clone .cold]
+    main::{lambda()#64}::operator()() const [clone .part.0]
+    main::{lambda()#66}::operator()() const [clone .isra.0]
+    main::{lambda()#69}::operator()() const
+    main::{lambda()#69}::operator()() const [clone .cold]
+    main::{lambda()#69}::operator()() const::{lambda(int, int, main::{lambda()#69}::operator()() const::CohortWin&, unsigned long&)#1}::operator()(int, int, main::{lambda()#69}::operator()() const::CohortWin&, unsigned long&) const
+    main::{lambda()#69}::operator()() const::{lambda(strata::core::Verifier&, main::{lambda()#69}::operator()() const::CohortWin&)#1}::operator()(strata::core::Verifier&, main::{lambda()#69}::operator()() const::CohortWin&) const
+    main::{lambda()#69}::operator()() const::{lambda(strata::core::Verifier&, main::{lambda()#69}::operator()() const::CohortWin&)#1}::operator()(strata::core::Verifier&, main::{lambda()#69}::operator()() const::CohortWin&) const [clone .cold]
+    main::{lambda()#69}::operator()() const::{lambda(strata::core::Verifier&, main::{lambda()#69}::operator()() const::CohortWin&)#1}::operator()(strata::core::Verifier&, main::{lambda()#69}::operator()() const::CohortWin&) const::{lambda()#1}::operator()() const [clone .isra.0]
+    main::{lambda()#72}::operator()() const
+    main::{lambda()#73}::operator()() const [clone .cold]
+    main::{lambda()#78}::operator()() const
+    main::{lambda()#78}::operator()() const [clone .cold]
+    main::{lambda()#81}::operator()() const [clone .isra.0]
+    main::{lambda()#91}::operator()() const
+    main::{lambda()#93}::operator()() const
+    main::{lambda()#93}::operator()() const [clone .cold]
+    main::{lambda()#94}::operator()() const [clone .isra.0]
+    main::{lambda()#98}::operator()() const [clone .isra.0]
+    std::_Function_handler<bool (), main::{lambda()#60}>::_M_invoke(std::_Any_data const&)
+    std::_Function_handler<bool (), main::{lambda()#60}>::_M_manager(std::_Any_data&, std::_Any_data const&, std::_Manager_operation)
+    std::_Function_handler<bool (unsigned long, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >&), main::{lambda()#73}::operator()() const::{lambda(unsigned long, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >&)#1}>::_M_invoke(std::_Any_data const&, unsigned long&&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >&)
+    std::_Function_handler<bool (unsigned long, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >&), main::{lambda()#73}::operator()() const::{lambda(unsigned long, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >&)#1}>::_M_invoke(std::_Any_data const&, unsigned long&&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >&) [clone .cold]
+    std::_Function_handler<bool (unsigned long, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >&), main::{lambda()#73}::operator()() const::{lambda(unsigned long, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >&)#1}>::_M_manager(std::_Any_data&, std::_Any_data const&, std::_Manager_operation)
+    std::_Function_handler<void (), main::{lambda()#103}>::_M_invoke(std::_Any_data const&)
+    std::_Function_handler<void (), main::{lambda()#103}>::_M_manager(std::_Any_data&, std::_Any_data const&, std::_Manager_operation)
+    std::_Function_handler<void (), main::{lambda()#34}>::_M_invoke(std::_Any_data const&)
+    std::_Function_handler<void (), main::{lambda()#34}>::_M_manager(std::_Any_data&, std::_Any_data const&, std::_Manager_operation)
+    std::_Function_handler<void (), main::{lambda()#50}>::_M_invoke(std::_Any_data const&)
+    std::_Function_handler<void (), main::{lambda()#50}>::_M_manager(std::_Any_data&, std::_Any_data const&, std::_Manager_operation)
+    std::_Function_handler<void (), main::{lambda()#51}>::_M_invoke(std::_Any_data const&) [clone .cold]
+    std::_Function_handler<void (), main::{lambda()#54}>::_M_invoke(std::_Any_data const&)
+    std::_Function_handler<void (), main::{lambda()#54}>::_M_manager(std::_Any_data&, std::_Any_data const&, std::_Manager_operation)
+    std::_Function_handler<void (), main::{lambda()#56}>::_M_invoke(std::_Any_data const&)
+    std::_Function_handler<void (), main::{lambda()#56}>::_M_invoke(std::_Any_data const&) [clone .cold]
+    std::_Function_handler<void (), main::{lambda()#56}>::_M_manager(std::_Any_data&, std::_Any_data const&, std::_Manager_operation)
+    std::_Function_handler<void (), main::{lambda()#77}>::_M_invoke(std::_Any_data const&)
+    std::_Function_handler<void (), main::{lambda()#77}>::_M_manager(std::_Any_data&, std::_Any_data const&, std::_Manager_operation)
+    std::_Function_handler<void (), main::{lambda()#90}>::_M_invoke(std::_Any_data const&)
+    std::_Function_handler<void (), main::{lambda()#90}>::_M_invoke(std::_Any_data const&) [clone .cold]
+    std::_Function_handler<void (), main::{lambda()#90}>::_M_manager(std::_Any_data&, std::_Any_data const&, std::_Manager_operation)
+    std::thread::_State_impl<std::thread::_Invoker<std::tuple<main::{lambda()#102}> > >::_M_run()
+    std::thread::_State_impl<std::thread::_Invoker<std::tuple<main::{lambda()#102}> > >::_M_run() [clone .cold]
+    std::thread::_State_impl<std::thread::_Invoker<std::tuple<main::{lambda()#102}> > >::~_State_impl()
+    std::thread::_State_impl<std::thread::_Invoker<std::tuple<main::{lambda()#108}> > >::_M_run()
+    std::thread::_State_impl<std::thread::_Invoker<std::tuple<main::{lambda()#108}> > >::_M_run() [clone .cold]
+    std::thread::_State_impl<std::thread::_Invoker<std::tuple<main::{lambda()#108}> > >::~_State_impl()
+    std::thread::_State_impl<std::thread::_Invoker<std::tuple<main::{lambda()#58}> > >::_M_run()
+    std::thread::_State_impl<std::thread::_Invoker<std::tuple<main::{lambda()#58}> > >::~_State_impl()
+    std::thread::_State_impl<std::thread::_Invoker<std::tuple<main::{lambda()#61}> > >::_M_run()
+    std::thread::_State_impl<std::thread::_Invoker<std::tuple<main::{lambda()#61}> > >::_M_run() [clone .cold]
+    std::thread::_State_impl<std::thread::_Invoker<std::tuple<main::{lambda()#61}> > >::~_State_impl()
+    std::thread::_State_impl<std::thread::_Invoker<std::tuple<main::{lambda()#69}::operator()() const::{lambda()#3}> > >::_M_run()
+    std::thread::_State_impl<std::thread::_Invoker<std::tuple<main::{lambda()#69}::operator()() const::{lambda()#3}> > >::_M_run() [clone .cold]
+    std::thread::_State_impl<std::thread::_Invoker<std::tuple<main::{lambda()#69}::operator()() const::{lambda()#3}> > >::~_State_impl()
+    std::thread::_State_impl<std::thread::_Invoker<std::tuple<main::{lambda()#69}::operator()() const::{lambda()#5}> > >::_M_run()
+    std::thread::_State_impl<std::thread::_Invoker<std::tuple<main::{lambda()#69}::operator()() const::{lambda()#5}> > >::~_State_impl()
+    std::thread::_State_impl<std::thread::_Invoker<std::tuple<main::{lambda()#69}::operator()() const::{lambda()#6}> > >::_M_run()
+    std::thread::_State_impl<std::thread::_Invoker<std::tuple<main::{lambda()#69}::operator()() const::{lambda()#6}> > >::~_State_impl()
+    std::thread::_State_impl<std::thread::_Invoker<std::tuple<main::{lambda()#75}> > >::_M_run()
+    std::thread::_State_impl<std::thread::_Invoker<std::tuple<main::{lambda()#75}> > >::_M_run() [clone .cold]
+    std::thread::_State_impl<std::thread::_Invoker<std::tuple<main::{lambda()#75}> > >::~_State_impl()
+    std::thread::_State_impl<std::thread::_Invoker<std::tuple<main::{lambda()#93}::operator()() const::{lambda()#1}> > >::_M_run()
+    std::thread::_State_impl<std::thread::_Invoker<std::tuple<main::{lambda()#93}::operator()() const::{lambda()#1}> > >::_M_run() [clone .cold]
+    std::thread::_State_impl<std::thread::_Invoker<std::tuple<main::{lambda()#93}::operator()() const::{lambda()#1}> > >::~_State_impl()
+    std::vector<main::{lambda()#73}::operator()() const::Found, std::allocator<main::{lambda()#73}::operator()() const::Found> >::~vector()
+    void std::__insertion_sort<__gnu_cxx::__normal_iterator<main::{lambda()#73}::operator()() const::Found*, std::vector<main::{lambda()#73}::operator()() const::Found, std::allocator<main::{lambda()#73}::operator()() const::Found> > >, main::{lambda()#73}::operator()() const::{lambda(main::{lambda()#73}::operator()() const::Found const&, main::{lambda()#73}::operator()() const::Found const&)#1}>(__gnu_cxx::__normal_iterator<main::{lambda()#73}::operator()() const::Found*, std::vector<main::{lambda()#73}::operator()() const::Found, std::allocator<main::{lambda()#73}::operator()() const::Found> > >, __gnu_cxx::__normal_iterator<main::{lambda()#73}::operator()() const::Found*, std::vector<main::{lambda()#73}::operator()() const::Found, std::allocator<main::{lambda()#73}::operator()() const::Found> > >, main::{lambda()#73}::operator()() const::{lambda(main::{lambda()#73}::operator()() const::Found const&, main::{lambda()#73}::operator()() const::Found const&)#1}) [clone .isra.0]
+    void std::__introsort_loop<__gnu_cxx::__normal_iterator<main::{lambda()#107}::operator()() const::Swap*, std::vector<main::{lambda()#107}::operator()() const::Swap, std::allocator<main::{lambda()#107}::operator()() const::Swap> > >, long, main::{lambda()#107}::operator()() const::{lambda(main::{lambda()#107}::operator()() const::Swap const&, main::{lambda()#107}::operator()() const::Swap const&)#1}>(__gnu_cxx::__normal_iterator<main::{lambda()#107}::operator()() const::Swap*, std::vector<main::{lambda()#107}::operator()() const::Swap, std::allocator<main::{lambda()#107}::operator()() const::Swap> > >, __gnu_cxx::__normal_iterator<main::{lambda()#107}::operator()() const::Swap*, std::vector<main::{lambda()#107}::operator()() const::Swap, std::allocator<main::{lambda()#107}::operator()() const::Swap> > >, long, main::{lambda()#107}::operator()() const::{lambda(main::{lambda()#107}::operator()() const::Swap const&, main::{lambda()#107}::operator()() const::Swap const&)#1}) [clone .isra.0]
+    void std::__introsort_loop<__gnu_cxx::__normal_iterator<main::{lambda()#50}::operator()() const::C*, std::vector<main::{lambda()#50}::operator()() const::C, std::allocator<main::{lambda()#50}::operator()() const::C> > >, long, main::{lambda()#50}::operator()() const::{lambda(main::{lambda()#50}::operator()() const::C const&, main::{lambda()#50}::operator()() const::C const&)#1}>(__gnu_cxx::__normal_iterator<main::{lambda()#50}::operator()() const::C*, std::vector<main::{lambda()#50}::operator()() const::C, std::allocator<main::{lambda()#50}::operator()() const::C> > >, __gnu_cxx::__normal_iterator<main::{lambda()#50}::operator()() const::C*, std::vector<main::{lambda()#50}::operator()() const::C, std::allocator<main::{lambda()#50}::operator()() const::C> > >, long, main::{lambda()#50}::operator()() const::{lambda(main::{lambda()#50}::operator()() const::C const&, main::{lambda()#50}::operator()() const::C const&)#1}) [clone .isra.0]
+    void std::__introsort_loop<__gnu_cxx::__normal_iterator<main::{lambda()#73}::operator()() const::Found*, std::vector<main::{lambda()#73}::operator()() const::Found, std::allocator<main::{lambda()#73}::operator()() const::Found> > >, long, main::{lambda()#73}::operator()() const::{lambda(main::{lambda()#73}::operator()() const::Found const&, main::{lambda()#73}::operator()() const::Found const&)#1}>(__gnu_cxx::__normal_iterator<main::{lambda()#73}::operator()() const::Found*, std::vector<main::{lambda()#73}::operator()() const::Found, std::allocator<main::{lambda()#73}::operator()() const::Found> > >, __gnu_cxx::__normal_iterator<main::{lambda()#73}::operator()() const::Found*, std::vector<main::{lambda()#73}::operator()() const::Found, std::allocator<main::{lambda()#73}::operator()() const::Found> > >, long, main::{lambda()#73}::operator()() const::{lambda(main::{lambda()#73}::operator()() const::Found const&, main::{lambda()#73}::operator()() const::Found const&)#1}) [clone .isra.0]
+    void std::__introsort_loop<__gnu_cxx::__normal_iterator<std::pair<float, int>*, std::vector<std::pair<float, int>, std::allocator<std::pair<float, int> > > >, long, main::{lambda()#107}::operator()() const::{lambda(auto:1&, auto:2&)#1}>(__gnu_cxx::__normal_iterator<std::pair<float, int>*, std::vector<std::pair<float, int>, std::allocator<std::pair<float, int> > > >, __gnu_cxx::__normal_iterator<std::pair<float, int>*, std::vector<std::pair<float, int>, std::allocator<std::pair<float, int> > > >, long, main::{lambda()#107}::operator()() const::{lambda(auto:1&, auto:2&)#1}) [clone .isra.0]
+    void std::__introsort_loop<__gnu_cxx::__normal_iterator<std::pair<float, int>*, std::vector<std::pair<float, int>, std::allocator<std::pair<float, int> > > >, long, main::{lambda()#50}::operator()() const::{lambda(auto:1&, auto:2&)#1}>(__gnu_cxx::__normal_iterator<std::pair<float, int>*, std::vector<std::pair<float, int>, std::allocator<std::pair<float, int> > > >, __gnu_cxx::__normal_iterator<std::pair<float, int>*, std::vector<std::pair<float, int>, std::allocator<std::pair<float, int> > > >, long, main::{lambda()#50}::operator()() const::{lambda(auto:1&, auto:2&)#1}) [clone .isra.0]
+
+CANDIDATE ONLY (92):
+    main::{lambda()#108}::operator()() const
+    main::{lambda()#108}::operator()() const [clone .cold]
+    main::{lambda()#31}::operator()() const
+    main::{lambda()#34}::operator()() const
+    main::{lambda()#34}::operator()() const [clone .cold]
+    main::{lambda()#37}::operator()() const
+    main::{lambda()#37}::operator()() const [clone .cold]
+    main::{lambda()#39}::operator()() const [clone .isra.0]
+    main::{lambda()#41}::operator()() const
+    main::{lambda()#41}::operator()() const [clone .cold]
+    main::{lambda()#45}::operator()() const
+    main::{lambda()#45}::operator()() const [clone .cold]
+    main::{lambda()#51}::operator()() const
+    main::{lambda()#51}::operator()() const [clone .cold]
+    main::{lambda()#54}::operator()() const
+    main::{lambda()#54}::operator()() const [clone .cold]
+    main::{lambda()#59}::operator()() const
+    main::{lambda()#59}::operator()() const [clone .cold]
+    main::{lambda()#65}::operator()() const [clone .part.0]
+    main::{lambda()#67}::operator()() const [clone .isra.0]
+    main::{lambda()#70}::operator()() const
+    main::{lambda()#70}::operator()() const [clone .cold]
+    main::{lambda()#70}::operator()() const::{lambda(int, int, main::{lambda()#70}::operator()() const::CohortWin&, unsigned long&)#1}::operator()(int, int, main::{lambda()#70}::operator()() const::CohortWin&, unsigned long&) const
+    main::{lambda()#70}::operator()() const::{lambda(strata::core::Verifier&, main::{lambda()#70}::operator()() const::CohortWin&)#1}::operator()(strata::core::Verifier&, main::{lambda()#70}::operator()() const::CohortWin&) const
+    main::{lambda()#70}::operator()() const::{lambda(strata::core::Verifier&, main::{lambda()#70}::operator()() const::CohortWin&)#1}::operator()(strata::core::Verifier&, main::{lambda()#70}::operator()() const::CohortWin&) const [clone .cold]
+    main::{lambda()#70}::operator()() const::{lambda(strata::core::Verifier&, main::{lambda()#70}::operator()() const::CohortWin&)#1}::operator()(strata::core::Verifier&, main::{lambda()#70}::operator()() const::CohortWin&) const::{lambda()#1}::operator()() const [clone .isra.0]
+    main::{lambda()#75}::operator()() const
+    main::{lambda()#75}::operator()() const [clone .cold]
+    main::{lambda()#79}::operator()() const
+    main::{lambda()#79}::operator()() const [clone .cold]
+    main::{lambda()#83}::operator()() const [clone .isra.0]
+    main::{lambda()#92}::operator()() const
+    main::{lambda()#94}::operator()() const
+    main::{lambda()#94}::operator()() const [clone .cold]
+    main::{lambda()#97}::operator()() const [clone .isra.0]
+    main::{lambda()#99}::operator()() const [clone .isra.0]
+    std::_Function_handler<bool (), main::{lambda()#61}>::_M_invoke(std::_Any_data const&)
+    std::_Function_handler<bool (), main::{lambda()#61}>::_M_manager(std::_Any_data&, std::_Any_data const&, std::_Manager_operation)
+    std::_Function_handler<bool (unsigned long, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >&), main::{lambda()#74}::operator()() const::{lambda(unsigned long, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >&)#1}>::_M_invoke(std::_Any_data const&, unsigned long&&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >&)
+    std::_Function_handler<bool (unsigned long, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >&), main::{lambda()#74}::operator()() const::{lambda(unsigned long, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >&)#1}>::_M_invoke(std::_Any_data const&, unsigned long&&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >&) [clone .cold]
+    std::_Function_handler<bool (unsigned long, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >&), main::{lambda()#74}::operator()() const::{lambda(unsigned long, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >&)#1}>::_M_manager(std::_Any_data&, std::_Any_data const&, std::_Manager_operation)
+    std::_Function_handler<void (), main::{lambda()#107}>::_M_invoke(std::_Any_data const&)
+    std::_Function_handler<void (), main::{lambda()#107}>::_M_manager(std::_Any_data&, std::_Any_data const&, std::_Manager_operation)
+    std::_Function_handler<void (), main::{lambda()#35}>::_M_invoke(std::_Any_data const&)
+    std::_Function_handler<void (), main::{lambda()#35}>::_M_manager(std::_Any_data&, std::_Any_data const&, std::_Manager_operation)
+    std::_Function_handler<void (), main::{lambda()#53}>::_M_invoke(std::_Any_data const&)
+    std::_Function_handler<void (), main::{lambda()#53}>::_M_invoke(std::_Any_data const&) [clone .cold]
+    std::_Function_handler<void (), main::{lambda()#53}>::_M_manager(std::_Any_data&, std::_Any_data const&, std::_Manager_operation)
+    std::_Function_handler<void (), main::{lambda()#55}>::_M_invoke(std::_Any_data const&)
+    std::_Function_handler<void (), main::{lambda()#55}>::_M_manager(std::_Any_data&, std::_Any_data const&, std::_Manager_operation)
+    std::_Function_handler<void (), main::{lambda()#57}>::_M_invoke(std::_Any_data const&)
+    std::_Function_handler<void (), main::{lambda()#57}>::_M_invoke(std::_Any_data const&) [clone .cold]
+    std::_Function_handler<void (), main::{lambda()#57}>::_M_manager(std::_Any_data&, std::_Any_data const&, std::_Manager_operation)
+    std::_Function_handler<void (), main::{lambda()#78}>::_M_invoke(std::_Any_data const&)
+    std::_Function_handler<void (), main::{lambda()#78}>::_M_manager(std::_Any_data&, std::_Any_data const&, std::_Manager_operation)
+    std::_Function_handler<void (), main::{lambda()#91}>::_M_invoke(std::_Any_data const&)
+    std::_Function_handler<void (), main::{lambda()#91}>::_M_invoke(std::_Any_data const&) [clone .cold]
+    std::_Function_handler<void (), main::{lambda()#91}>::_M_manager(std::_Any_data&, std::_Any_data const&, std::_Manager_operation)
+    std::thread::_State_impl<std::thread::_Invoker<std::tuple<main::{lambda()#103}> > >::_M_run()
+    std::thread::_State_impl<std::thread::_Invoker<std::tuple<main::{lambda()#103}> > >::_M_run() [clone .cold]
+    std::thread::_State_impl<std::thread::_Invoker<std::tuple<main::{lambda()#103}> > >::~_State_impl()
+    std::thread::_State_impl<std::thread::_Invoker<std::tuple<main::{lambda()#109}> > >::_M_run()
+    std::thread::_State_impl<std::thread::_Invoker<std::tuple<main::{lambda()#109}> > >::_M_run() [clone .cold]
+    std::thread::_State_impl<std::thread::_Invoker<std::tuple<main::{lambda()#109}> > >::~_State_impl()
+    std::thread::_State_impl<std::thread::_Invoker<std::tuple<main::{lambda()#59}> > >::_M_run()
+    std::thread::_State_impl<std::thread::_Invoker<std::tuple<main::{lambda()#59}> > >::~_State_impl()
+    std::thread::_State_impl<std::thread::_Invoker<std::tuple<main::{lambda()#62}> > >::_M_run()
+    std::thread::_State_impl<std::thread::_Invoker<std::tuple<main::{lambda()#62}> > >::_M_run() [clone .cold]
+    std::thread::_State_impl<std::thread::_Invoker<std::tuple<main::{lambda()#62}> > >::~_State_impl()
+    std::thread::_State_impl<std::thread::_Invoker<std::tuple<main::{lambda()#70}::operator()() const::{lambda()#3}> > >::_M_run()
+    std::thread::_State_impl<std::thread::_Invoker<std::tuple<main::{lambda()#70}::operator()() const::{lambda()#3}> > >::_M_run() [clone .cold]
+    std::thread::_State_impl<std::thread::_Invoker<std::tuple<main::{lambda()#70}::operator()() const::{lambda()#3}> > >::~_State_impl()
+    std::thread::_State_impl<std::thread::_Invoker<std::tuple<main::{lambda()#70}::operator()() const::{lambda()#5}> > >::_M_run()
+    std::thread::_State_impl<std::thread::_Invoker<std::tuple<main::{lambda()#70}::operator()() const::{lambda()#5}> > >::~_State_impl()
+    std::thread::_State_impl<std::thread::_Invoker<std::tuple<main::{lambda()#70}::operator()() const::{lambda()#6}> > >::_M_run()
+    std::thread::_State_impl<std::thread::_Invoker<std::tuple<main::{lambda()#70}::operator()() const::{lambda()#6}> > >::~_State_impl()
+    std::thread::_State_impl<std::thread::_Invoker<std::tuple<main::{lambda()#76}> > >::_M_run()
+    std::thread::_State_impl<std::thread::_Invoker<std::tuple<main::{lambda()#76}> > >::_M_run() [clone .cold]
+    std::thread::_State_impl<std::thread::_Invoker<std::tuple<main::{lambda()#76}> > >::~_State_impl()
+    std::thread::_State_impl<std::thread::_Invoker<std::tuple<main::{lambda()#94}::operator()() const::{lambda()#1}> > >::_M_run()
+    std::thread::_State_impl<std::thread::_Invoker<std::tuple<main::{lambda()#94}::operator()() const::{lambda()#1}> > >::_M_run() [clone .cold]
+    std::thread::_State_impl<std::thread::_Invoker<std::tuple<main::{lambda()#94}::operator()() const::{lambda()#1}> > >::~_State_impl()
+    std::vector<main::{lambda()#74}::operator()() const::Found, std::allocator<main::{lambda()#74}::operator()() const::Found> >::~vector()
+    strata::core::CohortSharedMiss::arm(long, long)
+    strata::core::CohortSharedMiss::~CohortSharedMiss()
+    strata::kernels::cpu::CpuFeatures::usable() const [clone .part.0]
+    void std::__insertion_sort<__gnu_cxx::__normal_iterator<main::{lambda()#74}::operator()() const::Found*, std::vector<main::{lambda()#74}::operator()() const::Found, std::allocator<main::{lambda()#74}::operator()() const::Found> > >, main::{lambda()#74}::operator()() const::{lambda(main::{lambda()#74}::operator()() const::Found const&, main::{lambda()#74}::operator()() const::Found const&)#1}>(__gnu_cxx::__normal_iterator<main::{lambda()#74}::operator()() const::Found*, std::vector<main::{lambda()#74}::operator()() const::Found, std::allocator<main::{lambda()#74}::operator()() const::Found> > >, __gnu_cxx::__normal_iterator<main::{lambda()#74}::operator()() const::Found*, std::vector<main::{lambda()#74}::operator()() const::Found, std::allocator<main::{lambda()#74}::operator()() const::Found> > >, main::{lambda()#74}::operator()() const::{lambda(main::{lambda()#74}::operator()() const::Found const&, main::{lambda()#74}::operator()() const::Found const&)#1}) [clone .isra.0]
+    void std::__introsort_loop<__gnu_cxx::__normal_iterator<main::{lambda()#108}::operator()() const::Swap*, std::vector<main::{lambda()#108}::operator()() const::Swap, std::allocator<main::{lambda()#108}::operator()() const::Swap> > >, long, main::{lambda()#108}::operator()() const::{lambda(main::{lambda()#108}::operator()() const::Swap const&, main::{lambda()#108}::operator()() const::Swap const&)#1}>(__gnu_cxx::__normal_iterator<main::{lambda()#108}::operator()() const::Swap*, std::vector<main::{lambda()#108}::operator()() const::Swap, std::allocator<main::{lambda()#108}::operator()() const::Swap> > >, __gnu_cxx::__normal_iterator<main::{lambda()#108}::operator()() const::Swap*, std::vector<main::{lambda()#108}::operator()() const::Swap, std::allocator<main::{lambda()#108}::operator()() const::Swap> > >, long, main::{lambda()#108}::operator()() const::{lambda(main::{lambda()#108}::operator()() const::Swap const&, main::{lambda()#108}::operator()() const::Swap const&)#1}) [clone .isra.0]
+    void std::__introsort_loop<__gnu_cxx::__normal_iterator<main::{lambda()#51}::operator()() const::C*, std::vector<main::{lambda()#51}::operator()() const::C, std::allocator<main::{lambda()#51}::operator()() const::C> > >, long, main::{lambda()#51}::operator()() const::{lambda(main::{lambda()#51}::operator()() const::C const&, main::{lambda()#51}::operator()() const::C const&)#1}>(__gnu_cxx::__normal_iterator<main::{lambda()#51}::operator()() const::C*, std::vector<main::{lambda()#51}::operator()() const::C, std::allocator<main::{lambda()#51}::operator()() const::C> > >, __gnu_cxx::__normal_iterator<main::{lambda()#51}::operator()() const::C*, std::vector<main::{lambda()#51}::operator()() const::C, std::allocator<main::{lambda()#51}::operator()() const::C> > >, long, main::{lambda()#51}::operator()() const::{lambda(main::{lambda()#51}::operator()() const::C const&, main::{lambda()#51}::operator()() const::C const&)#1}) [clone .isra.0]
+    void std::__introsort_loop<__gnu_cxx::__normal_iterator<main::{lambda()#74}::operator()() const::Found*, std::vector<main::{lambda()#74}::operator()() const::Found, std::allocator<main::{lambda()#74}::operator()() const::Found> > >, long, main::{lambda()#74}::operator()() const::{lambda(main::{lambda()#74}::operator()() const::Found const&, main::{lambda()#74}::operator()() const::Found const&)#1}>(__gnu_cxx::__normal_iterator<main::{lambda()#74}::operator()() const::Found*, std::vector<main::{lambda()#74}::operator()() const::Found, std::allocator<main::{lambda()#74}::operator()() const::Found> > >, __gnu_cxx::__normal_iterator<main::{lambda()#74}::operator()() const::Found*, std::vector<main::{lambda()#74}::operator()() const::Found, std::allocator<main::{lambda()#74}::operator()() const::Found> > >, long, main::{lambda()#74}::operator()() const::{lambda(main::{lambda()#74}::operator()() const::Found const&, main::{lambda()#74}::operator()() const::Found const&)#1}) [clone .isra.0]
+    void std::__introsort_loop<__gnu_cxx::__normal_iterator<std::pair<float, int>*, std::vector<std::pair<float, int>, std::allocator<std::pair<float, int> > > >, long, main::{lambda()#108}::operator()() const::{lambda(auto:1&, auto:2&)#1}>(__gnu_cxx::__normal_iterator<std::pair<float, int>*, std::vector<std::pair<float, int>, std::allocator<std::pair<float, int> > > >, __gnu_cxx::__normal_iterator<std::pair<float, int>*, std::vector<std::pair<float, int>, std::allocator<std::pair<float, int> > > >, long, main::{lambda()#108}::operator()() const::{lambda(auto:1&, auto:2&)#1}) [clone .isra.0]
+    void std::__introsort_loop<__gnu_cxx::__normal_iterator<std::pair<float, int>*, std::vector<std::pair<float, int>, std::allocator<std::pair<float, int> > > >, long, main::{lambda()#51}::operator()() const::{lambda(auto:1&, auto:2&)#1}>(__gnu_cxx::__normal_iterator<std::pair<float, int>*, std::vector<std::pair<float, int>, std::allocator<std::pair<float, int> > > >, __gnu_cxx::__normal_iterator<std::pair<float, int>*, std::vector<std::pair<float, int>, std::allocator<std::pair<float, int> > > >, long, main::{lambda()#51}::operator()() const::{lambda(auto:1&, auto:2&)#1}) [clone .isra.0]

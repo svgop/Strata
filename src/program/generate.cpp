@@ -7189,6 +7189,25 @@ int main(int argc, char** argv) {
     drive.d.pool = &pool;
     drive.d.src = srcp;
     drive.d.n_expert = g.n_expert;
+    // F-459 STRATA_COHORT_SHARED_MISS (diagnostic, default off): the both-cohorts CPU-miss share - of the (layer, expert)
+    // blobs a cohort's window computes on the CPU in a round, the ones cohort A computed too (F-458 item 1a: a blob both
+    // cohorts miss streams twice, 89.8 us against 46.8 for one call; the lever's ceiling is 0.138 x share of a round).  The
+    // record is sized here, once, from the dispatch's own expert count and the geometry's layer count, so every id the
+    // dispatch can route has a bit; the cohort round tags its drives with it and clears it at every round's start.  It
+    // reports on the `cohorts: tel` line, so it is read only beside STRATA_COHORT_ROUND_TELEMETRY=1.  Set = armed, as that
+    // one is.  Nothing is adopted: unset, no drive carries the record and the split site never looks at it.
+    static const bool shared_miss_on = [] { return std::getenv("STRATA_COHORT_SHARED_MISS") != nullptr; }();
+    strata::core::CohortSharedMiss shared_miss;
+    if (shared_miss_on) {
+        if (!shared_miss.arm(g.n_layers, drive.d.n_expert)) {
+            std::fprintf(stderr, "strata generate: STRATA_COHORT_SHARED_MISS: no mask holds %lld layers x %lld experts\n",
+                         (long long) g.n_layers, (long long) drive.d.n_expert);
+            return 1;
+        }
+        std::fprintf(stderr, "strata serve: cohort shared-miss counter armed (F-459: %lld mask words per layer for %lld layers x %lld experts; "
+                             "the `cohorts: tel` line carries `shared +S of cpu +b (A +a)`, and STRATA_COHORT_ROUND_TELEMETRY=1 prints that line)\n",
+                     (long long) shared_miss.words, (long long) shared_miss.n_layers, (long long) shared_miss.n_expert);
+    }
     drive.d.jobs.resize((size_t) K);
     // CS-T: routing-aware prefetch of the file tier (the GGUF in place): the next layer's router on this layer's MoE
     // input predicts its experts and their pages are warmed meanwhile.  It only warms pages; STRATA_LOOKAHEAD=0 is
@@ -12679,6 +12698,14 @@ int main(int argc, char** argv) {
                     coh_c_drive.cpu_ms = 0;
                     coh_c_ready = true;
                 }
+                if (shared_miss_on) {   // F-459: AFTER the copies above (a copy carries A's tag) - every drive, every round, so
+                    // no tag is ever stale; and the round's record starts here, before either cohort stages
+                    drive.d.cohort = 1;
+                    coh_b_drive.d.cohort = 2;
+                    coh_c_drive.d.cohort = 3;
+                    drive.d.shared_miss = coh_b_drive.d.shared_miss = coh_c_drive.d.shared_miss = &shared_miss;
+                    shared_miss.clear();
+                }
                 if (bt_windows == 0) {
                     bt_start = Clock::now();
                     bt_wait0 = ver.ms_wait; bt_pool0 = ver.ms_pool;
@@ -12966,9 +12993,24 @@ int main(int argc, char** argv) {
                 if (ternary && wc.S > 0 && !finish(ver_c, wc)) return false;   // (the third tail)
                 const Clock::time_point w2c = Clock::now();
                 if (cohort_tel) {
+                    // F-459: the round's both-cohorts CPU-miss share, appended only when the counter is armed.  Both windows
+                    // are done (the poll loop above), so the masks are complete; the suffix is one string, so the line is
+                    // still one write.  C's fields appear once the ternary's drive exists.  The brief's field is B's.
+                    char tel_sm[96] = "";
+                    if (drive.d.shared_miss != nullptr) {
+                        const strata::core::CohortSharedMiss& sm = *drive.d.shared_miss;
+                        const int nsm = std::snprintf(tel_sm, sizeof tel_sm, " shared +%lld of cpu +%lld (A +%lld)",
+                                                     (long long) sm.shared_with_a(2), (long long) sm.cpu[1], (long long) sm.cpu[0]);
+                        if (coh_c_ready && nsm > 0 && (size_t) nsm < sizeof tel_sm)
+                            std::snprintf(tel_sm + nsm, sizeof tel_sm - (size_t) nsm, " C +%lld of +%lld",
+                                          (long long) sm.shared_with_a(3), (long long) sm.cpu[2]);
+                        if (sm.overflow > 0)   // never expected: the record is sized from the dispatch's own expert count
+                            std::fprintf(stderr, "cohorts: shared-miss overflow +%lld (blobs the record could not hold; the share is blind to them)\n",
+                                         (long long) sm.overflow);
+                    }
                     std::fprintf(stderr, "cohorts: tel rows %d+%d stage %.2f/%.2f go %.2f/%.2f poll %.2f/%.2f window %.2f tail %.2f "
                                      "since-prev %.2f | wait +%.2f pool +%.2f [gate/up +%.2f quantize +%.2f down +%.2f; call +%.2f] "
-                                     "| hits +%lld cpu +%lld pcie +%lld swaps +%lld\n",
+                                     "| hits +%lld cpu +%lld pcie +%lld swaps +%lld%s\n",
                                  wa.S, wb.S, msd2(w0c, tel_sA), msd2(tel_sA, tel_sB), msd2(tel_sB, tel_gA), msd2(tel_gA, tel_gB),
                                  msd2(tel_gB, tel_dA), msd2(tel_gB, tel_dB), msd2(w0c, w1c), msd2(w1c, w2c), msd2(tel_prev_w2c, w0c),
                                  ver.ms_wait + ver_b.ms_wait - tel_w0, ver.ms_pool + ver_b.ms_pool - tel_pl0,
@@ -12976,7 +13018,7 @@ int main(int argc, char** argv) {
                                  (long long) (drive.d.cache_hits + coh_b_drive.d.cache_hits - tel_h0),
                                  (long long) (drive.d.multi_misses + coh_b_drive.d.multi_misses - tel_m0),
                                  (long long) (drive.d.pcie_experts + coh_b_drive.d.pcie_experts - tel_p0),
-                                 (long long) (a_swapped + bt_adapt_swaps - tel_sw0));
+                                 (long long) (a_swapped + bt_adapt_swaps - tel_sw0), tel_sm);
                     tel_prev_w2c = w2c;
                 }
                 // T39 C5b: the cohort sample now covers the SAME phase as the standing push (window +

@@ -1,0 +1,19 @@
+F-459 warnings proof - 2026-11-25 11:36: the four TUs that warned in the F-459 build, compiled from HEAD's src/ and include/ (git archive HEAD; no F-459 line) with build-fresh's exact commands (ninja -t commands). Script: warnings-baseline.py.
+
+CMakeFiles/strata_engine.dir/src/core/expert_source.cpp.o  exit 0  warnings 2
+    $HEAD/src/core/expert_source.cpp:5013:78: warning: unused parameter ‘n’ [-Wunused-parameter]
+    $HEAD/src/core/expert_source.cpp:4761:24: warning: ‘gtail’ may be used uninitialized [-Wmaybe-uninitialized]
+CMakeFiles/strata_engine.dir/src/core/verify.cpp.o  exit 0  warnings 1
+    $HEAD/src/core/verify.cpp:3443:20: warning: unused variable ‘f’ [-Wunused-variable]
+CMakeFiles/strata_engine.dir/src/core/remote_expert_opt.cu.o  exit 0  warnings 4
+    $HEAD/include/strata/core/expert_source.hpp(723): warning #611-D: overloaded virtual function "strata::core::ExpertSource::prefetch" is only partially overridden in class "strata::core::FileExpertSource"
+    $HEAD/include/strata/core/expert_source.hpp(1302): warning #611-D: overloaded virtual function "strata::core::ExpertSource::prefetch" is only partially overridden in class "strata::core::ArenaExpertSource"
+    $HEAD/include/strata/core/expert_source.hpp(723): warning #611-D: overloaded virtual function "strata::core::ExpertSource::prefetch" is only partially overridden in class "strata::core::FileExpertSource"
+    $HEAD/include/strata/core/expert_source.hpp(1302): warning #611-D: overloaded virtual function "strata::core::ExpertSource::prefetch" is only partially overridden in class "strata::core::ArenaExpertSource"
+CMakeFiles/strata_mmq.dir/src/prefill/moe_fused_iq.cu.o  exit 0  warnings 4
+    $HEAD/src/prefill/moe_fused_iq.cu(101): warning #177-D: function "strata::prefill::fused::<unnamed>::has_min" was declared but never referenced
+    $HEAD/src/prefill/moe_fused_iq.cu(1320): warning #177-D: function "strata::prefill::fused::<unnamed>::kq_on" was declared but never referenced
+    $HEAD/src/prefill/moe_fused_iq.cu(1328): warning #177-D: function "strata::prefill::fused::<unnamed>::f16_gu" was declared but never referenced
+    $HEAD/src/prefill/moe_fused_iq.cu(1331): warning #177-D: function "strata::prefill::fused::<unnamed>::f16_d" was declared but never referenced
+BASELINE WARNINGS TOTAL 11
+PROVE_EXIT=0
