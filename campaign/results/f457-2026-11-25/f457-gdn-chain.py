@@ -17,7 +17,8 @@ for p, q in pairs:
     a, b, v, s = mm[0], mm[1], cv[0], sp[0]           # qkv = the first projection, z = the second
     T.append((a[0] - p[0], a[1] - a[0], b[0] - a[0], b[1] - b[0], b[0] - a[1], v[0] - a[1], v[1] - v[0], s[0] - v[1], s[0] - a[0], a[4], b[4]))
 if not T: sys.exit("no layer with two projections, a conv and a step was found")
-M = [st.median(t[i] for t in T) / 1e3 for i in range(11)]; p = lambda i, f: sorted(t[i] for t in T)[f * len(T) // 10] / 1e3
+med = lambda i: st.median(t[i] for t in T)
+M = [med(i) / 1e3 for i in range(9)]; p = lambda i, f: sorted(t[i] for t in T)[f * len(T) // 10] / 1e3   # times in us; grids unscaled
 print(f"layers {len(T)} | qkv: starts +{M[0]:.2f} us after gdn_ab, runs {M[1]:.2f} us, grid median {M[9]:.0f} blocks")
 print(f"z: starts {M[2]:.2f} us after qkv's start ({M[4]:+.2f} us against qkv's END), runs {M[3]:.2f} us, grid median {M[10]:.0f} blocks")
 print(f"conv: starts {M[5]:+.2f} us against qkv's END, runs {M[6]:.2f} us | step: {M[7]:.2f} us after the conv's end")
