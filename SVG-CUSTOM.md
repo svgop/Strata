@@ -14984,3 +14984,52 @@ campaign/results/f460-2026-11-25/prefetch-bench.md, raw in prefetch-30-*.out; no
   call; (3) the pass's duration beside the engine's real staging traffic (measured only as two equal readers); (4) what the pass's 70-80 % share of
   DRAM reads costs the staging in the same window. The bench's 4.7 GB of synthetic fixtures were reclaimed at closeout;
   `POOL_BENCH_FIXTURES=<dir>` rebuilds them in ~90 s (a first run then carries its own generation's load: not a measured run).
+
+## F-461 — the L3 prefetch's missing number: the router lookahead cannot feed it. CLOSED with mechanism (2026-11-25, 12:55-13:05)
+
+**F-460 (the benchmark falsifier) passed and re-priced:** a prefetched call beats its cold control by 13-18% at the
+engine's call size (N = 2-3), with no decay over gaps to 0.5 ms and none under 32 MiB of competing traffic; ONE reader
+thread suffices (55 us per expert); the reachable floor is "hot under a gap" (F-458's hot was a gap-0 number: the workers
+park after 100 us).  Upper bound with PERFECT routes: **+4.3-5.9% conc.**  Everything then hung on the predictor.
+
+**The predictor, by the engine's own scorecard** (`STRATA_LOOKAHEAD_STATS=1`, measurement only, the champion binary, one
+smoke boot; `campaign/results/f461-2026-11-25/lookahead-stats.txt`; the 700-window line):
+
+| | |
+|---|---|
+| layers scored / without a prediction | 23,790 / **156,971 = 86.8%** |
+| actual non-resident experts per layer | 1.27 |
+| top-10: recall / precision / predicted per layer | 0.528 / **0.112** / 6.02 |
+| top-14 | 0.594 / 0.078 / 9.75 |
+| top-20 | 0.652 / **0.052** / 16.07 |
+
+A prefetch fed by it would warm ~13% x 0.55 = **~7% of CPU misses** and read ~9 useless experts per useful one, every
+byte from the DRAM the pool is waiting on.  **Realizable: ~+0.3% conc.  The lever closes.**  The lookahead is a file-tier
+aid - being early by a few experts is worth it from disk - not a next-layer route predictor (and its measurement mode
+costs 42-51 ms per window: it is not free even as an oracle).
+- *Re-open clause:* a next-layer route predictor with >= ~80% coverage and >= ~50% precision on non-resident experts
+  (a learned router-predictor, or any earlier knowledge of the next layer's routes).  The benchmark that prices it
+  exists (`pool_bench --prefetch`); the lever then reopens at +4-6%.
+
+## THE MEASURED FLOOR OF THE CURRENT TOPOLOGY (declared under the goal's termination clause; 2026-11-25, 13:05)
+
+**Every lever on the priced frontier is now closed by measurement within the +-4% noise band.**  Nothing was adopted
+today; the standing is the F-452 state (`3865e27a`), quality-neutral on a paired 534-question test (p = 0.345).
+
+- **Solo (M1): 235-248 t/s in this window.**  Binding: the window graph's kernel set - 97.6% kernel time; the GDN
+  front-end (0.89 ms of 10.2) within ~2% of its bandwidth floor at 60-88% of peak; the drafter's step time (0.57 ms)
+  kernel-bound, with ~0.1 ms available from the one-pass sampler (built, default off, +1.1%); small kernels' launch
+  floors already hidden by the side mixer and the device launch.  Distance to this kernel set's floor: ~2-3%.
+- **Concurrent (6-conc): 289-297 t/s on this box.**  Binding: the CPU-expert pool's DRAM reads at the engine's call size
+  (45.6 GB/s at N = 8; 37-40 at N = 2-3; ceiling 48-57) TIMES the miss rate.  Round model: window = 17.9 ms + 33 us per
+  CPU expert + 15 us per link expert; the pool is 46% of a round.  A pool at the ceiling is +~3%: **~300 t/s is this
+  box's floor for this hit rate and kernel set.**  The 307.6 bank (11-09) was an ISOLATED box: fewer consumers of the
+  same memory system, not a different engine.
+- **The variables its statement leaves movable** (none is an env or config change):
+  1. the hit rate itself - fewer non-resident experts (VRAM capacity or a placement that beats the banked family);
+  2. memory-system decoupling - the pool's DRAM reads against the link's staging traffic (a second memory domain or
+     faster DRAM; a wider link than the measured 12 GB/s);
+  3. a next-layer route predictor (the L3 prefetch reopens at +4-6%);
+  4. kernels past eight rows with co-available cohort rows (the double read reopens if the cohort structure changes);
+  5. format-level information density on the CPU store - a LABELLED trade, paired-gate evaluated, operator sign-off.
+**State at the declaration: HEAD == origin/main; champion `3865e27a` in service, engine stopped, profile pinned.**
