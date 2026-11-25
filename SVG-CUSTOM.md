@@ -14020,6 +14020,15 @@ PAIR form exists), the gate scalar as a 513th row of the router GEMM, the sigmoi
 ms).  Sum ~0.7 ms of 8.73 = **+8% M1 with no arithmetic touched**; with the QSA split/fusion work (parity harness)
 1.3-1.7 ms = **+15-20%**.  Priced, not built.
 
+**Addendum 03:55 - the "gate matvec order" piece is VOID (the cheapest falsifier was a code read).**  `verify.cpp:1233`
+`branch()` is a single-event fork (`cudaEventRecord(e, from)` then `cudaStreamWaitEvent(to, e, 0)`); with the side mixer on
+(`g_side_mixer() >= 2`) the gate projection is forked at `:1566`, the line after its producer
+(`native_q8_1_interleave`, `:1563`), and joined at `:1618`.  There is no capture-order dependency to remove: the node is
+ready when the interleave ends.  Its 10.9 us late start is GPU-side - a cross-stream graph node dispatched under the qkv
+matvec's wave (the audit's own layer-0 instance runs the gate inside qkv at reduced speed).  The piece's 0.11-0.17 ms
+was contingent on a dependency that does not exist; it needs a node-level edge trace before it is priced again.  The
+`gdn_ab` loads-in-flight (up to 0.22 ms) and shared-expert fusion (up to 0.33 ms) pieces stand.
+
 ### 5. DISCOVER - conc: a near-optimal steady round and a quarter of slow rounds
 First serve-mode anatomy of the concurrent lane (instruments below; capture = two 6-conc runs, 26.26 s).
 - **GPU busy 82.0%; idle 4.73 s, of which 255 gaps >= 3 ms hold 3.44 s (72.8%).**  Steady rounds (573 of 671): period

@@ -48,6 +48,11 @@ below was read from the named file or command on this date.
   | 279.8 rows/s` -> 3.574 ms per row, 17.5 ms per cycle, of which the host waits on the GPU 0.40 ms (solo: 8.96).
   In conc every host-millisecond saved is conc throughput.
 
+## 03:55 - the GDN "gate matvec order" piece is VOID
+`branch()` (verify.cpp:1233) is a single-event fork; the gate projection is forked at :1566 right after its producer (:1563)
+and joined at :1618 - no capture-order dependency exists.  The late start is GPU-side dispatch under the qkv wave.  A build
+avoided by one read; the gdn_ab and shared-expert pieces of the solo queue stand.
+
 ## 03:15 — THE RECALIBRATED SOLO MAP: the window is LAUNCH-BOUND, not bandwidth-bound (stage bandwidth-floor audit)
 
 `campaign/results/f453-2026-11-25/stage-bandwidth-audit.md` (157 lines; bytes from the pack manifest and the GGUF header
