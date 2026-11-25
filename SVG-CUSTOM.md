@@ -14594,3 +14594,44 @@ batch share).  **Recorded; nothing adopted.**
   describe their own window).
 
 **CLOSEOUT (09:52): champion `3865e27a` in service, engine stopped, profile pinned.  F-456 adopts nothing.**
+
+## F-457 — the `gdn_ab` launch fold: STOPPED at the trace, the launch is off the solo window's critical path (2026-11-25, 09:55-10:06)
+
+**Origin.**  F-453's closeout priced "fold `gdn_ab_multi_kernel` into a neighbour and remove a launch: +1.6-3% M1" on the
+node-level read that the kernel's 9 us is a fixed per-launch floor (p10 5.5 us).  A delegate traced it against the
+existing node-level capture before building anything (`campaign/results/f457-2026-11-25/trace.md`, `f457-neighbours.py`,
+`f457-slack.py`).
+
+**THE TRACE (measured on all 24,804 `gdn_ab_multi_kernel` instances of the solo window graphs, `f453g-off`).**  On sm120 the
+champion runs `STRATA_SIDE_MIXER=2` by default (`verify.cpp:187-196`): `gdn_ab` is launched on the SIDE branch beside the qkv
+projection (`verify.cpp:1549-1555`).  Its only in-window reader, `gdn_step_norm_multi_kernel` (48x128, 5.70 us), starts a
+median **16.90 us after `gdn_ab` ends** (mean 16.83, p10 12.54, min 5.82); `gdn_ab` is the last of the step's producers to
+finish in **0 of 24,804** instances.  Neighbours per layer: `gr_up_v3_kernel` (160x256, 9.38 us) immediately before, gap
+0.19 us; `native_quantize_q8_1_kernel` (0.83 us) 0.13-0.29 us after, on the same input.
+
+**RULING: THE LAUNCH IS ALREADY PAID UNDER AN EXISTING WAIT.  F-453's lever 4 is RETRACTED (law 8): removing that launch
+removes 0 us of the solo window.**  The structure the fold was priced to buy is in the champion - the side mixer put the
+gates beside the projections.  With it goes the composition F-453 named: the one-pass sampler's +1.1% stands alone, under
+the bar.  Nothing was built, deployed or run; the candidate does not exist.
+- *Why the one bitwise fold would lose:* into the consumer (step block `head` reads only `gate`/`beta[t*h_v+head]`), the
+  fused body runs in series after the conv and the gate projection - the serialization the in-tree conv+a/b fold
+  (`gdn_conv_ab_kernel`, HIP-only) measured at -0.3% on gfx1201 (`verify.cpp:375`).  Into the producer of `xm`: every a/b
+  warp's dot reads all N columns - a grid-wide barrier.  Into the projections: the a/b rows in the native IlQ4K/IlQ6K
+  layout - a new data layout.
+
+**WHAT THE TRACE HANDS ON (unpriced; neither is a lever yet):**
+1. **Batch windows disable the side mixer** (`side_proj`/`sidem` carry `!batch_rec_`, `verify.cpp:1232, 1239`), so in the
+   CONCURRENT lane `gdn_ab` is launched in line between the conv and the gate projection (`:1612`), and there its launch
+   IS on the path.  Price by arithmetic: 36 x 5-9 us = 0.18-0.32 ms of a ~23.5 ms round = **+0.8-1.4% conc - inside the
+   band; not run alone (law 15).**  UNCONFIRMED static analysis: no batch-window capture was read.
+2. **The step's binding producer is the gate projection `z`, and `z` starts late.**  On a named subset (3,626 instances
+   where both projections are `native_mmvq_il_kernel` between `gdn_ab` and the step; the other 21,178 carry another
+   projection-kernel name, not censused): the last producer is `z` (IlQ4K) in 78.8% and the conv in 21.2%; `z` END ->
+   step START median 0.19 us; **`z` START - qkv START median 10.30 us.**  This is the audit's "gate matvec starts 10.9 us
+   late" item, voided at 03:55 for a dependency reading that may have answered a different question: the measured fact is
+   that the path runs through `z`'s late START, not through `gdn_ab`.  What `z` waits on in those 10.3 us - its producer's
+   event, the stream's order, or launch order - is the next cheapest falsifier (one code read at the `z` launch).
+
+**Process note.**  The first delegation of the day (F-456) read itself out of room; this one was forbidden the reading,
+wrote its trace to disk first, and stopped correctly in twelve minutes.  A STOP at the trace is the cheapest falsifier
+doing its job: this one cost no GPU time and retracted a priced lever before it was built.
