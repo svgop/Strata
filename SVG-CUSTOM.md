@@ -15049,7 +15049,7 @@ scattered-gather / per-slot / concurrent-boot overhead inside the fill path (~2.
 LOW priority, to be instrumented when expert_source work resumes).  Decode DMA ceiling is not a
 constraint (2-MiB pageable already 20.5 GB/s; windows move far less) - the F-450 bottleneck ranking
 stands: CPU pool 42% of window, tails, residency, MTP tuning.  Instruments preserved
-(campaign/probes/pcie_probe{,2}.cu); full write-up campaign/research/5090-pcie-link-audit-f451.md,
+(campaign/probes/pcie_probe{,2}.cu); full write-up campaign/research/5090-pcie-link-audit-f462.md,
 which also carries the condensed rig audit (premise corrections: 9950X3D, 184 GiB, in-engine C++
 serve, Qwen3.8-Flash-Next-GSQ-RCO IQ3_S geometry; measured steady state: 24.1 ms mean window,
 pool 10.22 ms, gate/up 5.81, MTP acceptance 61-65%; prefill 884-906 tok/s cold-read, 174 ms

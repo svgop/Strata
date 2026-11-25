@@ -278,7 +278,10 @@ DELETED when the question closes; git history is the archive. Historical journal
 pre-F-268 paths (e.g. `campaign/t27-baseline.sh`) resolve in git history, not the working tree.
 
 **Learned-profile hazard (F-271):** `data/expert-profile-learned.bin` accumulates across EVERY
-session (saved every 30 rounds) and can poison the adaptive tier after enough synthetic-traffic boots
+session (saved at exit and every `--expert-profile-save-every` MINUTES - 30 in the standing config; read
+back at the next start only by a config that names it through the server's `expert_profile_save` key, never
+through the raw engine arg the standing config passes - the standing recipe loads `data/expert-profile.bin`
+and does not read the learned bin) and can poison the adaptive tier after enough synthetic-traffic boots
 (21k swaps/boot, GPU-reach waits 6-10 ms/window, M1 down 2.2x - silently). Any battery or A/B must
 control it: back it up and remove it (fresh profile) or pin one copy for both sides. A 2x-slower
 standing recipe with hit rates still ~99% and normal ms/window accounting = check the adapt tier
