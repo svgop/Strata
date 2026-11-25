@@ -14482,4 +14482,24 @@ batch-scoped share, an engine change, and its ceiling is the link.**
 - *Re-open clause:* a wider link (a x16 slot at full width; this box measures 12 GB/s), or a second conc piece to
   compose with.
 
+**ADDENDUM (09:05) - THE TWO CONC ITEMS THE OBJECTIVE NAMES, PRICED FROM THE ROUND-LEVEL TELEMETRY (law 15):**
+- *Device launch for the batch graphs: PRICED INSIDE THE BAND - NOT RUN.*  F-452's device launch paid on the solo lane
+  because launch mechanics were its dominant boundary term.  The batch round's telemetry says that is not this lane's
+  shape: per round stage 0.19 + 0.25 ms and go 0.01 + 0.03 ms are the launch mechanics - about 0.05 ms of a 26.7 ms
+  period (0.2%); poll is 95% of the window; the tail after the polls is 1.33 ms (5%) and is the LEAST this could ever
+  reach.  Re-open: a round-level read that shows the tail growing, or a cohort window short enough for launch latency
+  to matter.
+- *The batch-scoped link share - what exists, and the one open design question.*  (1) `STRATA_PCIE_MIN1` (opt-in, at the
+  split site itself): with >= 2 misses a layer gives the link at least one.  Priced from the miss-count distributions:
+  share 21 -> ~29% (fast rounds), 25 -> ~33% (slow) - about half the shift of the 0.50 arm, so ~+1% conc; inside the
+  band, and unscoped (solo takes it too).  Not run alone.  (2) The per-request share: a request's tune object may carry
+  `pcie_frac` (`generate.cpp:14093`) and the drive takes it at admission (`:15819`) - the request boundary already
+  owns a scoped share; a trigger tied to concurrency would be server logic, and the server file is the operator's.
+  (3) The engine-internal form: the dispatch state carries NO cohort/batch marker, and cohort B's drive
+  (`coh_b_drive`) is not assigned a share by name at any of the four `pcie_num` sites - it inherits by a path not yet
+  traced.  The change is small only once that path is: one owner for "the batch windows' share", set where the cohort
+  drives are prepared, default = the operator's value, env-gated, one-line rollback.  Spec handed to the next session
+  with its price (+2-4% conc at 0.50-0.70, M1 untouched by construction, M3b and the 70q gate owed because the tiers
+  compute an expert from different stores).
+
 **CLOSEOUT (08:57): champion `3865e27a` in service, engine stopped, profile pinned.  F-455 adopts nothing.**
