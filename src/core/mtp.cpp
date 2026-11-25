@@ -1673,7 +1673,6 @@ bool MtpDrafter::draft(int T, const int32_t* tokens, int64_t p, int a, int32_t* 
     // Draft j writes its K/V at cell p + a + j, and the K/V ends at max_cells (its page table has no page past it):
     // near the context's end the round drafts only the cells that exist
     const int max_steps = (int) std::min<int64_t>(std::min(max_t_ - 1, max_drafts_), st_.max_cells - (p + a));
-    const int steps_cap = (step_cap_ > 0 && step_cap_ < max_steps) ? step_cap_ : max_steps;   // STRATA_DRAFT_STEP_CAP
     for (int j = 1; j < max_steps; ++j)
         if (!capture_step(j, cp, err)) return false;
     const Clock::time_point t0 = Clock::now();
@@ -1840,7 +1839,7 @@ bool MtpDrafter::draft(int T, const int32_t* tokens, int64_t p, int a, int32_t* 
         n = 1;
         // the abort rides this loop's gate: position j-1's evidence (its prob, its stats) decides whether
         // step j launches at all - the saved steps are the serial window's own draft tax (digest §3.5)
-        for (int j = 1; j < steps_cap && pj >= min_p && !abort_after(j - 1, pj); ++j) {
+        for (int j = 1; j < max_steps && pj >= min_p && !abort_after(j - 1, pj); ++j) {
             if (dt) cudaEventRecord(g_dt.eb[j], cs_);
             tl = Clock::now();
             if (cudaGraphLaunch(cp ? step_exec_c_[j] : step_exec_[j], cs_) != cudaSuccess) {
@@ -1860,11 +1859,6 @@ bool MtpDrafter::draft(int T, const int32_t* tokens, int64_t p, int a, int32_t* 
             ++n;
         }
         }
-        // STRATA_DRAFT_STEP_CAP: a chain stopped by the cap ends on a draft still at or above min_p, and the caller's
-        // min_p walk would read past it into the previous round's probabilities; the cap's edge is marked the way the
-        // natural stop is - with a probability no walk accepts.  (Uncapped, steps_cap == max_steps and n never
-        // reaches it: the condition is false and nothing is written.)
-        if (n == steps_cap && steps_cap < max_steps && probs) probs[n] = 0.0f;
         prefetch_ple(drafts[n - 1]);
         const Clock::time_point t_pre_sync = Clock::now();
         if (cudaStreamSynchronize(cs_) != cudaSuccess) {
