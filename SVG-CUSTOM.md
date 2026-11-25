@@ -14544,4 +14544,53 @@ adoption (a small instrument: the same questions, six at a time).
 serves the concurrent lane: a smoke leg at 0.5.  (3) `campaign/env-ladder.sh STRATA_PCIE_FRAC_BATCH -1 0.5`, two
 interleaved rounds, means only.  (4) 0.7 if 0.5 reads >= +2%.
 
-**Status: built (`0aec007e6830b4b3`, 0 warnings); NOT RUN.  Nothing here is adopted.**
+**THE FIRST BUILD WAS HALF-APPLIED, AND THE ARMED TELEMETRY LEG CAUGHT IT (09:21-09:26).**  Both smoke legs passed on
+`0aec007e`, but the armed boot read 26.9% of misses on the link - the mean of one cohort at 0.50 and one at 0.35.  Cohort
+B's drive is copied from A's on the FIRST round only; the guard restored B at that round's end and never set it again.
+Fixed in `783ecba4643bf4f9` (B and C set explicitly every round); the armed telemetry leg then read **36.6%**.
+
+**THE ENV LADDER (09:28-09:47; one binary `783ecba4`; control = the variable not exported; `envladder-050.out`,
+per-leg probes under `campaign/results/f456-batch-*`; the round telemetry published to BOTH arms): NOT A WIN.**
+
+| boot | arm | M1 | pair | 6-conc | M3b |
+|---|---|---:|---:|---:|---:|
+| off1 | unset | 243.7 | 210.1 | 291.3 | 76.8 |
+| on1 | 0.5 | 235.0 | 212.6 | 281.1 | 77.6 |
+| off2 | unset | 234.8 | 212.2 | 291.4 | 76.9 |
+| on2 | 0.5 | 233.8 | 214.7 | 296.6 | 76.7 |
+| pairs | | -3.6% / -0.4% | +1.2% / +1.2% | **-3.5% / +1.8%** | flat (+0.4%) |
+
+Conc mean -0.9%, the two rounds disagreeing in sign; M1's -2.0% is noise by construction (the solo path never sees the
+batch share).  **Recorded; nothing adopted.**
+
+**THE MECHANISM, FROM THE LADDER'S OWN TELEMETRY (~1,500 rounds per boot):**
+
+| boot | window | pool | CPU / link experts per round | link share | us per CPU expert |
+|---|---:|---:|---|---:|---:|
+| off1 | 23.49 ms | 9.90 ms | 150 / 35 | 18.9% | 65.9 |
+| on1 | 23.95 ms | 10.53 ms | 137 / 89 | 39.5% | 77.1 |
+| off2 | 23.62 ms | 10.18 ms | 155 / 37 | 19.1% | 65.6 |
+| on2 | 23.27 ms | 9.47 ms | 121 / 75 | 38.2% | 78.1 |
+
+- The arm does exactly what it was built to do (the share doubles on every armed boot) **and buys nothing: each remaining
+  CPU expert slows 18% (66 -> 77-78 us) the moment the link carries more, which cancels the saving from having 13-22%
+  fewer of them.**  Pool time per round 10.04 -> 10.00 ms; the window 23.56 -> 23.61 ms.
+- **The two tiers draw on the same memory system: shifting misses from the pool to the link moves the contention, not
+  the cost.**  That is the equilibrium the tree's own balance rule encodes (`link / (link + k x pool rate)`, fitted on
+  measurements): the operating point is set by MARGINAL COST, not by nominal count.  F-455's floor-rounding finding
+  stands as a fact about the knob (0.35 nominal delivers ~19% by count in the concurrent lane) and never implied a free
+  gain.  F-455's "+2.0%, real but small" is re-read as noise-floor: scoped, the same shift reads -0.9%.
+
+**RULING (09:50): THE LINK-SHARE LEVER IS CLOSED ON THIS BOX - FALSIFIED WITH MECHANISM, IN BOTH FORMS.**
+- *Disposition:* the knob does not land (law 17: a change with no gain only moves code sideways).  The guard is removed;
+  `generate.cpp` is the pre-F-456 text exactly and the deterministic rebuild reproduces the earlier tree candidate byte
+  for byte (`7a4d3477b2975d6a` - the bytes that passed three smoke legs).  The record keeps the design for a box where it
+  pays.
+- *Re-open clause:* a memory system that separates the tiers (the experts' store on a different memory/controller from
+  the staged link buffers), a wider link, or a CPU-expert kernel light enough on memory that the link's traffic no
+  longer slows it.
+- *What this leaves for the conc gap (~293 against 307.6):* the hit rate itself (placement and ternary: banked) and a
+  faster CPU kernel - or acceptance that this box's conc bank of 11-09 described another window (law 17: banked numbers
+  describe their own window).
+
+**CLOSEOUT (09:52): champion `3865e27a` in service, engine stopped, profile pinned.  F-456 adopts nothing.**

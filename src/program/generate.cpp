@@ -12660,41 +12660,6 @@ int main(int argc, char** argv) {
                     collect(split, o.batch, wb, next_b);
                 }
                 if (wa.S + wb.S + wc.S == 0) return true;
-                // F-456 STRATA_PCIE_FRAC_BATCH=F (default off): the share of a window's missed experts the GPU streams over
-                // PCIe instead of the CPU pool computing - for the COHORT windows only; the solo windows that run between
-                // cohort rounds keep the operator's --pcie-frac.  Why a batch share: the split is a floor per window,
-                // per layer (expert_source.cpp: m = pick(nmiss, (nmiss * pcie_num) >> 8)), and each cohort plans alone
-                // with at most six rows, so a layer sees ~2.7 misses in a fast round and ~5.5 in a slow one - floor(0.35 n)
-                // streams nothing for n = 2 and one for n = 3 or 5.  Measured 2026-11-25 (F-455): the standing's 0.35 puts
-                // 20.7% of the concurrent lane's misses on the link; a nominal 0.50 puts 37.9% and reads 6-conc +2.0% but
-                // M1 -2.9% because solo windows floor too.  A link expert costs 15-22 us of window against 29-33 us for a
-                // CPU one; the link measures 12.0 GB/s and saturates near a 50% share.  Scope is the whole point of this
-                // knob: an unscoped share is a config value, not this variable.  Unset, or outside [0, 1]: no effect.
-                static const int batch_pcie_num = [] {
-                    const char* v = std::getenv("STRATA_PCIE_FRAC_BATCH");
-                    if (v == nullptr) return -1;
-                    const double f = std::atof(v);
-                    return (f >= 0.0 && f <= 1.0) ? (int) (f * 256.0 + 0.5) : -1;
-                }();
-                // All cohort drives plan inside this scope with the batch share (cohort B's drive is a copy of A's made on
-                // the first round only, so after that round it is set here, explicitly); the share is restored on every
-                // return path of the round - between rounds all three plan with the operator's share.
-                struct BatchPcieShare {
-                    Drive& a; Drive& b; Drive& c; const bool armed; int saved = 0;
-                    ~BatchPcieShare() {
-                        if (armed) { a.d.pcie_num = saved; b.d.pcie_num = saved; c.d.pcie_num = saved; }
-                    }
-                } batch_pcie_share{drive, coh_b_drive, coh_c_drive, batch_pcie_num >= 0};
-                if (batch_pcie_share.armed) {
-                    batch_pcie_share.saved = drive.d.pcie_num;
-                    drive.d.pcie_num = batch_pcie_num;
-                    // B and C must be set on EVERY round, not inherited through the first round's copy: that copy happens
-                    // once, and this guard's restore at the end of the first round would leave them on the solo share for
-                    // the rest of the request.  (Found by the armed telemetry leg: one cohort at 0.50 and one at 0.35
-                    // read 26.9% on the link, the mean of the two.)
-                    if (coh_b_ready) coh_b_drive.d.pcie_num = batch_pcie_num;
-                    if (coh_c_ready) coh_c_drive.d.pcie_num = batch_pcie_num;
-                }
                 const bool was_busy = strata::core::progress().busy.load();
                 strata::core::progress().busy.store(true);
                 drive.d.layers = 0;

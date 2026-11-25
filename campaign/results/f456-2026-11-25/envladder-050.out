@@ -1,0 +1,88 @@
+lane binary saved: 7ee00a7d
+=== round 1: OFF ===
+F-271 re-pin VERIFIED (learned == expert-profile-gold.bin, after the engine stop)
+[off1] env STRATA_PCIE_FRAC_BATCH=
+[warm-discard] load: 2.59, 2.32, 1.67
+[warm-discard] M1 single-stream : 224.9 t/s (2000 tok in 8.89s)
+[warm-discard] M2 pair          : 191.8 t/s aggregate (1800 tok in 9.39s)
+[warm-discard] M2 6-conc        : 277.9 t/s aggregate (3600 tok in 12.95s)
+[f456-batch-off1-1] load: 2.88, 2.46, 1.75
+M1 single-stream : 250.7 t/s (2000 tok in 7.98s)
+M2 pair          : 218.1 t/s aggregate (1800 tok in 8.25s)
+M2 6-conc        : 289.2 t/s aggregate (3600 tok in 12.45s)
+[f456-batch-off1-2] load: 4.38, 2.95, 1.95
+M1 single-stream : 248.6 t/s (2000 tok in 8.05s)
+M2 pair          : 202.4 t/s aggregate (1800 tok in 8.89s)
+M2 6-conc        : 296.0 t/s aggregate (3600 tok in 12.16s)
+[f456-batch-off1-3] load: 4.99, 3.40, 2.15
+M1 single-stream : 231.7 t/s (2000 tok in 8.63s)
+M2 pair          : 209.8 t/s aggregate (1800 tok in 8.58s)
+M2 6-conc        : 288.6 t/s aggregate (3600 tok in 12.47s)
+=== round 1: ON ===
+F-271 re-pin VERIFIED (learned == expert-profile-gold.bin, after the engine stop)
+[on1] env STRATA_PCIE_FRAC_BATCH=0.5
+[warm-discard] load: 5.59, 3.85, 2.44
+[warm-discard] M1 single-stream : 237.1 t/s (2000 tok in 8.43s)
+[warm-discard] M2 pair          : 203.6 t/s aggregate (1800 tok in 8.84s)
+[warm-discard] M2 6-conc        : 304.1 t/s aggregate (3600 tok in 11.84s)
+[f456-batch-on1-1] load: 4.68, 3.83, 2.50
+M1 single-stream : 230.6 t/s (2000 tok in 8.67s)
+M2 pair          : 216.1 t/s aggregate (1800 tok in 8.33s)
+M2 6-conc        : 284.7 t/s aggregate (3600 tok in 12.65s)
+[f456-batch-on1-2] load: 6.21, 4.26, 2.69
+M1 single-stream : 247.1 t/s (2000 tok in 8.09s)
+M2 pair          : 211.1 t/s aggregate (1800 tok in 8.53s)
+M2 6-conc        : 282.1 t/s aggregate (3600 tok in 12.76s)
+[f456-batch-on1-3] load: 5.00, 4.25, 2.76
+M1 single-stream : 227.3 t/s (2000 tok in 8.80s)
+M2 pair          : 210.7 t/s aggregate (1800 tok in 8.54s)
+M2 6-conc        : 276.5 t/s aggregate (3600 tok in 13.02s)
+=== round 2: OFF ===
+F-271 re-pin VERIFIED (learned == expert-profile-gold.bin, after the engine stop)
+[off2] env STRATA_PCIE_FRAC_BATCH=
+[warm-discard] load: 2.83, 3.55, 2.67
+[warm-discard] M1 single-stream : 254.6 t/s (2000 tok in 7.86s)
+[warm-discard] M2 pair          : 209.5 t/s aggregate (1800 tok in 8.59s)
+[warm-discard] M2 6-conc        : 269.0 t/s aggregate (3600 tok in 13.38s)
+[f456-batch-off2-1] load: 2.00, 3.24, 2.61
+M1 single-stream : 228.6 t/s (2000 tok in 8.75s)
+M2 pair          : 209.3 t/s aggregate (1800 tok in 8.60s)
+M2 6-conc        : 290.4 t/s aggregate (3600 tok in 12.40s)
+[f456-batch-off2-2] load: 3.29, 3.43, 2.70
+M1 single-stream : 229.6 t/s (2000 tok in 8.71s)
+M2 pair          : 217.6 t/s aggregate (1800 tok in 8.27s)
+M2 6-conc        : 284.3 t/s aggregate (3600 tok in 12.66s)
+[f456-batch-off2-3] load: 2.70, 3.28, 2.68
+M1 single-stream : 246.3 t/s (2000 tok in 8.12s)
+M2 pair          : 209.7 t/s aggregate (1800 tok in 8.59s)
+M2 6-conc        : 299.6 t/s aggregate (3600 tok in 12.02s)
+=== round 2: ON ===
+F-271 re-pin VERIFIED (learned == expert-profile-gold.bin, after the engine stop)
+[on2] env STRATA_PCIE_FRAC_BATCH=0.5
+[warm-discard] load: 1.97, 2.86, 2.60
+[warm-discard] M1 single-stream : 244.4 t/s (2000 tok in 8.18s)
+[warm-discard] M2 pair          : 211.9 t/s aggregate (1800 tok in 8.49s)
+[warm-discard] M2 6-conc        : 295.5 t/s aggregate (3600 tok in 12.18s)
+[f456-batch-on2-1] load: 3.33, 3.04, 2.67
+M1 single-stream : 245.9 t/s (2000 tok in 8.13s)
+M2 pair          : 219.7 t/s aggregate (1800 tok in 8.19s)
+M2 6-conc        : 291.2 t/s aggregate (3600 tok in 12.36s)
+[f456-batch-on2-2] load: 3.26, 3.09, 2.70
+M1 single-stream : 234.2 t/s (2000 tok in 8.54s)
+M2 pair          : 213.3 t/s aggregate (1800 tok in 8.44s)
+M2 6-conc        : 302.1 t/s aggregate (3600 tok in 11.91s)
+[f456-batch-on2-3] load: 4.82, 3.53, 2.87
+M1 single-stream : 221.4 t/s (2000 tok in 9.03s)
+M2 pair          : 211.0 t/s aggregate (1800 tok in 8.53s)
+M2 6-conc        : 296.6 t/s aggregate (3600 tok in 12.14s)
+F-271 re-pin VERIFIED (learned == expert-profile-gold.bin, after the engine stop)
+off1 {'M1': 243.66666666666666, 'pair': 210.1, 'conc': 291.26666666666665, 'M3b': 76.8}
+on1  {'M1': 235.0, 'pair': 212.63333333333333, 'conc': 281.1, 'M3b': 77.63333333333333}
+off2 {'M1': 234.83333333333334, 'pair': 212.2, 'conc': 291.43333333333334, 'M3b': 76.93333333333334}
+on2  {'M1': 233.83333333333334, 'pair': 214.66666666666666, 'conc': 296.6333333333333, 'M3b': 76.7}
+M1: pairs -3.6% / -0.4%  mean -2.0%
+pair: pairs +1.2% / +1.2%  mean +1.2%
+conc: pairs -3.5% / +1.8%  mean -0.9%
+M3b canary: OFF 76.9% vs ON 77.2% (mean +0.4%)
+BAR: no lane below -4%: PASS - the targeted lane's +4% gain is judged on its mean above (law 2, both legs)
+CONFIG/ENV LADDER DONE — config restored, engine UP on the restored binary.
