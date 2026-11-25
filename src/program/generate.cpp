@@ -12709,7 +12709,7 @@ int main(int argc, char** argv) {
                 static Clock::time_point tel_prev_w2c = Clock::now();
                 Clock::time_point tel_sA = w0c, tel_sB = w0c, tel_gA = w0c, tel_gB = w0c, tel_dA = w0c, tel_dB = w0c;
                 int64_t tel_h0 = 0, tel_m0 = 0, tel_p0 = 0, tel_sw0 = 0;
-                double tel_w0 = 0.0, tel_pl0 = 0.0;
+                double tel_w0 = 0.0, tel_pl0 = 0.0, tel_g0 = 0.0, tel_q0 = 0.0, tel_d0 = 0.0, tel_c0 = 0.0;
                 if (cohort_tel) {
                     tel_h0 = drive.d.cache_hits + coh_b_drive.d.cache_hits;
                     tel_m0 = drive.d.multi_misses + coh_b_drive.d.multi_misses;
@@ -12717,6 +12717,7 @@ int main(int argc, char** argv) {
                     tel_sw0 = a_swapped + bt_adapt_swaps;
                     tel_w0 = ver.ms_wait + ver_b.ms_wait;
                     tel_pl0 = ver.ms_pool + ver_b.ms_pool;
+                    tel_g0 = pool.ms_multi_gu; tel_q0 = pool.ms_multi_q; tel_d0 = pool.ms_multi_down; tel_c0 = drive.cpu_ms;   // the pool's own phases
                 }
                 // stage BOTH cohorts (a lazy capture happens while NO window is in flight - the standing
                 // flow's capture condition), then launch both: B's pool runs under A's GPU from here on
@@ -12966,10 +12967,12 @@ int main(int argc, char** argv) {
                 const Clock::time_point w2c = Clock::now();
                 if (cohort_tel) {
                     std::fprintf(stderr, "cohorts: tel rows %d+%d stage %.2f/%.2f go %.2f/%.2f poll %.2f/%.2f window %.2f tail %.2f "
-                                     "since-prev %.2f | wait +%.2f pool +%.2f | hits +%lld cpu +%lld pcie +%lld swaps +%lld\n",
+                                     "since-prev %.2f | wait +%.2f pool +%.2f [gate/up +%.2f quantize +%.2f down +%.2f; call +%.2f] "
+                                     "| hits +%lld cpu +%lld pcie +%lld swaps +%lld\n",
                                  wa.S, wb.S, msd2(w0c, tel_sA), msd2(tel_sA, tel_sB), msd2(tel_sB, tel_gA), msd2(tel_gA, tel_gB),
                                  msd2(tel_gB, tel_dA), msd2(tel_gB, tel_dB), msd2(w0c, w1c), msd2(w1c, w2c), msd2(tel_prev_w2c, w0c),
                                  ver.ms_wait + ver_b.ms_wait - tel_w0, ver.ms_pool + ver_b.ms_pool - tel_pl0,
+                                 pool.ms_multi_gu - tel_g0, pool.ms_multi_q - tel_q0, pool.ms_multi_down - tel_d0, drive.cpu_ms - tel_c0,
                                  (long long) (drive.d.cache_hits + coh_b_drive.d.cache_hits - tel_h0),
                                  (long long) (drive.d.multi_misses + coh_b_drive.d.multi_misses - tel_m0),
                                  (long long) (drive.d.pcie_experts + coh_b_drive.d.pcie_experts - tel_p0),
