@@ -60,3 +60,17 @@ Drafter: -46 (k 20) to -65 (k 64) us per step x 1.56 steps per window; the main 
 k-aware step graphs (lazy capture keyed by the request's top_k; the default list = the engine's default): 64 -> 20
 rounds, -46 us per step, no new kernel - but graph-key plumbing in mtp.cpp.  A clamp of the request's top_k to a
 captured constant is refused (law 16: a silent capability cut).
+
+## Result (2026-11-25, F-453 closeout)
+
+Bench, quiet card, `sampler_fastk_parity --bench` (`campaign/results/f453-2026-11-25/sampler-fastk-bench.txt`):
+- the drafter's shape (nv 40,960, k 64): **68.6 us by k argmax rounds -> 20.3 us by the one-pass top-k** (the serve trace had
+  read 69.7 us on 64 rounds of 1.09 us);
+- the main sampler's shape (nv 151,936, k 20): 20.4 -> 12.8 us.
+
+Engine price: 48 us x ~2.0 steps per solo window = ~0.1 ms of the 0.57 ms step-graph time = **about +1.1% M1** - real at the
+kernel, under the +4% bar alone.  Kept default off (`STRATA_SAMPLER_FASTK=1` in the tree candidate `7a4d3477b2975d6a`;
+bitwise in both modes, 192 cases + the planted-difference self-check) as a COMPOSITION piece: with the `gdn_ab` launch
+fold (+1.6-3%, F-453) the two clear ~3-4% together.  Not run in the engine alone (law 15).  The one-pass is 20.3 us rather
+than the ~5 us first estimated: ten blocks, a 32-step threshold search per warp - a finer split (more blocks over the
+vocabulary, a wider merge) is the next kernel step if the composition needs more.
