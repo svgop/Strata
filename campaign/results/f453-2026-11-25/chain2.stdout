@@ -1,0 +1,8 @@
+47fa4a65a2c374ed7a1b48802130a76e85bedfc5871728825581a1ea9f5d2956  build-fresh/strata
+3865e27a5ac1a170c7639e517e361a271e31acbcb020336b5c3289bb3dd74ec5  engine/strata
+[STRATA_SMALL_UNR=7]   gdn_ab_multi T=1..8 == fused_gdn_ab        bitwise (8 cases)
+[STRATA_SMALL_UNR=3]   gdn_ab_multi T=1..8 == fused_gdn_ab        bitwise (8 cases)
+[05:47:25] full candidate deployed (gdn_ab + step cap + telemetry, default off)
+Terminated                 ROUNDS=2 bash campaign/env-ladder.sh STRATA_F453_COMPOSE 0 1 f453-compose yes > $O/envladder-compose.out 2>&1
+[06:03:48] champion restored to engine/strata (3865e27a5ac1a170)
+F-271 re-pin VERIFIED (learned == expert-profile-gold.bin, after the engine stop)

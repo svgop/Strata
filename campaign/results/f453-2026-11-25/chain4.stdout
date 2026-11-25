@@ -1,0 +1,54 @@
+[06:18:10] A. control boot: binary 3865e27a5ac1a170 | device launch in the engine's env: STRATA_VERIFY_DEVICE_LAUNCH=0
+[discard] M1 single-stream : 203.6 t/s (2000 tok in 9.82s)
+[discard] M2 pair          : 205.4 t/s aggregate (1800 tok in 8.76s)
+[discard] M2 6-conc        : 268.8 t/s aggregate (3600 tok in 13.39s)
+[06:59:50] A. control gate exit 0: === MMLU-Pro (534 Qs) [floor 0.933, f452-control]: 456/534 = 85.4%  (1-sigma = 1.53 pts) ===  [MMLU-Pro test (1500q: stratified, seed 20261125); 95% C
+paired over 534 questions (control 534 rows, adopted 1500 rows)
+  control 456/534 = 85.4%   adopted 462/534 = 86.5%   difference +1.1 pts
+  both right 445 | both wrong 61 | control only 11 | adopted only 17
+  exact McNemar (two-sided) on the discordant pairs: p = 0.345
+  standard error of the paired difference: 0.99 pts
+  per category (n, control, adopted):
+    health             38   28   26  -2
+    philosophy         38   32   31  -1
+    biology            39   38   38  +0
+    chemistry          38   32   32  +0
+    economics          38   33   33  +0
+    history            38   32   32  +0
+    math               38   37   37  +0
+    other              38   31   31  +0
+    physics            38   38   38  +0
+    business           39   33   34  +1
+    law                38   26   27  +1
+    engineering        38   29   31  +2
+    psychology         38   33   35  +2
+    computer science   38   34   37  +3
+[07:00:00] B. full candidate deployed (87e4d95dcd365450)
+[07:02:30] B. capture off (STRATA_SMALL_UNR=3, node-level) exit 0
+[07:04:59] B. capture on (STRATA_SMALL_UNR=7, node-level) exit 0
+=== off: /mnt/DATA/LLM/Models/GGUF/strata/Custom-data/profiles/f453g-off-2026-11-25/anatomy.sqlite
+gdn_ab_multi_kernel: n=24804, median 9.31 us, mean 9.06 us, p10 5.47, p90 12.13   (the 11-24 baseline: 8.26 us mean)
+window graphId 66: instances 518, median occupancy 0.161 ms, mean kernel time 0.161 ms
+window graphId 111: instances 515, median occupancy 0.270 ms, mean kernel time 0.274 ms
+window graphId 114: instances 404, median occupancy 0.269 ms, mean kernel time 0.273 ms
+window graphId 117: instances 310, median occupancy 0.269 ms, mean kernel time 0.273 ms
+kernel rows 1448686; window instances 3497
+=== on: /mnt/DATA/LLM/Models/GGUF/strata/Custom-data/profiles/f453g-on-2026-11-25/anatomy.sqlite
+gdn_ab_multi_kernel: n=24372, median 9.18 us, mean 8.83 us, p10 5.25, p90 11.87   (the 11-24 baseline: 8.26 us mean)
+window graphId 66: instances 514, median occupancy 0.161 ms, mean kernel time 0.160 ms
+window graphId 105: instances 507, median occupancy 0.270 ms, mean kernel time 0.274 ms
+window graphId 108: instances 399, median occupancy 0.269 ms, mean kernel time 0.273 ms
+window graphId 111: instances 327, median occupancy 0.270 ms, mean kernel time 0.274 ms
+kernel rows 1426547; window instances 3445
+[07:22:47] C. composed ladder exit 0
+[07:23:57] D. arm boot: SMALL_UNR=7 in env: 1 | STEP_CAP=1 in env: 1
+[discard] M1 single-stream : 246.8 t/s (2000 tok in 8.10s)
+[discard] M2 pair          : 209.8 t/s aggregate (1800 tok in 8.58s)
+[discard] M2 6-conc        : 303.4 t/s aggregate (3600 tok in 11.86s)
+[07:28:04] D. 70q gate on the arm exit 0: === MMLU-Pro (70 Qs) [floor 0.933, f453-compose]: 67/70 = 95.7%  (1-sigma = 2.42 pts) ===  [MMLU-Pro validation (70q); 95% CI +/- 4.7; 200 s, 2.86 s/q
+[07:30:50] E. telemetry leg 1: M1 single-stream : 234.7 t/s (2000 tok in 8.52s);M2 pair          : 209.3 t/s aggregate (1800 tok in 8.60s);M2 6-conc        : 289.3 t/s aggregate (36
+[07:31:33] E. telemetry leg 2: M1 single-stream : 242.7 t/s (2000 tok in 8.24s);M2 pair          : 213.9 t/s aggregate (1800 tok in 8.42s);M2 6-conc        : 297.5 t/s aggregate (36
+[07:31:33] E. telemetry lines (both legs and the discard): 1163
+[07:31:33] chain 4 done
+[07:31:33] champion restored to engine/strata (3865e27a5ac1a170)
+F-271 re-pin VERIFIED (learned == expert-profile-gold.bin, after the engine stop)

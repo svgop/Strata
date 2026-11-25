@@ -14284,10 +14284,12 @@ conc reads were the window (this hour 289.7-296.9 over four boots); the gap to t
 IMPROVE: **no promotion** - three solo pieces, one falsified with mechanism (the gdn_ab preload), one inert and removed
 (the step cap), one real at the kernel and under the bar (the sampler).  DISCOVER: the concurrent lane's map, recalibrated
 at round level, and its levers priced:
-1. **Pool capacity - the sixteen SMT siblings**, idle in the standing ("aux cpus ... off at start; a request's
-   `aux_cpus=1` turns it on").  Against a dequant-bound 64 us per CPU expert, any throughput they add comes straight off
-   the slow rounds: a +25% pool would take ~2.8 ms off a slow round's 19 ms of pool.  Cheapest falsifier: one boot with
-   them on, smoke, then the interleave.  (A request flag today: the first question is whether the standing sets it.)
+1. **Pool capacity - the SMT siblings**, unused by the pool in the standing ("15 pool workers on logical processors
+   1..15" on a 9950X3D: one worker per physical core by plan).  `--aux-cpus` is NOT this lever - it only pins the
+   non-pool threads onto the siblings; the owner of the count is **`--pool-workers N`** (default 0 = every physical
+   core; `--pool-affinity` beside it).  Against a dequant-bound 64 us per CPU expert, whatever the siblings add comes
+   straight off the slow rounds: a +25% pool takes ~5 ms off a slow round's 20 ms of pool.  Cheapest falsifier: one boot
+   at `--pool-workers 30`, read the start line (are workers placed on logical 17-31?), smoke, then the conc interleave.
 2. **A tier shift** (law 9, move work under an existing wait): the PCIe tier streams ~97 experts in a slow round, ~8 GB/s
    on a link good for ~50; each miss moved from the CPU tier to it takes 64 us off the pool and runs under the GPU's window.
    The question is the planner's cut and the hit-rate cost of what the move displaces.

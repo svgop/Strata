@@ -1,0 +1,2 @@
+cp: cannot create regular file 'engine/strata.new': File exists
+F-271 re-pin VERIFIED (learned == expert-profile-gold.bin, after the engine stop)
