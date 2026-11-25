@@ -14844,3 +14844,15 @@ cohorts, longer windows); above it, the structure question is named and handed o
 **Falsifier.**  This counter, one telemetry boot: `campaign/smoke-candidate.sh` first (the smoke toll), then three warm legs,
 legs 2-3 measured; the share over rounds with >= 10 rows and `since-prev` < 100 ms (inside a run).  Nothing is adopted: with
 the env unset the split site runs its old control flow behind one not-taken null test.
+
+## GOAL REVISION (2026-11-25, 11:40; operator: "update and extend the goal to push for results, using the past twelve hours' evidence as the baseline for knowing where to look")
+
+The session goal is rewritten around the evidence above.  **Baseline:** champion `3865e27a`; this box reads M1 235-248 and
+6-conc 289-297 in the afternoon window; the map is exact.  **Closed by measurement - not to be re-bought:** the gdn_ab
+preload and its launch fold, the drafter step cap, SMT capacity for the pool, the PCIe share (both forms), the batch
+device launch, the pool's quantization phase, the gate projection's late start, GDN projection "headroom", and a faster
+dequant kernel.  **Results, strictly in order:** (1) the L3 prefetch of the next layer's CPU-expert weights by the pool's
+idle workers - cache-resident experts cost 25-38% less (F-458), price +7-9% conc, bitwise; falsifier in `pool_bench`
+first; (2) the both-cohorts double read, by F-459's measured share; (3) the DRAM call-size gap, priced before built;
+(4) the one-pass sampler only with a partner worth >= +3%; (5) a formal re-bank of the standing, the operator's call.
+**Stop rule:** when the list is exhausted, STOP and report - no exploratory rounds outside it.
