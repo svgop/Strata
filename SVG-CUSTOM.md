@@ -14688,3 +14688,60 @@ layer bounds any gain from it below the band too.)  Nothing was built; the solo 
 **Process note.**  The first delegation of the day (F-456) read itself out of room; this one was forbidden the reading,
 wrote its trace to disk first, and stopped correctly in twelve minutes.  A STOP at the trace is the cheapest falsifier
 doing its job: this one cost no GPU time and retracted a priced lever before it was built.
+
+## HAND-OFF — the map at the close of the 2026-11-25 session (11:15).  The next session starts here.
+
+**State.**  Standing recipe unchanged: the F-452 state (`STRATA_VERIFY_DEVICE_LAUNCH=1`, launcher default).  In service
+`engine/strata` = the champion `3865e27a5ac1a170` (built from 465b4b617); `build-fresh/strata` = `7a4d3477b2975d6a`
+(the champion's kernels + two default-off instruments: `STRATA_SAMPLER_FASTK`, `STRATA_COHORT_ROUND_TELEMETRY`).
+Engine stopped, port free, learned profile == gold.  Nine entries today (F-453..F-457), nothing promoted.
+
+**Settled.**  (a) F-452 is quality-neutral: paired over 534 questions, control 85.4% / adopted 86.5%, p = 0.345; the
+0.933 floor belongs to the 70-question suite - on the 1,500-suite a state is judged against a paired control.  The
+instrument's run noise is 5.2% of answers (28 of 534) between near-equivalent runs: a 70q gate sees +/-2 questions.
+(b) The conc deficit is the window, not a change: four default-off boots read 289.7-296.9 against the 11-09 bank 307.6
+(an isolated box); F-452 was conc-positive in its own interleave.  The bank stands (the incline law).
+
+**The recalibrated maps.**  Solo window 10.2 ms graph + 1.96 ms drafter + boundary; kernels 97.6% of graph time.
+Concurrent round: window 24 ms (poll 95% of it; the CPU-expert pool ~half), tail 1.33 ms, 1.33 ms between rounds;
+a CPU expert 63-66 us whatever the round (dequant-op-bound on sixteen threads, SMT-blind); a link expert 15-22 us of
+window against 29-33 for a CPU one; the link 12.0 GB/s; slow rounds = low-hit-rate rounds (CPU/row 13 -> 25, link
+experts/round 36 -> 97).  GDN front-end: qkv 17.95 us (1280 blocks) and the gate 15.07 us (768), overlapping 8.5 us,
+chain 24.7 us x 36 = 0.89 ms, at 60-88% of peak bandwidth.
+
+**Open items - each with its price and its FIRST falsifier; none is adopted; nothing below the band is to be run alone:**
+1. *A faster CPU-expert dequant kernel (conc; the one large term).*  63-66 us per expert on ~7 G weights/s per core.
+   A kernel 25% faster: pool -2.5 ms/round, **concrete price conc +6-8%**.  First falsifier: a standalone benchmark of
+   the Q2_0 AVX-512 kernel's limiting port at T = 12 - the tree has none (`build-fresh/` has `expert_multi_test`, a
+   parity test); build the bench before the kernel.
+2. *The hit rate (conc).*  Placement family and ternary are BANKED (F-354 etc.) - do not re-purchase.  Open only as an
+   operator question: the learned profile is pinned to `expert-profile-gold.bin` (11-18) for every battery; whether a
+   profile learned on this box's current traffic would raise the concurrent hit rate is unmeasured.  Falsifier: one
+   unpinned boot's adapt-tier line against the pinned boot's, same hour.
+3. *The batch windows' `gdn_ab` launch (conc).*  In line there (the side mixer is off on batch windows): +0.8-1.4% by
+   arithmetic - UNCONFIRMED: read a batch-window capture first (`STRATA_ANATOMY_GRAPH_TRACE=node`, the conc lane).
+4. *Small-matvec occupancy (solo).*  The 768-block gate projection runs alone for 6.5 us per layer after qkv; <= +1-2%.
+5. *The one-pass sampler (solo; BUILT, default off).*  Real at the kernel: 68.6 -> 20.3 us on the drafter's shape,
+   +1.1% M1.  A composition piece awaiting a partner worth >= +3%.
+6. *The conc bank.*  307.6 describes an isolated box on 11-09.  Whether the standing's concurrent bank should describe
+   the unpinned box is the operator's call (the incline law forbids a downward step; a labeled re-bank is the form).
+
+**Closed today, with mechanism and re-open clauses (do not buy again):** the gdn_ab weight preload (a launch-floor
+kernel, and off the solo critical path through the side mixer); the drafter step cap (inert: the controller sizes the
+chain, the suffix extends it); the pool's serial quantization as a parallel phase (0.2% of pool time); SMT capacity for
+the pool (a second thread per core makes each expert 9% slower); the PCIe share, scoped and unscoped (the tiers share
+the memory system: moving misses moves contention, not cost); the device launch for the batch graphs (launch mechanics
+0.2% of the round); the gate projection's late start (already overlapped); the GDN projections as "headroom" (within
+~2% of the bandwidth floor).
+
+**Rules this day paid for.**  (1) A default-off switch does not make an ungated control-flow edit safe: every candidate
+pays `campaign/smoke-candidate.sh` before any ladder - and the smoke's own arithmetic is part of the instrument.
+(2) MEASURE THE KERNEL BEFORE BELIEVING A FIX: the audit's bandwidth arithmetic was wrong about `gdn_ab`, about the
+pool's serial stage (by two orders), and about the GDN headroom.  (3) Verify the arm is armed on the instrument, not by
+the smoke: F-456's first build passed both smokes and was half-applied.  (4) A delegation is forbidden the reading,
+writes its trace to disk first, and stops on its rule: F-457's STOP cost twelve minutes and no GPU.  (5) Never `tee`
+into an evidence file a script may crash on: an empty file reached the remote once.  (6) The MMLU gate is solo-only: a
+batch-scoped change's canary is the concurrent lane's M3b, and a concurrent gate is an instrument still owed.
+
+**Instruments owed:** a concurrent MMLU gate; a CPU-expert kernel benchmark; `--pool-workers` above the physical cores
+should be refused at option validation (today it runs the excess unpinned); `harvest/records/windows.npy` for the trainer.
