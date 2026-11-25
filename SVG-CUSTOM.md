@@ -14511,3 +14511,37 @@ batch-scoped share, an engine change, and its ceiling is the link.**
   the next one starts.
 
 **CLOSEOUT (08:57): champion `3865e27a` in service, engine stopped, profile pinned.  F-455 adopts nothing.**
+
+## F-456 — the batch-scoped link share: `STRATA_PCIE_FRAC_BATCH` (needle priced before the leg; 2026-11-25, 09:2x)
+
+**Origin.**  F-455: the standing's `--pcie-frac 0.35` puts 20.7% of the concurrent lane's misses on the link because the
+share is a floor per cohort window per layer; a nominal 0.50 raised that to 37.9% and read 6-conc +2.0% with M1 -2.9%,
+because solo windows floor too.  The form F-455 owed was a share for the cohort windows only.
+
+**The trace (one line).**  `coh_b_drive = drive;` (`generate.cpp:12669`) - cohort B's drive is a copy of A's, made on the
+FIRST round only (`if (!coh_b_ready)`); B keeps its own `d` afterwards.  So both cohorts plan with `drive.d.pcie_num`
+as it stands when a round begins, and the solo windows that run between rounds use the same `drive`.
+
+**The change (default off).**  A scope guard at the top of the cohort round, after its first early return: when
+`STRATA_PCIE_FRAC_BATCH` is set to a value in [0, 1], the cohort drives plan with `round(F * 256)` for the round and every
+return path of the round restores the operator's share (B and C follow A's restored value).  Unset or outside [0, 1]: no
+effect - the control flow is the old one.  No new instrument: the share is read where it always was.
+
+**The needle (measured, F-455).**  227 misses per concurrent round, 20.7% on the link; window = 17.9 ms + 33 us per CPU
+expert + 15 us per link expert (0.35), 18.2 + 29 + 22 (0.50).  **Lane math:** 0.5 moves ~31 experts per round from the
+pool to the link: pool -2.0 ms, of which 0.715 reaches the window, against +0.5 ms of link cost and the pool's own 20%
+slowdown under the moved load -> about -0.5 ms of a 24 ms round = **+2% conc**; 0.7 moves more until the link (12.0 GB/s,
+~140 experts per round) saturates: **+3-4% at the limit, with saturation in slow rounds as the named risk.**  M1 is
+untouched by construction (the solo windows never see the batch share); M3b is the canary.
+
+**The quality instrument for a batch-scoped change.**  `campaign/mmlu-pro-gate.py` asks its questions one at a time: it
+exercises the solo path only and would pass this change trivially.  The tiers compute an expert from different stores
+(the CPU pool from the shadow Q2_0 store, the GPU from the native pack), so moving misses between them can move the
+token stream of a CONCURRENT request: the canary is M3b under the interleave; a concurrent gate is owed before any
+adoption (a small instrument: the same questions, six at a time).
+
+**Falsifiers, cheapest first.**  (1) The default boot must be the old behaviour: a smoke leg unset.  (2) The armed boot
+serves the concurrent lane: a smoke leg at 0.5.  (3) `campaign/env-ladder.sh STRATA_PCIE_FRAC_BATCH -1 0.5`, two
+interleaved rounds, means only.  (4) 0.7 if 0.5 reads >= +2%.
+
+**Status: built (`0aec007e6830b4b3`, 0 warnings); NOT RUN.  Nothing here is adopted.**
