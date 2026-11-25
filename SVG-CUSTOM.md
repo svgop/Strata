@@ -14632,6 +14632,22 @@ the bar.  Nothing was built, deployed or run; the candidate does not exist.
    that the path runs through `z`'s late START, not through `gdn_ab`.  What `z` waits on in those 10.3 us - its producer's
    event, the stream's order, or launch order - is the next cheapest falsifier (one code read at the `z` launch).
 
+**FOLLOW-UP ON QUESTION 2, BY CODE READ (10:15; UNCONFIRMED static analysis - the kernel's occupancy is not measured).**
+The launch order is deliberate and documented at the site: `z` is forked to its own stream (`branch(pfork_, cs, side2_)`,
+`verify.cpp:1566`), qkv is launched on the compute stream FIRST (`:1567`; the comment: "so its grid is dispatched first"),
+then `z` (`:1568-1570`); the conv depends on qkv and follows it (`:1592-1604`); the compute stream waits on `z`'s branch
+(`cudaStreamWaitEvent(cs, pjoin_)`, `:1618`) before the step.  `z` reads only the shared input: it has no data dependency
+on qkv and no event to wait for beyond the fork.  **Its 10.3 us late start is therefore neither order nor an event - it is
+CAPACITY: qkv's grid occupies the GPU and `z` runs when the machine frees.**  The path is qkv + max(z, conv).
+- *The lever that shape suggests, NOT a lever yet:* give `z` the occupancy qkv leaves idle - one launch over both
+  projections (a two-tensor matvec, or concatenated weights: the latter is a pack change).  Per-row arithmetic is
+  independent in `native_mmvq_il`, so a fused launch would be bitwise; the gain is bounded by `z`'s own duration times
+  the idle fraction while it runs alone, and NEITHER NUMBER IS MEASURED.
+- *The cheapest falsifier (one read of the existing capture, no GPU):* `z`'s and qkv's grids, blocks and durations in
+  the solo window graphs.  If `z`'s grid already covers the GPU (>= 148 SMs x its blocks per SM), there is no idle
+  capacity to give it and the item closes.  If it does not, the price is (z's duration x idle fraction) x 36 per window,
+  and only a price above the band buys a kernel.
+
 **Process note.**  The first delegation of the day (F-456) read itself out of room; this one was forbidden the reading,
 wrote its trace to disk first, and stopped correctly in twelve minutes.  A STOP at the trace is the cheapest falsifier
 doing its job: this one cost no GPU time and retracted a priced lever before it was built.
