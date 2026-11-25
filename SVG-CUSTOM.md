@@ -14402,3 +14402,34 @@ the kernel's single-thread throughput on this CPU (~7 G weights/s per core); cap
   script is deleted with the closed question; its outputs stay.
 
 **CLOSEOUT (08:27): champion `3865e27a` in service, engine stopped, profile pinned.  F-454 adopts nothing.**
+
+## F-455 — the PCIe share's floor rounding halves the link's share in the concurrent lane (needle priced before the leg; 2026-11-25, 08:4x)
+
+**Origin.**  F-454 closed the pool's capacity; the term it left was the pool's 63 us per CPU expert, and the structure
+law's next move was to shift cold misses to the PCIe tier.  The code read (free) found three things before any boot:
+- **The link is 12.0 GB/s on this box** (the boot's own prefill-plan line), not the ~50 GB/s F-453's closeout assumed
+  from the card's nominal link.  F-453's "8 of ~50 GB/s" is retracted: the link carries 72 MB (6 ms) in a fast round and
+  194 MB (16 ms of a 30 ms window) in a slow one - a quarter and over a half busy.
+- **The standing sets the share explicitly: `--pcie-frac 0.35`** (`config/custom-iq3_s-8081.json`; the 0.1.42 refinement
+  is not on the path).  It enters the dispatch as fixed point, `pcie_num = 90`.
+- **The split is a FLOOR per cohort window, per layer**: `m = pcie_model.pick(nmiss, (nmiss * pcie_num) >> 8)`
+  (`src/core/expert_source.cpp:4915`).  Each cohort plans alone, so a layer sees ~2.7 misses in a fast round and ~5.5 in
+  a slow one: two misses stream NOTHING, three stream one, five stream one.  Over the miss-count distribution the model
+  predicts 21% / 31% of misses on the link; the telemetry reads 19% / 24%.  **The operator's 0.35 delivers about a fifth
+  to a quarter in the concurrent lane, and least where the pool hurts most.**
+
+**The needle.**  CPU experts per round: 155 (fast) / 302 (slow) at 63 us; window moves 0.715 ms per ms of pool.
+**The arm (no build): nominal 0.50** - floor(0.5 n) over the same distributions gives ~39% / ~45% by count: ~38 experts
+per fast round and ~80 per slow round leave the pool (-2.4 / -5.0 ms of pool = -7% / -11% of window) for the link
+(+6.5 / +13.7 ms of link time: 27% -> ~57% busy in fast rounds, near saturation in slow ones).  **Price: conc +4-7%.**
+**The named risk:** link saturation in slow rounds - a stall there, not a saving.  **M1 is exposed:** solo windows floor
+too, so the arm raises their share as well; the ladder's M1 column decides whether the adoption is a config change or a
+batch-scoped build (a cumulative share across a round's layers - the exact form).
+
+**Falsifiers, cheapest first.**  (1) The floor model against the telemetry: done above (21/31 predicted, 19/24 read).
+(2) `campaign/config-abab.py`, one binary (the champion), A = the standing (0.35) against B = 0.50
+(`campaign/results/f455-2026-11-25/config-pciefrac-050.json`), four boots x three legs, profile pinned per boot.
+(3) On a conc win: the 70q gate (nothing token-affecting is expected: an expert's output is the same whichever tier
+serves it), then M1's verdict picks config or scoped build.
+
+**Status: the config ladder is RUNNING (08:45).  Nothing here is adopted.**
