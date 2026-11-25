@@ -15036,7 +15036,7 @@ today; the standing is the F-452 state (`3865e27a`), quality-neutral on a paired
 
 ---
 
-## F-451 — the PCIe "Gen2" suspicion investigated and refuted; the 5090 rig audit banked
+## F-462 — the PCIe "Gen2" suspicion investigated and refuted; the 5090 rig audit banked
 
 The F-450 rig audit's P0 item (boot fill at 7555 MB/s ~ a Gen2 ceiling; idle link at Gen1/Gen2) is
 falsified by measurement: under sustained pinned DMA the link uptrains to 32.0 GT/s Gen5 x16 within
@@ -15054,3 +15054,46 @@ which also carries the condensed rig audit (premise corrections: 9950X3D, 184 Gi
 serve, Qwen3.8-Flash-Next-GSQ-RCO IQ3_S geometry; measured steady state: 24.1 ms mean window,
 pool 10.22 ms, gate/up 5.81, MTP acceptance 61-65%; prefill 884-906 tok/s cold-read, 174 ms
 fixed small-read cost; backlog P0-P3 and the verification protocol per the standing line).
+
+---
+
+## F-463 — the critical path traced at source level by six parallel read-only audits; reconciled against the F-452..F-461 floor; the prefill lane found off the frontier (2026-11-25, 13:2x)
+
+Housekeeping first: my PCIe entry above was appended as a second "F-451" without re-reading the journal head -
+the number had been taken on 11-23 by the lexicon entry.  It is renumbered F-462 (heading, body and its research
+file) in this commit; the earlier commit message still says F-451 and is left as history.  Law restated: read the
+whole log before numbering.
+
+Method: six fresh-context auditors, read-only, over head 4d3e375ac - router/dispatch, CPU pool (objdump on the
+built kernel objects), GPU kernels (ptxas -v recompile of the hot TUs from build.ninja flags, sm_120), verify/MTP,
+prefill/KV/PLE, serving + Python layer - each citing file:line and separating MEASURED from INFERRED.  Full map,
+backlog and blueprints: `campaign/research/f463-critical-path-trace-2026-11-25.md`.
+
+What the traces add to F-461's statement (its floor and its five movable variables stand):
+- The solo lane's binding resource is "the window graph's kernel set" - and that set is not at its own floor:
+  `native_gu_swiglu_kernel<22>` (IQ2_S gate/up, 20 of 48 layers) compiles to 64 registers and SPILLS 104/148 B
+  per thread at the 2-CTA/SM cliff; <21>/<23> (11 layers) take 87/92 registers -> 1 CTA/SM = 25 % occupancy.
+  `__launch_bounds__(512)` carries no minBlocks (iq_kernels.cu:2606), so ptxas picks a different trade per type.
+  Bitwise-safe, S, on both lanes' critical path.  (A2)
+- A dead host memset of VRAM-hit rows sits between doorbell and flag on the device-plan route
+  (expert_source.cpp:5301, :5127-5128): ~16 MiB/window of pinned writes never read [I; Golden + LOGPOS gate].  (A5)
+- The cohort lane is blind: `batch_poll` never adds to ms_wait and "ms/window" is per cohort-half - every
+  Amdahl on the concurrent lane so far under-counts GPU waits by construction.  (A11, S, none)
+- The PREFILL lane is not on the F-461 frontier and is the largest wall share on this box [M]: 11,567 s of prompt
+  reads vs 7,103 s of rounds in the production log; reads run synchronously on the single window thread and every
+  slot stalls for a 32K piece; per-request p50 58.5 t/s (n = 4,996) is that dilution.  Fit 420 ms + 0.155 ms/token.
+  Mechanisms, each file:line'd: the stream-all walk streams every non-resident expert routed or not (28.6-38.7
+  GB/chunk) through a 96-blob ring; the fused kernel re-decodes weights per 64-row tile; GDN recurrence is
+  sequential per token (a bit-exact chunked scan exists for sm_70 only); PLE gather is one mutex'd thread; park/
+  restore is 38 + 60 synchronized copies.  (A1, A3, A4, A7-A10)
+- The pack is mixed-quant: gate/up IQ2_S in 20 layers, IQ3_XXS 17, IQ3_S 10; down IQ4_NL 39, Q2_0 9 - the
+  quality ceiling is 2-bit gate/up (F-461 variable 5 in the quality direction).  Tail-skip 7 zeroes a missed
+  expert with no renormalisation (~2 entries/window); production runs 7 while the determinism pin says 0.
+- Corrections to my own F-462/F-450 text: the Python server exists (serve/server.py, 9,329 lines; my `head -6`
+  truncated it), ADAPT_OVERLAP withdrawn (F-185/F-187), prefill not flat here, solo decode MTP-amortized,
+  `answering:` p50 58.5.  The standing line carries the corrections.
+
+Nothing adopted, nothing built into the engine; the engine stayed down; no GPU program ran (ptxas recompiles
+were compile-only, to /tmp).  Repo state at this entry: `main` = origin/main (F-461) + F-462 + this; working
+tree also carries another session's uncommitted edits (serve/server.py, tools/, config/custom-dsv41-8081.json)
+that are not mine and were left untouched.

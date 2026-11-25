@@ -88,3 +88,18 @@ C3. STRATA_SPEC_PROB probabilistic draft acceptance (mtp.cpp:653).  Sampled traf
 The 2026-11-23 external numbers are internally consistent (3.21x = 143.2/44.6;
 32768/2917 = 11.23 s ~ 11.26; 32768/1922 = 17.05 s) but unverifiable - no artifacts.
 Use as direction, falsify on this box.
+
+## Corrections and additions (F-462/F-463, 2026-11-25) - the ledger re-read against the measured floor (F-461)
+
+- II `STRATA_ADAPT_OVERLAP=1` is WITHDRAWN for this rig: removed by F-187, measured -5..-8 % at 6-conc (F-185),
+  refused by the engine under DMA_BATCH.  Keep DMA_BATCH + ADAPT_LAG + DEVICE_PLAN.
+- A1 residency: the placement family is the other session's priced frontier (F-453 ff., "gold" pinned for
+  batteries); F-461 names the hit rate its movable variable 1.  New config items from the F-463 trace: +~600
+  slots from idle VRAM (A14), the learned-vs-base profile as an operator question, not a finding.
+- A2 tail-skip: production runs 7 (T63) while the determinism pin says 0 - a contract conflict; on this 32 GB
+  rig at 96 % hits its perf value is ~nil (~2 skipped entries/window), so 7 -> 0 is a quality-side battery item.
+- The quality battery exists: the other session's paired 534-question test (p = 0.345 for the F-452 state).
+- NEW lane absent from the standing line: PREFILL (420 ms + 0.155 ms/token; 62 % of the log's wall time is
+  prompt reads; per-request p50 58.5 t/s is diluted by other slots' reads).  See F-463 A1/A3/A4/A7-A10.
+- Solo-decode "8-11 ms/token" and "prefill flat" in the original text were misreadings (MTP-amortized windows;
+  laptop rig).  F-461's numbers govern: solo 235-248, conc 289-297 t/s.

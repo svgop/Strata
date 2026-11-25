@@ -1,4 +1,4 @@
-# F-451 — the PCIe Gen2 suspicion: investigated and REFUTED (platform exonerated; boot-fill gap is engine-side)
+# F-462 — the PCIe Gen2 suspicion: investigated and REFUTED (platform exonerated; boot-fill gap is engine-side)
 
 Operator directive 2026-11-23: "behaving like gen2 is unacceptable, please investigate."  Suspicion
 arose in the F-450 rig audit: the boot log's cache pre-fill ran at 7555 MB/s - ~94% of a Gen2 x16
