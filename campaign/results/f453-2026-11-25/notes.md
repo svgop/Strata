@@ -48,6 +48,17 @@ below was read from the named file or command on this date.
   | 279.8 rows/s` -> 3.574 ms per row, 17.5 ms per cycle, of which the host waits on the GPU 0.40 ms (solo: 8.96).
   In conc every host-millisecond saved is conc throughput.
 
+## 04:05 - FIRST CANDIDATE BUILT: gdn_ab weight preload (STRATA_SMALL_UNR bit 2, default off)
+The solo queue's first bitwise piece.  `gdn_ab_multi_kernel` (one 64-thread block per two rows, 48 blocks on 170 SMs; the
+F-453 node trace: 0.49 MB in 8.2 us = 60 GB/s): a lane's ten passes were a chain of dependent HBM misses.  Bit 2 reads
+the ten weight vectors into registers before the first FMA chain; one owner (`pass`) for the FMA chain in all three load
+variants.  Priced: up to 0.22 ms per window (+1.8-2.2% M1) - under the bar alone, the first piece of the launch-shape
+composition.  Proof so far: `STRATA_SMALL_UNR=7 build-fresh/gdn_parity --selftest` -> `gdn_ab_multi T=1..8 ==
+fused_gdn_ab: bitwise (8 cases)` (also at 3 and 0).  Built in build-fresh (03:41).  **Env ladder queued behind the
+gate** (`env-ladder.sh STRATA_SMALL_UNR 3 7 f453-gdnab yes`, 2 rounds): it deploys the candidate with the champion
+alongside (`engine/strata.pre-f453-gdnab`), and the job RESTORES THE CHAMPION and stops the engine at the end whatever the
+table says; promotion is a decision from `envladder-gdnab.out`, not a script's.
+
 ## 03:55 - the GDN "gate matvec order" piece is VOID
 `branch()` (verify.cpp:1233) is a single-event fork; the gate projection is forked at :1566 right after its producer (:1563)
 and joined at :1618 - no capture-order dependency exists.  The late start is GPU-side dispatch under the qkv wave.  A build
