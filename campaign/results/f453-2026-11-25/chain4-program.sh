@@ -21,7 +21,15 @@ trap restore EXIT
 cleanup_engine >/dev/null 2>&1
 [ "$(sha256sum engine/strata | cut -c1-16)" = "$CHAMP" ] || { log "ABORT: engine/strata is not the champion"; exit 1; }
 [ "$(sha256sum build-fresh/strata | cut -c1-16)" = "$CAND" ] || { log "ABORT: build-fresh/strata is not the smoked candidate"; exit 1; }
-boot(){ cleanup_engine >/dev/null 2>&1; L0=$(grep -c 'engine started:' logs/custom-iq3_s.log); env $1 nohup ./launch-custom-iq3s-8081.sh > $O/$2-boot.log 2>&1 & for i in $(seq 1 100); do curl -s -m 3 http://127.0.0.1:8081/health 2>/dev/null | grep -q '"status": "ok"' && break; sleep 5; done; curl -s -m 3 http://127.0.0.1:8081/health | grep -q '"status": "ok"' || { log "ABORT: no health ($2)"; exit 1; }; wait_prewarm; echo "boot $2: binary $(sha256sum engine/strata | cut -c1-16) log-from-line $L0" > $O/$2.anchor; }
+boot(){ cleanup_engine >/dev/null 2>&1
+  PREV=$(grep -n 'engine started:' logs/custom-iq3_s.log | tail -1 | cut -d: -f1); PREV=${PREV:-0}      # the log is appended across boots
+  env $1 nohup ./launch-custom-iq3s-8081.sh > $O/$2-boot.log 2>&1 &
+  for i in $(seq 1 100); do curl -s -m 3 http://127.0.0.1:8081/health 2>/dev/null | grep -q '"status": "ok"' && break; sleep 5; done
+  curl -s -m 3 http://127.0.0.1:8081/health | grep -q '"status": "ok"' || { log "ABORT: no health ($2)"; exit 1; }
+  wait_prewarm
+  # this boot's segment starts at ITS start line: the first one past the previous boot's
+  L0=$(tail -n +"$((PREV + 1))" logs/custom-iq3_s.log | grep -n 'engine started:' | head -1 | cut -d: -f1); L0=$(( ${L0:-1} + PREV ))
+  echo "boot $2: binary $(sha256sum engine/strata | cut -c1-16) log-from-line $L0" > $O/$2.anchor; }
 leglines(){ grep -E '^M1|^M2|conc' "$1" | cut -c1-120; }
 
 # ---- A. attribution
