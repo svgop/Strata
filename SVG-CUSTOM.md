@@ -14820,3 +14820,27 @@ as `svg` then fails to overwrite them.  `chown -R svg:svg build-fresh campaign/r
 returned today; `engine/strata` unchanged at `3865e27a`).
 
 **State (11:25): HEAD == origin/main; champion `3865e27a` in service, engine stopped, profile pinned; all files svg-owned.**
+
+## F-459 - the both-cohorts CPU-miss share (diagnostic; priced before the leg)
+**Origin.**  F-458's item 1a: twelve rows are two calls of six (`ExpertJobMulti::MAXT = 8`), so a (layer, expert) that both
+cohorts miss is streamed twice - 89.8 us against 46.8 for one call, -42% for that blob.  Whether one call for both cohorts'
+rows is worth a structure change turns on one unmeasured number: the share of a cohort's CPU experts that the other cohort's
+window also computed in the same round.  The split that puts an expert on the CPU is `expert_source.cpp:4915` (per window, per
+layer: the misses not chosen for PCIe).
+**The counter** (`STRATA_COHORT_SHARED_MISS`, default off; prints only with `STRATA_COHORT_ROUND_TELEMETRY=1`).  One record per
+cohort round, shared by the cohort drives; a bit per (layer, expert) each cohort's window computes on the CPU, from the engine's
+own miss list (`cpu_miss_pipeline`: kind -1).  `cohorts: tel ... shared +S of cpu +b (A +a)`: S = popcount(mask_B & mask_A)
+over the layers (B's CPU blobs that A computed too), b and a the cohorts' distinct (layer, expert) counts - the unit of
+`multi_misses`, so a + b must reconcile with the line's own `cpu` delta.  The intersection is taken when the round ends, so it
+does not depend on which window reached a layer first.  C, under the ternary flag, is counted against A the same way.
+**Price the number decides** (arithmetic, not a measurement; equal CPU populations a = b; F-458's six-row shape): the pool time
+removed is 0.42 x share x the pool's share of a round (46%) x the window's 0.715 ms per ms of pool = 0.138 x share of the
+round.  25% -> -3.45% (the arithmetic's ceiling is +3.6% conc; the hand-off's price is +2-3%, since the single 12-row call is
+an extrapolation past the 8-row cap); 15% -> -2.07%, +2.1%; 10% -> -1.4%, +1.4%.  It is a STRUCTURE change: cohort B's rows for
+a layer do not exist when A's call runs (the offset is the pool-under-GPU overlap, F-223/F-233) and no cache survives the
+~60 MB read between the two calls.
+**Ruling by the price:** a share under ~15% closes the item (re-open clause: a change in a round's CPU population - more
+cohorts, longer windows); above it, the structure question is named and handed on, not built here.
+**Falsifier.**  This counter, one telemetry boot: `campaign/smoke-candidate.sh` first (the smoke toll), then three warm legs,
+legs 2-3 measured; the share over rounds with >= 10 rows and `since-prev` < 100 ms (inside a run).  Nothing is adopted: with
+the env unset the split site runs its old control flow behind one not-taken null test.
