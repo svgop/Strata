@@ -1,0 +1,4 @@
+layers 18237 | qkv: starts +2.46 us after gdn_ab, runs 17.95 us, grid median 1280 blocks
+z: starts 9.34 us after qkv's start (-8.51 us against qkv's END), runs 15.07 us, grid median 768 blocks
+conv: starts +0.19 us against qkv's END, runs 1.95 us | step: 2.72 us after the conv's end
+chain qkv START -> step START: median 24.74 us (p10 20.99, p90 28.64) | x36 = 0.890 ms per window

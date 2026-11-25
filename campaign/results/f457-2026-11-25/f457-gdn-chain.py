@@ -19,7 +19,7 @@ for p, q in pairs:
 if not T: sys.exit("no layer with two projections, a conv and a step was found")
 med = lambda i: st.median(t[i] for t in T)
 M = [med(i) / 1e3 for i in range(9)]; p = lambda i, f: sorted(t[i] for t in T)[f * len(T) // 10] / 1e3   # times in us; grids unscaled
-print(f"layers {len(T)} | qkv: starts +{M[0]:.2f} us after gdn_ab, runs {M[1]:.2f} us, grid median {M[9]:.0f} blocks")
-print(f"z: starts {M[2]:.2f} us after qkv's start ({M[4]:+.2f} us against qkv's END), runs {M[3]:.2f} us, grid median {M[10]:.0f} blocks")
+print(f"layers {len(T)} | qkv: starts +{M[0]:.2f} us after gdn_ab, runs {M[1]:.2f} us, grid median {med(9):.0f} blocks")
+print(f"z: starts {M[2]:.2f} us after qkv's start ({M[4]:+.2f} us against qkv's END), runs {M[3]:.2f} us, grid median {med(10):.0f} blocks")
 print(f"conv: starts {M[5]:+.2f} us against qkv's END, runs {M[6]:.2f} us | step: {M[7]:.2f} us after the conv's end")
 print(f"chain qkv START -> step START: median {M[8]:.2f} us (p10 {p(8, 1):.2f}, p90 {p(8, 9):.2f}) | x36 = {36 * M[8] / 1e3:.3f} ms per window")
