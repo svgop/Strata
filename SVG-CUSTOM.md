@@ -14098,6 +14098,31 @@ First serve-mode anatomy of the concurrent lane (instruments below; capture = tw
 - Layout: profiler captures are bulk and live in `Custom-data/profiles/` (AGENTS.md, workspace law); the F-452 node
   traces were in `/tmp` and are moved there.
 
+
+**LADDER 1 - the gdn_ab weight preload (05:29-05:46; `campaign/env-ladder.sh STRATA_SMALL_UNR 3 7 f453-gdnab yes`, two
+interleaved rounds on the candidate binary with the bit off = the standing; `envladder-gdnab.out`):**
+
+| boot | arm | M1 | 6-conc | pair | M3b |
+|---|---|---:|---:|---:|---:|
+| off1 | `STRATA_SMALL_UNR=3` | 230.4 | 296.9 | 209.2 | 76.67 |
+| on1 | `STRATA_SMALL_UNR=7` | 252.7 | 291.8 | 213.6 | 76.17 |
+| off2 | `STRATA_SMALL_UNR=3` | 246.3 | 294.7 | 210.5 | 76.43 |
+| on2 | `STRATA_SMALL_UNR=7` | 250.1 | 293.7 | 215.5 | 76.53 |
+| mean | OFF -> ON | 238.4 -> 251.4 (**+5.5%**) | 295.8 -> 292.8 (-1.0%) | 209.9 -> 214.6 (+2.2%) | flat |
+
+- *By the letter:* the bar is met - M1 +5.5% (paired rounds +9.7% and +1.5%), conc inside the band, the canary flat.
+- *Why it is NOT adopted on this table:* (a) the two CONTROL boots differ by 6.9% (230.4 against 246.3), more than the
+  round-2 paired effect; (b) **the effect is 2.5x the priced ceiling** - the preload can return at most ~0.22 ms of a ~12 ms
+  window (~+2%) - and a surplus the mechanism cannot explain is a question before it is a win (laws 3, 16).  **HOLD as a
+  composition piece.  Owed: the node-level kernel check, arm off against on in the same hour (chain 3).**
+- *The bit check is not a proof here and the record already says why:* round 1's three greedy prompt hashes differ between
+  the arms - and F-452 found two CONTROL boots disagreeing on all three (`bit-check.py` is void as an oracle on the server
+  path, line above).  The instrument for a bitwise claim on this engine is the standalone kernel parity: `gdn_parity`,
+  bitwise T=1..8, re-proved on the full candidate binary (chain 2, `candidate-full-parity.txt`).
+- *The box moved (RECOVER b):* this hour's control boots read M1 230.4 / 246.3 against the 225.5 solo bank and conc 296.9 /
+  294.7 against last night's 269.1 / 282.5 - the low conc reads were the window, not the pin.  The pooled five-boot mean
+  completes with chain 2's control boots.
+
 ### 7. Priced queue (law 15; nothing below is adopted)
 A. Solo, bitwise launch shape/order: ~0.7 ms/window = +8%; with QSA work +15-20%.  First step: one read of the GDN capture
    order (the gate matvec's 10.9 us late start).  B. Solo drafter composition: step cap +2.4%, the adapt round, the

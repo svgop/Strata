@@ -1,0 +1,4 @@
+47fa4a65a2c374ed7a1b48802130a76e85bedfc5871728825581a1ea9f5d2956  build-fresh/strata
+3865e27a5ac1a170c7639e517e361a271e31acbcb020336b5c3289bb3dd74ec5  engine/strata
+[STRATA_SMALL_UNR=7]   gdn_ab_multi T=1..8 == fused_gdn_ab        bitwise (8 cases)
+[STRATA_SMALL_UNR=3]   gdn_ab_multi T=1..8 == fused_gdn_ab        bitwise (8 cases)

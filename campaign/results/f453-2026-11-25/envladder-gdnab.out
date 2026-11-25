@@ -1,0 +1,98 @@
+lane binary saved: 67d3ccc0
+=== round 1: OFF ===
+F-271 re-pin VERIFIED (learned == expert-profile-gold.bin, after the engine stop)
+[off1] env STRATA_SMALL_UNR=3
+[warm-discard] load: 3.61, 4.34, 4.86
+[warm-discard] M1 single-stream : 230.1 t/s (2000 tok in 8.69s)
+[warm-discard] M2 pair          : 200.6 t/s aggregate (1800 tok in 8.97s)
+[warm-discard] M2 6-conc        : 283.6 t/s aggregate (3600 tok in 12.70s)
+[f453-gdnab-off1-1] load: 4.50, 4.53, 4.90
+M1 single-stream : 230.0 t/s (2000 tok in 8.70s)
+M2 pair          : 214.8 t/s aggregate (1800 tok in 8.38s)
+M2 6-conc        : 292.4 t/s aggregate (3600 tok in 12.31s)
+[f453-gdnab-off1-2] load: 5.45, 4.71, 4.94
+M1 single-stream : 234.0 t/s (2000 tok in 8.55s)
+M2 pair          : 206.3 t/s aggregate (1800 tok in 8.72s)
+M2 6-conc        : 299.9 t/s aggregate (3600 tok in 12.01s)
+[f453-gdnab-off1-3] load: 4.81, 4.62, 4.90
+M1 single-stream : 227.3 t/s (2000 tok in 8.80s)
+M2 pair          : 206.6 t/s aggregate (1800 tok in 8.71s)
+M2 6-conc        : 298.4 t/s aggregate (3600 tok in 12.06s)
+p1: 320 tok, sha256 8deb03bbfb91eb8d..., 2.69s
+p2: 320 tok, sha256 cf6a3f2a2a17a54c..., 3.0s
+p3: 320 tok, sha256 aa322f2f1b4826a8..., 2.69s
+saved /home/svg/LLM/strata-custom-2/campaign/results/f209-bit-f453-gdnab-off.json
+=== round 1: ON ===
+F-271 re-pin VERIFIED (learned == expert-profile-gold.bin, after the engine stop)
+[on1] env STRATA_SMALL_UNR=7
+[warm-discard] load: 3.71, 4.38, 4.78
+[warm-discard] M1 single-stream : 249.6 t/s (2000 tok in 8.01s)
+[warm-discard] M2 pair          : 213.1 t/s aggregate (1800 tok in 8.45s)
+[warm-discard] M2 6-conc        : 286.6 t/s aggregate (3600 tok in 12.56s)
+[f453-gdnab-on1-1] load: 3.76, 4.31, 4.75
+M1 single-stream : 246.9 t/s (2000 tok in 8.10s)
+M2 pair          : 211.1 t/s aggregate (1800 tok in 8.53s)
+M2 6-conc        : 291.5 t/s aggregate (3600 tok in 12.35s)
+[f453-gdnab-on1-2] load: 3.58, 4.13, 4.66
+M1 single-stream : 261.2 t/s (2000 tok in 7.66s)
+M2 pair          : 217.8 t/s aggregate (1800 tok in 8.26s)
+M2 6-conc        : 290.9 t/s aggregate (3600 tok in 12.37s)
+[f453-gdnab-on1-3] load: 4.82, 4.40, 4.73
+M1 single-stream : 250.0 t/s (2000 tok in 8.00s)
+M2 pair          : 212.0 t/s aggregate (1800 tok in 8.49s)
+M2 6-conc        : 293.0 t/s aggregate (3600 tok in 12.29s)
+p1: 320 tok, sha256 90573a10e3763f3e..., 1.72s
+p2: 320 tok, sha256 423e413580dafa44..., 1.84s
+p3: 320 tok, sha256 022d561a644a8cf4..., 2.18s
+saved /home/svg/LLM/strata-custom-2/campaign/results/f209-bit-f453-gdnab-on.json
+=== round 2: OFF ===
+F-271 re-pin VERIFIED (learned == expert-profile-gold.bin, after the engine stop)
+[off2] env STRATA_SMALL_UNR=3
+[warm-discard] load: 2.68, 3.86, 4.50
+[warm-discard] M1 single-stream : 218.3 t/s (2000 tok in 9.16s)
+[warm-discard] M2 pair          : 213.1 t/s aggregate (1800 tok in 8.45s)
+[warm-discard] M2 6-conc        : 309.3 t/s aggregate (3600 tok in 11.64s)
+[f453-gdnab-off2-1] load: 2.95, 3.79, 4.45
+M1 single-stream : 240.6 t/s (2000 tok in 8.31s)
+M2 pair          : 206.6 t/s aggregate (1800 tok in 8.71s)
+M2 6-conc        : 297.1 t/s aggregate (3600 tok in 12.12s)
+[f453-gdnab-off2-2] load: 3.13, 3.70, 4.38
+M1 single-stream : 246.5 t/s (2000 tok in 8.11s)
+M2 pair          : 210.1 t/s aggregate (1800 tok in 8.57s)
+M2 6-conc        : 279.9 t/s aggregate (3600 tok in 12.86s)
+[f453-gdnab-off2-3] load: 4.51, 3.93, 4.43
+M1 single-stream : 251.8 t/s (2000 tok in 7.94s)
+M2 pair          : 214.8 t/s aggregate (1800 tok in 8.38s)
+M2 6-conc        : 307.1 t/s aggregate (3600 tok in 11.72s)
+=== round 2: ON ===
+F-271 re-pin VERIFIED (learned == expert-profile-gold.bin, after the engine stop)
+[on2] env STRATA_SMALL_UNR=7
+[warm-discard] load: 3.77, 3.94, 4.38
+[warm-discard] M1 single-stream : 232.0 t/s (2000 tok in 8.62s)
+[warm-discard] M2 pair          : 206.9 t/s aggregate (1800 tok in 8.70s)
+[warm-discard] M2 6-conc        : 278.4 t/s aggregate (3600 tok in 12.93s)
+[f453-gdnab-on2-1] load: 6.56, 4.72, 4.62
+M1 single-stream : 249.3 t/s (2000 tok in 8.02s)
+M2 pair          : 210.3 t/s aggregate (1800 tok in 8.56s)
+M2 6-conc        : 295.2 t/s aggregate (3600 tok in 12.19s)
+[f453-gdnab-on2-2] load: 4.97, 4.57, 4.58
+M1 single-stream : 264.3 t/s (2000 tok in 7.57s)
+M2 pair          : 223.3 t/s aggregate (1800 tok in 8.06s)
+M2 6-conc        : 282.8 t/s aggregate (3600 tok in 12.73s)
+[f453-gdnab-on2-3] load: 6.63, 5.08, 4.75
+M1 single-stream : 236.6 t/s (2000 tok in 8.45s)
+M2 pair          : 212.9 t/s aggregate (1800 tok in 8.45s)
+M2 6-conc        : 303.2 t/s aggregate (3600 tok in 11.87s)
+F-271 re-pin VERIFIED (learned == expert-profile-gold.bin, after the engine stop)
+off1 {'M1': 230.43333333333334, 'pair': 209.23333333333335, 'conc': 296.9, 'M3b': 76.66666666666667}
+on1  {'M1': 252.7, 'pair': 213.63333333333333, 'conc': 291.8, 'M3b': 76.16666666666666}
+off2 {'M1': 246.3, 'pair': 210.5, 'conc': 294.7, 'M3b': 76.43333333333334}
+on2  {'M1': 250.06666666666666, 'pair': 215.5, 'conc': 293.73333333333335, 'M3b': 76.53333333333333}
+M1: pairs +9.7% / +1.5%  mean +5.6%
+pair: pairs +2.1% / +2.4%  mean +2.2%
+conc: pairs -1.7% / -0.3%  mean -1.0%
+M3b canary: OFF 76.6% vs ON 76.3% (mean -0.3%)
+BAR: no lane below -4%: PASS - the targeted lane's +4% gain is judged on its mean above (law 2, both legs)
+CONFIG/ENV LADDER DONE — config restored, engine UP on the restored binary.
+champion restored to engine/strata (3865e27a5ac1a170)
+F-271 re-pin VERIFIED (learned == expert-profile-gold.bin, after the engine stop)

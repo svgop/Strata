@@ -18,6 +18,9 @@
 #          of its own zero beside the UTC one, and the reader proves the alignment before attributing anything.
 #   conc   the probe's own 6-concurrent run (six 600-token requests) - the host-bound lane
 #   m1     the probe's own single-stream request (REAL, 2000 tokens)
+#   STRATA_ANATOMY_GRAPH_TRACE=node   record every kernel inside a graph (the node-level trace the F-453 window and step
+#          graph prices were read from) instead of one row per graph launch (the default, `graph`); ~1.5 M kernel rows
+#          for a 13 s run.  With `node` the sqlite carries CUPTI_ACTIVITY_KIND_KERNEL rows with graphId and graphNodeId.
 # Leaves the readable record in campaign/results/<label>-anatomy/{boot.log,anatomy-summary.txt,stalls.txt,perf.log} and
 # the captures (anatomy.nsys-rep, anatomy.sqlite, perf.serve.data) in $STRATA_PROFILE_HOME/<label>-<date>/, and prints the
 # sqlite summary (campaign/nsys-serve-summary.py) when that script exists.  Leaves the engine DOWN and the learned
@@ -51,7 +54,7 @@ echo "[$(date +%T)] launching the standing server inside nsys session $SESSION (
 # only caps swap, which a short diagnostic never reaches; placement is unchanged - this box has no kernel pin, so
 # the standing boot is the scope plus the engine's own self-pinning, and this boot is the self-pinning alone.
 STRATA_SWAP_GUARD=0 nohup "$NSYS" launch --session="$SESSION" --wait=primary \
-    --trace=cuda --cuda-graph-trace=graph --trace-fork-before-exec=true \
+    --trace=cuda --cuda-graph-trace="${STRATA_ANATOMY_GRAPH_TRACE:-graph}" --trace-fork-before-exec=true \
     -- ./launch-custom-iq3s-8081.sh > "$O/boot.log" 2>&1 &
 NPID=$!
 for i in $(seq 1 100); do

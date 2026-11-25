@@ -94,8 +94,15 @@ def main():
                     help="70 = the validation split (the record suite); N = the fixed stratified test sample")
     ap.add_argument("--list", action="store_true",
                     help="print the suite's composition and exit (no server contact)")
+    ap.add_argument("--first", type=int, default=0,
+                    help="score only the first N questions of the suite (the order is category round-robin, so a prefix "
+                         "is a balanced sample): the paired form of a comparison against a run that covered more")
     a = ap.parse_args()
     examples, suite_name = suite(a.suite)
+    if a.first > 0:
+        if a.first > len(examples):
+            sys.exit(f"--first {a.first} exceeds the suite's {len(examples)} questions")
+        examples = examples[:a.first]
     if a.list:
         by_cat = defaultdict(int)
         for ex in examples:
@@ -158,6 +165,7 @@ def main():
     with open(out, "w", encoding="utf-8") as f:
         json.dump({"label": a.label, "floor": a.floor, "suite": suite_name, "n": n, "seed": SUITE_SEED,
                    "order": "category round-robin" if a.suite != 70 else "dataset",
+                   "first": a.first,
                    "score_pct": pct, "sigma_pts": se, "ci95_pts": 1.96 * se,
                    "seconds": seconds, "excluded": failed,
                    "by_cat": {c: f"{sum(v)}/{len(v)}" for c, v in sorted(by_cat.items())},
