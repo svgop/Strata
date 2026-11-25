@@ -14784,3 +14784,39 @@ reports its expert counts per form.
 
 **Owed next.** Those per-form expert counts (one telemetry line); the DRAM counter profile; and the structure question this prices - 12 rows in ONE call is -42 %
 of pool time (89.8 -> ~52 us): kernels past `MAXT = 8`, and rows that the two cohorts hold at different times (F-233).
+
+## HAND-OFF ADDENDUM — F-458 re-prices the map's largest item (2026-11-25, 11:25)
+
+**Item 1 of the hand-off (a faster CPU-expert dequant kernel, priced +6-8% conc) is CLOSED.**  F-458's standalone
+benchmark of the engine's own pool calls shows the premise was wrong: for DRAM-resident experts - the real case - the
+pool is bound by DRAM read throughput (40-47 GB/s against a measured 48-57 GB/s ceiling; more threads stop helping; the
+lean single-row kernel gains 4%).  A dequantization optimization is worth <= +1.3-2.0% conc: inside the band.  The
+round-level telemetry's "dequant-op-bound" reading (F-454) was true of cache-resident experts only.
+**In its place, priced by the same measurement:**
+- *1a. The second read of the same weights (bitwise; no quality cost).*  Twelve rows are TWO calls of six - the kernel
+  caps at eight rows (`ExpertJobMulti::MAXT = 8`, `expert_source.cpp:4791`; the kernels stop at 8) - so an expert both
+  cohorts miss streams twice: 89.8 us against 46.8 for one call (-42% for that expert).  Ceiling = the share of CPU
+  experts that both cohorts miss in a round, which nobody has measured; at a plausible quarter, +2-3% conc.  Obstacle:
+  cohort B's rows for a layer do not exist when cohort A's call for it runs (the offset IS the pool-under-GPU overlap,
+  F-223/F-233), and no cache survives the ~60 MB read between the two calls.  **Cheapest falsifier: an env-gated counter
+  of CPU experts per round that the other cohort also missed (a small build, one boot).**  If the share is under ~15%,
+  the item closes.
+- *1b. The DRAM ceiling's own gap (unbounded).*  A call reaches 37.3 / 45.6 / 51.4 GB/s at N = 1 / 8 / 32 experts; read
+  loops reach 49-57.  The instrument that would bound it: DRAM read counters (AMD UMC `cas_count_read`) over one cold
+  call at N = 8 against N = 32.  Larger calls (pooling a layer's misses across cohorts in TIME, not rows) may collect
+  the gap without touching the cohort structure: UNPRICED.
+- *1c. Which forms the engine's CPU experts really use (unconfirmed, and it decides whose number applies).*  The
+  engine's 63-66 us per expert is not reproduced by DRAM-resident native experts (89.8 us) and matches cache-resident
+  native ones (67.4) and the shadow Q2_0 store (52.1 cold, 32.2 hot - the cheapest form, 1.6-1.7x faster than the native
+  mix); its gate/up ~37 / down ~17 split matches the Q2_0-down forms.  Falsifier: the engine's CPU-expert counts per
+  form, one telemetry field beside 1a's.
+**Bytes are the lever, and they divide three ways** (operator question, 11:20): the second read above is free of quality
+cost; routing-level stripping is already standing (`STRATA_ROUTE_TAIL_SKIP=7`) and every further step is a LABELLED trade
+with the paired gate and the operator's sign-off (law 16); in-expert sparsity or fewer bits on the CPU store is a format
+change with real quality cost and waits on 1a.  Arithmetic: the pool is 46% of a round and the window moves 0.715 ms per
+ms of pool, so each 4% of bytes removed from cold CPU experts is about +1% conc.
+**Rule 7 (housekeeping, paid once):** a root shell that builds leaves root-owned objects and binaries; a build or deploy
+as `svg` then fails to overwrite them.  `chown -R svg:svg build-fresh campaign/results engine` at closeout (70 files
+returned today; `engine/strata` unchanged at `3865e27a`).
+
+**State (11:25): HEAD == origin/main; champion `3865e27a` in service, engine stopped, profile pinned; all files svg-owned.**
