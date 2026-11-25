@@ -14371,4 +14371,34 @@ concurrent lane 4.3% and single-stream 2.7%.  Not adopted; the lever is retired 
 - *The instrument note:* `--pool-workers` above the physical cores is accepted with a warning, and the excess runs
   unpinned.  A count the plan will not place is a count the plan should refuse, or place: filed with the result below.
 
-**Status: the diagnostic pair is RUNNING (08:19).  Nothing here is adopted.**
+**THE DIAGNOSTIC PAIR (08:19-08:23; the tree candidate `7a4d3477` on BOTH arms so the binary cancels; telemetry armed;
+`tel-A-15workers.txt`, `tel-B-30workers.txt`, `tel-pair-abab.out`; the diagnostic's t/s is not a verdict):**
+
+| arm | rounds | window | CPU experts / round | per CPU expert: pool | gate/up | down | window per ms of pool |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| A - 15 workers | 786 | 25.24 ms | 203 | **62.9 us** | 36.7 us | 17.1 us | 0.665 ms |
+| B - 30 workers (15 floating) | 791 | 24.86 ms | 152 | **68.4 us** | 38.2 us | 18.0 us | 0.825 ms |
+
+- **A second thread per core makes each expert SLOWER (+9%), not faster: the dequant kernel is compute-port-bound and
+  blind to SMT.**  There is nothing for sibling-pinned placement to pin for; that build is not owed.
+- B's rounds read cheaper only because that boot drew fewer misses (152 against 203 CPU experts per round - run-to-run
+  residency, not the arm).  Per unit of work nothing improved.
+- **Floating workers TAX the window**: a millisecond of pool time costs 0.665 ms of window on A and 0.825 on B - the
+  ladder's -4.3%, at round level.
+
+**RULING (08:25): THE LEVER IS CLOSED IN BOTH FORMS - FALSIFIED WITH MECHANISM.**  The pool's ~63 us per CPU expert is
+the kernel's single-thread throughput on this CPU (~7 G weights/s per core); capacity is not the lever, and
+`pool_plan.hpp`'s one-worker-per-core plan is right at twelve rows too, for a better reason than the one it records
+(the header's "DRAM-bound" is the single-row regime; at twelve rows the kernel is dequant-op-bound and SMT-blind).
+- *Re-open clause:* a CPU-expert kernel whose limiting port differs from its dot product's, or a CPU with more physical
+  cores.  Not a thread count.
+- *What is left on this term (law 9, in order):* MOVE - shift cold routed misses to the PCIe tier, which streams under
+  the GPU's window (~8 of ~50 GB/s in a slow round; the question is the planner's cut and what the move displaces);
+  then a faster kernel; then the hit rate (placement and ternary: banked, do not re-purchase).
+- *Instrument notes:* (1) `--pool-workers` above the physical cores is accepted with a warning and the excess runs
+  unpinned - a count the plan will not place should be REFUSED at option validation (filed; not built: a behaviour
+  change that wants its own round).  (2) The diagnostic's first cut read "A 0 lines": the run-once script split two
+  line numbers on a space and they are newline-separated; re-cut from the saved engine segment, nothing lost.  The
+  script is deleted with the closed question; its outputs stay.
+
+**CLOSEOUT (08:27): champion `3865e27a` in service, engine stopped, profile pinned.  F-454 adopts nothing.**

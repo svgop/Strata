@@ -1,0 +1,13 @@
+  [A0] up in 64s prewarm=done cvec=?
+  [A0 leg1  (discard)] M1 228.4  conc 271.2  M3b 76.2%  load 4.09
+  [A0 leg2] M1 252.3  conc 286.0  M3b 77.5%  load 5.13
+  [B1] up in 64s prewarm=done cvec=?
+  [B1 leg1  (discard)] M1 205.9  conc 273.8  M3b 76.1%  load 6.37
+  [B1 leg2] M1 244.9  conc 290.2  M3b 75.6%  load 10.46
+
+=== CONFIG LADDER [f454-pool30-tel]  measured legs only, means over 2 boots x 1 legs
+lane               A         B    A vs B   band +-4%
+M1             252.3     244.9     +3.0%
+6-conc         286.0     290.2     -1.4%
+M3b %           77.5      75.6     +2.5%
+A = config/custom-iq3_s-8081.json  |  B = campaign/results/f454-2026-11-25/config-pool30.json
