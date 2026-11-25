@@ -14931,3 +14931,29 @@ lookahead-driven prefetch, structural couplings resolved by bounded-overhead orc
 relocation preferred over new mechanism), the falsification-gated method, the adoption criterion, and a termination
 clause (declare the measured floor with its binding resource and the variable its statement leaves movable).  The lever
 ordering above stays in the record and is revised there.
+
+## F-460 - the L3 prefetch of the next expert call: the benchmark falsifier
+(priced before the leg; 2026-11-25, 12:1x; a benchmark only - no engine change, nothing deployed, no GPU program)
+- **Origin.** F-458's `pool_bench`: a DRAM-resident expert call runs at 40-47 GB/s against a 48-57 GB/s ceiling; a
+  cache-resident one is compute-bound. T = 6, N = 8, native mix: 46.8 us per expert cold, 33.8 hot (-28 %); the 6+6
+  row 89.8 against 67.4 (-25 %); the shadow Q2_0 store 52.1 against 32.2 (-38 %). In the concurrent lane the pool is
+  called once per layer with 2-3 experts x 6 rows, and its 16 threads idle for most of the ~0.65 ms layer period.
+- **Hypothesis (an upper bound: the router lookahead predicts every route).** A read-only pass over the NEXT call's
+  N experts during that idle time leaves their lines in L3, and the call then runs at the hot rate.
+- **Price.** The pool is 46 % of a concurrent round and the window moves 0.715 ms per ms of pool: -25 % of pool time
+  = 0.46 x 0.25 x 0.715 = -8.2 % of the window; -38 % (the shadow store) = -12.5 %; the standing mix of native and
+  shadow calls lands at +7-9 % concurrent.
+- **Falsifiers, in order.**
+  1. CCD locality. Tasks are claimed at run time (pool.cpp:863), so a pass places a line in a CCD, never in the core
+     that will read it: with one reader, the other CCD's 8 threads read half the call's bytes across the fabric.
+  2. Decay with the gap G in {0, 0.1, 0.25, 0.5} ms between the pass and the call.
+  3. Eviction: 8 and 32 MiB of unrelated reads by one thread during the gap, through the 32 MiB CCD's L3.
+  4. The pass's own cost: one thread streams 35-53 GB/s; 3 experts (4.1 MB) = 80-118 us, against 0.25 ms of idle
+     time per layer (solo) and ~0.32 ms (concurrent).
+  5. The wake: a call after a gap wakes parked workers (+5-12 %, F-458 table 4). The cold control runs the same gap
+     and traffic behind a sham pass that reads the same bytes from unrelated memory.
+- **Stop rule.** The prefetched call must beat its cold control by >= 15 % at G = 0.25 ms with 8 MiB of traffic;
+  otherwise the lever closes. The pass is reported three ways: `one` (one thread), `all` (16 threads, 1/16 each),
+  `both` (one thread per CCD, each reading everything - the only placement that keeps every call read on its own CCD).
+- **Instrument.** `pool_bench --prefetch` (a new option; the default run does not change): T = 6, N in {2, 3, 4, 8},
+  cold experts cycling through the 320 per format, 15 workers + the host. Evidence: campaign/results/f460-2026-11-25/.
