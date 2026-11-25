@@ -1,0 +1,9 @@
+prompt 0 standing     ok   finish length  12000 tok  58 s  peak 0.13 guard no  most repeated x1: "We need answer user's request. Need analyze C++ part. User a"
+prompt 0 standing     ok   finish stop    10407 tok  45 s  peak 0.03 guard no  most repeated x2: '8 make_cache_complement_plan'
+prompt 1 standing     loop finish stop    10536 tok  49 s  peak 0.27 guard no  most repeated x2: '- pipe_byield_nodrain_env'
+prompt 1 standing     loop finish stop     8908 tok  40 s  peak 0.39 guard yes most repeated x11: '- Potential issue: if env="0", threshold 0; OK.'
+prompt 2 standing     ok   finish stop    11160 tok  49 s  peak 0.11 guard no  most repeated x2: 'if rc < 0 and os.name != "nt":'
+prompt 2 standing     ok   finish stop    10290 tok  46 s  peak 0.02 guard no  most repeated x1: "We need answer user's request. Need analyze program part fun"
+--- loops / replies, and the median tokens of a reply:
+  standing     2 / 6 loops, median reply 10472 tokens
+responses: /home/svg/LLM/strata-custom-2/logs/loop-propensity/20261125-214018

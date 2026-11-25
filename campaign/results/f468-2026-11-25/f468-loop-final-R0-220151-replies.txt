@@ -1,0 +1,9 @@
+prompt 0 standing     ok   finish stop    10541 tok  50 s  peak 0.25 guard no  most repeated x1: "We need answer user's request. Need analyze C++ part, functi"
+prompt 0 standing     loop finish stop     9493 tok  39 s  peak 0.28 guard yes most repeated x4: 'Issue: if `io_stop()` called then set_io_prefetch true but `'
+prompt 1 standing     ok   finish stop    10662 tok  48 s  peak 0.11 guard no  most repeated x3: '"  --kv fp16|int8       KV storage (plan v0.3 P7):'
+prompt 1 standing     loop finish stop     9669 tok  42 s  peak 0.33 guard no  most repeated x2: 'const strata::core::OnDevice on(home.dev);'
+prompt 2 standing     ok   finish length   5484 tok  25 s  peak 0.23 guard no  most repeated x1: "We need answer user's request. Need analyze code. User provi"
+prompt 2 standing     ok   finish stop    11090 tok  49 s  peak 0.07 guard no  most repeated x1: "We need answer user's request. Need analyze program part fun"
+--- loops / replies, and the median tokens of a reply:
+  standing     2 / 6 loops, median reply 10105 tokens
+responses: /home/svg/LLM/strata-custom-2/logs/loop-propensity/20261125-220300

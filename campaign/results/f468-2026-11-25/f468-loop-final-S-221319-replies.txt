@@ -1,0 +1,9 @@
+prompt 0 standing     loop finish stop     9688 tok  43 s  peak 0.36 guard yes most repeated x10: '- Issue: `resident_sampled` returns n when all four pages ar'
+prompt 0 standing     ok   finish stop    10568 tok  45 s  peak 0.02 guard no  most repeated x1: "We need answer user's request. Need analyze C++ snippet func"
+prompt 1 standing     loop finish length  12000 tok  58 s  peak 0.33 guard yes most repeated x4: '"  --kv fp16|int8       KV storage (plan v0.3 P7):'
+prompt 1 standing     loop finish stop     4770 tok  19 s  peak 0.37 guard yes most repeated x2: 'for (double q : p) { q /= sum; if (q > 0.0) entropy -= q * s'
+prompt 2 standing     ok   finish stop    10834 tok  48 s  peak 0.05 guard no  most repeated x2: '6 combined_embeddings_path'
+prompt 2 standing     ok   finish stop    10228 tok  45 s  peak 0.15 guard no  most repeated x2: '6 combined_embeddings_path'
+--- loops / replies, and the median tokens of a reply:
+  standing     3 / 6 loops, median reply 10398 tokens
+responses: /home/svg/LLM/strata-custom-2/logs/loop-propensity/20261125-221429

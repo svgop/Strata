@@ -1,0 +1,9 @@
+prompt 0 standing     ok   finish stop     8731 tok  44 s  peak 0.06 guard no  most repeated x2: '3. `append_stage_lend_regions` evaluates `cap_bytes - bytes`'
+prompt 0 standing     ok   finish stop    11009 tok  52 s  peak 0.07 guard no  most repeated x1: "We need answer user's request. Need analyze C++ snippet func"
+prompt 1 standing     ok   finish stop     6565 tok  33 s  peak 0.08 guard no  most repeated x1: 'The user wants me to go through the provided C++ code functi'
+prompt 1 standing     ok   finish stop     3794 tok  18 s  peak 0.08 guard no  most repeated x1: 'The user wants me to go through the provided C++ code functi'
+prompt 2 standing     ok   finish length  12000 tok  60 s  peak 0.04 guard no  most repeated x2: '- combined_embeddings_path'
+prompt 2 standing     ok   finish stop    10857 tok  54 s  peak 0.10 guard no  most repeated x4: '6 combined_embeddings_path'
+--- loops / replies, and the median tokens of a reply:
+  standing     0 / 6 loops, median reply 9794 tokens
+responses: /home/svg/LLM/strata-custom-2/logs/loop-propensity/20261125-201455

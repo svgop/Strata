@@ -1,0 +1,9 @@
+prompt 0 standing     ok   finish stop    10136 tok  52 s  peak 0.03 guard no  most repeated x1: "We need answer user's request. Need analyze C++ snippet func"
+prompt 0 standing     ok   finish stop    10143 tok  46 s  peak 0.09 guard no  most repeated x2: '- In `append_stage_lend_regions`, if `n_layers * n_expert` i'
+prompt 1 standing     ok   finish stop    11035 tok  58 s  peak 0.17 guard no  most repeated x1: "We need answer user's request. Need analyze provided C++ cod"
+prompt 1 standing     ok   finish stop    10180 tok  47 s  peak 0.09 guard no  most repeated x1: "We need answer user's request. Need analyze program part fun"
+prompt 2 standing     ok   finish stop    10664 tok  54 s  peak 0.01 guard no  most repeated x2: '6 combined_embeddings_path'
+prompt 2 standing     ok   finish stop    10363 tok  51 s  peak 0.14 guard no  most repeated x1: "We need answer user's request. Need analyze C++? Actually co"
+--- loops / replies, and the median tokens of a reply:
+  standing     0 / 6 loops, median reply 10272 tokens
+responses: /home/svg/LLM/strata-custom-2/logs/loop-propensity/20261125-204858

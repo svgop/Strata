@@ -1,0 +1,9 @@
+prompt 0 standing     ok   finish stop    10376 tok  55 s  peak 0.14 guard no  most repeated x2: 'I think the three worst issues are:'
+prompt 0 standing     ok   finish length  12000 tok  56 s  peak 0.23 guard no  most repeated x2: '- Potential issue: if `io_stop` called with io_stats_? OK.'
+prompt 1 standing     ok   finish stop    10169 tok  58 s  peak 0.09 guard no  most repeated x1: "We need answer user's request. Need analyze C++ code part? T"
+prompt 1 standing     ok   finish stop    11192 tok  59 s  peak 0.16 guard no  most repeated x2: '"  --kv fp16|int8       KV storage (plan v0.3 P7):'
+prompt 2 standing     ok   finish stop    11030 tok  60 s  peak 0.04 guard no  most repeated x2: '6 combined_embeddings_path'
+prompt 2 standing     ok   finish stop    10489 tok  55 s  peak 0.03 guard no  most repeated x1: "We need answer user's request. Need analyze C++? Actually Py"
+--- loops / replies, and the median tokens of a reply:
+  standing     0 / 6 loops, median reply 10760 tokens
+responses: /home/svg/LLM/strata-custom-2/logs/loop-propensity/20261125-202036

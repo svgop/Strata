@@ -1,0 +1,9 @@
+prompt 0 standing     ok   finish stop    10707 tok  52 s  peak 0.09 guard no  most repeated x2: '1 detail::cgroup_available_bytes'
+prompt 0 standing     loop finish stop    10205 tok  44 s  peak 0.27 guard yes most repeated x7: '- Potential issue: if io_fill_ and `pf_mark_` not allocated?'
+prompt 1 standing     ok   finish stop    10007 tok  48 s  peak 0.09 guard no  most repeated x2: '- In `under_wddm`, if called on Windows or WSL2: OK.'
+prompt 1 standing     loop finish stop     6426 tok  28 s  peak 0.39 guard yes most repeated x1: "We need answer user's request. Need analyze C++ code part? U"
+prompt 2 standing     ok   finish stop    10438 tok  49 s  peak 0.24 guard no  most repeated x1: "We need answer user's request. Need go through part of progr"
+prompt 2 standing     ok   finish stop    11301 tok  49 s  peak 0.18 guard no  most repeated x44: 'Need include `EngineProtocol`? no.'
+--- loops / replies, and the median tokens of a reply:
+  standing     2 / 6 loops, median reply 10322 tokens
+responses: /home/svg/LLM/strata-custom-2/logs/loop-propensity/20261125-222638

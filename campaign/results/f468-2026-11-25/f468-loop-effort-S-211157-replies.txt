@@ -1,0 +1,23 @@
+prompt 0 standing     ok   finish stop    10518 tok  54 s  peak 0.01 guard no  most repeated x1: "We need answer user's request. Need analyze C++ snippet func"
+prompt 0 effort-max   loop finish length  12000 tok  48 s  peak 0.38 guard yes most repeated x6: '- Potential issue: if cgroup v2 path root has memory.max lim'
+prompt 0 effort-high  ok   finish stop    10315 tok  48 s  peak 0.04 guard no  most repeated x1: "We need answer user's request. Need go through part of progr"
+prompt 0 standing     ok   finish stop    10385 tok  45 s  peak 0.00 guard no  most repeated x1: "We need answer user's request. Need analyze C++ snippet func"
+prompt 0 effort-max   ok   finish stop    11081 tok  45 s  peak 0.12 guard no  most repeated x4: '- Potential: if io_stop() called while io_worker? OK.'
+prompt 0 effort-high  ok   finish stop    10651 tok  47 s  peak 0.04 guard no  most repeated x1: 'We need answer user\'s request. User: "Here is part of a prog'
+prompt 1 standing     loop finish stop     8711 tok  38 s  peak 0.32 guard no  most repeated x4: '`resident_stage_swaps()`: the `kept` vector is built from sw'
+prompt 1 effort-max   loop finish stop     6748 tok  27 s  peak 0.46 guard yes most repeated x16: '- Potential issue: if `cudaMemcpyAsync` failure and `cudaGet'
+prompt 1 effort-high  ok   finish stop    10301 tok  50 s  peak 0.10 guard no  most repeated x2: '"  --kv fp16|int8       KV storage (plan v0.3 P7):'
+prompt 1 standing     ok   finish stop     9923 tok  46 s  peak 0.10 guard no  most repeated x1: "We need answer user's request. Need analyze C++ code part? U"
+prompt 1 effort-max   ok   finish stop    10366 tok  46 s  peak 0.21 guard no  most repeated x37: '- `cvec_files2` vector empty. OK.'
+prompt 1 effort-high  loop finish stop    10222 tok  46 s  peak 0.38 guard yes most repeated x4: '- `int64_t prefill_auto_max = 8192;` OK.'
+prompt 2 standing     ok   finish stop    10175 tok  49 s  peak 0.14 guard no  most repeated x4: 'Need maybe include `Engine.generate`? yes.'
+prompt 2 effort-max   ok   finish stop    10763 tok  48 s  peak 0.04 guard no  most repeated x1: "We need answer user's request. Need go through part of progr"
+prompt 2 effort-high  ok   finish stop    10461 tok  47 s  peak 0.07 guard no  most repeated x3: '6 combined_embeddings_path'
+prompt 2 standing     loop finish stop    10670 tok  44 s  peak 0.55 guard yes most repeated x9: '- if rc = 0xC0000005? OK.'
+prompt 2 effort-max   ok   finish stop    10038 tok  45 s  peak 0.05 guard no  most repeated x1: "We need answer user's request. Need go through provided prog"
+prompt 2 effort-high  ok   finish stop    10444 tok  46 s  peak 0.03 guard no  most repeated x1: 'We need answer user\'s request. Need analyze code? User: "Her'
+--- loops / replies, and the median tokens of a reply:
+  standing     2 / 6 loops, median reply 10280 tokens
+  effort-max   2 / 6 loops, median reply 10564 tokens
+  effort-high  1 / 6 loops, median reply 10380 tokens
+responses: /home/svg/LLM/strata-custom-2/logs/loop-propensity/20261125-211251

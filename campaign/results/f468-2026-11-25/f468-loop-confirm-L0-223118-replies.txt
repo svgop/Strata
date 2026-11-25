@@ -1,0 +1,9 @@
+prompt 0 standing     ok   finish stop    10377 tok  55 s  peak 0.05 guard no  most repeated x2: '1. detail::cgroup_available_bytes'
+prompt 0 standing     ok   finish length  12000 tok  51 s  peak 0.03 guard no  most repeated x1: "We need answer user's request. Need analyze code function by"
+prompt 1 standing     ok   finish stop    10115 tok  54 s  peak 0.21 guard no  most repeated x2: '"  --kv fp16|int8       KV storage (plan v0.3 P7):'
+prompt 1 standing     loop finish stop     7528 tok  32 s  peak 0.32 guard yes most repeated x4: 'The code returns `q >= 1.0`.'
+prompt 2 standing     ok   finish stop    11021 tok  54 s  peak 0.08 guard no  most repeated x2: '`visible_device_order`: incomplete.'
+prompt 2 standing     ok   finish stop    10643 tok  48 s  peak 0.05 guard no  most repeated x2: '6 combined_embeddings_path'
+--- loops / replies, and the median tokens of a reply:
+  standing     1 / 6 loops, median reply 10510 tokens
+responses: /home/svg/LLM/strata-custom-2/logs/loop-propensity/20261125-223227

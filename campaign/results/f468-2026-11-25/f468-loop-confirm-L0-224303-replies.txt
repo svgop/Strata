@@ -1,0 +1,9 @@
+prompt 0 standing     loop finish length  12000 tok  56 s  peak 0.30 guard no  most repeated x1: "We need answer user's request. Need analyze code function by"
+prompt 0 standing     ok   finish stop    10946 tok  47 s  peak 0.03 guard no  most repeated x1: "We need answer user's request. Need analyze C++ snippet func"
+prompt 1 standing     ok   finish stop     9919 tok  50 s  peak 0.11 guard no  most repeated x1: "We need answer user's request. Need analyze provided C++ cod"
+prompt 1 standing     ok   finish stop     9716 tok  45 s  peak 0.23 guard no  most repeated x3: '- `resident_stage_swaps`: if failure after stage_exchange, n'
+prompt 2 standing     ok   finish stop    11251 tok  53 s  peak 0.03 guard no  most repeated x2: '6 combined_embeddings_path'
+prompt 2 standing     loop finish stop     8014 tok  35 s  peak 0.55 guard yes most repeated x53: 'Need include `Engine`? OK.'
+--- loops / replies, and the median tokens of a reply:
+  standing     2 / 6 loops, median reply 10432 tokens
+responses: /home/svg/LLM/strata-custom-2/logs/loop-propensity/20261125-224409

@@ -1,0 +1,9 @@
+prompt 0 standing     ok   finish stop     4950 tok  25 s  peak 0.09 guard no  most repeated x1: 'The user wants me to go through the provided C++ code functi'
+prompt 0 standing     loop finish stop    11093 tok  47 s  peak 0.32 guard no  most repeated x7: '- Potential issue: if io_fill_ and mapped_blob null, file_re'
+prompt 1 standing     ok   finish stop     9754 tok  50 s  peak 0.14 guard no  most repeated x2: '"  --kv fp16|int8       KV storage (plan v0.3 P7):'
+prompt 1 standing     ok   finish stop    10146 tok  48 s  peak 0.05 guard no  most repeated x2: '#if (defined(STRATA_USE_HIP) || defined(STRATA_HIP_GFX906)) '
+prompt 2 standing     ok   finish stop    11152 tok  52 s  peak 0.06 guard no  most repeated x3: '6 combined_embeddings_path'
+prompt 2 standing     ok   finish stop    10417 tok  46 s  peak 0.11 guard no  most repeated x4: 'Need include `conversation_cache_view`? yes.'
+--- loops / replies, and the median tokens of a reply:
+  standing     1 / 6 loops, median reply 10282 tokens
+responses: /home/svg/LLM/strata-custom-2/logs/loop-propensity/20261125-215713

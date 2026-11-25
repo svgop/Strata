@@ -1,0 +1,54 @@
+prompt 0 standing     loop finish length  12000 tok  54 s  coverage 0.77  most repeated x1: "We need answer user's request. Need analyze C++ snippet function by fu"
+prompt 0 cvec-off     ok   finish stop    10429 tok  50 s  coverage 0.02  most repeated x1: "We need answer user's request. Need analyze code function by function "
+prompt 0 temp-0.6     ok   finish stop    10354 tok  49 s  coverage 0.00  most repeated x1: "We need answer user's request. Need go through program function by fun"
+prompt 0 presence-1.5 ok   finish stop    10515 tok  53 s  coverage 0.00  most repeated x1: "We need answer user's request. Need analyze C++ snippet function by fu"
+prompt 0 standing     ok   finish stop    10270 tok  48 s  coverage 0.14  most repeated x2: '- io_stop: if io_stop called while io_worker in io_fill_? OK.'
+prompt 0 cvec-off     ok   finish stop    10610 tok  44 s  coverage 0.01  most repeated x2: 'static thread_local std::vector<uint8_t> scratch;'
+prompt 0 temp-0.6     ok   finish stop     5833 tok  25 s  coverage 0.01  most repeated x1: 'The user wants me to go through the provided C++ code function by func'
+prompt 0 presence-1.5 ok   finish stop    11120 tok  54 s  coverage 0.01  most repeated x1: "We need answer user's request. Need analyze C++ snippet function by fu"
+prompt 0 standing     ok   finish stop    10941 tok  52 s  coverage 0.03  most repeated x2: '- Potential issue: if `io_ahead_` false but io_sched_? OK.'
+prompt 0 cvec-off     ok   finish stop    10642 tok  49 s  coverage 0.15  most repeated x2: '- Potential issue: if io_minconf_ >1? clamped. OK.'
+prompt 0 temp-0.6     ok   finish stop    11139 tok  51 s  coverage 0.00  most repeated x3: '- On Linux, if cgroup v2 path root memory.max present but memory.stat '
+prompt 0 presence-1.5 loop finish stop    11819 tok  97 s  coverage 0.00  most repeated x1: "We need answer user's request. Need analyze C++ snippet function by fu"
+prompt 1 standing     ok   finish stop    10342 tok  47 s  coverage 0.16  most repeated x1: "We need answer user's request. Need analyze provided C++ fragment. Use"
+prompt 1 cvec-off     loop finish stop     3885 tok  17 s  coverage 0.41  most repeated x22: '- Potential issue: if `r` is not empty, the code calls cudaGetLastErro'
+prompt 1 temp-0.6     ok   finish stop    10712 tok  49 s  coverage 0.13  most repeated x2: '- calls typical_stats; if false return false.'
+prompt 1 presence-1.5 HTTP 400: b'{"error": {"type": "invalid_request_error", "message": "I/O operation on closed file."}}'
+Traceback (most recent call last):
+  File "/home/svg/LLM/strata-custom-2/campaign/loop-propensity.py", line 139, in <module>
+    sys.exit(main())
+             ~~~~^^
+  File "/home/svg/LLM/strata-custom-2/campaign/loop-propensity.py", line 107, in main
+    obj = post(url, cfg["api_key"], messages, a.max_tokens, arms[name])
+  File "/home/svg/LLM/strata-custom-2/campaign/loop-propensity.py", line 74, in post
+    with urllib.request.urlopen(req, timeout=3600) as r:
+         ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib64/python3.15/urllib/request.py", line 187, in urlopen
+    return opener.open(url, data, timeout)
+           ~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib64/python3.15/urllib/request.py", line 489, in open
+    response = self._open(req, data)
+  File "/usr/lib64/python3.15/urllib/request.py", line 506, in _open
+    result = self._call_chain(self.handle_open, protocol, protocol +
+                              '_open', req)
+  File "/usr/lib64/python3.15/urllib/request.py", line 466, in _call_chain
+    result = func(*args)
+  File "/usr/lib64/python3.15/urllib/request.py", line 1364, in http_open
+    return self.do_open(http.client.HTTPConnection, req)
+           ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib64/python3.15/urllib/request.py", line 1339, in do_open
+    r = h.getresponse()
+  File "/usr/lib64/python3.15/http/client.py", line 1490, in getresponse
+    response.begin()
+    ~~~~~~~~~~~~~~^^
+  File "/usr/lib64/python3.15/http/client.py", line 350, in begin
+    version, status, reason = self._read_status()
+                              ~~~~~~~~~~~~~~~~~^^
+  File "/usr/lib64/python3.15/http/client.py", line 306, in _read_status
+    line = str(self.fp.readline(_MAXLINE + 1), "iso-8859-1")
+               ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^
+  File "/usr/lib64/python3.15/socket.py", line 738, in readinto
+    return self._sock.recv_into(b)
+           ~~~~~~~~~~~~~~~~~~~~^^^
+ConnectionResetError: [Errno 104] Connection reset by peer
+exit 1

@@ -1,0 +1,9 @@
+prompt 0 standing     loop finish stop     9571 tok  49 s  peak 0.32 guard yes most repeated x13: '- issue: if io_sched_ true and io_q_ empty and io_jobs_ none'
+prompt 0 standing     ok   finish stop    11577 tok  52 s  peak 0.03 guard no  most repeated x1: "We need answer user's request. Need analyze C++ snippet part"
+prompt 1 standing     ok   finish stop    10025 tok  51 s  peak 0.13 guard no  most repeated x3: '"  --kv fp16|int8       KV storage (plan v0.3 P7):'
+prompt 1 standing     ok   finish stop     4205 tok  18 s  peak 0.14 guard no  most repeated x1: 'The user wants me to go through the provided C++ code functi'
+prompt 2 standing     ok   finish stop    10687 tok  55 s  peak 0.08 guard no  most repeated x3: 'Need include `ConvCacheLog.__init__`: OK.'
+prompt 2 standing     loop finish stop     6535 tok  31 s  peak 0.53 guard yes most repeated x11: 'flags = next((x.split(":", 1)[1].split() for x in text.split'
+--- loops / replies, and the median tokens of a reply:
+  standing     2 / 6 loops, median reply 9798 tokens
+responses: /home/svg/LLM/strata-custom-2/logs/loop-propensity/20261125-204324

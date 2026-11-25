@@ -1,0 +1,9 @@
+prompt 0 standing     ok   finish length  12000 tok  59 s  peak 0.19 guard no  most repeated x1: "We need answer user's request. Need analyze C++ snippet func"
+prompt 0 standing     loop finish stop     4160 tok  17 s  peak 0.27 guard yes most repeated x5: '`reclaimable = stat.file_dirty >= reclaimable ? 0 : reclaima'
+prompt 1 standing     ok   finish stop     9908 tok  47 s  peak 0.11 guard no  most repeated x4: '(void) cudaGetLastError();'
+prompt 1 standing     ok   finish stop     9969 tok  45 s  peak 0.11 guard no  most repeated x1: "We need answer user's request. Need analyze code function by"
+prompt 2 standing     ok   finish stop    10595 tok  50 s  peak 0.13 guard no  most repeated x2: 'def visible_device_order(env: dict | None, backend: str | No'
+prompt 2 standing     ok   finish stop    11064 tok  47 s  peak 0.06 guard no  most repeated x2: '6 combined_embeddings_path'
+--- loops / replies, and the median tokens of a reply:
+  standing     1 / 6 loops, median reply 10282 tokens
+responses: /home/svg/LLM/strata-custom-2/logs/loop-propensity/20261125-214620

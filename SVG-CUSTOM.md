@@ -15575,3 +15575,60 @@ shows thinking beats only): the next one exercises that path.
 MMLU gate on the armed guard (it cannot fire under about 2,000 reasoning words unless the tail is periodic); the
 greedy-card penalty defect (`sampler.cu:1259-1269`); a recovery that outlasts a confident loop; the root cause,
 from the evidence files of the operator's next loops.
+## F-469 - what makes the model loop: a propensity battery over eight arms - neither control vector is the cause, the device-launched window graph is a suspect but not a cause, a presence penalty is the one flat arm (2026-11-25, 19:46-22:50)
+
+Operator, after F-468: the guard is a reactive fallback; find the proactive cause ("something ... from what we've done
+in past days. maybe the persona is subtly broken"); lowering the temperature "fixes it mostly".
+
+### 1. The instrument
+
+`campaign/loop-propensity.py`: three long code documents (60,000 characters each) under a function-by-function
+checklist task that elicits the shape of the operator's loop line.  A reply is a LOOP when a quarter or more of some
+2,000-word window sits inside 12-word passages seen three times - the guard's own rule, taken at the reply's worst
+window and from the text alone, so the guard's cut cannot hide a loop from the count.  `campaign/loop-arms.sh`: a
+boot an arm (the operator's launcher with one line changed, its own slot scratch under /tmp, the warm-in, six
+replies, a clean stop); request arms interleave inside a boot.  Evidence: `campaign/results/f468-2026-11-25/`.
+
+### 2. Results (loops / replies, all on the text rule)
+
+| arm | how | loops |
+|---|---|---|
+| standing | - | 13 / 43 (30 %): three batteries 11 / 36, request-level 2 / 7 |
+| both control vectors off | request (`experimental_speed_projection: false`) | 1 / 7 |
+| refusal projection removed | boot, `config-r0.json` | 4 / 12 |
+| persona at scale 0.0 | boot, `config-p0.json` | 2 / 12 |
+| window graph launched from the HOST (F-452 off) | boot, `STRATA_VERIFY_DEVICE_LAUNCH=0` | 4 / 36: 0/12, 1/12, 3/12 in three interleaved rounds, against the standing's 2/12, 5/12, 4/12 |
+| temperature 0.6 | request | 1 / 7 |
+| presence penalty 1.5 | request | 0 / 6, and every reply's worst window <= 0.10 |
+| effort text: max / high / none | request | 2 / 6, 1 / 6, 2 / 6 |
+
+- **Neither vector is the cause.**  Loops continue at the standing's rate with the refusal projection removed and
+  with the persona adding zero.
+- **F-452 is a suspect, not a cause.**  Pooled 4 / 36 against 11 / 36, but the round run to confirm it read 3 / 12
+  against 4 / 12: inside the noise band.  Its design note (`src/core/verify.cpp:262`) claims bit-identity with the
+  host launch; its entry records "on2 = off2 through 282 of 320 tokens then one late flip" on controls that do not
+  reproduce themselves.  Re-open with 100 replies an arm, or a prompt set with a higher base rate.
+- **Temperature does not fix it.**  1 / 7, and one 91-repeat loop occurred AT 0.6.
+- **A presence penalty is the one flat arm**, and the vendor's own knob for repetition (the Qwen quickstart:
+  "adjust presence_penalty between 0 and 2 to reduce repetitions"; it warns of language mixing at high values).
+  n = 6.  Trial running at the time of writing: `f468-loop-presence`, 24 replies an arm, interleaved as request arms
+  inside each of two standing boots.
+
+### 3. Notes on the guard (F-468), from this hour
+
+A natural thinking loop was found at 2,560 tokens (coverage 0.372) and closed into an answer at 3,885: the path
+F-468 had not run.  A loop is visible to the guard only once about 530 repeated words exist; a short one (the
+91-repeat loop, about 1,100 tokens) can sit entirely between two looks.  None of that touches this entry's counts.
+
+### 4. Owned errors
+
+The first battery's four vector boots never booted: the config builder dropped one value of a two-value flag
+("unknown argument: 8"), and the engine then refused table 2 without table 1.  Thirty-two minutes of box time, no
+replies; the smoke boot belonged first.  Run 2 of the request-level arms stopped at 16 replies when the server was
+stopped underneath it.
+
+### 5. Next
+
+The presence trial's verdict; if it holds, and the MMLU gate holds, a thinking-phase presence penalty is the
+proactive candidate (the 3.6 model's card already carries it).  F-452 with more replies.  The operator's own loop
+prompt is still not in the document set.

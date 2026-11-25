@@ -1,0 +1,9 @@
+prompt 0 standing     ok   finish stop    11526 tok  54 s  peak 0.16 guard no  most repeated x1: "We need answer user's request. Need analyze C++ snippet func"
+prompt 0 standing     ok   finish stop    10392 tok  47 s  peak 0.02 guard no  most repeated x1: "We need answer user's request. Need analyze C++ snippet func"
+prompt 1 standing     ok   finish stop    10944 tok  45 s  peak 0.10 guard no  most repeated x2: '- Potential issue: `session_min_free_mib` 4096; OK.'
+prompt 1 standing     ok   finish stop     5410 tok  22 s  peak 0.19 guard no  most repeated x1: 'The user wants me to go through the provided C++ code functi'
+prompt 2 standing     ok   finish stop    11293 tok  52 s  peak 0.14 guard no  most repeated x2: '6 combined_embeddings_path'
+prompt 2 standing     ok   finish stop    11317 tok  50 s  peak 0.05 guard no  most repeated x3: '6 combined_embeddings_path'
+--- loops / replies, and the median tokens of a reply:
+  standing     0 / 6 loops, median reply 11118 tokens
+responses: /home/svg/LLM/strata-custom-2/logs/loop-propensity/20261125-222002

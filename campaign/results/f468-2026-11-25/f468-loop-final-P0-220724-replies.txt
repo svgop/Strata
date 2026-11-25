@@ -1,0 +1,9 @@
+prompt 0 standing     loop finish stop     9442 tok  43 s  peak 0.26 guard yes most repeated x8: 'if (cached_bytes(layer, expert, total, false) >= total) {'
+prompt 0 standing     ok   finish stop    11535 tok  47 s  peak 0.14 guard no  most repeated x1: "We need answer user's request. Need analyze code function by"
+prompt 1 standing     ok   finish stop    10308 tok  47 s  peak 0.07 guard no  most repeated x2: 'if (!typical_stats(...)) return false;'
+prompt 1 standing     ok   finish stop    10488 tok  44 s  peak 0.07 guard no  most repeated x4: '(void) cudaGetLastError();'
+prompt 2 standing     ok   finish stop     9704 tok  43 s  peak 0.15 guard no  most repeated x2: 'if rc < 0 and os.name != "nt":'
+prompt 2 standing     ok   finish stop    11628 tok  50 s  peak 0.04 guard no  most repeated x2: '- combined_embeddings_path'
+--- loops / replies, and the median tokens of a reply:
+  standing     1 / 6 loops, median reply 10398 tokens
+responses: /home/svg/LLM/strata-custom-2/logs/loop-propensity/20261125-220836

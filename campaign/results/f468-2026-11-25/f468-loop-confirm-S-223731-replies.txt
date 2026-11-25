@@ -1,0 +1,9 @@
+prompt 0 standing     loop finish stop     7723 tok  35 s  peak 0.35 guard yes most repeated x5: '- Issue: `pick` returns `(int) out.size() >= kPerPass / 2`. '
+prompt 0 standing     ok   finish stop    11038 tok  44 s  peak 0.04 guard no  most repeated x2: 'detail::cgroup_available_bytes'
+prompt 1 standing     loop finish stop     9481 tok  44 s  peak 0.36 guard yes most repeated x2: '- static bool getenv non-null. OK.'
+prompt 1 standing     ok   finish stop    10270 tok  44 s  peak 0.17 guard no  most repeated x1: "We need answer user's request. Need analyze provided C++ cod"
+prompt 2 standing     ok   finish stop    10214 tok  47 s  peak 0.08 guard no  most repeated x3: '6 combined_embeddings_path'
+prompt 2 standing     ok   finish stop    10215 tok  45 s  peak 0.11 guard no  most repeated x2: '- def end_leftover_engines'
+--- loops / replies, and the median tokens of a reply:
+  standing     2 / 6 loops, median reply 10214 tokens
+responses: /home/svg/LLM/strata-custom-2/logs/loop-propensity/20261125-223837

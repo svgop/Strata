@@ -1,0 +1,19 @@
+prompt 0 standing     ok   finish stop     9164 tok  43 s  coverage 0.00  most repeated x1: 'The user wants me to go through the provided C++ code function by func'
+prompt 0 cvec-off     ok   finish stop    11854 tok  57 s  coverage 0.03  most repeated x2: 'if bytes == 0 return false;'
+prompt 0 temp-0.6     ok   finish stop    10793 tok  48 s  coverage 0.00  most repeated x9: '- Potential issue: if io_stop called while io_worker waiting on io_cv_'
+prompt 0 presence-1.5 ok   finish length  12000 tok  62 s  coverage 0.00  most repeated x1: "We need answer user's request. Need analyze C++ snippet function by fu"
+prompt 1 standing     ok   finish stop     9917 tok  53 s  coverage 0.13  most repeated x6: '- static local reads env once. OK.'
+prompt 1 cvec-off     ok   finish stop    10282 tok  53 s  coverage 0.10  most repeated x3: '(void) cudaGetLastError();'
+prompt 1 temp-0.6     ok   finish stop     5634 tok  25 s  coverage 0.03  most repeated x2: '- Precondition: `typical_stats` returns true.'
+prompt 1 presence-1.5 ok   finish stop     4203 tok  19 s  coverage 0.10  most repeated x2: '3. `pipe_byield_nodrain_env()`'
+prompt 2 standing     loop finish length  12000 tok  61 s  coverage 0.37  most repeated x2: '6 combined_embeddings_path'
+prompt 2 cvec-off     ok   finish stop    11006 tok  57 s  coverage 0.06  most repeated x2: 'def popen(what: str, args: list, role: str = "engine", **kw):'
+prompt 2 temp-0.6     loop finish stop     9264 tok  44 s  coverage 0.26  most repeated x91: 'Need maybe include `popen`? yes.'
+prompt 2 presence-1.5 ok   finish stop    10780 tok  56 s  coverage 0.01  most repeated x2: '6 combined_embeddings_path'
+--- loops / replies, and the median tokens of a reply:
+  standing     1 / 3 loops, median reply 9917 tokens
+  cvec-off     0 / 3 loops, median reply 11006 tokens
+  temp-0.6     1 / 3 loops, median reply 9264 tokens
+  presence-1.5 0 / 3 loops, median reply 10780 tokens
+responses: /home/svg/LLM/strata-custom-2/logs/loop-propensity/20261125-194742
+exit 0

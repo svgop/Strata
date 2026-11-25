@@ -1,0 +1,9 @@
+prompt 0 standing     loop finish stop     6669 tok  32 s  peak 0.29 guard yes most repeated x7: '- Issue: `maps_[f].base` and `maps_[f]` accessed when f >= m'
+prompt 0 standing     ok   finish stop    10747 tok  44 s  peak 0.14 guard no  most repeated x1: "We need answer user's request. Need analyze C++ excerpt func"
+prompt 1 standing     ok   finish stop     5316 tok  24 s  peak 0.09 guard no  most repeated x3: 'return cudaGetLastError();'
+prompt 1 standing     ok   finish stop    10616 tok  46 s  peak 0.09 guard no  most repeated x2: '--kv fp16|int8       KV storage (plan v0.3 P7):'
+prompt 2 standing     ok   finish stop     9839 tok  45 s  peak 0.13 guard no  most repeated x22: 'Need include `popen`? yes.'
+prompt 2 standing     loop finish stop    10311 tok  46 s  peak 0.25 guard no  most repeated x11: 'def engine_frozen(...): ...'
+--- loops / replies, and the median tokens of a reply:
+  standing     2 / 6 loops, median reply 10075 tokens
+responses: /home/svg/LLM/strata-custom-2/logs/loop-propensity/20261125-215202
