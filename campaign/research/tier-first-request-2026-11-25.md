@@ -15,6 +15,22 @@ tested on the live standing server; code reads and the F-467 boots only, no boot
 The request held at the door until the warm-in finished decoded at 146.2 t/s (`ctx-f467-hold`): the same
 first-request cost.  It lasts about one request: 0.4-0.7 s on a long generation, about 0.1 s on a tool call.
 
+### 1a. Correction, 18:39 - the operator's real first request is already warm
+
+The operator's first request on the live standing server after the warm-in: a 616-token prompt read in 597 ms,
+then **10,660 tokens in 41,514 ms = 257 t/s, tier hit 97.7 %, 0.4 % of routed experts over PCIe, drafts 7,318 of
+8,188**.  No first-request deficit.  The probe's solo prompt is 800 random letter-strings: content unlike anything
+the warm-in ran, so its tier had nothing cached for it.  The 141-175 t/s readings are a property of that
+out-of-distribution prompt and do not transfer to the operator's first request (the production boot said the
+same: its first twelve requests decoded at 205 t/s against 184 later).  The warm-in ends on a burst of prose
+prompts, and real prose traffic hits that tier at once.
+
+What does transfer is a content SHIFT: the probe's first tool call (JSON syntax after prose) decoded at 138-163
+t/s against 207-219 for the second.  So levers 1-3 fall to low value for this operator; lever 4 (prefill-informed
+admission) remains the fix for shifts, worth about 0.1 s on a session's first tool call.  Instrument debt:
+campaign/cold-cost-probe.py's solo shape should be prose the warm-in did not run, not random letters, or its
+first-request row reads a content type the operator never sends.
+
 ## 2. The mechanism (static reading, confirmed by the terms above)
 
 - One writer feeds the tier's routing counts: the DECODE dispatch, `src/core/expert_source.cpp:5272`
