@@ -14648,6 +14648,25 @@ CAPACITY: qkv's grid occupies the GPU and `z` runs when the machine frees.**  Th
   capacity to give it and the item closes.  If it does not, the price is (z's duration x idle fraction) x 36 per window,
   and only a price above the band buys a kernel.
 
+**QUESTION 2 READ TO ITS NUMBER AND CLOSED (10:40; `f457-gdn-chain.py`, `gdn-chain.txt`; 17,928 layers of the same
+capture).**  The hypothesis above - that `z` runs only when qkv frees the machine - is FALSE:
+
+| kernel | starts | runs | ends |
+|---|---:|---:|---:|
+| qkv (`native_mmvq_il`, 1280 blocks) | +2.46 us after `gdn_ab` | 17.95 us | +20.4 us |
+| z (`native_mmvq_il`, 768 blocks) | qkv + 9.34 us | 15.07 us | +24.4 us |
+| conv (depends on qkv) | qkv + 20.42 us | 1.95 us | +22.4 us |
+| step | 2.72 us after the conv | | +25.1 us - waiting on `z` |
+
+- **`z` already shares the machine with qkv for 8.5 of its 15.1 us.**  35 us of kernel time fits a 24.7 us chain (p10
+  21.0, p90 28.6): the overlap exists; perfect overlap would save at most ~2.7 us per layer = **+1% M1 - INSIDE THE BAND.
+  The late-start item is CLOSED**, in both of its readings (no event to reorder, and no idle machine to give it).
+- *What the read does expose:* the GDN front-end's chain is **24.7 us x 36 = 0.89 ms of the 10.2 ms window (8.7%)**, and
+  its cost is the two projections' own kernel time (18 + 15 us), not their order.  Whether those two run at the memory
+  system's bandwidth or below it is a question about BYTES, which this capture does not carry - the audit's "GDN+proj
+  headroom" line is that question, still unmeasured.  Cheapest falsifier if it is taken up: bytes moved per qkv and z
+  launch (shapes x the pack's bits) against duration, one arithmetic - before any kernel.
+
 **Process note.**  The first delegation of the day (F-456) read itself out of room; this one was forbidden the reading,
 wrote its trace to disk first, and stopped correctly in twelve minutes.  A STOP at the trace is the cheapest falsifier
 doing its job: this one cost no GPU time and retracted a priced lever before it was built.
