@@ -12676,9 +12676,9 @@ int main(int argc, char** argv) {
                     const double f = std::atof(v);
                     return (f >= 0.0 && f <= 1.0) ? (int) (f * 256.0 + 0.5) : -1;
                 }();
-                // Both cohort drives plan inside this scope (cohort B's is copied from A's on the first round only, so it
-                // takes the batch share through that copy); the share is restored on every return path of the round, and
-                // B and C follow A's restored value - between rounds all three plan with the operator's share.
+                // All cohort drives plan inside this scope with the batch share (cohort B's drive is a copy of A's made on
+                // the first round only, so after that round it is set here, explicitly); the share is restored on every
+                // return path of the round - between rounds all three plan with the operator's share.
                 struct BatchPcieShare {
                     Drive& a; Drive& b; Drive& c; const bool armed; int saved = 0;
                     ~BatchPcieShare() {
@@ -12688,6 +12688,12 @@ int main(int argc, char** argv) {
                 if (batch_pcie_share.armed) {
                     batch_pcie_share.saved = drive.d.pcie_num;
                     drive.d.pcie_num = batch_pcie_num;
+                    // B and C must be set on EVERY round, not inherited through the first round's copy: that copy happens
+                    // once, and this guard's restore at the end of the first round would leave them on the solo share for
+                    // the rest of the request.  (Found by the armed telemetry leg: one cohort at 0.50 and one at 0.35
+                    // read 26.9% on the link, the mean of the two.)
+                    if (coh_b_ready) coh_b_drive.d.pcie_num = batch_pcie_num;
+                    if (coh_c_ready) coh_c_drive.d.pcie_num = batch_pcie_num;
                 }
                 const bool was_busy = strata::core::progress().busy.load();
                 strata::core::progress().busy.store(true);
