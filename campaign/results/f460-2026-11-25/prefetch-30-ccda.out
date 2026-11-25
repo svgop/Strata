@@ -1,0 +1,1975 @@
+# pool_bench 30 --prefetch, run ccda: the traffic thread beside the host (the default; logical 16, the host CCD's 96 MiB L3). [store] IQ2_S/IQ4_NL   blob  1971200 B x 320 =   601 MB, loaded in 166 ms
+[store] IQ2_S/IQ4_NL   blob  1971200 B x 320 =   601 MB, loaded in 166 ms
+[store] IQ3_XXS/IQ4_NL blob  2176000 B x 320 =   664 MB, loaded in 181 ms
+[store] IQ3_S/IQ4_NL   blob  2329600 B x 320 =   710 MB, loaded in 193 ms
+[store] IQ2_S/Q2_0     blob  1510400 B x 320 =   460 MB, loaded in 124 ms
+[store] IQ3_XXS/Q2_0   blob  1715200 B x 320 =   523 MB, loaded in 141 ms
+[store] IQ4_XS/IQ4_NL  blob  2662400 B x 320 =   812 MB, loaded in 232 ms
+[store] IQ3_S/Q2_0     blob  1868800 B x 320 =   570 MB, loaded in 154 ms
+[store] shadow-Q2_0    blob  1382400 B x 320 =   421 MB, loaded in 114 ms (the shadow store's canonical blob)
+# F-458 pool_bench: ExpertPool::run_split_multi[_native] per expert at the concurrent lane's shape
+cpu: AMD Ryzen 9 9950X3D 16-Core Processor | 32 logical processors
+fixture: 8 formats, 5.00 GB of synthetic experts (320 per format; the smallest store is 442 MB, far over any cache)
+env: STRATA_POOL_DIET=1 STRATA_POOL_SPIN_US=100 (the standing recipe) | units per point: 30 (the median; 5 warm-up) | 4.915 M weights per expert-call (3 x 2560 x 640)
+stream: 16 threads read 1074 MB they had not touched: 48.4 GB/s (best of 7), 48.4 GB/s (median); one thread, 67 MB:
+        40.0 GB/s (best), 39.7 GB/s (median); checksum 9ca2d60fb4000000
+layout: the host on logical processor 0; workers pinned to the 15 physical cores after it, in the OS's order
+
+# F-460 --prefetch: T=6, N in {2, 3, 4, 8}, cold experts cycling through the store, 30 units per point (the median)
+pool: 15 workers + the draining host; the host on logical processor 0, its L3 96 MiB shared with CPUs 0-7,16-23
+readers: host = the host thread itself; one = a thread beside the host, on logical processor 16; all = 16 threads beside
+         the pool's threads (beside the host, then beside each worker in the OS's order); their L3 domains A/B: A A A A A A A A B B B B B B B B  (B = CPUs 8-15,24-31, 32 MiB)
+         both = the thread beside the host and the one beside worker 7, on logical processor 24
+traffic: one thread beside the host (logical processor 16, L3 96 MiB shared with CPUs 0-7,16-23) reads X MiB of a 512 MiB region
+         during the gap; the sham passes read a separate 256 MiB region.  The workers park as the standing
+         recipe has them (STRATA_POOL_SPIN_US=100).
+[prefetch] IQ2_S/IQ4_NL   N=2: cold 114.4 us | hot 79.6 us | one, gap 0, no traffic: pass 109.6 us, call 86.3 us (0.88 of its cold)
+[prefetch] IQ2_S/IQ4_NL   N=3: cold 156.1 us | hot 110.8 us | one, gap 0, no traffic: pass 138.5 us, call 121.6 us (0.81 of its cold)
+[prefetch] IQ2_S/IQ4_NL   N=4: cold 197.6 us | hot 126.5 us | one, gap 0, no traffic: pass 222.5 us, call 162.0 us (0.81 of its cold)
+[prefetch] IQ2_S/IQ4_NL   N=8: cold 399.4 us | hot 283.8 us | one, gap 0, no traffic: pass 439.0 us, call 309.4 us (0.81 of its cold)
+[prefetch] IQ3_XXS/IQ4_NL N=2: cold 117.1 us | hot 86.8 us | one, gap 0, no traffic: pass 101.4 us, call 91.4 us (0.83 of its cold)
+[prefetch] IQ3_XXS/IQ4_NL N=3: cold 166.8 us | hot 117.6 us | one, gap 0, no traffic: pass 153.6 us, call 140.9 us (0.83 of its cold)
+[prefetch] IQ3_XXS/IQ4_NL N=4: cold 225.0 us | hot 176.5 us | one, gap 0, no traffic: pass 246.9 us, call 189.1 us (0.86 of its cold)
+[prefetch] IQ3_XXS/IQ4_NL N=8: cold 453.6 us | hot 338.5 us | one, gap 0, no traffic: pass 407.4 us, call 354.7 us (0.81 of its cold)
+[prefetch] IQ3_S/IQ4_NL   N=2: cold 112.7 us | hot 74.9 us | one, gap 0, no traffic: pass 119.9 us, call 103.2 us (0.79 of its cold)
+[prefetch] IQ3_S/IQ4_NL   N=3: cold 161.2 us | hot 142.5 us | one, gap 0, no traffic: pass 173.4 us, call 149.7 us (0.80 of its cold)
+[prefetch] IQ3_S/IQ4_NL   N=4: cold 242.1 us | hot 188.6 us | one, gap 0, no traffic: pass 241.5 us, call 199.8 us (0.85 of its cold)
+[prefetch] IQ3_S/IQ4_NL   N=8: cold 469.0 us | hot 327.1 us | one, gap 0, no traffic: pass 443.6 us, call 355.8 us (0.79 of its cold)
+[prefetch] IQ2_S/Q2_0     N=2: cold 81.6 us | hot 65.1 us | one, gap 0, no traffic: pass 88.2 us, call 75.2 us (0.88 of its cold)
+[prefetch] IQ2_S/Q2_0     N=3: cold 127.3 us | hot 97.4 us | one, gap 0, no traffic: pass 114.5 us, call 111.6 us (0.86 of its cold)
+[prefetch] IQ2_S/Q2_0     N=4: cold 171.1 us | hot 110.3 us | one, gap 0, no traffic: pass 150.1 us, call 144.5 us (0.88 of its cold)
+[prefetch] IQ2_S/Q2_0     N=8: cold 305.3 us | hot 243.9 us | one, gap 0, no traffic: pass 338.8 us, call 262.5 us (0.83 of its cold)
+[prefetch] IQ3_XXS/Q2_0   N=2: cold 95.8 us | hot 85.2 us | one, gap 0, no traffic: pass 99.1 us, call 85.5 us (0.85 of its cold)
+[prefetch] IQ3_XXS/Q2_0   N=3: cold 143.6 us | hot 97.1 us | one, gap 0, no traffic: pass 123.0 us, call 124.3 us (0.89 of its cold)
+[prefetch] IQ3_XXS/Q2_0   N=4: cold 184.5 us | hot 129.8 us | one, gap 0, no traffic: pass 165.8 us, call 168.1 us (0.88 of its cold)
+[prefetch] IQ3_XXS/Q2_0   N=8: cold 358.8 us | hot 290.9 us | one, gap 0, no traffic: pass 326.8 us, call 305.1 us (0.86 of its cold)
+[prefetch] IQ4_XS/IQ4_NL  N=2: cold 128.4 us | hot 110.1 us | one, gap 0, no traffic: pass 130.9 us, call 120.8 us (0.79 of its cold)
+[prefetch] IQ4_XS/IQ4_NL  N=3: cold 208.2 us | hot 133.7 us | one, gap 0, no traffic: pass 225.9 us, call 174.5 us (0.81 of its cold)
+[prefetch] IQ4_XS/IQ4_NL  N=4: cold 277.6 us | hot 225.7 us | one, gap 0, no traffic: pass 298.5 us, call 227.9 us (0.79 of its cold)
+[prefetch] IQ4_XS/IQ4_NL  N=8: cold 546.6 us | hot 440.0 us | one, gap 0, no traffic: pass 514.1 us, call 457.8 us (0.83 of its cold)
+[prefetch] IQ3_S/Q2_0     N=2: cold 113.0 us | hot 86.4 us | one, gap 0, no traffic: pass 92.1 us, call 94.5 us (0.90 of its cold)
+[prefetch] IQ3_S/Q2_0     N=3: cold 135.8 us | hot 122.4 us | one, gap 0, no traffic: pass 135.6 us, call 130.8 us (0.84 of its cold)
+[prefetch] IQ3_S/Q2_0     N=4: cold 203.8 us | hot 136.3 us | one, gap 0, no traffic: pass 177.4 us, call 172.0 us (0.84 of its cold)
+[prefetch] IQ3_S/Q2_0     N=8: cold 383.6 us | hot 323.2 us | one, gap 0, no traffic: pass 357.4 us, call 327.5 us (0.87 of its cold)
+[prefetch] shadow-Q2_0    N=2: cold 73.3 us | hot 43.1 us | one, gap 0, no traffic: pass 71.1 us, call 51.9 us (0.72 of its cold)
+[prefetch] shadow-Q2_0    N=3: cold 106.4 us | hot 58.7 us | one, gap 0, no traffic: pass 106.3 us, call 77.6 us (0.77 of its cold)
+[prefetch] shadow-Q2_0    N=4: cold 154.8 us | hot 90.0 us | one, gap 0, no traffic: pass 135.5 us, call 117.5 us (0.84 of its cold)
+[prefetch] shadow-Q2_0    N=8: cold 267.5 us | hot 138.3 us | one, gap 0, no traffic: pass 313.7 us, call 203.0 us (0.75 of its cold)
+
+load: the kernel's 1-minute average 2.11 when the measured phase began, 4.20 when it ended; 53760 passes returned their
+     experts' sum (exactly their bytes, each once); the sham passes read 8daf7d0757c83c00, the traffic b8058abfa8000000
+
+## P1. IQ2_S/IQ4_NL, N=2, T=6, 15 workers + host: us per call of N experts, the median of 30 units
+##     cold = behind a sham pass by the same readers (the same bytes from unrelated memory), then the gap, then the
+##     call; hot = no pass, the same N experts every unit; pass = the pass's own time, its readers' wake included;
+##     traffic = the thread's read of X MiB during the gap: its duration (its overrun past the gap's end)
+anchors, gap 0, no pass, no traffic: cold 114.4 us | hot 79.6 us | the call reads 3.9 MB
+ G ms  MiB | call:  host   one   all  both | cold:  host   one   all  both |   hot | pass:  host   one   all  both | traffic us (overrun)
+ 0.00    0 |        80.5  86.3  74.3  88.6 |       105.1  98.5  97.3 112.5 |  60.5 |       105.4 109.6  82.0 154.3 |      0 (    0)
+ 0.00    8 |        94.1  97.0  98.0  94.8 |       123.6 125.1 124.5 126.1 |  92.2 |       106.5  91.2  82.5 149.9 |    228 (  228)
+ 0.00   32 |        96.3  97.2  98.5  94.7 |       124.3 122.5 121.1 123.9 |  97.1 |       117.2  90.2  83.7 147.6 |    730 (  730)
+ 0.10    0 |        89.9  89.9  90.0  82.8 |       108.3 109.3 108.5 109.7 |  79.2 |       105.6  93.2  86.6 155.2 |      0 (    0)
+ 0.10    8 |        96.8  98.8  97.2  91.9 |       126.2 124.4 123.7 126.6 |  94.5 |       107.5 102.6  82.3 150.0 |    216 (  116)
+ 0.10   32 |        96.7  98.4  97.3  97.3 |       123.6 121.8 122.7 124.3 |  91.2 |       107.3  90.6  83.8 147.2 |    769 (  669)
+ 0.25    0 |        91.7  90.7  93.1  83.2 |       108.7 109.7 105.0 108.8 |  80.2 |       114.9 111.0  83.8 147.6 |      0 (    0)
+ 0.25    8 |        87.6  87.2  88.2  80.3 |       108.3 108.5 105.5 111.7 |  83.4 |       107.4  95.3  85.5 153.5 |    182 (    0)
+ 0.25   32 |       100.4 104.6  96.8  94.0 |       123.4 124.5 123.6 124.0 |  90.8 |       106.4 102.6  83.3 149.5 |    742 (  492)
+ 0.50    0 |        88.3  87.3  90.7  81.2 |       107.8 107.0 108.0 111.9 |  78.2 |       104.8  93.2  82.8 149.6 |      0 (    0)
+ 0.50    8 |        86.9  86.6  88.8  79.9 |       109.3 108.6 108.2 108.8 |  80.3 |       115.7  93.7  84.1 149.9 |    183 (    0)
+ 0.50   32 |       112.3 111.0  95.8  97.0 |       122.7 120.2 120.9 121.5 |  89.9 |       105.8  91.3  84.7 152.9 |    756 (  256)
+
+## P2. IQ2_S/IQ4_NL, N=2: the pass's rate (GB/s = bytes read / its time; both reads every line twice) and the call against
+##     its controls: pf/cold (its own cold control: the same readers, gap and traffic) | pf/hot (no pass, the same gap
+##     and traffic)
+ G ms  MiB | host    GB/s pf/cold  pf/hot | one     GB/s pf/cold  pf/hot | all     GB/s pf/cold  pf/hot | both    GB/s pf/cold  pf/hot |
+ 0.00    0 |         37.4    0.77    1.33 |         36.0    0.88    1.43 |         48.1    0.76    1.23 |         51.1    0.79    1.46 |
+ 0.00    8 |         37.0    0.76    1.02 |         43.2    0.78    1.05 |         47.8    0.79    1.06 |         52.6    0.75    1.03 |
+ 0.00   32 |         33.7    0.77    0.99 |         43.7    0.79    1.00 |         47.1    0.81    1.01 |         53.4    0.76    0.98 |
+ 0.10    0 |         37.3    0.83    1.13 |         42.3    0.82    1.14 |         45.5    0.83    1.14 |         50.8    0.75    1.05 |
+ 0.10    8 |         36.7    0.77    1.03 |         38.4    0.79    1.05 |         47.9    0.79    1.03 |         52.6    0.73    0.97 |
+ 0.10   32 |         36.7    0.78    1.06 |         43.5    0.81    1.08 |         47.0    0.79    1.07 |         53.6    0.78    1.07 |
+ 0.25    0 |         34.3    0.84    1.14 |         35.5    0.83    1.13 |         47.0    0.89    1.16 |         53.4    0.76    1.04 |
+ 0.25    8 |         36.7    0.81    1.05 |         41.4    0.80    1.05 |         46.1    0.84    1.06 |         51.4    0.72    0.96 |
+ 0.25   32 |         37.0    0.81    1.11 |         38.4    0.84    1.15 |         47.3    0.78    1.07 |         52.7    0.76    1.03 |
+ 0.50    0 |         37.6    0.82    1.13 |         42.3    0.82    1.12 |         47.6    0.84    1.16 |         52.7    0.73    1.04 |
+ 0.50    8 |         34.1    0.80    1.08 |         42.1    0.80    1.08 |         46.9    0.82    1.11 |         52.6    0.73    1.00 |
+ 0.50   32 |         37.3    0.91    1.25 |         43.2    0.92    1.23 |         46.5    0.79    1.07 |         51.6    0.80    1.08 |
+
+## P3. IQ2_S/IQ4_NL, N=2: the pass's wake, us (the median): the slowest reader's time from the host's signal to its first read;
+##     the pass is the wake and the reads (P1)
+ G ms  MiB |   host    one    all   both
+ 0.00    0 |    0.0    2.8   30.0    4.0
+ 0.00    8 |    0.0    1.3   35.3    4.4
+ 0.00   32 |    0.0    1.4   36.7    5.5
+ 0.10    0 |    0.0    3.1   30.9    4.0
+ 0.10    8 |    0.0    1.2   31.7    4.6
+ 0.10   32 |    0.0    1.3   36.0    5.6
+ 0.25    0 |    0.0    3.1   30.1    4.3
+ 0.25    8 |    0.0    3.0   30.4    4.7
+ 0.25   32 |    0.0    1.4   35.2    5.5
+ 0.50    0 |    0.0    3.2   28.6    4.8
+ 0.50    8 |    0.0    3.5   30.5    4.9
+ 0.50   32 |    0.0    1.4   37.8    5.5
+
+## P1. IQ2_S/IQ4_NL, N=3, T=6, 15 workers + host: us per call of N experts, the median of 30 units
+##     cold = behind a sham pass by the same readers (the same bytes from unrelated memory), then the gap, then the
+##     call; hot = no pass, the same N experts every unit; pass = the pass's own time, its readers' wake included;
+##     traffic = the thread's read of X MiB during the gap: its duration (its overrun past the gap's end)
+anchors, gap 0, no pass, no traffic: cold 156.1 us | hot 110.8 us | the call reads 5.9 MB
+ G ms  MiB | call:  host   one   all  both | cold:  host   one   all  both |   hot | pass:  host   one   all  both | traffic us (overrun)
+ 0.00    0 |       122.8 121.6 127.6 116.2 |       152.9 149.8 155.2 154.2 |  89.1 |       166.1 138.5 125.6 232.9 |      0 (    0)
+ 0.00    8 |       134.3 139.1 139.7 132.1 |       185.2 172.0 172.4 179.5 | 121.9 |       161.4 144.0 121.0 237.6 |    230 (  230)
+ 0.00   32 |       133.8 142.5 142.9 132.6 |       177.8 170.2 172.8 172.5 | 133.8 |       161.8 144.8 122.0 221.7 |    782 (  782)
+ 0.10    0 |       124.1 124.8 133.1 124.6 |       158.5 154.4 154.0 155.4 |  89.8 |       162.9 140.7 127.4 233.1 |      0 (    0)
+ 0.10    8 |       134.4 139.0 140.1 131.1 |       179.7 174.9 174.5 172.9 | 132.8 |       160.6 140.9 121.3 221.3 |    240 (  140)
+ 0.10   32 |       131.5 139.0 139.4 134.1 |       179.5 171.1 172.2 173.6 | 131.4 |       163.4 137.3 122.9 231.0 |    785 (  685)
+ 0.25    0 |       123.8 125.3 130.9 117.0 |       152.7 155.3 156.4 155.2 | 113.2 |       159.2 164.1 123.9 222.7 |      0 (    0)
+ 0.25    8 |       122.9 123.0 127.5 119.7 |       151.5 152.3 155.8 154.0 | 122.3 |       159.2 154.7 122.2 226.7 |    189 (    0)
+ 0.25   32 |       151.6 137.1 139.7 131.0 |       177.4 172.3 170.7 175.7 | 129.8 |       170.0 136.8 122.1 232.1 |    773 (  523)
+ 0.50    0 |       133.8 124.6 130.6 119.6 |       154.7 152.1 158.5 155.0 | 117.7 |       158.6 139.4 123.8 223.5 |      0 (    0)
+ 0.50    8 |       121.9 123.1 132.3 123.6 |       155.7 153.5 155.7 153.8 | 113.6 |       159.9 171.7 124.0 227.2 |    186 (    0)
+ 0.50   32 |       169.5 151.0 148.7 141.7 |       175.2 182.8 185.3 183.4 | 153.2 |       163.8 160.8 122.3 222.3 |    908 (  408)
+
+## P2. IQ2_S/IQ4_NL, N=3: the pass's rate (GB/s = bytes read / its time; both reads every line twice) and the call against
+##     its controls: pf/cold (its own cold control: the same readers, gap and traffic) | pf/hot (no pass, the same gap
+##     and traffic)
+ G ms  MiB | host    GB/s pf/cold  pf/hot | one     GB/s pf/cold  pf/hot | all     GB/s pf/cold  pf/hot | both    GB/s pf/cold  pf/hot |
+ 0.00    0 |         35.6    0.80    1.38 |         42.7    0.81    1.37 |         47.1    0.82    1.43 |         50.8    0.75    1.30 |
+ 0.00    8 |         36.6    0.73    1.10 |         41.1    0.81    1.14 |         48.9    0.81    1.15 |         49.8    0.74    1.08 |
+ 0.00   32 |         36.6    0.75    1.00 |         40.9    0.84    1.06 |         48.5    0.83    1.07 |         53.3    0.77    0.99 |
+ 0.10    0 |         36.3    0.78    1.38 |         42.0    0.81    1.39 |         46.4    0.86    1.48 |         50.7    0.80    1.39 |
+ 0.10    8 |         36.8    0.75    1.01 |         42.0    0.79    1.05 |         48.7    0.80    1.06 |         53.5    0.76    0.99 |
+ 0.10   32 |         36.2    0.73    1.00 |         43.1    0.81    1.06 |         48.1    0.81    1.06 |         51.2    0.77    1.02 |
+ 0.25    0 |         37.1    0.81    1.09 |         36.0    0.81    1.11 |         47.7    0.84    1.16 |         53.1    0.75    1.03 |
+ 0.25    8 |         37.1    0.81    1.01 |         38.2    0.81    1.01 |         48.4    0.82    1.04 |         52.2    0.78    0.98 |
+ 0.25   32 |         34.8    0.85    1.17 |         43.2    0.80    1.06 |         48.4    0.82    1.08 |         51.0    0.75    1.01 |
+ 0.50    0 |         37.3    0.86    1.14 |         42.4    0.82    1.06 |         47.8    0.82    1.11 |         52.9    0.77    1.02 |
+ 0.50    8 |         37.0    0.78    1.07 |         34.4    0.80    1.08 |         47.7    0.85    1.16 |         52.1    0.80    1.09 |
+ 0.50   32 |         36.1    0.97    1.11 |         36.8    0.83    0.99 |         48.4    0.80    0.97 |         53.2    0.77    0.93 |
+
+## P3. IQ2_S/IQ4_NL, N=3: the pass's wake, us (the median): the slowest reader's time from the host's signal to its first read;
+##     the pass is the wake and the reads (P1)
+ G ms  MiB |   host    one    all   both
+ 0.00    0 |    0.0    3.1   32.1    4.3
+ 0.00    8 |    0.0    1.3   33.7    5.5
+ 0.00   32 |    0.0    1.3   36.8    5.8
+ 0.10    0 |    0.0    3.2   41.2    4.7
+ 0.10    8 |    0.0    1.3   32.0    4.4
+ 0.10   32 |    0.0    1.3   34.8    5.7
+ 0.25    0 |    0.0    3.4   30.2    5.1
+ 0.25    8 |    0.0    3.4   29.8    4.8
+ 0.25   32 |    0.0    1.4   36.4    5.2
+ 0.50    0 |    0.0    3.4   30.3    5.6
+ 0.50    8 |    0.0    3.5   30.3    5.4
+ 0.50   32 |    0.0    1.4   35.7    5.4
+
+## P1. IQ2_S/IQ4_NL, N=4, T=6, 15 workers + host: us per call of N experts, the median of 30 units
+##     cold = behind a sham pass by the same readers (the same bytes from unrelated memory), then the gap, then the
+##     call; hot = no pass, the same N experts every unit; pass = the pass's own time, its readers' wake included;
+##     traffic = the thread's read of X MiB during the gap: its duration (its overrun past the gap's end)
+anchors, gap 0, no pass, no traffic: cold 197.6 us | hot 126.5 us | the call reads 7.9 MB
+ G ms  MiB | call:  host   one   all  both | cold:  host   one   all  both |   hot | pass:  host   one   all  both | traffic us (overrun)
+ 0.00    0 |       166.8 162.0 152.2 158.9 |       202.8 201.1 201.1 205.3 | 144.9 |       214.5 222.5 162.0 309.5 |      0 (    0)
+ 0.00    8 |       170.5 183.5 178.9 173.1 |       237.7 222.5 225.8 229.5 | 157.9 |       216.1 184.3 162.3 306.6 |    252 (  252)
+ 0.00   32 |       171.6 183.1 177.9 174.3 |       232.5 221.3 223.3 226.0 | 175.3 |       219.5 185.5 163.3 297.0 |    784 (  784)
+ 0.10    0 |       165.8 157.5 167.8 158.8 |       202.2 199.0 203.4 204.5 | 146.5 |       213.4 219.7 168.6 311.4 |      0 (    0)
+ 0.10    8 |       215.5 174.7 186.0 173.5 |       229.0 241.7 242.8 246.1 | 181.4 |       217.8 222.3 162.0 309.2 |    267 (  167)
+ 0.10   32 |       220.6 180.2 189.1 181.1 |       228.0 240.1 241.4 239.6 | 202.4 |       216.1 215.1 164.0 298.5 |    921 (  821)
+ 0.25    0 |       166.2 161.6 160.3 158.8 |       207.7 201.6 204.5 205.1 | 158.4 |       217.8 221.7 164.0 300.6 |      0 (    0)
+ 0.25    8 |       161.1 158.6 164.3 160.2 |       203.9 201.5 199.7 198.5 | 162.9 |       215.2 219.4 161.7 302.6 |    220 (    0)
+ 0.25   32 |       219.5 193.7 189.1 199.3 |       226.7 238.1 243.4 242.0 | 197.5 |       217.9 220.4 162.1 321.9 |    909 (  659)
+ 0.50    0 |       175.6 161.7 169.0 157.2 |       206.0 200.4 196.9 202.3 | 159.9 |       210.7 218.5 163.4 298.6 |      0 (    0)
+ 0.50    8 |       161.1 163.8 162.5 157.1 |       204.3 199.2 196.6 205.0 | 162.5 |       225.3 222.2 162.7 298.9 |    220 (    0)
+ 0.50   32 |       220.6 199.1 189.7 187.6 |       228.6 240.3 245.3 242.0 | 199.5 |       212.5 215.2 162.8 298.2 |    913 (  413)
+
+## P2. IQ2_S/IQ4_NL, N=4: the pass's rate (GB/s = bytes read / its time; both reads every line twice) and the call against
+##     its controls: pf/cold (its own cold control: the same readers, gap and traffic) | pf/hot (no pass, the same gap
+##     and traffic)
+ G ms  MiB | host    GB/s pf/cold  pf/hot | one     GB/s pf/cold  pf/hot | all     GB/s pf/cold  pf/hot | both    GB/s pf/cold  pf/hot |
+ 0.00    0 |         36.8    0.82    1.15 |         35.4    0.81    1.12 |         48.7    0.76    1.05 |         51.0    0.77    1.10 |
+ 0.00    8 |         36.5    0.72    1.08 |         42.8    0.82    1.16 |         48.6    0.79    1.13 |         51.4    0.75    1.10 |
+ 0.00   32 |         35.9    0.74    0.98 |         42.5    0.83    1.04 |         48.3    0.80    1.01 |         53.1    0.77    0.99 |
+ 0.10    0 |         36.9    0.82    1.13 |         35.9    0.79    1.07 |         46.8    0.83    1.15 |         50.6    0.78    1.08 |
+ 0.10    8 |         36.2    0.94    1.19 |         35.5    0.72    0.96 |         48.7    0.77    1.03 |         51.0    0.71    0.96 |
+ 0.10   32 |         36.5    0.97    1.09 |         36.7    0.75    0.89 |         48.1    0.78    0.93 |         52.8    0.76    0.90 |
+ 0.25    0 |         36.2    0.80    1.05 |         35.6    0.80    1.02 |         48.1    0.78    1.01 |         52.5    0.77    1.00 |
+ 0.25    8 |         36.6    0.79    0.99 |         35.9    0.79    0.97 |         48.7    0.82    1.01 |         52.1    0.81    0.98 |
+ 0.25   32 |         36.2    0.97    1.11 |         35.8    0.81    0.98 |         48.6    0.78    0.96 |         49.0    0.82    1.01 |
+ 0.50    0 |         37.4    0.85    1.10 |         36.1    0.81    1.01 |         48.2    0.86    1.06 |         52.8    0.78    0.98 |
+ 0.50    8 |         35.0    0.79    0.99 |         35.5    0.82    1.01 |         48.5    0.83    1.00 |         52.8    0.77    0.97 |
+ 0.50   32 |         37.1    0.96    1.11 |         36.6    0.83    1.00 |         48.4    0.77    0.95 |         52.9    0.78    0.94 |
+
+## P3. IQ2_S/IQ4_NL, N=4: the pass's wake, us (the median): the slowest reader's time from the host's signal to its first read;
+##     the pass is the wake and the reads (P1)
+ G ms  MiB |   host    one    all   both
+ 0.00    0 |    0.0    3.4   31.7    4.3
+ 0.00    8 |    0.0    1.3   38.1    5.3
+ 0.00   32 |    0.0    1.3   37.0    5.8
+ 0.10    0 |    0.0    3.5  136.4    4.6
+ 0.10    8 |    0.0    1.2   33.0    4.9
+ 0.10   32 |    0.0    1.4   39.3    5.5
+ 0.25    0 |    0.0    3.5   36.1    5.2
+ 0.25    8 |    0.0    3.5   31.8    5.4
+ 0.25   32 |    0.0    1.4   35.8    7.1
+ 0.50    0 |    0.0    3.5   32.1    5.1
+ 0.50    8 |    0.0    3.7   32.8    4.9
+ 0.50   32 |    0.0    1.4   39.4    5.9
+
+## P1. IQ2_S/IQ4_NL, N=8, T=6, 15 workers + host: us per call of N experts, the median of 30 units
+##     cold = behind a sham pass by the same readers (the same bytes from unrelated memory), then the gap, then the
+##     call; hot = no pass, the same N experts every unit; pass = the pass's own time, its readers' wake included;
+##     traffic = the thread's read of X MiB during the gap: its duration (its overrun past the gap's end)
+anchors, gap 0, no pass, no traffic: cold 399.4 us | hot 283.8 us | the call reads 15.8 MB
+ G ms  MiB | call:  host   one   all  both | cold:  host   one   all  both |   hot | pass:  host   one   all  both | traffic us (overrun)
+ 0.00    0 |       317.7 309.4 311.4 304.6 |       402.1 381.8 393.2 407.7 | 289.2 |       427.6 439.0 324.3 597.7 |      0 (    0)
+ 0.00    8 |       393.0 331.7 355.6 327.7 |       449.8 452.2 447.7 457.7 | 333.0 |       441.4 436.5 322.7 613.2 |    284 (  284)
+ 0.00   32 |       389.5 326.6 354.2 373.3 |       448.1 455.7 449.9 490.3 | 373.3 |       432.3 430.7 322.2 705.8 |    953 (  953)
+ 0.10    0 |       311.8 306.6 309.9 301.2 |       417.6 394.8 385.2 403.2 | 316.9 |       488.4 438.0 318.6 619.5 |      0 (    0)
+ 0.10    8 |       367.6 332.2 350.7 324.8 |       453.5 443.4 444.9 444.8 | 295.1 |       431.8 414.8 343.0 628.9 |    263 (  163)
+ 0.10   32 |       335.5 345.9 360.2 334.3 |       462.7 430.2 431.5 440.7 | 333.3 |       434.9 366.6 317.6 620.8 |    873 (  773)
+ 0.25    0 |       304.4 308.5 309.1 308.4 |       387.3 382.6 388.4 398.4 | 297.2 |       439.0 372.5 315.6 615.9 |      0 (    0)
+ 0.25    8 |       303.3 303.7 304.5 293.7 |       389.7 396.9 394.3 389.0 | 305.0 |       430.8 376.2 319.9 609.1 |    190 (    0)
+ 0.25   32 |       336.8 332.4 346.7 322.5 |       470.0 425.6 427.0 432.2 | 329.6 |       438.2 367.9 323.6 617.0 |    862 (  612)
+ 0.50    0 |       301.8 288.0 304.4 295.4 |       393.4 381.5 380.8 397.6 | 288.4 |       432.2 367.2 322.1 600.8 |      0 (    0)
+ 0.50    8 |       302.7 306.4 317.5 301.8 |       388.4 388.9 381.4 392.2 | 298.2 |       431.8 369.5 321.4 595.9 |    191 (    0)
+ 0.50   32 |       333.1 335.5 352.2 332.5 |       470.9 437.1 430.0 431.0 | 332.3 |       431.6 371.7 324.2 610.0 |    870 (  370)
+
+## P2. IQ2_S/IQ4_NL, N=8: the pass's rate (GB/s = bytes read / its time; both reads every line twice) and the call against
+##     its controls: pf/cold (its own cold control: the same readers, gap and traffic) | pf/hot (no pass, the same gap
+##     and traffic)
+ G ms  MiB | host    GB/s pf/cold  pf/hot | one     GB/s pf/cold  pf/hot | all     GB/s pf/cold  pf/hot | both    GB/s pf/cold  pf/hot |
+ 0.00    0 |         36.9    0.79    1.10 |         35.9    0.81    1.07 |         48.6    0.79    1.08 |         52.8    0.75    1.05 |
+ 0.00    8 |         35.7    0.87    1.18 |         36.1    0.73    1.00 |         48.9    0.79    1.07 |         51.4    0.72    0.98 |
+ 0.00   32 |         36.5    0.87    1.04 |         36.6    0.72    0.87 |         48.9    0.79    0.95 |         44.7    0.76    1.00 |
+ 0.10    0 |         32.3    0.75    0.98 |         36.0    0.78    0.97 |         49.5    0.80    0.98 |         50.9    0.75    0.95 |
+ 0.10    8 |         36.5    0.81    1.25 |         38.0    0.75    1.13 |         46.0    0.79    1.19 |         50.2    0.73    1.10 |
+ 0.10   32 |         36.3    0.73    1.01 |         43.0    0.80    1.04 |         49.7    0.83    1.08 |         50.8    0.76    1.00 |
+ 0.25    0 |         35.9    0.79    1.02 |         42.3    0.81    1.04 |         50.0    0.80    1.04 |         51.2    0.77    1.04 |
+ 0.25    8 |         36.6    0.78    0.99 |         41.9    0.77    1.00 |         49.3    0.77    1.00 |         51.8    0.75    0.96 |
+ 0.25   32 |         36.0    0.72    1.02 |         42.9    0.78    1.01 |         48.7    0.81    1.05 |         51.1    0.75    0.98 |
+ 0.50    0 |         36.5    0.77    1.05 |         42.9    0.75    1.00 |         49.0    0.80    1.06 |         52.5    0.74    1.02 |
+ 0.50    8 |         36.5    0.78    1.01 |         42.7    0.79    1.03 |         49.1    0.83    1.06 |         52.9    0.77    1.01 |
+ 0.50   32 |         36.5    0.71    1.00 |         42.4    0.77    1.01 |         48.6    0.82    1.06 |         51.7    0.77    1.00 |
+
+## P3. IQ2_S/IQ4_NL, N=8: the pass's wake, us (the median): the slowest reader's time from the host's signal to its first read;
+##     the pass is the wake and the reads (P1)
+ G ms  MiB |   host    one    all   both
+ 0.00    0 |    0.0    3.9   50.0    5.4
+ 0.00    8 |    0.0    1.3   55.6    5.7
+ 0.00   32 |    0.0    1.4   61.6    6.9
+ 0.10    0 |    0.0    3.8   33.6    5.5
+ 0.10    8 |    0.0    3.1  307.1    5.8
+ 0.10   32 |    0.0    1.3   52.3    6.4
+ 0.25    0 |    0.0    3.7   28.6    5.7
+ 0.25    8 |    0.0    4.0   32.4    5.8
+ 0.25   32 |    0.0    1.3   77.2    6.4
+ 0.50    0 |    0.0    3.7   45.0    6.3
+ 0.50    8 |    0.0    3.9   30.8    6.3
+ 0.50   32 |    0.0    1.4   62.7    6.9
+
+## P1. IQ3_XXS/IQ4_NL, N=2, T=6, 15 workers + host: us per call of N experts, the median of 30 units
+##     cold = behind a sham pass by the same readers (the same bytes from unrelated memory), then the gap, then the
+##     call; hot = no pass, the same N experts every unit; pass = the pass's own time, its readers' wake included;
+##     traffic = the thread's read of X MiB during the gap: its duration (its overrun past the gap's end)
+anchors, gap 0, no pass, no traffic: cold 117.1 us | hot 86.8 us | the call reads 4.4 MB
+ G ms  MiB | call:  host   one   all  both | cold:  host   one   all  both |   hot | pass:  host   one   all  both | traffic us (overrun)
+ 0.00    0 |        99.7  91.4  93.6  98.5 |       121.3 110.1 109.0 122.9 |  70.7 |       121.3 101.4  93.4 171.4 |      0 (    0)
+ 0.00    8 |       107.7 113.2 109.1 107.8 |       138.1 140.0 135.7 139.5 |  99.9 |       119.3 101.6  92.6 165.0 |    209 (  209)
+ 0.00   32 |       110.9 115.1 112.2 104.8 |       136.7 136.8 137.8 136.8 | 106.0 |       117.9 102.0  94.7 164.4 |    732 (  732)
+ 0.10    0 |       101.8 101.3 105.0 100.2 |       120.1 119.7 120.3 122.9 |  90.3 |       118.3 104.5  93.2 175.6 |      0 (    0)
+ 0.10    8 |       108.8 116.0 116.4 110.2 |       141.3 137.6 136.1 141.5 | 101.8 |       119.3 105.3  96.6 170.5 |    206 (  106)
+ 0.10   32 |       116.3 113.3 117.9 113.3 |       139.3 135.4 136.7 138.8 | 104.6 |       120.1 102.1  93.2 163.5 |    737 (  637)
+ 0.25    0 |       100.5  99.2 101.0  91.4 |       118.5 119.8 121.5 120.2 |  90.2 |       116.3 103.1  91.0 166.8 |      0 (    0)
+ 0.25    8 |        97.7  97.8 100.3  95.1 |       118.5 119.8 120.9 122.2 |  94.3 |       118.2 102.7  91.8 167.5 |    184 (    0)
+ 0.25   32 |       115.7 115.1 115.9 106.2 |       143.7 133.9 135.5 138.2 | 104.2 |       119.0 100.4  92.1 163.6 |    754 (  504)
+ 0.50    0 |        98.5  98.9  95.7  89.5 |       117.8 119.3 118.5 118.0 |  87.9 |       117.9 104.9  91.5 165.3 |      0 (    0)
+ 0.50    8 |        97.1  97.1  98.9  93.3 |       119.8 120.5 118.6 120.3 |  90.7 |       117.0 104.8  92.0 165.1 |    187 (    0)
+ 0.50   32 |       131.3 129.1 118.0 114.7 |       144.6 134.9 136.0 136.1 | 105.6 |       118.1 100.8  94.5 166.1 |    751 (  251)
+
+## P2. IQ3_XXS/IQ4_NL, N=2: the pass's rate (GB/s = bytes read / its time; both reads every line twice) and the call against
+##     its controls: pf/cold (its own cold control: the same readers, gap and traffic) | pf/hot (no pass, the same gap
+##     and traffic)
+ G ms  MiB | host    GB/s pf/cold  pf/hot | one     GB/s pf/cold  pf/hot | all     GB/s pf/cold  pf/hot | both    GB/s pf/cold  pf/hot |
+ 0.00    0 |         35.9    0.82    1.41 |         42.9    0.83    1.29 |         46.6    0.86    1.32 |         50.8    0.80    1.39 |
+ 0.00    8 |         36.5    0.78    1.08 |         42.8    0.81    1.13 |         47.0    0.80    1.09 |         52.7    0.77    1.08 |
+ 0.00   32 |         36.9    0.81    1.05 |         42.6    0.84    1.09 |         46.0    0.81    1.06 |         52.9    0.77    0.99 |
+ 0.10    0 |         36.8    0.85    1.13 |         41.6    0.85    1.12 |         46.7    0.87    1.16 |         49.6    0.82    1.11 |
+ 0.10    8 |         36.5    0.77    1.07 |         41.3    0.84    1.14 |         45.1    0.85    1.14 |         51.0    0.78    1.08 |
+ 0.10   32 |         36.2    0.84    1.11 |         42.6    0.84    1.08 |         46.7    0.86    1.13 |         53.3    0.82    1.08 |
+ 0.25    0 |         37.4    0.85    1.11 |         42.2    0.83    1.10 |         47.8    0.83    1.12 |         52.2    0.76    1.01 |
+ 0.25    8 |         36.8    0.82    1.04 |         42.4    0.82    1.04 |         47.4    0.83    1.06 |         52.0    0.78    1.01 |
+ 0.25   32 |         36.6    0.81    1.11 |         43.4    0.86    1.10 |         47.3    0.86    1.11 |         53.2    0.77    1.02 |
+ 0.50    0 |         36.9    0.84    1.12 |         41.5    0.83    1.13 |         47.5    0.81    1.09 |         52.6    0.76    1.02 |
+ 0.50    8 |         37.2    0.81    1.07 |         41.5    0.81    1.07 |         47.3    0.83    1.09 |         52.7    0.77    1.03 |
+ 0.50   32 |         36.8    0.91    1.24 |         43.2    0.96    1.22 |         46.1    0.87    1.12 |         52.4    0.84    1.09 |
+
+## P3. IQ3_XXS/IQ4_NL, N=2: the pass's wake, us (the median): the slowest reader's time from the host's signal to its first read;
+##     the pass is the wake and the reads (P1)
+ G ms  MiB |   host    one    all   both
+ 0.00    0 |    0.0    2.7   31.9    4.0
+ 0.00    8 |    0.0    1.3   35.3    5.2
+ 0.00   32 |    0.0    1.4   37.3    5.1
+ 0.10    0 |    0.0    3.0   30.8    4.4
+ 0.10    8 |    0.0    1.3   71.3    4.5
+ 0.10   32 |    0.0    1.4   36.3    5.2
+ 0.25    0 |    0.0    3.2   31.9    5.2
+ 0.25    8 |    0.0    3.3   30.8    4.8
+ 0.25   32 |    0.0    1.4   37.3    5.2
+ 0.50    0 |    0.0    3.2   29.8    4.8
+ 0.50    8 |    0.0    3.4   31.0    5.8
+ 0.50   32 |    0.0    1.4   37.2    5.6
+
+## P1. IQ3_XXS/IQ4_NL, N=3, T=6, 15 workers + host: us per call of N experts, the median of 30 units
+##     cold = behind a sham pass by the same readers (the same bytes from unrelated memory), then the gap, then the
+##     call; hot = no pass, the same N experts every unit; pass = the pass's own time, its readers' wake included;
+##     traffic = the thread's read of X MiB during the gap: its duration (its overrun past the gap's end)
+anchors, gap 0, no pass, no traffic: cold 166.8 us | hot 117.6 us | the call reads 6.5 MB
+ G ms  MiB | call:  host   one   all  both | cold:  host   one   all  both |   hot | pass:  host   one   all  both | traffic us (overrun)
+ 0.00    0 |       142.2 140.9 144.7 139.8 |       170.4 169.0 172.5 176.3 | 132.7 |       179.5 153.6 138.3 251.4 |      0 (    0)
+ 0.00    8 |       157.3 160.5 164.1 149.6 |       192.3 195.1 195.7 203.2 | 141.0 |       178.6 153.4 154.8 254.2 |    217 (  217)
+ 0.00   32 |       160.7 158.2 156.6 149.5 |       195.2 199.2 193.1 202.1 | 150.6 |       179.9 150.2 135.3 248.7 |    763 (  763)
+ 0.10    0 |       139.4 141.2 154.0 139.6 |       174.2 171.5 177.5 174.3 | 126.9 |       175.7 182.1 142.9 246.5 |      0 (    0)
+ 0.10    8 |       153.8 160.7 163.7 146.7 |       196.2 198.0 194.6 198.7 | 142.0 |       183.4 154.8 143.2 255.6 |    212 (  112)
+ 0.10   32 |       155.7 157.8 165.7 147.2 |       200.2 195.8 198.9 195.5 | 148.9 |       178.6 149.4 136.7 252.0 |    748 (  648)
+ 0.25    0 |       146.1 141.0 146.0 134.1 |       170.6 168.1 169.9 170.2 | 136.6 |       181.2 154.6 134.2 246.3 |      0 (    0)
+ 0.25    8 |       140.1 141.8 156.2 142.6 |       170.5 172.0 171.0 182.8 | 140.2 |       178.3 156.4 159.8 266.4 |    184 (    0)
+ 0.25   32 |       173.0 170.6 168.7 150.5 |       201.9 203.1 207.3 205.4 | 150.2 |       179.3 155.7 151.3 261.0 |    794 (  544)
+ 0.50    0 |       150.9 153.2 155.8 145.4 |       178.5 178.5 182.2 193.6 | 142.4 |       179.0 158.7 160.4 261.6 |      0 (    0)
+ 0.50    8 |       147.5 141.3 143.7 132.8 |       190.1 192.1 172.5 171.8 | 142.1 |       181.0 159.9 138.3 248.3 |    192 (    0)
+ 0.50   32 |       184.0 179.8 163.8 146.9 |       195.7 197.0 213.1 195.3 | 153.4 |       176.9 166.6 144.9 254.1 |    762 (  262)
+
+## P2. IQ3_XXS/IQ4_NL, N=3: the pass's rate (GB/s = bytes read / its time; both reads every line twice) and the call against
+##     its controls: pf/cold (its own cold control: the same readers, gap and traffic) | pf/hot (no pass, the same gap
+##     and traffic)
+ G ms  MiB | host    GB/s pf/cold  pf/hot | one     GB/s pf/cold  pf/hot | all     GB/s pf/cold  pf/hot | both    GB/s pf/cold  pf/hot |
+ 0.00    0 |         36.4    0.83    1.07 |         42.5    0.83    1.06 |         47.2    0.84    1.09 |         51.9    0.79    1.05 |
+ 0.00    8 |         36.6    0.82    1.12 |         42.6    0.82    1.14 |         42.2    0.84    1.16 |         51.4    0.74    1.06 |
+ 0.00   32 |         36.3    0.82    1.07 |         43.5    0.79    1.05 |         48.2    0.81    1.04 |         52.5    0.74    0.99 |
+ 0.10    0 |         37.1    0.80    1.10 |         35.8    0.82    1.11 |         45.7    0.87    1.21 |         53.0    0.80    1.10 |
+ 0.10    8 |         35.6    0.78    1.08 |         42.2    0.81    1.13 |         45.6    0.84    1.15 |         51.1    0.74    1.03 |
+ 0.10   32 |         36.6    0.78    1.05 |         43.7    0.81    1.06 |         47.7    0.83    1.11 |         51.8    0.75    0.99 |
+ 0.25    0 |         36.0    0.86    1.07 |         42.2    0.84    1.03 |         48.6    0.86    1.07 |         53.0    0.79    0.98 |
+ 0.25    8 |         36.6    0.82    1.00 |         41.7    0.82    1.01 |         40.9    0.91    1.11 |         49.0    0.78    1.02 |
+ 0.25   32 |         36.4    0.86    1.15 |         41.9    0.84    1.14 |         43.1    0.81    1.12 |         50.0    0.73    1.00 |
+ 0.50    0 |         36.5    0.85    1.06 |         41.1    0.86    1.08 |         40.7    0.86    1.09 |         49.9    0.75    1.02 |
+ 0.50    8 |         36.1    0.78    1.04 |         40.8    0.74    0.99 |         47.2    0.83    1.01 |         52.6    0.77    0.93 |
+ 0.50   32 |         36.9    0.94    1.20 |         39.2    0.91    1.17 |         45.1    0.77    1.07 |         51.4    0.75    0.96 |
+
+## P3. IQ3_XXS/IQ4_NL, N=3: the pass's wake, us (the median): the slowest reader's time from the host's signal to its first read;
+##     the pass is the wake and the reads (P1)
+ G ms  MiB |   host    one    all   both
+ 0.00    0 |    0.0    3.2   41.6    4.4
+ 0.00    8 |    0.0    1.3  141.1    4.5
+ 0.00   32 |    0.0    1.4   36.4    5.3
+ 0.10    0 |    0.0    3.3  123.5    4.4
+ 0.10    8 |    0.0    1.7  121.8    4.5
+ 0.10   32 |    0.0    1.4   38.2    5.3
+ 0.25    0 |    0.0    3.4   29.9    5.0
+ 0.25    8 |    0.0    3.4  147.0    4.7
+ 0.25   32 |    0.0    1.5  122.7    6.5
+ 0.50    0 |    0.0    3.4  144.6    5.1
+ 0.50    8 |    0.0    3.5   31.7    5.2
+ 0.50   32 |    0.0    1.6   69.8    5.7
+
+## P1. IQ3_XXS/IQ4_NL, N=4, T=6, 15 workers + host: us per call of N experts, the median of 30 units
+##     cold = behind a sham pass by the same readers (the same bytes from unrelated memory), then the gap, then the
+##     call; hot = no pass, the same N experts every unit; pass = the pass's own time, its readers' wake included;
+##     traffic = the thread's read of X MiB during the gap: its duration (its overrun past the gap's end)
+anchors, gap 0, no pass, no traffic: cold 225.0 us | hot 176.5 us | the call reads 8.7 MB
+ G ms  MiB | call:  host   one   all  both | cold:  host   one   all  both |   hot | pass:  host   one   all  both | traffic us (overrun)
+ 0.00    0 |       186.4 189.1 174.2 183.9 |       225.5 219.1 217.3 227.8 | 143.0 |       237.8 246.9 176.5 338.8 |      0 (    0)
+ 0.00    8 |       227.4 199.6 219.6 199.9 |       262.7 261.5 257.8 263.1 | 197.4 |       241.5 243.8 191.8 336.4 |    256 (  256)
+ 0.00   32 |       229.1 211.2 209.6 201.3 |       261.7 259.3 259.7 267.6 | 211.7 |       239.4 238.7 180.0 336.3 |    900 (  900)
+ 0.10    0 |       180.4 178.9 169.9 179.1 |       221.3 218.5 220.0 225.2 | 161.2 |       236.4 242.0 180.8 331.9 |      0 (    0)
+ 0.10    8 |       209.6 197.3 212.7 186.6 |       262.2 262.9 262.3 261.7 | 185.6 |       238.9 241.7 181.1 340.6 |    241 (  141)
+ 0.10   32 |       227.5 213.3 218.3 210.2 |       263.3 259.4 255.9 268.3 | 210.0 |       240.7 238.9 180.3 326.5 |    898 (  798)
+ 0.25    0 |       182.3 180.1 173.4 179.0 |       227.4 221.5 222.5 226.5 | 158.3 |       239.3 207.3 177.9 330.6 |      0 (    0)
+ 0.25    8 |       182.9 182.4 180.6 177.7 |       220.0 222.8 217.7 225.7 | 181.4 |       237.2 209.5 178.3 330.8 |    191 (    0)
+ 0.25   32 |       213.9 204.6 203.7 190.1 |       253.9 248.9 248.7 259.1 | 198.3 |       237.4 201.1 186.8 336.5 |    770 (  520)
+ 0.50    0 |       182.4 178.4 179.7 172.4 |       219.1 222.1 218.1 221.4 | 163.4 |       234.1 206.4 177.5 324.9 |      0 (    0)
+ 0.50    8 |       176.5 177.5 175.4 185.4 |       219.0 218.7 217.3 223.1 | 169.0 |       234.3 205.8 180.3 351.4 |    191 (    0)
+ 0.50   32 |       213.9 206.4 202.5 188.8 |       270.1 261.0 245.0 254.3 | 198.1 |       242.1 205.8 179.5 329.4 |    839 (  339)
+
+## P2. IQ3_XXS/IQ4_NL, N=4: the pass's rate (GB/s = bytes read / its time; both reads every line twice) and the call against
+##     its controls: pf/cold (its own cold control: the same readers, gap and traffic) | pf/hot (no pass, the same gap
+##     and traffic)
+ G ms  MiB | host    GB/s pf/cold  pf/hot | one     GB/s pf/cold  pf/hot | all     GB/s pf/cold  pf/hot | both    GB/s pf/cold  pf/hot |
+ 0.00    0 |         36.6    0.83    1.30 |         35.3    0.86    1.32 |         49.3    0.80    1.22 |         51.4    0.81    1.29 |
+ 0.00    8 |         36.0    0.87    1.15 |         35.7    0.76    1.01 |         45.4    0.85    1.11 |         51.8    0.76    1.01 |
+ 0.00   32 |         36.4    0.88    1.08 |         36.5    0.81    1.00 |         48.4    0.81    0.99 |         51.8    0.75    0.95 |
+ 0.10    0 |         36.8    0.82    1.12 |         36.0    0.82    1.11 |         48.2    0.77    1.05 |         52.4    0.80    1.11 |
+ 0.10    8 |         36.4    0.80    1.13 |         36.0    0.75    1.06 |         48.1    0.81    1.15 |         51.1    0.71    1.01 |
+ 0.10   32 |         36.2    0.86    1.08 |         36.4    0.82    1.02 |         48.3    0.85    1.04 |         53.3    0.78    1.00 |
+ 0.25    0 |         36.4    0.80    1.15 |         42.0    0.81    1.14 |         48.9    0.78    1.10 |         52.6    0.79    1.13 |
+ 0.25    8 |         36.7    0.83    1.01 |         41.5    0.82    1.01 |         48.8    0.83    1.00 |         52.6    0.79    0.98 |
+ 0.25   32 |         36.7    0.84    1.08 |         43.3    0.82    1.03 |         46.6    0.82    1.03 |         51.7    0.73    0.96 |
+ 0.50    0 |         37.2    0.83    1.12 |         42.2    0.80    1.09 |         49.0    0.82    1.10 |         53.6    0.78    1.05 |
+ 0.50    8 |         37.2    0.81    1.04 |         42.3    0.81    1.05 |         48.3    0.81    1.04 |         49.5    0.83    1.10 |
+ 0.50   32 |         36.0    0.79    1.08 |         42.3    0.79    1.04 |         48.5    0.83    1.02 |         52.8    0.74    0.95 |
+
+## P3. IQ3_XXS/IQ4_NL, N=4: the pass's wake, us (the median): the slowest reader's time from the host's signal to its first read;
+##     the pass is the wake and the reads (P1)
+ G ms  MiB |   host    one    all   both
+ 0.00    0 |    0.0    3.4   30.3    4.8
+ 0.00    8 |    0.0    1.3  118.7    5.1
+ 0.00   32 |    0.0    1.4   39.0    5.5
+ 0.10    0 |    0.0    3.4   32.7    4.9
+ 0.10    8 |    0.0    1.7   72.5    4.6
+ 0.10   32 |    0.0    1.4   37.1    5.7
+ 0.25    0 |    0.0    3.5   31.8    4.8
+ 0.25    8 |    0.0    3.6   33.6    4.8
+ 0.25   32 |    0.0    1.4   37.8    5.5
+ 0.50    0 |    0.0    3.5   31.0    5.7
+ 0.50    8 |    0.0    3.6   30.9    6.4
+ 0.50   32 |    0.0    1.3   37.0    5.8
+
+## P1. IQ3_XXS/IQ4_NL, N=8, T=6, 15 workers + host: us per call of N experts, the median of 30 units
+##     cold = behind a sham pass by the same readers (the same bytes from unrelated memory), then the gap, then the
+##     call; hot = no pass, the same N experts every unit; pass = the pass's own time, its readers' wake included;
+##     traffic = the thread's read of X MiB during the gap: its duration (its overrun past the gap's end)
+anchors, gap 0, no pass, no traffic: cold 453.6 us | hot 338.5 us | the call reads 17.4 MB
+ G ms  MiB | call:  host   one   all  both | cold:  host   one   all  both |   hot | pass:  host   one   all  both | traffic us (overrun)
+ 0.00    0 |       350.0 354.7 352.5 348.8 |       440.8 435.4 434.3 449.9 | 313.3 |       474.2 407.4 361.2 663.1 |      0 (    0)
+ 0.00    8 |       374.2 379.9 393.8 365.9 |       492.2 485.2 476.0 485.8 | 355.1 |       474.4 414.8 371.7 683.5 |    250 (  250)
+ 0.00   32 |       364.4 374.5 420.7 373.9 |       485.6 470.6 515.7 476.0 | 367.2 |       477.6 402.5 439.8 651.7 |    824 (  824)
+ 0.10    0 |       348.5 329.1 354.2 340.7 |       432.3 446.4 419.6 436.0 | 289.8 |       474.3 408.5 348.7 653.5 |      0 (    0)
+ 0.10    8 |       357.2 362.3 363.1 349.2 |       480.9 473.8 474.5 473.8 | 324.0 |       480.0 419.3 352.5 653.9 |    218 (  118)
+ 0.10   32 |       376.4 385.9 396.2 368.0 |       488.2 473.6 471.5 474.8 | 362.1 |       473.9 398.8 348.5 668.3 |    814 (  714)
+ 0.25    0 |       352.1 347.2 331.2 320.4 |       443.5 436.3 418.6 436.9 | 354.1 |       477.3 487.3 353.2 656.7 |      0 (    0)
+ 0.25    8 |       352.0 349.0 350.5 358.7 |       451.9 441.3 432.7 442.6 | 325.5 |       480.6 418.2 359.3 662.4 |    225 (    0)
+ 0.25   32 |       377.1 379.2 397.2 366.7 |       485.4 475.6 470.8 485.0 | 366.6 |       472.8 403.9 355.3 656.4 |    850 (  600)
+ 0.50    0 |       346.8 329.0 362.5 346.5 |       407.9 403.1 409.7 431.0 | 323.9 |       471.6 405.9 362.5 678.0 |      0 (    0)
+ 0.50    8 |       346.1 348.3 373.7 346.4 |       418.3 421.5 509.1 424.8 | 297.3 |       473.6 414.0 397.7 668.8 |    193 (    0)
+ 0.50   32 |       377.8 379.7 401.1 365.4 |       488.1 478.3 471.3 486.7 | 361.7 |       478.1 413.5 390.1 667.5 |    856 (  356)
+
+## P2. IQ3_XXS/IQ4_NL, N=8: the pass's rate (GB/s = bytes read / its time; both reads every line twice) and the call against
+##     its controls: pf/cold (its own cold control: the same readers, gap and traffic) | pf/hot (no pass, the same gap
+##     and traffic)
+ G ms  MiB | host    GB/s pf/cold  pf/hot | one     GB/s pf/cold  pf/hot | all     GB/s pf/cold  pf/hot | both    GB/s pf/cold  pf/hot |
+ 0.00    0 |         36.7    0.79    1.12 |         42.7    0.81    1.13 |         48.2    0.81    1.13 |         52.5    0.78    1.11 |
+ 0.00    8 |         36.7    0.76    1.05 |         42.0    0.78    1.07 |         46.8    0.83    1.11 |         50.9    0.75    1.03 |
+ 0.00   32 |         36.5    0.75    0.99 |         43.2    0.80    1.02 |         39.6    0.82    1.15 |         53.4    0.79    1.02 |
+ 0.10    0 |         36.7    0.81    1.20 |         42.6    0.74    1.14 |         49.9    0.84    1.22 |         53.3    0.78    1.18 |
+ 0.10    8 |         36.3    0.74    1.10 |         41.5    0.76    1.12 |         49.4    0.77    1.12 |         53.2    0.74    1.08 |
+ 0.10   32 |         36.7    0.77    1.04 |         43.6    0.81    1.07 |         49.9    0.84    1.09 |         52.1    0.77    1.02 |
+ 0.25    0 |         36.5    0.79    0.99 |         35.7    0.80    0.98 |         49.3    0.79    0.94 |         53.0    0.73    0.90 |
+ 0.25    8 |         36.2    0.78    1.08 |         41.6    0.79    1.07 |         48.4    0.81    1.08 |         52.6    0.81    1.10 |
+ 0.25   32 |         36.8    0.78    1.03 |         43.1    0.80    1.03 |         49.0    0.84    1.08 |         53.0    0.76    1.00 |
+ 0.50    0 |         36.9    0.85    1.07 |         42.9    0.82    1.02 |         48.0    0.88    1.12 |         51.3    0.80    1.07 |
+ 0.50    8 |         36.8    0.83    1.16 |         42.0    0.83    1.17 |         43.8    0.73    1.26 |         52.1    0.82    1.17 |
+ 0.50   32 |         36.4    0.77    1.04 |         42.1    0.79    1.05 |         44.6    0.85    1.11 |         52.2    0.75    1.01 |
+
+## P3. IQ3_XXS/IQ4_NL, N=8: the pass's wake, us (the median): the slowest reader's time from the host's signal to its first read;
+##     the pass is the wake and the reads (P1)
+ G ms  MiB |   host    one    all   both
+ 0.00    0 |    0.0    3.8   41.8    5.4
+ 0.00    8 |    0.0    1.7  187.1    6.7
+ 0.00   32 |    0.0    1.3  382.1    6.3
+ 0.10    0 |    0.0    3.9   28.2    5.6
+ 0.10    8 |    0.0    3.6   31.0    6.6
+ 0.10   32 |    0.0    1.4   36.9    8.0
+ 0.25    0 |    0.0    4.1   29.6    6.6
+ 0.25    8 |    0.0    3.8  173.6    5.8
+ 0.25   32 |    0.0    1.2   36.3    6.2
+ 0.50    0 |    0.0    4.0  263.0    6.7
+ 0.50    8 |    0.0    4.2  352.8    7.3
+ 0.50   32 |    0.0    1.3  344.0    6.9
+
+## P1. IQ3_S/IQ4_NL, N=2, T=6, 15 workers + host: us per call of N experts, the median of 30 units
+##     cold = behind a sham pass by the same readers (the same bytes from unrelated memory), then the gap, then the
+##     call; hot = no pass, the same N experts every unit; pass = the pass's own time, its readers' wake included;
+##     traffic = the thread's read of X MiB during the gap: its duration (its overrun past the gap's end)
+anchors, gap 0, no pass, no traffic: cold 112.7 us | hot 74.9 us | the call reads 4.7 MB
+ G ms  MiB | call:  host   one   all  both | cold:  host   one   all  both |   hot | pass:  host   one   all  both | traffic us (overrun)
+ 0.00    0 |       101.4 103.2  97.0 101.9 |       123.6 130.2 124.6 129.7 |  92.0 |       126.9 119.9  97.4 189.0 |      0 (    0)
+ 0.00    8 |       112.3 120.8 116.0 110.8 |       148.3 149.0 148.9 145.5 | 102.7 |       128.1 114.1  98.3 183.9 |    214 (  214)
+ 0.00   32 |       118.4 119.5 115.1 108.3 |       149.9 147.2 146.7 146.2 | 114.7 |       127.2 108.7 102.0 177.8 |    742 (  742)
+ 0.10    0 |       105.9 105.0 100.1  97.7 |       127.6 126.5 125.6 132.5 |  94.4 |       126.9 114.3  95.4 177.9 |      0 (    0)
+ 0.10    8 |       114.0 120.5 120.9 111.0 |       148.6 144.6 147.9 148.7 | 109.7 |       127.7 108.2 103.1 185.3 |    222 (  122)
+ 0.10   32 |       140.6 116.3 115.7 109.0 |       161.9 149.8 145.9 150.9 | 126.4 |       142.0 109.2  97.6 178.7 |    902 (  802)
+ 0.25    0 |       107.1 109.3 109.8 102.4 |       126.5 127.1 123.1 128.3 |  99.0 |       129.5 131.9 118.3 181.0 |      0 (    0)
+ 0.25    8 |       100.9 104.1 100.5 100.3 |       130.2 129.8 124.9 124.7 |  95.6 |       126.2 117.4  96.9 180.6 |    187 (    0)
+ 0.25   32 |       124.7 120.6 117.7 115.5 |       151.2 145.6 147.2 148.6 | 114.0 |       125.5 107.6 101.0 175.6 |    742 (  492)
+ 0.50    0 |       105.6 103.4 103.7 103.4 |       125.5 124.4 127.1 126.6 |  92.2 |       125.6 110.2  96.1 183.5 |      0 (    0)
+ 0.50    8 |       101.2 101.3 104.6  92.4 |       123.1 125.1 125.4 124.4 |  94.6 |       126.1 111.4 108.0 176.6 |    186 (    0)
+ 0.50   32 |       138.8 137.4 118.6 118.7 |       148.2 146.2 147.8 147.8 | 115.0 |       126.4 110.7  97.8 175.1 |    760 (  260)
+
+## P2. IQ3_S/IQ4_NL, N=2: the pass's rate (GB/s = bytes read / its time; both reads every line twice) and the call against
+##     its controls: pf/cold (its own cold control: the same readers, gap and traffic) | pf/hot (no pass, the same gap
+##     and traffic)
+ G ms  MiB | host    GB/s pf/cold  pf/hot | one     GB/s pf/cold  pf/hot | all     GB/s pf/cold  pf/hot | both    GB/s pf/cold  pf/hot |
+ 0.00    0 |         36.7    0.82    1.10 |         38.9    0.79    1.12 |         47.8    0.78    1.05 |         49.3    0.79    1.11 |
+ 0.00    8 |         36.4    0.76    1.09 |         40.8    0.81    1.18 |         47.4    0.78    1.13 |         50.7    0.76    1.08 |
+ 0.00   32 |         36.6    0.79    1.03 |         42.9    0.81    1.04 |         45.7    0.78    1.00 |         52.4    0.74    0.94 |
+ 0.10    0 |         36.7    0.83    1.12 |         40.7    0.83    1.11 |         48.8    0.80    1.06 |         52.4    0.74    1.03 |
+ 0.10    8 |         36.5    0.77    1.04 |         43.1    0.83    1.10 |         45.2    0.82    1.10 |         50.3    0.75    1.01 |
+ 0.10   32 |         32.8    0.87    1.11 |         42.7    0.78    0.92 |         47.7    0.79    0.92 |         52.1    0.72    0.86 |
+ 0.25    0 |         36.0    0.85    1.08 |         35.3    0.86    1.10 |         39.4    0.89    1.11 |         51.5    0.80    1.03 |
+ 0.25    8 |         36.9    0.77    1.06 |         39.7    0.80    1.09 |         48.1    0.80    1.05 |         51.6    0.80    1.05 |
+ 0.25   32 |         37.1    0.82    1.09 |         43.3    0.83    1.06 |         46.1    0.80    1.03 |         53.1    0.78    1.01 |
+ 0.50    0 |         37.1    0.84    1.15 |         42.3    0.83    1.12 |         48.5    0.82    1.13 |         50.8    0.82    1.12 |
+ 0.50    8 |         36.9    0.82    1.07 |         41.8    0.81    1.07 |         43.1    0.83    1.10 |         52.8    0.74    0.98 |
+ 0.50   32 |         36.9    0.94    1.21 |         42.1    0.94    1.19 |         47.6    0.80    1.03 |         53.2    0.80    1.03 |
+
+## P3. IQ3_S/IQ4_NL, N=2: the pass's wake, us (the median): the slowest reader's time from the host's signal to its first read;
+##     the pass is the wake and the reads (P1)
+ G ms  MiB |   host    one    all   both
+ 0.00    0 |    0.0    2.7   33.1    4.1
+ 0.00    8 |    0.0    1.3   35.8    5.0
+ 0.00   32 |    0.0    1.4   37.8    5.5
+ 0.10    0 |    0.0    3.1   30.6    4.1
+ 0.10    8 |    0.0    1.2   94.2    5.3
+ 0.10   32 |    0.0    1.3   36.4    6.0
+ 0.25    0 |    0.0    3.3  103.8    4.8
+ 0.25    8 |    0.0    2.9   30.6    5.0
+ 0.25   32 |    0.0    1.4   38.5    5.4
+ 0.50    0 |    0.0    3.3   30.6    4.5
+ 0.50    8 |    0.0    3.4   31.6    5.1
+ 0.50   32 |    0.0    1.3   38.2    4.7
+
+## P1. IQ3_S/IQ4_NL, N=3, T=6, 15 workers + host: us per call of N experts, the median of 30 units
+##     cold = behind a sham pass by the same readers (the same bytes from unrelated memory), then the gap, then the
+##     call; hot = no pass, the same N experts every unit; pass = the pass's own time, its readers' wake included;
+##     traffic = the thread's read of X MiB during the gap: its duration (its overrun past the gap's end)
+anchors, gap 0, no pass, no traffic: cold 161.2 us | hot 142.5 us | the call reads 7.0 MB
+ G ms  MiB | call:  host   one   all  both | cold:  host   one   all  both |   hot | pass:  host   one   all  both | traffic us (overrun)
+ 0.00    0 |       146.8 149.7 146.7 145.6 |       183.9 187.8 180.3 195.5 | 112.1 |       192.3 173.4 142.7 269.2 |      0 (    0)
+ 0.00    8 |       162.5 170.4 173.2 153.7 |       206.7 214.7 203.3 215.5 | 141.8 |       193.5 170.6 150.8 278.0 |    211 (  211)
+ 0.00   32 |       159.6 162.6 160.5 156.3 |       205.2 205.4 208.5 205.9 | 160.1 |       192.6 162.6 144.8 272.9 |    784 (  784)
+ 0.10    0 |       145.8 147.0 146.2 143.7 |       179.8 176.0 178.8 185.9 | 138.4 |       191.4 195.2 142.2 266.7 |      0 (    0)
+ 0.10    8 |       177.3 159.3 182.8 154.4 |       219.9 215.8 212.9 216.1 | 154.1 |       191.4 196.3 143.1 277.2 |    238 (  138)
+ 0.10   32 |       165.7 165.2 164.2 154.7 |       207.9 209.9 202.5 208.4 | 162.3 |       189.8 164.1 146.0 266.8 |    763 (  663)
+ 0.25    0 |       150.0 149.4 147.2 144.4 |       185.1 183.0 177.3 178.6 | 147.2 |       191.9 198.0 143.5 267.5 |      0 (    0)
+ 0.25    8 |       148.4 147.8 152.1 149.9 |       183.5 182.4 177.8 185.6 | 145.6 |       189.8 173.5 144.8 280.6 |    191 (    0)
+ 0.25   32 |       169.5 162.4 172.5 155.6 |       208.1 205.0 213.1 210.7 | 160.0 |       188.6 167.9 153.9 268.2 |    798 (  548)
+ 0.50    0 |       144.6 145.4 148.0 139.0 |       175.3 177.1 178.2 183.4 | 136.8 |       189.6 166.4 144.8 261.5 |      0 (    0)
+ 0.50    8 |       146.1 147.5 147.2 135.2 |       179.1 177.8 178.8 178.1 | 137.2 |       190.1 166.6 143.8 267.8 |    188 (    0)
+ 0.50   32 |       171.4 161.8 165.7 149.7 |       213.6 211.9 204.1 209.6 | 159.7 |       192.3 164.3 151.3 276.4 |    805 (  305)
+
+## P2. IQ3_S/IQ4_NL, N=3: the pass's rate (GB/s = bytes read / its time; both reads every line twice) and the call against
+##     its controls: pf/cold (its own cold control: the same readers, gap and traffic) | pf/hot (no pass, the same gap
+##     and traffic)
+ G ms  MiB | host    GB/s pf/cold  pf/hot | one     GB/s pf/cold  pf/hot | all     GB/s pf/cold  pf/hot | both    GB/s pf/cold  pf/hot |
+ 0.00    0 |         36.4    0.80    1.31 |         40.3    0.80    1.34 |         49.0    0.81    1.31 |         51.9    0.74    1.30 |
+ 0.00    8 |         36.1    0.79    1.15 |         41.0    0.79    1.20 |         46.4    0.85    1.22 |         50.3    0.71    1.08 |
+ 0.00   32 |         36.3    0.78    1.00 |         43.0    0.79    1.02 |         48.3    0.77    1.00 |         51.2    0.76    0.98 |
+ 0.10    0 |         36.5    0.81    1.05 |         35.8    0.83    1.06 |         49.1    0.82    1.06 |         52.4    0.77    1.04 |
+ 0.10    8 |         36.5    0.81    1.15 |         35.6    0.74    1.03 |         48.8    0.86    1.19 |         50.4    0.71    1.00 |
+ 0.10   32 |         36.8    0.80    1.02 |         42.6    0.79    1.02 |         47.9    0.81    1.01 |         52.4    0.74    0.95 |
+ 0.25    0 |         36.4    0.81    1.02 |         35.3    0.82    1.01 |         48.7    0.83    1.00 |         52.3    0.81    0.98 |
+ 0.25    8 |         36.8    0.81    1.02 |         40.3    0.81    1.01 |         48.3    0.86    1.04 |         49.8    0.81    1.03 |
+ 0.25   32 |         37.1    0.81    1.06 |         41.6    0.79    1.02 |         45.4    0.81    1.08 |         52.1    0.74    0.97 |
+ 0.50    0 |         36.9    0.83    1.06 |         42.0    0.82    1.06 |         48.3    0.83    1.08 |         53.4    0.76    1.02 |
+ 0.50    8 |         36.8    0.82    1.06 |         42.0    0.83    1.08 |         48.6    0.82    1.07 |         52.2    0.76    0.99 |
+ 0.50   32 |         36.4    0.80    1.07 |         42.5    0.76    1.01 |         46.2    0.81    1.04 |         50.6    0.71    0.94 |
+
+## P3. IQ3_S/IQ4_NL, N=3: the pass's wake, us (the median): the slowest reader's time from the host's signal to its first read;
+##     the pass is the wake and the reads (P1)
+ G ms  MiB |   host    one    all   both
+ 0.00    0 |    0.0    3.2   29.6    4.0
+ 0.00    8 |    0.0    1.3   41.8    4.8
+ 0.00   32 |    0.0    1.4   35.3    6.0
+ 0.10    0 |    0.0    3.3   29.8    4.5
+ 0.10    8 |    0.0    1.3   31.3    4.5
+ 0.10   32 |    0.0    1.3   37.5    5.7
+ 0.25    0 |    0.0    3.4   29.7    4.8
+ 0.25    8 |    0.0    3.5   30.1    4.9
+ 0.25   32 |    0.0    1.3   41.6    5.8
+ 0.50    0 |    0.0    3.4   33.7    5.4
+ 0.50    8 |    0.0    3.8   29.0    5.1
+ 0.50   32 |    0.0    1.5  111.1    7.5
+
+## P1. IQ3_S/IQ4_NL, N=4, T=6, 15 workers + host: us per call of N experts, the median of 30 units
+##     cold = behind a sham pass by the same readers (the same bytes from unrelated memory), then the gap, then the
+##     call; hot = no pass, the same N experts every unit; pass = the pass's own time, its readers' wake included;
+##     traffic = the thread's read of X MiB during the gap: its duration (its overrun past the gap's end)
+anchors, gap 0, no pass, no traffic: cold 242.1 us | hot 188.6 us | the call reads 9.3 MB
+ G ms  MiB | call:  host   one   all  both | cold:  host   one   all  both |   hot | pass:  host   one   all  both | traffic us (overrun)
+ 0.00    0 |       197.6 199.8 203.1 195.3 |       235.9 234.0 247.3 251.4 | 187.8 |       259.7 241.5 207.7 364.1 |      0 (    0)
+ 0.00    8 |       229.3 218.4 214.9 201.8 |       280.3 276.1 264.3 264.1 | 188.8 |       271.2 228.5 192.1 365.8 |    230 (  230)
+ 0.00   32 |       218.3 213.2 210.9 204.3 |       265.7 259.8 261.6 264.9 | 210.1 |       252.0 212.9 192.9 356.3 |    789 (  789)
+ 0.10    0 |       192.1 195.7 189.2 187.3 |       240.7 237.3 229.4 240.2 | 184.5 |       254.0 232.3 189.8 370.4 |      0 (    0)
+ 0.10    8 |       205.0 206.0 208.3 200.2 |       276.5 268.2 263.5 271.4 | 192.7 |       253.9 221.2 190.3 367.5 |    219 (  119)
+ 0.10   32 |       220.5 213.5 214.3 201.6 |       269.9 264.1 263.9 264.5 | 211.1 |       250.3 221.1 195.4 357.7 |    795 (  695)
+ 0.25    0 |       190.5 190.9 186.9 189.4 |       238.7 235.5 227.7 240.8 | 170.5 |       254.2 224.6 192.0 351.7 |      0 (    0)
+ 0.25    8 |       190.7 192.2 191.7 175.6 |       238.2 241.4 232.4 237.5 | 174.2 |       253.9 223.2 192.7 349.5 |    184 (    0)
+ 0.25   32 |       225.0 213.5 216.8 202.3 |       266.6 260.4 263.6 265.5 | 210.6 |       253.1 220.7 191.2 359.6 |    792 (  542)
+ 0.50    0 |       188.8 189.6 190.1 178.0 |       227.6 228.2 224.7 236.9 | 171.4 |       252.8 259.8 197.5 362.1 |      0 (    0)
+ 0.50    8 |       188.9 189.9 192.9 181.7 |       232.3 232.3 240.3 242.9 | 178.4 |       251.8 223.8 195.1 363.5 |    192 (    0)
+ 0.50   32 |       242.4 215.7 212.1 202.2 |       268.3 263.5 264.4 262.5 | 204.3 |       253.3 210.0 193.1 372.7 |    793 (  293)
+
+## P2. IQ3_S/IQ4_NL, N=4: the pass's rate (GB/s = bytes read / its time; both reads every line twice) and the call against
+##     its controls: pf/cold (its own cold control: the same readers, gap and traffic) | pf/hot (no pass, the same gap
+##     and traffic)
+ G ms  MiB | host    GB/s pf/cold  pf/hot | one     GB/s pf/cold  pf/hot | all     GB/s pf/cold  pf/hot | both    GB/s pf/cold  pf/hot |
+ 0.00    0 |         35.9    0.84    1.05 |         38.6    0.85    1.06 |         44.9    0.82    1.08 |         51.2    0.78    1.04 |
+ 0.00    8 |         34.4    0.82    1.21 |         40.8    0.79    1.16 |         48.5    0.81    1.14 |         50.9    0.76    1.07 |
+ 0.00   32 |         37.0    0.82    1.04 |         43.8    0.82    1.01 |         48.3    0.81    1.00 |         52.3    0.77    0.97 |
+ 0.10    0 |         36.7    0.80    1.04 |         40.1    0.82    1.06 |         49.1    0.82    1.03 |         50.3    0.78    1.02 |
+ 0.10    8 |         36.7    0.74    1.06 |         42.1    0.77    1.07 |         49.0    0.79    1.08 |         50.7    0.74    1.04 |
+ 0.10   32 |         37.2    0.82    1.04 |         42.1    0.81    1.01 |         47.7    0.81    1.02 |         52.1    0.76    0.95 |
+ 0.25    0 |         36.7    0.80    1.12 |         41.5    0.81    1.12 |         48.5    0.82    1.10 |         53.0    0.79    1.11 |
+ 0.25    8 |         36.7    0.80    1.09 |         41.7    0.80    1.10 |         48.4    0.82    1.10 |         53.3    0.74    1.01 |
+ 0.25   32 |         36.8    0.84    1.07 |         42.2    0.82    1.01 |         48.7    0.82    1.03 |         51.8    0.76    0.96 |
+ 0.50    0 |         36.9    0.83    1.10 |         35.9    0.83    1.11 |         47.2    0.85    1.11 |         51.5    0.75    1.04 |
+ 0.50    8 |         37.0    0.81    1.06 |         41.6    0.82    1.06 |         47.8    0.80    1.08 |         51.3    0.75    1.02 |
+ 0.50   32 |         36.8    0.90    1.19 |         44.4    0.82    1.06 |         48.3    0.80    1.04 |         50.0    0.77    0.99 |
+
+## P3. IQ3_S/IQ4_NL, N=4: the pass's wake, us (the median): the slowest reader's time from the host's signal to its first read;
+##     the pass is the wake and the reads (P1)
+ G ms  MiB |   host    one    all   both
+ 0.00    0 |    0.0    3.5  192.0    4.9
+ 0.00    8 |    0.0    1.3   84.6    5.6
+ 0.00   32 |    0.0    1.4   36.1    5.7
+ 0.10    0 |    0.0    3.5   30.4    5.0
+ 0.10    8 |    0.0    1.8   30.4    5.5
+ 0.10   32 |    0.0    1.4   38.5    5.9
+ 0.25    0 |    0.0    3.5   30.4    5.2
+ 0.25    8 |    0.0    3.6   31.9    5.0
+ 0.25   32 |    0.0    1.4   38.4    5.3
+ 0.50    0 |    0.0    3.5   32.1    5.9
+ 0.50    8 |    0.0    3.8   33.2    5.7
+ 0.50   32 |    0.0    1.3   38.3    7.8
+
+## P1. IQ3_S/IQ4_NL, N=8, T=6, 15 workers + host: us per call of N experts, the median of 30 units
+##     cold = behind a sham pass by the same readers (the same bytes from unrelated memory), then the gap, then the
+##     call; hot = no pass, the same N experts every unit; pass = the pass's own time, its readers' wake included;
+##     traffic = the thread's read of X MiB during the gap: its duration (its overrun past the gap's end)
+anchors, gap 0, no pass, no traffic: cold 469.0 us | hot 327.1 us | the call reads 18.6 MB
+ G ms  MiB | call:  host   one   all  both | cold:  host   one   all  both |   hot | pass:  host   one   all  both | traffic us (overrun)
+ 0.00    0 |       362.9 355.8 362.1 379.5 |       469.5 449.2 464.5 475.9 | 302.1 |       505.8 443.6 375.9 740.6 |      0 (    0)
+ 0.00    8 |       412.0 396.7 422.5 382.6 |       528.9 527.7 523.9 523.2 | 358.1 |       528.8 446.1 411.1 728.8 |    239 (  239)
+ 0.00   32 |       392.7 399.8 408.4 384.0 |       519.0 508.0 501.4 508.1 | 397.1 |       505.5 433.7 378.4 730.8 |    822 (  822)
+ 0.10    0 |       380.7 371.6 392.5 375.2 |       490.3 481.4 487.5 492.2 | 304.1 |       530.3 466.1 390.4 752.7 |      0 (    0)
+ 0.10    8 |       375.7 379.6 386.2 371.2 |       514.2 501.9 498.6 511.7 | 344.4 |       506.7 444.6 379.6 732.9 |    215 (  115)
+ 0.10   32 |       393.9 403.3 416.0 382.7 |       527.5 504.9 506.7 508.2 | 392.8 |       505.6 434.6 380.8 724.4 |    845 (  745)
+ 0.25    0 |       344.1 346.5 380.3 343.9 |       453.5 445.3 433.6 451.3 | 322.2 |       504.3 521.6 383.7 706.0 |      0 (    0)
+ 0.25    8 |       344.6 359.4 353.0 334.7 |       465.9 461.7 462.7 469.1 | 309.8 |       508.0 514.9 389.9 730.8 |    225 (    0)
+ 0.25   32 |       468.6 410.6 479.5 414.2 |       553.0 532.8 538.4 554.2 | 430.0 |       503.6 509.1 384.3 724.5 |    934 (  684)
+ 0.50    0 |       377.3 344.1 345.4 363.2 |       433.2 427.8 432.3 468.0 | 311.3 |       506.2 510.6 371.9 712.0 |      0 (    0)
+ 0.50    8 |       367.8 342.7 377.5 358.8 |       475.0 434.4 431.8 461.3 | 326.8 |       504.8 512.4 381.8 722.9 |    224 (    0)
+ 0.50   32 |       483.9 405.5 465.4 406.1 |       543.9 541.1 541.3 559.1 | 430.0 |       501.5 512.3 378.3 717.0 |    929 (  429)
+
+## P2. IQ3_S/IQ4_NL, N=8: the pass's rate (GB/s = bytes read / its time; both reads every line twice) and the call against
+##     its controls: pf/cold (its own cold control: the same readers, gap and traffic) | pf/hot (no pass, the same gap
+##     and traffic)
+ G ms  MiB | host    GB/s pf/cold  pf/hot | one     GB/s pf/cold  pf/hot | all     GB/s pf/cold  pf/hot | both    GB/s pf/cold  pf/hot |
+ 0.00    0 |         36.8    0.77    1.20 |         42.0    0.79    1.18 |         49.6    0.78    1.20 |         50.3    0.80    1.26 |
+ 0.00    8 |         35.2    0.78    1.15 |         41.8    0.75    1.11 |         45.3    0.81    1.18 |         51.1    0.73    1.07 |
+ 0.00   32 |         36.9    0.76    0.99 |         43.0    0.79    1.01 |         49.2    0.81    1.03 |         51.0    0.76    0.97 |
+ 0.10    0 |         35.1    0.78    1.25 |         40.0    0.77    1.22 |         47.7    0.81    1.29 |         49.5    0.76    1.23 |
+ 0.10    8 |         36.8    0.73    1.09 |         41.9    0.76    1.10 |         49.1    0.77    1.12 |         50.9    0.73    1.08 |
+ 0.10   32 |         36.9    0.75    1.00 |         42.9    0.80    1.03 |         48.9    0.82    1.06 |         51.5    0.75    0.97 |
+ 0.25    0 |         37.0    0.76    1.07 |         35.7    0.78    1.08 |         48.6    0.88    1.18 |         52.8    0.76    1.07 |
+ 0.25    8 |         36.7    0.74    1.11 |         36.2    0.78    1.16 |         47.8    0.76    1.14 |         51.0    0.71    1.08 |
+ 0.25   32 |         37.0    0.85    1.09 |         36.6    0.77    0.96 |         48.5    0.89    1.12 |         51.4    0.75    0.96 |
+ 0.50    0 |         36.8    0.87    1.21 |         36.5    0.80    1.11 |         50.1    0.80    1.11 |         52.4    0.78    1.17 |
+ 0.50    8 |         36.9    0.77    1.13 |         36.4    0.79    1.05 |         48.8    0.87    1.16 |         51.6    0.78    1.10 |
+ 0.50   32 |         37.2    0.89    1.13 |         36.4    0.75    0.94 |         49.3    0.86    1.08 |         52.0    0.73    0.94 |
+
+## P3. IQ3_S/IQ4_NL, N=8: the pass's wake, us (the median): the slowest reader's time from the host's signal to its first read;
+##     the pass is the wake and the reads (P1)
+ G ms  MiB |   host    one    all   both
+ 0.00    0 |    0.0    3.9   31.0    6.1
+ 0.00    8 |    0.0    2.0  352.9    5.9
+ 0.00   32 |    0.0    1.3   36.5    6.4
+ 0.10    0 |    0.0    3.5  315.8    6.0
+ 0.10    8 |    0.0    3.6   43.1    6.5
+ 0.10   32 |    0.0    1.3  144.4    7.1
+ 0.25    0 |    0.0    3.8   29.3    5.8
+ 0.25    8 |    0.0    4.0   31.4    6.1
+ 0.25   32 |    0.0    1.2   89.2    6.0
+ 0.50    0 |    0.0    3.9   28.3    6.5
+ 0.50    8 |    0.0    3.9   54.6    7.0
+ 0.50   32 |    0.0    1.2   38.9    6.4
+
+## P1. IQ2_S/Q2_0, N=2, T=6, 15 workers + host: us per call of N experts, the median of 30 units
+##     cold = behind a sham pass by the same readers (the same bytes from unrelated memory), then the gap, then the
+##     call; hot = no pass, the same N experts every unit; pass = the pass's own time, its readers' wake included;
+##     traffic = the thread's read of X MiB during the gap: its duration (its overrun past the gap's end)
+anchors, gap 0, no pass, no traffic: cold 81.6 us | hot 65.1 us | the call reads 3.0 MB
+ G ms  MiB | call:  host   one   all  both | cold:  host   one   all  both |   hot | pass:  host   one   all  both | traffic us (overrun)
+ 0.00    0 |        76.2  75.2  65.7  78.7 |        87.4  86.0  82.2  97.9 |  72.0 |        86.2  88.2  63.5 126.6 |      0 (    0)
+ 0.00    8 |        98.7  86.9  87.1  87.7 |       111.5 106.4 105.5 112.4 |  83.9 |        84.4  84.0  64.0 117.4 |    242 (  242)
+ 0.00   32 |        98.8  87.9  88.8  89.4 |       112.4 104.6 106.7 103.6 |  95.5 |        82.6  83.5  65.3 118.8 |    886 (  886)
+ 0.10    0 |        82.1  84.1  80.2  81.4 |        93.9  95.7  94.8  96.4 |  65.9 |        81.5  86.9  65.0 118.7 |      0 (    0)
+ 0.10    8 |        88.6  89.3  90.2  90.0 |       108.4 105.7 107.3 109.2 |  90.3 |        83.6  72.2  73.9 117.8 |    230 (  130)
+ 0.10   32 |        90.1  91.8  91.2  92.5 |       103.9 104.4 103.6 105.1 |  88.4 |        84.1  70.5  65.9 117.6 |    753 (  653)
+ 0.25    0 |        84.6  84.2  82.5  82.3 |        96.3  95.3  94.0  93.3 |  80.4 |        80.9  86.1  66.0 122.7 |      0 (    0)
+ 0.25    8 |        85.1  84.2  84.4  81.3 |        98.7  96.8  94.6  97.3 |  81.3 |        82.8  85.2  65.0 118.6 |    225 (    0)
+ 0.25   32 |        93.2  92.0  91.2  88.1 |       103.7 103.4 104.0 103.3 |  88.3 |        82.0  70.3  68.5 118.5 |    759 (  509)
+ 0.50    0 |        93.2  94.3  83.9  82.2 |        93.3 113.3 104.7  93.7 |  77.9 |        87.9 114.8  67.7 120.2 |      0 (    0)
+ 0.50    8 |        80.5  81.7  79.9  79.6 |        95.5  94.2  94.9  92.9 |  79.7 |        81.5  73.4  65.1 119.0 |    192 (    0)
+ 0.50   32 |        98.4  98.6  90.9  88.7 |       103.2 102.8 105.2 102.6 |  87.2 |        83.5  71.6  66.2 121.1 |    761 (  261)
+
+## P2. IQ2_S/Q2_0, N=2: the pass's rate (GB/s = bytes read / its time; both reads every line twice) and the call against
+##     its controls: pf/cold (its own cold control: the same readers, gap and traffic) | pf/hot (no pass, the same gap
+##     and traffic)
+ G ms  MiB | host    GB/s pf/cold  pf/hot | one     GB/s pf/cold  pf/hot | all     GB/s pf/cold  pf/hot | both    GB/s pf/cold  pf/hot |
+ 0.00    0 |         35.0    0.87    1.06 |         34.2    0.88    1.05 |         47.6    0.80    0.91 |         47.7    0.80    1.09 |
+ 0.00    8 |         35.8    0.88    1.18 |         36.0    0.82    1.04 |         47.2    0.83    1.04 |         51.5    0.78    1.05 |
+ 0.00   32 |         36.6    0.88    1.03 |         36.2    0.84    0.92 |         46.3    0.83    0.93 |         50.9    0.86    0.94 |
+ 0.10    0 |         37.1    0.87    1.25 |         34.8    0.88    1.28 |         46.5    0.85    1.22 |         50.9    0.84    1.23 |
+ 0.10    8 |         36.1    0.82    0.98 |         41.9    0.85    0.99 |         40.9    0.84    1.00 |         51.3    0.82    1.00 |
+ 0.10   32 |         35.9    0.87    1.02 |         42.9    0.88    1.04 |         45.9    0.88    1.03 |         51.4    0.88    1.05 |
+ 0.25    0 |         37.4    0.88    1.05 |         35.1    0.88    1.05 |         45.8    0.88    1.03 |         49.3    0.88    1.02 |
+ 0.25    8 |         36.5    0.86    1.05 |         35.5    0.87    1.04 |         46.5    0.89    1.04 |         51.0    0.84    1.00 |
+ 0.25   32 |         36.9    0.90    1.06 |         43.0    0.89    1.04 |         44.1    0.88    1.03 |         51.0    0.85    1.00 |
+ 0.50    0 |         34.3    1.00    1.20 |         26.3    0.83    1.21 |         44.6    0.80    1.08 |         50.3    0.88    1.05 |
+ 0.50    8 |         37.1    0.84    1.01 |         41.2    0.87    1.03 |         46.4    0.84    1.00 |         50.8    0.86    1.00 |
+ 0.50   32 |         36.2    0.95    1.13 |         42.2    0.96    1.13 |         45.6    0.86    1.04 |         49.9    0.86    1.02 |
+
+## P3. IQ2_S/Q2_0, N=2: the pass's wake, us (the median): the slowest reader's time from the host's signal to its first read;
+##     the pass is the wake and the reads (P1)
+ G ms  MiB |   host    one    all   both
+ 0.00    0 |    0.0    2.0   27.2    4.0
+ 0.00    8 |    0.0    1.3   30.8    4.4
+ 0.00   32 |    0.0    1.4   31.8    5.3
+ 0.10    0 |    0.0    3.1   30.1    4.3
+ 0.10    8 |    0.0    1.3   62.2    5.2
+ 0.10   32 |    0.0    1.4   34.0    5.6
+ 0.25    0 |    0.0    3.1   30.9    4.8
+ 0.25    8 |    0.0    2.8   31.0    4.7
+ 0.25   32 |    0.0    1.4   34.2    5.4
+ 0.50    0 |    0.0    3.4   29.4    5.3
+ 0.50    8 |    0.0    3.2   30.1    5.8
+ 0.50   32 |    0.0    1.5   32.4    5.7
+
+## P1. IQ2_S/Q2_0, N=3, T=6, 15 workers + host: us per call of N experts, the median of 30 units
+##     cold = behind a sham pass by the same readers (the same bytes from unrelated memory), then the gap, then the
+##     call; hot = no pass, the same N experts every unit; pass = the pass's own time, its readers' wake included;
+##     traffic = the thread's read of X MiB during the gap: its duration (its overrun past the gap's end)
+anchors, gap 0, no pass, no traffic: cold 127.3 us | hot 97.4 us | the call reads 4.5 MB
+ G ms  MiB | call:  host   one   all  both | cold:  host   one   all  both |   hot | pass:  host   one   all  both | traffic us (overrun)
+ 0.00    0 |       102.4 111.6 104.7 107.0 |       135.4 130.3 125.3 134.4 |  99.5 |       122.1 114.5  96.1 175.6 |      0 (    0)
+ 0.00    8 |       121.0 122.3 126.7 126.0 |       151.7 147.5 146.7 155.0 | 119.7 |       125.4 108.5 114.1 177.4 |    239 (  239)
+ 0.00   32 |       120.8 124.9 126.0 124.9 |       149.7 150.0 145.7 150.4 | 122.8 |       123.3 106.1  97.0 174.8 |    778 (  778)
+ 0.10    0 |       117.8 114.7 124.2 114.6 |       134.7 133.5 130.6 140.6 | 103.6 |       122.4 128.2  95.8 178.0 |      0 (    0)
+ 0.10    8 |       121.7 126.4 125.6 122.9 |       152.9 151.6 145.0 150.1 | 123.9 |       123.3 111.2 100.4 176.9 |    241 (  141)
+ 0.10   32 |       126.6 120.5 123.8 124.5 |       149.2 149.2 145.8 150.3 | 122.5 |       125.2 107.8  99.1 173.2 |    784 (  684)
+ 0.25    0 |       116.2 113.5 114.7 111.0 |       129.3 130.6 129.6 133.1 | 110.8 |       122.1 112.1  93.4 171.0 |      0 (    0)
+ 0.25    8 |       114.8 112.9 116.2 121.5 |       130.1 131.2 131.8 170.8 | 110.5 |       123.3 108.5 104.0 180.5 |    191 (    0)
+ 0.25   32 |       124.2 118.5 124.5 123.5 |       168.6 151.5 147.5 146.4 | 124.0 |       133.7 107.0 104.2 175.8 |    878 (  628)
+ 0.50    0 |       111.0 118.3 114.0 111.0 |       130.3 131.6 132.6 132.6 | 105.5 |       122.7 113.3  99.8 176.5 |      0 (    0)
+ 0.50    8 |       115.5 111.6 115.7 112.1 |       131.4 131.2 130.2 133.1 | 112.0 |       123.5 109.0 102.1 174.0 |    188 (    0)
+ 0.50   32 |       136.7 134.4 122.6 122.3 |       150.6 146.1 146.4 149.6 | 124.2 |       123.3 104.9  98.1 173.4 |    794 (  295)
+
+## P2. IQ2_S/Q2_0, N=3: the pass's rate (GB/s = bytes read / its time; both reads every line twice) and the call against
+##     its controls: pf/cold (its own cold control: the same readers, gap and traffic) | pf/hot (no pass, the same gap
+##     and traffic)
+ G ms  MiB | host    GB/s pf/cold  pf/hot | one     GB/s pf/cold  pf/hot | all     GB/s pf/cold  pf/hot | both    GB/s pf/cold  pf/hot |
+ 0.00    0 |         37.1    0.76    1.03 |         39.6    0.86    1.12 |         47.1    0.84    1.05 |         51.6    0.80    1.08 |
+ 0.00    8 |         36.1    0.80    1.01 |         41.8    0.83    1.02 |         39.7    0.86    1.06 |         51.1    0.81    1.05 |
+ 0.00   32 |         36.8    0.81    0.98 |         42.7    0.83    1.02 |         46.7    0.87    1.03 |         51.8    0.83    1.02 |
+ 0.10    0 |         37.0    0.87    1.14 |         35.3    0.86    1.11 |         47.3    0.95    1.20 |         50.9    0.81    1.11 |
+ 0.10    8 |         36.8    0.80    0.98 |         40.8    0.83    1.02 |         45.1    0.87    1.01 |         51.2    0.82    0.99 |
+ 0.10   32 |         36.2    0.85    1.03 |         42.0    0.81    0.98 |         45.7    0.85    1.01 |         52.3    0.83    1.02 |
+ 0.25    0 |         37.1    0.90    1.05 |         40.4    0.87    1.02 |         48.5    0.89    1.04 |         53.0    0.83    1.00 |
+ 0.25    8 |         36.7    0.88    1.04 |         41.8    0.86    1.02 |         43.6    0.88    1.05 |         50.2    0.71    1.10 |
+ 0.25   32 |         33.9    0.74    1.00 |         42.3    0.78    0.96 |         43.5    0.84    1.00 |         51.6    0.84    1.00 |
+ 0.50    0 |         36.9    0.85    1.05 |         40.0    0.90    1.12 |         45.4    0.86    1.08 |         51.3    0.84    1.05 |
+ 0.50    8 |         36.7    0.88    1.03 |         41.6    0.85    1.00 |         44.4    0.89    1.03 |         52.1    0.84    1.00 |
+ 0.50   32 |         36.7    0.91    1.10 |         43.2    0.92    1.08 |         46.2    0.84    0.99 |         52.3    0.82    0.98 |
+
+## P3. IQ2_S/Q2_0, N=3: the pass's wake, us (the median): the slowest reader's time from the host's signal to its first read;
+##     the pass is the wake and the reads (P1)
+ G ms  MiB |   host    one    all   both
+ 0.00    0 |    0.0    2.8   32.5    4.0
+ 0.00    8 |    0.0    1.3  104.4    4.8
+ 0.00   32 |    0.0    1.4   34.9    5.8
+ 0.10    0 |    0.0    3.1   32.3    4.7
+ 0.10    8 |    0.0    1.3   90.0    4.5
+ 0.10   32 |    0.0    1.5   44.9    5.6
+ 0.25    0 |    0.0    3.2   29.5    4.8
+ 0.25    8 |    0.0    3.2   87.4    5.1
+ 0.25   32 |    0.0    1.4   60.7    5.8
+ 0.50    0 |    0.0    3.3   31.3    5.1
+ 0.50    8 |    0.0    3.5   45.4    5.2
+ 0.50   32 |    0.0    1.4   36.0    5.4
+
+## P1. IQ2_S/Q2_0, N=4, T=6, 15 workers + host: us per call of N experts, the median of 30 units
+##     cold = behind a sham pass by the same readers (the same bytes from unrelated memory), then the gap, then the
+##     call; hot = no pass, the same N experts every unit; pass = the pass's own time, its readers' wake included;
+##     traffic = the thread's read of X MiB during the gap: its duration (its overrun past the gap's end)
+anchors, gap 0, no pass, no traffic: cold 171.1 us | hot 110.3 us | the call reads 6.0 MB
+ G ms  MiB | call:  host   one   all  both | cold:  host   one   all  both |   hot | pass:  host   one   all  both | traffic us (overrun)
+ 0.00    0 |       145.7 144.5 141.4 141.3 |       168.0 164.7 163.9 179.2 | 129.6 |       166.4 150.1 129.5 232.5 |      0 (    0)
+ 0.00    8 |       155.1 155.7 159.3 157.5 |       201.8 192.6 188.5 192.8 | 150.4 |       166.8 143.7 128.7 234.5 |    266 (  266)
+ 0.00   32 |       154.7 156.9 161.9 158.6 |       198.2 183.7 194.0 197.9 | 156.9 |       165.7 148.5 130.4 232.3 |    819 (  819)
+ 0.10    0 |       141.3 142.1 149.1 141.9 |       168.3 168.2 170.1 166.9 | 136.1 |       165.0 147.8 139.4 251.4 |      0 (    0)
+ 0.10    8 |       153.3 156.8 158.1 157.7 |       203.3 192.5 189.8 187.5 | 151.1 |       167.9 145.5 127.6 240.8 |    254 (  154)
+ 0.10   32 |       156.9 150.9 159.2 160.0 |       197.4 187.8 190.4 187.3 | 154.8 |       166.7 143.2 131.0 235.3 |    822 (  722)
+ 0.25    0 |       141.7 138.9 145.6 139.5 |       162.4 160.7 163.5 165.1 | 137.6 |       164.3 170.2 127.1 229.4 |      0 (    0)
+ 0.25    8 |       144.9 143.7 144.6 144.4 |       168.1 173.6 171.5 169.6 | 141.6 |       165.7 148.3 131.8 238.5 |    187 (    0)
+ 0.25   32 |       166.5 154.3 161.4 159.4 |       195.0 189.2 193.2 194.8 | 155.9 |       164.4 142.4 129.0 229.6 |    808 (  558)
+ 0.50    0 |       142.5 141.2 145.1 141.3 |       168.4 164.6 168.1 165.6 | 140.0 |       164.3 144.8 124.7 232.5 |      0 (    0)
+ 0.50    8 |       142.9 143.4 147.9 141.6 |       163.7 178.9 170.2 166.3 | 141.8 |       165.3 152.7 134.6 233.7 |    192 (    0)
+ 0.50   32 |       167.4 162.7 167.8 163.9 |       198.1 195.6 196.1 194.4 | 154.3 |       167.4 153.1 130.6 224.5 |    817 (  317)
+
+## P2. IQ2_S/Q2_0, N=4: the pass's rate (GB/s = bytes read / its time; both reads every line twice) and the call against
+##     its controls: pf/cold (its own cold control: the same readers, gap and traffic) | pf/hot (no pass, the same gap
+##     and traffic)
+ G ms  MiB | host    GB/s pf/cold  pf/hot | one     GB/s pf/cold  pf/hot | all     GB/s pf/cold  pf/hot | both    GB/s pf/cold  pf/hot |
+ 0.00    0 |         36.3    0.87    1.12 |         40.2    0.88    1.11 |         46.7    0.86    1.09 |         52.0    0.79    1.09 |
+ 0.00    8 |         36.2    0.77    1.03 |         42.0    0.81    1.04 |         46.9    0.85    1.06 |         51.5    0.82    1.05 |
+ 0.00   32 |         36.5    0.78    0.99 |         40.7    0.85    1.00 |         46.3    0.83    1.03 |         52.0    0.80    1.01 |
+ 0.10    0 |         36.6    0.84    1.04 |         40.9    0.85    1.04 |         43.3    0.88    1.10 |         48.1    0.85    1.04 |
+ 0.10    8 |         36.0    0.75    1.01 |         41.5    0.81    1.04 |         47.4    0.83    1.05 |         50.2    0.84    1.04 |
+ 0.10   32 |         36.2    0.79    1.01 |         42.2    0.80    0.97 |         46.1    0.84    1.03 |         51.3    0.85    1.03 |
+ 0.25    0 |         36.8    0.87    1.03 |         35.5    0.86    1.01 |         47.5    0.89    1.06 |         52.7    0.84    1.01 |
+ 0.25    8 |         36.5    0.86    1.02 |         40.7    0.83    1.02 |         45.8    0.84    1.02 |         50.7    0.85    1.02 |
+ 0.25   32 |         36.7    0.85    1.07 |         42.4    0.82    0.99 |         46.8    0.84    1.04 |         52.6    0.82    1.02 |
+ 0.50    0 |         36.8    0.85    1.02 |         41.7    0.86    1.01 |         48.5    0.86    1.04 |         52.0    0.85    1.01 |
+ 0.50    8 |         36.5    0.87    1.01 |         39.6    0.80    1.01 |         44.9    0.87    1.04 |         51.7    0.85    1.00 |
+ 0.50   32 |         36.1    0.85    1.09 |         39.5    0.83    1.05 |         46.3    0.86    1.09 |         53.8    0.84    1.06 |
+
+## P3. IQ2_S/Q2_0, N=4: the pass's wake, us (the median): the slowest reader's time from the host's signal to its first read;
+##     the pass is the wake and the reads (P1)
+ G ms  MiB |   host    one    all   both
+ 0.00    0 |    0.0    3.3   74.1    4.3
+ 0.00    8 |    0.0    1.3   42.2    4.8
+ 0.00   32 |    0.0    1.4   75.8    5.2
+ 0.10    0 |    0.0    3.3  126.4    4.6
+ 0.10    8 |    0.0    1.2   35.1    5.4
+ 0.10   32 |    0.0    1.4   88.4    5.6
+ 0.25    0 |    0.0    3.3   31.2    4.8
+ 0.25    8 |    0.0    3.3   32.0    5.4
+ 0.25   32 |    0.0    1.4   71.5    5.5
+ 0.50    0 |    0.0    3.4   27.2    5.8
+ 0.50    8 |    0.0    3.4   52.5    4.8
+ 0.50   32 |    0.0    1.4   39.6    5.5
+
+## P1. IQ2_S/Q2_0, N=8, T=6, 15 workers + host: us per call of N experts, the median of 30 units
+##     cold = behind a sham pass by the same readers (the same bytes from unrelated memory), then the gap, then the
+##     call; hot = no pass, the same N experts every unit; pass = the pass's own time, its readers' wake included;
+##     traffic = the thread's read of X MiB during the gap: its duration (its overrun past the gap's end)
+anchors, gap 0, no pass, no traffic: cold 305.3 us | hot 243.9 us | the call reads 12.1 MB
+ G ms  MiB | call:  host   one   all  both | cold:  host   one   all  both |   hot | pass:  host   one   all  both | traffic us (overrun)
+ 0.00    0 |       271.2 262.5 248.5 258.2 |       318.9 316.9 313.1 314.5 | 213.8 |       327.7 338.8 244.6 453.2 |      0 (    0)
+ 0.00    8 |       290.3 286.8 293.0 297.7 |       377.7 350.8 349.1 363.5 | 266.6 |       329.6 289.0 242.6 475.0 |    294 (  294)
+ 0.00   32 |       282.3 293.2 285.5 290.8 |       382.1 351.0 354.2 351.9 | 293.7 |       329.6 283.3 249.6 461.9 |    884 (  884)
+ 0.10    0 |       258.6 260.1 245.6 255.2 |       293.4 310.9 300.7 316.5 | 245.9 |       328.9 292.0 245.8 454.9 |      0 (    0)
+ 0.10    8 |       319.8 275.7 281.6 272.9 |       359.4 366.1 352.4 372.8 | 268.9 |       332.2 334.0 242.8 459.9 |    278 (  178)
+ 0.10   32 |       329.0 280.4 301.5 292.3 |       356.9 368.9 368.1 356.6 | 305.6 |       328.3 330.5 248.4 452.4 |    942 (  842)
+ 0.25    0 |       258.8 239.5 236.1 255.0 |       305.8 293.6 291.2 308.7 | 252.5 |       327.6 336.2 244.3 454.7 |      0 (    0)
+ 0.25    8 |       257.7 241.9 236.9 258.6 |       313.8 294.0 297.4 310.7 | 241.8 |       329.9 334.5 243.1 462.2 |    224 (    0)
+ 0.25   32 |       340.1 278.3 303.7 288.9 |       351.6 380.6 370.2 378.3 | 313.4 |       329.0 331.1 243.3 444.5 |    948 (  698)
+ 0.50    0 |       244.6 241.0 243.6 252.0 |       296.2 295.6 308.3 299.6 | 238.6 |       329.8 333.5 244.1 451.9 |      0 (    0)
+ 0.50    8 |       247.4 259.3 246.7 256.4 |       299.4 302.3 304.1 314.5 | 241.4 |       328.8 334.0 246.3 458.0 |    222 (    0)
+ 0.50   32 |       306.7 271.1 302.8 287.0 |       352.6 349.3 385.5 370.9 | 312.2 |       328.1 332.4 254.8 457.4 |    937 (  437)
+
+## P2. IQ2_S/Q2_0, N=8: the pass's rate (GB/s = bytes read / its time; both reads every line twice) and the call against
+##     its controls: pf/cold (its own cold control: the same readers, gap and traffic) | pf/hot (no pass, the same gap
+##     and traffic)
+ G ms  MiB | host    GB/s pf/cold  pf/hot | one     GB/s pf/cold  pf/hot | all     GB/s pf/cold  pf/hot | both    GB/s pf/cold  pf/hot |
+ 0.00    0 |         36.9    0.85    1.27 |         35.7    0.83    1.23 |         49.4    0.79    1.16 |         53.3    0.82    1.21 |
+ 0.00    8 |         36.7    0.77    1.09 |         41.8    0.82    1.08 |         49.8    0.84    1.10 |         50.9    0.82    1.12 |
+ 0.00   32 |         36.7    0.74    0.96 |         42.6    0.84    1.00 |         48.4    0.81    0.97 |         52.3    0.83    0.99 |
+ 0.10    0 |         36.7    0.88    1.05 |         41.4    0.84    1.06 |         49.2    0.82    1.00 |         53.1    0.81    1.04 |
+ 0.10    8 |         36.4    0.89    1.19 |         36.2    0.75    1.03 |         49.8    0.80    1.05 |         52.5    0.73    1.01 |
+ 0.10   32 |         36.8    0.92    1.08 |         36.6    0.76    0.92 |         48.6    0.82    0.99 |         53.4    0.82    0.96 |
+ 0.25    0 |         36.9    0.85    1.03 |         35.9    0.82    0.95 |         49.5    0.81    0.94 |         53.1    0.83    1.01 |
+ 0.25    8 |         36.6    0.82    1.07 |         36.1    0.82    1.00 |         49.7    0.80    0.98 |         52.3    0.83    1.07 |
+ 0.25   32 |         36.7    0.97    1.09 |         36.5    0.73    0.89 |         49.7    0.82    0.97 |         54.4    0.76    0.92 |
+ 0.50    0 |         36.6    0.83    1.03 |         36.2    0.82    1.01 |         49.5    0.79    1.02 |         53.5    0.84    1.06 |
+ 0.50    8 |         36.7    0.83    1.03 |         36.2    0.86    1.07 |         49.1    0.81    1.02 |         52.8    0.82    1.06 |
+ 0.50   32 |         36.8    0.87    0.98 |         36.4    0.78    0.87 |         47.4    0.79    0.97 |         52.8    0.77    0.92 |
+
+## P3. IQ2_S/Q2_0, N=8: the pass's wake, us (the median): the slowest reader's time from the host's signal to its first read;
+##     the pass is the wake and the reads (P1)
+ G ms  MiB |   host    one    all   both
+ 0.00    0 |    0.0    3.7   31.2    4.4
+ 0.00    8 |    0.0    1.2   33.3    5.2
+ 0.00   32 |    0.0    1.5   36.5    6.1
+ 0.10    0 |    0.0    3.6   36.0    4.6
+ 0.10    8 |    0.0    1.6   29.8    5.5
+ 0.10   32 |    0.0    1.4   38.3    5.5
+ 0.25    0 |    0.0    3.7   30.3    4.9
+ 0.25    8 |    0.0    3.7   31.4    4.7
+ 0.25   32 |    0.0    1.4   39.7    5.3
+ 0.50    0 |    0.0    3.7   30.4    5.5
+ 0.50    8 |    0.0    3.7   32.4    5.9
+ 0.50   32 |    0.0    1.4   38.7    5.5
+
+## P1. IQ3_XXS/Q2_0, N=2, T=6, 15 workers + host: us per call of N experts, the median of 30 units
+##     cold = behind a sham pass by the same readers (the same bytes from unrelated memory), then the gap, then the
+##     call; hot = no pass, the same N experts every unit; pass = the pass's own time, its readers' wake included;
+##     traffic = the thread's read of X MiB during the gap: its duration (its overrun past the gap's end)
+anchors, gap 0, no pass, no traffic: cold 95.8 us | hot 85.2 us | the call reads 3.4 MB
+ G ms  MiB | call:  host   one   all  both | cold:  host   one   all  both |   hot | pass:  host   one   all  both | traffic us (overrun)
+ 0.00    0 |        80.9  85.5  82.0  88.8 |       100.1 100.1  90.6 107.1 |  72.8 |        92.8  99.1  74.1 134.9 |      0 (    0)
+ 0.00    8 |       101.5  98.8 103.1  99.4 |       123.0 120.6 116.4 120.4 |  92.8 |        95.4  95.9  73.2 129.9 |    232 (  232)
+ 0.00   32 |       110.4 102.6 103.3  98.9 |       121.8 117.1 118.0 118.2 |  96.6 |        94.6  94.3  74.6 129.3 |    875 (  875)
+ 0.10    0 |        92.6  92.4  89.5  91.5 |       105.1 106.9 102.8 106.2 |  76.1 |        93.2  97.1  72.4 133.6 |      0 (    0)
+ 0.10    8 |       100.4 105.3 101.2 102.2 |       124.0 117.8 121.3 120.3 |  98.5 |        94.2  82.5  72.9 133.1 |    207 (  107)
+ 0.10   32 |       103.8 106.9 110.0 104.5 |       118.7 116.7 119.5 116.7 | 101.7 |        95.1  80.8  73.2 130.8 |    729 (  629)
+ 0.25    0 |        93.6  93.6  94.2  91.2 |       105.5 106.3 105.8 107.4 |  88.2 |        92.9  81.8  86.6 130.6 |      0 (    0)
+ 0.25    8 |        90.0  92.6  92.8  89.9 |       103.0 104.1 101.8 104.1 |  90.2 |        93.1  82.5  74.3 133.3 |    185 (    0)
+ 0.25   32 |       109.7 108.1 109.4 103.3 |       120.1 114.8 118.5 120.0 |  98.6 |        93.5  80.6  78.1 129.8 |    738 (  488)
+ 0.50    0 |        93.3  95.3  91.8  91.4 |       104.0 103.7 103.6 103.7 |  87.5 |        93.1  82.5  73.7 130.6 |      0 (    0)
+ 0.50    8 |        91.3  93.2  89.4  89.6 |       105.9 105.9 103.2 104.0 |  89.3 |        92.6  82.2  73.7 129.8 |    182 (    0)
+ 0.50   32 |       119.8 113.2 110.2 102.8 |       122.0 118.4 119.7 122.1 | 104.5 |        94.8  80.5  74.8 129.0 |    747 (  247)
+
+## P2. IQ3_XXS/Q2_0, N=2: the pass's rate (GB/s = bytes read / its time; both reads every line twice) and the call against
+##     its controls: pf/cold (its own cold control: the same readers, gap and traffic) | pf/hot (no pass, the same gap
+##     and traffic)
+ G ms  MiB | host    GB/s pf/cold  pf/hot | one     GB/s pf/cold  pf/hot | all     GB/s pf/cold  pf/hot | both    GB/s pf/cold  pf/hot |
+ 0.00    0 |         37.0    0.81    1.11 |         34.6    0.85    1.17 |         46.3    0.91    1.13 |         50.9    0.83    1.22 |
+ 0.00    8 |         36.0    0.83    1.09 |         35.8    0.82    1.06 |         46.9    0.89    1.11 |         52.8    0.83    1.07 |
+ 0.00   32 |         36.3    0.91    1.14 |         36.4    0.88    1.06 |         46.0    0.88    1.07 |         53.0    0.84    1.02 |
+ 0.10    0 |         36.8    0.88    1.22 |         35.3    0.86    1.21 |         47.4    0.87    1.18 |         51.3    0.86    1.20 |
+ 0.10    8 |         36.4    0.81    1.02 |         41.6    0.89    1.07 |         47.1    0.83    1.03 |         51.5    0.85    1.04 |
+ 0.10   32 |         36.1    0.87    1.02 |         42.5    0.92    1.05 |         46.9    0.92    1.08 |         52.5    0.89    1.03 |
+ 0.25    0 |         36.9    0.89    1.06 |         42.0    0.88    1.06 |         39.6    0.89    1.07 |         52.5    0.85    1.03 |
+ 0.25    8 |         36.8    0.87    1.00 |         41.6    0.89    1.03 |         46.2    0.91    1.03 |         51.5    0.86    1.00 |
+ 0.25   32 |         36.7    0.91    1.11 |         42.6    0.94    1.10 |         43.9    0.92    1.11 |         52.9    0.86    1.05 |
+ 0.50    0 |         36.8    0.90    1.07 |         41.6    0.92    1.09 |         46.5    0.89    1.05 |         52.5    0.88    1.05 |
+ 0.50    8 |         37.0    0.86    1.02 |         41.7    0.88    1.04 |         46.5    0.87    1.00 |         52.8    0.86    1.00 |
+ 0.50   32 |         36.2    0.98    1.15 |         42.6    0.96    1.08 |         45.9    0.92    1.05 |         53.2    0.84    0.98 |
+
+## P3. IQ3_XXS/Q2_0, N=2: the pass's wake, us (the median): the slowest reader's time from the host's signal to its first read;
+##     the pass is the wake and the reads (P1)
+ G ms  MiB |   host    one    all   both
+ 0.00    0 |    0.0    2.6   32.1    4.1
+ 0.00    8 |    0.0    1.4   36.4    3.8
+ 0.00   32 |    0.0    1.4   36.3    5.1
+ 0.10    0 |    0.0    3.2   30.4    4.5
+ 0.10    8 |    0.0    1.3   31.3    4.8
+ 0.10   32 |    0.0    1.4   36.5    5.7
+ 0.25    0 |    0.0    3.1   59.1    4.0
+ 0.25    8 |    0.0    3.2   30.8    4.3
+ 0.25   32 |    0.0    1.4   38.5    5.7
+ 0.50    0 |    0.0    3.3   32.9    4.6
+ 0.50    8 |    0.0    3.2   29.6    5.4
+ 0.50   32 |    0.0    1.4   35.9    5.0
+
+## P1. IQ3_XXS/Q2_0, N=3, T=6, 15 workers + host: us per call of N experts, the median of 30 units
+##     cold = behind a sham pass by the same readers (the same bytes from unrelated memory), then the gap, then the
+##     call; hot = no pass, the same N experts every unit; pass = the pass's own time, its readers' wake included;
+##     traffic = the thread's read of X MiB during the gap: its duration (its overrun past the gap's end)
+anchors, gap 0, no pass, no traffic: cold 143.6 us | hot 97.1 us | the call reads 5.1 MB
+ G ms  MiB | call:  host   one   all  both | cold:  host   one   all  both |   hot | pass:  host   one   all  both | traffic us (overrun)
+ 0.00    0 |       120.3 124.3 121.2 127.1 |       138.9 139.6 141.2 145.3 | 115.2 |       140.1 123.0 107.7 196.8 |      0 (    0)
+ 0.00    8 |       139.5 142.5 139.8 139.6 |       163.6 168.1 165.0 172.0 | 124.9 |       141.7 121.3 109.3 192.2 |    212 (  212)
+ 0.00   32 |       141.8 140.4 139.4 141.0 |       175.0 168.8 172.3 168.5 | 137.8 |       139.9 119.5 107.9 193.4 |    739 (  739)
+ 0.10    0 |       129.0 126.5 129.2 125.9 |       140.2 141.6 145.6 142.8 | 119.5 |       139.9 123.1 112.1 198.1 |      0 (    0)
+ 0.10    8 |       137.1 145.5 138.8 136.2 |       167.7 165.5 168.3 172.5 | 127.8 |       141.9 122.8 108.7 194.3 |    208 (  108)
+ 0.10   32 |       144.7 140.6 143.3 136.9 |       165.2 169.1 163.5 170.6 | 137.1 |       143.9 118.8 115.7 196.8 |    744 (  644)
+ 0.25    0 |       127.4 128.2 127.4 124.5 |       140.5 145.8 145.7 141.5 | 121.0 |       139.9 146.0 106.8 192.6 |      0 (    0)
+ 0.25    8 |       125.8 127.9 128.4 123.4 |       145.8 142.7 144.4 148.5 | 123.8 |       139.7 126.8 121.5 198.4 |    185 (    0)
+ 0.25   32 |       150.4 147.4 147.9 137.6 |       163.1 168.3 169.3 168.7 | 138.8 |       140.2 119.1 108.3 193.0 |    766 (  516)
+ 0.50    0 |       125.8 125.3 126.4 127.1 |       141.2 139.1 141.9 142.5 | 120.9 |       139.2 122.6 107.0 192.9 |      0 (    0)
+ 0.50    8 |       124.9 126.9 126.8 126.7 |       143.9 140.8 146.0 141.9 | 121.6 |       140.2 145.3 108.5 192.0 |    221 (    0)
+ 0.50   32 |       155.7 155.6 143.4 143.7 |       166.8 169.8 166.4 165.4 | 139.8 |       139.9 118.8 108.3 194.8 |    772 (  272)
+
+## P2. IQ3_XXS/Q2_0, N=3: the pass's rate (GB/s = bytes read / its time; both reads every line twice) and the call against
+##     its controls: pf/cold (its own cold control: the same readers, gap and traffic) | pf/hot (no pass, the same gap
+##     and traffic)
+ G ms  MiB | host    GB/s pf/cold  pf/hot | one     GB/s pf/cold  pf/hot | all     GB/s pf/cold  pf/hot | both    GB/s pf/cold  pf/hot |
+ 0.00    0 |         36.7    0.87    1.04 |         41.8    0.89    1.08 |         47.8    0.86    1.05 |         52.3    0.87    1.10 |
+ 0.00    8 |         36.3    0.85    1.12 |         42.4    0.85    1.14 |         47.1    0.85    1.12 |         53.5    0.81    1.12 |
+ 0.00   32 |         36.8    0.81    1.03 |         43.1    0.83    1.02 |         47.7    0.81    1.01 |         53.2    0.84    1.02 |
+ 0.10    0 |         36.8    0.92    1.08 |         41.8    0.89    1.06 |         45.9    0.89    1.08 |         51.9    0.88    1.05 |
+ 0.10    8 |         36.3    0.82    1.07 |         41.9    0.88    1.14 |         47.4    0.82    1.09 |         53.0    0.79    1.07 |
+ 0.10   32 |         35.8    0.88    1.06 |         43.3    0.83    1.03 |         44.5    0.88    1.04 |         52.3    0.80    1.00 |
+ 0.25    0 |         36.8    0.91    1.05 |         35.2    0.88    1.06 |         48.2    0.87    1.05 |         53.4    0.88    1.03 |
+ 0.25    8 |         36.8    0.86    1.02 |         40.6    0.90    1.03 |         42.3    0.89    1.04 |         51.9    0.83    1.00 |
+ 0.25   32 |         36.7    0.92    1.08 |         43.2    0.88    1.06 |         47.5    0.87    1.07 |         53.3    0.82    0.99 |
+ 0.50    0 |         37.0    0.89    1.04 |         42.0    0.90    1.04 |         48.1    0.89    1.05 |         53.4    0.89    1.05 |
+ 0.50    8 |         36.7    0.87    1.03 |         35.4    0.90    1.04 |         47.4    0.87    1.04 |         53.6    0.89    1.04 |
+ 0.50   32 |         36.8    0.93    1.11 |         43.3    0.92    1.11 |         47.5    0.86    1.03 |         52.8    0.87    1.03 |
+
+## P3. IQ3_XXS/Q2_0, N=3: the pass's wake, us (the median): the slowest reader's time from the host's signal to its first read;
+##     the pass is the wake and the reads (P1)
+ G ms  MiB |   host    one    all   both
+ 0.00    0 |    0.0    3.2   33.6    4.2
+ 0.00    8 |    0.0    1.3   37.1    4.5
+ 0.00   32 |    0.0    1.4   34.6    5.2
+ 0.10    0 |    0.0    3.2   46.8    4.3
+ 0.10    8 |    0.0    1.3   32.5    4.5
+ 0.10   32 |    0.0    1.4   37.9    5.6
+ 0.25    0 |    0.0    3.2   30.0    4.6
+ 0.25    8 |    0.0    3.3   82.5    4.6
+ 0.25   32 |    0.0    1.4   37.4    5.4
+ 0.50    0 |    0.0    3.3   30.7    5.2
+ 0.50    8 |    0.0    3.4   29.2    5.6
+ 0.50   32 |    0.0    1.3   36.5    5.1
+
+## P1. IQ3_XXS/Q2_0, N=4, T=6, 15 workers + host: us per call of N experts, the median of 30 units
+##     cold = behind a sham pass by the same readers (the same bytes from unrelated memory), then the gap, then the
+##     call; hot = no pass, the same N experts every unit; pass = the pass's own time, its readers' wake included;
+##     traffic = the thread's read of X MiB during the gap: its duration (its overrun past the gap's end)
+anchors, gap 0, no pass, no traffic: cold 184.5 us | hot 129.8 us | the call reads 6.9 MB
+ G ms  MiB | call:  host   one   all  both | cold:  host   one   all  both |   hot | pass:  host   one   all  both | traffic us (overrun)
+ 0.00    0 |       166.9 168.1 165.6 163.6 |       186.4 190.6 181.3 191.7 | 156.2 |       187.9 165.8 142.2 269.1 |      0 (    0)
+ 0.00    8 |       176.1 183.0 180.3 174.9 |       217.5 210.2 210.8 222.0 | 163.1 |       187.7 162.2 144.0 268.2 |    227 (  227)
+ 0.00   32 |       182.8 179.2 179.4 176.3 |       209.5 217.4 216.5 208.6 | 175.3 |       188.0 159.2 143.0 256.9 |    750 (  750)
+ 0.10    0 |       160.6 160.5 162.1 163.1 |       187.3 191.7 187.2 191.7 | 154.7 |       186.9 163.9 143.6 267.6 |      0 (    0)
+ 0.10    8 |       173.0 187.0 184.8 168.9 |       216.0 212.9 213.6 220.5 | 160.4 |       186.8 168.4 149.3 262.5 |    216 (  116)
+ 0.10   32 |       221.0 190.8 185.8 178.9 |       215.2 244.9 219.9 212.2 | 178.1 |       200.3 162.3 143.9 261.5 |    768 (  668)
+ 0.25    0 |       166.0 163.9 166.1 158.9 |       178.2 185.3 186.7 188.4 | 153.2 |       187.2 165.2 144.1 262.1 |      0 (    0)
+ 0.25    8 |       165.2 164.5 156.9 159.8 |       181.6 186.9 187.5 190.5 | 165.1 |       187.3 164.7 144.4 262.4 |    189 (    0)
+ 0.25   32 |       198.0 192.3 183.9 178.9 |       212.2 212.8 221.8 211.0 | 181.0 |       188.6 160.7 142.2 259.0 |    784 (  534)
+ 0.50    0 |       161.0 158.4 161.3 162.1 |       177.5 186.6 183.1 186.3 | 153.9 |       184.6 163.4 145.4 258.7 |      0 (    0)
+ 0.50    8 |       159.8 161.9 165.5 156.1 |       184.0 186.3 182.9 181.9 | 157.2 |       186.4 164.7 144.8 258.7 |    185 (    0)
+ 0.50   32 |       200.0 189.6 185.6 176.9 |       214.1 217.9 216.5 212.3 | 181.7 |       187.5 163.7 140.9 260.7 |    758 (  258)
+
+## P2. IQ3_XXS/Q2_0, N=4: the pass's rate (GB/s = bytes read / its time; both reads every line twice) and the call against
+##     its controls: pf/cold (its own cold control: the same readers, gap and traffic) | pf/hot (no pass, the same gap
+##     and traffic)
+ G ms  MiB | host    GB/s pf/cold  pf/hot | one     GB/s pf/cold  pf/hot | all     GB/s pf/cold  pf/hot | both    GB/s pf/cold  pf/hot |
+ 0.00    0 |         36.5    0.90    1.07 |         41.4    0.88    1.08 |         48.3    0.91    1.06 |         51.0    0.85    1.05 |
+ 0.00    8 |         36.5    0.81    1.08 |         42.3    0.87    1.12 |         47.7    0.86    1.11 |         51.2    0.79    1.07 |
+ 0.00   32 |         36.5    0.87    1.04 |         43.1    0.82    1.02 |         48.0    0.83    1.02 |         53.4    0.85    1.01 |
+ 0.10    0 |         36.7    0.86    1.04 |         41.9    0.84    1.04 |         47.8    0.87    1.05 |         51.3    0.85    1.05 |
+ 0.10    8 |         36.7    0.80    1.08 |         40.7    0.88    1.17 |         45.9    0.86    1.15 |         52.3    0.77    1.05 |
+ 0.10   32 |         34.2    1.03    1.24 |         42.3    0.78    1.07 |         47.7    0.84    1.04 |         52.5    0.84    1.00 |
+ 0.25    0 |         36.6    0.93    1.08 |         41.5    0.88    1.07 |         47.6    0.89    1.08 |         52.4    0.84    1.04 |
+ 0.25    8 |         36.6    0.91    1.00 |         41.7    0.88    1.00 |         47.5    0.84    0.95 |         52.3    0.84    0.97 |
+ 0.25   32 |         36.4    0.93    1.09 |         42.7    0.90    1.06 |         48.2    0.83    1.02 |         53.0    0.85    0.99 |
+ 0.50    0 |         37.2    0.91    1.05 |         42.0    0.85    1.03 |         47.2    0.88    1.05 |         53.0    0.87    1.05 |
+ 0.50    8 |         36.8    0.87    1.02 |         41.7    0.87    1.03 |         47.4    0.90    1.05 |         53.0    0.86    0.99 |
+ 0.50   32 |         36.6    0.93    1.10 |         41.9    0.87    1.04 |         48.7    0.86    1.02 |         52.6    0.83    0.97 |
+
+## P3. IQ3_XXS/Q2_0, N=4: the pass's wake, us (the median): the slowest reader's time from the host's signal to its first read;
+##     the pass is the wake and the reads (P1)
+ G ms  MiB |   host    one    all   both
+ 0.00    0 |    0.0    3.3   34.0    4.4
+ 0.00    8 |    0.0    1.3   60.6    4.6
+ 0.00   32 |    0.0    1.4   38.3    5.3
+ 0.10    0 |    0.0    3.3   37.3    4.6
+ 0.10    8 |    0.0    1.6  107.0    4.7
+ 0.10   32 |    0.0    1.4   38.5    4.9
+ 0.25    0 |    0.0    3.4   33.3    4.4
+ 0.25    8 |    0.0    3.4   36.8    4.8
+ 0.25   32 |    0.0    1.4   38.4    5.7
+ 0.50    0 |    0.0    3.5   30.9    5.5
+ 0.50    8 |    0.0    3.5   98.6    5.4
+ 0.50   32 |    0.0    1.4   37.8    5.8
+
+## P1. IQ3_XXS/Q2_0, N=8, T=6, 15 workers + host: us per call of N experts, the median of 30 units
+##     cold = behind a sham pass by the same readers (the same bytes from unrelated memory), then the gap, then the
+##     call; hot = no pass, the same N experts every unit; pass = the pass's own time, its readers' wake included;
+##     traffic = the thread's read of X MiB during the gap: its duration (its overrun past the gap's end)
+anchors, gap 0, no pass, no traffic: cold 358.8 us | hot 290.9 us | the call reads 13.7 MB
+ G ms  MiB | call:  host   one   all  both | cold:  host   one   all  both |   hot | pass:  host   one   all  both | traffic us (overrun)
+ 0.00    0 |       305.0 305.1 308.2 310.3 |       344.6 353.7 355.9 359.9 | 285.9 |       376.1 326.8 285.1 528.0 |      0 (    0)
+ 0.00    8 |       332.0 330.3 335.2 318.1 |       405.0 396.9 394.9 399.8 | 298.1 |       375.8 332.8 289.9 524.3 |    246 (  246)
+ 0.00   32 |       333.4 326.9 331.7 331.7 |       399.7 392.8 393.4 393.2 | 327.3 |       377.1 320.7 282.2 522.5 |    797 (  797)
+ 0.10    0 |       300.2 308.8 314.4 302.8 |       349.6 354.2 351.6 355.8 | 293.4 |       375.0 327.1 287.8 516.0 |      0 (    0)
+ 0.10    8 |       316.6 319.5 325.5 311.2 |       398.9 389.9 388.2 397.9 | 301.0 |       376.0 325.2 284.0 528.7 |    219 (  119)
+ 0.10   32 |       327.5 327.7 333.0 336.2 |       402.9 395.4 396.6 421.6 | 325.1 |       375.7 326.2 282.9 574.7 |    803 (  704)
+ 0.25    0 |       314.7 293.9 319.6 302.0 |       364.7 371.4 362.9 371.0 | 302.6 |       394.4 329.7 290.6 559.4 |      0 (    0)
+ 0.25    8 |       309.0 298.9 312.2 289.5 |       363.5 371.9 352.4 364.1 | 297.2 |       375.0 329.6 278.2 519.1 |    186 (    0)
+ 0.25   32 |       328.6 327.4 333.5 328.4 |       396.1 393.5 394.1 399.6 | 319.5 |       373.8 315.8 282.7 521.0 |    807 (  557)
+ 0.50    0 |       286.4 298.3 285.2 298.3 |       337.9 350.8 335.3 351.7 | 297.7 |       372.3 324.5 277.5 512.4 |      0 (    0)
+ 0.50    8 |       294.2 298.6 285.2 295.5 |       331.7 349.7 337.7 339.8 | 268.5 |       374.0 323.1 276.7 510.7 |    185 (    0)
+ 0.50   32 |       329.0 327.2 330.7 324.1 |       397.7 392.8 400.3 395.9 | 318.9 |       371.1 323.3 281.6 531.7 |    805 (  305)
+
+## P2. IQ3_XXS/Q2_0, N=8: the pass's rate (GB/s = bytes read / its time; both reads every line twice) and the call against
+##     its controls: pf/cold (its own cold control: the same readers, gap and traffic) | pf/hot (no pass, the same gap
+##     and traffic)
+ G ms  MiB | host    GB/s pf/cold  pf/hot | one     GB/s pf/cold  pf/hot | all     GB/s pf/cold  pf/hot | both    GB/s pf/cold  pf/hot |
+ 0.00    0 |         36.5    0.88    1.07 |         42.0    0.86    1.07 |         48.1    0.87    1.08 |         52.0    0.86    1.09 |
+ 0.00    8 |         36.5    0.82    1.11 |         41.2    0.83    1.11 |         47.3    0.85    1.12 |         52.3    0.80    1.07 |
+ 0.00   32 |         36.4    0.83    1.02 |         42.8    0.83    1.00 |         48.6    0.84    1.01 |         52.5    0.84    1.01 |
+ 0.10    0 |         36.6    0.86    1.02 |         41.9    0.87    1.05 |         47.7    0.89    1.07 |         53.2    0.85    1.03 |
+ 0.10    8 |         36.5    0.79    1.05 |         42.2    0.82    1.06 |         48.3    0.84    1.08 |         51.9    0.78    1.03 |
+ 0.10   32 |         36.5    0.81    1.01 |         42.1    0.83    1.01 |         48.5    0.84    1.02 |         47.7    0.80    1.03 |
+ 0.25    0 |         34.8    0.86    1.04 |         41.6    0.79    0.97 |         47.2    0.88    1.06 |         49.1    0.81    1.00 |
+ 0.25    8 |         36.6    0.85    1.04 |         41.6    0.80    1.01 |         49.3    0.89    1.05 |         52.9    0.80    0.97 |
+ 0.25   32 |         36.7    0.83    1.03 |         43.4    0.83    1.02 |         48.5    0.85    1.04 |         52.7    0.82    1.03 |
+ 0.50    0 |         36.9    0.85    0.96 |         42.3    0.85    1.00 |         49.5    0.85    0.96 |         53.6    0.85    1.00 |
+ 0.50    8 |         36.7    0.89    1.10 |         42.5    0.85    1.11 |         49.6    0.84    1.06 |         53.7    0.87    1.10 |
+ 0.50   32 |         37.0    0.83    1.03 |         42.4    0.83    1.03 |         48.7    0.83    1.04 |         51.6    0.82    1.02 |
+
+## P3. IQ3_XXS/Q2_0, N=8: the pass's wake, us (the median): the slowest reader's time from the host's signal to its first read;
+##     the pass is the wake and the reads (P1)
+ G ms  MiB |   host    one    all   both
+ 0.00    0 |    0.0    3.7  191.1    4.8
+ 0.00    8 |    0.0    1.4  170.0    5.3
+ 0.00   32 |    0.0    1.4  128.3    6.9
+ 0.10    0 |    0.0    3.9  185.2    5.2
+ 0.10    8 |    0.0    3.2  117.2    5.3
+ 0.10   32 |    0.0    1.3   51.5    6.0
+ 0.25    0 |    0.0    3.9  264.7    5.5
+ 0.25    8 |    0.0    3.9   42.5    5.2
+ 0.25   32 |    0.0    1.4  120.3    4.3
+ 0.50    0 |    0.0    3.9   34.1    5.6
+ 0.50    8 |    0.0    3.9   34.8    5.6
+ 0.50   32 |    0.0    1.2   39.5    6.1
+
+## P1. IQ4_XS/IQ4_NL, N=2, T=6, 15 workers + host: us per call of N experts, the median of 30 units
+##     cold = behind a sham pass by the same readers (the same bytes from unrelated memory), then the gap, then the
+##     call; hot = no pass, the same N experts every unit; pass = the pass's own time, its readers' wake included;
+##     traffic = the thread's read of X MiB during the gap: its duration (its overrun past the gap's end)
+anchors, gap 0, no pass, no traffic: cold 128.4 us | hot 110.1 us | the call reads 5.3 MB
+ G ms  MiB | call:  host   one   all  both | cold:  host   one   all  both |   hot | pass:  host   one   all  both | traffic us (overrun)
+ 0.00    0 |       117.5 120.8 124.0 119.2 |       147.1 153.6 149.5 152.4 |  90.8 |       145.1 130.9 112.1 207.6 |      0 (    0)
+ 0.00    8 |       131.4 134.6 140.5 129.2 |       166.5 169.6 171.0 174.8 | 116.4 |       145.9 126.4 111.2 212.9 |    204 (  204)
+ 0.00   32 |       140.0 129.6 134.8 125.9 |       166.5 166.3 182.6 168.0 | 136.2 |       146.4 124.9 111.3 199.4 |    741 (  741)
+ 0.10    0 |       122.8 122.5 119.8 108.5 |       144.6 145.4 150.5 150.2 | 111.9 |       143.6 150.1 110.0 200.2 |      0 (    0)
+ 0.10    8 |       131.7 134.0 139.0 126.3 |       171.6 170.0 172.7 172.3 | 131.1 |       146.2 131.7 115.2 204.2 |    221 (  121)
+ 0.10   32 |       149.9 135.1 137.5 127.2 |       167.4 168.4 178.8 170.7 | 129.1 |       146.5 123.1 113.1 199.5 |    736 (  636)
+ 0.25    0 |       119.1 119.8 126.3 113.2 |       145.5 146.6 149.7 148.6 | 115.8 |       144.7 129.3 112.1 200.5 |      0 (    0)
+ 0.25    8 |       120.1 119.9 117.8 111.8 |       146.5 146.7 147.7 147.3 | 115.7 |       145.0 127.0 109.9 206.6 |    187 (    0)
+ 0.25   32 |       159.2 151.0 136.1 126.9 |       166.2 167.5 174.1 168.7 | 127.9 |       144.4 124.3 111.0 199.0 |    737 (  487)
+ 0.50    0 |       121.8 119.1 122.1 118.0 |       150.2 143.3 144.7 145.6 | 104.3 |       144.7 148.2 112.8 199.9 |      0 (    0)
+ 0.50    8 |       122.5 123.1 122.6 117.0 |       144.9 146.5 143.4 150.1 | 112.2 |       144.7 149.6 111.7 205.1 |    222 (    0)
+ 0.50   32 |       155.3 159.7 151.5 140.5 |       172.6 171.5 171.2 170.2 | 145.4 |       145.1 145.5 110.0 198.6 |    883 (  383)
+
+## P2. IQ4_XS/IQ4_NL, N=2: the pass's rate (GB/s = bytes read / its time; both reads every line twice) and the call against
+##     its controls: pf/cold (its own cold control: the same readers, gap and traffic) | pf/hot (no pass, the same gap
+##     and traffic)
+ G ms  MiB | host    GB/s pf/cold  pf/hot | one     GB/s pf/cold  pf/hot | all     GB/s pf/cold  pf/hot | both    GB/s pf/cold  pf/hot |
+ 0.00    0 |         36.7    0.80    1.29 |         40.7    0.79    1.33 |         47.5    0.83    1.37 |         51.3    0.78    1.31 |
+ 0.00    8 |         36.5    0.79    1.13 |         42.1    0.79    1.16 |         47.9    0.82    1.21 |         50.0    0.74    1.11 |
+ 0.00   32 |         36.4    0.84    1.03 |         42.6    0.78    0.95 |         47.8    0.74    0.99 |         53.4    0.75    0.92 |
+ 0.10    0 |         37.1    0.85    1.10 |         35.5    0.84    1.10 |         48.4    0.80    1.07 |         53.2    0.72    0.97 |
+ 0.10    8 |         36.4    0.77    1.00 |         40.4    0.79    1.02 |         46.2    0.81    1.06 |         52.2    0.73    0.96 |
+ 0.10   32 |         36.3    0.90    1.16 |         43.3    0.80    1.05 |         47.1    0.77    1.07 |         53.4    0.75    0.99 |
+ 0.25    0 |         36.8    0.82    1.03 |         41.2    0.82    1.03 |         47.5    0.84    1.09 |         53.1    0.76    0.98 |
+ 0.25    8 |         36.7    0.82    1.04 |         41.9    0.82    1.04 |         48.4    0.80    1.02 |         51.5    0.76    0.97 |
+ 0.25   32 |         36.9    0.96    1.24 |         42.9    0.90    1.18 |         48.0    0.78    1.06 |         53.5    0.75    0.99 |
+ 0.50    0 |         36.8    0.81    1.17 |         35.9    0.83    1.14 |         47.2    0.84    1.17 |         53.3    0.81    1.13 |
+ 0.50    8 |         36.8    0.85    1.09 |         35.6    0.84    1.10 |         47.7    0.85    1.09 |         51.9    0.78    1.04 |
+ 0.50   32 |         36.7    0.90    1.07 |         36.6    0.93    1.10 |         48.4    0.88    1.04 |         53.6    0.83    0.97 |
+
+## P3. IQ4_XS/IQ4_NL, N=2: the pass's wake, us (the median): the slowest reader's time from the host's signal to its first read;
+##     the pass is the wake and the reads (P1)
+ G ms  MiB |   host    one    all   both
+ 0.00    0 |    0.0    3.2   35.9    4.7
+ 0.00    8 |    0.0    1.3   34.7    5.3
+ 0.00   32 |    0.0    1.4   36.8    5.0
+ 0.10    0 |    0.0    3.1   29.3    4.4
+ 0.10    8 |    0.0    1.3   36.1    4.6
+ 0.10   32 |    0.0    1.4   38.4    5.0
+ 0.25    0 |    0.0    3.2   30.1    4.9
+ 0.25    8 |    0.0    3.1   30.5    5.0
+ 0.25   32 |    0.0    1.4   36.5    5.4
+ 0.50    0 |    0.0    3.3   32.1    5.1
+ 0.50    8 |    0.0    3.4   30.2    5.3
+ 0.50   32 |    0.0    1.3   36.2    4.9
+
+## P1. IQ4_XS/IQ4_NL, N=3, T=6, 15 workers + host: us per call of N experts, the median of 30 units
+##     cold = behind a sham pass by the same readers (the same bytes from unrelated memory), then the gap, then the
+##     call; hot = no pass, the same N experts every unit; pass = the pass's own time, its readers' wake included;
+##     traffic = the thread's read of X MiB during the gap: its duration (its overrun past the gap's end)
+anchors, gap 0, no pass, no traffic: cold 208.2 us | hot 133.7 us | the call reads 8.0 MB
+ G ms  MiB | call:  host   one   all  both | cold:  host   one   all  both |   hot | pass:  host   one   all  both | traffic us (overrun)
+ 0.00    0 |       179.6 174.5 169.5 177.4 |       212.0 215.8 216.4 218.2 | 153.3 |       219.0 225.9 163.3 313.8 |      0 (    0)
+ 0.00    8 |       237.5 198.3 220.7 192.1 |       255.6 244.8 250.7 256.9 | 213.1 |       221.1 223.8 163.2 307.9 |    246 (  246)
+ 0.00   32 |       210.3 215.1 222.8 199.8 |       256.5 249.3 250.8 249.5 | 215.4 |       217.6 217.4 164.0 301.4 |    884 (  885)
+ 0.10    0 |       172.8 174.4 181.0 170.4 |       212.1 210.5 212.4 215.9 | 165.8 |       216.3 223.1 162.6 307.6 |      0 (    0)
+ 0.10    8 |       214.5 191.7 205.8 183.8 |       256.6 255.5 253.6 257.7 | 194.5 |       217.4 220.0 162.6 308.3 |    241 (  141)
+ 0.10   32 |       210.2 222.4 222.0 200.0 |       255.2 255.0 251.2 247.2 | 214.0 |       215.7 218.5 163.7 299.8 |    886 (  786)
+ 0.25    0 |       175.9 174.5 169.5 168.0 |       208.9 210.9 216.3 214.5 | 151.7 |       215.9 223.8 164.6 299.6 |      0 (    0)
+ 0.25    8 |       175.2 173.5 178.2 168.7 |       210.7 210.4 207.1 210.9 | 167.3 |       217.4 222.8 164.0 301.8 |    221 (    0)
+ 0.25   32 |       218.5 226.3 230.4 202.5 |       253.6 245.6 250.7 248.6 | 214.3 |       217.2 217.3 161.9 297.4 |    883 (  633)
+ 0.50    0 |       167.8 170.3 172.0 172.5 |       206.8 208.6 207.2 210.5 | 152.6 |       216.5 222.6 164.2 299.2 |      0 (    0)
+ 0.50    8 |       169.9 171.8 205.2 178.0 |       207.7 214.2 213.6 226.7 | 156.2 |       216.9 222.0 450.4 355.6 |    220 (    0)
+ 0.50   32 |       230.0 196.1 193.4 179.5 |       240.7 239.1 237.6 237.1 | 184.3 |       216.0 188.1 164.7 306.1 |    766 (  266)
+
+## P2. IQ4_XS/IQ4_NL, N=3: the pass's rate (GB/s = bytes read / its time; both reads every line twice) and the call against
+##     its controls: pf/cold (its own cold control: the same readers, gap and traffic) | pf/hot (no pass, the same gap
+##     and traffic)
+ G ms  MiB | host    GB/s pf/cold  pf/hot | one     GB/s pf/cold  pf/hot | all     GB/s pf/cold  pf/hot | both    GB/s pf/cold  pf/hot |
+ 0.00    0 |         36.5    0.85    1.17 |         35.4    0.81    1.14 |         48.9    0.78    1.11 |         50.9    0.81    1.16 |
+ 0.00    8 |         36.1    0.93    1.11 |         35.7    0.81    0.93 |         48.9    0.88    1.04 |         51.9    0.75    0.90 |
+ 0.00   32 |         36.7    0.82    0.98 |         36.7    0.86    1.00 |         48.7    0.89    1.03 |         53.0    0.80    0.93 |
+ 0.10    0 |         36.9    0.81    1.04 |         35.8    0.83    1.05 |         49.1    0.85    1.09 |         51.9    0.79    1.03 |
+ 0.10    8 |         36.7    0.84    1.10 |         36.3    0.75    0.99 |         49.1    0.81    1.06 |         51.8    0.71    0.94 |
+ 0.10   32 |         37.0    0.82    0.98 |         36.6    0.87    1.04 |         48.8    0.88    1.04 |         53.3    0.81    0.93 |
+ 0.25    0 |         37.0    0.84    1.16 |         35.7    0.83    1.15 |         48.5    0.78    1.12 |         53.3    0.78    1.11 |
+ 0.25    8 |         36.7    0.83    1.05 |         35.8    0.82    1.04 |         48.7    0.86    1.07 |         52.9    0.80    1.01 |
+ 0.25   32 |         36.8    0.86    1.02 |         36.7    0.92    1.06 |         49.3    0.92    1.08 |         53.7    0.81    0.94 |
+ 0.50    0 |         36.9    0.81    1.10 |         35.9    0.82    1.12 |         48.6    0.83    1.13 |         53.4    0.82    1.13 |
+ 0.50    8 |         36.8    0.82    1.09 |         36.0    0.80    1.10 |         17.7    0.96    1.31 |         44.9    0.78    1.14 |
+ 0.50   32 |         37.0    0.96    1.25 |         42.5    0.82    1.06 |         48.5    0.81    1.05 |         52.2    0.76    0.97 |
+
+## P3. IQ4_XS/IQ4_NL, N=3: the pass's wake, us (the median): the slowest reader's time from the host's signal to its first read;
+##     the pass is the wake and the reads (P1)
+ G ms  MiB |   host    one    all   both
+ 0.00    0 |    0.0    3.4   32.3    4.6
+ 0.00    8 |    0.0    1.3   36.0    4.4
+ 0.00   32 |    0.0    1.4   37.6    5.4
+ 0.10    0 |    0.0    3.3   33.7    4.5
+ 0.10    8 |    0.0    1.7   31.9    4.6
+ 0.10   32 |    0.0    1.4   38.8    5.4
+ 0.25    0 |    0.0    3.4   30.7    5.1
+ 0.25    8 |    0.0    3.4   33.7    5.0
+ 0.25   32 |    0.0    1.4   37.2    4.9
+ 0.50    0 |    0.0    3.4   30.7    5.1
+ 0.50    8 |    0.0    3.5  431.6    5.3
+ 0.50   32 |    0.0    1.3   36.7    5.7
+
+## P1. IQ4_XS/IQ4_NL, N=4, T=6, 15 workers + host: us per call of N experts, the median of 30 units
+##     cold = behind a sham pass by the same readers (the same bytes from unrelated memory), then the gap, then the
+##     call; hot = no pass, the same N experts every unit; pass = the pass's own time, its readers' wake included;
+##     traffic = the thread's read of X MiB during the gap: its duration (its overrun past the gap's end)
+anchors, gap 0, no pass, no traffic: cold 277.6 us | hot 225.7 us | the call reads 10.6 MB
+ G ms  MiB | call:  host   one   all  both | cold:  host   one   all  both |   hot | pass:  host   one   all  both | traffic us (overrun)
+ 0.00    0 |       229.6 227.9 209.4 228.9 |       272.9 287.6 273.2 282.3 | 188.5 |       290.6 298.5 216.2 399.8 |      0 (    0)
+ 0.00    8 |       300.8 257.7 289.7 248.7 |       338.7 332.0 326.2 328.1 | 265.1 |       290.8 294.1 217.7 411.9 |    251 (  251)
+ 0.00   32 |       274.7 252.7 286.3 249.6 |       338.0 323.8 334.0 329.1 | 249.1 |       292.5 291.0 215.2 399.9 |    891 (  891)
+ 0.10    0 |       228.5 230.4 237.7 214.1 |       274.7 282.1 278.1 281.2 | 217.9 |       290.1 256.4 218.0 402.0 |      0 (    0)
+ 0.10    8 |       237.3 236.9 246.1 235.8 |       338.2 313.2 308.9 320.5 | 220.1 |       292.4 256.0 216.9 414.3 |    211 (  111)
+ 0.10   32 |       246.7 249.4 260.7 242.2 |       313.4 310.0 310.3 311.3 | 253.5 |       289.0 248.3 216.1 409.1 |    777 (  677)
+ 0.25    0 |       217.5 222.7 209.8 222.7 |       272.2 277.6 267.4 276.5 | 202.0 |       289.4 252.2 214.5 399.0 |      0 (    0)
+ 0.25    8 |       226.3 226.6 215.7 225.2 |       275.5 278.8 282.7 275.8 | 194.7 |       289.9 254.7 216.2 407.7 |    186 (    0)
+ 0.25   32 |       246.3 246.7 262.4 236.7 |       310.2 308.4 307.7 316.9 | 246.2 |       290.4 250.4 220.5 404.0 |    791 (  541)
+ 0.50    0 |       230.2 217.0 210.9 209.0 |       276.2 276.2 263.4 272.1 | 189.1 |       292.4 254.0 214.2 395.9 |      0 (    0)
+ 0.50    8 |       222.7 222.4 221.9 221.8 |       272.6 271.9 284.6 277.7 | 192.5 |       290.0 256.0 216.8 398.3 |    186 (    0)
+ 0.50   32 |       257.3 249.1 253.3 237.3 |       305.2 308.9 312.5 310.8 | 236.1 |       289.5 258.4 220.6 403.1 |    785 (  285)
+
+## P2. IQ4_XS/IQ4_NL, N=4: the pass's rate (GB/s = bytes read / its time; both reads every line twice) and the call against
+##     its controls: pf/cold (its own cold control: the same readers, gap and traffic) | pf/hot (no pass, the same gap
+##     and traffic)
+ G ms  MiB | host    GB/s pf/cold  pf/hot | one     GB/s pf/cold  pf/hot | all     GB/s pf/cold  pf/hot | both    GB/s pf/cold  pf/hot |
+ 0.00    0 |         36.6    0.84    1.22 |         35.7    0.79    1.21 |         49.3    0.77    1.11 |         53.3    0.81    1.21 |
+ 0.00    8 |         36.6    0.89    1.13 |         36.2    0.78    0.97 |         48.9    0.89    1.09 |         51.7    0.76    0.94 |
+ 0.00   32 |         36.4    0.81    1.10 |         36.6    0.78    1.01 |         49.5    0.86    1.15 |         53.3    0.76    1.00 |
+ 0.10    0 |         36.7    0.83    1.05 |         41.5    0.82    1.06 |         48.8    0.85    1.09 |         53.0    0.76    0.98 |
+ 0.10    8 |         36.4    0.70    1.08 |         41.6    0.76    1.08 |         49.1    0.80    1.12 |         51.4    0.74    1.07 |
+ 0.10   32 |         36.9    0.79    0.97 |         42.9    0.80    0.98 |         49.3    0.84    1.03 |         52.1    0.78    0.96 |
+ 0.25    0 |         36.8    0.80    1.08 |         42.2    0.80    1.10 |         49.7    0.78    1.04 |         53.4    0.81    1.10 |
+ 0.25    8 |         36.7    0.82    1.16 |         41.8    0.81    1.16 |         49.3    0.76    1.11 |         52.2    0.82    1.16 |
+ 0.25   32 |         36.7    0.79    1.00 |         42.5    0.80    1.00 |         48.3    0.85    1.07 |         52.7    0.75    0.96 |
+ 0.50    0 |         36.4    0.83    1.22 |         41.9    0.79    1.15 |         49.7    0.80    1.12 |         53.8    0.77    1.11 |
+ 0.50    8 |         36.7    0.82    1.16 |         41.6    0.82    1.16 |         49.1    0.78    1.15 |         53.5    0.80    1.15 |
+ 0.50   32 |         36.8    0.84    1.09 |         41.2    0.81    1.06 |         48.3    0.81    1.07 |         52.8    0.76    1.01 |
+
+## P3. IQ4_XS/IQ4_NL, N=4: the pass's wake, us (the median): the slowest reader's time from the host's signal to its first read;
+##     the pass is the wake and the reads (P1)
+ G ms  MiB |   host    one    all   both
+ 0.00    0 |    0.0    3.6   30.2    5.1
+ 0.00    8 |    0.0    1.2   32.6    5.9
+ 0.00   32 |    0.0    1.3   35.2    5.3
+ 0.10    0 |    0.0    3.6   51.7    5.1
+ 0.10    8 |    0.0    2.9   30.1    5.3
+ 0.10   32 |    0.0    1.3   37.6    5.4
+ 0.25    0 |    0.0    3.6   28.4    5.2
+ 0.25    8 |    0.0    3.8   34.0    5.2
+ 0.25   32 |    0.0    1.3   40.8    5.6
+ 0.50    0 |    0.0    3.5   28.9    5.3
+ 0.50    8 |    0.0    3.6   31.7    5.6
+ 0.50   32 |    0.0    1.4   75.5    5.6
+
+## P1. IQ4_XS/IQ4_NL, N=8, T=6, 15 workers + host: us per call of N experts, the median of 30 units
+##     cold = behind a sham pass by the same readers (the same bytes from unrelated memory), then the gap, then the
+##     call; hot = no pass, the same N experts every unit; pass = the pass's own time, its readers' wake included;
+##     traffic = the thread's read of X MiB during the gap: its duration (its overrun past the gap's end)
+anchors, gap 0, no pass, no traffic: cold 546.6 us | hot 440.0 us | the call reads 21.3 MB
+ G ms  MiB | call:  host   one   all  both | cold:  host   one   all  both |   hot | pass:  host   one   all  both | traffic us (overrun)
+ 0.00    0 |       459.2 457.8 453.8 451.4 |       547.1 552.6 546.7 550.9 | 370.3 |       584.5 514.1 436.9 805.8 |      0 (    0)
+ 0.00    8 |       470.4 468.1 572.4 460.9 |       609.2 600.0 609.9 658.0 | 450.7 |       586.3 519.6 746.8 872.3 |    261 (  261)
+ 0.00   32 |       483.7 482.5 517.1 470.8 |       604.5 596.5 608.7 598.0 | 459.9 |       587.5 498.7 430.5 827.7 |    865 (  865)
+ 0.10    0 |       452.1 454.4 459.5 442.2 |       548.8 554.3 561.9 552.3 | 436.5 |       585.6 503.8 455.2 818.7 |      0 (    0)
+ 0.10    8 |       460.5 461.1 474.6 453.3 |       584.5 583.6 583.0 588.6 | 456.1 |       580.2 507.7 432.8 807.1 |    229 (  129)
+ 0.10   32 |       635.9 498.5 572.6 491.2 |       599.4 640.3 642.7 648.9 | 472.2 |       581.8 583.2 431.5 814.6 |    850 (  750)
+ 0.25    0 |       442.5 427.2 462.7 434.1 |       543.0 547.0 545.3 548.3 | 427.3 |       584.8 590.1 432.8 815.8 |      0 (    0)
+ 0.25    8 |       446.3 423.4 469.6 429.4 |       548.7 546.2 544.3 555.0 | 445.8 |       580.6 502.3 431.6 827.0 |    190 (    0)
+ 0.25   32 |       475.4 483.0 508.9 464.4 |       605.6 599.1 603.5 601.9 | 472.5 |       583.8 504.6 439.5 832.8 |    863 (  613)
+ 0.50    0 |       440.5 449.1 438.6 445.1 |       527.7 541.0 547.3 551.6 | 392.6 |       580.0 509.4 431.2 832.8 |      0 (    0)
+ 0.50    8 |       486.6 486.9 515.8 471.5 |       589.1 591.6 586.7 557.5 | 445.3 |       621.2 565.2 531.6 849.1 |    188 (    0)
+ 0.50   32 |       507.8 490.0 549.2 471.1 |       618.3 611.0 624.8 637.7 | 494.7 |       587.5 524.1 482.4 906.4 |    880 (  380)
+
+## P2. IQ4_XS/IQ4_NL, N=8: the pass's rate (GB/s = bytes read / its time; both reads every line twice) and the call against
+##     its controls: pf/cold (its own cold control: the same readers, gap and traffic) | pf/hot (no pass, the same gap
+##     and traffic)
+ G ms  MiB | host    GB/s pf/cold  pf/hot | one     GB/s pf/cold  pf/hot | all     GB/s pf/cold  pf/hot | both    GB/s pf/cold  pf/hot |
+ 0.00    0 |         36.4    0.84    1.24 |         41.4    0.83    1.24 |         48.8    0.83    1.23 |         52.9    0.82    1.22 |
+ 0.00    8 |         36.3    0.77    1.04 |         41.0    0.78    1.04 |         28.5    0.94    1.27 |         48.8    0.70    1.02 |
+ 0.00   32 |         36.3    0.80    1.05 |         42.7    0.81    1.05 |         49.5    0.85    1.12 |         51.5    0.79    1.02 |
+ 0.10    0 |         36.4    0.82    1.04 |         42.3    0.82    1.04 |         46.8    0.82    1.05 |         52.0    0.80    1.01 |
+ 0.10    8 |         36.7    0.79    1.01 |         41.9    0.79    1.01 |         49.2    0.81    1.04 |         52.8    0.77    0.99 |
+ 0.10   32 |         36.6    1.06    1.35 |         36.5    0.78    1.06 |         49.4    0.89    1.21 |         52.3    0.76    1.04 |
+ 0.25    0 |         36.4    0.82    1.04 |         36.1    0.78    1.00 |         49.2    0.85    1.08 |         52.2    0.79    1.02 |
+ 0.25    8 |         36.7    0.81    1.00 |         42.4    0.78    0.95 |         49.4    0.86    1.05 |         51.5    0.77    0.96 |
+ 0.25   32 |         36.5    0.79    1.01 |         42.2    0.81    1.02 |         48.5    0.84    1.08 |         51.1    0.77    0.98 |
+ 0.50    0 |         36.7    0.83    1.12 |         41.8    0.83    1.14 |         49.4    0.80    1.12 |         51.1    0.81    1.13 |
+ 0.50    8 |         34.3    0.83    1.09 |         37.7    0.82    1.09 |         40.1    0.88    1.16 |         50.2    0.85    1.06 |
+ 0.50   32 |         36.3    0.82    1.03 |         40.6    0.80    0.99 |         44.2    0.88    1.11 |         47.0    0.74    0.95 |
+
+## P3. IQ4_XS/IQ4_NL, N=8: the pass's wake, us (the median): the slowest reader's time from the host's signal to its first read;
+##     the pass is the wake and the reads (P1)
+ G ms  MiB |   host    one    all   both
+ 0.00    0 |    0.0    3.8  174.5    6.4
+ 0.00    8 |    0.0    3.4  701.9    6.2
+ 0.00   32 |    0.0    1.4   57.4    5.9
+ 0.10    0 |    0.0    3.8  305.6    6.1
+ 0.10    8 |    0.0    3.8  146.3    6.0
+ 0.10   32 |    0.0    1.3   37.3    5.9
+ 0.25    0 |    0.0    3.8   31.2    6.8
+ 0.25    8 |    0.0    3.9   72.9    6.2
+ 0.25   32 |    0.0    1.3  200.2    6.1
+ 0.50    0 |    0.0    3.9   32.6    7.2
+ 0.50    8 |    0.0    4.1  481.6    7.0
+ 0.50   32 |    0.0    1.8  425.7    7.4
+
+## P1. IQ3_S/Q2_0, N=2, T=6, 15 workers + host: us per call of N experts, the median of 30 units
+##     cold = behind a sham pass by the same readers (the same bytes from unrelated memory), then the gap, then the
+##     call; hot = no pass, the same N experts every unit; pass = the pass's own time, its readers' wake included;
+##     traffic = the thread's read of X MiB during the gap: its duration (its overrun past the gap's end)
+anchors, gap 0, no pass, no traffic: cold 113.0 us | hot 86.4 us | the call reads 3.7 MB
+ G ms  MiB | call:  host   one   all  both | cold:  host   one   all  both |   hot | pass:  host   one   all  both | traffic us (overrun)
+ 0.00    0 |        99.3  94.5  92.5  95.1 |       109.3 104.7 112.3 114.0 |  73.7 |       104.4  92.1  80.5 146.1 |      0 (    0)
+ 0.00    8 |       104.9 110.5 109.1 102.1 |       127.7 129.1 128.9 127.3 |  98.3 |       101.8  89.3  80.1 144.9 |    209 (  209)
+ 0.00   32 |       117.5 114.3 109.2 105.2 |       132.5 140.9 126.6 127.7 | 106.2 |       105.9 105.2  79.0 142.5 |    872 (  872)
+ 0.10    0 |        96.0  98.5  94.5  95.7 |       111.0 112.8 113.9 111.9 |  78.3 |       101.1  91.5  79.7 146.6 |      0 (    0)
+ 0.10    8 |       105.4 109.6 110.4 105.0 |       128.4 130.3 130.0 132.6 | 106.7 |       104.7  90.5  77.7 144.4 |    213 (  113)
+ 0.10   32 |       108.5 107.9 112.5 102.4 |       127.3 126.8 127.4 125.6 | 111.2 |       102.6  85.6  78.6 140.8 |    778 (  678)
+ 0.25    0 |        96.8  98.1  97.7 101.5 |       111.3 111.4 111.0 109.9 |  89.9 |       102.2  90.2  78.3 148.1 |      0 (    0)
+ 0.25    8 |        94.8  96.2  95.8  93.1 |       116.1 110.6 110.0 109.7 |  95.9 |       101.5  90.5  77.8 150.0 |    180 (    0)
+ 0.25   32 |       121.1 116.3 110.6 106.3 |       129.2 130.6 129.9 129.3 | 107.0 |       102.3  87.0  81.6 143.9 |    783 (  533)
+ 0.50    0 |        96.1  95.8  93.7  93.1 |       110.3 110.2 108.3 109.3 |  90.3 |       100.2  88.8  78.9 141.2 |      0 (    0)
+ 0.50    8 |        94.9  96.6  94.4  96.5 |       109.3 110.2 108.7 111.5 |  91.9 |       101.0  90.3  78.3 145.1 |    182 (    0)
+ 0.50   32 |       123.1 120.4 110.5 111.9 |       134.9 124.8 126.2 126.9 | 106.8 |       102.0  85.7  78.8 138.4 |    745 (  245)
+
+## P2. IQ3_S/Q2_0, N=2: the pass's rate (GB/s = bytes read / its time; both reads every line twice) and the call against
+##     its controls: pf/cold (its own cold control: the same readers, gap and traffic) | pf/hot (no pass, the same gap
+##     and traffic)
+ G ms  MiB | host    GB/s pf/cold  pf/hot | one     GB/s pf/cold  pf/hot | all     GB/s pf/cold  pf/hot | both    GB/s pf/cold  pf/hot |
+ 0.00    0 |         35.8    0.91    1.35 |         40.6    0.90    1.28 |         46.5    0.82    1.25 |         51.2    0.83    1.29 |
+ 0.00    8 |         36.7    0.82    1.07 |         41.8    0.86    1.12 |         46.7    0.85    1.11 |         51.6    0.80    1.04 |
+ 0.00   32 |         35.3    0.89    1.11 |         35.5    0.81    1.08 |         47.3    0.86    1.03 |         52.5    0.82    0.99 |
+ 0.10    0 |         37.0    0.87    1.23 |         40.8    0.87    1.26 |         46.9    0.83    1.21 |         51.0    0.86    1.22 |
+ 0.10    8 |         35.7    0.82    0.99 |         41.3    0.84    1.03 |         48.1    0.85    1.03 |         51.8    0.79    0.98 |
+ 0.10   32 |         36.4    0.85    0.98 |         43.7    0.85    0.97 |         47.5    0.88    1.01 |         53.1    0.82    0.92 |
+ 0.25    0 |         36.6    0.87    1.08 |         41.4    0.88    1.09 |         47.7    0.88    1.09 |         50.5    0.92    1.13 |
+ 0.25    8 |         36.8    0.82    0.99 |         41.3    0.87    1.00 |         48.0    0.87    1.00 |         49.8    0.85    0.97 |
+ 0.25   32 |         36.5    0.94    1.13 |         43.0    0.89    1.09 |         45.8    0.85    1.03 |         52.0    0.82    0.99 |
+ 0.50    0 |         37.3    0.87    1.06 |         42.1    0.87    1.06 |         47.4    0.86    1.04 |         52.9    0.85    1.03 |
+ 0.50    8 |         37.0    0.87    1.03 |         41.4    0.88    1.05 |         47.7    0.87    1.03 |         51.5    0.87    1.05 |
+ 0.50   32 |         36.6    0.91    1.15 |         43.6    0.96    1.13 |         47.4    0.88    1.04 |         54.0    0.88    1.05 |
+
+## P3. IQ3_S/Q2_0, N=2: the pass's wake, us (the median): the slowest reader's time from the host's signal to its first read;
+##     the pass is the wake and the reads (P1)
+ G ms  MiB |   host    one    all   both
+ 0.00    0 |    0.0    2.6   31.8    4.0
+ 0.00    8 |    0.0    1.3   35.4    4.3
+ 0.00   32 |    0.0    1.4   35.2    5.3
+ 0.10    0 |    0.0    3.0   29.7    4.5
+ 0.10    8 |    0.0    1.2   31.6    4.8
+ 0.10   32 |    0.0    1.4   34.7    5.2
+ 0.25    0 |    0.0    3.1   28.5    4.9
+ 0.25    8 |    0.0    3.1   30.9    4.7
+ 0.25   32 |    0.0    1.4   37.5    5.8
+ 0.50    0 |    0.0    3.1   27.6    4.5
+ 0.50    8 |    0.0    3.3   28.6    5.4
+ 0.50   32 |    0.0    1.3   35.1    4.9
+
+## P1. IQ3_S/Q2_0, N=3, T=6, 15 workers + host: us per call of N experts, the median of 30 units
+##     cold = behind a sham pass by the same readers (the same bytes from unrelated memory), then the gap, then the
+##     call; hot = no pass, the same N experts every unit; pass = the pass's own time, its readers' wake included;
+##     traffic = the thread's read of X MiB during the gap: its duration (its overrun past the gap's end)
+anchors, gap 0, no pass, no traffic: cold 135.8 us | hot 122.4 us | the call reads 5.6 MB
+ G ms  MiB | call:  host   one   all  both | cold:  host   one   all  both |   hot | pass:  host   one   all  both | traffic us (overrun)
+ 0.00    0 |       129.5 130.8 123.5 135.7 |       150.1 154.9 149.6 157.8 | 104.1 |       153.0 135.6 113.4 224.2 |      0 (    0)
+ 0.00    8 |       146.4 150.2 148.3 148.4 |       174.8 188.3 179.2 187.8 | 139.8 |       154.5 138.6 114.3 222.2 |    218 (  218)
+ 0.00   32 |       151.5 147.7 147.5 147.1 |       175.0 181.3 176.1 175.0 | 143.2 |       153.4 130.6 117.6 211.0 |    746 (  746)
+ 0.10    0 |       137.2 134.3 130.4 130.9 |       153.3 151.6 151.3 152.6 | 125.0 |       152.2 134.0 116.1 212.9 |      0 (    0)
+ 0.10    8 |       145.9 149.1 147.8 141.9 |       181.4 176.7 175.3 188.0 | 138.7 |       156.5 135.5 120.1 213.5 |    203 (  103)
+ 0.10   32 |       153.2 145.8 146.8 147.8 |       176.9 173.8 177.8 181.1 | 152.2 |       154.0 129.7 116.2 209.6 |    739 (  639)
+ 0.25    0 |       135.3 133.3 132.3 138.3 |       153.6 152.1 153.5 152.4 | 127.5 |       151.2 132.4 115.2 217.0 |      0 (    0)
+ 0.25    8 |       135.3 135.0 129.5 125.5 |       156.1 154.3 152.9 153.6 | 129.3 |       151.8 131.6 115.3 210.7 |    193 (    0)
+ 0.25   32 |       157.4 144.5 144.4 146.3 |       177.1 176.9 179.5 186.1 | 152.6 |       151.7 130.1 116.7 217.3 |    745 (  495)
+ 0.50    0 |       133.2 133.1 134.5 130.6 |       152.9 150.2 152.8 153.3 | 127.4 |       150.2 134.5 116.6 211.6 |      0 (    0)
+ 0.50    8 |       135.1 135.7 135.2 139.5 |       158.7 150.9 154.6 151.7 | 130.8 |       150.5 156.5 116.3 246.7 |    219 (    0)
+ 0.50   32 |       177.5 150.8 152.2 142.8 |       188.6 176.1 180.6 178.2 | 153.6 |       153.9 133.3 116.4 209.4 |    890 (  390)
+
+## P2. IQ3_S/Q2_0, N=3: the pass's rate (GB/s = bytes read / its time; both reads every line twice) and the call against
+##     its controls: pf/cold (its own cold control: the same readers, gap and traffic) | pf/hot (no pass, the same gap
+##     and traffic)
+ G ms  MiB | host    GB/s pf/cold  pf/hot | one     GB/s pf/cold  pf/hot | all     GB/s pf/cold  pf/hot | both    GB/s pf/cold  pf/hot |
+ 0.00    0 |         36.7    0.86    1.24 |         41.4    0.84    1.26 |         49.4    0.83    1.19 |         50.0    0.86    1.30 |
+ 0.00    8 |         36.3    0.84    1.05 |         40.5    0.80    1.07 |         49.0    0.83    1.06 |         50.5    0.79    1.06 |
+ 0.00   32 |         36.5    0.87    1.06 |         42.9    0.81    1.03 |         47.7    0.84    1.03 |         53.1    0.84    1.03 |
+ 0.10    0 |         36.8    0.89    1.10 |         41.8    0.89    1.07 |         48.3    0.86    1.04 |         52.7    0.86    1.05 |
+ 0.10    8 |         35.8    0.80    1.05 |         41.4    0.84    1.07 |         46.7    0.84    1.07 |         52.5    0.75    1.02 |
+ 0.10   32 |         36.4    0.87    1.01 |         43.2    0.84    0.96 |         48.3    0.83    0.96 |         53.5    0.82    0.97 |
+ 0.25    0 |         37.1    0.88    1.06 |         42.3    0.88    1.05 |         48.7    0.86    1.04 |         51.7    0.91    1.08 |
+ 0.25    8 |         36.9    0.87    1.05 |         42.6    0.88    1.04 |         48.6    0.85    1.00 |         53.2    0.82    0.97 |
+ 0.25   32 |         36.9    0.89    1.03 |         43.1    0.82    0.95 |         48.0    0.80    0.95 |         51.6    0.79    0.96 |
+ 0.50    0 |         37.3    0.87    1.05 |         41.7    0.89    1.04 |         48.1    0.88    1.06 |         53.0    0.85    1.03 |
+ 0.50    8 |         37.2    0.85    1.03 |         35.8    0.90    1.04 |         48.2    0.87    1.03 |         45.5    0.92    1.07 |
+ 0.50   32 |         36.4    0.94    1.16 |         42.1    0.86    0.98 |         48.2    0.84    0.99 |         53.5    0.80    0.93 |
+
+## P3. IQ3_S/Q2_0, N=3: the pass's wake, us (the median): the slowest reader's time from the host's signal to its first read;
+##     the pass is the wake and the reads (P1)
+ G ms  MiB |   host    one    all   both
+ 0.00    0 |    0.0    3.2   29.6    4.3
+ 0.00    8 |    0.0    1.3   35.2    5.0
+ 0.00   32 |    0.0    1.4   35.7    5.4
+ 0.10    0 |    0.0    3.2   30.9    4.3
+ 0.10    8 |    0.0    1.5   81.8    4.7
+ 0.10   32 |    0.0    1.4   36.8    5.3
+ 0.25    0 |    0.0    3.3   28.6    4.6
+ 0.25    8 |    0.0    3.4   32.1    5.1
+ 0.25   32 |    0.0    1.4   35.3    5.7
+ 0.50    0 |    0.0    3.3   33.1    5.2
+ 0.50    8 |    0.0    3.5   29.8    5.1
+ 0.50   32 |    0.0    1.3   35.7    5.4
+
+## P1. IQ3_S/Q2_0, N=4, T=6, 15 workers + host: us per call of N experts, the median of 30 units
+##     cold = behind a sham pass by the same readers (the same bytes from unrelated memory), then the gap, then the
+##     call; hot = no pass, the same N experts every unit; pass = the pass's own time, its readers' wake included;
+##     traffic = the thread's read of X MiB during the gap: its duration (its overrun past the gap's end)
+anchors, gap 0, no pass, no traffic: cold 203.8 us | hot 136.3 us | the call reads 7.5 MB
+ G ms  MiB | call:  host   one   all  both | cold:  host   one   all  both |   hot | pass:  host   one   all  both | traffic us (overrun)
+ 0.00    0 |       172.8 172.0 179.1 165.1 |       194.1 205.1 198.2 210.2 | 161.0 |       206.4 177.4 175.6 279.7 |      0 (    0)
+ 0.00    8 |       185.0 190.3 188.9 190.5 |       232.7 241.6 224.9 225.6 | 181.2 |       210.2 175.1 153.5 292.6 |    224 (  224)
+ 0.00   32 |       187.5 186.5 187.3 183.9 |       225.4 226.2 222.2 222.9 | 192.1 |       205.3 175.3 153.9 277.8 |    772 (  772)
+ 0.10    0 |       167.2 167.0 160.8 155.7 |       193.5 200.5 192.9 198.8 | 141.5 |       204.4 176.3 151.0 279.8 |      0 (    0)
+ 0.10    8 |       184.4 188.7 200.0 182.3 |       234.6 238.4 240.6 234.8 | 168.4 |       208.7 184.3 153.2 286.8 |    211 (  111)
+ 0.10   32 |       211.5 199.5 195.6 189.1 |       240.5 230.6 229.7 235.6 | 185.8 |       205.0 205.1 151.7 293.7 |    886 (  786)
+ 0.25    0 |       182.2 177.3 167.7 167.9 |       225.2 213.2 209.6 204.8 | 187.9 |       214.5 189.5 158.7 283.8 |      0 (    0)
+ 0.25    8 |       173.6 173.0 167.3 163.9 |       195.6 197.1 198.5 202.7 | 163.8 |       203.6 179.2 151.3 285.5 |    188 (    0)
+ 0.25   32 |       207.1 190.7 191.8 184.9 |       228.7 223.3 223.2 228.8 | 191.0 |       201.5 175.1 151.5 282.3 |    761 (  511)
+ 0.50    0 |       168.7 170.3 173.3 164.7 |       195.6 198.8 194.6 195.2 | 153.7 |       200.8 178.4 154.7 282.5 |      0 (    0)
+ 0.50    8 |       169.6 169.3 173.0 169.3 |       197.1 189.7 194.5 200.1 | 167.8 |       202.0 207.0 153.5 282.0 |    220 (    0)
+ 0.50   32 |       221.3 204.8 200.7 192.4 |       242.6 229.5 235.9 232.3 | 191.7 |       203.0 203.8 151.8 280.4 |    882 (  382)
+
+## P2. IQ3_S/Q2_0, N=4: the pass's rate (GB/s = bytes read / its time; both reads every line twice) and the call against
+##     its controls: pf/cold (its own cold control: the same readers, gap and traffic) | pf/hot (no pass, the same gap
+##     and traffic)
+ G ms  MiB | host    GB/s pf/cold  pf/hot | one     GB/s pf/cold  pf/hot | all     GB/s pf/cold  pf/hot | both    GB/s pf/cold  pf/hot |
+ 0.00    0 |         36.2    0.89    1.07 |         42.1    0.84    1.07 |         42.6    0.90    1.11 |         53.5    0.79    1.02 |
+ 0.00    8 |         35.6    0.79    1.02 |         42.7    0.79    1.05 |         48.7    0.84    1.04 |         51.1    0.84    1.05 |
+ 0.00   32 |         36.4    0.83    0.98 |         42.6    0.82    0.97 |         48.6    0.84    0.97 |         53.8    0.83    0.96 |
+ 0.10    0 |         36.6    0.86    1.18 |         42.4    0.83    1.18 |         49.5    0.83    1.14 |         53.4    0.78    1.10 |
+ 0.10    8 |         35.8    0.79    1.10 |         40.6    0.79    1.12 |         48.8    0.83    1.19 |         52.1    0.78    1.08 |
+ 0.10   32 |         36.5    0.88    1.14 |         36.4    0.87    1.07 |         49.3    0.85    1.05 |         50.9    0.80    1.02 |
+ 0.25    0 |         34.8    0.81    0.97 |         39.4    0.83    0.94 |         47.1    0.80    0.89 |         52.7    0.82    0.89 |
+ 0.25    8 |         36.7    0.89    1.06 |         41.7    0.88    1.06 |         49.4    0.84    1.02 |         52.4    0.81    1.00 |
+ 0.25   32 |         37.1    0.91    1.08 |         42.7    0.85    1.00 |         49.3    0.86    1.00 |         53.0    0.81    0.97 |
+ 0.50    0 |         37.2    0.86    1.10 |         41.9    0.86    1.11 |         48.3    0.89    1.13 |         52.9    0.84    1.07 |
+ 0.50    8 |         37.0    0.86    1.01 |         36.1    0.89    1.01 |         48.7    0.89    1.03 |         53.0    0.85    1.01 |
+ 0.50   32 |         36.8    0.91    1.15 |         36.7    0.89    1.07 |         49.2    0.85    1.05 |         53.3    0.83    1.00 |
+
+## P3. IQ3_S/Q2_0, N=4: the pass's wake, us (the median): the slowest reader's time from the host's signal to its first read;
+##     the pass is the wake and the reads (P1)
+ G ms  MiB |   host    one    all   both
+ 0.00    0 |    0.0    3.4  135.9    4.1
+ 0.00    8 |    0.0    1.3   33.7    4.8
+ 0.00   32 |    0.0    1.4   36.4    5.2
+ 0.10    0 |    0.0    3.4   29.7    4.6
+ 0.10    8 |    0.0    1.7   34.2    4.7
+ 0.10   32 |    0.0    1.4   36.3    5.5
+ 0.25    0 |    0.0    3.5   34.0    4.6
+ 0.25    8 |    0.0    3.5   29.2    5.5
+ 0.25   32 |    0.0    1.4   37.6    5.5
+ 0.50    0 |    0.0    3.5   48.2    5.6
+ 0.50    8 |    0.0    3.4   33.1    5.6
+ 0.50   32 |    0.0    1.4   38.9    5.1
+
+## P1. IQ3_S/Q2_0, N=8, T=6, 15 workers + host: us per call of N experts, the median of 30 units
+##     cold = behind a sham pass by the same readers (the same bytes from unrelated memory), then the gap, then the
+##     call; hot = no pass, the same N experts every unit; pass = the pass's own time, its readers' wake included;
+##     traffic = the thread's read of X MiB during the gap: its duration (its overrun past the gap's end)
+anchors, gap 0, no pass, no traffic: cold 383.6 us | hot 323.2 us | the call reads 15.0 MB
+ G ms  MiB | call:  host   one   all  both | cold:  host   one   all  both |   hot | pass:  host   one   all  both | traffic us (overrun)
+ 0.00    0 |       320.8 327.5 309.0 319.5 |       386.6 374.6 385.3 387.5 | 283.4 |       410.3 357.4 303.4 565.7 |      0 (    0)
+ 0.00    8 |       375.5 352.9 405.7 336.4 |       460.9 446.2 460.6 465.5 | 329.1 |       411.7 418.2 314.2 584.3 |    255 (  255)
+ 0.00   32 |       380.9 347.0 352.2 347.3 |       456.2 450.6 442.1 429.6 | 335.8 |       406.7 410.6 303.4 555.0 |    914 (  914)
+ 0.10    0 |       331.9 314.3 323.1 321.2 |       369.2 381.7 364.0 376.3 | 301.4 |       413.0 355.0 302.6 560.0 |      0 (    0)
+ 0.10    8 |       333.8 365.4 367.4 338.5 |       429.1 456.4 451.7 436.5 | 321.1 |       409.2 381.9 439.2 588.8 |    213 (  113)
+ 0.10   32 |       340.6 347.1 351.6 347.2 |       441.5 429.0 429.2 433.4 | 355.5 |       407.9 350.4 302.3 563.7 |    824 (  724)
+ 0.25    0 |       307.7 298.3 329.3 315.1 |       368.4 371.7 366.2 379.4 | 308.5 |       410.4 357.2 306.0 569.3 |      0 (    0)
+ 0.25    8 |       325.5 325.4 316.5 308.7 |       382.8 373.9 379.3 368.8 | 280.7 |       410.4 352.8 302.1 552.3 |    188 (    0)
+ 0.25   32 |       355.2 344.4 350.1 347.1 |       433.5 429.7 425.7 427.9 | 354.1 |       413.7 347.5 303.1 575.1 |    803 (  553)
+ 0.50    0 |       335.9 324.8 284.3 329.7 |       430.2 366.3 349.8 379.8 | 323.3 |       431.2 359.3 299.0 568.0 |      0 (    0)
+ 0.50    8 |       327.0 316.8 309.8 350.1 |       389.3 369.1 377.6 400.3 | 324.1 |       408.2 354.8 303.2 632.6 |    194 (    0)
+ 0.50   32 |       349.8 355.4 360.4 339.6 |       461.9 457.0 443.6 437.2 | 359.1 |       429.8 365.3 306.4 558.6 |    873 (  373)
+
+## P2. IQ3_S/Q2_0, N=8: the pass's rate (GB/s = bytes read / its time; both reads every line twice) and the call against
+##     its controls: pf/cold (its own cold control: the same readers, gap and traffic) | pf/hot (no pass, the same gap
+##     and traffic)
+ G ms  MiB | host    GB/s pf/cold  pf/hot | one     GB/s pf/cold  pf/hot | all     GB/s pf/cold  pf/hot | both    GB/s pf/cold  pf/hot |
+ 0.00    0 |         36.4    0.83    1.13 |         41.8    0.87    1.16 |         49.3    0.80    1.09 |         52.9    0.82    1.13 |
+ 0.00    8 |         36.3    0.81    1.14 |         35.7    0.79    1.07 |         47.6    0.88    1.23 |         51.2    0.72    1.02 |
+ 0.00   32 |         36.8    0.83    1.13 |         36.4    0.77    1.03 |         49.3    0.80    1.05 |         53.9    0.81    1.03 |
+ 0.10    0 |         36.2    0.90    1.10 |         42.1    0.82    1.04 |         49.4    0.89    1.07 |         53.4    0.85    1.07 |
+ 0.10    8 |         36.5    0.78    1.04 |         39.1    0.80    1.14 |         34.0    0.81    1.14 |         50.8    0.78    1.05 |
+ 0.10   32 |         36.7    0.77    0.96 |         42.7    0.81    0.98 |         49.5    0.82    0.99 |         53.0    0.80    0.98 |
+ 0.25    0 |         36.4    0.84    1.00 |         41.9    0.80    0.97 |         48.9    0.90    1.07 |         52.5    0.83    1.02 |
+ 0.25    8 |         36.4    0.85    1.16 |         42.4    0.87    1.16 |         49.5    0.83    1.13 |         54.1    0.84    1.10 |
+ 0.25   32 |         36.1    0.82    1.00 |         43.0    0.80    0.97 |         49.3    0.82    0.99 |         52.0    0.81    0.98 |
+ 0.50    0 |         34.7    0.78    1.04 |         41.6    0.89    1.00 |         50.0    0.81    0.88 |         52.6    0.87    1.02 |
+ 0.50    8 |         36.6    0.84    1.01 |         42.1    0.86    0.98 |         49.3    0.82    0.96 |         47.3    0.87    1.08 |
+ 0.50   32 |         34.8    0.76    0.97 |         40.9    0.78    0.99 |         48.8    0.81    1.00 |         53.5    0.78    0.95 |
+
+## P3. IQ3_S/Q2_0, N=8: the pass's wake, us (the median): the slowest reader's time from the host's signal to its first read;
+##     the pass is the wake and the reads (P1)
+ G ms  MiB |   host    one    all   both
+ 0.00    0 |    0.0    3.8   53.2    5.3
+ 0.00    8 |    0.0    1.7  263.7    5.3
+ 0.00   32 |    0.0    1.4   36.2    5.9
+ 0.10    0 |    0.0    3.7   29.9    5.5
+ 0.10    8 |    0.0    3.4  410.9    5.4
+ 0.10   32 |    0.0    1.3   37.5    5.6
+ 0.25    0 |    0.0    3.9  190.3    5.5
+ 0.25    8 |    0.0    3.9   42.6    5.7
+ 0.25   32 |    0.0    1.3   38.4    5.7
+ 0.50    0 |    0.0    4.1   31.2    6.4
+ 0.50    8 |    0.0    3.8   31.9    6.4
+ 0.50   32 |    0.0    1.2   62.0    5.9
+
+## P1. shadow-Q2_0, N=2, T=6, 15 workers + host: us per call of N experts, the median of 30 units
+##     cold = behind a sham pass by the same readers (the same bytes from unrelated memory), then the gap, then the
+##     call; hot = no pass, the same N experts every unit; pass = the pass's own time, its readers' wake included;
+##     traffic = the thread's read of X MiB during the gap: its duration (its overrun past the gap's end)
+anchors, gap 0, no pass, no traffic: cold 73.3 us | hot 43.1 us | the call reads 2.8 MB
+ G ms  MiB | call:  host   one   all  both | cold:  host   one   all  both |   hot | pass:  host   one   all  both | traffic us (overrun)
+ 0.00    0 |        51.5  51.9  50.4  45.3 |        70.6  72.1  70.2  76.8 |  41.1 |        76.4  71.1  67.8 105.5 |      0 (    0)
+ 0.00    8 |        68.6  68.4  68.9  63.9 |        93.1  94.5  94.2  96.2 |  58.6 |        76.7  67.0  60.1 110.6 |    215 (  215)
+ 0.00   32 |        71.2  70.9  71.3  62.5 |        93.4  91.7  92.8  93.5 |  62.6 |        76.7  62.3  61.6 106.8 |    729 (  729)
+ 0.10    0 |        61.5  62.5  63.6  58.8 |        81.5  81.7  81.4  82.0 |  45.7 |        74.8  68.2  59.5 105.7 |      0 (    0)
+ 0.10    8 |        69.5  67.4  75.1  62.2 |        95.5  94.5  92.8  94.7 |  65.1 |        77.3  67.4  63.1 107.5 |    204 (  104)
+ 0.10   32 |        73.3  71.4  74.6  71.8 |        93.7  94.0  96.4  92.5 |  61.1 |        74.7  65.2  60.8 106.7 |    729 (  629)
+ 0.25    0 |        62.5  62.3  63.5  58.2 |        80.8  80.9  82.5  81.4 |  58.8 |        75.0  65.4  59.3 105.9 |      0 (    0)
+ 0.25    8 |        58.9  60.5  62.0  55.3 |        81.3  82.0  80.3  81.6 |  58.1 |        75.3  68.2  61.0 107.1 |    184 (    0)
+ 0.25   32 |        77.9  85.3  73.7  69.5 |        94.1  92.4  92.2  93.0 |  63.2 |        75.5  68.4  60.8 104.8 |    756 (  506)
+ 0.50    0 |        59.8  60.7  62.8  58.2 |        79.6  79.8  80.0  81.8 |  55.9 |        74.1  68.1  61.1 106.4 |      0 (    0)
+ 0.50    8 |        59.6  60.9  63.3  56.1 |        80.3  80.5  81.8  81.1 |  58.1 |        75.0  67.7  66.8 105.4 |    187 (    0)
+ 0.50   32 |        93.0  87.9  74.0  73.2 |        95.9  96.1  94.2  92.9 |  61.2 |        76.9  65.0  60.7 105.6 |    765 (  265)
+
+## P2. shadow-Q2_0, N=2: the pass's rate (GB/s = bytes read / its time; both reads every line twice) and the call against
+##     its controls: pf/cold (its own cold control: the same readers, gap and traffic) | pf/hot (no pass, the same gap
+##     and traffic)
+ G ms  MiB | host    GB/s pf/cold  pf/hot | one     GB/s pf/cold  pf/hot | all     GB/s pf/cold  pf/hot | both    GB/s pf/cold  pf/hot |
+ 0.00    0 |         36.2    0.73    1.25 |         38.9    0.72    1.26 |         40.8    0.72    1.22 |         52.4    0.59    1.10 |
+ 0.00    8 |         36.1    0.74    1.17 |         41.3    0.72    1.17 |         46.0    0.73    1.18 |         50.0    0.66    1.09 |
+ 0.00   32 |         36.1    0.76    1.14 |         44.4    0.77    1.13 |         44.9    0.77    1.14 |         51.8    0.67    1.00 |
+ 0.10    0 |         37.0    0.75    1.35 |         40.5    0.77    1.37 |         46.5    0.78    1.39 |         52.3    0.72    1.29 |
+ 0.10    8 |         35.8    0.73    1.07 |         41.0    0.71    1.04 |         43.8    0.81    1.15 |         51.4    0.66    0.96 |
+ 0.10   32 |         37.0    0.78    1.20 |         42.4    0.76    1.17 |         45.5    0.77    1.22 |         51.8    0.78    1.18 |
+ 0.25    0 |         36.9    0.77    1.06 |         42.3    0.77    1.06 |         46.6    0.77    1.08 |         52.2    0.71    0.99 |
+ 0.25    8 |         36.7    0.72    1.01 |         40.5    0.74    1.04 |         45.3    0.77    1.07 |         51.6    0.68    0.95 |
+ 0.25   32 |         36.6    0.83    1.23 |         40.4    0.92    1.35 |         45.5    0.80    1.16 |         52.8    0.75    1.10 |
+ 0.50    0 |         37.3    0.75    1.07 |         40.6    0.76    1.09 |         45.2    0.78    1.12 |         52.0    0.71    1.04 |
+ 0.50    8 |         36.8    0.74    1.03 |         40.8    0.76    1.05 |         41.4    0.77    1.09 |         52.5    0.69    0.96 |
+ 0.50   32 |         36.0    0.97    1.52 |         42.5    0.91    1.44 |         45.5    0.79    1.21 |         52.3    0.79    1.20 |
+
+## P3. shadow-Q2_0, N=2: the pass's wake, us (the median): the slowest reader's time from the host's signal to its first read;
+##     the pass is the wake and the reads (P1)
+ G ms  MiB |   host    one    all   both
+ 0.00    0 |    0.0    2.5   34.5    3.3
+ 0.00    8 |    0.0    1.3   32.3    4.4
+ 0.00   32 |    0.0    1.4   34.5    5.8
+ 0.10    0 |    0.0    2.9   29.1    4.2
+ 0.10    8 |    0.0    1.3   30.0    4.6
+ 0.10   32 |    0.0    1.4   31.5    5.3
+ 0.25    0 |    0.0    3.2   29.4    4.4
+ 0.25    8 |    0.0    3.1   29.5    4.7
+ 0.25   32 |    0.0    1.4   30.1    5.1
+ 0.50    0 |    0.0    3.2   29.4    4.9
+ 0.50    8 |    0.0    3.3   31.0    5.3
+ 0.50   32 |    0.0    1.4   32.8    5.3
+
+## P1. shadow-Q2_0, N=3, T=6, 15 workers + host: us per call of N experts, the median of 30 units
+##     cold = behind a sham pass by the same readers (the same bytes from unrelated memory), then the gap, then the
+##     call; hot = no pass, the same N experts every unit; pass = the pass's own time, its readers' wake included;
+##     traffic = the thread's read of X MiB during the gap: its duration (its overrun past the gap's end)
+anchors, gap 0, no pass, no traffic: cold 106.4 us | hot 58.7 us | the call reads 4.1 MB
+ G ms  MiB | call:  host   one   all  both | cold:  host   one   all  both |   hot | pass:  host   one   all  both | traffic us (overrun)
+ 0.00    0 |        80.6  77.6  76.6  74.1 |       106.6 100.7 108.1 115.0 |  57.3 |       114.5 106.3  88.8 158.0 |      0 (    0)
+ 0.00    8 |        93.8  91.9  94.0  85.4 |       127.2 127.0 129.9 129.4 |  80.3 |       114.9  99.0  87.7 159.0 |    214 (  214)
+ 0.00   32 |       101.1  99.7 100.0  87.7 |       130.7 133.5 132.9 128.2 |  81.4 |       113.1  99.4  89.5 159.7 |    780 (  780)
+ 0.10    0 |        91.1  91.1  88.6  84.5 |       110.8 111.7 113.8 113.5 |  74.0 |       113.2 116.1  87.4 158.4 |      0 (    0)
+ 0.10    8 |        94.2  95.7 104.1  90.1 |       138.3 133.1 131.3 132.5 |  87.4 |       114.9 115.4  90.3 157.4 |    248 (  148)
+ 0.10   32 |       114.2 107.1 103.1  91.6 |       130.7 129.7 130.5 129.7 |  86.1 |       114.8 114.2  88.9 158.9 |    904 (  804)
+ 0.25    0 |        86.6  85.3  91.7  79.7 |       112.9 113.8 112.7 112.7 |  81.7 |       113.3  98.2  87.8 157.4 |      0 (    0)
+ 0.25    8 |        80.8  80.8  84.3  76.0 |       112.2 112.6 113.7 111.7 |  81.6 |       111.7 104.9  91.9 160.6 |    191 (    0)
+ 0.25   32 |       109.2 104.0 101.5  91.7 |       131.3 126.2 128.5 129.6 |  80.4 |       112.5  96.8  88.9 155.0 |    768 (  518)
+ 0.50    0 |        82.1  81.3  85.6  77.2 |       111.1 112.5 112.5 115.6 |  75.3 |       111.5  97.1  88.1 158.4 |      0 (    0)
+ 0.50    8 |        83.3  82.5  86.4  78.5 |       110.1 114.2 113.3 113.5 |  75.9 |       111.0  97.3  87.4 161.2 |    184 (    0)
+ 0.50   32 |       122.0 120.3 102.3  99.9 |       128.1 129.1 129.2 142.3 |  87.4 |       113.3  98.9  96.8 183.9 |    767 (  267)
+
+## P2. shadow-Q2_0, N=3: the pass's rate (GB/s = bytes read / its time; both reads every line twice) and the call against
+##     its controls: pf/cold (its own cold control: the same readers, gap and traffic) | pf/hot (no pass, the same gap
+##     and traffic)
+ G ms  MiB | host    GB/s pf/cold  pf/hot | one     GB/s pf/cold  pf/hot | all     GB/s pf/cold  pf/hot | both    GB/s pf/cold  pf/hot |
+ 0.00    0 |         36.2    0.76    1.41 |         39.0    0.77    1.35 |         46.7    0.71    1.34 |         52.5    0.64    1.29 |
+ 0.00    8 |         36.1    0.74    1.17 |         41.9    0.72    1.14 |         47.3    0.72    1.17 |         52.2    0.66    1.06 |
+ 0.00   32 |         36.7    0.77    1.24 |         41.7    0.75    1.22 |         46.4    0.75    1.23 |         51.9    0.68    1.08 |
+ 0.10    0 |         36.6    0.82    1.23 |         35.7    0.82    1.23 |         47.5    0.78    1.20 |         52.4    0.74    1.14 |
+ 0.10    8 |         36.1    0.68    1.08 |         36.0    0.72    1.09 |         45.9    0.79    1.19 |         52.7    0.68    1.03 |
+ 0.10   32 |         36.1    0.87    1.33 |         36.3    0.83    1.24 |         46.6    0.79    1.20 |         52.2    0.71    1.06 |
+ 0.25    0 |         36.6    0.77    1.06 |         42.2    0.75    1.04 |         47.2    0.81    1.12 |         52.7    0.71    0.98 |
+ 0.25    8 |         37.1    0.72    0.99 |         39.5    0.72    0.99 |         45.1    0.74    1.03 |         51.6    0.68    0.93 |
+ 0.25   32 |         36.9    0.83    1.36 |         42.9    0.82    1.29 |         46.6    0.79    1.26 |         53.5    0.71    1.14 |
+ 0.50    0 |         37.2    0.74    1.09 |         42.7    0.72    1.08 |         47.1    0.76    1.14 |         52.4    0.67    1.02 |
+ 0.50    8 |         37.4    0.76    1.10 |         42.6    0.72    1.09 |         47.4    0.76    1.14 |         51.5    0.69    1.03 |
+ 0.50   32 |         36.6    0.95    1.40 |         41.9    0.93    1.38 |         42.9    0.79    1.17 |         45.1    0.70    1.14 |
+
+## P3. shadow-Q2_0, N=3: the pass's wake, us (the median): the slowest reader's time from the host's signal to its first read;
+##     the pass is the wake and the reads (P1)
+ G ms  MiB |   host    one    all   both
+ 0.00    0 |    0.0    2.7   31.8    4.1
+ 0.00    8 |    0.0    1.3   35.6    4.2
+ 0.00   32 |    0.0    1.4   39.4    5.6
+ 0.10    0 |    0.0    3.0   32.4    4.2
+ 0.10    8 |    0.0    1.3   37.0    5.2
+ 0.10   32 |    0.0    1.3   37.6    5.4
+ 0.25    0 |    0.0    3.1   32.5    4.5
+ 0.25    8 |    0.0    3.3   33.8    4.7
+ 0.25   32 |    0.0    1.3   35.3    5.0
+ 0.50    0 |    0.0    3.3   29.4    5.3
+ 0.50    8 |    0.0    3.4   29.4    5.4
+ 0.50   32 |    0.0    1.4   87.6    6.8
+
+## P1. shadow-Q2_0, N=4, T=6, 15 workers + host: us per call of N experts, the median of 30 units
+##     cold = behind a sham pass by the same readers (the same bytes from unrelated memory), then the gap, then the
+##     call; hot = no pass, the same N experts every unit; pass = the pass's own time, its readers' wake included;
+##     traffic = the thread's read of X MiB during the gap: its duration (its overrun past the gap's end)
+anchors, gap 0, no pass, no traffic: cold 154.8 us | hot 90.0 us | the call reads 5.5 MB
+ G ms  MiB | call:  host   one   all  both | cold:  host   one   all  both |   hot | pass:  host   one   all  both | traffic us (overrun)
+ 0.00    0 |       116.1 117.5 107.0  94.0 |       159.7 139.8 146.2 145.6 |  75.2 |       151.0 135.5 126.6 219.2 |      0 (    0)
+ 0.00    8 |       127.0 124.5 124.6 109.5 |       165.2 167.2 163.9 167.6 | 104.0 |       152.7 130.7 117.9 218.9 |    231 (  231)
+ 0.00   32 |       133.9 136.9 127.3 116.8 |       168.0 171.8 165.4 162.9 | 106.6 |       153.5 133.5 119.5 209.4 |    776 (  776)
+ 0.10    0 |       112.7 112.8 108.0 101.6 |       145.0 143.9 147.3 145.7 |  90.3 |       150.8 155.1 115.4 210.9 |      0 (    0)
+ 0.10    8 |       117.0 111.7 122.2 104.7 |       165.2 167.1 164.6 166.4 | 107.8 |       151.6 130.5 120.4 219.5 |    231 (  131)
+ 0.10   32 |       140.8 133.8 132.3 120.7 |       170.0 164.0 166.6 163.9 | 102.0 |       153.8 151.7 120.2 216.2 |    894 (  794)
+ 0.25    0 |       110.3 105.7 112.3 103.8 |       146.4 143.6 148.0 142.4 |  98.6 |       149.8 156.1 116.3 214.7 |      0 (    0)
+ 0.25    8 |        97.5 101.6 109.2  97.8 |       145.9 142.2 150.0 144.4 |  99.9 |       149.8 135.4 131.7 212.6 |    185 (    0)
+ 0.25   32 |       138.5 113.8 125.6 107.0 |       165.9 161.7 163.3 166.1 | 103.1 |       150.6 131.0 132.2 212.9 |    764 (  514)
+ 0.50    0 |        99.4 100.6 104.4  99.7 |       140.4 141.5 142.9 142.1 |  96.4 |       150.3 131.2 122.8 205.2 |      0 (    0)
+ 0.50    8 |       101.1  99.4 105.5  98.0 |       142.2 141.4 148.5 143.3 |  98.8 |       152.0 132.6 116.0 212.8 |    185 (    0)
+ 0.50   32 |       153.4 145.6 124.4 114.6 |       163.2 164.2 165.2 162.9 | 107.7 |       149.1 126.2 116.0 212.7 |    776 (  277)
+
+## P2. shadow-Q2_0, N=4: the pass's rate (GB/s = bytes read / its time; both reads every line twice) and the call against
+##     its controls: pf/cold (its own cold control: the same readers, gap and traffic) | pf/hot (no pass, the same gap
+##     and traffic)
+ G ms  MiB | host    GB/s pf/cold  pf/hot | one     GB/s pf/cold  pf/hot | all     GB/s pf/cold  pf/hot | both    GB/s pf/cold  pf/hot |
+ 0.00    0 |         36.6    0.73    1.54 |         40.8    0.84    1.56 |         43.7    0.73    1.42 |         50.5    0.65    1.25 |
+ 0.00    8 |         36.2    0.77    1.22 |         42.3    0.74    1.20 |         46.9    0.76    1.20 |         50.5    0.65    1.05 |
+ 0.00   32 |         36.0    0.80    1.26 |         41.4    0.80    1.28 |         46.3    0.77    1.19 |         52.8    0.72    1.10 |
+ 0.10    0 |         36.7    0.78    1.25 |         35.6    0.78    1.25 |         47.9    0.73    1.20 |         52.4    0.70    1.12 |
+ 0.10    8 |         36.5    0.71    1.09 |         42.4    0.67    1.04 |         45.9    0.74    1.13 |         50.4    0.63    0.97 |
+ 0.10   32 |         35.9    0.83    1.38 |         36.4    0.82    1.31 |         46.0    0.79    1.30 |         51.2    0.74    1.18 |
+ 0.25    0 |         36.9    0.75    1.12 |         35.4    0.74    1.07 |         47.5    0.76    1.14 |         51.5    0.73    1.05 |
+ 0.25    8 |         36.9    0.67    0.98 |         40.8    0.71    1.02 |         42.0    0.73    1.09 |         52.0    0.68    0.98 |
+ 0.25   32 |         36.7    0.84    1.34 |         42.2    0.70    1.10 |         41.8    0.77    1.22 |         52.0    0.64    1.04 |
+ 0.50    0 |         36.8    0.71    1.03 |         42.1    0.71    1.04 |         45.0    0.73    1.08 |         53.9    0.70    1.04 |
+ 0.50    8 |         36.4    0.71    1.02 |         41.7    0.70    1.01 |         47.7    0.71    1.07 |         52.0    0.68    0.99 |
+ 0.50   32 |         37.1    0.94    1.42 |         43.8    0.89    1.35 |         47.7    0.75    1.15 |         52.0    0.70    1.06 |
+
+## P3. shadow-Q2_0, N=4: the pass's wake, us (the median): the slowest reader's time from the host's signal to its first read;
+##     the pass is the wake and the reads (P1)
+ G ms  MiB |   host    one    all   both
+ 0.00    0 |    0.0    3.1  116.3    4.2
+ 0.00    8 |    0.0    1.3   38.0    5.1
+ 0.00   32 |    0.0    1.3   38.7    5.3
+ 0.10    0 |    0.0    3.2   30.5    4.5
+ 0.10    8 |    0.0    1.2   35.2    5.1
+ 0.10   32 |    0.0    1.4   36.8    5.4
+ 0.25    0 |    0.0    3.3   30.5    4.9
+ 0.25    8 |    0.0    3.2  114.8    4.3
+ 0.25   32 |    0.0    1.3   40.5    5.6
+ 0.50    0 |    0.0    3.3   31.2    5.3
+ 0.50    8 |    0.0    3.4   30.3    5.4
+ 0.50   32 |    0.0    1.3   36.6    5.6
+
+## P1. shadow-Q2_0, N=8, T=6, 15 workers + host: us per call of N experts, the median of 30 units
+##     cold = behind a sham pass by the same readers (the same bytes from unrelated memory), then the gap, then the
+##     call; hot = no pass, the same N experts every unit; pass = the pass's own time, its readers' wake included;
+##     traffic = the thread's read of X MiB during the gap: its duration (its overrun past the gap's end)
+anchors, gap 0, no pass, no traffic: cold 267.5 us | hot 138.3 us | the call reads 11.1 MB
+ G ms  MiB | call:  host   one   all  both | cold:  host   one   all  both |   hot | pass:  host   one   all  both | traffic us (overrun)
+ 0.00    0 |       220.9 203.0 188.5 169.7 |       272.6 271.5 274.8 273.0 | 133.6 |       302.1 313.7 227.7 429.3 |      0 (    0)
+ 0.00    8 |       210.9 207.9 222.5 191.8 |       299.0 310.3 308.3 309.7 | 182.3 |       301.6 303.8 232.8 433.9 |    273 (  273)
+ 0.00   32 |       242.3 211.9 224.7 205.2 |       301.5 312.3 306.6 312.3 | 199.6 |       305.3 304.9 230.3 434.6 |    926 (  926)
+ 0.10    0 |       203.7 194.4 198.2 175.3 |       290.4 284.5 277.5 277.1 | 193.0 |       307.8 296.3 233.6 424.4 |      0 (    0)
+ 0.10    8 |       224.8 220.3 211.2 176.4 |       328.5 327.0 301.1 306.5 | 209.4 |       317.2 287.8 231.1 431.4 |    317 (  217)
+ 0.10   32 |       219.7 193.1 217.9 201.2 |       308.8 301.4 304.9 302.8 | 179.5 |       298.4 254.2 227.2 428.5 |    806 (  706)
+ 0.25    0 |       209.8 200.0 194.3 174.9 |       269.9 261.4 269.3 269.1 | 174.7 |       299.6 306.7 230.4 414.8 |      0 (    0)
+ 0.25    8 |       177.6 173.2 193.9 175.3 |       269.8 268.2 267.7 275.3 | 173.5 |       301.5 290.9 332.9 426.9 |    222 (    0)
+ 0.25   32 |       213.0 192.3 217.3 194.6 |       316.9 303.7 303.8 307.2 | 179.3 |       301.4 256.1 228.6 421.0 |    788 (  538)
+ 0.50    0 |       200.2 174.0 182.6 174.5 |       263.9 260.6 263.4 266.8 | 170.2 |       299.6 305.5 225.1 412.9 |      0 (    0)
+ 0.50    8 |       179.5 180.2 188.5 177.3 |       263.3 261.9 266.2 269.4 | 174.8 |       301.5 263.8 229.6 424.5 |    223 (    0)
+ 0.50   32 |       214.1 195.4 217.1 186.0 |       309.2 302.3 306.2 306.5 | 181.6 |       300.4 257.1 226.3 413.2 |    803 (  303)
+
+## P2. shadow-Q2_0, N=8: the pass's rate (GB/s = bytes read / its time; both reads every line twice) and the call against
+##     its controls: pf/cold (its own cold control: the same readers, gap and traffic) | pf/hot (no pass, the same gap
+##     and traffic)
+ G ms  MiB | host    GB/s pf/cold  pf/hot | one     GB/s pf/cold  pf/hot | all     GB/s pf/cold  pf/hot | both    GB/s pf/cold  pf/hot |
+ 0.00    0 |         36.6    0.81    1.65 |         35.3    0.75    1.52 |         48.6    0.69    1.41 |         51.5    0.62    1.27 |
+ 0.00    8 |         36.7    0.71    1.16 |         36.4    0.67    1.14 |         47.5    0.72    1.22 |         51.0    0.62    1.05 |
+ 0.00   32 |         36.2    0.80    1.21 |         36.3    0.68    1.06 |         48.0    0.73    1.13 |         50.9    0.66    1.03 |
+ 0.10    0 |         35.9    0.70    1.06 |         37.3    0.68    1.01 |         47.3    0.71    1.03 |         52.1    0.63    0.91 |
+ 0.10    8 |         34.9    0.68    1.07 |         38.4    0.67    1.05 |         47.9    0.70    1.01 |         51.3    0.58    0.84 |
+ 0.10   32 |         37.1    0.71    1.22 |         43.5    0.64    1.08 |         48.7    0.71    1.21 |         51.6    0.66    1.12 |
+ 0.25    0 |         36.9    0.78    1.20 |         36.1    0.77    1.14 |         48.0    0.72    1.11 |         53.3    0.65    1.00 |
+ 0.25    8 |         36.7    0.66    1.02 |         38.0    0.65    1.00 |         33.2    0.72    1.12 |         51.8    0.64    1.01 |
+ 0.25   32 |         36.7    0.67    1.19 |         43.2    0.63    1.07 |         48.4    0.72    1.21 |         52.5    0.63    1.09 |
+ 0.50    0 |         36.9    0.76    1.18 |         36.2    0.67    1.02 |         49.1    0.69    1.07 |         53.6    0.65    1.02 |
+ 0.50    8 |         36.7    0.68    1.03 |         41.9    0.69    1.03 |         48.2    0.71    1.08 |         52.1    0.66    1.01 |
+ 0.50   32 |         36.8    0.69    1.18 |         43.0    0.65    1.08 |         48.9    0.71    1.20 |         53.5    0.61    1.02 |
+
+## P3. shadow-Q2_0, N=8: the pass's wake, us (the median): the slowest reader's time from the host's signal to its first read;
+##     the pass is the wake and the reads (P1)
+ G ms  MiB |   host    one    all   both
+ 0.00    0 |    0.0    2.6   28.0    4.4
+ 0.00    8 |    0.0    1.2   84.4    6.2
+ 0.00   32 |    0.0    1.3   38.0    6.1
+ 0.10    0 |    0.0    3.8  201.3    4.4
+ 0.10    8 |    0.0    1.7   70.2    4.7
+ 0.10   32 |    0.0    1.3   39.2    5.8
+ 0.25    0 |    0.0    3.8   35.0    5.3
+ 0.25    8 |    0.0    3.9  305.8    4.7
+ 0.25   32 |    0.0    1.3   38.7    5.6
+ 0.50    0 |    0.0    3.9   32.7    5.5
+ 0.50    8 |    0.0    4.1   30.7    5.9
+ 0.50   32 |    0.0    1.2   40.8    5.6
+
+## P1. native mix, N=2, T=6, 15 workers + host: us per call of N experts, the median of 30 units
+##     cold = behind a sham pass by the same readers (the same bytes from unrelated memory), then the gap, then the
+##     call; hot = no pass, the same N experts every unit; pass = the pass's own time, its readers' wake included;
+##     traffic = the thread's read of X MiB during the gap: its duration (its overrun past the gap's end)
+anchors, gap 0, no pass, no traffic: cold 110.5 us | hot 80.4 us | the call reads 4.1 MB
+ G ms  MiB | call:  host   one   all  both | cold:  host   one   all  both |   hot | pass:  host   one   all  both | traffic us (overrun)
+ 0.00    0 |        90.8  90.6  85.2  93.7 |       112.1 107.9 105.3 117.8 |  72.3 |       112.1 106.3  86.4 162.6 |      0 (    0)
+ 0.00    8 |       103.4 106.3 104.9 102.0 |       132.2 132.7 130.9 132.9 |  96.2 |       112.0  98.8  86.5 157.3 |    221 (  221)
+ 0.00   32 |       107.2 107.0 105.9 100.8 |       132.4 130.4 130.5 130.3 | 103.8 |       114.6  97.7  88.3 155.0 |    762 (  762)
+ 0.10    0 |        96.5  96.4  95.9  91.9 |       114.5 114.8 114.4 117.1 |  84.4 |       110.7 101.2  87.4 161.0 |      0 (    0)
+ 0.10    8 |       103.8 108.3 107.9 102.2 |       133.8 130.8 131.2 133.9 | 100.3 |       112.1 100.4  89.5 159.2 |    215 (  115)
+ 0.10   32 |       111.8 106.9 108.1 104.8 |       134.0 130.0 130.2 132.0 | 103.3 |       115.1  95.3  87.1 154.7 |    780 (  680)
+ 0.25    0 |        97.2  96.9  98.3  90.6 |       114.2 115.0 113.2 114.9 |  88.1 |       113.5 108.1  91.2 156.9 |      0 (    0)
+ 0.25    8 |        93.8  94.4  94.7  90.0 |       115.0 115.1 113.3 115.9 |  90.0 |       111.3 100.3  87.0 158.8 |    188 (    0)
+ 0.25   32 |       110.9 110.7 107.6 102.5 |       133.3 129.4 130.3 131.4 | 100.4 |       111.0  98.3  87.8 155.0 |    748 (  498)
+ 0.50    0 |        96.2  95.8  94.7  89.5 |       113.2 115.1 114.8 114.7 |  85.0 |       110.8 102.4  86.2 157.2 |      0 (    0)
+ 0.50    8 |        93.1  93.3  94.6  87.8 |       114.0 114.3 113.5 114.0 |  87.4 |       113.3  98.5  88.7 155.9 |    186 (    0)
+ 0.50   32 |       123.0 121.3 108.4 106.9 |       133.1 128.6 129.8 129.9 | 101.3 |       111.0  96.0  87.9 156.8 |    758 (  258)
+
+## P2. native mix, N=2: the pass's rate (GB/s = bytes read / its time; both reads every line twice) and the call against
+##     its controls: pf/cold (its own cold control: the same readers, gap and traffic) | pf/hot (no pass, the same gap
+##     and traffic)
+ G ms  MiB | host    GB/s pf/cold  pf/hot | one     GB/s pf/cold  pf/hot | all     GB/s pf/cold  pf/hot | both    GB/s pf/cold  pf/hot |
+ 0.00    0 |         36.5    0.81    1.26 |         38.5    0.84    1.25 |         47.4    0.81    1.18 |         50.3    0.80    1.30 |
+ 0.00    8 |         36.5    0.78    1.07 |         41.4    0.80    1.10 |         47.3    0.80    1.09 |         52.0    0.77    1.06 |
+ 0.00   32 |         35.7    0.81    1.03 |         41.9    0.82    1.03 |         46.3    0.81    1.02 |         52.8    0.77    0.97 |
+ 0.10    0 |         37.0    0.84    1.14 |         40.4    0.84    1.14 |         46.8    0.84    1.14 |         50.8    0.78    1.09 |
+ 0.10    8 |         36.5    0.78    1.04 |         40.8    0.83    1.08 |         45.7    0.82    1.08 |         51.4    0.76    1.02 |
+ 0.10   32 |         35.6    0.83    1.08 |         42.9    0.82    1.04 |         47.0    0.83    1.05 |         52.9    0.79    1.02 |
+ 0.25    0 |         36.1    0.85    1.10 |         37.8    0.84    1.10 |         44.9    0.87    1.12 |         52.2    0.79    1.03 |
+ 0.25    8 |         36.8    0.82    1.04 |         40.8    0.82    1.05 |         47.0    0.84    1.05 |         51.6    0.78    1.00 |
+ 0.25   32 |         36.9    0.83    1.10 |         41.6    0.86    1.10 |         46.6    0.83    1.07 |         52.8    0.78    1.02 |
+ 0.50    0 |         36.9    0.85    1.13 |         40.0    0.83    1.13 |         47.5    0.82    1.11 |         52.1    0.78    1.05 |
+ 0.50    8 |         36.1    0.82    1.06 |         41.5    0.82    1.07 |         46.1    0.83    1.08 |         52.5    0.77    1.00 |
+ 0.50   32 |         36.9    0.92    1.21 |         42.6    0.94    1.20 |         46.6    0.84    1.07 |         52.2    0.82    1.06 |
+
+## P3. native mix, N=2: the pass's wake, us (the median): the slowest reader's time from the host's signal to its first read;
+##     the pass is the wake and the reads (P1)
+ G ms  MiB |   host    one    all   both
+ 0.00    0 |    0.0    2.6   31.1    4.1
+ 0.00    8 |    0.0    1.3   35.0    4.7
+ 0.00   32 |    0.0    1.4   36.5    5.3
+ 0.10    0 |    0.0    3.1   30.7    4.2
+ 0.10    8 |    0.0    1.3   58.2    4.8
+ 0.10   32 |    0.0    1.3   36.0    5.6
+ 0.25    0 |    0.0    3.2   46.3    4.7
+ 0.25    8 |    0.0    3.1   30.7    4.8
+ 0.25   32 |    0.0    1.4   36.6    5.4
+ 0.50    0 |    0.0    3.3   29.7    4.8
+ 0.50    8 |    0.0    3.4   30.7    5.3
+ 0.50   32 |    0.0    1.4   36.9    5.3
+
+## P1. native mix, N=3, T=6, 15 workers + host: us per call of N experts, the median of 30 units
+##     cold = behind a sham pass by the same readers (the same bytes from unrelated memory), then the gap, then the
+##     call; hot = no pass, the same N experts every unit; pass = the pass's own time, its readers' wake included;
+##     traffic = the thread's read of X MiB during the gap: its duration (its overrun past the gap's end)
+anchors, gap 0, no pass, no traffic: cold 157.0 us | hot 117.2 us | the call reads 6.1 MB
+ G ms  MiB | call:  host   one   all  both | cold:  host   one   all  both |   hot | pass:  host   one   all  both | traffic us (overrun)
+ 0.00    0 |       132.0 132.9 134.2 130.0 |       162.3 161.3 162.1 167.2 | 110.5 |       169.5 147.8 128.9 238.4 |      0 (    0)
+ 0.00    8 |       147.6 151.2 153.6 142.7 |       187.7 185.8 183.6 191.9 | 133.5 |       168.6 148.1 135.8 242.1 |    222 (  222)
+ 0.00   32 |       147.6 150.5 150.0 143.4 |       186.5 185.0 184.2 186.5 | 144.6 |       168.4 145.3 127.5 234.0 |    775 (  775)
+ 0.10    0 |       133.6 134.0 141.4 132.7 |       164.4 161.6 163.7 165.5 | 115.4 |       167.2 162.2 131.0 236.5 |      0 (    0)
+ 0.10    8 |       148.9 149.5 154.9 140.8 |       190.1 188.0 185.8 188.2 | 139.6 |       169.1 152.6 129.7 237.1 |    229 (  129)
+ 0.10   32 |       147.4 149.5 152.2 142.6 |       188.3 185.0 184.1 185.6 | 143.9 |       168.5 143.1 129.0 236.7 |    769 (  669)
+ 0.25    0 |       136.0 134.5 137.3 128.5 |       162.0 162.2 162.0 162.0 | 127.8 |       167.7 161.7 127.0 232.2 |      0 (    0)
+ 0.25    8 |       133.4 133.7 140.4 133.6 |       161.8 162.1 162.1 170.9 | 131.8 |       166.6 153.1 136.2 243.0 |    189 (    0)
+ 0.25   32 |       159.8 152.3 155.2 142.7 |       190.1 186.6 188.7 189.2 | 143.6 |       171.2 145.5 134.6 240.0 |    796 (  546)
+ 0.50    0 |       138.6 137.4 140.2 131.7 |       163.1 162.7 166.3 169.6 | 128.3 |       166.4 148.0 135.6 236.3 |      0 (    0)
+ 0.50    8 |       134.7 133.3 137.9 128.9 |       168.0 167.4 162.9 162.2 | 127.9 |       167.7 159.8 135.3 236.3 |    192 (    0)
+ 0.50   32 |       171.2 160.9 154.3 143.6 |       186.9 188.8 192.7 188.1 | 151.3 |       168.1 154.7 131.7 236.4 |    822 (  322)
+
+## P2. native mix, N=3: the pass's rate (GB/s = bytes read / its time; both reads every line twice) and the call against
+##     its controls: pf/cold (its own cold control: the same readers, gap and traffic) | pf/hot (no pass, the same gap
+##     and traffic)
+ G ms  MiB | host    GB/s pf/cold  pf/hot | one     GB/s pf/cold  pf/hot | all     GB/s pf/cold  pf/hot | both    GB/s pf/cold  pf/hot |
+ 0.00    0 |         36.2    0.81    1.19 |         41.6    0.82    1.20 |         47.6    0.83    1.21 |         51.5    0.78    1.18 |
+ 0.00    8 |         36.4    0.79    1.11 |         41.4    0.81    1.13 |         45.2    0.84    1.15 |         50.7    0.74    1.07 |
+ 0.00   32 |         36.4    0.79    1.02 |         42.3    0.81    1.04 |         48.2    0.81    1.04 |         52.5    0.77    0.99 |
+ 0.10    0 |         36.7    0.81    1.16 |         37.9    0.83    1.16 |         46.9    0.86    1.23 |         51.9    0.80    1.15 |
+ 0.10    8 |         36.3    0.78    1.07 |         40.2    0.80    1.07 |         47.4    0.83    1.11 |         51.8    0.75    1.01 |
+ 0.10   32 |         36.4    0.78    1.02 |         42.9    0.81    1.04 |         47.6    0.83    1.06 |         51.9    0.77    0.99 |
+ 0.25    0 |         36.6    0.84    1.06 |         38.0    0.83    1.05 |         48.3    0.85    1.07 |         52.9    0.79    1.01 |
+ 0.25    8 |         36.9    0.82    1.01 |         40.1    0.82    1.01 |         45.1    0.87    1.07 |         50.5    0.78    1.01 |
+ 0.25   32 |         35.9    0.84    1.11 |         42.2    0.82    1.06 |         45.6    0.82    1.08 |         51.2    0.75    0.99 |
+ 0.50    0 |         36.9    0.85    1.08 |         41.5    0.84    1.07 |         45.3    0.84    1.09 |         52.0    0.78    1.03 |
+ 0.50    8 |         36.6    0.80    1.05 |         38.4    0.80    1.04 |         45.4    0.85    1.08 |         52.0    0.79    1.01 |
+ 0.50   32 |         36.5    0.92    1.13 |         39.7    0.85    1.06 |         46.6    0.80    1.02 |         51.9    0.76    0.95 |
+
+## P3. native mix, N=3: the pass's wake, us (the median): the slowest reader's time from the host's signal to its first read;
+##     the pass is the wake and the reads (P1)
+ G ms  MiB |   host    one    all   both
+ 0.00    0 |    0.0    3.1   34.5    4.3
+ 0.00    8 |    0.0    1.3   74.2    4.9
+ 0.00   32 |    0.0    1.3   36.0    5.6
+ 0.10    0 |    0.0    3.3   62.1    4.5
+ 0.10    8 |    0.0    1.4   65.2    4.5
+ 0.10   32 |    0.0    1.4   37.7    5.6
+ 0.25    0 |    0.0    3.3   29.9    4.9
+ 0.25    8 |    0.0    3.4   73.5    4.8
+ 0.25   32 |    0.0    1.4   65.2    5.8
+ 0.50    0 |    0.0    3.4   64.5    5.3
+ 0.50    8 |    0.0    3.6   40.3    5.3
+ 0.50   32 |    0.0    1.5   59.9    5.8
+
+## P1. native mix, N=4, T=6, 15 workers + host: us per call of N experts, the median of 30 units
+##     cold = behind a sham pass by the same readers (the same bytes from unrelated memory), then the gap, then the
+##     call; hot = no pass, the same N experts every unit; pass = the pass's own time, its readers' wake included;
+##     traffic = the thread's read of X MiB during the gap: its duration (its overrun past the gap's end)
+anchors, gap 0, no pass, no traffic: cold 212.2 us | hot 153.5 us | the call reads 8.2 MB
+ G ms  MiB | call:  host   one   all  both | cold:  host   one   all  both |   hot | pass:  host   one   all  both | traffic us (overrun)
+ 0.00    0 |       177.5 177.1 169.6 173.1 |       212.3 210.0 210.8 218.7 | 152.7 |       224.5 222.7 171.6 319.0 |      0 (    0)
+ 0.00    8 |       199.9 193.5 198.1 186.7 |       250.0 242.7 239.6 243.5 | 177.5 |       228.4 206.4 172.8 318.4 |    248 (  248)
+ 0.00   32 |       198.5 195.5 194.2 188.0 |       244.3 237.7 239.9 243.5 | 192.4 |       225.0 202.7 169.9 312.1 |    822 (  822)
+ 0.10    0 |       173.5 171.2 171.4 169.7 |       211.9 210.0 210.0 214.0 | 158.7 |       222.4 217.5 172.2 320.7 |      0 (    0)
+ 0.10    8 |       202.5 187.7 196.5 181.9 |       246.5 247.3 246.3 249.0 | 180.8 |       224.9 216.3 169.4 321.0 |    244 (  144)
+ 0.10   32 |       216.4 195.5 200.6 192.6 |       244.2 246.3 244.4 246.9 | 200.5 |       224.8 212.8 170.8 311.1 |    867 (  767)
+ 0.25    0 |       174.3 171.9 169.1 169.9 |       214.4 210.3 210.2 214.3 | 159.7 |       224.8 209.1 169.2 310.8 |      0 (    0)
+ 0.25    8 |       173.2 172.4 172.8 167.9 |       211.3 212.9 209.1 212.0 | 169.0 |       223.3 206.3 169.1 312.3 |    198 (    0)
+ 0.25   32 |       212.3 197.5 196.9 192.3 |       239.7 239.9 243.0 245.8 | 195.7 |       224.0 202.7 171.1 320.6 |    823 (  573)
+ 0.50    0 |       176.7 170.8 174.1 165.4 |       209.4 208.9 205.8 210.9 | 161.1 |       220.4 211.5 169.6 310.5 |      0 (    0)
+ 0.50    8 |       170.3 171.8 172.1 169.9 |       209.6 209.5 209.0 213.3 | 165.6 |       225.1 207.3 170.8 318.8 |    201 (    0)
+ 0.50   32 |       216.7 201.1 196.7 188.7 |       246.0 245.8 243.1 243.8 | 194.8 |       223.9 202.5 169.6 313.1 |    846 (  346)
+
+## P2. native mix, N=4: the pass's rate (GB/s = bytes read / its time; both reads every line twice) and the call against
+##     its controls: pf/cold (its own cold control: the same readers, gap and traffic) | pf/hot (no pass, the same gap
+##     and traffic)
+ G ms  MiB | host    GB/s pf/cold  pf/hot | one     GB/s pf/cold  pf/hot | all     GB/s pf/cold  pf/hot | both    GB/s pf/cold  pf/hot |
+ 0.00    0 |         36.5    0.84    1.16 |         36.8    0.84    1.16 |         47.7    0.80    1.11 |         51.3    0.79    1.13 |
+ 0.00    8 |         35.8    0.80    1.13 |         39.7    0.80    1.09 |         47.4    0.83    1.12 |         51.4    0.77    1.05 |
+ 0.00   32 |         36.4    0.81    1.03 |         40.4    0.82    1.02 |         48.2    0.81    1.01 |         52.5    0.77    0.98 |
+ 0.10    0 |         36.8    0.82    1.09 |         37.6    0.82    1.08 |         47.5    0.82    1.08 |         51.1    0.79    1.07 |
+ 0.10    8 |         36.4    0.82    1.12 |         37.8    0.76    1.04 |         48.3    0.80    1.09 |         51.0    0.73    1.01 |
+ 0.10   32 |         36.4    0.89    1.08 |         38.5    0.79    0.98 |         47.9    0.82    1.00 |         52.6    0.78    0.96 |
+ 0.25    0 |         36.4    0.81    1.09 |         39.1    0.82    1.08 |         48.4    0.80    1.06 |         52.7    0.79    1.06 |
+ 0.25    8 |         36.7    0.82    1.02 |         39.7    0.81    1.02 |         48.4    0.83    1.02 |         52.4    0.79    0.99 |
+ 0.25   32 |         36.5    0.89    1.08 |         40.4    0.82    1.01 |         47.9    0.81    1.01 |         51.1    0.78    0.98 |
+ 0.50    0 |         37.1    0.84    1.10 |         38.7    0.82    1.06 |         48.3    0.85    1.08 |         52.7    0.78    1.03 |
+ 0.50    8 |         36.4    0.81    1.03 |         39.5    0.82    1.04 |         47.9    0.82    1.04 |         51.4    0.80    1.03 |
+ 0.50   32 |         36.6    0.88    1.11 |         40.4    0.82    1.03 |         48.3    0.81    1.01 |         52.3    0.77    0.97 |
+
+## P3. native mix, N=4: the pass's wake, us (the median): the slowest reader's time from the host's signal to its first read;
+##     the pass is the wake and the reads (P1)
+ G ms  MiB |   host    one    all   both
+ 0.00    0 |    0.0    3.4   68.1    4.6
+ 0.00    8 |    0.0    1.3   71.9    5.2
+ 0.00   32 |    0.0    1.4   41.5    5.6
+ 0.10    0 |    0.0    3.4   75.0    4.8
+ 0.10    8 |    0.0    1.5   48.8    5.0
+ 0.10   32 |    0.0    1.4   43.5    5.6
+ 0.25    0 |    0.0    3.5   32.9    5.0
+ 0.25    8 |    0.0    3.5   32.7    5.1
+ 0.25   32 |    0.0    1.4   40.9    6.0
+ 0.50    0 |    0.0    3.5   31.5    5.5
+ 0.50    8 |    0.0    3.6   38.5    5.5
+ 0.50   32 |    0.0    1.3   39.2    6.2
+
+## P1. native mix, N=8, T=6, 15 workers + host: us per call of N experts, the median of 30 units
+##     cold = behind a sham pass by the same readers (the same bytes from unrelated memory), then the gap, then the
+##     call; hot = no pass, the same N experts every unit; pass = the pass's own time, its readers' wake included;
+##     traffic = the thread's read of X MiB during the gap: its duration (its overrun past the gap's end)
+anchors, gap 0, no pass, no traffic: cold 418.6 us | hot 308.2 us | the call reads 16.4 MB
+ G ms  MiB | call:  host   one   all  both | cold:  host   one   all  both |   hot | pass:  host   one   all  both | traffic us (overrun)
+ 0.00    0 |       333.0 329.6 329.1 330.4 |       416.5 405.0 410.9 422.6 | 292.2 |       445.1 413.1 335.9 627.8 |      0 (    0)
+ 0.00    8 |       377.8 356.5 377.0 348.4 |       470.2 464.9 460.3 469.1 | 337.4 |       454.1 411.5 351.8 640.2 |    263 (  263)
+ 0.00   32 |       369.9 354.5 378.5 365.8 |       465.9 457.9 468.4 470.0 | 365.8 |       447.8 401.8 358.9 657.3 |    871 (  871)
+ 0.10    0 |       332.5 323.9 335.3 325.3 |       420.1 417.9 406.8 420.0 | 299.9 |       468.9 412.2 333.9 633.7 |      0 (    0)
+ 0.10    8 |       359.1 346.6 355.1 337.3 |       461.9 455.0 453.5 458.2 | 314.3 |       448.6 408.9 342.4 634.7 |    238 (  138)
+ 0.10   32 |       363.6 363.6 377.6 352.5 |       470.0 452.7 452.8 457.5 | 352.8 |       447.2 386.6 331.2 636.5 |    852 (  752)
+ 0.25    0 |       324.6 321.1 325.6 315.3 |       409.1 403.3 396.8 411.2 | 317.1 |       450.5 431.7 332.6 627.6 |      0 (    0)
+ 0.25    8 |       324.3 323.5 324.1 319.6 |       415.8 412.3 408.4 413.0 | 307.2 |       448.5 409.3 335.9 629.9 |    210 (    0)
+ 0.25   32 |       376.4 358.2 384.5 352.9 |       475.2 457.3 456.4 466.3 | 360.4 |       447.7 400.2 335.3 628.3 |    876 (  626)
+ 0.50    0 |       325.8 310.4 323.9 322.5 |       395.1 388.6 391.3 410.3 | 301.3 |       446.2 402.0 334.1 627.3 |      0 (    0)
+ 0.50    8 |       325.6 324.0 339.7 324.9 |       404.8 399.3 421.5 406.9 | 299.1 |       446.8 406.5 348.4 627.3 |    201 (    0)
+ 0.50   32 |       375.4 357.9 385.5 353.7 |       475.6 460.7 460.8 467.2 | 360.2 |       446.9 406.2 346.6 631.2 |    880 (  380)
+
+## P2. native mix, N=8: the pass's rate (GB/s = bytes read / its time; both reads every line twice) and the call against
+##     its controls: pf/cold (its own cold control: the same readers, gap and traffic) | pf/hot (no pass, the same gap
+##     and traffic)
+ G ms  MiB | host    GB/s pf/cold  pf/hot | one     GB/s pf/cold  pf/hot | all     GB/s pf/cold  pf/hot | both    GB/s pf/cold  pf/hot |
+ 0.00    0 |         36.8    0.80    1.14 |         39.6    0.81    1.13 |         48.7    0.80    1.13 |         52.2    0.78    1.13 |
+ 0.00    8 |         36.1    0.80    1.12 |         39.8    0.77    1.06 |         46.5    0.82    1.12 |         51.1    0.74    1.03 |
+ 0.00   32 |         36.6    0.79    1.01 |         40.7    0.77    0.97 |         45.6    0.81    1.03 |         49.8    0.78    1.00 |
+ 0.10    0 |         34.9    0.79    1.11 |         39.7    0.78    1.08 |         49.0    0.82    1.12 |         51.7    0.77    1.08 |
+ 0.10    8 |         36.5    0.78    1.14 |         40.0    0.76    1.10 |         47.8    0.78    1.13 |         51.6    0.74    1.07 |
+ 0.10   32 |         36.6    0.77    1.03 |         42.3    0.80    1.03 |         49.4    0.83    1.07 |         51.4    0.77    1.00 |
+ 0.25    0 |         36.3    0.79    1.02 |         37.9    0.80    1.01 |         49.2    0.82    1.03 |         52.2    0.77    0.99 |
+ 0.25    8 |         36.5    0.78    1.06 |         40.0    0.78    1.05 |         48.7    0.79    1.05 |         52.0    0.77    1.04 |
+ 0.25   32 |         36.6    0.79    1.04 |         40.9    0.78    0.99 |         48.8    0.84    1.07 |         52.1    0.76    0.98 |
+ 0.50    0 |         36.7    0.82    1.08 |         40.7    0.80    1.03 |         49.0    0.83    1.07 |         52.2    0.79    1.07 |
+ 0.50    8 |         36.6    0.80    1.09 |         40.3    0.81    1.08 |         47.0    0.81    1.14 |         52.2    0.80    1.09 |
+ 0.50   32 |         36.6    0.79    1.04 |         40.3    0.78    0.99 |         47.2    0.84    1.07 |         51.9    0.76    0.98 |
+
+## P3. native mix, N=8: the pass's wake, us (the median): the slowest reader's time from the host's signal to its first read;
+##     the pass is the wake and the reads (P1)
+ G ms  MiB |   host    one    all   both
+ 0.00    0 |    0.0    3.8   53.6    5.4
+ 0.00    8 |    0.0    1.6  172.3    6.0
+ 0.00   32 |    0.0    1.4  151.3    6.5
+ 0.10    0 |    0.0    3.8  100.3    5.5
+ 0.10    8 |    0.0    3.2  135.1    6.1
+ 0.10   32 |    0.0    1.3   63.0    6.9
+ 0.25    0 |    0.0    3.9   47.4    5.9
+ 0.25    8 |    0.0    3.9   75.0    5.7
+ 0.25   32 |    0.0    1.3   68.1    6.0
+ 0.50    0 |    0.0    3.9  102.7    6.3
+ 0.50    8 |    0.0    4.0  139.0    6.7
+ 0.50   32 |    0.0    1.3  143.9    6.6
+
+## S. the stop rule: call/cold at G = 0.25 ms with 8 MiB of traffic; the best cell of each reader set over G and X
+##    (who, G ms, MiB, call/cold); the pass's own time at the stop-rule cell against the engine's idle time per layer
+##    (250 us solo, ~320 us concurrent); the price if the stop-rule cell held for every call: (1 - r) x 0.46 x 0.715 of the
+##    concurrent round's window
+format            N | call/cold:  host    one    all   both | best cell                | pass us:   host    one    all   both | price %:   host    one    all   both
+IQ2_S/IQ4_NL      2 |   0.81   0.80   0.84   0.72 | both  0.25  8 MiB  0.72 |  107.4   95.3   85.5  153.5   +6.3   +6.5   +5.4   +9.2
+                  3 |   0.81   0.81   0.82   0.78 | host  0.00  8 MiB  0.73 |  159.2  154.7  122.2  226.7   +6.2   +6.3   +6.0   +7.3
+                  4 |   0.79   0.79   0.82   0.81 | both  0.10  8 MiB  0.71 |  215.2  219.4  161.7  302.6   +6.9   +7.0   +5.8   +6.4
+                  8 |   0.78   0.77   0.77   0.75 | host  0.50 32 MiB  0.71 |  430.8  376.2  319.9  609.1   +7.3   +7.7   +7.5   +8.1
+IQ3_XXS/IQ4_NL    2 |   0.82   0.82   0.83   0.78 | both  0.50  0 MiB  0.76 |  118.2  102.7   91.8  167.5   +5.8   +6.0   +5.6   +7.3
+                  3 |   0.82   0.82   0.91   0.78 | both  0.25 32 MiB  0.73 |  178.3  156.4  159.8  266.4   +5.9   +5.8   +2.9   +7.2
+                  4 |   0.83   0.82   0.83   0.79 | both  0.10  8 MiB  0.71 |  237.2  209.5  178.3  330.8   +5.5   +6.0   +5.6   +7.0
+                  8 |   0.78   0.79   0.81   0.81 | both  0.25  0 MiB  0.73 |  480.6  418.2  359.3  662.4   +7.3   +6.9   +6.2   +6.2
+IQ3_S/IQ4_NL      2 |   0.77   0.80   0.80   0.80 | both  0.10 32 MiB  0.72 |  126.2  117.4   96.9  180.6   +7.4   +6.5   +6.4   +6.4
+                  3 |   0.81   0.81   0.86   0.81 | both  0.00  8 MiB  0.71 |  189.8  173.5  144.8  280.6   +6.3   +6.3   +4.8   +6.3
+                  4 |   0.80   0.80   0.82   0.74 | both  0.10  8 MiB  0.74 |  253.9  223.2  192.7  349.5   +6.6   +6.7   +5.8   +8.6
+                  8 |   0.74   0.78   0.76   0.71 | both  0.25  8 MiB  0.71 |  508.0  514.9  389.9  730.8   +8.6   +7.3   +7.8   +9.4
+IQ2_S/Q2_0        2 |   0.86   0.87   0.89   0.84 | both  0.00  8 MiB  0.78 |   82.8   85.2   65.0  118.6   +4.5   +4.3   +3.6   +5.4
+                  3 |   0.88   0.86   0.88   0.71 | both  0.25  8 MiB  0.71 |  123.3  108.5  104.0  180.5   +3.9   +4.6   +3.9   +9.5
+                  4 |   0.86   0.83   0.84   0.85 | host  0.10  8 MiB  0.75 |  165.7  148.3  131.8  238.5   +4.6   +5.7   +5.1   +4.9
+                  8 |   0.82   0.82   0.80   0.83 | one   0.25 32 MiB  0.73 |  329.9  334.5  243.1  462.2   +5.9   +5.8   +6.7   +5.5
+IQ3_XXS/Q2_0      2 |   0.87   0.89   0.91   0.86 | host  0.00  0 MiB  0.81 |   93.1   82.5   74.3  133.3   +4.2   +3.6   +2.9   +4.5
+                  3 |   0.86   0.90   0.89   0.83 | both  0.10  8 MiB  0.79 |  139.7  126.8  121.5  198.4   +4.5   +3.4   +3.7   +5.6
+                  4 |   0.91   0.88   0.84   0.84 | both  0.10  8 MiB  0.77 |  187.3  164.7  144.4  262.4   +3.0   +3.9   +5.4   +5.3
+                  8 |   0.85   0.80   0.89   0.80 | both  0.10  8 MiB  0.78 |  375.0  329.6  278.2  519.1   +4.9   +6.5   +3.8   +6.7
+IQ4_XS/IQ4_NL     2 |   0.82   0.82   0.80   0.76 | both  0.10  0 MiB  0.72 |  145.0  127.0  109.9  206.6   +5.9   +6.0   +6.7   +7.9
+                  3 |   0.83   0.82   0.86   0.80 | both  0.10  8 MiB  0.71 |  217.4  222.8  164.0  301.8   +5.5   +5.8   +4.6   +6.6
+                  4 |   0.82   0.81   0.76   0.82 | host  0.10  8 MiB  0.70 |  289.9  254.7  216.2  407.7   +5.9   +6.2   +7.8   +6.0
+                  8 |   0.81   0.78   0.86   0.77 | both  0.00  8 MiB  0.70 |  580.6  502.3  431.6  827.0   +6.1   +7.4   +4.5   +7.4
+IQ3_S/Q2_0        2 |   0.82   0.87   0.87   0.85 | both  0.10  8 MiB  0.79 |  101.5   90.5   77.8  150.0   +6.0   +4.3   +4.3   +5.0
+                  3 |   0.87   0.88   0.85   0.82 | both  0.10  8 MiB  0.75 |  151.8  131.6  115.3  210.7   +4.4   +4.1   +5.0   +6.0
+                  4 |   0.89   0.88   0.84   0.81 | both  0.10  8 MiB  0.78 |  203.6  179.2  151.3  285.5   +3.7   +4.0   +5.2   +6.3
+                  8 |   0.85   0.87   0.83   0.84 | both  0.00  8 MiB  0.72 |  410.4  352.8  302.1  552.3   +4.9   +4.3   +5.4   +5.4
+shadow-Q2_0       2 |   0.72   0.74   0.77   0.68 | both  0.00  0 MiB  0.59 |   75.3   68.2   61.0  107.1   +9.1   +8.6   +7.5  +10.6
+                  3 |   0.72   0.72   0.74   0.68 | both  0.00  0 MiB  0.64 |  111.7  104.9   91.9  160.6   +9.2   +9.3   +8.5  +10.5
+                  4 |   0.67   0.71   0.73   0.68 | both  0.10  8 MiB  0.63 |  149.8  135.4  131.7  212.6  +10.9   +9.4   +9.0  +10.6
+                  8 |   0.66   0.65   0.72   0.64 | both  0.10  8 MiB  0.58 |  301.5  290.9  332.9  426.9  +11.2  +11.7   +9.1  +11.9
+native mix        2 |   0.82   0.82   0.84   0.78 | both  0.10  8 MiB  0.76 |  111.3  100.3   87.0  158.8   +6.1   +5.9   +5.4   +7.4
+                  3 |   0.82   0.82   0.87   0.78 | both  0.00  8 MiB  0.74 |  166.6  153.1  136.2  243.0   +5.8   +5.8   +4.4   +7.2
+                  4 |   0.82   0.81   0.83   0.79 | both  0.10  8 MiB  0.73 |  223.3  206.3  169.1  312.3   +5.9   +6.3   +5.7   +6.8
+                  8 |   0.78   0.78   0.79   0.77 | both  0.10  8 MiB  0.74 |  448.5  409.3  335.9  629.9   +7.2   +7.1   +6.8   +7.4
+END pool_bench

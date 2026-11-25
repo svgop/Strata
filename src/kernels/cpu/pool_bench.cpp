@@ -3,6 +3,8 @@
 //   pool_bench [units=30] [name]     CPU only, synthetic experts, no model and no GPU.  `name` keeps only the formats
 //                                    whose name contains it (a smoke run).  POOL_BENCH_FIXTURES=<dir> keeps the experts
 //                                    there, so a measured run starts on an idle box and a repeat costs seconds.
+//   --prefetch                       F-460's experiment (section F-460 below) instead of tables 1-4; the default run
+//                                    does not change.
 //
 // Timed: ExpertPool::run_split_multi_native (a native pack's layer) and ExpertPool::run_split_multi (the shadow Q2_0
 // store), the engine's own calls (src/core/expert_source.cpp, expert_pool_dispatch_multi), over N experts of T rows each.
@@ -34,6 +36,10 @@
 //           the pool is measured against.
 //   stream  16 threads, pinned as the pool pins its threads, read 1 GiB they have not touched: the box's streaming
 //           read rate, the bandwidth ceiling.
+//   --prefetch   F-460: before each timed call a pass reads every byte of THAT call's experts, the host idles for a gap,
+//           one thread reads X MiB of unrelated memory in the gap, and the call is timed against a cold control that
+//           carries the same gap and traffic behind a sham pass.  Who reads: the host thread, one thread beside the
+//           host, 16 threads beside the pool's, or one thread per CCD.
 #include "strata/kernels/cpu/pool.hpp"
 #include "strata/kernels/cpu/expert_layout.hpp"
 #include "ggml.h"
@@ -570,16 +576,347 @@ void print_rates(double us_per_expert, double blob, int calls, int threads) {
     std::printf("%6.1f %7.2f", blob * calls / s / 1e9, 3.0 * kH * kFF * calls / s / threads / 1e9);
 }
 
+// ---------------------------------------------------------------------------------------------------------------
+// F-460: the prefetch experiment (`--prefetch`).  The default run does not enter this section.
+//
+// THE QUESTION.  A DRAM-resident call is bound by DRAM reads and a cache-resident one is cheaper (tables 1 and 3).  Does
+// a read-only pass over the NEXT call's experts, made while the pool idles, hand the call the hot rate - after a gap,
+// under other traffic, with the pool's threads spread over both CCDs - and what does the pass itself cost?
+//
+// THE UNIT.  Select the call's N experts (cold: the next N of the store) -> THE PASS: every byte of those N experts is
+// read once through the not-foldable pattern above; its checksum is checked against per-expert sums, so the pass read
+// exactly the bytes the call will read, each once -> the host idles for the gap G while ONE thread reads X MiB of
+// unrelated memory -> the timed call (the engine's own call, timed inside, as its telemetry times it) -> the traffic
+// is waited for, so no unit overlaps the next.
+//
+// WHO READS.  The pool claims its tasks at run time (pool.cpp: "one claim per iteration, so a slow worker takes fewer
+// experts"), so no pass can place a line in the core that will read it - only in a CCD's L3:
+//   host  the host thread itself reads everything: no wake, no second thread
+//   one   one thread beside the host (its SMT sibling): every line lands in the host's CCD's L3, and the other CCD's
+//         threads read their share across the fabric
+//   all   16 threads beside the pool's 16, each a contiguous 1/16 of the call's bytes: each line in one CCD's L3
+//   both  one thread per CCD, each reading everything: every line in both L3s (each line is read twice)
+//
+// THE CONTROLS.  A call after a gap wakes parked workers (table 4), and the pass itself streams the call's bytes through
+// the L3s.  So every cold control runs the same gap and the same traffic behind a SHAM pass: the same readers reading
+// the same number of bytes from unrelated memory.  `hot` is the same N experts every unit, no pass, under the same gap
+// and traffic: what an already-resident set survives of them.
+
+constexpr int kPfRows = 6;
+constexpr int kPfNs[] = {2, 3, 4, 8};
+constexpr int kPfNCount = (int) (sizeof kPfNs / sizeof kPfNs[0]);
+constexpr int kPfMaxN = 8;
+constexpr double kPfGapsMs[] = {0.0, 0.1, 0.25, 0.5};      // the host's idle time between the pass and the call
+constexpr int kPfGCount = (int) (sizeof kPfGapsMs / sizeof kPfGapsMs[0]);
+constexpr int kPfTrafficMib[] = {0, 8, 32};                // what the traffic thread reads during the gap
+constexpr int kPfXCount = (int) (sizeof kPfTrafficMib / sizeof kPfTrafficMib[0]);
+constexpr int kPfStopG = 2, kPfStopX = 1;                   // the stop rule's cell: G = 0.25 ms, 8 MiB of traffic
+constexpr int kPfReaders = 16;                             // beside the pool's threads: the host, then the 15 workers
+enum PfWho { kPfHost = 0, kPfOne, kPfAll, kPfBoth, kPfWhoCount };
+constexpr const char* kPfWhoName[kPfWhoCount] = {"host", "one", "all", "both"};
+constexpr size_t kPfTrafficBytes = (size_t) 512 << 20;     // the traffic's region: 16 units of 32 MiB before a wrap
+constexpr size_t kPfShamBytes = (size_t) 256 << 20;        // the sham pass reads its own region, apart from it
+
+std::string read_sysfs(const std::string& path) {
+#if defined(_WIN32)
+    (void) path;
+    return std::string();
+#else
+    std::FILE* const f = std::fopen(path.c_str(), "r");
+    if (f == nullptr) return std::string();
+    char buf[256];
+    const size_t n = std::fread(buf, 1, sizeof buf - 1, f);
+    std::fclose(f);
+    buf[n] = '\0';
+    std::string s(buf);
+    while (!s.empty() && (s.back() == '\n' || s.back() == '\r' || s.back() == ' ')) s.pop_back();
+    return s;
+#endif
+}
+
+/// The SMT sibling of logical processor `cpu` (/sys/devices/system/cpu/cpuN/topology/thread_siblings_list, "0,16" or
+/// "0-3,4-7"): -1 where there is none or it is not told.
+int smt_sibling(int cpu) {
+    const std::string list = read_sysfs("/sys/devices/system/cpu/cpu" + std::to_string(cpu) + "/topology/thread_siblings_list");
+    size_t i = 0;
+    while (i < list.size()) {
+        const size_t j = list.find(',', i);
+        const std::string token = list.substr(i, (j == std::string::npos ? list.size() : j) - i);
+        const size_t dash = token.find('-');
+        const int a = std::atoi(token.c_str());
+        const int b = dash == std::string::npos ? a : std::atoi(token.c_str() + dash + 1);
+        for (int c = a; c <= b; ++c)
+            if (c != cpu) return c;
+        if (j == std::string::npos) break;
+        i = j + 1;
+    }
+    return -1;
+}
+
+/// `cpu`'s last-level cache: the logical processors that share it (its domain) and its size in MiB.
+struct L3 {
+    std::string cpus;
+    int mib = 0;
+};
+L3 l3_of(int cpu) {
+    L3 l;
+    for (int i = 0; i < 6 && l.cpus.empty(); ++i) {
+        const std::string dir = "/sys/devices/system/cpu/cpu" + std::to_string(cpu) + "/cache/index" + std::to_string(i) + "/";
+        if (read_sysfs(dir + "level") != "3") continue;
+        l.cpus = read_sysfs(dir + "shared_cpu_list");
+        l.mib = (int) (std::atof(read_sysfs(dir + "size").c_str()) / 1024.0 + 0.5);   // "98304K"
+    }
+    return l;
+}
+
+const uint8_t* volatile g_prefetch = nullptr;      // the pass's only view of the expert store
+const uint8_t* volatile g_scratch = nullptr;       // the traffic thread's and the sham pass's only view of their buffer
+
+/// Every byte of [p, p + n), the 8-aligned body through the not-foldable word sum.
+uint64_t bytes_sum(const uint8_t* p, size_t n) {
+    uint64_t sum = 0;
+    size_t i = 0;
+    for (; i < n && (reinterpret_cast<uintptr_t>(p + i) & 7u) != 0; ++i) sum += p[i];
+    const size_t words = (n - i) >> 3;
+    if (words > 0) sum += stream_sum(reinterpret_cast<const uint64_t*>(p + i), words);
+    for (i += words << 3; i < n; ++i) sum += p[i];
+    return sum;
+}
+
+struct Seg { size_t off, len; };                   // the bytes [off, off + len) from the pass's base
+
+/// Reader `pos` of `k`: the linear slice [pos*T/k, (pos+1)*T/k) over the segments' concatenated T bytes, or all of them
+/// when `whole`.
+uint64_t read_part(const uint8_t* base, const Seg* segs, int nsegs, int pos, int k, bool whole) {
+    size_t total = 0;
+    for (int i = 0; i < nsegs; ++i) total += segs[i].len;
+    size_t lo = 0, hi = total;
+    if (!whole) {
+        lo = total * (size_t) pos / (size_t) k;
+        hi = total * (size_t) (pos + 1) / (size_t) k;
+    }
+    uint64_t sum = 0;
+    size_t lin = 0;
+    for (int i = 0; i < nsegs; ++i) {
+        const size_t a = (std::max)(lo, lin), b = (std::min)(hi, lin + segs[i].len);
+        if (a < b) sum += bytes_sum(base + segs[i].off + (a - lin), b - a);
+        lin += segs[i].len;
+    }
+    return sum;
+}
+
+/// The pass's readers: persistent threads, each pinned to the SMT sibling of one pool thread (the pool's threads keep
+/// their own logical processors), asleep on their own counter between passes.  A pass wakes the readers of its set;
+/// its time is the wake and the reads.
+struct Readers {
+    struct Job {
+        const uint8_t* const volatile* base = nullptr;   // &g_prefetch or &g_scratch
+        Seg segs[kPfMaxN] = {};
+        int nsegs = 0, k = 0;
+        bool whole = true;
+        int pos[kPfReaders] = {};                        // a reader's place in the pass (-1: not in it)
+    };
+    Job job = {};
+    std::atomic<uint32_t> go[kPfReaders] = {};
+    std::atomic<uint32_t> done{0};
+    std::atomic<bool> parked[kPfReaders] = {};         // the reader has left its CPU's run queue for the wait
+    std::atomic<bool> stop{false};
+    std::atomic<int64_t> woke_ns[kPfReaders] = {};     // when the reader began its slice (ns since the epoch)
+    uint64_t last[kPfReaders] = {};                      // the readers' sums of the last pass they ran
+    int core[kPfReaders] = {};                           // where reader i is pinned
+    std::vector<std::thread> th;
+
+    void start() {
+        for (int i = 0; i < kPfReaders; ++i) {
+            th.emplace_back([this, i] {
+                cpu::pin_current_thread(core[i]);
+                uint32_t seen = 0;
+                for (;;) {
+                    go[i].wait(seen, std::memory_order_acquire);
+                    seen = go[i].load(std::memory_order_relaxed);
+                    if (stop.load(std::memory_order_relaxed)) break;
+                    woke_ns[i].store(std::chrono::duration_cast<std::chrono::nanoseconds>(Clock::now().time_since_epoch()).count(),
+                                     std::memory_order_relaxed);
+                    const uint8_t* const base = *job.base;   // through the volatile pointer: the loads are not foldable
+                    last[i] = read_part(base, job.segs, job.nsegs, job.pos[i], job.k, job.whole);
+                    done.fetch_add(1, std::memory_order_release);
+                    parked[i].store(true, std::memory_order_release);
+                }
+            });
+        }
+    }
+    /// One pass by readers ids[0..k): each its slice, or every byte when `whole`.  `wake` receives the slowest reader's
+    /// time from the signal to its first read; the return is the pass's own us, the wake included.  The pass ends when
+    /// every reader has parked again, so none of it runs beside the traffic thread that follows.
+    double run(const int* ids, int k, bool whole, const uint8_t* const volatile* base, const Seg* segs, int nsegs,
+               double& wake) {
+        job.base = base;
+        job.nsegs = nsegs;
+        job.k = k;
+        job.whole = whole;
+        for (int i = 0; i < kPfReaders; ++i) job.pos[i] = -1;
+        for (int i = 0; i < nsegs; ++i) job.segs[i] = segs[i];
+        for (int r = 0; r < k; ++r) {
+            job.pos[ids[r]] = r;
+            parked[ids[r]].store(false, std::memory_order_relaxed);
+        }
+        done.store(0, std::memory_order_relaxed);
+        const Clock::time_point t0 = Clock::now();
+        for (int r = 0; r < k; ++r) {
+            go[ids[r]].fetch_add(1, std::memory_order_release);
+            go[ids[r]].notify_one();
+        }
+        while (done.load(std::memory_order_acquire) < (uint32_t) k) pause_cpu();
+        const double us = us_of(Clock::now() - t0);
+        wake = 0.0;
+        for (int r = 0; r < k; ++r) {
+            const double w = std::chrono::duration<double, std::micro>(
+                Clock::time_point(std::chrono::duration_cast<Clock::duration>(std::chrono::nanoseconds(
+                    woke_ns[ids[r]].load(std::memory_order_relaxed)))) - t0).count();
+            wake = (std::max)(wake, w);
+        }
+        for (int r = 0; r < k; ++r)
+            while (!parked[ids[r]].load(std::memory_order_acquire)) pause_cpu();
+        return us;
+    }
+    uint64_t sum(const int* ids, int k) const {
+        uint64_t s = 0;
+        for (int r = 0; r < k; ++r) s += last[ids[r]];
+        return s;
+    }
+    void join() {
+        stop.store(true, std::memory_order_relaxed);
+        for (int i = 0; i < kPfReaders; ++i) {
+            go[i].fetch_add(1, std::memory_order_release);
+            go[i].notify_one();
+        }
+        for (std::thread& t : th) t.join();
+    }
+};
+
+/// One thread reading X MiB of the traffic region while the host idles: the engine's host work and DMA staging, which
+/// pass through the memory system while the pool does nothing.  Pinned beside the host, where reader 0 lives too; the
+/// two never run at once, and each is waited into its park before the other is woken.  It shares a processor with no
+/// pool thread: its effect on a call is the memory system's.
+struct Traffic {
+    std::atomic<uint32_t> go{0}, done{0};
+    std::atomic<bool> parked{false}, stop{false};
+    std::atomic<size_t> off{0}, bytes{0};
+    std::atomic<int64_t> end_ns{0};
+    uint64_t sum = 0;                           // what it read: written by the thread, read after the join
+    std::thread th;
+    size_t cursor = 0;                          // the host's side: where the next unit's traffic begins
+    uint32_t ticket = 0;
+    Clock::time_point t_start = Clock::now();
+
+    void start(int core) {
+        th = std::thread([this, core] {
+            cpu::pin_current_thread(core);
+            uint32_t seen = 0;
+            for (;;) {
+                go.wait(seen, std::memory_order_acquire);
+                seen = go.load(std::memory_order_relaxed);
+                if (stop.load(std::memory_order_relaxed)) break;
+                const uint8_t* const base = g_scratch;
+                const size_t n = bytes.load(std::memory_order_relaxed), o = off.load(std::memory_order_relaxed);
+                sum += stream_sum(reinterpret_cast<const uint64_t*>(base + o), n >> 3);
+                end_ns.store(std::chrono::duration_cast<std::chrono::nanoseconds>(Clock::now().time_since_epoch()).count(),
+                             std::memory_order_release);
+                done.fetch_add(1, std::memory_order_release);
+                parked.store(true, std::memory_order_release);
+            }
+        });
+    }
+    /// This unit's traffic: n bytes of the region [0, region).  Returns the ticket `wait` takes.
+    uint32_t begin(size_t n, size_t region) {
+        if (cursor + n > region) cursor = 0;
+        off.store(cursor, std::memory_order_relaxed);
+        bytes.store(n, std::memory_order_relaxed);
+        cursor += n;
+        parked.store(false, std::memory_order_relaxed);
+        t_start = Clock::now();
+        go.fetch_add(1, std::memory_order_release);
+        go.notify_one();
+        return ++ticket;
+    }
+    /// The traffic of ticket `t` has ended and its thread has left its processor (which it shares with reader 0).
+    void wait(uint32_t t) {
+        while (done.load(std::memory_order_acquire) < t) pause_cpu();
+        while (!parked.load(std::memory_order_acquire)) pause_cpu();
+    }
+    void join() {
+        stop.store(true, std::memory_order_relaxed);
+        go.fetch_add(1, std::memory_order_release);
+        go.notify_one();
+        th.join();
+    }
+};
+
+struct PfPt { double us = 0, gu = 0, q = 0, down = 0, pf = 0, wake = 0, traffic = 0, overrun = 0; };
+struct PfSeries {
+    double call = 0, p25 = 0, p75 = 0;          // the call's us per unit of N experts: median, quartiles
+    double pf = 0, pf_p25 = 0, pf_p75 = 0;      // the pass's own us (0: no pass)
+    double wake = 0;                            // median: the slowest reader's time from the signal to its first read
+    double traffic = 0, overrun = 0;            // medians: the traffic's duration, and its overrun past the gap's end
+    Pt mean;                                    // the call's phases, means
+};
+
+template <class Run>
+PfSeries measure_pf(int units, Run&& run) {
+    for (int i = 0; i < kWarm; ++i) run();
+    std::vector<PfPt> pts((size_t) units);
+    for (int i = 0; i < units; ++i) pts[(size_t) i] = run();
+    const auto quantile = [&pts, units](double PfPt::*field, double f) {
+        std::vector<double> v((size_t) units);
+        for (int i = 0; i < units; ++i) v[(size_t) i] = pts[(size_t) i].*field;
+        std::sort(v.begin(), v.end());
+        const double pos = f * (double) (units - 1);
+        const size_t lo = (size_t) pos, hi = (std::min)((size_t) (units - 1), lo + 1);
+        return v[lo] + (v[hi] - v[lo]) * (pos - (double) lo);
+    };
+    PfSeries s;
+    s.call = quantile(&PfPt::us, 0.5);
+    s.p25 = quantile(&PfPt::us, 0.25);
+    s.p75 = quantile(&PfPt::us, 0.75);
+    s.pf = quantile(&PfPt::pf, 0.5);
+    s.pf_p25 = quantile(&PfPt::pf, 0.25);
+    s.pf_p75 = quantile(&PfPt::pf, 0.75);
+    s.wake = quantile(&PfPt::wake, 0.5);
+    s.traffic = quantile(&PfPt::traffic, 0.5);
+    s.overrun = quantile(&PfPt::overrun, 0.5);
+    for (const PfPt& p : pts) {
+        s.mean.us += p.us / units;
+        s.mean.gu += p.gu / units;
+        s.mean.q += p.q / units;
+        s.mean.down += p.down / units;
+    }
+    return s;
+}
+
+struct PfRes {
+    PfSeries cold0, hot0;                                   // the anchors: gap 0, no pass, no traffic
+    PfSeries hot[kPfGCount][kPfXCount];                     // no pass, under the gap and the traffic
+    PfSeries cold[kPfWhoCount][kPfGCount][kPfXCount];       // behind a sham pass by `who`
+    PfSeries pf[kPfWhoCount][kPfGCount][kPfXCount];         // behind the real pass by `who`
+};
+
 int run(int argc, char** argv) {
     if (const cpu::CpuFeatures feat = cpu::cpu_features(); !feat.usable()) {   // the AVX-512 kernels: nothing to time here
         std::printf("pool_bench: CPU lacks %s: SKIPPED\n", feat.reason());
         return 77;
     }
-    const int units = argc > 1 ? std::atoi(argv[1]) : 30;
-    const std::string only = argc > 2 ? argv[2] : "";
+    // F-460: `--prefetch` is an option anywhere on the line; the positional arguments are unchanged.
+    std::vector<std::string> positional;
+    bool prefetch = false;
+    for (int i = 1; i < argc; ++i) {
+        if (std::strcmp(argv[i], "--prefetch") == 0) prefetch = true;
+        else positional.emplace_back(argv[i]);
+    }
+    const int units = !positional.empty() ? std::atoi(positional[0].c_str()) : 30;
+    const std::string only = positional.size() > 1 ? positional[1] : std::string();
     std::setvbuf(stdout, nullptr, _IOLBF, 0);      // a run that dies must not take its tables with it
     if (units < 5) {
-        std::fprintf(stderr, "usage: pool_bench [units >= 5] [format-name]\n");
+        std::fprintf(stderr, "usage: pool_bench [units >= 5] [format-name] [--prefetch]\n");
         return 2;
     }
     // The layout is read before anything is pinned, and nothing is detected again afterwards: a pinned thread's mask
@@ -651,6 +988,333 @@ int run(int argc, char** argv) {
         return std::unique_ptr<cpu::ExpertPool>(
             new cpu::ExpertPool(workers, /*pin=*/true, /*host_works=*/true, cpu::PoolAffinity::All, /*tasks=*/0));
     };
+
+    // ---- F-460: the prefetch experiment (--prefetch); then the run ends
+    if (prefetch) {
+        // The readers go beside the pool's threads, on each one's SMT sibling, so a pool thread keeps its own logical
+        // processor.  The topology is read before the host is pinned: a pinned thread's mask is one processor.
+        int beside[kPfReaders];
+        beside[0] = host;
+        for (int i = 1; i < kPfReaders; ++i) beside[i] = worker_cores[(size_t) (i - 1)];
+        for (int i = 0; i < kPfReaders; ++i)
+            if (const int s = smt_sibling(beside[i]); s >= 0) beside[i] = s;
+        L3 l3[kPfReaders];
+        for (int i = 0; i < kPfReaders; ++i) l3[i] = l3_of(beside[i]);
+        int other = 0;                                       // `both`: a reader whose L3 is not the host's
+        for (int i = 1; i < kPfReaders; ++i)
+            if (!l3[i].cpus.empty() && l3[i].cpus != l3[0].cpus) { other = i; break; }
+        int ids_all[kPfReaders];
+        for (int i = 0; i < kPfReaders; ++i) ids_all[i] = i;
+        const int ids_one[1] = {0}, ids_both[2] = {0, other};
+        const int* const ids[kPfWhoCount] = {ids_one, ids_one, ids_all, ids_both};
+        const int count[kPfWhoCount] = {1, 1, kPfReaders, other != 0 ? 2 : 0};
+        const bool whole[kPfWhoCount] = {true, true, false, true};
+        const bool has[kPfWhoCount] = {true, true, true, other != 0};
+
+        Readers readers;
+        for (int i = 0; i < kPfReaders; ++i) readers.core[i] = beside[i];
+        std::vector<uint8_t> scratch(kPfTrafficBytes + kPfShamBytes);
+        for (size_t k = 0; k < scratch.size(); ++k) scratch[k] = (uint8_t) (k * 131u + 7u);
+        g_scratch = scratch.data();
+        const std::unique_ptr<cpu::ExpertPool> pool = make_pool(15);   // built unpinned, as above; then the host takes its core
+        const HostPin host_pin(host);
+        readers.start();
+        Traffic traffic;
+        // POOL_BENCH_PF_TRAFFIC_CCD=B: the traffic beside a worker of the other CCD, so it streams through that CCD's L3
+        // (the 32 MiB one on this CPU) instead of the host's.  It then shares a processor with that worker's reader; the
+        // park handshakes keep the two from running at once.
+        const char* const traffic_ccd = std::getenv("POOL_BENCH_PF_TRAFFIC_CCD");
+        const bool traffic_b = other != 0 && traffic_ccd != nullptr && traffic_ccd[0] == 'B';
+        const int traffic_core = traffic_b ? beside[other] : beside[0];
+        traffic.start(traffic_core);
+
+        std::printf("\n# F-460 --prefetch: T=%d, N in {2, 3, 4, 8}, cold experts cycling through the store, %d units per point (the median)\n",
+                    kPfRows, units);
+        std::printf("pool: %d workers + the draining host; the host on logical processor %d, its L3 %d MiB shared with CPUs %s\n",
+                    pool->workers(), host, l3[0].mib, l3[0].cpus.c_str());
+        std::printf("readers: host = the host thread itself; one = a thread beside the host, on logical processor %d; all = %d threads beside\n"
+                    "         the pool's threads (beside the host, then beside each worker in the OS's order); their L3 domains A/B:",
+                    beside[0], kPfReaders);
+        for (int i = 0; i < kPfReaders; ++i) std::printf(" %c", l3[i].cpus == l3[0].cpus ? 'A' : 'B');
+        std::printf("  (B = CPUs %s, %d MiB)\n", l3[other].cpus.c_str(), l3[other].mib);
+        if (other != 0)
+            std::printf("         both = the thread beside the host and the one beside worker %d, on logical processor %d\n", other - 1, beside[other]);
+        else
+            std::printf("         both = not run: every pool thread shares one L3\n");
+        std::printf("traffic: one thread%s (logical processor %d, L3 %d MiB shared with CPUs %s) reads X MiB of a %zu MiB region\n"
+                    "         during the gap; the sham passes read a separate %zu MiB region.  The workers park as the standing\n"
+                    "         recipe has them (STRATA_POOL_SPIN_US=100).\n",
+                    traffic_b ? " beside a worker on the other CCD (POOL_BENCH_PF_TRAFFIC_CCD=B)" : " beside the host", traffic_core,
+                    l3_of(traffic_core).mib, l3_of(traffic_core).cpus.c_str(), kPfTrafficBytes >> 20, kPfShamBytes >> 20);
+
+        const double load_start = loadavg();
+        const bool trace = env_on("POOL_BENCH_PF_TRACE");
+        std::vector<PfRes> pf((size_t) live.size() * (size_t) kPfNCount);
+        size_t sham_cursor = 0;
+        uint64_t sham_sum = 0, checks = 0;
+        Unit u;
+        for (size_t li = 0; li < live.size(); ++li) {
+            const int f = live[li];
+            const Store& st = store_of(f);
+            g_prefetch = st.mem.data();
+            std::vector<uint64_t> esum((size_t) kStore);           // every expert's byte sum: what a pass over it must return
+            for (int e = 0; e < kStore; ++e) esum[(size_t) e] = bytes_sum(st.mem.data() + (size_t) e * st.bytes, st.bytes);
+            const auto fail = [&](int n, int who, uint64_t got, uint64_t expected) {
+                std::fprintf(stderr, "pool_bench: --prefetch: %s N=%d who=%s: the pass returned %016llx, the experts' bytes sum to %016llx -"
+                                     " it did not read exactly their bytes, each once\n",
+                             kFormats[f].name, n, kPfWhoName[who], (unsigned long long) got, (unsigned long long) expected);
+                std::exit(2);
+            };
+            for (int ni = 0; ni < kPfNCount; ++ni) {
+                const int n = kPfNs[ni];
+                PfRes& r = pf[li * (size_t) kPfNCount + (size_t) ni];
+                // One point: `who` -1 = no pass (the anchors, and hot); `sham` = the pass reads the same byte count from
+                // unrelated memory.  The workers park as they do in the engine between two layers.
+                const auto series = [&](bool hot, int who, int gi, int xi, bool sham) {
+                    u.configure(st, n, kPfRows, hot, true);
+                    return measure_pf(units, [&] {
+                        PfPt pt;
+                        u.select();
+                        const int gap_us = (int) (kPfGapsMs[gi] * 1000.0 + 0.5);
+                        const size_t xbytes = (size_t) kPfTrafficMib[xi] << 20;
+                        Seg segs[kPfMaxN];
+                        int nsegs = 0;
+                        uint64_t expected = 0;
+                        const uint8_t* const volatile* base = &g_prefetch;
+                        if (who >= 0 && sham) {
+                            if (sham_cursor + (size_t) n * st.bytes > kPfShamBytes) sham_cursor = 0;
+                            segs[0] = {kPfTrafficBytes + sham_cursor, (size_t) n * st.bytes};
+                            sham_cursor += (size_t) n * st.bytes;
+                            nsegs = 1;
+                            base = &g_scratch;
+                        } else if (who >= 0) {
+                            for (int e = 0; e < n; ++e) {
+                                segs[e] = {(size_t) u.index[(size_t) e] * st.bytes, st.bytes};
+                                expected += esum[(size_t) u.index[(size_t) e]];
+                            }
+                            nsegs = n;
+                        }
+                        // the pass: the host thread itself, or the readers of `who`
+                        uint64_t got = 0;
+                        if (who == kPfHost) {
+                            const Clock::time_point t0 = Clock::now();
+                            got = read_part(*base, segs, nsegs, 0, 1, true);
+                            pt.pf = us_of(Clock::now() - t0);
+                        } else if (who >= 0) {
+                            pt.pf = readers.run(ids[who], count[who], whole[who], base, segs, nsegs, pt.wake);
+                            got = readers.sum(ids[who], count[who]);
+                        }
+                        if (who >= 0) {
+                            if (sham) sham_sum += got;
+                            else if (got != (whole[who] ? (uint64_t) count[who] : 1u) * expected) fail(n, who, got, expected);
+                            else ++checks;
+                        }
+                        // the gap, with the traffic in it
+                        const Clock::time_point t_gap = Clock::now();
+                        uint32_t ticket = 0;
+                        if (xbytes > 0) ticket = traffic.begin(xbytes, kPfTrafficBytes);
+                        const Clock::time_point gap_end = t_gap + std::chrono::microseconds(gap_us);
+                        if (gap_us > 0) spin_until(gap_end);
+                        // the call, timed inside as the engine's telemetry times it
+                        u.point(0);
+                        const double g0 = pool->ms_multi_gu, q0 = pool->ms_multi_q, d0 = pool->ms_multi_down;
+                        const Clock::time_point t0 = Clock::now();
+                        if (st.fmt->gu >= 0) pool->run_split_multi_native(st.nf, u.jobs.data(), n);
+                        else pool->run_split_multi(u.jobs.data(), n);
+                        const Clock::time_point t1 = Clock::now();
+                        pt.us = us_of(t1 - t0);
+                        pt.gu = 1e3 * (pool->ms_multi_gu - g0);
+                        pt.q = 1e3 * (pool->ms_multi_q - q0);
+                        pt.down = 1e3 * (pool->ms_multi_down - d0);
+                        if (xbytes > 0) {                          // no unit overlaps the next: the traffic is waited for
+                            traffic.wait(ticket);
+                            const Clock::time_point t_end = Clock::time_point(std::chrono::duration_cast<Clock::duration>(
+                                std::chrono::nanoseconds(traffic.end_ns.load(std::memory_order_relaxed))));
+                            pt.traffic = us_of(t_end - traffic.t_start);
+                            pt.overrun = (std::max)(0.0, us_of(t_end - gap_end));
+                        }
+                        u.advance();
+                        if (trace)   // POOL_BENCH_PF_TRACE=1: every unit, to read a series' shape
+                            std::fprintf(stderr, "unit %-14s N=%d %-4s G=%.2f X=%2d%s: pass %6.1f (wake %5.1f) call %6.1f traffic %6.1f overrun %6.1f\n",
+                                         kFormats[f].name, n, who >= 0 ? kPfWhoName[who] : "none", kPfGapsMs[gi], kPfTrafficMib[xi],
+                                         sham ? " sham" : "", pt.pf, pt.wake, pt.us, pt.traffic, pt.overrun);
+                        return pt;
+                    });
+                };
+                r.cold0 = series(false, -1, 0, 0, false);
+                r.hot0 = series(true, -1, 0, 0, false);
+                for (int gi = 0; gi < kPfGCount; ++gi)
+                    for (int xi = 0; xi < kPfXCount; ++xi) {
+                        r.hot[gi][xi] = series(true, -1, gi, xi, false);
+                        for (int w = 0; w < kPfWhoCount; ++w) {
+                            if (!has[w]) continue;
+                            r.cold[w][gi][xi] = series(false, w, gi, xi, true);
+                            r.pf[w][gi][xi] = series(false, w, gi, xi, false);
+                        }
+                    }
+                std::printf("[prefetch] %-14s N=%d: cold %.1f us | hot %.1f us | one, gap 0, no traffic: pass %.1f us, call %.1f us (%.2f of its cold)\n",
+                            kFormats[f].name, n, r.cold0.call, r.hot0.call, r.pf[kPfOne][0][0].pf, r.pf[kPfOne][0][0].call,
+                            r.pf[kPfOne][0][0].call / r.cold[kPfOne][0][0].call);
+            }
+        }
+        readers.join();
+        traffic.join();
+        g_prefetch = nullptr;
+        g_scratch = nullptr;
+        std::printf("\nload: the kernel's 1-minute average %.2f when the measured phase began, %.2f when it ended; %llu passes returned their\n"
+                    "     experts' sum (exactly their bytes, each once); the sham passes read %016llx, the traffic %016llx\n",
+                    load_start, loadavg(), (unsigned long long) checks, (unsigned long long) sham_sum, (unsigned long long) traffic.sum);
+
+        // ---- tables P1, P2: per format, then the pack's layer-weighted native mix.  `at(ni, kind, who, gi, xi)`: kind 0 the
+        // cold anchor, 1 the hot anchor, 2 hot under the gap and traffic, 3 the cold control of `who`, 4 the pass of `who`.
+        const auto cell = [&](size_t li, int ni, int kind, int w, int gi, int xi) -> const PfSeries& {
+            const PfRes& r = pf[li * (size_t) kPfNCount + (size_t) ni];
+            switch (kind) {
+                case 0: return r.cold0;
+                case 1: return r.hot0;
+                case 2: return r.hot[gi][xi];
+                case 3: return r.cold[w][gi][xi];
+                default: return r.pf[w][gi][xi];
+            }
+        };
+        const auto mix_cell = [&](int ni, int kind, int w, int gi, int xi) -> PfSeries {   // unit us, layer-weighted
+            PfSeries m;
+            double layers = 0;
+            for (size_t li = 0; li < live.size(); ++li) {
+                const int of = kFormats[live[li]].layers;
+                if (of == 0) continue;
+                const PfSeries& s = cell(li, ni, kind, w, gi, xi);
+                m.call += of * s.call;
+                m.p25 += of * s.p25;
+                m.p75 += of * s.p75;
+                m.pf += of * s.pf;
+                m.pf_p25 += of * s.pf_p25;
+                m.pf_p75 += of * s.pf_p75;
+                m.wake += of * s.wake;
+                m.traffic += of * s.traffic;
+                m.overrun += of * s.overrun;
+                Pt t = s.mean;
+                t.scale((double) of);
+                m.mean.add(t);
+                layers += of;
+            }
+            const double k = layers > 0 ? 1.0 / layers : 0.0;
+            m.call *= k, m.p25 *= k, m.p75 *= k, m.pf *= k, m.pf_p25 *= k, m.pf_p75 *= k, m.wake *= k, m.traffic *= k, m.overrun *= k;
+            m.mean.scale(k);
+            return m;
+        };
+        const auto print_tables = [&](const char* title, double blob, const auto& at) {
+            for (int ni = 0; ni < kPfNCount; ++ni) {
+                const int n = kPfNs[ni];
+                const PfSeries c0 = at(ni, 0, 0, 0, 0), h0 = at(ni, 1, 0, 0, 0);
+                std::printf("\n## P1. %s, N=%d, T=%d, 15 workers + host: us per call of N experts, the median of %d units\n", title, n, kPfRows, units);
+                std::printf("##     cold = behind a sham pass by the same readers (the same bytes from unrelated memory), then the gap, then the\n"
+                            "##     call; hot = no pass, the same N experts every unit; pass = the pass's own time, its readers' wake included;\n"
+                            "##     traffic = the thread's read of X MiB during the gap: its duration (its overrun past the gap's end)\n");
+                std::printf("anchors, gap 0, no pass, no traffic: cold %.1f us | hot %.1f us | the call reads %.1f MB\n", c0.call, h0.call, blob * n / 1e6);
+                std::printf("%5s %4s |%s |%s |%s |%s | %s\n", "G ms", "MiB", " call:  host   one   all  both", " cold:  host   one   all  both",
+                            "   hot", " pass:  host   one   all  both", "traffic us (overrun)");
+                for (int gi = 0; gi < kPfGCount; ++gi)
+                    for (int xi = 0; xi < kPfXCount; ++xi) {
+                        const PfSeries h = at(ni, 2, 0, gi, xi);
+                        std::printf("%5.2f %4d |", kPfGapsMs[gi], kPfTrafficMib[xi]);
+                        for (int kind = 4; kind >= 3; --kind) {              // the prefetched call, then its cold control
+                            std::printf("      ");
+                            for (int w = 0; w < kPfWhoCount; ++w) {
+                                if (has[w]) std::printf(" %5.1f", at(ni, kind, w, gi, xi).call);
+                                else std::printf("    na");
+                            }
+                            std::printf(" |");
+                        }
+                        std::printf(" %5.1f |", h.call);
+                        std::printf("      ");
+                        for (int w = 0; w < kPfWhoCount; ++w) {
+                            if (has[w]) std::printf(" %5.1f", at(ni, 4, w, gi, xi).pf);
+                            else std::printf("    na");
+                        }
+                        std::printf(" | %6.0f (%5.0f)\n", h.traffic, h.overrun);
+                    }
+                std::printf("\n## P2. %s, N=%d: the pass's rate (GB/s = bytes read / its time; both reads every line twice) and the call against\n"
+                            "##     its controls: pf/cold (its own cold control: the same readers, gap and traffic) | pf/hot (no pass, the same gap\n"
+                            "##     and traffic)\n", title, n);
+                std::printf("%5s %4s |", "G ms", "MiB");
+                for (int w = 0; w < kPfWhoCount; ++w) std::printf(" %-5s %6s %7s %7s |", kPfWhoName[w], "GB/s", "pf/cold", "pf/hot");
+                std::printf("\n");
+                for (int gi = 0; gi < kPfGCount; ++gi)
+                    for (int xi = 0; xi < kPfXCount; ++xi) {
+                        std::printf("%5.2f %4d |", kPfGapsMs[gi], kPfTrafficMib[xi]);
+                        for (int w = 0; w < kPfWhoCount; ++w) {
+                            if (!has[w]) {
+                                std::printf("%30s|", "n/a");
+                                continue;
+                            }
+                            const PfSeries c = at(ni, 3, w, gi, xi), p = at(ni, 4, w, gi, xi), h = at(ni, 2, 0, gi, xi);
+                            const double gbs = p.pf > 0 ? blob * n * (whole[w] ? count[w] : 1) / (p.pf * 1e-6) / 1e9 : 0.0;
+                            std::printf("       %6.1f %7.2f %7.2f |", gbs, p.call / c.call, p.call / h.call);
+                        }
+                        std::printf("\n");
+                    }
+                std::printf("\n## P3. %s, N=%d: the pass's wake, us (the median): the slowest reader's time from the host's signal to its first read;\n"
+                            "##     the pass is the wake and the reads (P1)\n", title, n);
+                std::printf("%5s %4s |%s\n", "G ms", "MiB", "   host    one    all   both");
+                for (int gi = 0; gi < kPfGCount; ++gi)
+                    for (int xi = 0; xi < kPfXCount; ++xi) {
+                        std::printf("%5.2f %4d |", kPfGapsMs[gi], kPfTrafficMib[xi]);
+                        for (int w = 0; w < kPfWhoCount; ++w) {
+                            if (has[w]) std::printf(" %6.1f", at(ni, 4, w, gi, xi).wake);
+                            else std::printf("     na");
+                        }
+                        std::printf("\n");
+                    }
+            }
+        };
+        for (size_t li = 0; li < live.size(); ++li)
+            print_tables(kFormats[live[li]].name, (double) store_of(live[li]).bytes,
+                         [&](int ni, int kind, int w, int gi, int xi) -> PfSeries { return cell(li, ni, kind, w, gi, xi); });
+        if (native_layers > 0)
+            print_tables("native mix", mean_blob,
+                         [&](int ni, int kind, int w, int gi, int xi) -> PfSeries { return mix_cell(ni, kind, w, gi, xi); });
+
+        // ---- table S: the stop rule, the best cell of each reader set, the pass against the idle time, the price
+        std::printf("\n## S. the stop rule: call/cold at G = %.2f ms with %d MiB of traffic; the best cell of each reader set over G and X\n"
+                    "##    (who, G ms, MiB, call/cold); the pass's own time at the stop-rule cell against the engine's idle time per layer\n"
+                    "##    (250 us solo, ~320 us concurrent); the price if the stop-rule cell held for every call: (1 - r) x 0.46 x 0.715 of the\n"
+                    "##    concurrent round's window\n", kPfGapsMs[kPfStopG], kPfTrafficMib[kPfStopX]);
+        std::printf("%-15s %3s |%s | %-24s |%s |%s\n", "format", "N", " call/cold:  host    one    all   both", "best cell",
+                    " pass us:   host    one    all   both", " price %:   host    one    all   both");
+        const auto summary_rows = [&](const char* name, const auto& at) {
+            for (int ni = 0; ni < kPfNCount; ++ni) {
+                std::printf("%-15s %3d |", ni == 0 ? name : "", kPfNs[ni]);
+                for (int w = 0; w < kPfWhoCount; ++w)
+                    if (has[w]) std::printf(" %6.2f", at(ni, 4, w, kPfStopG, kPfStopX).call / at(ni, 3, w, kPfStopG, kPfStopX).call);
+                int bg = 0, bx = 0, bw = 0;
+                double best = 1e9;
+                for (int w = 0; w < kPfWhoCount; ++w) {
+                    if (!has[w]) continue;
+                    for (int gi = 0; gi < kPfGCount; ++gi)
+                        for (int xi = 0; xi < kPfXCount; ++xi) {
+                            const double r = at(ni, 4, w, gi, xi).call / at(ni, 3, w, gi, xi).call;
+                            if (r < best) best = r, bg = gi, bx = xi, bw = w;
+                        }
+                }
+                std::printf(" | %-5s %.2f %2d MiB %5.2f |", kPfWhoName[bw], kPfGapsMs[bg], kPfTrafficMib[bx], best);
+                for (int w = 0; w < kPfWhoCount; ++w)
+                    if (has[w]) std::printf(" %6.1f", at(ni, 4, w, kPfStopG, kPfStopX).pf);
+                for (int w = 0; w < kPfWhoCount; ++w)
+                    if (has[w])
+                        std::printf(" %+6.1f", 100.0 * (1.0 - at(ni, 4, w, kPfStopG, kPfStopX).call / at(ni, 3, w, kPfStopG, kPfStopX).call) * 0.46 * 0.715);
+                std::printf("\n");
+            }
+        };
+        for (size_t li = 0; li < live.size(); ++li)
+            summary_rows(kFormats[live[li]].name,
+                         [&](int ni, int kind, int w, int gi, int xi) -> PfSeries { return cell(li, ni, kind, w, gi, xi); });
+        if (native_layers > 0)
+            summary_rows("native mix",
+                         [&](int ni, int kind, int w, int gi, int xi) -> PfSeries { return mix_cell(ni, kind, w, gi, xi); });
+        std::printf("END pool_bench\n");
+        return 0;
+    }
 
     // ---- tables 1-3: the standing park environment, no gap
     const double load_start = loadavg();

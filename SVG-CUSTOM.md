@@ -14957,3 +14957,29 @@ ordering above stays in the record and is revised there.
   `both` (one thread per CCD, each reading everything - the only placement that keeps every call read on its own CCD).
 - **Instrument.** `pool_bench --prefetch` (a new option; the default run does not change): T = 6, N in {2, 3, 4, 8},
   cold experts cycling through the 320 per format, 15 workers + the host. Evidence: campaign/results/f460-2026-11-25/.
+**RESULT (2026-11-25, 12:4x; three complete runs and a fourth, 30 units per point, load 2.11 / 0.97 / 4.30 at start; full tables in
+campaign/results/f460-2026-11-25/prefetch-bench.md, raw in prefetch-30-*.out; nothing adopted, no GPU program).**
+- **The stop rule passes: the lever does not close.** G = 0.25 ms, 8 MiB of traffic, one reader: call/cold 0.82-0.87 at N = 2 (13-18 %) and
+  0.82-0.84 at N = 3 (16-18 %); sixteen readers 0.83-0.87; a reader per CCD 0.78-0.79 (21-22 %). Key rows, native mix, N = 3, the three runs:
+  prefetched call 133.7 / 139.7 / 134.9 us against cold controls 162.1 / 167.3 / 161.5; the pass 153-165 us at 37-40 GB/s, its wake 3 us.
+- **It does not reach the hot rate the premise priced.** F-458's hot number is a gap-0 number: the call finds the workers still spinning. The pass
+  (148-171 us) outlasts their 100 us spin, and a 0.25 ms gap costs a hot call +9-20 % (127.8-130.7 against 108.6-117.2) but a cold one +2-5 %.
+  Against the hot call under the same gap the prefetched call is +3-5 % with one reader and 0.98-1.01 with a reader per CCD. Every engine call
+  follows the GPU's wait, so hot-under-gap is the reachable floor, and the premise's -25 % is -16 to -18 %.
+- **No decay and no eviction: nothing to fit a constant to.** Flat over G = 0..0.5 ms and X = 0..32 MiB, with the traffic through either CCD's L3.
+  The lines a pass leaves stay. Traffic costs only when it overruns the gap into the call (32 MiB takes 758-906 us), and then both arms alike.
+- **CCD locality is worth 3-5 % of the call.** Sixteen contiguous readers are no better than one (half of every thread's reads cross the fabric
+  either way) and wake 16 threads in 31-74 us against 3 us. The pool claims its tasks at run time (pool.cpp:863): no pass can place a line by core.
+- **The pass's cost.** One thread reads 36-42 GB/s = 55 us per expert at the mean blob 2.05 MB: 100-114 us (N = 2), 148-171 (N = 3), 206-223
+  (N = 4) - inside 250 us to N = 4 on a quiet DRAM. Two concurrent one-thread readers get 0.70x each, so beside a staging copy N = 3 takes
+  215-231 us. A reader per CCD reads everything twice: 234-243 us at N = 3, 310-325 at N = 4.
+- **Price, an upper bound (perfect routes, every CPU call):** (1 - r) x 0.46 x 0.715 = **+4.3-5.9 % concurrent with one reader** on the native mix
+  (N = 2-3); +6.9-7.2 % with a reader per CCD, which does not fit the idle time past N = 3; shadow Q2_0 calls +8.6-11.7 % and +10.5-11.9 %.
+  Against the priced +7-9 %: the likelier build lands at the edge of the +-4 % band before the lookahead's misses. The frontier's item is
+  re-priced from +7-9 % to +4.3-5.9 %.
+- **One instability, mechanism unconfirmed:** the shadow store's N = 3 cell read 1.00 in one run of six (0.72-0.88 otherwise); its 8 MiB of traffic
+  takes 230-330 us and straddles the 250 us gap, and in that run more than half the units overran.
+- **Owed - what would tell:** (1) whether the other CCD's threads hit the first CCD's L3 or go to DRAM under one reader: UMC `cas_count_read` over one
+  call (perf's amd_umc_0/1, amd_df and amd_l3 are registered on this box); (2) the router lookahead's hit rate - each miss is a wasted pass and a cold
+  call; (3) the pass's duration beside the engine's real staging traffic (measured only as two equal readers); (4) what the pass's 70-80 % share of
+  DRAM reads costs the staging in the same window. The bench's fixtures (4.7 GB) are in Custom-data/vector-lab/f460-fixtures: scratch, to reclaim.
