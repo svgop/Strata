@@ -14315,3 +14315,31 @@ A. Solo, bitwise launch shape/order: ~0.7 ms/window = +8%; with QSA work +15-20%
 
 **State at commit:** the gate's engine is UP (self-stopping job; it re-pins on stop); the pin before it was
 `expert-profile-gold.bin`, verified; root-owned strays chowned to `svg` except the two files the running gate writes.
+
+## F-454 — the CPU-expert pool's capacity at twelve rows: the SMT siblings (needle priced before the leg; 2026-11-25, 08:1x)
+
+**Origin.**  F-453's round-level telemetry: the concurrent lane's slow rounds are its low-hit-rate rounds, and the pool
+costs 64 us per CPU expert whatever the round.  The pool runs fifteen workers, one per physical core (`pool_plan.hpp`:
+"the kernel is DRAM-bound; past the memory system's width more cores add nothing" - measured with ONE activation per
+expert: a 256-thread machine, two-socket Xeons, `phaseA-tests/notes-152-users.md`).  The concurrent lane's windows carry
+TWELVE rows: each weight is dequantized once and used for twelve dot products.
+
+**The needle (measured, `round-telemetry-phases.txt`, 1,136 rounds).**  Pool time per round 11.20 ms mean (9.81 in fast
+rounds, 19.98 in slow); each thread works its share of an expert at ~7 G weights/s = 2.3 GB/s (gate/up 86 KB in 36.9 us),
+a quarter of the FMA ports busy: **dequant-op-bound at T = 12, not DRAM-bound.**  In that regime a sibling thread can use
+the ports the first leaves idle (dequant: shuffles and integer ops; dots: FMA).
+
+**The lane math.**  Window time moves 0.715 ms per ms of pool time across the two populations (fast 9.81 -> 23.24, slow
+19.98 -> 30.54).  A pool 15-25% faster takes 1.2-2.0 ms off the mean 24.25 ms round: **conc +5-8%**; M1 within +-1% (the
+solo lane's windows carry <= 8 rows and ~5% misses); M3b unchanged - the split is by rows, each row computed whole by one
+thread, so every CPU expert's output is bitwise whatever the thread count.  Inside the band on M1 by price: the arm is run
+for conc, under the single-stream protection law.
+
+**The falsifiers, cheapest first.**  (1) The engine's start line on arm B: are thirty workers placed on logical 1-15 AND
+17-31, or piled two to a core (`--pool-workers` above the physical cores runs "as configured", with the plan's warning)?
+(2) `campaign/config-abab.py` - THE CONFIG LADDER, one binary (the champion `3865e27a`), two configs, A/B alternating,
+four boots x three legs, the profile pinned to `expert-profile-gold.bin` before every boot; arm B = the standing config +
+`--pool-workers 30` (`campaign/results/f454-2026-11-25/config-pool30.json`).  (3) Verdict on the means: adopt = conc
+>= +4% and no priority lane beyond -4%; then the gate, because adoption touches a boot argument.
+
+**Status: RUNNING (08:13).  Nothing here is adopted.**
