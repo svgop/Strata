@@ -48,6 +48,15 @@ below was read from the named file or command on this date.
   | 279.8 rows/s` -> 3.574 ms per row, 17.5 ms per cycle, of which the host waits on the GPU 0.40 ms (solo: 8.96).
   In conc every host-millisecond saved is conc throughput.
 
+## 06:15 - DEFECT OWNED AND FIXED; the composed ladder's first run VOID; conc's slow rounds = its CPU-expert rounds
+The telemetry edit (0361361e6) inverted `batch_poll`'s completion sense (0 = still running): the cohort loop marked both
+cohorts done on the first poll, the batch window hung, the watchdog aborted the engine seven times in thirteen minutes,
+conc read 0.0 t/s on three legs before the server's log was read.  Fixed 06:06; the rebuilt candidate (87e4d95dcd365450)
+passed three smoke legs.  New instrument: `campaign/smoke-candidate.sh` (single-stream answers, THE CONCURRENT LANE
+ANSWERS, no restart) - every candidate pays it before a ladder.  The telemetry then settled the slow rounds: poll = 95% of
+the window phase, the CPU-expert pool 53% of poll, r = 0.96 with CPU experts per row, GPU-reach wait 0.0.  Lever restated:
+a miss's LATENCY per layer and the number of layers with a miss.  Also seen: a mean 12 ms between rounds.
+
 ## 05:15 - THIRD CANDIDATE PIECE BUILT: the sampler's one-pass warp top-k (STRATA_SAMPLER_FASTK=1, default off)
 `sampler_split_part_kernel<FAST>`: order key, a 32-step threshold search, id-ordered collection, a 21-stage warp bitonic sort
 of the 64 slots.  `sampler_fastk_parity` (new): the one-pass against the k argmax rounds, list for list - bitwise, 192 cases,

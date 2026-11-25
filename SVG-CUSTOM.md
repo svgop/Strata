@@ -14123,6 +14123,47 @@ interleaved rounds on the candidate binary with the bit off = the standing; `env
   294.7 against last night's 269.1 / 282.5 - the low conc reads were the window, not the pin.  The pooled five-boot mean
   completes with chain 2's control boots.
 
+
+**DEFECT, OWNED (06:02-06:10): the composed ladder's first run is VOID, and the cause is this session's own edit.**  The
+per-round telemetry change (committed 0361361e6, "default off") rewrote the cohort poll loop's completion test with its
+sense INVERTED: `batch_poll` returns 0 = still running, 1 = done (verify.hpp:251); the original is `la = (r == 0);`; the
+edit made the loop mark both cohorts done on the FIRST poll.  The batch window was left unserved - the pool finished its
+jobs, the host never passed layer step 1 - every concurrent request hung for 60 s, the engine's own watchdog aborted it
+("no progress for 60 s ... stopping the engine so the server starts it again", exit -6), the server restarted it: seven
+engine starts in thirteen minutes, single-stream unaffected between them.  The edit compiled, its unit's kernel parities
+passed, and it went into a ladder unrun: **a default-off switch does not make an ungated control-flow edit safe, and no
+kernel parity test sees the serve loop.**  The ladder read three zero-token conc legs as "0.0 t/s" before the server's
+log was read.  Both queued chains were stopped by pid (06:03); the champion verified back in `engine/strata`.
+- *Fix (06:06):* the original sense restored at both sites with `batch_poll`'s contract quoted on the line; the completion
+  timestamp is taken on the done transition only.  The rebuilt full candidate (`87e4d95dcd365450`) then passed three smoke
+  legs on the live system - default env (M1 237.7, conc 266.0), telemetry armed (209.4, 272.0), composed arm (215.7,
+  293.9) - each with no request in error, no restart, no stall.
+- *The instrument the tree was missing (law 11):* `campaign/smoke-candidate.sh [VAR=value ...] <tag>` - one boot, the warm
+  protocol, one full probe leg, three checks a ladder assumes and never made: the single-stream lane answers, THE
+  CONCURRENT LANE ANSWERS (tokens > 0, no request in error), the engine was not restarted (a stall caught is reported
+  too).  Every candidate pays it before any ladder; it deploys nothing and never makes a tracker point.
+
+**THE CONCURRENT LANE'S SLOW ROUNDS, FROM THE PER-ROUND TELEMETRY (the armed smoke leg, 463 full 12-row rounds,
+`campaign/results/smoke-f453-fixed-tel/telemetry.log`):**
+
+| rounds | n | window (median) | pool time (mean) | CPU experts per row (mean) |
+|---|---:|---:|---:|---:|
+| window < 28 ms | 350 | 23.4 ms | 10.7 ms | 14.0 |
+| 28-35 ms | 108 | 30.3 ms | 19.6 ms | 27.3 |
+| >= 35 ms | 5 | 36.0 ms | 23.5 ms | 33.8 |
+
+- Poll is **95% of the window phase**; staging and launch together 2% (the 5-10 ms stage figures belong to the first
+  three cold rounds); the tail 1.25 ms.
+- **The CPU-expert pool is 53% of the poll time, and poll time tracks CPU experts per row at r = 0.96**: 5-10 misses per
+  row -> 20.5 ms median; 10-20 -> 22.5; 20-40 -> 27.6.  The GPU-reach wait is 0.0 ms of 11.2 s of poll.
+- **So the slow rounds are the CPU-expert rounds.**  The `--no-host-worker` arm was flat because the cost is not the
+  host thread's share of the compute: it is the LATENCY A LAYER PAYS WHEN ANY OF ITS ROUTED EXPERTS MISSES.  The lever is
+  restated: not who computes a miss, but how long a miss blocks a layer (job latency: dispatch, compute over the window's
+  rows, result upload), and how many layers have a miss at all (12 rows x 8 experts at a 96% hit rate: nearly every layer).
+  Priced next, from the pool's own job anatomy - before any build.
+- A term not seen before: a mean **12.0 ms between one round's end and the next's start** (median not yet read; the
+  first version of this note is a cold first leg - a warm-leg telemetry boot is queued).
+
 ### 7. Priced queue (law 15; nothing below is adopted)
 A. Solo, bitwise launch shape/order: ~0.7 ms/window = +8%; with QSA work +15-20%.  First step: one read of the GDN capture
    order (the gate matvec's 10.9 us late start).  B. Solo drafter composition: step cap +2.4%, the adapt round, the

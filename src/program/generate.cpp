@@ -12787,12 +12787,14 @@ int main(int argc, char** argv) {
                     if (la) {
                         const int r = ver.batch_poll(win_pool_fn, &drive, err);
                         if (r < 0) { std::fprintf(stderr, "cohorts: A poll: %s\n", err.c_str()); std::printf("ERR cohort A: %s\n", err.c_str()); std::fflush(stdout); return false; }
-                        if (r == 0) { la = false; if (cohort_tel) tel_dA = Clock::now(); } else la = true;
+                        la = (r == 0);                                   // batch_poll: 0 = still running, 1 = done, -1 = an error
+                        if (!la && cohort_tel) tel_dA = Clock::now();
                     }
                     if (lb) {
                         const int r = ver_b.batch_poll(win_pool_fn, &coh_b_drive, err);
                         if (r < 0) { std::fprintf(stderr, "cohorts: B poll: %s\n", err.c_str()); std::printf("ERR cohort B: %s\n", err.c_str()); std::fflush(stdout); return false; }
-                        if (r == 0) { lb = false; if (cohort_tel) tel_dB = Clock::now(); } else lb = true;
+                        lb = (r == 0);                                   // batch_poll: 0 = still running, 1 = done, -1 = an error
+                        if (!lb && cohort_tel) tel_dB = Clock::now();
                     }
                     if (lc) {
                         const int r = ver_c.batch_poll(win_pool_fn, &coh_c_drive, err);

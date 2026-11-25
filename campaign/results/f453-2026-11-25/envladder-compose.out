@@ -1,0 +1,33 @@
+lane binary saved: 9e3e9cd3
+=== round 1: OFF ===
+F-271 re-pin VERIFIED (learned == expert-profile-gold.bin, after the engine stop)
+campaign/env-ladder.sh: line 51: /proc//environ: No such file or directory
+[off1] env STRATA_F453_COMPOSE=
+[warm-discard] load: 1.91, 3.68, 4.28
+[warm-discard] M1 single-stream : 214.0 t/s (2000 tok in 9.34s)
+[warm-discard] M2 pair          : 202.9 t/s aggregate (1800 tok in 8.87s)
+[warm-discard] M2 6-conc        : 0.0 t/s aggregate (0 tok in 67.41s)
+[f453-compose-off1-1] load: 1.22, 2.80, 3.87
+M1 single-stream : 216.8 t/s (2000 tok in 9.22s)
+M2 pair          : 206.9 t/s aggregate (1800 tok in 8.70s)
+M2 6-conc        : 0.0 t/s aggregate (0 tok in 67.88s)
+[f453-compose-off1-2] load: 1.67, 2.60, 3.65
+M1 single-stream : 227.5 t/s (2000 tok in 8.79s)
+M2 pair          : 206.2 t/s aggregate (1800 tok in 8.73s)
+M2 6-conc        : 0.0 t/s aggregate (0 tok in 67.23s)
+[f453-compose-off1-3] load: 2.13, 2.68, 3.55
+M1 single-stream : 213.2 t/s (2000 tok in 9.38s)
+M2 pair          : 205.4 t/s aggregate (1800 tok in 8.76s)
+M2 6-conc        : 0.0 t/s aggregate (0 tok in 67.00s)
+p1: 320 tok, sha256 f9aa9f9c11846635..., 37.1s
+p2: 320 tok, sha256 96f801dc1639612e..., 2.93s
+p3: 320 tok, sha256 bd42c408da624bfe..., 3.46s
+saved /home/svg/LLM/strata-custom-2/campaign/results/f209-bit-f453-compose-off.json
+=== round 1: ON ===
+F-271 re-pin VERIFIED (learned == expert-profile-gold.bin, after the engine stop)
+campaign/env-ladder.sh: line 51: /proc//environ: No such file or directory
+[on1] env STRATA_F453_COMPOSE=
+[warm-discard] load: 1.69, 2.23, 3.07
+[warm-discard] M1 single-stream : 208.7 t/s (2000 tok in 9.58s)
+[warm-discard] M2 pair          : 191.3 t/s aggregate (1800 tok in 9.41s)
+[warm-discard] M2 6-conc        : 0.0 t/s aggregate (0 tok in 32.51s)
