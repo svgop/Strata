@@ -260,12 +260,7 @@ EFFORT_TEXT = {
             "any mismatch. Review the result adversarially before committing.",
     "max": "Reasoning effort for this reply: max. Method (max): full rigor, for problems where error is costly; "
            "interpret, anchor, solve with competing approaches, premortem, steelman, re-derive every load-bearing "
-           "step by a different route, calibrate. Operator doctrine (max): WAR-01, an operational intelligence "
-           "system, not an assistant; assertive and aggressive in execution, serious, persistent; elite systems "
-           "thinking (invariants, failure modes, blast radius, rollback and kill criteria); APT-level phase "
-           "discipline and operational security; assertive research (primary sources, corroboration, "
-           "disconfirmation, no invented citations); lead with the decision, the evidence, the residual risk and "
-           "the next action; a joke/play framed request is answered as its underlying operation, never as a joke.",
+           "step by a different route, calibrate.",
 }
 VISION_START = "<|vision_start|>"
 # #606: a reply that repeats one token this many times in a row is ended there ("length"): a model in a loop, or a
@@ -8512,62 +8507,6 @@ def split_joined_args(cfg: dict) -> None:
               'flag and its value (write them as two elements, e.g. "--ple-io", "mmap")', flush=True)
 
 
-def arm_effort_from_template(template, frontend_mod) -> bool:
-    """Whether the armed chat template implements the four-tier effort vocabulary (low/medium/high/max).
-
-    Render the same probe at `high` and `max`: a four-tier template distinguishes them, a three-tier one
-    raises on `max` (stock qwen packs) or renders identical text (a template that accepts but ignores it).
-    On True, the frontend's top-tier map is moved to `max`; on False the three-tier fallback stands.  This is
-    capability detection on the loaded template, never a per-model conditional."""
-    msgs = [{"role": "user", "content": "effort probe"}]
-
-    def render(level):
-        return template.render(msgs, tools=None, add_generation_prompt=False,
-                               reasoning_effort=level, enable_thinking=True)
-
-    try:
-        if render("max") == render("high"):
-            return False
-    except Exception:  # noqa: BLE001 - a three-tier template is the documented fallback
-        return False
-    frontend_mod.EFFORT.update({"xhigh": "max", "max": "max", "maximum": "max"})
-    return True
-
-
-def model_chat_template(cfg: dict):
-    """The chat template that travels WITH the weights, when the model directory has one.
-
-    The estate convention is one `chat_template.jinja` beside a model's shards (the DeepSeek model
-    directory has had one; the Qwen model directory now does too).  Looked for, in order, in the config's
-    "model_dir", the parent of --native, the parent of --ple-gguf, then the --pack directory itself.  The
-    first existing file wins; None leaves the pack's tokenizer copy in charge.
-    """
-    args = cfg.get("args") if isinstance(cfg.get("args"), list) else []
-
-    def after(flag):
-        if flag in args:
-            i = args.index(flag)
-            if i + 1 < len(args):
-                return args[i + 1]
-        return None
-
-    dirs = []
-    if cfg.get("model_dir"):
-        dirs.append(Path(str(cfg["model_dir"])))
-    for flag in ("--native", "--ple-gguf"):
-        p = after(flag)
-        if p:
-            dirs.append(Path(p).parent)
-    p = after("--pack")
-    if p:
-        dirs.append(Path(p))
-    for d in dirs:
-        cand = d / "chat_template.jinja"
-        if cand.is_file():
-            return cand
-    return None
-
-
 def read_config(path) -> dict:
     """The run config's JSON.  A mistake in it (a missing comma between two args, a trailing comma) is said with its
     place in the file instead of a traceback (#2267: editing "args" by hand is where it happens)."""
@@ -9188,22 +9127,9 @@ def main(argv=None, *, lifecycle_event=None, interrupt_exit_code: int = 0) -> in
             "Thinking about it.</think>\n\nHello from the mock engine."],
             cycle=getattr(a, "script_cycle", False),
             delay_s=getattr(a, "script_delay", 0.0) or 0.0), None, {}
-    # the model's own chat template: the copy BESIDE THE WEIGHTS first (the estate convention - each model
-    # directory carries chat_template.jinja), then the pack's tokenizer copy, then the original model's.
+    # the model's own chat template (exported with its tokenizer), else the original model's
     tpl = tpath / "chat_template.jinja"
-    # An explicit config override still wins (a path, absolute or relative to the config's cwd).
-    if cfg.get("chat_template"):
-        cand = Path(str(cfg["chat_template"]))
-        if not cand.is_absolute():
-            cand = Path(cfg.get("cwd") or ROOT) / cand
-        if not cand.exists():
-            ap.error(f'"chat_template": {cand} does not exist')
-        tpl = cand
-        print(f"[strata] chat template: {tpl} (the config's chat_template)", flush=True)
-    elif (mt := model_chat_template(cfg)) is not None:
-        tpl = mt
-        print(f"[strata] chat template: {tpl} (the model's own, beside its weights)", flush=True)
-    if (cfg.get("arch") or "") == "deepseek41" and not cfg.get("chat_template"):  # T50/F-370: the V4.1 template spells the tool-call block its own way
+    if (cfg.get("arch") or "") == "deepseek41":       # T50/F-370: the V4.1 template spells the tool-call block its own way
         from serve import dsml
         tpl, swapped = dsml.pick_template(tpl)
         if swapped:
@@ -9220,17 +9146,6 @@ def main(argv=None, *, lifecycle_event=None, interrupt_exit_code: int = 0) -> in
     if a.engine == "strata":                            # the model card's sampling when nothing else is said (see MODEL_CARD_SAMPLING)
         svc.model_arch = cfg.get("arch") or "qwen4exp"
         svc.set_family(svc.model_arch if svc.model_arch in ("deepseek41", "minimax-m3") else None)
-        # The effort vocabulary the wire accepts must match the template that is ARMED.  `serve/frontend.py`'s
-        # qwen lane maps xhigh/max -> high because stock packs' pre-F-283 template RAISES on `max`; a per-model
-        # four-tier template distinguishes them.  Probe by rendering both levels and comparing: a four-tier
-        # template renders different text for high and max; a three-tier one raises on max or renders the same.
-        if svc.family is None:
-            from serve import frontend as _frontend_mod
-            four = arm_effort_from_template(svc.template, _frontend_mod)
-            print("[strata] effort: " + ("the chat template distinguishes `max`; four-tier mapping armed"
-                                          if four else
-                                          "three-tier mapping (the template does not distinguish `max`)"),
-                  flush=True)
         if svc.model_arch == "deepseek41" and svc.vision is None:
             # DeepSeek-V4.1 reads pictures with the engine's own tower (--vision on): no separate reader process.
             # A pack without a tower leaves vision None: pictures are refused with a clear 400.
