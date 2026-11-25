@@ -14217,6 +14217,48 @@ captures on the full candidate, m1 lane, same hour; `gdnab-kernel-mechanism.txt`
 - *Instrument note:* `f453-gdnab-kernels.py`'s "window graph" rows picked sub-millisecond graphs (the > 1,500-kernel
   filter was applied per graphId AFTER instance cutting); the kernel line is the reading, those rows are not.
 
+
+**THE COMPOSED LADDER, ON THE FIXED CANDIDATE (07:05-07:22; chain 4 section C; `envladder-compose.out`): NOT A WIN.**
+`STRATA_F453_COMPOSE` 0 vs 1 (then = the gdn_ab preload + the drafter step cap), two interleaved rounds:
+
+| boot | arm | M1 | pair | 6-conc | M3b |
+|---|---|---:|---:|---:|---:|
+| off1 | off | 243.7 | 214.4 | 293.0 | 76.1 |
+| on1 | on | 238.6 | 211.2 | 291.8 | 78.0 |
+| off2 | off | 241.2 | 214.0 | 289.7 | 77.9 |
+| on2 | on | 231.2 | 210.8 | 289.6 | 77.0 |
+| mean | OFF -> ON | 242.4 -> 234.9 (**-3.1%**) | -1.5% | -0.2% | flat |
+
+Inside the band on the wrong side in both paired rounds (-2.1%, -4.1%).  Since the preload returns nothing (above), this
+is the DRAFTER STEP CAP's own reading against its +2.4% price: a five-point miss.  Ruling: HOLD, not adopted; the step cap
+stays default off and its mechanism is owed - a node-level capture with the cap armed (chain 5: steps per window and the
+wall between windows).  The arm's 70q gate: **67/70 = 95.7%** (floor 93.3; the F-452 state's earlier 92.86 x2, the
+control's 94.29 - within the instrument's +/-2 questions of run noise).
+- *This hour's standing (the OFF boots of a default-off candidate = the champion's behaviour):* M1 242.4, conc 291.3,
+  pair 214.2 - above the solo bank (225.5) and last night's conc reads (269.1 / 282.5).  **RECOVER (b)'s question is
+  answered as the drift law says it usually is: the low conc reads were the window.**  The 307.6 bank (11-09, isolated
+  box) still stands above every read on this box; closing that gap is the pool work below, not a pin.
+
+**THE WARM TELEMETRY (chain 4 section E; discard + two measured legs, 1,152 full 12-row rounds;
+`round-telemetry-warm.txt`):**
+- The "12 ms between rounds" of the cold first leg counted the gaps BETWEEN REQUEST RUNS.  Inside a run the gap is 1.33 ms
+  (median 0.01, p90 6.7); the round period is ~26.7 ms (window 24.06 + tail 1.33 + 1.33).
+- **The slow rounds are low-hit-rate rounds in both miss tiers at once:**
+
+| rounds | n | window (mean) | pool (mean) | CPU experts per row | PCIe experts per round |
+|---|---:|---:|---:|---:|---:|
+| < 28 ms | 1,041 | ~22.4 ms | 10.06 ms | 12.9 | 35.8 |
+| 28-35 ms | 109 | ~30.5 ms | 18.66 ms | 25.2 | 97.0 |
+
+  Window time correlates 0.94 with CPU experts per row and 0.91 with PCIe experts per row; the adaptive tier made no
+  swap in any round (swaps 0 of 1,152).  The pool holds **~63 us per CPU expert in BOTH populations** (155 experts ->
+  10.06 ms; 302 -> 18.66 ms): that is the experts' compute on fifteen cores with the rows already split across them -
+  not launch overhead, as the cold leg suggested.
+- *Levers this prices, for the next session (none built):* (1) the pool's host-serial quantization between its two row
+  phases - share to be read from the phase split (chain 5); (2) the sixteen SMT siblings, idle today ("aux cpus ... off at
+  start; a request's `aux_cpus=1` turns it on") as extra pool capacity against a compute-bound 63 us; (3) the hit rate
+  itself (placement and ternary: banked, do not re-purchase).
+
 ### 7. Priced queue (law 15; nothing below is adopted)
 A. Solo, bitwise launch shape/order: ~0.7 ms/window = +8%; with QSA work +15-20%.  First step: one read of the GDN capture
    order (the gate matvec's 10.9 us late start).  B. Solo drafter composition: step cap +2.4%, the adapt round, the
