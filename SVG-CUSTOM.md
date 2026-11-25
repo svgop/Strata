@@ -15033,3 +15033,24 @@ today; the standing is the F-452 state (`3865e27a`), quality-neutral on a paired
   4. kernels past eight rows with co-available cohort rows (the double read reopens if the cohort structure changes);
   5. format-level information density on the CPU store - a LABELLED trade, paired-gate evaluated, operator sign-off.
 **State at the declaration: HEAD == origin/main; champion `3865e27a` in service, engine stopped, profile pinned.**
+
+---
+
+## F-451 — the PCIe "Gen2" suspicion investigated and refuted; the 5090 rig audit banked
+
+The F-450 rig audit's P0 item (boot fill at 7555 MB/s ~ a Gen2 ceiling; idle link at Gen1/Gen2) is
+falsified by measurement: under sustained pinned DMA the link uptrains to 32.0 GT/s Gen5 x16 within
+250 ms and sustains 52.2 GB/s H2D / 43.6 D2H big-block, 39.0 GB/s at the engine's own 2 MiB x 9900
+fill pattern, zero replays, both ends Gen5 (root port 00:01.1, CPU-attached).  Platform exonerated
+- no BIOS/ASPM action; the idle downtrain is normal P8 power state; negative result banked with the
+re-open condition (nsys showing sub-Gen5 during active decode windows).  The boot-fill gap is
+engine-side: the identical pattern through pageable memory runs 20.5 GB/s, so the engine's 7.55 is
+scattered-gather / per-slot / concurrent-boot overhead inside the fill path (~2.2 s boot headroom,
+LOW priority, to be instrumented when expert_source work resumes).  Decode DMA ceiling is not a
+constraint (2-MiB pageable already 20.5 GB/s; windows move far less) - the F-450 bottleneck ranking
+stands: CPU pool 42% of window, tails, residency, MTP tuning.  Instruments preserved
+(campaign/probes/pcie_probe{,2}.cu); full write-up campaign/research/5090-pcie-link-audit-f451.md,
+which also carries the condensed rig audit (premise corrections: 9950X3D, 184 GiB, in-engine C++
+serve, Qwen3.8-Flash-Next-GSQ-RCO IQ3_S geometry; measured steady state: 24.1 ms mean window,
+pool 10.22 ms, gate/up 5.81, MTP acceptance 61-65%; prefill 884-906 tok/s cold-read, 174 ms
+fixed small-read cost; backlog P0-P3 and the verification protocol per the standing line).
