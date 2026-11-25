@@ -1,0 +1,1 @@
+.venv/bin/python serve/server.py --engine strata --config /home/svg/LLM/strata-custom-2/campaign/results/f454-2026-11-25/config-pool30.json --port 8081 --host 127.0.0.1

@@ -14342,4 +14342,33 @@ four boots x three legs, the profile pinned to `expert-profile-gold.bin` before 
 `--pool-workers 30` (`campaign/results/f454-2026-11-25/config-pool30.json`).  (3) Verdict on the means: adopt = conc
 >= +4% and no priority lane beyond -4%; then the gate, because adoption touches a boot argument.
 
-**Status: RUNNING (08:13).  Nothing here is adopted.**
+**Falsifier (1), READ AT 08:07 ON THE LIVE ARM-B BOOT: the plan does not place the overflow on the siblings.**  The
+start line says "30 pool workers on logical processors 1,2,...,15" and the plan's warning is printed; the threads say
+what that is: workers w0-w14 are pinned one to a core (Cpus_allowed_list 1, 2, ..., 15), and **the fifteen extra workers
+are UNPINNED (Cpus_allowed_list 0-31)** - floating over the host's core 0, the aux processor 16 and the siblings,
+wherever the scheduler puts them.  `--pool-workers` above the physical cores was never a case the plan designed: the
+excess is capacity without a home.  The ladder therefore measures FLOATING capacity, not sibling-pinned capacity: idle
+siblings are where a floating thread mostly lands, so a gain here is a lower bound on what pinned siblings would give
+and the build that follows is a pool change (pin worker i + 15 to logical i + 16); a loss here retires the lever for
+floating threads and leaves only the pinned form open, at a lower prior.
+
+**THE CONFIG LADDER (08:01-08:16; one binary, the champion `3865e27a`; `config-abab.out`, per-leg probes under
+`campaign/results/f454-pool30/`): NEGATIVE.**
+
+| lane | A - 15 workers | B - 30 workers (15 floating) | A vs B | band +-4% |
+|---|---:|---:|---:|---|
+| M1 | 238.1 | 231.9 | +2.7% to A | inside |
+| 6-conc | 292.8 | 280.8 | **+4.3% to A** | **beyond** |
+| M3b % | 76.8 | 77.5 | -1.0% | inside |
+
+Boot means, conc: A 293.9 / 291.6, B 279.2 / 282.4 (-5.0%, -3.2%): the sign holds in both pairs.  The load average on
+B (5.7-7.8 against 3.4-4.8 on A) is the fifteen floating workers themselves.  **Floating SMT capacity COSTS the
+concurrent lane 4.3% and single-stream 2.7%.  Not adopted; the lever is retired in this form.**
+- *What the ladder cannot say:* whether the second thread per core gained nothing on the dequant kernel (the kernel is
+  SMT-blind) or gained and gave it back through contention, migrations and thirty-thread barriers.  The two lead to
+  different ends - close the lever, or build sibling-PINNED placement (a pool change: worker i + 15 on logical i + 16).
+  A telemetry pair on the same two arms reads gate/up and down per CPU expert directly (running, 08:19).
+- *The instrument note:* `--pool-workers` above the physical cores is accepted with a warning, and the excess runs
+  unpinned.  A count the plan will not place is a count the plan should refuse, or place: filed with the result below.
+
+**Status: the diagnostic pair is RUNNING (08:19).  Nothing here is adopted.**
