@@ -1,0 +1,5 @@
+build start 2026-11-25 11:47:34 (rebuild 2: arm line reworded; generate.cpp only)
+ninja: Entering directory `build-fresh'
+[1/2] Building CXX object CMakeFiles/strata.dir/src/program/generate.cpp.o
+[2/2] Linking CXX executable strata
+BUILD_EXIT=0 11:48:11

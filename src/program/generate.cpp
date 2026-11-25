@@ -7204,8 +7204,10 @@ int main(int argc, char** argv) {
                          (long long) g.n_layers, (long long) drive.d.n_expert);
             return 1;
         }
+        // The line names the per-round line as `cohorts:` on purpose: the smoke's extraction greps the exact text
+        // `cohorts: tel`, and a boot line carrying it would land in every boot's evidence as a non-round line.
         std::fprintf(stderr, "strata serve: cohort shared-miss counter armed (F-459: %lld mask words per layer for %lld layers x %lld experts; "
-                             "the `cohorts: tel` line carries `shared +S of cpu +b (A +a)`, and STRATA_COHORT_ROUND_TELEMETRY=1 prints that line)\n",
+                             "the round's `cohorts:` telemetry line carries `shared +S of cpu +b (A +a)`, and STRATA_COHORT_ROUND_TELEMETRY=1 prints that line)\n",
                      (long long) shared_miss.words, (long long) shared_miss.n_layers, (long long) shared_miss.n_expert);
     }
     drive.d.jobs.resize((size_t) K);
