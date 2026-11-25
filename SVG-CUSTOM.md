@@ -14856,3 +14856,12 @@ idle workers - cache-resident experts cost 25-38% less (F-458), price +7-9% conc
 first; (2) the both-cohorts double read, by F-459's measured share; (3) the DRAM call-size gap, priced before built;
 (4) the one-pass sampler only with a partner worth >= +3%; (5) a formal re-bank of the standing, the operator's call.
 **Stop rule:** when the list is exhausted, STOP and report - no exploratory rounds outside it.
+
+**REFORMULATED (11:50; operator: "the goal should not specify anything too specifically; more elite, low-level, with
+complex formulation and systems-architecture terminology").**  The goal now states the problem frame (decode as a
+heterogeneous, weakly coupled pipeline of device-side graph execution and host-side expert materialization, optimized on
+its critical path under a bandwidth-latency-occupancy roofline: data-movement minimization, last-level-cache locality via
+lookahead-driven prefetch, structural couplings resolved by bounded-overhead orchestration, stage removal/fusion/
+relocation preferred over new mechanism), the falsification-gated method, the adoption criterion, and a termination
+clause (declare the measured floor with its binding resource and the variable its statement leaves movable).  The lever
+ordering above stays in the record and is revised there.
