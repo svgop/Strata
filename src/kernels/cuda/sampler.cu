@@ -688,11 +688,105 @@ __device__ __forceinline__ void warp_merge_lists(const int2* lists, int nl, int 
     }
 }
 
+/// **ONE-PASS WARP TOP-K (F-453, STRATA_SAMPLER_FASTK=1): bitwise the k argmax rounds it replaces.**  Spec:
+/// campaign/research/2026-11-25-sampler-fast-topk-spec.md.  Both return the first k candidates of one strict total
+/// order - value descending, id ascending; candidates are the finite values and +inf (the rounds never pick -inf or
+/// NaN) - then sentinels (id n_vocab, -inf).  Here: the order key; a 32-step search for the smallest key with fewer
+/// than k candidates above it (the k-th largest; below every key when fewer than k exist); collection in id order (j
+/// outer, lane inner) of the entries above that key, then its ties up to k; and a bitonic sort of the 64 slots whose
+/// key carries each entry's collection position, so the list gets its original value bits back (-0.0 included).
+/// The 64 slots hold the 1,024 logits' list at any k: -inf sentinels sort last.
+__device__ __forceinline__ unsigned int order_key(float f) {
+    if (f == 0.0f) f = 0.0f;                               // -0.0 ranks with +0.0: the rounds compare them equal
+    const unsigned int b = __float_as_uint(f);
+    return (b & 0x80000000u) ? ~b : (b | 0x80000000u);
+}
+
+__device__ __forceinline__ void warp_topk_one_pass(const float (&s)[kSplitPerLane], int lo, int n_vocab, int k, int2* wl,
+                                                   int lane) {
+    constexpr unsigned int full = 0xffffffffu;
+    const int2 sentinel = make_int2(n_vocab, (int) 0xff800000u);
+    unsigned int key[kSplitPerLane], cm = 0u;
+#pragma unroll
+    for (int j = 0; j < kSplitPerLane; ++j) {
+        const float f = s[j];
+        key[j] = order_key(f);
+        cm |= (unsigned int) (f == f && f > __int_as_float(0xff800000)) << j;
+    }
+    // 1. the threshold
+    unsigned long long l = 0ull, h = 0x100000000ull;
+    while (l < h) {
+        const unsigned int mid = (unsigned int) ((l + h) >> 1);
+        unsigned int m = 0u;
+#pragma unroll
+        for (int j = 0; j < kSplitPerLane; ++j) m |= (unsigned int) (((cm >> j) & 1u) && key[j] > mid) << j;
+        int c = __popc(m);
+#pragma unroll
+        for (int off = 16; off > 0; off >>= 1) c += __shfl_xor_sync(full, c, off);
+        if (c < k) h = mid; else l = (unsigned long long) mid + 1ull;
+    }
+    const unsigned int t = (unsigned int) l;
+    // 2. collect in id order: above the threshold, then its ties up to k, then sentinels
+    unsigned int gt[kSplitPerLane];
+    int at = 0;
+#pragma unroll
+    for (int j = 0; j < kSplitPerLane; ++j) {
+        gt[j] = __ballot_sync(full, ((cm >> j) & 1u) && key[j] > t);
+        at += __popc(gt[j]);
+    }
+    int pos = 0;
+#pragma unroll
+    for (int j = 0; j < kSplitPerLane; ++j) {
+        if ((gt[j] >> lane) & 1u) wl[pos + __popc(gt[j] & ((1u << lane) - 1u))] = make_int2(lo + 32 * j + lane, __float_as_int(s[j]));
+        pos += __popc(gt[j]);
+    }
+    for (int j = 0; j < kSplitPerLane && at < k; ++j) {   // at is warp-uniform: every lane leaves the loop together
+        const unsigned int eq = __ballot_sync(full, ((cm >> j) & 1u) && key[j] == t);
+        const int ne = __popc(eq), take = ne < k - at ? ne : k - at;
+        const int rank = __popc(eq & ((1u << lane) - 1u));
+        if (((eq >> lane) & 1u) && rank < take)                    // a member of the tie, among the first `take`
+            wl[at + rank] = make_int2(lo + 32 * j + lane, __float_as_int(s[j]));
+        at += take;
+    }
+    for (int r = at + lane; r < k; r += 32) wl[r] = sentinel;
+    // 3. sort the 64 slots ascending by (~key, position) = value descending, id ascending
+    __syncwarp();
+    const int2 ea = lane < k ? wl[lane] : sentinel, eb = lane + 32 < k ? wl[lane + 32] : sentinel;   // slots past k were never written
+    uint64_t a = ((uint64_t) (~order_key(__int_as_float(ea.y))) << 32) | (unsigned int) lane;
+    uint64_t b = ((uint64_t) (~order_key(__int_as_float(eb.y))) << 32) | (unsigned int) (lane + 32);
+#pragma unroll
+    for (int sz = 2; sz <= 64; sz <<= 1) {
+#pragma unroll
+        for (int stride = sz >> 1; stride > 0; stride >>= 1) {
+            if (stride == 32) {                             // this lane's two slots: a has the lower index
+                if (((lane & sz) == 0) ? a > b : a < b) { const uint64_t o = b; b = a; a = o; }
+            } else {                                        // the partner is the same slot of lane ^ stride
+                const uint64_t pa = __shfl_xor_sync(full, a, stride), pb = __shfl_xor_sync(full, b, stride);
+                const bool low = (lane & stride) == 0;      // a's index (lane) and b's (lane + 32) are each the lower of their pair
+                a = ((((lane & sz) == 0) == low) ? (a > pa ? pa : a) : (a < pa ? pa : a));
+                b = ((((lane + 32) & sz) == 0) == low) ? (b > pb ? pb : b) : (b < pb ? pb : b);
+            }
+        }
+    }
+    const int2 ra = wl[(int) (a & 63u)], rb = wl[(int) (b & 63u)];
+    __syncwarp();                                           // every source slot is read before any is overwritten
+    wl[lane] = ra;
+    if (lane + 32 < k) wl[lane + 32] = rb;
+    __syncwarp();
+}
+
+// F-453 STRATA_SAMPLER_FASTK=1: the split stage's one-pass warp top-k for every caller (default off: the k argmax rounds)
+bool sampler_fastk_on() {
+    static const bool on = [] { const char* v = std::getenv("STRATA_SAMPLER_FASTK"); return v != nullptr && v[0] == '1'; }();
+    return on;
+}
+
 /// **SPLIT STAGE 1: THE top_k OF EACH 4,096-LOGIT BLOCK.**  Grid (blocks per row, rows), 128 threads.  Each warp
 /// loads its 1,024 penalised logits once into registers (lane + 32 j: every load is one coalesced 128-byte line)
 /// and runs `k` warp-argmax rounds over them with the threshold of `sampler_one_block_kernel` - no shared memory
 /// and no block barrier per round.  Warp 0 then merges the four warp lists into the block's list in `cand`
 /// (row-major: row t, block b, entry i at `(t * n_blocks + b) * k + i`, as (id, value bits)).
+template <bool FAST = false>
 __global__ void __launch_bounds__(kSplitWarps * 32)
 sampler_split_part_kernel(const float* __restrict__ logits, int n_vocab, const int* __restrict__ history,
                           int history_len, const SamplerParams p, int k, int n_blocks, int2* __restrict__ cand) {
@@ -742,6 +836,9 @@ sampler_split_part_kernel(const float* __restrict__ logits, int n_vocab, const i
     }
 
     __shared__ int2 wl[kSplitWarps][kSelMax];
+    if constexpr (FAST) {
+        warp_topk_one_pass(s, lo, n_vocab, k, wl[warp], lane);
+    } else {
     float prev_v = __int_as_float(0x7f800000);   // +inf and id -1: round 0 takes every logit
     int prev_i = -1;
     int i = 0;
@@ -765,6 +862,7 @@ sampler_split_part_kernel(const float* __restrict__ logits, int n_vocab, const i
         prev_i = i0;
     }
     for (int r = i + lane; r < k; r += 32) wl[warp][r] = make_int2(n_vocab, (int) 0xff800000u);   // sentinels
+    }
     __syncthreads();
     if (warp == 0) {
         int2* dst = cand + ((size_t) t * n_blocks + blockIdx.x) * k;
@@ -1287,7 +1385,7 @@ void sample_tokens(const float* logits, int n_tokens, int n_vocab, const int* hi
             // sized for 16 rows and 64 entries at least, so a verify window or a wider top_k does not regrow it
             scratch = split_scratch(stream, (size_t) (n_tokens > 16 ? n_tokens : 16) * n_blocks * kSelMax);
         if (scratch != nullptr) {
-            sampler_split_part_kernel<<<dim3((unsigned) n_blocks, (unsigned) n_tokens), kSplitWarps * 32, 0,
+            (sampler_fastk_on() ? sampler_split_part_kernel<true> : sampler_split_part_kernel<false>)<<<dim3((unsigned) n_blocks, (unsigned) n_tokens), kSplitWarps * 32, 0,
                                         (cudaStream_t) stream>>>(logits, n_vocab, history, history_len, p, k,
                                                                  n_blocks, scratch);
             sampler_split_merge_kernel<<<(unsigned) n_tokens, 32, 0, (cudaStream_t) stream>>>(
@@ -1316,6 +1414,21 @@ void coupled_check(const char* what) {
     }
 }
 }  // namespace
+
+int sampler_split_part_both_for_test(const float* logits, int n_vocab, int k, void* cand_rounds, void* cand_fast, int mode,
+                                    void* stream) {
+    // F-453 sampler_fastk_parity: stage 1 on one row into lists of n_blocks * k entries - mode bit 0 the rounds, bit 1
+    // the one-pass top-k (3 = both; the benchmark times each alone with 1 and with 2)
+    const int n_blocks = (n_vocab + kSplitBlockSpan - 1) / kSplitBlockSpan;
+    const dim3 grid((unsigned) n_blocks, 1u), block((unsigned) (kSplitWarps * 32));
+    if (mode & 1)
+        sampler_split_part_kernel<false><<<grid, block, 0, (cudaStream_t) stream>>>(logits, n_vocab, nullptr, 0, SamplerParams{}, k,
+                                                                                  n_blocks, (int2*) cand_rounds);
+    if (mode & 2)
+        sampler_split_part_kernel<true><<<grid, block, 0, (cudaStream_t) stream>>>(logits, n_vocab, nullptr, 0, SamplerParams{}, k,
+                                                                                 n_blocks, (int2*) cand_fast);
+    return n_blocks;
+}
 
 size_t coupled_draft_scratch_bytes(int nv) {
     if (nv <= 0 || coupled_blocks(nv) > kSplitMaxBlocks) return 0;
@@ -1349,7 +1462,7 @@ void coupled_draft_sample(float* logits, int nv, const int32_t* sub_to_id, const
     coupled_check("coupled_penalize");
     // the selection of the split sampler, unchanged: every 4,096-logit block's first `kpart` (the widest list,
     // since the request's top_k is only known on the device), penalties already applied above
-    sampler_split_part_kernel<<<dim3((unsigned) n_blocks, 1u), kSplitWarps * 32, 0, s>>>(
+    (sampler_fastk_on() ? sampler_split_part_kernel<true> : sampler_split_part_kernel<false>)<<<dim3((unsigned) n_blocks, 1u), kSplitWarps * 32, 0, s>>>(
         logits, nv, nullptr, 0, SamplerParams{}, kpart, n_blocks, (int2*) scratch);
     coupled_check("coupled_draft split part");
     coupled_merge_kernel<<<1, 32, 0, s>>>((const int2*) scratch, n_blocks, nv, kpart, params, step_rec, sub_to_id, ring,
@@ -1370,7 +1483,7 @@ bool sample_tokens_spec(const float* logits, int n_tokens, int n_vocab, const in
         return false;
     int2* scratch = split_scratch(stream, (size_t) (n_tokens > 16 ? n_tokens : 16) * n_blocks * kSelMax);
     if (scratch == nullptr) return false;
-    sampler_split_part_kernel<<<dim3((unsigned) n_blocks, (unsigned) n_tokens), kSplitWarps * 32, 0,
+    (sampler_fastk_on() ? sampler_split_part_kernel<true> : sampler_split_part_kernel<false>)<<<dim3((unsigned) n_blocks, (unsigned) n_tokens), kSplitWarps * 32, 0,
                                 (cudaStream_t) stream>>>(logits, n_vocab, history, history_len, p, k, n_blocks, scratch);
     spec_verify_merge_kernel<<<(unsigned) n_tokens, 32, 0, (cudaStream_t) stream>>>(scratch, n_blocks, n_vocab, p, k,
                                                                                     n_tokens, dtok, qbuf, n_q, out);
@@ -1395,7 +1508,7 @@ void spec_draft_sample(float* logits, int nv, const int32_t* sub_to_id, const in
     coupled_penalize_kernel<<<1, 1024, (unsigned) ((nv + 31) / 32) * sizeof(unsigned), s>>>(logits, nv, id_to_sub,
                                                                                            id_vocab, params, ring, cap, j);
     coupled_check("spec_penalize");
-    sampler_split_part_kernel<<<dim3((unsigned) n_blocks, 1u), kSplitWarps * 32, 0, s>>>(
+    (sampler_fastk_on() ? sampler_split_part_kernel<true> : sampler_split_part_kernel<false>)<<<dim3((unsigned) n_blocks, 1u), kSplitWarps * 32, 0, s>>>(
         logits, nv, nullptr, 0, SamplerParams{}, kpart, n_blocks, (int2*) scratch);
     coupled_check("spec_draft split part");
     spec_draft_merge_kernel<<<1, 32, 0, s>>>((const int2*) scratch, n_blocks, nv, kpart, params, step_rec, sub_to_id,

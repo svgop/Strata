@@ -48,6 +48,13 @@ below was read from the named file or command on this date.
   | 279.8 rows/s` -> 3.574 ms per row, 17.5 ms per cycle, of which the host waits on the GPU 0.40 ms (solo: 8.96).
   In conc every host-millisecond saved is conc throughput.
 
+## 05:15 - THIRD CANDIDATE PIECE BUILT: the sampler's one-pass warp top-k (STRATA_SAMPLER_FASTK=1, default off)
+`sampler_split_part_kernel<FAST>`: order key, a 32-step threshold search, id-ordered collection, a 21-stage warp bitonic sort
+of the 64 slots.  `sampler_fastk_parity` (new): the one-pass against the k argmax rounds, list for list - bitwise, 192 cases,
+corners injected (-inf, NaN, +inf, -0.0, duplicates, ragged vocabulary, short lists); `sampler_parity` 0 failures unarmed and
+armed.  The list-level test earned its keep: two defects caught before any engine run (slots past k read uninitialised; the
+ties pass missing its membership test).  Owed: --bench on a quiet card, the engine ladder.  Priced +0.8-1.2% M1.
+
 ## 04:10 - THE STEP GRAPH PRICED AT NODE LEVEL: kernel-bound (PDL dead); the coupled sampler is 25% of a step
 `drafter-stepgraph-pricing.md`.  1,826 step-graph instances: kernels 275.1 us, gaps 9.5 us - the "launch-bound" reading was an
 inference and is falsified; PDL for the drafter is worth <= 3% of a step.  The largest kernel is the coupled sampler's split

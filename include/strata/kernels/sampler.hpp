@@ -54,6 +54,13 @@ bool sample_greedy_cluster(const float* logits, int n_tokens, int n_vocab, int* 
 //
 // The scratch `coupled_draft_sample` needs for `nv` logits (0: too wide for the split merge, coupled cannot run).
 size_t coupled_draft_scratch_bytes(int nv);
+
+/// F-453 test hook (sampler_fastk_parity; no engine caller): stage 1 of the split sampler on one row by both selections -
+/// the k argmax rounds and the one-pass warp top-k (STRATA_SAMPLER_FASTK) - into `cand_rounds` and `cand_fast`
+/// (n_blocks * k entries of two ints each); `mode` bit 0 runs the rounds, bit 1 the one-pass top-k (3 = both).
+/// Returns n_blocks.
+int sampler_split_part_both_for_test(const float* logits, int n_vocab, int k, void* cand_rounds, void* cand_fast, int mode,
+                                     void* stream);
 // A round's inputs: `*params` <- `*mapped_params`, ring[cap - h, cap) <- mapped_hist[cap - h, cap) with h =
 // coupled_hist_len(penalty_last_n, cap).  `mapped_*` are mapped host memory.
 void coupled_draft_stage(const SamplerParams* mapped_params, const int32_t* mapped_hist, SamplerParams* params,

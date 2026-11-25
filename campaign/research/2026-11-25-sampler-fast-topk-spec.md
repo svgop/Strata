@@ -1,6 +1,15 @@
 # Sampler split stage: a one-pass warp top-k instead of k argmax rounds (spec, 2026-11-25)
 
-Status: SPEC, nothing built. Evidence: `campaign/results/f453-2026-11-25/drafter-stepgraph-pricing.md`.
+Status: BUILT 2026-11-25 05:15, default off (`STRATA_SAMPLER_FASTK=1` arms it). Evidence:
+`campaign/results/f453-2026-11-25/drafter-stepgraph-pricing.md`.
+- Passed: `build-fresh/sampler_fastk_parity --selftest` - the one-pass top-k against the k argmax rounds, list for list,
+  bitwise over 192 cases (vocabulary widths 4,096 / 8,209 / 40,960 / 151,936; k 1 / 20 / 40 / 64; -inf, NaN, +inf, -0.0,
+  duplicates, a short candidate list in every fixture), and the comparison is shown to see a one-entry difference.
+  `sampler_parity --selftest`: 0 failures unarmed and armed.
+- Not run: the benchmark on a quiet card (`--bench`); the engine ladder (bit-identity, M3b).
+- Two defects the list-level test caught before any engine run: the sort read list slots past k that were never written
+  (uninitialised shared memory entered the sort), and the ties pass tested a lane's rank without testing that the lane was
+  itself a match, so non-members below the first match overwrote slot 0.
 
 ## The term
 
