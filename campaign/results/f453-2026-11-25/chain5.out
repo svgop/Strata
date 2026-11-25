@@ -4,3 +4,14 @@
 [07:36:25] ABORT: the smoke leg failed
 [07:36:25] champion restored to engine/strata (3865e27a5ac1a170)
 F-271 re-pin VERIFIED (learned == expert-profile-gold.bin, after the engine stop)
+[07:37:35] 1. sampler benchmark (quiet card):  bench: nv 40960, k 64 (the drafter's shape): k argmax rounds 68.6 us, one-pass top-k 20.3 us per call; bench: nv 151936, k 20 (the main sampler's shape): k argmax rounds 20.4 us, one-pass top-k 12.8 us per call;
+[07:37:35] final candidate deployed (1db35c0350ba40c6); champion alongside
+[07:39:42] 2. smoke (default env) exit 0:   concurrent lane answers: 279.9 t/s SMOKE PASS (f453-final-off) 
+[07:41:51] 3a. telemetry smoke exit 0: SMOKE PASS (f453-final-tel) 
+[07:44:32] 3b. telemetry leg 1: M1 single-stream : 248.8 t/s;M2 6-conc        : 294.7 t/s aggregate;
+[07:45:16] 3b. telemetry leg 2: M1 single-stream : 249.1 t/s;M2 6-conc        : 271.0 t/s aggregate;
+[07:45:16] 3b. telemetry lines: 1171
+[07:47:54] 4. capture with the step cap armed exit 0
+[07:47:57] chain 5 done
+[07:47:57] champion restored to engine/strata (3865e27a5ac1a170)
+F-271 re-pin VERIFIED (learned == expert-profile-gold.bin, after the engine stop)

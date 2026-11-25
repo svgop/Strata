@@ -343,42 +343,6 @@
     {
      "date": "2026-11-09",
      "commit": "003d78d8",
-     "label": "note",
-     "solo": null,
-     "pair": null,
-     "conc": null,
-     "kinds": {}
-    },
-    {
-     "date": "2026-11-09",
-     "commit": "e8484c36",
-     "label": "note",
-     "solo": null,
-     "pair": null,
-     "conc": null,
-     "kinds": {}
-    },
-    {
-     "date": "2026-11-09",
-     "commit": "f95455a6",
-     "label": "note",
-     "solo": null,
-     "pair": null,
-     "conc": null,
-     "kinds": {}
-    },
-    {
-     "date": "2026-11-09",
-     "commit": "919b4db3",
-     "label": "note",
-     "solo": null,
-     "pair": null,
-     "conc": null,
-     "kinds": {}
-    },
-    {
-     "date": "2026-11-09",
-     "commit": "003d78d8",
      "label": "GSQ warm-residency recovery bank (clean box 2 boots x 3 probes all shown; witnesses green: complement 37.8-37.9 GiB HUGETLB POOL + memfd store 31.64 GiB; means solo 181.0 pair 166.2 conc 237.3 bests 197.0/175.9/260.0 vs leg-0 anchor -12/-11/-8 pct on means; midday desktop load avg 3 present; remaining delta bound to pool-drained-vs-armed discriminator + mem-pin falsifier both sudo)",
      "solo": 181.0,
      "pair": null,
@@ -636,6 +600,26 @@
    ],
    "notes": [
     {
+     "date": "2026-11-09",
+     "commit": "003d78d8",
+     "label": ""
+    },
+    {
+     "date": "2026-11-09",
+     "commit": "e8484c36",
+     "label": ""
+    },
+    {
+     "date": "2026-11-09",
+     "commit": "f95455a6",
+     "label": ""
+    },
+    {
+     "date": "2026-11-09",
+     "commit": "919b4db3",
+     "label": ""
+    },
+    {
      "date": "2026-11-10",
      "commit": "712f1981",
      "label": "GSQ POST-REBOOT WARM BENCH (isolation stack LIVE: isolcpus/nohz_full/rcu_nocbs 8-15+24-31 + irqaffinity 0-7+16-23; engine pinned 8-15+24-31 under swap scope; clocks 2962/13801 held; 5 probes; last-3 booked; solo peak 240.0 = best since F-357's 241.8 and +3.8pct over the 231.2 recent-era best; GPU-reach wait 0.40-0.63ms in ALL FIVE probes = the structural quiet class with zero 12ms flushes; pool released 0)"
@@ -669,6 +653,11 @@
      "date": "2026-11-25",
      "commit": "465b4b617",
      "label": "F-453 --no-host-worker (the host thread out of the expert drain) single boot x 2 legs: M1 236.0 vs same-hour control 225.3 - a rumor under law 1; interleave owed; ledger only"
+    },
+    {
+     "date": "2026-11-25",
+     "commit": "465b4b617",
+     "label": "F-453 conc question answered: four default-off boots of the standing behaviour in one hour read M1 240.4 (230.4/246.3/243.7/241.2) and conc 293.6 (296.9/294.7/293.0/289.7) - above the F-452 solo bank 225.5 and the night's 269-283; below the 11-09 conc bank 307.6 so the bank stands; mechanism: the slow rounds are low-hit-rate rounds (the CPU-expert pool 46-53% of the window phase at ~63 us per expert; dequant-bound) and the M1 spread (6.7%) is not a re-bank"
     }
    ]
   },

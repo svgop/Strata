@@ -1,0 +1,12 @@
+smoke f453-final-tel: binary 1db35c0350ba40c6 | engine pid 1557396 | env: STRATA_COHORT_ROUND_TELEMETRY=1
+M1 single-stream : 230.8 t/s (2000 tok in 8.66s)
+M2 pair          : 197.4 t/s aggregate (1800 tok in 9.12s)
+M2 6-conc        : 295.5 t/s aggregate (3600 tok in 12.18s)
+  single-stream answers: 230.8 t/s
+  concurrent lane answers: 295.5 t/s
+  no request of the leg ended in an error
+  the engine was not restarted
+  no stall was caught
+  per-round telemetry lines: 474 (/home/svg/LLM/strata-custom-2/campaign/results/smoke-f453-final-tel/telemetry.log)
+F-271 re-pin VERIFIED (learned == expert-profile-gold.bin, after the engine stop)
+SMOKE PASS (f453-final-tel)

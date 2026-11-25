@@ -49,7 +49,7 @@ ok(){ echo "  $1"; }; bad(){ echo "  *** $1"; FAIL=1; }
 [ "$ERRS" = 0 ] && ok "no request of the leg ended in an error" || { bad "$ERRS request(s) ended in an error:"; grep '(error' "$OUT/boot.log" | head -3 | cut -c1-200 | sed 's/^/      /'; }
 [ "$RESTARTS" = 0 ] && ok "the engine was not restarted" || bad "the engine restarted $RESTARTS time(s) during the leg"
 [ "$STALLS" = 0 ] && ok "no stall was caught" || { bad "$STALLS stall(s) caught:"; tail -n +"$L0" logs/custom-iq3_s.log | grep -E 'no progress for|stall report' | head -2 | cut -c1-200 | sed 's/^/      /'; }
-TEL=$(tail -n +"$L0" logs/custom-iq3_s.log | grep -c 'cohorts: tel'); [ "$TEL" -gt 0 ] && echo "  per-round telemetry lines: $TEL ($OUT/telemetry.log)" && tail -n +"$L0" logs/custom-iq3_s.log | grep 'cohorts: tel' > "$OUT/telemetry.txt"
+TEL=$(tail -n +"$L0" logs/custom-iq3_s.log | grep -c 'cohorts: tel'); [ "$TEL" -gt 0 ] && echo "  per-round telemetry lines: $TEL ($OUT/telemetry.txt)" && tail -n +"$L0" logs/custom-iq3_s.log | grep 'cohorts: tel' > "$OUT/telemetry.txt"
 cleanup_engine | tail -1
 [ "$FAIL" = 0 ] && echo "SMOKE PASS ($TAG)" || echo "SMOKE FAIL ($TAG) - do not ladder this binary"
 exit "$FAIL"

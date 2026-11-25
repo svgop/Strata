@@ -14259,6 +14259,50 @@ control's 94.29 - within the instrument's +/-2 questions of run noise).
   start; a request's `aux_cpus=1` turns it on") as extra pool capacity against a compute-bound 63 us; (3) the hit rate
   itself (placement and ternary: banked, do not re-purchase).
 
+
+**THE NEEDLES PRICED AND READ (07:34-07:48; chain 5 on the final candidate; `sampler-fastk-bench.txt`,
+`stepcap-mechanism.txt`, `round-telemetry-phases.txt`):**
+
+| piece | priced before the leg | read | ruling |
+|---|---|---|---|
+| one-pass top-k sampler | 64 argmax rounds -> one pass | quiet card: **68.6 -> 20.3 us** on the drafter's shape (nv 40,960, k 64; the trace had read 69.7), 20.4 -> 12.8 us on the main sampler's (nv 151,936, k 20) | REAL at the kernel: ~+1.1% M1 (0.1 ms of 0.57 ms step time per window); under the bar alone - a COMPOSITION piece, default off, kept |
+| drafter step cap | +2.4% M1 (0.29 ms/window of wasted steps) | node level, cap armed vs same-day baseline: steps/window **2.02 -> 1.96**, step-graph time **0.568 -> 0.555 ms** | INERT (+0.1%): the pricing census misread the chain - see below; REMOVED (cd8e3bbfe) |
+| pool quantization as a parallel phase | (to be read) | **0.04 ms of 11.20 ms per round = 0.2%**; 0.2 us per CPU expert | DROPPED before it was built - the host-serial stage is not a stage |
+
+- *Why the step cap is inert:* a 6-token window follows a five-step chain exactly (no waste to cut); the cap trims the one
+  true excess on 5-token windows (5 -> 4 steps); the windows the census read as over-drafted are windows the SUFFIX CHAIN
+  extends, which the cap does not touch.  The controller already sizes the chain.  The composed ladder's -3.1% has no
+  mechanism behind it.
+- *What the pool's phases say about the concurrent lane* (1,136 rounds inside runs): gate/up 6.45 ms (58%), down 3.04 ms
+  (27%), quantize 0.04 ms, the rest dispatch and parks (~15%).  Gate/up : down = 2.1 : 1 is their byte ratio: each thread
+  works its share of an expert at ~5.5 G weights/s, so **the CPU-expert pool is bound by DEQUANTIZATION COMPUTE on sixteen
+  threads (~88 G weights/s aggregate), not by bandwidth, dispatch, or any serial stage.**  A CPU expert costs 64 us of
+  pool time whatever the round.  The levers against it are capacity, a faster CPU kernel, or fewer misses on that tier.
+
+**CLOSEOUT (08:05).**  RECOVER (a) SETTLED: F-452 does not cost quality (paired, p = 0.345).  RECOVER (b) ANSWERED: the low
+conc reads were the window (this hour 289.7-296.9 over four boots); the gap to the 307.6 bank is the pool work below.
+IMPROVE: **no promotion** - three solo pieces, one falsified with mechanism (the gdn_ab preload), one inert and removed
+(the step cap), one real at the kernel and under the bar (the sampler).  DISCOVER: the concurrent lane's map, recalibrated
+at round level, and its levers priced:
+1. **Pool capacity - the sixteen SMT siblings**, idle in the standing ("aux cpus ... off at start; a request's
+   `aux_cpus=1` turns it on").  Against a dequant-bound 64 us per CPU expert, any throughput they add comes straight off
+   the slow rounds: a +25% pool would take ~2.8 ms off a slow round's 19 ms of pool.  Cheapest falsifier: one boot with
+   them on, smoke, then the interleave.  (A request flag today: the first question is whether the standing sets it.)
+2. **A tier shift** (law 9, move work under an existing wait): the PCIe tier streams ~97 experts in a slow round, ~8 GB/s
+   on a link good for ~50; each miss moved from the CPU tier to it takes 64 us off the pool and runs under the GPU's window.
+   The question is the planner's cut and the hit-rate cost of what the move displaces.
+3. **The CPU kernel**: 5.5 G weights/s per thread on the Q2_0 shadow kernels.
+4. **Solo:** fold `gdn_ab_multi_kernel` into a neighbour and remove a launch (+1.6-3% M1, bitwise); compose the sampler
+   (+1.1%) with it - two pieces that clear nothing alone and ~3-4% together.
+- *The tree:* champion in service (`3865e27a5ac1a170`, built from 465b4b617), engine stopped, profile pinned; the step
+  cap and the preload removed; kept default off - `STRATA_SAMPLER_FASTK`, `STRATA_COHORT_ROUND_TELEMETRY` (with the pool's
+  phases); added - `campaign/smoke-candidate.sh`.
+- *Rules this session paid for:* (1) a default-off switch does not make an ungated control-flow edit safe - every candidate
+  pays a smoke leg before a ladder; (2) MEASURE THE KERNEL BEFORE BELIEVING A FIX - the audit's bandwidth arithmetic was
+  wrong about `gdn_ab` at node level and about the pool's serial stage by two orders; (3) an instrument's self-check is
+  part of the instrument (the smoke's restart count was off by one after its anchor fix; a false failure is the safe
+  direction, and still a defect).
+
 ### 7. Priced queue (law 15; nothing below is adopted)
 A. Solo, bitwise launch shape/order: ~0.7 ms/window = +8%; with QSA work +15-20%.  First step: one read of the GDN capture
    order (the gate matvec's 10.9 us late start).  B. Solo drafter composition: step cap +2.4%, the adapt round, the

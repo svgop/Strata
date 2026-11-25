@@ -1,0 +1,22 @@
+=== baseline: step cap off (/mnt/DATA/LLM/Models/GGUF/strata/Custom-data/profiles/f453g-off-2026-11-25/anatomy.sqlite)
+window graphs: [4, 12, 20, 28, 36, 44] | step graphs: [108, 111, 114, 117, 120, 123, 126, 129, 132, 135]
+solo steady intervals: 294
+  window graph 44: n=154 steps/window mean 2.39 median 0 dist {0: 78, 1: 1, 2: 2, 4: 2, 5: 71} | step-graph time mean 0.674 ms | gap to next window (wall between windows) mean 1.38 ms
+  window graph 4: n=63 steps/window mean 0.87 median 1 dist {0: 8, 1: 55} | step-graph time mean 0.239 ms | gap to next window (wall between windows) mean 0.84 ms
+  window graph 12: n=31 steps/window mean 1.68 median 2 dist {0: 5, 2: 26} | step-graph time mean 0.484 ms | gap to next window (wall between windows) mean 1.48 ms
+  window graph 36: n=24 steps/window mean 3.12 median 5 dist {0: 9, 5: 15} | step-graph time mean 0.871 ms | gap to next window (wall between windows) mean 1.49 ms
+  window graph 20: n=16 steps/window mean 1.69 median 3 dist {0: 7, 3: 9} | step-graph time mean 0.483 ms | gap to next window (wall between windows) mean 1.29 ms
+  window graph 28: n=6 steps/window mean 2.67 median 4 dist {0: 2, 4: 4} | step-graph time mean 0.756 ms | gap to next window (wall between windows) mean 1.29 ms
+ALL: steps/window mean 2.02 (median 1); step-graph GPU time mean 0.568 ms; wall between windows mean 1.278 ms
+other graphs seen between windows (graphId: count): {66: 130, 47: 76, 7: 56, 15: 26, 39: 15, 23: 9, 31: 4}
+=== step cap on (/mnt/DATA/LLM/Models/GGUF/strata/Custom-data/profiles/f453g-cap-2026-11-25/anatomy.sqlite)
+window graphs: [4, 12, 20, 28, 36, 44, 60] | step graphs: [108, 111, 114, 117, 120, 123, 126, 129, 132, 135]
+solo steady intervals: 358
+  window graph 44: n=136 steps/window mean 1.82 median 0 dist {0: 86, 4: 2, 5: 48} | step-graph time mean 0.516 ms | gap to next window (wall between windows) mean 1.09 ms
+  window graph 36: n=89 steps/window mean 3.17 median 4 dist {0: 19, 4: 68, 5: 2} | step-graph time mean 0.895 ms | gap to next window (wall between windows) mean 1.69 ms
+  window graph 4: n=65 steps/window mean 0.95 median 1 dist {0: 3, 1: 62} | step-graph time mean 0.262 ms | gap to next window (wall between windows) mean 0.73 ms
+  window graph 28: n=20 steps/window mean 2.20 median 4 dist {0: 9, 4: 11} | step-graph time mean 0.620 ms | gap to next window (wall between windows) mean 1.29 ms
+  window graph 20: n=17 steps/window mean 2.29 median 3 dist {0: 4, 3: 13} | step-graph time mean 0.658 ms | gap to next window (wall between windows) mean 1.33 ms
+  window graph 60: n=16 steps/window mean 0.00 median 0 dist {0: 16} | step-graph time mean 0.000 ms | gap to next window (wall between windows) mean 0.25 ms
+ALL: steps/window mean 1.96 (median 1); step-graph GPU time mean 0.555 ms; wall between windows mean 1.168 ms
+other graphs seen between windows (graphId: count): {66: 159, 39: 70, 7: 63, 47: 50, 15: 14, 23: 13, 31: 11, 102: 1}
