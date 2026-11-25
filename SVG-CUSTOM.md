@@ -14745,3 +14745,42 @@ batch-scoped change's canary is the concurrent lane's M3b, and a concurrent gate
 
 **Instruments owed:** a concurrent MMLU gate; a CPU-expert kernel benchmark; `--pool-workers` above the physical cores
 should be refused at option validation (today it runs the excess unpinned); `harvest/records/windows.npy` for the trainer.
+
+## F-458 — the CPU-expert kernel at the concurrent lane's shape is bound by DRAM read throughput, not by dequantization: a kernel 25 % faster is worth <= 4 % of pool time (2026-11-25, 10:16-11:15; standalone benchmark, nothing adopted)
+
+**Origin.** The concurrent lane computes its missed experts on the CPU through `ExpertPool` (15 workers + the host, every expert split by rows;
+63-66 us of pool time per expert whatever the round). Open: DRAM bandwidth, the dequantization's compute, latency/occupancy, or the pool's own
+synchronization - and whether a kernel 25 % faster (priced at +6-8 % concurrent) was worth starting.
+
+**Built.** `pool_bench` (`src/kernels/cpu/pool_bench.cpp`, beside `expert_multi_test`; 0 warnings): the engine's own calls, `run_split_multi_native` /
+`run_split_multi`, over N experts x T rows, median of 30 units. The standing pack's seven native layer types by layer count and the shadow Q2_0 blob,
+320 synthetic experts each; cold (the next N of a 442-852 MB store) against hot (the same N); 4/8/15 workers + the host and one thread on the kernels
+alone; T = 1..16, N = 1..32; host-idle gaps 0/150/2000 us under the standing park env (`STRATA_POOL_DIET=1`, `STRATA_POOL_SPIN_US=100`); a read loop for
+the DRAM rate. Two runs 4 min apart on an idle box agree within 1-3 % on every 16-thread number (`campaign/results/f458-2026-11-25/`).
+
+**Key rows** (15 workers + host, us per expert-call, cold | hot). T = 12 as 6 + 6, N = 8, layer-weighted native mix: **89.8** [gate/up 52.1, quantize 1.6,
+down 36.4] | **67.4**, at 45.6 | 60.8 GB/s; shadow store 52.1 | 32.2. Workers, mix: one thread 898 | 900; 5 threads 190 | 187; 9 threads 114 | 107; 16 threads
+89.8 | 67.4: the hot per-thread rate is flat at 9.1-10.9 G weights/s (each core's own compute); cold stops at 21.6 / 35.9 / 45.6 GB/s. Cold mix at N = 8 for
+T = 1/4/6/8/12/16: 44.9 / 44.6 / 46.8 / 49.8 / 89.8 / 101.5.
+
+**Verdict.** DRAM read throughput, as the call's size drives it. Dequant speed is ruled out by T = 1, which runs ggml-cpu's single-token dot: its cache-resident
+time (14.6 us) is a third of its DRAM-resident 44.9, and it still streams 45.6 GB/s at N = 8 - the multi-token kernel at T = 6 takes +4 %. Compute-light or not,
+N = 8 gets ~45 GB/s, N = 1 37.3, N = 32 51.4 (DRAM ceiling 47.8-48.0 in this bench, 49-57 by a standalone loop). Compute limits cache-resident experts only
+(per-row dot products 64 % of that time at T = 6); the host-serial quantization is 2-3 %; the pool's synchronization reads +5.6 % / -2.9 % over the two runs at a
+150 us cadence, +11-12 % at 2 ms.
+
+**Three facts paid for.** (1) 12 rows are two reads: `ExpertJobMulti` holds `MAXT = 8` and the kernels stop at 8 (`iq4nl256_down_rows_v` fills a `y[8]`;
+`gu_rows_nt` has cases 1..8): 6 + 6 costs 1.92x one 6-row call. (2) A hot set must fit the smaller CCD: L3 is 96 MiB on CPUs 0-7, 32 MiB on CPUs 8-15, and every
+thread reads every expert. (3) The instrument lied twice before it measured: a read loop that could see its fill folded every load ("612 GB/s"); a pool built by an
+already-pinned host saw one CPU. Both guarded now (a checksum; exit 3).
+
+**Headroom.** DRAM-resident experts: <= 4 % of pool time at N = 8, 6 % at N = 4 - <= +1.3 % / +2.0 % concurrent at the premise's pool share, inside the band:
+the kernel work is not worth starting. Cache-resident: <= 21 % of pool time (<= +5-7 %), only for what a second call finds in 32 MiB. Not bounded: 45.6 against
+the 51-57 GB/s of bigger calls; owed: DRAM read counters (UMC `cas_count_read`) over one cold call, N = 8 against N = 32.
+
+**Against the engine.** Its 63-66 us is 27-30 % below DRAM-resident native experts (89.8), 2-7 % below cache-resident ones (67.4), between shadow cold (52.1) and
+native cold. Its gate/up ~37 / down ~17 split matches the Q2_0-down forms (down 19-23 us), not the 38 IQ4_NL-down layers (39-42): unconfirmed until the engine
+reports its expert counts per form.
+
+**Owed next.** Those per-form expert counts (one telemetry line); the DRAM counter profile; and the structure question this prices - 12 rows in ONE call is -42 %
+of pool time (89.8 -> ~52 us): kernels past `MAXT = 8`, and rows that the two cohorts hold at different times (F-233).
