@@ -48,6 +48,24 @@ below was read from the named file or command on this date.
   | 279.8 rows/s` -> 3.574 ms per row, 17.5 ms per cycle, of which the host waits on the GPU 0.40 ms (solo: 8.96).
   In conc every host-millisecond saved is conc throughput.
 
+## 03:50 - ROUND 2 (while the gate runs): a per-round telemetry candidate; the shared-expert fusion priced and shelved
+- The engine's per-round line measures stage-to-polls-done only.  So "202 of 812 rounds at 30-40 ms against 22-26" means
+  the WINDOW PHASE grows in those rounds, not the tail.  The first capture's 15 ms memcpy-only stretch was 2-5 MB H2D
+  copies 0.3-3 ms apart = expert swap-ins run one at a time between windows, GPU idle.  In the joint capture the >= 3 ms
+  stalls hold no copy at all (pure idleness bounded by copies); its copy totals say the residency tier uploads ~153 MB
+  per round (148.6 GB H2D in 26 s) = ~60-75 expert swap-ins per round, overlapped inside windows.
+- No instrument on the record says which phase of a slow round grows.  Built (object only; relinked after the gdn_ab
+  ladder has deployed its copy): `STRATA_COHORT_ROUND_TELEMETRY=1` - one line per cohort round: rows, stage A/B, go A/B,
+  poll A/B, window, tail, since-prev, and deltas of the request-end line's own counters (wait, pool, hits, cpu, pcie,
+  swaps).  Default off; clock reads only when armed.  Compiles clean (the unit's two warnings are older:
+  generate.cpp:13277 -Wformat-extra-args in the request-end batch line - a real defect, one value is never printed -
+  and an unused variable at :13532).
+- Shared-expert fusion (audit: up to 0.33 ms) priced per part and SHELVED: (a) gate + up in one launch needs one block
+  type for both matrices - these layers mix types, so partial coverage, ~+0.8%; (b) the gate scalar as a router row needs
+  a pack-layout change and a matching summation order - not bitwise by construction; (c) folding the sigmoid scale into
+  the down matvec's epilogue is bitwise (it multiplies the output rows) but worth ~+0.5%.  Too thin per piece for its
+  cost; QSA (0.90 ms headroom) and the conc slow rounds pay more per hour.
+
 ## 04:05 - FIRST CANDIDATE BUILT: gdn_ab weight preload (STRATA_SMALL_UNR bit 2, default off)
 The solo queue's first bitwise piece.  `gdn_ab_multi_kernel` (one 64-thread block per two rows, 48 blocks on 170 SMs; the
 F-453 node trace: 0.49 MB in 8.2 us = 60 GB/s): a lane's ten passes were a chain of dependent HBM misses.  Bit 2 reads

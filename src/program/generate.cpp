@@ -12700,12 +12700,31 @@ int main(int argc, char** argv) {
                 if (ternary) std::fprintf(stderr, "cohorts: round A.S=%d B.S=%d C.S=%d\n", wa.S, wb.S, wc.S);
                 else std::fprintf(stderr, "cohorts: round A.S=%d B.S=%d\n", wa.S, wb.S);
                 const Clock::time_point w0c = Clock::now();
+                // STRATA_COHORT_ROUND_TELEMETRY=1 (F-453, diagnostic, default off): one line per cohort round with the
+                // round's own split.  The standing per-round line says how long a round took, not what it spent; a quarter
+                // of the concurrent lane's rounds run 30-40 ms against 22-26 (812 rounds, 2026-11-25) and no instrument
+                // on the record says which phase grows.  The counters are the request-end line's own, as deltas; the clock
+                // reads are paid only when armed.
+                static const bool cohort_tel = std::getenv("STRATA_COHORT_ROUND_TELEMETRY") != nullptr;
+                static Clock::time_point tel_prev_w2c = Clock::now();
+                Clock::time_point tel_sA = w0c, tel_sB = w0c, tel_gA = w0c, tel_gB = w0c, tel_dA = w0c, tel_dB = w0c;
+                int64_t tel_h0 = 0, tel_m0 = 0, tel_p0 = 0, tel_sw0 = 0;
+                double tel_w0 = 0.0, tel_pl0 = 0.0;
+                if (cohort_tel) {
+                    tel_h0 = drive.d.cache_hits + coh_b_drive.d.cache_hits;
+                    tel_m0 = drive.d.multi_misses + coh_b_drive.d.multi_misses;
+                    tel_p0 = drive.d.pcie_experts + coh_b_drive.d.pcie_experts;
+                    tel_sw0 = a_swapped + bt_adapt_swaps;
+                    tel_w0 = ver.ms_wait + ver_b.ms_wait;
+                    tel_pl0 = ver.ms_pool + ver_b.ms_pool;
+                }
                 // stage BOTH cohorts (a lazy capture happens while NO window is in flight - the standing
                 // flow's capture condition), then launch both: B's pool runs under A's GPU from here on
                 if (wa.S > 0 && !ver.batch_stage_rows(wa.rows, wa.S, wa.tok, wa.pos, err)) {
                     std::fprintf(stderr, "cohorts: A stage: %s\n", err.c_str()); std::printf("ERR cohort A stage: %s\n", err.c_str()); std::fflush(stdout);
                     return false;
                 }
+                if (cohort_tel) tel_sA = Clock::now();
                 if (wb.S > 0 && !ver_b.batch_stage_rows(wb.rows, wb.S, wb.tok, wb.pos, err)) {
                     std::fprintf(stderr, "cohorts: B stage: %s\n", err.c_str()); std::printf("ERR cohort B stage: %s\n", err.c_str()); std::fflush(stdout);
                     return false;
@@ -12716,14 +12735,17 @@ int main(int argc, char** argv) {
                     std::fprintf(stderr, "cohorts: C stage: %s\n", err.c_str()); std::printf("ERR cohort C stage: %s\n", err.c_str()); std::fflush(stdout);
                     return false;
                 }
+                if (cohort_tel) tel_sB = Clock::now();
                 if (wa.S > 0 && !ver.batch_go(err, false)) {
                     std::fprintf(stderr, "cohorts: A launch: %s\n", err.c_str()); std::printf("ERR cohort A launch: %s\n", err.c_str()); std::fflush(stdout);
                     return false;
                 }
+                if (cohort_tel) tel_gA = Clock::now();
                 if (wb.S > 0 && !ver_b.batch_go(err, false)) {
                     std::fprintf(stderr, "cohorts: B launch: %s\n", err.c_str()); std::printf("ERR cohort B launch: %s\n", err.c_str()); std::fflush(stdout);
                     return false;
                 }
+                if (cohort_tel) tel_gB = Clock::now();
                 if (ternary && wc.S > 0 && !ver_c.batch_go(err, false)) {
                     std::fprintf(stderr, "cohorts: C launch: %s\n", err.c_str()); std::printf("ERR cohort C launch: %s\n", err.c_str()); std::fflush(stdout);
                     return false;
@@ -12765,12 +12787,12 @@ int main(int argc, char** argv) {
                     if (la) {
                         const int r = ver.batch_poll(win_pool_fn, &drive, err);
                         if (r < 0) { std::fprintf(stderr, "cohorts: A poll: %s\n", err.c_str()); std::printf("ERR cohort A: %s\n", err.c_str()); std::fflush(stdout); return false; }
-                        la = (r == 0);
+                        if (r == 0) { la = false; if (cohort_tel) tel_dA = Clock::now(); } else la = true;
                     }
                     if (lb) {
                         const int r = ver_b.batch_poll(win_pool_fn, &coh_b_drive, err);
                         if (r < 0) { std::fprintf(stderr, "cohorts: B poll: %s\n", err.c_str()); std::printf("ERR cohort B: %s\n", err.c_str()); std::fflush(stdout); return false; }
-                        lb = (r == 0);
+                        if (r == 0) { lb = false; if (cohort_tel) tel_dB = Clock::now(); } else lb = true;
                     }
                     if (lc) {
                         const int r = ver_c.batch_poll(win_pool_fn, &coh_c_drive, err);
@@ -12940,6 +12962,18 @@ int main(int argc, char** argv) {
                 if (wb.S > 0 && !finish(ver_b, wb)) return false; // commit (commit_slots would abort)
                 if (ternary && wc.S > 0 && !finish(ver_c, wc)) return false;   // (the third tail)
                 const Clock::time_point w2c = Clock::now();
+                if (cohort_tel) {
+                    std::fprintf(stderr, "cohorts: tel rows %d+%d stage %.2f/%.2f go %.2f/%.2f poll %.2f/%.2f window %.2f tail %.2f "
+                                     "since-prev %.2f | wait +%.2f pool +%.2f | hits +%lld cpu +%lld pcie +%lld swaps +%lld\n",
+                                 wa.S, wb.S, msd2(w0c, tel_sA), msd2(tel_sA, tel_sB), msd2(tel_sB, tel_gA), msd2(tel_gA, tel_gB),
+                                 msd2(tel_gB, tel_dA), msd2(tel_gB, tel_dB), msd2(w0c, w1c), msd2(w1c, w2c), msd2(tel_prev_w2c, w0c),
+                                 ver.ms_wait + ver_b.ms_wait - tel_w0, ver.ms_pool + ver_b.ms_pool - tel_pl0,
+                                 (long long) (drive.d.cache_hits + coh_b_drive.d.cache_hits - tel_h0),
+                                 (long long) (drive.d.multi_misses + coh_b_drive.d.multi_misses - tel_m0),
+                                 (long long) (drive.d.pcie_experts + coh_b_drive.d.pcie_experts - tel_p0),
+                                 (long long) (a_swapped + bt_adapt_swaps - tel_sw0));
+                    tel_prev_w2c = w2c;
+                }
                 // T39 C5b: the cohort sample now covers the SAME phase as the standing push (window +
                 // commit + emit). The T38 C5 placement (stage-to-windows-done, w0c..w1c) understated the
                 // cohort round by the finish tails this span includes.
