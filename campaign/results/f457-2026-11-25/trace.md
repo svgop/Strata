@@ -104,3 +104,13 @@ run).  Cost of the one feasible fold, if built: the a/b body's marginal time per
 2. If the projection branch through quantize -> mmvq_il -> conv -> z gets more than 17 us per layer faster, `gdn_ab` (9 us) becomes the
    last producer of the step and the consumer fold (or a faster a/b body) turns into a lever.  Falsifier: re-run `f457-slack.py` on a
    new capture; the lever exists when "last producers to finish" leaves 0.
+
+## Addendum 10:06 - which producer gates the step (census, a named subset)
+
+In 3,626 of the 24,804 instances both projections appear between `gdn_ab` and the step as `native_mmvq_il_kernel` (`IlQ6K`, then
+`IlQ4K`); the other 21,178 carry a different projection-kernel name (not censused).  In that subset the LAST producer of the step is
+the gate projection z (`IlQ4K`) in 2,858 = 78.8% and the conv in 768 = 21.2%.  z END -> step START: median 0.19 us (p10 0.16, p90 3.04).
+z START - qkv START: median 10.30 us (p10 8.90, p90 11.87).  The path to the step runs through the gate projection's late start, never
+through `gdn_ab`.  This is the audit's "gate matvec starts 10.9 us after its input is ready" item (VOID at 03:55 for its dependency
+reading); the census adds that z is the step's binding producer in 78.8% of the subset.  A lever there is UNPRICED and UNMEASURED;
+named so the census is not bought again.

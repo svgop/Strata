@@ -12,3 +12,4 @@
   no deploy, no capture, no smoke, no ladder.
 - CLOSEOUT (nothing was started, so nothing to restore): engine/strata sha256 3865e27a (the champion, untouched; pre-f457 backup not
   needed - no deploy happened); build-fresh/strata 7a4d3477 (baseline, untouched); engine DOWN, port 8081 free; no GPU job run.
+- 10:05 addendum - binding producer census (subset 3,626): z last in 78.8%, conv 21.2%, gdn_ab 0%; appended to trace.md
