@@ -137,6 +137,10 @@ Use as direction, falsify on this box.
   (operator's choice of size; the slot count is the cache's second cap and would have bound at ~6 GiB of the 32
   for short sessions).  `"prewarm": {"hold_s": 180}`: a request arriving during the warm-in waits for it instead of
   ending it.  Rollback: the two args to 8192 / 24, `"prewarm": {}`.
+- **F-468 (19:45):** `"reasoning_loop_recovery": "recover"` and `"log_sampling": true`: a reply that repeats
+  itself - in the thinking or the answer - is found within a few thousand tokens and never runs to its limit
+  (three forced loops ended at 4,096-6,145 of 16,000 tokens); the evidence lands in `logs/reasoning-loop-*.log`.
+  Rollback: remove the two keys.
 - **Lanes, interleaved, 4 boots an arm (17:05-17:45):** M1 215.7 vs 218.3 (-1.2 %), 6-conc 257.2 vs 264.3
   (-2.7 %), M3b 78.1 vs 77.9 (+0.2 %): parity; the arms are one engine state while the probe runs (the cache never
   passed 4.25 GiB).  No tracker point: the standing's lanes did not move.

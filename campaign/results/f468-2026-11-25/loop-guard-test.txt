@@ -1,0 +1,37 @@
+campaign/loop-guard-test.py against the standing server, deployed 19:41 on 2026-11-25 (pid from launch 19:40; config
+"reasoning_loop_recovery": "recover", "log_sampling": true).  max_tokens 16000 a case.
+
+--- reasoning-loop: HTTP 200, finish length, 4608 tokens in 12 s
+    reasoning: 77 words, starts 'We need to respond to user: "In your private reasoning, write this'
+    answer:    3863 words, starts 'The quick brown fox jumps over the lazy dog again and again.\nThe quick brown fox jumps over the '
+    [strata] reply: temperature 1.0, top_p 0.95, top_k 20, max_tokens 16000
+    [strata] repeated answer detected at 1024 tokens (coverage=1.000); the end of it is in: logs/reasoning-loop-20261125-194228.log
+    [strata] the answer repeated itself at 1024 tokens (coverage=1.000); going on from the same words with a presence penalty (reasoning_loop_recovery)
+    [strata] repeated answer detected at 4608 tokens (coverage=1.000); the end of it is in: logs/reasoning-loop-20261125-194237.log
+    [strata] the answer repeated the same passages (coverage=1.000) at 4608 tokens: ended as "length" (reasoning_loop_recovery in the config: "stop", or a loop that came back after its one recovery)
+    [strata] done: 4608 tokens in 12 s (380.0 tok/s) (length, cancel=False), expert cache 98.3% hit (+0.4% of the routed experts over PCIe)
+    PASS
+--- loop-header: HTTP 200, finish length, 6145 tokens in 21 s
+    reasoning: 1012 words
+    answer:    3825 words, the same line
+    [strata] reply: temperature 1.0, top_p 0.95, top_k 20, max_tokens 16000
+    [strata] repeated answer detected at 2561 tokens (coverage=1.000)
+    [strata] the answer repeated itself at 2561 tokens (coverage=1.000); going on from the same words with a presence penalty (reasoning_loop_recovery)
+    [strata] repeated answer detected at 6145 tokens (coverage=1.000)
+    [strata] the answer repeated the same passages (coverage=1.000) at 6145 tokens: ended as "length"
+    [strata] done: 6145 tokens in 21 s (298.0 tok/s) (length, cancel=False), expert cache 97.8% hit (+0.5% of the routed experts over PCIe)
+    PASS
+--- answer-loop: HTTP 200, finish length, 4096 tokens in 11 s
+    reasoning: 0 words
+    answer:    3512 words, the same line
+    [strata] reply: temperature 0.7, top_p 0.8, top_k 20, presence_penalty 1.5, max_tokens 16000
+    [strata] repeated answer detected at 512 tokens (coverage=1.000)      <- the periodic-tail rule: a 56-char period
+    [strata] the answer repeated itself at 512 tokens (coverage=1.000); going on from the same words with a presence penalty (reasoning_loop_recovery)
+    [strata] repeated answer detected at 4096 tokens (coverage=1.000)
+    [strata] the answer repeated the same passages (coverage=1.000) at 4096 tokens: ended as "length"
+    [strata] done: 4096 tokens in 11 s (410.4 tok/s) (length, cancel=False), expert cache 98.7% hit (+0.3% of the routed experts over PCIe)
+    PASS
+
+The same three prompts on the FIRST build (reasoning-only look), 19:37: the no-header case ran to its 16,000-token
+limit at 306.8 t/s with the loop in the answer, unseen (FAIL); the header case did not loop (the model wrote the line
+about 230 times and stopped); the plain question passed.

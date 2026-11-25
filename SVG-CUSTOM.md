@@ -15517,3 +15517,61 @@ not keep the gate.
 (any probe in a warmed boot; keeps the server's log as `server.log`), `campaign/reqlog-census.py` (both lines).
 Owed: the engine's admission record should say so instead of "1 generated" (a text change in the next engine
 build; every consumer of that line must treat `generated == 1 && drafts == 0` as "not a generation").
+## F-468 - a reply that repeats itself no longer runs forever: the loop guard watches the answer as well as the thinking, ends a loop that returns, and leaves its evidence (2026-11-25, 19:00-19:45)
+
+Operator, 19:00: the same line seven times in a row during live use; 19:24: "If I don't stop the chat it will loop
+permanently. Clearly something somewhere is wrong."  Three read-only lanes first
+(`campaign/research/loop-7x-line-2026-11-25.md`), then the fix, on the operator's running server.
+
+### 1. What let it run [M]
+
+- The operator's requests carry a thinking budget of 179,974 tokens (max_tokens 239,965 and up): a loop in the
+  thinking has thirteen minutes of runway.  The loop-shaped requests of the 18:35 boot ran 67,761 / 57,089 tokens
+  at 322 t/s with 99.06 % of drafts accepted, and ended only when the operator cancelled.
+- Thinking mode has no repetition, frequency or presence penalty (`MODEL_CARD_SAMPLING`, `serve/server.py`; the
+  config has no `sampling` block).  #606 counts one TOKEN repeated; #728 was off, looked at the reasoning only, and
+  needed an ` (effort: high)` header to recover.  The control vectors do not double-apply (`cvec.cu:247-258`; the
+  persona row is orthogonal to the refusal axes), and the persona add is gated off during the thinking; no F-entry
+  had ever measured loops with the vectors off.  Root cause NOT attributed: the evidence capture below is the
+  instrument that will.
+
+### 2. What changed (`serve/server.py`; config `"reasoning_loop_recovery": "recover"`, `"log_sampling": true`)
+
+The #728 look now runs in the reasoning AND the content state, every 512 tokens at a clean parser boundary.  On a
+loop (a quarter of the last 2,000 words inside 12-word passages seen three times, or a periodic tail): the end of
+what repeated is written to `logs/reasoning-loop-<time>.log`; with "stop" the reply ends; in the thinking with an
+effort header the header is flipped to low and the same output resumes (the original path); with no header the
+thinking is closed as a spent budget is closed and the model answers; in the answer the reply goes on from the same
+words with the loop-breaking sampling (`loop_breaking_sampling`: temperature at least 1.0, presence penalty at least
+1.5), once; a loop that comes back after its one recovery ends the reply as "length" with a line that says so.
+Every reply now prints its sampling keys (`[strata] reply: ...`): the engine's own log carries none.
+
+### 3. Proof [M] (`campaign/loop-guard-test.py`, `campaign/results/f468-2026-11-25/loop-guard-test.txt`)
+
+| case | first found | found again | ended at | t/s |
+|---|---|---|---|---|
+| reasoning-loop (no effort header) | 1,024 tokens, coverage 1.000 | 4,608 | 4,608 of 16,000 | 380 |
+| loop-header | 2,561 | 6,145 | 6,145 | 298 |
+| answer-loop | 512 (the periodic-tail rule) | 4,096 | 4,096 | 410 |
+
+On the first build, reasoning-only, the no-header case ran to its 16,000-token limit with the loop in the answer,
+unseen.  Two findings kept: the presence penalty of 1.5 over 64 tokens did not break a confident repeat (all three
+prompts ask for the repeat), so the reply ends after one attempt - "never permanent", not a cure; and in both
+reasoning cases the model left its thinking after 77 and 101 words and looped in the answer, so the thinking-phase
+close path is read and compiled but NOT yet run.  The operator's own loops were in the thinking (their narration
+shows thinking beats only): the next one exercises that path.
+
+### 4. Also from this hour
+
+- The slot store works across a standing stop and start: 18 of 18 parked conversations restored at 19:34.  The
+  wholesale drops (17 at 18:35) came from campaign boots of another kind (a routing-dump boot at 15:29) writing to
+  the operator's directory.  The engine still does not say why it refuses a file.
+- A detached server stops on SIGTERM (`serve/lifeline.py:276-290`, about 12 s with the drain).  SIGINT is ignored by
+  a process started in the background from a non-interactive shell.  The launcher's preflight refused a second
+  boot against the live one ("the box is at its edge").
+
+### 5. Owed
+
+MMLU gate on the armed guard (it cannot fire under about 2,000 reasoning words unless the tail is periodic); the
+greedy-card penalty defect (`sampler.cu:1259-1269`); a recovery that outlasts a confident loop; the root cause,
+from the evidence files of the operator's next loops.

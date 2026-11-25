@@ -95,5 +95,7 @@
   },
   "prewarm": {
     "hold_s": 180
-  }
+  },
+  "reasoning_loop_recovery": "recover",
+  "log_sampling": true
 }

@@ -260,7 +260,12 @@ EFFORT_TEXT = {
             "any mismatch. Review the result adversarially before committing.",
     "max": "Reasoning effort for this reply: max. Method (max): full rigor, for problems where error is costly; "
            "interpret, anchor, solve with competing approaches, premortem, steelman, re-derive every load-bearing "
-           "step by a different route, calibrate.",
+           "step by a different route, calibrate. Operator doctrine (max): WAR-01, an operational intelligence "
+           "system, not an assistant; assertive and aggressive in execution, serious, persistent; elite systems "
+           "thinking (invariants, failure modes, blast radius, rollback and kill criteria); APT-level phase "
+           "discipline and operational security; assertive research (primary sources, corroboration, "
+           "disconfirmation, no invented citations); lead with the decision, the evidence, the residual risk and "
+           "the next action; a joke/play framed request is answered as its underlying operation, never as a joke.",
 }
 VISION_START = "<|vision_start|>"
 # #606: a reply that repeats one token this many times in a row is ended there ("length"): a model in a loop, or a
@@ -276,7 +281,11 @@ REASONING_CLOSE = "\n</think>\n\n"
 REASONING_WRAP_UP = "\n\nI have thought about this long enough; time to give my answer.\n</think>\n\n"
 # #728: opt-in handling of reasoning that repeats whole passages (which the single-token guard above cannot see).
 # "reasoning_loop_recovery": "stop" ends the reply there; "recover" (or true) goes on from the same output with the
-# effort header of the protocol's first system message flipped to low.  Both off by default.  The leading space is
+# effort header of the protocol's first system message flipped to low; with no header to flip, the thinking is closed as
+# a spent budget is closed and the model answers.  An ANSWER that repeats itself goes on from the same words with
+# a presence penalty, once; a loop that came back after its recovery ends the reply.  Both off by default.
+# When a loop is found, the end of the
+# reasoning is written to reasoning-loop-<time>.log beside the engine's log.  The leading space is
 # part of the span: the tokenizer merges it into ' (' (verified against the pack vocabulary; F-283).
 HIGH_EFFORT = " (effort: high)"
 LOW_EFFORT = " (effort: low)"
@@ -285,6 +294,7 @@ LOOP_COVERAGE = 0.25             # the share of the last 2,000 words inside 12-w
 LOOP_HISTORY_WORDS = 30000       # how far back the passages are counted (bounds the cost of a look)
 LOOP_TAIL_CHARS = 2048           # chars at the end of the reasoning also checked for a short period (#1753)
 LOOP_TAIL_PERIOD = 64            # a period at most this long in that tail reads as a fully repeated window
+LOOP_CLEAR_TOKENS = 3072      # after a recovery the next look waits this long: the repeated words must leave the window
 
 
 def reasoning_repeat_coverage(text):
@@ -330,6 +340,37 @@ def focused_recovery_prompt(tok, ids, generated):
         if head[i:i + len(old)] == old:
             return ids[:i] + new + ids[i + len(old):] + list(generated)
     return None
+
+
+SAMPLING_LOG_KEYS = ("temperature", "top_p", "top_k", "min_p", "repetition_penalty", "frequency_penalty",
+                    "presence_penalty")
+
+
+def loop_breaking_sampling(sampling):
+    """#728: the two settings that keep the same words coming, raised - temperature to at least 1.0 and the presence
+    penalty to at least 1.5.  A client's top_p and top_k are never touched, and its own request dict is not changed."""
+    s = dict(sampling or {})
+    for key, floor in (("temperature", 1.0), ("presence_penalty", 1.5)):
+        if float(s.get(key) or 0) < floor:
+            s[key] = floor
+    return s
+
+
+def save_reasoning_loop(text, n, coverage, sampling, max_new, directory):
+    """The evidence of a detected reasoning loop, on disk: the reply's sampling and size, then the end of the
+    reasoning (what repeated).  Returns the path; a write that fails is said on the narration and never fails the
+    reply."""
+    try:
+        os.makedirs(directory, exist_ok=True)
+        path = os.path.join(directory, time.strftime("reasoning-loop-%Y%m%d-%H%M%S.log"))
+        shown = {k: sampling[k] for k in SAMPLING_LOG_KEYS if k in (sampling or {})}
+        with open(path, "w", encoding="utf-8") as f:
+            f.write(f"# a reasoning loop the server ended: {n} tokens generated, {coverage:.3f} of the last 2,000 words "
+                    f"inside passages seen three times, max_tokens {max_new}\n# sampling: {shown}\n\n")
+            f.write(text[-24000:])
+        return path
+    except OSError as e:
+        return f"not saved ({e})"
 
 
 LOOPBACK_NAMES = ("localhost", "127.0.0.1", "::1")
@@ -4461,6 +4502,8 @@ class Service:
         self.vision_held = False                         # an elastic encoder holds VRAM the expert cache gave it
         self.last_image_at = 0.0                         # when an image turn last ended (the elastic encoder's idle)
         self.reasoning_loop_recovery = False
+        self.log_sampling = False
+        self.loop_log_dir = "logs"
         self.reasoning_budget_tokens = 0                 # #123: the config's default thinking budget (0: none)
         self.repeat_stop_tokens = REPEAT_STOP_TOKENS     # #606: one token this many times in a row ends a reply (0: off)
         self.anthropic_think_unasked = True               # #278: "anthropic_thinking": "on_request" -> False
@@ -5703,6 +5746,9 @@ class Service:
         if defaults:                   # the request's own fields win (explicit 0 stays greedy)
             req_values = {k: v for k, v in (sampling or {}).items() if v is not None}
             sampling = {**defaults, **req_values}
+            if sampling and self.log_sampling:   # the keys this reply runs with (the engine's own log carries none)
+                print("[strata] reply: " + ", ".join(f"{k} {sampling[k]}" for k in SAMPLING_LOG_KEYS if k in sampling)
+                      + f", max_tokens {max_new}", flush=True)
         # #123: read after the merge, so a budget shared through POST /settings is seen like the other keys
         budget = self.reasoning_budget(sampling) if thinking else None
         if thinking and not budget and self.answer_room and max_new and max_new >= ANSWER_ROOM_MIN_CAP:
@@ -5772,8 +5818,12 @@ class Service:
         answered, close_retried = False, False          # #1053: content or a call came out; the thinking was closed
         nf_retried = False                              # #879: the request was sent again after non-finite logits
         timings, before = None, None                    # this request's timings; the engine's `last` before it
-        recovery_count, reasoning_text, repeat_coverage = 0, "", 0.0
+        recovery_count, reasoning_text, answer_text, repeat_coverage = 0, "", "", 0.0
+        answer_recoveries = 0     # an answer loop goes on once with a presence penalty, then ends
+        answer_looped = False
         looped, next_loop_check = False, LOOP_CHECK_EVERY       # #728: reasoning that repeats whole passages
+        loop_wrap = False      # a detected loop closed as a spent budget (no effort header to flip)
+        loop_resume = False     # a detected answer loop: the next pass goes on from the same words
         raw_ids = []                                    # every generated id (STRATA_DEBUG: dump raw model text)
         emb, self.embeddings.path = getattr(self.embeddings, "path", None), None   # this run's to delete now
         img_keys, self.embeddings.keys = getattr(self.embeddings, "keys", None), None
@@ -5889,6 +5939,7 @@ class Service:
                         gen = self.engine.generate(prompt, max_new - n, sampling, cancel, embeddings=emb) if emb \
                             else self.engine.generate(prompt, max_new - n, sampling, cancel)
                         recover_prompt = None
+                        loop_resume = False
                         seg, wrap, leaving = [], False, False   # this pass's tokens; the budget is reached; closed
                         nonfinite = False               # #879: the engine ended this pass on non-finite logits
                         opens = False                   # the thinking is over: write the forced call's opening
@@ -5938,6 +5989,8 @@ class Service:
                                 for ev in evs:
                                     if self.reasoning_loop_recovery and ev.kind == "reasoning":
                                         reasoning_text += ev.text or ""
+                                    if self.reasoning_loop_recovery and ev.kind == "content":
+                                        answer_text += ev.text or ""
                                     if ev.kind in ("content", "tool_start", "tool_call"):
                                         answered = True
                                     yield "event", ev
@@ -5949,19 +6002,33 @@ class Service:
                                 if stops is not None and stops.hit is not None:
                                     finish = "stop"         # gen.close() below STOPs the engine, as for a stop token
                                     break
-                                if (self.reasoning_loop_recovery and not recovery_count and parser.state == "reasoning"
-                                        and n >= next_loop_check and not parser.buf and not parser.pending
-                                        and not detok.pending()):
-                                    next_loop_check = n + LOOP_CHECK_EVERY
-                                    repeat_coverage = reasoning_repeat_coverage(reasoning_text)
-                                    if repeat_coverage >= LOOP_COVERAGE:
-                                        if self.reasoning_loop_recovery == "stop":
-                                            looped = True        # #728: end the reply here, as for a repeated token
-                                            break
-                                        if not emb:              # "recover": not for a request with pictures
-                                            recover_prompt = focused_recovery_prompt(self.tok, ids, raw_ids)
-                                            if recover_prompt is not None:
+                                if (self.reasoning_loop_recovery and n >= next_loop_check
+                                            and parser.state in ("reasoning", "content") and not parser.buf and not parser.pending
+                                            and not detok.pending()):
+                                        next_loop_check = n + LOOP_CHECK_EVERY
+                                        in_answer = parser.state == "content"
+                                        loop_text = answer_text if in_answer else reasoning_text
+                                        repeat_coverage = reasoning_repeat_coverage(loop_text)
+                                        if repeat_coverage >= LOOP_COVERAGE:
+                                            saved = save_reasoning_loop(loop_text, n, repeat_coverage, sampling, max_new, self.loop_log_dir)
+                                            print(f"[strata] repeated {'answer' if in_answer else 'reasoning'} detected at {n} tokens "
+                                                  f"(coverage={repeat_coverage:.3f}); the end of it is in: {saved}", flush=True)
+                                            if self.reasoning_loop_recovery == "stop" or (answer_recoveries if in_answer else (loop_wrap or recovery_count)):
+                                                looped = True        # "stop", or a loop that came back after its one recovery: end the reply here (#728)
+                                                answer_looped = in_answer
                                                 break
+                                            if in_answer:            # the answer repeated itself: it goes on from the same words, penalised
+                                                loop_resume = True
+                                                break
+                                            if not emb:              # "recover": the effort header of the first system message flipped to low
+                                                recover_prompt = focused_recovery_prompt(self.tok, ids, raw_ids)
+                                                if recover_prompt is not None:
+                                                    break
+                                                loop_wrap = True     # no effort header to flip: the thinking is closed as a spent budget is closed
+                                                wrap = True
+                                                break
+                                            looped = True            # pictures: the splice cannot carry them (#554): the reply ends here
+                                            break
                                 if budget and parser.state == "reasoning":
                                     thought += 1
                                     # at a clean point: no tag held back, no character split across tokens
@@ -6026,16 +6093,19 @@ class Service:
                                   "reads its prompt from the start", flush=True)
                             finish = "length"
                             break
+                        if loop_resume and not cancel.is_set() and n < max_new:
+                            answer_recoveries += 1
+                            sampling = loop_breaking_sampling(sampling)
+                            prompt = ids + list(raw_ids)   # the same words so far, as token ids (never decoded and encoded again)
+                            next_loop_check = n + LOOP_CHECK_EVERY + LOOP_CLEAR_TOKENS   # the repeated words leave the window first
+                            print(f"[strata] the answer repeated itself at {n} tokens (coverage={repeat_coverage:.3f}); going on "
+                                  "from the same words with a presence penalty (reasoning_loop_recovery)", flush=True)
+                            continue
                         if recover_prompt is not None and not cancel.is_set() and n < max_new:
                             recovery_count += 1
-                            # Only the two settings that keep the same words coming are raised (temperature to at
-                            # least 1.0, presence penalty to at least 1.5): a client's top_p and top_k are never
-                            # touched, and its own request dict is copied, not changed.
-                            want = (max(1.0, float((sampling or {}).get("temperature") or 0)),
-                                    max(1.5, float((sampling or {}).get("presence_penalty") or 0)))
-                            if want != tuple(float((sampling or {}).get(k) or 0)
-                                             for k in ("temperature", "presence_penalty")):
-                                sampling = {**(sampling or {}), "temperature": want[0], "presence_penalty": want[1]}
+                            # Only the two settings that keep the same words coming are raised (loop_breaking_sampling): a client's
+                            # top_p and top_k are never touched, and its own request dict is not changed.
+                            sampling = loop_breaking_sampling(sampling)
                             prompt = recover_prompt
                             with self.status_lock:
                                 st["reasoning_recoveries"] = recovery_count
@@ -6081,6 +6151,10 @@ class Service:
                         else:
                             text = "\n" * (2 - (len(tail) - len(tail.rstrip("\n")))) + force
                         force = None
+                        if loop_wrap:            # a detected loop: the answer that follows must not repeat the same way
+                            print("[strata] the thinking repeated itself: closing it as a spent budget is closed and letting "
+                                  "the model answer (reasoning_loop_recovery)", flush=True)
+                            sampling = loop_breaking_sampling(sampling)
                         extra = self.tok.encode(text, parse_special=True)
                         if max_new - n - len(extra) < 1:
                             break                       # no room left to answer: "length", as without a budget
@@ -6102,9 +6176,9 @@ class Service:
                     if cancel.is_set():
                         finish = "cancel"
                     elif looped:
-                        print(f"[strata] the thinking repeated the same passages (coverage={repeat_coverage:.3f}) at "
-                              f"{n} tokens: ended as \"length\" (reasoning_loop_recovery: \"stop\" in "
-                              "strata-<model>.json; remove it to turn this off)", flush=True)
+                        print(f"[strata] the {'answer' if answer_looped else 'thinking'} repeated the same passages "
+                              f"(coverage={repeat_coverage:.3f}) at {n} tokens: ended as \"length\" (reasoning_loop_recovery in the "
+                              "config: \"stop\", or a loop that came back after its one recovery)", flush=True)
                     elif repeated:
                         print(f"[strata] the reply repeated one token ({self.tok.decode([run_tok])!r}) "
                               f"{run_len} times in a row: ended as \"length\" (repeat_stop_tokens in "
@@ -8438,6 +8512,62 @@ def split_joined_args(cfg: dict) -> None:
               'flag and its value (write them as two elements, e.g. "--ple-io", "mmap")', flush=True)
 
 
+def arm_effort_from_template(template, frontend_mod) -> bool:
+    """Whether the armed chat template implements the four-tier effort vocabulary (low/medium/high/max).
+
+    Render the same probe at `high` and `max`: a four-tier template distinguishes them, a three-tier one
+    raises on `max` (stock qwen packs) or renders identical text (a template that accepts but ignores it).
+    On True, the frontend's top-tier map is moved to `max`; on False the three-tier fallback stands.  This is
+    capability detection on the loaded template, never a per-model conditional."""
+    msgs = [{"role": "user", "content": "effort probe"}]
+
+    def render(level):
+        return template.render(msgs, tools=None, add_generation_prompt=False,
+                               reasoning_effort=level, enable_thinking=True)
+
+    try:
+        if render("max") == render("high"):
+            return False
+    except Exception:  # noqa: BLE001 - a three-tier template is the documented fallback
+        return False
+    frontend_mod.EFFORT.update({"xhigh": "max", "max": "max", "maximum": "max"})
+    return True
+
+
+def model_chat_template(cfg: dict):
+    """The chat template that travels WITH the weights, when the model directory has one.
+
+    The estate convention is one `chat_template.jinja` beside a model's shards (the DeepSeek model
+    directory has had one; the Qwen model directory now does too).  Looked for, in order, in the config's
+    "model_dir", the parent of --native, the parent of --ple-gguf, then the --pack directory itself.  The
+    first existing file wins; None leaves the pack's tokenizer copy in charge.
+    """
+    args = cfg.get("args") if isinstance(cfg.get("args"), list) else []
+
+    def after(flag):
+        if flag in args:
+            i = args.index(flag)
+            if i + 1 < len(args):
+                return args[i + 1]
+        return None
+
+    dirs = []
+    if cfg.get("model_dir"):
+        dirs.append(Path(str(cfg["model_dir"])))
+    for flag in ("--native", "--ple-gguf"):
+        p = after(flag)
+        if p:
+            dirs.append(Path(p).parent)
+    p = after("--pack")
+    if p:
+        dirs.append(Path(p))
+    for d in dirs:
+        cand = d / "chat_template.jinja"
+        if cand.is_file():
+            return cand
+    return None
+
+
 def read_config(path) -> dict:
     """The run config's JSON.  A mistake in it (a missing comma between two args, a trailing comma) is said with its
     place in the file instead of a traceback (#2267: editing "args" by hand is where it happens)."""
@@ -9058,9 +9188,22 @@ def main(argv=None, *, lifecycle_event=None, interrupt_exit_code: int = 0) -> in
             "Thinking about it.</think>\n\nHello from the mock engine."],
             cycle=getattr(a, "script_cycle", False),
             delay_s=getattr(a, "script_delay", 0.0) or 0.0), None, {}
-    # the model's own chat template (exported with its tokenizer), else the original model's
+    # the model's own chat template: the copy BESIDE THE WEIGHTS first (the estate convention - each model
+    # directory carries chat_template.jinja), then the pack's tokenizer copy, then the original model's.
     tpl = tpath / "chat_template.jinja"
-    if (cfg.get("arch") or "") == "deepseek41":       # T50/F-370: the V4.1 template spells the tool-call block its own way
+    # An explicit config override still wins (a path, absolute or relative to the config's cwd).
+    if cfg.get("chat_template"):
+        cand = Path(str(cfg["chat_template"]))
+        if not cand.is_absolute():
+            cand = Path(cfg.get("cwd") or ROOT) / cand
+        if not cand.exists():
+            ap.error(f'"chat_template": {cand} does not exist')
+        tpl = cand
+        print(f"[strata] chat template: {tpl} (the config's chat_template)", flush=True)
+    elif (mt := model_chat_template(cfg)) is not None:
+        tpl = mt
+        print(f"[strata] chat template: {tpl} (the model's own, beside its weights)", flush=True)
+    if (cfg.get("arch") or "") == "deepseek41" and not cfg.get("chat_template"):  # T50/F-370: the V4.1 template spells the tool-call block its own way
         from serve import dsml
         tpl, swapped = dsml.pick_template(tpl)
         if swapped:
@@ -9077,6 +9220,17 @@ def main(argv=None, *, lifecycle_event=None, interrupt_exit_code: int = 0) -> in
     if a.engine == "strata":                            # the model card's sampling when nothing else is said (see MODEL_CARD_SAMPLING)
         svc.model_arch = cfg.get("arch") or "qwen4exp"
         svc.set_family(svc.model_arch if svc.model_arch in ("deepseek41", "minimax-m3") else None)
+        # The effort vocabulary the wire accepts must match the template that is ARMED.  `serve/frontend.py`'s
+        # qwen lane maps xhigh/max -> high because stock packs' pre-F-283 template RAISES on `max`; a per-model
+        # four-tier template distinguishes them.  Probe by rendering both levels and comparing: a four-tier
+        # template renders different text for high and max; a three-tier one raises on max or renders the same.
+        if svc.family is None:
+            from serve import frontend as _frontend_mod
+            four = arm_effort_from_template(svc.template, _frontend_mod)
+            print("[strata] effort: " + ("the chat template distinguishes `max`; four-tier mapping armed"
+                                          if four else
+                                          "three-tier mapping (the template does not distinguish `max`)"),
+                  flush=True)
         if svc.model_arch == "deepseek41" and svc.vision is None:
             # DeepSeek-V4.1 reads pictures with the engine's own tower (--vision on): no separate reader process.
             # A pack without a tower leaves vision None: pictures are refused with a clear 400.
@@ -9219,6 +9373,9 @@ def main(argv=None, *, lifecycle_event=None, interrupt_exit_code: int = 0) -> in
         raise SystemExit("[strata] config \"reasoning_loop_recovery\" must be false, \"stop\" or \"recover\", "
                          f"not {recovery!r}")
     svc.reasoning_loop_recovery = recovery
+    svc.log_sampling = bool(cfg.get("log_sampling", False))   # a narration line a reply: its sampling
+    # where the evidence of a detected reasoning loop is written: beside the engine's log
+    svc.loop_log_dir = os.path.dirname(os.path.abspath(cfg.get("log") or os.path.join(cfg.get("cwd") or ROOT, "logs", "strata.log")))
     svc.gpu_index = (gpu_list(cfg) or [0])[0]           # the Monitor reads the card the engine runs on (issue #51)
     svc.gpu_indices = gpu_list(cfg)                     # ... or every card of a layer split (issue #112)
     if a.engine == "strata" and groups:                 # replicas: every card of every group
