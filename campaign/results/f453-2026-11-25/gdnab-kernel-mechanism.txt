@@ -1,0 +1,14 @@
+=== off: /mnt/DATA/LLM/Models/GGUF/strata/Custom-data/profiles/f453g-off-2026-11-25/anatomy.sqlite
+gdn_ab_multi_kernel: n=24804, median 9.31 us, mean 9.06 us, p10 5.47, p90 12.13   (the 11-24 baseline: 8.26 us mean)
+window graphId 66: instances 518, median occupancy 0.161 ms, mean kernel time 0.161 ms
+window graphId 111: instances 515, median occupancy 0.270 ms, mean kernel time 0.274 ms
+window graphId 114: instances 404, median occupancy 0.269 ms, mean kernel time 0.273 ms
+window graphId 117: instances 310, median occupancy 0.269 ms, mean kernel time 0.273 ms
+kernel rows 1448686; window instances 3497
+=== on: /mnt/DATA/LLM/Models/GGUF/strata/Custom-data/profiles/f453g-on-2026-11-25/anatomy.sqlite
+gdn_ab_multi_kernel: n=24372, median 9.18 us, mean 8.83 us, p10 5.25, p90 11.87   (the 11-24 baseline: 8.26 us mean)
+window graphId 66: instances 514, median occupancy 0.161 ms, mean kernel time 0.160 ms
+window graphId 105: instances 507, median occupancy 0.270 ms, mean kernel time 0.274 ms
+window graphId 108: instances 399, median occupancy 0.269 ms, mean kernel time 0.273 ms
+window graphId 111: instances 327, median occupancy 0.270 ms, mean kernel time 0.274 ms
+kernel rows 1426547; window instances 3445

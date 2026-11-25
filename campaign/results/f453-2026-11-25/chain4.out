@@ -4,3 +4,5 @@
 [discard] M2 6-conc        : 268.8 t/s aggregate (3600 tok in 13.39s)
 [06:59:50] A. control gate exit 0: === MMLU-Pro (534 Qs) [floor 0.933, f452-control]: 456/534 = 85.4%  (1-sigma = 1.53 pts) ===  [MMLU-Pro test (1500q: stratified, seed 20261125); 95% C
 [07:00:00] B. full candidate deployed (87e4d95dcd365450)
+[07:02:30] B. capture off (STRATA_SMALL_UNR=3, node-level) exit 0
+[07:04:59] B. capture on (STRATA_SMALL_UNR=7, node-level) exit 0

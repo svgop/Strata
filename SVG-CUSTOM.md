@@ -14193,6 +14193,30 @@ Per category the states are level (-2 to +3 questions of 38-39).  The running pr
   reasoning.  A larger thinking budget on this class of request is worth about a point on this instrument and costs
   latency on the long thinkers; it is recorded, not changed.
 
+
+**MECHANISM CHECK - THE gdn_ab PRELOAD IS A NEGATIVE (07:00-07:05; chain 4 section B, two node-level serve-mode
+captures on the full candidate, m1 lane, same hour; `gdnab-kernel-mechanism.txt`, `capture-gdnab-{off,on}.out`):**
+
+| arm | `gdn_ab_multi_kernel` mean | median | p10 | p90 | instances |
+|---|---:|---:|---:|---:|---:|
+| OFF (`STRATA_SMALL_UNR=3`) | 9.06 us | 9.31 | 5.47 | 12.13 | 24,804 |
+| ON (`STRATA_SMALL_UNR=7`) | 8.83 us | 9.18 | 5.25 | 11.87 | 24,372 |
+
+- **-0.23 us on a 9 us kernel: the preload does not do what it was priced to do** (8.26 -> ~2.5 us).  The premise - a
+  lane's ten weight loads as a chain of dependent HBM misses - was the audit's inference (UNCONFIRMED static analysis,
+  as its own header says), never a measurement.  The kernel's p10 of 5.5 us is a FIXED PER-LAUNCH FLOOR for a 48-block
+  kernel inside a graph; its time is not its loads.
+- **Therefore ladder 1's +5.5% M1 was the box, not the kernel** (its two control boots sat 6.9% apart).  Two interleaved
+  rounds would have adopted it on the means; the mechanism check is what stopped that.  Law 3 earned again, and a rule for
+  the rest of the audit's queue (QSA, the shared expert), which was priced by the same bandwidth arithmetic: MEASURE THE
+  KERNEL BEFORE BELIEVING A FIX - a node-level duration is one capture, a wrong build is a day.
+- *Ruling:* FALSIFIED, not adopted; the knob stays default off and the kernel change is reverted at closeout (the record
+  keeps it; the tree should not carry a dead knob).  **Re-open clause:** none for the load order.  The lever this kernel
+  does have is structural - fold it into a neighbour and remove a launch (5-9 us x 36 layers = +1.6-3% M1), a bitwise
+  fusion, a different piece.
+- *Instrument note:* `f453-gdnab-kernels.py`'s "window graph" rows picked sub-millisecond graphs (the > 1,500-kernel
+  filter was applied per graphId AFTER instance cutting); the kernel line is the reading, those rows are not.
+
 ### 7. Priced queue (law 15; nothing below is adopted)
 A. Solo, bitwise launch shape/order: ~0.7 ms/window = +8%; with QSA work +15-20%.  First step: one read of the GDN capture
    order (the gate matvec's 10.9 us late start).  B. Solo drafter composition: step cap +2.4%, the adapt round, the
