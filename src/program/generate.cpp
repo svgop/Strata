@@ -17190,6 +17190,35 @@ int main(int argc, char** argv) {
                     for (int d = 0; d < strata::spec::K_MAX; ++d) da.beta[d] = (float) spec_est.beta(d);
                     mtp.set_draft_abort(da);
                 }
+                // STRATA_DRAFT_STEP_CAP=1 (F-453, default off): stop the chain at what the next window will verify.  The
+                // W1 controller's size for that window is already decided here - its inputs are the acceptance tables
+                // (updated by this window's acceptance, above) and the calibrated cost, and nothing writes them before
+                // the next loop head - so bounding the gated loop changes no verified row: the min_p walk can only cut
+                // further.  (The F-453 node trace: 82 of 293 warm windows drafted five steps for a T=2 window.)  Not under
+                // STRATA_SPEC_LOGISTIC: that controller reads the NEW chain's own probabilities, which do not exist yet.
+                // The decision below mirrors the loop head's controller block; it is a copy on purpose - the standing
+                // path stays the code it was.
+                static const bool draft_step_cap = [] {
+                    const char* v = std::getenv("STRATA_DRAFT_STEP_CAP");
+                    return v != nullptr && v[0] != '\0' && v[0] != '0';
+                }();
+                if (draft_step_cap) {
+                    int want = 0;                                   // 0: the controller does not speak for the next window
+                    if (adaptive_spec && use_mtp && !first_window && !spec_logistic) {
+                        int64_t tested_n = 0;
+                        for (int d = 0; d < strata::kernels::kVerifyMaxT; ++d) tested_n += dp_tested[d];
+                        if (tested_n >= adaptive_warm) {
+                            strata::spec::Controller ctrl(adaptive_cost, 0.05);
+                            double cp[strata::spec::K_MAX];
+                            for (int d = 0; d < strata::spec::K_MAX; ++d)
+                                cp[d] = dp_tested[d] >= 8 ? (double) dp_ok[d] / (double) dp_tested[d] : -1.0;
+                            ctrl.set_mtp_accept(cp, strata::spec::K_MAX);
+                            const strata::spec::Choice ch = ctrl.choose(0, 0, true);
+                            want = ch.source == strata::spec::Source::Mtp ? ch.k + 1 : 1;
+                        }
+                    }
+                    mtp.set_draft_step_cap(want > 0 ? (std::max)(1, want - 1) : -1);
+                }
                 const bool drafted = !use_mtp || eos || produced_n >= max_new ||
                                      mtp.draft(T, outv.data(), p, a, drafts.data(), err, dprob.data(), (float) req_spec_min_p);
                 {

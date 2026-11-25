@@ -135,6 +135,11 @@ public:
     void set_draft_history(const int32_t* tail, int64_t n_tail, int32_t next);
     void set_ple_session(SessionState* s) { ple_ss_ = s; }
     bool coupled() const { return coupled_active_; }
+    /// STRATA_DRAFT_STEP_CAP=1 (F-453; the serial draft() only): the serve loop's bound on this round's chain - the
+    /// number of drafts the next window can verify (its T minus one), which the W1 controller decides from tables the
+    /// drafter cannot change.  The gated loop still stops earlier at min_p; the step-0 draft is always made.  A value
+    /// below 1 leaves the chain unbounded (the standing).  It persists: the loop sets it before every draft().
+    void set_draft_step_cap(int cap) { step_cap_ = cap; }
 
     /// STRATA_SPEC_ENTABORT (serial draft() only; the digest's mid-flight abort, decode-control2 §3.3 rule 3).
     /// Call before the first draft() when armed: it also arms the step graphs' capture - each step then runs
@@ -274,6 +279,7 @@ private:
     // STRATA_SPEC_ENTABORT: the step graphs' stats staging (p, entropy per drafted position, the kernel writes
     // the mapped device alias; the host trim loop reads the host side) and the abort's current inputs
     strata::spec::DraftAbort abort_{};
+    int step_cap_ = -1;   // STRATA_DRAFT_STEP_CAP (set_draft_step_cap)
     bool abort_stats_ = false;                 // armed-ness: stats nodes belong to the captures (sticky, boot-time)
     int stats_j_ = -1;                         // the capture writing now: the round's pick = 0, step j = j
     float* h_stat_ = nullptr;                  // DraftAbort::kFloats floats, mapped (lazy at first arm)

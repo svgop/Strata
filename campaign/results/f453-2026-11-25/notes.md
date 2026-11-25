@@ -48,6 +48,19 @@ below was read from the named file or command on this date.
   | 279.8 rows/s` -> 3.574 ms per row, 17.5 ms per cycle, of which the host waits on the GPU 0.40 ms (solo: 8.96).
   In conc every host-millisecond saved is conc throughput.
 
+## 04:00 - SECOND CANDIDATE PIECE: the drafter step cap (STRATA_DRAFT_STEP_CAP=1, default off) - compiled, not run
+Priced +2.4% M1 (82 of 293 warm windows drafted five steps for a T=2 window: 0.29 ms/window).  The W1 controller's size
+for the NEXT window is already decided when the drafter runs (its inputs: the acceptance tables, written by this window's
+acceptance before the draft call; the calibrated cost - nothing writes either before the next loop head), so the armed
+branch computes it and bounds the gated loop (`steps_cap`) - no verified row changes; the min_p walk can only cut further.
+Declines under STRATA_SPEC_LOGISTIC (that controller reads the new chain's probabilities) and while the controller warms
+up.  The standing path is untouched (the armed branch carries its own copy of the loop head's block on purpose).
+**Hazard caught by writing the proof down:** a naturally stopped chain ends on a draft BELOW min_p, which is what stops
+the caller's walk; a cap-stopped chain ends ABOVE it, and the walk would have read stale probabilities from the previous
+round and verified rows that were never drafted.  Fixed: `probs[n] = 0` at the cap's edge (mtp.cpp, after the gated loop).
+Objects compile; relink after the gdn_ab ladder deploys its copy; proof owed = the ladder's bit-identity check, M3b, and
+an MMLU gate if promoted (token-stream-adjacent: STRATA_SPEC_PROB=1 makes the emitted stream depend on the rows).
+
 ## 03:50 - ROUND 2 (while the gate runs): a per-round telemetry candidate; the shared-expert fusion priced and shelved
 - The engine's per-round line measures stage-to-polls-done only.  So "202 of 812 rounds at 30-40 ms against 22-26" means
   the WINDOW PHASE grows in those rounds, not the tail.  The first capture's 15 ms memcpy-only stretch was 2-5 MB H2D
