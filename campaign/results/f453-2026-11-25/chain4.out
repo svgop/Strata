@@ -6,3 +6,15 @@
 [07:00:00] B. full candidate deployed (87e4d95dcd365450)
 [07:02:30] B. capture off (STRATA_SMALL_UNR=3, node-level) exit 0
 [07:04:59] B. capture on (STRATA_SMALL_UNR=7, node-level) exit 0
+[07:22:47] C. composed ladder exit 0
+[07:23:57] D. arm boot: SMALL_UNR=7 in env: 1 | STEP_CAP=1 in env: 1
+[discard] M1 single-stream : 246.8 t/s (2000 tok in 8.10s)
+[discard] M2 pair          : 209.8 t/s aggregate (1800 tok in 8.58s)
+[discard] M2 6-conc        : 303.4 t/s aggregate (3600 tok in 11.86s)
+[07:28:04] D. 70q gate on the arm exit 0: === MMLU-Pro (70 Qs) [floor 0.933, f453-compose]: 67/70 = 95.7%  (1-sigma = 2.42 pts) ===  [MMLU-Pro validation (70q); 95% CI +/- 4.7; 200 s, 2.86 s/q
+[07:30:50] E. telemetry leg 1: M1 single-stream : 234.7 t/s (2000 tok in 8.52s);M2 pair          : 209.3 t/s aggregate (1800 tok in 8.60s);M2 6-conc        : 289.3 t/s aggregate (36
+[07:31:33] E. telemetry leg 2: M1 single-stream : 242.7 t/s (2000 tok in 8.24s);M2 pair          : 213.9 t/s aggregate (1800 tok in 8.42s);M2 6-conc        : 297.5 t/s aggregate (36
+[07:31:33] E. telemetry lines (both legs and the discard): 1163
+[07:31:33] chain 4 done
+[07:31:33] champion restored to engine/strata (3865e27a5ac1a170)
+F-271 re-pin VERIFIED (learned == expert-profile-gold.bin, after the engine stop)

@@ -157,9 +157,10 @@ export STRATA_TYPICAL_DEVICE=1      # F-200 ADOPTED 2026-10-15: device-side typi
 export STRATA_VERIFY_ASYNC_LAUNCH=1 # F-200 ADOPTED 2026-10-15: v0.1.44 HostGraphLaunch (+4.9/+7.9/+8.9 - attacks the 69% GPU-reach wait)
 export STRATA_VERIFY_DEVICE_LAUNCH="${STRATA_VERIFY_DEVICE_LAUNCH:-1}"  # F-452 ADOPTED (2026-11-24): the window graph launched from the DEVICE - a one-node parent graph (~3 us host launch) whose kernel tail-launches the uploaded 1949-node window; the host's node-by-node submission (552 us at T=6, first kernel +462 us) and the launch helper's thread start (~360 us) leave the path; GPU idle between the drafter's last step and the window 1.13 -> 0.03 ms median (nsys, node-level).  3-pair env ladder f452-devlaunch (3 legs per boot, discard each boot): M1 +8.4/+0.3/+6.4 = +5.0% (ON 229.4/218.0/229.0 vs OFF 211.5/217.4/215.3), pair +1.9%, conc +3.4%, M3b flat (+0.4/+0.4/-0.4).  Same kernels, same order, same inputs: ON reproduced a control run bit for bit on a deterministic config (the standing recipe itself is not run-to-run reproducible - two control boots differ on all three bit-check prompts, F-452).  The batch lane's graphs (exec_bm_) keep the host launch: v1 scope.  ROLLBACK: STRATA_VERIFY_DEVICE_LAUNCH=0
 export STRATA_SPEC_DRAFT_TEMP=0.85  # F-201 ADOPTED 2026-10-15: coupled drafter samples at 0.85x temp (proposals-only; exact-match verify emits the target's picks). Sweep 0.45-0.90 peaked here: M1 +13.4/pair +9.8/conc +7.5%
-# F-453 composition arm (ladder only; unset = the standing): one variable, so campaign/env-ladder.sh can A/B the two
-# default-off solo pieces together - the gdn_ab weight preload (STRATA_SMALL_UNR bit 2) and the drafter step cap.
-if [ "${STRATA_F453_COMPOSE:-0}" = "1" ]; then export STRATA_SMALL_UNR=7 STRATA_DRAFT_STEP_CAP=1; fi   # rollback: unset
+# F-453 composition arm (ladder only; unset = the standing): one variable, so campaign/env-ladder.sh can A/B the
+# default-off solo pieces together.  The gdn_ab weight preload it also mapped (STRATA_SMALL_UNR bit 2) was falsified at
+# node level (9.06 -> 8.83 us) and reverted; what remains under test is the drafter step cap.
+if [ "${STRATA_F453_COMPOSE:-0}" = "1" ]; then export STRATA_DRAFT_STEP_CAP=1; fi   # rollback: unset
 
 # (STRATA_ADAPT_OVERLAP / _RESIDENT removed F-187: the engine refuses them while DMA_BATCH=1 —
 #  "is off: not with STRATA_DMA_BATCH" boot line. F-185 rejected the overlap trade anyway.)

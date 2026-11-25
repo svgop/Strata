@@ -96,19 +96,11 @@ __global__ void gdn_conv_commit_kernel(float* __restrict__ hist, const float* __
 // constant-trip loop, so the compiler issues several passes' loads before the first FMA chain.  The same
 // FMAs in the same order (pass ascending, token inside): bitwise the loop it guards.  Default on (this
 // engine builds for this cc-12.0 card); STRATA_SMALL_UNR=0 restores the dependent-load loop everywhere.
-// Bit 2 (F-453, default OFF): the ten weight vectors are read into registers BEFORE the first FMA chain.
-// The kernel is one 64-thread block per two rows (48 blocks on 170 SMs) and a lane's passes were a chain of
-// dependent HBM misses (0.49 MB in 8.2 us = 60 GB/s, the F-453 node trace): at this kernel's register count
-// the compiler keeps one or two loads in flight.  Forty registers make the chain one miss; the activation
-// loads that follow are L2 hits (every row reads the same tokens).  Bitwise the same chain: gdn_parity's
-// "gdn_ab_multi T=1..8 == fused_gdn_ab" (memcmp, the real geometry) is the proof and runs with the bit set.
-// Arm: STRATA_SMALL_UNR=7 (bits 0-2); rollback: unset, or 3.
 __constant__ int c_gdn_ab_fast = 0;
 static void gdn_ab_fast_init() {
     static const bool done = [] {
         const char* e = std::getenv("STRATA_SMALL_UNR");
-        const int bits = e == nullptr ? 3 : std::atoi(e);
-        const int v = ((bits & 2) != 0 ? 1 : 0) | ((bits & 4) != 0 ? 2 : 0);
+        const int v = ((e == nullptr ? 3 : std::atoi(e)) & 2) != 0 ? 1 : 0;
         (void) cudaMemcpyToSymbol(c_gdn_ab_fast, &v, sizeof v);
         return true;
     }();
@@ -117,10 +109,10 @@ static void gdn_ab_fast_init() {
 
 template <int MAX_T = kVerifyMaxT, bool EXACT_T = false>
 __device__ __forceinline__ void gdn_ab_body(const int bx, const float* __restrict__ x, const uint16_t* __restrict__ wa,
-                                                           const uint16_t* __restrict__ wb,
-                                                           const float* __restrict__ dt,
-                                                           const float* __restrict__ ssm_a, float* __restrict__ gate,
-                                                           float* __restrict__ beta, int n, int h_v, int T) {
+                                                          const uint16_t* __restrict__ wb,
+                                                          const float* __restrict__ dt,
+                                                          const float* __restrict__ ssm_a, float* __restrict__ gate,
+                                                          float* __restrict__ beta, int n, int h_v, int T) {
     const int row = bx * 2 + (threadIdx.x >> 5), lane = threadIdx.x & 31;
     if (row >= 2 * h_v) return;
     const bool is_beta = row >= h_v;
@@ -129,8 +121,34 @@ __device__ __forceinline__ void gdn_ab_body(const int bx, const float* __restric
     float acc[MAX_T];
 #pragma unroll
     for (int t = 0; t < MAX_T; ++t) acc[t] = 0.0f;
-    // one pass over 64 weights (8 per lane): the same eight FMAs in the same order in every load variant below
-    auto pass = [&](const uint4& wv, int j) {
+    if (c_gdn_ab_fast != 0 && n == 2560) {
+        // the same ten passes (j = lane + 32 jj, all < n / 8 = 320) with a constant trip count; the same
+        // FMAs in the same order (pass ascending, token inside): bitwise the loop below
+#pragma unroll
+        for (int jj = 0; jj < 10; ++jj) {
+            const int j = lane + 32 * jj;
+            const uint4 wv = __ldg(w4 + j);
+            const float w0 = __uint_as_float(wv.x << 16), w1 = __uint_as_float(wv.x & 0xffff0000u);
+            const float w2 = __uint_as_float(wv.y << 16), w3 = __uint_as_float(wv.y & 0xffff0000u);
+            const float w4f = __uint_as_float(wv.z << 16), w5 = __uint_as_float(wv.z & 0xffff0000u);
+            const float w6 = __uint_as_float(wv.w << 16), w7 = __uint_as_float(wv.w & 0xffff0000u);
+#pragma unroll
+            for (int t = 0; t < MAX_T; ++t) {
+                if (!EXACT_T && t >= T) break;
+                const float* xt = x + (size_t) t * n;
+                const float4 xa = __ldg(reinterpret_cast<const float4*>(xt + j * 8));
+                const float4 xb = __ldg(reinterpret_cast<const float4*>(xt + j * 8 + 4));
+                float a = acc[t];
+                a = fmaf(w0, xa.x, a); a = fmaf(w1, xa.y, a);
+                a = fmaf(w2, xa.z, a); a = fmaf(w3, xa.w, a);
+                a = fmaf(w4f, xb.x, a); a = fmaf(w5, xb.y, a);
+                a = fmaf(w6, xb.z, a); a = fmaf(w7, xb.w, a);
+                acc[t] = a;
+            }
+        }
+    } else
+    for (int j = lane; j < n / 8; j += 32) {
+        const uint4 wv = __ldg(w4 + j);
         const float w0 = __uint_as_float(wv.x << 16), w1 = __uint_as_float(wv.x & 0xffff0000u);
         const float w2 = __uint_as_float(wv.y << 16), w3 = __uint_as_float(wv.y & 0xffff0000u);
         const float w4f = __uint_as_float(wv.z << 16), w5 = __uint_as_float(wv.z & 0xffff0000u);
@@ -148,20 +166,7 @@ __device__ __forceinline__ void gdn_ab_body(const int bx, const float* __restric
             a = fmaf(w6, xb.z, a); a = fmaf(w7, xb.w, a);
             acc[t] = a;
         }
-    };
-    if ((c_gdn_ab_fast & 2) != 0 && n == 2560) {
-        // F-453: the ten weight vectors in flight, then the passes in their order (j = lane + 32 jj, all < n / 8 = 320)
-        uint4 wv[10];
-#pragma unroll
-        for (int jj = 0; jj < 10; ++jj) wv[jj] = __ldg(w4 + lane + 32 * jj);
-#pragma unroll
-        for (int jj = 0; jj < 10; ++jj) pass(wv[jj], lane + 32 * jj);
-    } else if ((c_gdn_ab_fast & 1) != 0 && n == 2560) {
-        // the constant trip count; bitwise the dependent-load loop below
-#pragma unroll
-        for (int jj = 0; jj < 10; ++jj) pass(__ldg(w4 + lane + 32 * jj), lane + 32 * jj);
-    } else
-        for (int j = lane; j < n / 8; j += 32) pass(__ldg(w4 + j), j);
+    }
 #pragma unroll
     for (int t = 0; t < MAX_T; ++t) {
         if (!EXACT_T && t >= T) break;
