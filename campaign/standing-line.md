@@ -117,7 +117,7 @@ Use as direction, falsify on this box.
 
 - THE FLOOR'S REGIME: F-461's solo and concurrent numbers are measured at ~1.1k-token prompts with long generations.
   The production log (11-22 -> 11-24, 4,819 requests, 15,817 request-seconds) carries a 96k-token median context,
-  two requests in three generating <= 64 tokens, and splits its time 57.5 % decode / 42.5 % prompt read.  (F-463's
+  two requests in three generating <= 64 tokens, and split its time 57.5 % decode / 42.5 % prompt read on the engine's accounting lines.  [CORRECTED by F-467: those lines are printed at a request's admission to the batch lane, so their decode is the solo lane's only; by the server's completion lines prompt reads are at most 8.3 % of request time and batch-lane decode about 80 %.]  (F-463's
   "62 % of wall" set request-seconds against cohort-round seconds; like with like it is 42.5 %.)
 - Depth is not a decode cost on this engine: the idle ladder reads 292.6-308.4 t/s at 57k-168k tokens against
   222.0-251.7 at 2k (nine runs, drafts accepted 0.952-1.000).  F-181's -11 % at 244k is not reproduced to 168k.
@@ -127,6 +127,26 @@ Use as direction, falsify on this box.
   need a quarter of that on the link (`prefill.cpp:135`, STAGE = 8); (3) the per-turn read of 1,024-8,192 tokens
   8.5 % - stream-all moves 30.0 GB where 26-31 % is routed (`prefill.cpp:2905`); (4) prefill at depth, 5.9-6.5k
   tok/s, sets every cold start's 17-28 s stall; (5) reads run on the window thread and stall every slot.  Decode -
-  the adaptive tier, the CPU pool, the profile, the link share - is the 57.5 % that is at its floor.
+  the adaptive tier, the CPU pool, the profile, the link share - is about 91 % of request time (80 % of it in the batch lane; F-467) and is at its floor for this kernel set.
 - Instruments: `campaign/reqlog-census.py` and `campaign/ctx-lane.sh --turn | --branch` (reads, never tracker
   points).  F-463's A8 is withdrawn: the WY-chunked recurrence is in the standing behind STRATA_GDN_CHUNKED (F-224).
+
+## Corrections and additions (F-467, 2026-11-25)
+
+- **Standing config:** `--conversation-cache-mib` 8192 -> 32768 and `--conversation-cache-slots` 24 -> 96
+  (operator's choice of size; the slot count is the cache's second cap and would have bound at ~6 GiB of the 32
+  for short sessions).  `"prewarm": {"hold_s": 180}`: a request arriving during the warm-in waits for it instead of
+  ending it.  Rollback: the two args to 8192 / 24, `"prewarm": {}`.
+- **Lanes, interleaved, 4 boots an arm (17:05-17:45):** M1 215.7 vs 218.3 (-1.2 %), 6-conc 257.2 vs 264.3
+  (-2.7 %), M3b 78.1 vs 77.9 (+0.2 %): parity; the arms are one engine state while the probe runs (the cache never
+  passed 4.25 GiB).  No tracker point: the standing's lanes did not move.
+- **The cache's proof is a working set, not the probe:** 20 conversations of ~29k tokens, one turn each in order -
+  8 GiB: 0 of 20 turns served (88.5 s of re-reads); 32 GiB: see F-467 section 3.
+- **The census (F-466) corrected:** the engine's per-request line is an admission record under --batch.  Prompt
+  reads are at most 8.3 % of the operator's request time; the concurrent decode lane about 80 %.
+- **The warm-in, measured by shape** (`campaign/cold-cost-probe.py`): after the existing warm-in the only cold cost
+  is the expert tier's fit to new content during its first request (solo first 143-175 against 190-230 t/s; the
+  first tool call 138-163 against 207-219): 0.1-0.7 s a request.  Tool-call, slot-count and deep-read stages were
+  built or priced and removed: no first-use cost to remove.  The warm-in now reports its stages and a settled
+  reading on /v1/status and says NOT CONVERGED when its last short is below 90 % of its first.
+- **RAM:** with a full 32 GiB cache about 18 GiB stay free (MemAvailable 88.7 GiB measured with 19 GiB parked).

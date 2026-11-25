@@ -3792,6 +3792,14 @@ PREWARM_MID = ("Review note: the serving fabric moved its queues into the NICs, 
                "rather than per port, and the unit of capacity planning became the rack, not the switch. ") * 90
 PREWARM_BURST = ("Two engineers disagree about whether to shard a database by tenant or by region. Draft the "
                  "one-paragraph decision memo you would send them.")
+# NOT a warm-in stage, with the measurement (F-467): a tool call and its result.  After the old warm-in the first
+# tool call of a session decoded at 142 and 163 t/s with the expert tier at 85.6 % and 87.8 % hit; the next at 189
+# and 209 t/s with 92.8 % and 93.7 %.  A tool-call stage was built and switched on, and the probe's first tool call
+# still decoded at 138 t/s against 207 (tier 87.1 % against 94.3 %): the tier fits whatever ran LAST, so no stage
+# pre-fits it for content it has not seen.  A concurrent burst per slot count and a ~97.5k-token cold read were
+# measured the same way and showed no first-use cost either (bursts of 2..6 within +-4 %, deep reads 6,849 /
+# 6,745 / 6,693 tok/s).  campaign/cold-cost-probe.py owns the measurement.
+
 # THE CALIBRATION CORPUS (F-400): the campaign's fixed corpus (calibrate-tier.sh, boot-certify's M1 lane) - the
 # one token stream the tier's convergence is measured against.  Run at temperature 0 as the FIRST replay stage,
 # the routing it induces - and so the expert set the adaptive tier converges to before the first real request -
@@ -3834,6 +3842,13 @@ class Prewarm:
             The FIRST stage is the calibration corpus at temperature 0 (F-400): a fixed greedy token stream
             induces the same expert routing every boot, so the adaptive tier converges to the same starting
             state - the boot's warm state is derived from the config, not from sampling luck.
+            What is NOT a stage, and why, is written above the corpus (the expert tier fits whatever ran last).
+    hold_s:  with it, an inference request that arrives while the warm-in runs WAITS at the HTTP door until the
+            warm-in ends or hold_s has passed since the engine came up (the standing: 180 s).  Without it the
+            first live request pre-empts the warm-in, as before.  A request carrying "X-Strata-Wait: 0" never
+            waits (the warm-in's own carry it).  The hold owns no lock and no admission slot.
+    Every stage's seconds and tokens are on /v1/status ("prewarm.stages"), and a finished warm-in prints its
+    first short's solo rate against its last: a warm-in that has not converged says so.
 
     It fails open: a warm-in that cannot finish leaves one line here and its state in /health and /v1/status,
     and the server serves cold, exactly as it did without the section."""
@@ -3851,6 +3866,9 @@ class Prewarm:
         self.shorts = max(0, int(shape.get("shorts", 2)))
         self.mid = max(0, int(shape.get("mid", 1)))
         self.burst = max(0, int(shape.get("burst", 0 if arch == "deepseek41" else 6)))
+        self.hold_s = max(0.0, float(p.get("hold_s") or 0.0))            # live requests wait at the door this long
+        self.stages: list[dict] = []           # this warm-in's stages: name, seconds, tokens (on /v1/status)
+        self.rates: dict[str, float] = {}      # the solo readings the warm-in compares: its first short, its settled one
         # F-400: the calibration corpus as the boot's deterministic tier warm-in.  temperature 0 (greedy) - the
         # token stream, and so the routing the adaptive tier converges to, is the same every boot; that is the
         # residual boot lottery closed by construction.  The WARM-IN copies carry a prepended divergence
@@ -3863,26 +3881,65 @@ class Prewarm:
         self.corpus_tokens = max(0, int(corpus.get("tokens", 600)))
         self.corpus_on = (p.get("corpus") is not False and p.get("replay") is not False
                           and bool(self.corpus_prompts) and self.corpus_tokens > 0)
-        self.replay_on = p.get("replay") is not False and bool(self.shorts or self.mid or self.burst or self.corpus_on)
+        self.replay_on = (p.get("replay") is not False
+                          and bool(self.shorts or self.mid or self.burst or self.corpus_on))
         self.timeout_s = float(p.get("timeout_s") or 1800.0)
         self.extra = [g for g in p.get("extra_files", ()) if isinstance(g, str)]
         self.stop = threading.Event()
         self.lock = threading.Lock()
         self.state = {"phase": "idle", "note": "", "files_gib": 0.0, "files_s": 0.0, "replay_s": 0.0, "at": 0.0,
-                      "corpus_prompts": list(self.corpus_prompts) if self.corpus_on else []}
+                      "corpus_prompts": list(self.corpus_prompts) if self.corpus_on else [], "stages": []}
         self.svc = None                  # set by start(): the live-traffic counter, the loaded() gate
         self._own = 0                    # warm-in requests of ours that finished (any answer)
         self._base = 0                   # the service's request total when this warm-in's replay began
+        self._holding = False            # the door is held: live inference requests wait in hold()
+        self._hold_until = 0.0           # ... until this monotonic time at most
+        self._released = threading.Event()
+        self._released.set()
+        self.held_s = 0.0                # seconds live requests have waited at the door in the running warm-in
 
     # -- lifecycle ---------------------------------------------------------------------------------------------
     def start(self, svc) -> "Prewarm":
         self.svc = svc
         svc.prewarm = self
         what = " + ".join(name for name, on in (("files", self.files_on), ("replay", self.replay_on)) if on)
-        print(f"[strata] prewarm: on ({what}); the warm-in starts when the engine is up and yields to live traffic",
-              flush=True)
+        print(f"[strata] prewarm: on ({what}); the warm-in starts when the engine is up and "
+              + (f"holds live requests for up to {self.hold_s:.0f} s, then yields to them"
+                 if self.hold_s > 0 else "yields to live traffic"), flush=True)
+        # the door is held from the port's first request when the engine is already up (a lazy boot arms it
+        # in _run, at the engine's first READY)
+        if self.svc.loaded():
+            self.arm()
         threading.Thread(target=self._run, daemon=True, name="strata-prewarm").start()
         return self
+
+    def arm(self) -> None:
+        """Hold the door for a warm-in about to run (no-op without "hold_s"; a failed warm-in releases it too)."""
+        if self.hold_s > 0:
+            self._hold_until = time.monotonic() + self.hold_s
+            self._released.clear()
+            self._holding = True
+
+    def _release(self) -> None:
+        self._holding = False
+        self._released.set()
+
+    def hold_left(self) -> float:
+        """The seconds a request arriving now waits for the warm-in (0.0: it does not wait)."""
+        return max(0.0, self._hold_until - time.monotonic()) if self._holding else 0.0
+
+    def hold(self) -> float:
+        """The seconds a live inference request waited for the warm-in (0.0 when it did not).  The wait owns no
+        lock and ends by the warm-in's own end or by the hold's expiry, whichever comes first; a request let in
+        by the expiry then runs and pre-empts the rest of the warm-in exactly as a request did without a hold."""
+        if not self._holding:
+            return 0.0
+        t0 = time.monotonic()
+        while self._holding and time.monotonic() < self._hold_until:
+            self._released.wait(0.25)
+        waited = time.monotonic() - t0
+        self.held_s += waited
+        return waited
 
     def warm_before_load(self) -> bool:
         """The files sweep BEFORE the engine's heavy load (the 2026-11-09 bootstorm fix, F3).  The boot
@@ -3907,7 +3964,7 @@ class Prewarm:
 
     def snapshot(self) -> dict:
         with self.lock:
-            return dict(self.state)
+            return dict(self.state, stages=[dict(s) for s in self.state["stages"]])
 
     def _note(self, phase: str, note: str = "", **kv) -> None:
         with self.lock:
@@ -3922,14 +3979,19 @@ class Prewarm:
         while not self.stop.is_set():
             e = getattr(self.svc, "engine", None)
             gen = getattr(e, "gen", None)
+            if not self.svc.loaded():
+                self._release()       # no engine up: no warm-in is running (one that ran released itself) - nobody waits
             if gen is None:
                 seen = 0                                  # an engine without a process counter: nothing to warm
+                self._release()                           # ... so nobody waits for it
             elif self.svc.loaded() and (seen is None or gen != seen) and time.monotonic() - last_done >= 30:
                 seen = gen
+                self.arm()                                # a new engine process: the door is held while it warms
                 why = armed_geometry_problem(e, self.cfg)
                 if why and getattr(self.svc, "prewarm", None) is self:
                     print(f"[strata] REFUSING TO SERVE the restarted engine: {why}", flush=True)
                     self._note("refused", note=why)
+                    self._release()
                     try:
                         self.svc.unload()                 # it does not serve steering it was not asked for
                     except Exception:
@@ -3962,18 +4024,32 @@ class Prewarm:
                 except (AttributeError, KeyError):
                     return                                # no counter to stay aside by: skip the replay, not the traffic
                 self._own = 0
+                self.stages = []
+                self.rates = {}
+                self.held_s = 0.0                # what live requests waited at the door during this warm-in
                 self._note("replay")
                 t0 = time.monotonic()
                 why = self._replay(t_all + self.timeout_s)
+                elapsed = time.monotonic() - t0
                 self._note("failed" if why not in ("", "traffic") else ("yielded" if why else "done"),
-                           replay_s=time.monotonic() - t0)
+                           replay_s=elapsed, held_s=self.held_s, rates=dict(self.rates),
+                           stages=[dict(s) for s in self.stages])
                 if why == "traffic":
                     print("[strata] prewarm: live traffic arrived; the rest of the warm-in is skipped", flush=True)
                 elif why:
                     print(f"[strata] prewarm: the replay did not finish ({why}); serving continues cold", flush=True)
                 else:
-                    print(f"[strata] prewarm: replay done in {time.monotonic() - t0:.0f} s "
-                          "- the first real request is warm", flush=True)
+                    tokens = sum(s["tokens"] for s in self.stages)
+                    first, last = self.rates.get("first short"), self.rates.get("settled")
+                    warm = "the first real request is warm"
+                    if first and last:
+                        # two readings of one shape: the warm-in's first request and its last (whole-request rate)
+                        warm = (f"solo {first:.0f} -> {last:.0f} tokens/s from the first short to the settled check; "
+                                + ("the first real request is warm" if last >= 0.9 * first else
+                                   "NOT CONVERGED: the first minutes of live traffic will finish the warming"))
+                    waited = f"; live requests waited {self.held_s:.0f} s at the door" if self.held_s >= 1.0 else ""
+                    print(f"[strata] prewarm: replay done in {elapsed:.0f} s - {self._own} warm-in requests, "
+                          f"{tokens:,} tokens; {warm}{waited}", flush=True)
                     # F-402 finding 2: the READY contract sample is a moving moment (the KV pool and the
                     # elastic slot arenas materialize after it - measured 25.0 vs 62.9 GiB shmem at the same
                     # fingerprint).  The SECOND sample, after the warm-in, is the boot's settled end-state:
@@ -3988,6 +4064,8 @@ class Prewarm:
             self._note("failed", note=f"{type(e).__name__}: {e}")
             print(f"[strata] prewarm: the warm-in did not finish ({type(e).__name__}: {e}); serving continues "
                   "cold", flush=True)
+        finally:
+            self._release()                               # warm or not, the door opens
 
     # -- files ---------------------------------------------------------------------------------------------------
     def _file_targets(self) -> list[tuple[Path, int]]:
@@ -4080,52 +4158,77 @@ class Prewarm:
         return work.empty()
 
     # -- replay --------------------------------------------------------------------------------------------------
+    @staticmethod
+    def _user(content: str) -> dict:
+        return {"role": "user", "content": content}
+
+    def _stage(self, name: str, t0: float, tokens: int, **kv) -> None:
+        """One finished stage of this warm-in: its seconds and tokens, on /v1/status as prewarm.stages."""
+        self.stages.append(dict(name=name, s=round(time.monotonic() - t0, 1), tokens=int(tokens), **kv))
+
     def _replay(self, stop_at: float) -> str:
-        """The warm-in requests, in the shapes the cold costs live: shorts, one mid prefill, then one concurrent
-        burst (the lazy cohort graph captures are per batch shape - a lone request never forces them).
+        """The warm-in requests, in the shapes the cold costs live: the calibration corpus, the shorts, one mid
+        prefill, one concurrent burst (the lazy cohort graph captures are per batch shape - a lone request never
+        forces them), and last one settled short (F-467): the reading the first short is compared with.
         -> "" when they all ran, "traffic" when live traffic pre-empted the rest, else the reason it stopped."""
         temp = 1.0 if self.arch == "deepseek41" else 0.7  # each model's own sampling; the words are thrown away
         why = ""
+        self.rates = {}
+
+        def halted() -> str:
+            return "traffic" if self._external() else ("the warm-in's own timeout" if time.monotonic() >= stop_at else "")
+
         if self.corpus_on:
             # FIRST, at temperature 0: the corpus's greedy token stream induces the same routing every boot, so
             # the adaptive tier converges to the same expert set before any sampled request (or live traffic)
             # can move it - the boot's warm state becomes a function of the config, not of sampling luck.
             self._note("corpus")
-            t0 = time.monotonic()
+            t0, tok = time.monotonic(), 0
             for prompt in self.corpus_prompts:
-                if self._external():
-                    return "traffic"
-                if time.monotonic() >= stop_at:
-                    return "the warm-in's own timeout"
-                ok = self._ask(f"[boot warm-in {self.arch or 'engine'}; not a probe] {prompt}", self.corpus_tokens, 0.0)
+                why = halted()
+                if why:
+                    return why
+                r = self._ask([self._user(f"[boot warm-in {self.arch or 'engine'}; not a probe] {prompt}")],
+                              self.corpus_tokens, 0.0)
                 self._own += 1
-                if not ok:
+                tok += r["tokens"]
+                if not r["ok"]:
                     why = "a corpus warm request was refused"
                     break
+            self._stage("corpus", t0, tok)
             if not why:
                 print(f"[strata] prewarm: corpus warm: {len(self.corpus_prompts)} prompt(s) x {self.corpus_tokens} "
                       f"tokens at temperature 0 in {time.monotonic() - t0:.0f} s - the tier's starting state is "
                       "deterministic", flush=True)
-        for i in range(self.shorts):
-            if self._external():
-                return "traffic"
-            if time.monotonic() >= stop_at:
-                return "the warm-in's own timeout"
-            ok = self._ask(f"{PREWARM_SHORT} (warm pass {i + 1})", 200, temp)
+        if not why and self.shorts:
+            t0, tok = time.monotonic(), 0
+            for i in range(self.shorts):
+                why = halted()
+                if why:
+                    return why
+                r = self._ask([self._user(f"{PREWARM_SHORT} (warm pass {i + 1})")], 200, temp)
+                self._own += 1
+                tok += r["tokens"]
+                if not r["ok"]:
+                    why = "a warm-in request was refused"
+                    break
+                if i == 0:
+                    self.rates["first short"] = r["rate"]
+            self._stage("shorts", t0, tok)
+        if not why and self.mid and not halted():
+            t0 = time.monotonic()
+            r = self._ask([self._user(PREWARM_MID[:11000])], 260, temp)
             self._own += 1
-            if not ok:
-                why = "a warm-in request was refused"
-                break
-        if not why and self.mid and not self._external() and time.monotonic() < stop_at:
-            ok = self._ask(PREWARM_MID[:11000], 260, temp)
-            self._own += 1
-            if not ok:
+            if not r["ok"]:
                 why = "the warm prefill was refused"
-        if not why and self.burst and not self._external() and time.monotonic() < stop_at:
-            results: list[bool] = []
+            self._stage("mid", t0, r["tokens"])
+        why = why or halted()
+        if self.burst and not why:
+            t0 = time.monotonic()
+            done: list[dict] = []
 
             def one(i: int) -> None:
-                results.append(self._ask(f"{PREWARM_BURST} (warm pass {i + 1})", 200, temp))
+                done.append(self._ask([self._user(f"{PREWARM_BURST} (warm pass {i + 1})")], 200, temp))
 
             threads = [threading.Thread(target=one, args=(i,), daemon=True) for i in range(self.burst)]
             for t in threads:
@@ -4133,22 +4236,45 @@ class Prewarm:
             for t in threads:
                 t.join()
             self._own += self.burst
-            if not any(results):
+            tok = sum(r["tokens"] for r in done)
+            if not any(r["ok"] for r in done):
                 why = "the concurrent warm burst was refused"
+            elapsed = time.monotonic() - t0
+            self._stage("burst", t0, tok, requests=self.burst)
+            if not why:
+                print(f"[strata] prewarm: {self.burst}-way burst: {tok} tokens in {elapsed:.0f} s "
+                      f"({tok / max(1e-6, elapsed):.0f} tokens/s over the whole requests)", flush=True)
+        if not why and not halted():
+            # the settled reading: the first short's shape again, after everything else
+            t0 = time.monotonic()
+            r = self._ask([self._user(f"{PREWARM_SHORT} (settled check)")], 200, temp)
+            self._own += 1
+            if not r["ok"]:
+                why = "the settled warm request was refused"
+            self.rates["settled"] = r["rate"]
+            self._stage("check", t0, r["tokens"])
         return why
 
-    def _ask(self, prompt: str, max_tokens: int, temp: float) -> bool:
-        body = json.dumps({"messages": [{"role": "user", "content": prompt}],
-                           "max_tokens": max_tokens, "temperature": temp}).encode()
-        headers = {"Content-Type": "application/json"}
+    def _ask(self, messages: list, max_tokens: int, temp: float, tools=None) -> dict:
+        """One warm-in request through the server's own door, not waiting for the warm-in itself.
+        -> {"ok": the HTTP status was 200, "tokens": completion tokens, "rate": tokens a second over the whole
+        request (0.0 when unknown), "obj": the parsed answer or None}."""
+        body = {"messages": messages, "max_tokens": max_tokens, "temperature": temp}
+        if tools:
+            body["tools"] = list(tools)
+        headers = {"Content-Type": "application/json", "X-Strata-Wait": "0"}
         if self.api_key:
             headers["Authorization"] = f"Bearer {self.api_key}"
         try:
-            req = urllib.request.Request(self.url, data=body, headers=headers, method="POST")
+            req = urllib.request.Request(self.url, data=json.dumps(body).encode(), headers=headers, method="POST")
+            t0 = time.monotonic()
             with urllib.request.urlopen(req, timeout=PREWARM_ASK_S) as r:
-                return r.status == 200
+                ok = r.status == 200
+                obj = json.loads(r.read() or b"{}")
         except Exception:
-            return False
+            return {"ok": False, "tokens": 0, "rate": 0.0, "obj": None}
+        tokens = int((obj.get("usage") or {}).get("completion_tokens") or 0)
+        return {"ok": ok, "tokens": tokens, "rate": tokens / max(1e-6, time.monotonic() - t0), "obj": obj}
 
     def _external(self) -> bool:
         """Did a request that is not ours finish since this replay began?  Every finished request counts the
@@ -7132,7 +7258,9 @@ def make_handler(svc: Service):
                                  "image_generation": svc.images is not None,
                                  "loaded": svc.loaded(), "service": "strata",
                                  # liveness only; this one word is the warm-in's phase (detail: /v1/status)
-                                 "prewarm": pw.snapshot()["phase"] if pw is not None else None})
+                                 "prewarm": pw.snapshot()["phase"] if pw is not None else None,
+                                 # F-467: the seconds a request arriving now waits for the warm-in (0: none)
+                                 "hold_s": round(pw.hold_left(), 1) if pw is not None else 0.0})
             elif path.startswith("/v1/images/files/"):
                 # response_format url: the name (32 random hex digits) is the access, as an OpenAI image URL is
                 f = svc.images.file(path[len("/v1/images/files/"):]) if svc.images is not None else None
@@ -7253,6 +7381,14 @@ def make_handler(svc: Service):
                                headers={"Retry-After": int(ra)} if ra else None)
                 return
             reserved = False
+            # F-467: the boot warm-in may hold the door.  A live inference request waits here - owning no lock and
+            # no admission slot - until the warm-in ends or its hold expires; "X-Strata-Wait: 0" never waits.
+            if path in ("/v1/chat/completions", "/v1/messages", "/v1/responses") \
+                    and self.headers.get("X-Strata-Wait") != "0" and getattr(svc, "prewarm", None) is not None:
+                waited = svc.prewarm.hold()
+                if waited >= 1.0:
+                    print(f"[strata] prewarm: a live request waited {waited:.0f} s at the door for the warm-in "
+                          f"({svc.prewarm.snapshot()['phase']})", flush=True)
             try:
                 if path in ("/v1/chat/completions", "/v1/messages", "/v1/responses"):
                     reserved = svc.reserve_inference()

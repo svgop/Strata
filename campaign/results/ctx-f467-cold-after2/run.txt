@@ -1,0 +1,30 @@
+# cold-cost probe: 800 words a solo or burst prompt, 28571 a deep one; load 4.00
+cold-cost | solo    | first |  3832 prompt tokens | TTFT  1.24s | 256 tokens, decode 175.1 t/s | wall  2.71s
+cold-cost | solo    | again |  3897 prompt tokens | TTFT  1.25s | 256 tokens, decode 230.5 t/s | wall  2.36s
+cold-cost | tool    | first | TTFT  1.04s | finish tool_calls | tools +get_time+get_weather |  87 tokens | wall  1.66s
+cold-cost | tool    | again | TTFT  1.22s | finish tool_calls | tools +get_time+get_weather |  93 tokens | wall  1.63s
+cold-cost | burst2  | first | aggregate   78.2 t/s | mean TTFT  1.80s |  400 tokens in  5.11s
+cold-cost | burst2  | again | aggregate   86.9 t/s | mean TTFT  1.81s |  400 tokens in  4.60s
+cold-cost | burst3  | first | aggregate   87.6 t/s | mean TTFT  2.53s |  600 tokens in  6.85s
+cold-cost | burst3  | again | aggregate   86.8 t/s | mean TTFT  2.59s |  600 tokens in  6.91s
+cold-cost | burst4  | first | aggregate   84.6 t/s | mean TTFT  3.07s |  720 tokens in  8.51s
+cold-cost | burst4  | again | aggregate   92.2 t/s | mean TTFT  3.10s |  800 tokens in  8.67s
+cold-cost | burst5  | first | aggregate   90.0 t/s | mean TTFT  3.73s | 1000 tokens in 11.12s
+cold-cost | burst5  | again | aggregate  100.5 t/s | mean TTFT  3.80s | 1000 tokens in  9.95s
+cold-cost | burst6  | first | aggregate   97.7 t/s | mean TTFT  4.38s | 1200 tokens in 12.29s
+cold-cost | burst6  | again | aggregate   96.5 t/s | mean TTFT  4.40s | 1200 tokens in 12.44s
+cold-cost | deep    | read1 |  97504 prompt tokens | TTFT  14.42s
+cold-cost | deep    | read2 |  98155 prompt tokens | TTFT  15.00s
+cold-cost | deep    | read3 |  97618 prompt tokens | TTFT  15.02s
+cold-cost | deep    | turn1 |  97884 prompt tokens | TTFT   1.30s
+cold-cost | deep    | turn2 |  98146 prompt tokens | TTFT   0.85s
+# summary - the cold cost left after the warm-in (first against again; a first more than 10 % worse is named):
+#   solo    TTFT 1.24 vs 1.25 s, decode 175 vs 230 t/s (-24 %)
+#   tool    TTFT 1.04 vs 1.22 s (-14 %)
+#   burst2  aggregate 78 vs 87 t/s (-10 %), mean TTFT 1.80 vs 1.81 s
+#   burst3  aggregate 88 vs 87 t/s (+1 %), mean TTFT 2.53 vs 2.59 s
+#   burst4  aggregate 85 vs 92 t/s (-8 %), mean TTFT 3.07 vs 3.10 s
+#   burst5  aggregate 90 vs 101 t/s (-10 %), mean TTFT 3.73 vs 3.80 s
+#   burst6  aggregate 98 vs 96 t/s (+1 %), mean TTFT 4.38 vs 4.40 s
+# deep turns' TTFT 1.30s then 0.85s
+# cold after the warm-in: solo, burst5

@@ -1,0 +1,23 @@
+ctx-probe selftest: ok
+hold-test | sent at the port's first answer (0.00 s after the probe began); /health then: prewarm=files hold_s=177.6
+hold-test | 3866 prompt tokens | first token after   1.31 s | 256 tokens, decode  67.7 t/s | wall   5.09 s | /health after: prewarm=corpus hold_s=172.5
+hold-test | TTFT 1.31s: the wait a live request met at the door (X-Strata-Wait: 0: no hold, the warm-in was pre-empted)
+hold-test | again, a new session of the same shape | first token after  1.13 s | 256 tokens, decode  69.2 t/s | /health: prewarm=corpus
+ctx f467-hold-off: binary 3865e27a5ac1a170 | load 2.32 2.60 2.57 | args: .venv/bin/python campaign/ctx-probe.py 4096
+# calibration: 2000 words -> 7954 tokens (ratio 3.9770); gen 512/run; after each depth: nothing
+ctx    4607 | TTFT    1.35s | prefill    3419 t/s | decode  247.9 t/s | gen 512 in  2.07s | wall    3.41s
+# done
+engine accounting of the boot (reused + read tokens, read ms, drafts accepted):
+strata serve: prompt 3866 tokens = 0 reused + 3866 read in 1285 ms (3008.5 tok/s), 1 generated in 13 ms (77.4 tok/s), drafts accepted 0 of 0, 1 checkpoints
+strata serve: prompt 3867 tokens = 3866 reused + 1 read in 0 ms (8978.3 tok/s), 1 generated in 10 ms (103.9 tok/s), drafts accepted 0 of 0, 1 checkpoints
+strata serve: prompt 1186 tokens = 0 reused + 1186 read in 758 ms (1564.4 tok/s), 1 generated in 10 ms (101.8 tok/s), drafts accepted 0 of 0, 1 checkpoints
+strata serve: prompt 4012 tokens = 3867 reused + 145 read in 257 ms (564.6 tok/s), 1 generated in 11 ms (93.5 tok/s), drafts accepted 0 of 0, 1 checkpoints
+strata serve: prompt 3897 tokens = 0 reused + 3897 read in 1105 ms (3527.6 tok/s), 1 generated in 8 ms (123.3 tok/s), drafts accepted 0 of 0, 1 checkpoints
+strata serve: prompt 1504 tokens = 1186 reused + 318 read in 387 ms (822.1 tok/s), 1 generated in 9 ms (115.1 tok/s), drafts accepted 0 of 0, 1 checkpoints
+strata serve: prompt 4043 tokens = 3897 reused + 146 read in 323 ms (452.0 tok/s), 1 generated in 10 ms (95.6 tok/s), drafts accepted 0 of 0, 1 checkpoints
+strata serve: prompt 1674 tokens = 1673 reused + 1 read in 98 ms (10.2 tok/s), 112 generated in 641 ms (174.7 tok/s), drafts accepted 72 of 98, 1 checkpoints
+strata serve: prompt 7954 tokens = 0 reused + 7954 read in 1799 ms (4421.8 tok/s), 1 generated in 12 ms (81.9 tok/s), drafts accepted 0 of 0, 1 checkpoints
+strata serve: prompt 4607 tokens = 0 reused + 4607 read in 1327 ms (3470.6 tok/s), 512 generated in 2078 ms (246.4 tok/s), drafts accepted 407 of 430, 1 checkpoints
+F-271 re-pin VERIFIED (learned == expert-profile-gold.bin, after the engine stop)
+CTX DONE (f467-hold-off): 1 measured lines in /home/svg/LLM/strata-custom-2/campaign/results/ctx-f467-hold-off/run.txt, no request in error, no restart
+ctx-lane exit 0

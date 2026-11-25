@@ -9,8 +9,15 @@
 # message on a history the conversation cache holds) and --branch that of a history edit (see ctx-probe.py).
 # The engine's per-request accounting lines of the boot are kept beside the ladder and echoed.
 #
-# Usage: bash campaign/ctx-lane.sh <label> [--turn | --branch] <tokens...>
-#   Results: campaign/results/ctx-<label>/{boot-banner.txt,discard.txt,ladder.txt,serve-lines.txt}.
+# Usage: bash campaign/ctx-lane.sh <label> [--turn | --branch | --rotate N] <tokens...>
+#        bash campaign/ctx-lane.sh <label> [--during "<command>"] -- <command> [args...]
+#   --during "<command>" (F-467) runs a shell command the moment /health first answers - while the server's warm-in
+#   is still running - and waits for it before the warm-in's terminal state is awaited: campaign/hold-test.py sends
+#   the request a live user would send right after a restart.  Its output is during.txt.
+#   The second form runs any probe that prints TTFT rows in the warmed boot (F-467: campaign/cold-cost-probe.py,
+#   campaign/ctx-probe.py --rotate N <depth>) and sends NO discarded request first: a command that measures the
+#   cold must meet the cold.  Its output is run.txt; the ctx ladder's is ladder.txt.
+#   Results: campaign/results/ctx-<label>/{boot-banner.txt,server.log,discard.txt,ladder.txt|run.txt,serve-lines.txt}.
 #   Exit 0 only with measured lines on disk, no request in error, no restart, no stall.  Leaves the engine DOWN
 #   and the learned profile pinned (battery-lib's cleanup_engine owns both).  The probe's own offline self-test
 #   runs BEFORE the boot: its first run here booted the standing for a probe that crashed on its first request
@@ -20,23 +27,36 @@ REPO=${REPO:-/home/svg/LLM/strata-custom-2}
 PORT=${PORT:-8081}
 cd "$REPO"
 . "$REPO/campaign/battery-lib.sh"
-[ $# -ge 2 ] || { echo "usage: ctx-lane.sh <label> [--delta] <tokens...>"; exit 2; }
+[ $# -ge 2 ] || { echo "usage: ctx-lane.sh <label> [--turn | --branch | --rotate N] <tokens...>  |  ctx-lane.sh <label> [--during \"<command>\"] -- <command>"; exit 2; }
 LABEL=$1; shift
+CMD=(); DURING=""
+if [ "${1:-}" = "--during" ]; then DURING=$2; shift 2; fi
+if [ "${1:-}" = "--" ]; then shift; CMD=("$@"); fi
 OUT="$REPO/campaign/results/ctx-$LABEL"; mkdir -p "$OUT"
 .venv/bin/python campaign/ctx-probe.py --selftest || { echo "CTX FAIL: the probe failed its own self-test - nothing booted"; exit 1; }
 cleanup_engine >/dev/null 2>&1
 PREV=$(grep -n 'engine started:' logs/custom-iq3_s.log 2>/dev/null | tail -1 | cut -d: -f1); PREV=${PREV:-0}   # the log is appended across boots
 nohup ./launch-custom-iq3s-8081.sh > "$OUT/boot.log" 2>&1 &
 wait_health 100 || { echo "CTX FAIL: no health ($LABEL)"; tail -5 "$OUT/boot.log"; cleanup_engine | tail -1; exit 1; }
+DURING_PID=""
+if [ -n "$DURING" ]; then bash -c "$DURING" > "$OUT/during.txt" 2>&1 & DURING_PID=$!; fi
 wait_prewarm
+if [ -n "$DURING_PID" ]; then wait "$DURING_PID"; cat "$OUT/during.txt"; fi
 L0=$(tail -n +"$((PREV + 1))" logs/custom-iq3_s.log | grep -n 'engine started:' | head -1 | cut -d: -f1); L0=${L0:+$((L0 + PREV))}; L0=${L0:-$((PREV + 1))}
 echo "ctx $LABEL: binary $(sha256sum engine/strata | cut -c1-16) | load $(cut -d' ' -f1-3 /proc/loadavg) | args: $*"
-# campaign law 11: one discarded ladder request before the measured ones (a cold mapping's first-touch faults)
-.venv/bin/python campaign/ctx-probe.py 4096 > "$OUT/discard.txt" 2>&1 || { echo "CTX FAIL: the discarded request failed ($LABEL)"; cat "$OUT/discard.txt"; cleanup_engine | tail -1; exit 1; }
-cat "$OUT/discard.txt"
-.venv/bin/python campaign/ctx-probe.py "$@" > "$OUT/ladder.txt" 2>&1; RC=$?
-cat "$OUT/ladder.txt"
-N=$(grep -c '^ctx .*| TTFT' "$OUT/ladder.txt")
+if [ ${#CMD[@]} -gt 0 ]; then
+    "${CMD[@]}" > "$OUT/run.txt" 2>&1; RC=$?
+    cat "$OUT/run.txt"
+    MEASURED="$OUT/run.txt"
+else
+    # campaign law 11: one discarded ladder request before the measured ones (a cold mapping's first-touch faults)
+    .venv/bin/python campaign/ctx-probe.py 4096 > "$OUT/discard.txt" 2>&1 || { echo "CTX FAIL: the discarded request failed ($LABEL)"; cat "$OUT/discard.txt"; cleanup_engine | tail -1; exit 1; }
+    cat "$OUT/discard.txt"
+    .venv/bin/python campaign/ctx-probe.py "$@" > "$OUT/ladder.txt" 2>&1; RC=$?
+    cat "$OUT/ladder.txt"
+    MEASURED="$OUT/ladder.txt"
+fi
+N=$(grep -c 'TTFT' "$MEASURED")
 tail -n +"$L0" logs/custom-iq3_s.log > "$OUT/boot-segment.log"
 grep -E '^strata serve: prompt [0-9]+ tokens' "$OUT/boot-segment.log" > "$OUT/serve-lines.txt"
 awk '/engine started:/{f=1} f' "$OUT/boot-segment.log" | grep -vE '^strata (serve|batch|KV prefetch|decode|elastic)|^\[strata\]' | head -400 > "$OUT/boot-banner.txt"
@@ -46,12 +66,13 @@ ERRS=$(grep -cE '\(error' "$OUT/boot.log")
 RESTARTS=$(( $(tail -n +"$((L0 + 1))" logs/custom-iq3_s.log | grep -c 'engine started:') ))
 STALLS=$(tail -n +"$L0" logs/custom-iq3_s.log | grep -c 'no progress for')
 echo "engine accounting of the boot (reused + read tokens, read ms, drafts accepted):"; cut -c1-175 "$OUT/serve-lines.txt"
-rm -f "$OUT/boot-segment.log" "$OUT/boot.log"
+mv -f "$OUT/boot.log" "$OUT/server.log"      # the server's own lines (expert cache hit a request, phases, done): evidence
+rm -f "$OUT/boot-segment.log"
 cleanup_engine | tail -1
 FAIL=0
 [ "$RC" = 0 ] && [ "$N" -gt 0 ] || { echo "  *** the probe exited $RC with $N measured lines"; FAIL=1; }
 [ "$ERRS" = 0 ] || { echo "  *** $ERRS request(s) ended in error"; FAIL=1; }
 [ "$RESTARTS" = 0 ] || { echo "  *** the engine restarted $RESTARTS time(s) during the read"; FAIL=1; }
 [ "$STALLS" = 0 ] || { echo "  *** $STALLS stall(s) caught"; FAIL=1; }
-if [ "$FAIL" = 0 ]; then echo "CTX DONE ($LABEL): $N measured lines in $OUT/ladder.txt, no request in error, no restart"
+if [ "$FAIL" = 0 ]; then echo "CTX DONE ($LABEL): $N measured lines in $MEASURED, no request in error, no restart"
 else echo "CTX FAIL ($LABEL) - do not read this ladder"; exit 1; fi

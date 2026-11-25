@@ -1,0 +1,326 @@
+strata generate: RAM to keep free: 24.00 GiB (STRATA_RAM_KEEP_GIB): the expert arena is used only if that much stays available after it, and the resident RAM copy leaves 24.00 GiB free
+strata generate: memory guard: limit 184.2 GiB (source: meminfo), current 11.0 GiB, reclaimable cache credited 0.0 GiB; available 173.2 GiB (MemAvailable 173.2 GiB), floor 2560 MiB
+strata generate: native pack: /mnt/DATA/LLM/Models/GGUF/strata/data/packs/iq3_s experts (largest blob 2.66 MB), token embedding IQ4_XS in mapped host memory (322 MiB, 0.2 s)
+strata generate: 1466 MiB of weights loaded from /mnt/DATA/LLM/Models/GGUF/strata/data/packs/iq3_s in 0.2 s (302 canonical tensors skipped: served natively)
+strata generate: 300 native projection matrices, 2018.88 MiB of weights, in 0.2 s
+strata generate: control vector mode = add, dir = per-layer, layers 8..8 (1 steered)
+strata generate: profile data/expert-profile.bin: 24576 ranked pairs, built for 24576 slots
+strata generate: KV streaming: 32768 of 262144 cells per QSA layer in VRAM, the K/V in 3.09 GiB of pinned RAM
+strata generate: PLE on, table 320001536 rows of /mnt/DATA/LLM/Models/GGUF/GSQ-RCO/qwen3.8-flash-next/gsq-iq3s/Qwen3.8-Flash-Next-GSQ-RCO-IQ3_S-00002-of-00002.gguf
+strata generate: --batch: 6 slot sessions on CUDA0 (0.95 GiB each); 19.68 GiB free
+strata generate: --batch 6: the slot sessions take 5.69 GiB of VRAM on CUDA0 that the expert cache would otherwise hold
+strata mtp: --mtp-q4: 10 projections as Q4_0 (37.3 MiB)
+strata mtp: draft layer loaded, 874 MiB of VRAM (experts 675, dense 111), files read in 0.28 s (2765 MiB/s)
+strata mtp: shared draft weights, 51 MiB of private state and buffers
+strata mtp: shared draft weights, 51 MiB of private state and buffers
+strata mtp: shared draft weights, 51 MiB of private state and buffers
+strata mtp: shared draft weights, 51 MiB of private state and buffers
+strata mtp: shared draft weights, 51 MiB of private state and buffers
+strata mtp: shared draft weights, 51 MiB of private state and buffers
+strata generate: --batch-mtp: 6 slot drafters on CUDA0 (51 MiB of private K/V state and buffers each, sharing the solo drafter's weights); 18.51 GiB free there
+strata generate: experimental native Q5_K head, 521472000 bytes, in 0.1 s
+strata generate: GPU 0: NVIDIA GeForce RTX 5090, compute capability 12.0
+strata generate: experts via mmap (--mmap-experts; the GGUF shards in place, no experts.bin)
+strata generate: file tier (Linux defaults, the GGUF read in place): page-cached experts computed from the mapping (STRATA_COLD_OVERLAP=4), io prefetch with whole-blob preads on 8 I/O threads, the decode's read-ahead only while the page cache has room for it and it pays (STRATA_IO_PF_GATE=1); off: STRATA_COLD_OVERLAP=0, STRATA_IO_PREFETCH=0, STRATA_IO_PF_GATE=0
+strata generate: GPU host-callback thread started before host-core pinning
+strata generate: CPU pool tasks/phase: 48 (automatic), participating threads: 16
+strata generate: CPU pool: 15 workers by default (16 physical cores, 32 logical processors; bounded by every physical core but the host's)
+strata generate: 15 pool workers on logical processors 1,2,3,4,5,6,7,8,9,10,11,12,13,14,15, the host thread on 0 (draining too) (--host-core first)
+strata aux cpus: threads that are neither pool workers nor the host go to CPUs 16 (off at start; a request's aux_cpus=1 turns it on)
+strata generate: STRATA_ELASTIC_SESSIONS on: 6 slot arenas of 0.97 GiB reserved, 2 mapped at boot, 4 registered-but-unmapped; 2.91 GiB freed for the expert cache in 9 ms (20.93 GiB free now; 6 host pins per slot set, 3.09 GiB total)
+strata generate: STRATA_ELASTIC_SESSIONS: chunk unit 32.0 MiB (STRATA_VMM_CHUNK_MIB; 31 driver calls per arena moved), watermark on (31 chunks, 0.97 GiB kept in the spare), timed scan on, park-on-demote on
+strata generate: STRATA_ELASTIC_SESSIONS: slot VA table: 0=0x320000000, 1=0x360000000, 2=0x3a0000000, 3=0x3e0000000, 4=0x420000000, 5=0x460000000
+strata generate: expert cache 9900 slots, 18.78 GiB of VRAM; policy is
+strata generate: the GPU computes the experts in the cache; it rounds differently from the CPU,
+                 so a reply can differ slightly from a run without the cache (same quality:
+                 bench/results/2026-09-27-cache-parity).
+                 PROFILE, ranked by routing frequency, no eviction.
+strata generate: the profile fill asks for 256 pairs ahead (STRATA_FILL_AHEAD)
+strata generate: pre-filled 9900 of 9900 slots from the profile in 2.9 s (6899 MB/s); slot 0 verified
+strata generate: boot fingerprint f22e85411ce4aa82 slots=9900 verified=49
+strata generate: headroom: 2227 MiB VRAM free after the boot (bar 512)
+strata generate: routing-aware prefetch on (the next layer's router, file tier)
+strata generate: R4 hit path ON - resident experts are computed on the GPU
+strata generate: 15 expert-pool workers + the host thread
+strata generate: session is up (engine 0.1.46)
+strata generate: token graph hit path: 9900 resident experts, decided on the device
+FileExpertSource: allocating 37.86 GiB page-locked cache complement
+FileExpertSource: copied cache complement through layer 8/48 (8.10 GiB, 1 s)
+FileExpertSource: copied cache complement through layer 16/48 (14.20 GiB, 1 s)
+FileExpertSource: copied cache complement through layer 24/48 (19.57 GiB, 2 s)
+FileExpertSource: copied cache complement through layer 32/48 (26.36 GiB, 2 s)
+FileExpertSource: copied cache complement through layer 40/48 (33.29 GiB, 3 s)
+FileExpertSource: copied cache complement through layer 48/48 (37.86 GiB, 3 s)
+FileExpertSource: mapped pinned cache complement ready: resident 37.86 GiB, pinned 37.86 GiB in 8 s; page-locked and mapped
+FileExpertSource: 5189 of the prompt path's 5189 lendable slots keep their experts in RAM too
+strata generate: resident RAM mode: 37.86 GiB of experts in RAM (page-locked, backing: driver-pinned), 9900 in the GPU cache; adaptive swaps exchange them with the GPU cache (no file reads)
+strata: prefill plan: chunk 32768, ring 96 kept: file set 0.4 GiB fits the page cache 107.7 GiB -> about 0.0 GB read from the drive per 32768-token prompt (1 chunks)
+strata: prefill plan inputs: 46.8 GiB experts, 18.8 GiB in the GPU caches, 37.9 GiB RAM copy (5189 lend slots kept), file tier 0.0 GiB; 107.7 GiB available for the page cache; PCIe 12.0 GB/s; drive 2.50 GB/s (nvme2n1 is NVMe); a 32768-token prompt
+prefill: the GGUF experts are 100% in the page cache; the stager takes the RAM profile
+strata generate: STRATA_ROUTE_RESIDENT_MTP: the MTP draft's router is biased toward layer 47's resident experts (margin 0.75, ranks 6-9; experimental)
+strata hc: STRATA_GR_NORM_FAST=1 (T15C S3 default): the split norm runs the fast kernel
+strata hc: CUDA0: the hyper-connection read runs as staged (the norm per token and stream, the down projection's activations staged ahead by cp.async); checked bit for bit against the plain read on this card (STRATA_HC_SPLIT=1 or 0 for the earlier ones)
+strata verify: hc read weights bf16 rows copies=0, final mixer q8=0, native head=1
+strata verify: STRATA_DM armed (dm_wait_combine: the CPU-rows wait, the pool rows' read and the combine in one launch on the device-plan route)
+strata verify: window up to 8 tokens, 128.2 MiB of device buffers
+strata mtp: draft head over 40525 tokens (81.2 MiB)
+strata mtp: --mtp-q4: draft head over 40525 tokens as Q4_0 (55.7 MiB read per step, was 81.2)
+strata mtp: probabilistic draft acceptance on (STRATA_SPEC_PROB): sampled requests draft by sampling the draft head's distribution over 40525 tokens; the verifier accepts with min(1, p/q) and resamples the residual
+strata verify: capturing the 1-token window (1576 MiB of VRAM free)
+strata verify: captured the 1-token window (upload no error, sync no error, device launch armed)
+strata verify: capturing the 2-token window (1564 MiB of VRAM free)
+strata verify: captured the 2-token window (upload no error, sync no error, device launch armed)
+strata verify: capturing the 3-token window (1552 MiB of VRAM free)
+strata verify: captured the 3-token window (upload no error, sync no error, device launch armed)
+strata verify: capturing the 4-token window (1544 MiB of VRAM free)
+strata dense_tc: STRATA_DENSE_TC=unset -> mask 0 (the dense decode projections stay on native_mmvq)
+strata verify: captured the 4-token window (upload no error, sync no error, device launch armed)
+strata verify: capturing the 5-token window (1530 MiB of VRAM free)
+strata verify: captured the 5-token window (upload no error, sync no error, device launch armed)
+strata verify: capturing the 6-token window (1518 MiB of VRAM free)
+strata verify: captured the 6-token window (upload no error, sync no error, device launch armed)
+strata verify: capturing the 7-token window (1506 MiB of VRAM free)
+strata verify: captured the 7-token window (upload no error, sync no error, device launch armed)
+strata verify: capturing the 8-token window (1494 MiB of VRAM free)
+strata verify: captured the 8-token window (upload no error, sync no error, device launch armed)
+strata: L2 set-aside: 60 MiB window / 60 MiB carve over a 112 MiB span on 3 stream(s)
+strata mtp: probabilistic draft acceptance on (STRATA_SPEC_PROB): sampled requests draft by sampling the draft head's distribution over 40525 tokens; the verifier accepts with min(1, p/q) and resamples the residual
+strata mtp: probabilistic draft acceptance on (STRATA_SPEC_PROB): sampled requests draft by sampling the draft head's distribution over 40525 tokens; the verifier accepts with min(1, p/q) and resamples the residual
+strata mtp: probabilistic draft acceptance on (STRATA_SPEC_PROB): sampled requests draft by sampling the draft head's distribution over 40525 tokens; the verifier accepts with min(1, p/q) and resamples the residual
+strata mtp: probabilistic draft acceptance on (STRATA_SPEC_PROB): sampled requests draft by sampling the draft head's distribution over 40525 tokens; the verifier accepts with min(1, p/q) and resamples the residual
+strata mtp: probabilistic draft acceptance on (STRATA_SPEC_PROB): sampled requests draft by sampling the draft head's distribution over 40525 tokens; the verifier accepts with min(1, p/q) and resamples the residual
+strata mtp: probabilistic draft acceptance on (STRATA_SPEC_PROB): sampled requests draft by sampling the draft head's distribution over 40525 tokens; the verifier accepts with min(1, p/q) and resamples the residual
+strata verify: batch windows of up to 6 sequences (layers [0, 48))
+strata verify: hc read weights bf16 rows copies=0, final mixer q8=0, native head=1
+strata verify: STRATA_DM armed (dm_wait_combine: the CPU-rows wait, the pool rows' read and the combine in one launch on the device-plan route)
+strata verify: window up to 8 tokens, 128.2 MiB of device buffers
+strata verify: batch windows of up to 6 sequences (layers [0, 48))
+strata: prompt experts on the fused int8 kernels (STRATA_PF_FUSED=1, #136)
+strata verify: captured the batch window over slots 0,0
+strata verify: captured the batch window over slots 1,1,0,0
+strata verify: captured the batch window over slots 1,1,2,2,0,0
+cohorts: round A.S=6 B.S=2
+strata verify: captured the batch window over slots 0,0,1,1,2,2
+strata verify: captured the batch window over slots 3,3
+cohorts: windows done in 35.6 ms
+cohorts: round A.S=6 B.S=4
+strata verify: captured the batch window over slots 4,4,3,3
+cohorts: windows done in 33.4 ms
+cohorts: round A.S=6 B.S=6
+strata verify: captured the batch window over slots 4,4,5,5,3,3
+cohorts: windows done in 47.3 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 32.6 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 38.8 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 37.1 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 37.0 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 38.8 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 35.6 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 34.0 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 36.6 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 35.3 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 34.0 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 31.2 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 33.7 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 33.6 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 35.7 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 32.8 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 30.2 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 27.9 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 30.9 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 30.2 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 26.3 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 28.1 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 27.3 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 27.2 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 27.8 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 25.4 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 27.0 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 24.5 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 28.2 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 27.8 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 27.6 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 23.0 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 24.3 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 23.9 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 27.0 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 30.0 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 29.0 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 30.7 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 30.8 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 31.1 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 28.9 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 29.8 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 28.1 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 30.1 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 28.6 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 27.6 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 29.5 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 22.3 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 26.6 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 29.6 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 26.3 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 26.1 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 29.8 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 25.0 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 23.5 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 24.6 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 27.1 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 27.2 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 27.4 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 25.7 ms
+cohorts: round A.S=6 B.S=4
+cohorts: windows done in 24.4 ms
+cohorts: round A.S=6 B.S=4
+strata verify: captured the batch window over slots 4,4,5,5
+cohorts: windows done in 33.9 ms
+cohorts: round A.S=6 B.S=6
+strata verify: captured the batch window over slots 3,3,4,4,5,5
+cohorts: windows done in 35.4 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 25.7 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 25.9 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 24.1 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 25.8 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 24.3 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 25.7 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 24.7 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 26.9 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 26.7 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 26.1 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 27.1 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 26.2 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 25.6 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 24.7 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 23.6 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 22.0 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 22.5 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 22.6 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 22.8 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 21.7 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 23.2 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 24.4 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 22.4 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 23.3 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 21.8 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 23.5 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 24.5 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 22.3 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 21.6 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 20.8 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 28.5 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 22.8 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 21.0 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 22.8 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 24.5 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 21.3 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 22.7 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 21.0 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 25.3 ms
+cohorts: round A.S=6 B.S=6
+cohorts: windows done in 25.2 ms
+cohorts: round A.S=6 B.S=4
+strata verify: captured the batch window over slots 3,3,4,4
+cohorts: windows done in 31.8 ms
+cohorts: round A.S=6 B.S=4
+cohorts: windows done in 22.5 ms
+cohorts: round A.S=6 B.S=4
+cohorts: windows done in 20.8 ms
+strata verify: captured the batch window over slots 2,2,3,3,4,4
+strata verify: captured the batch window over slots 3,3

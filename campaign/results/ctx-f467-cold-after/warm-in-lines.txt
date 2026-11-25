@@ -1,0 +1,11 @@
+[strata] prewarm: pre-boot sweep: 18 files, 80.1 GiB into the page cache (before the engine's load, so the reclaim storm plays out here)
+[strata] prewarm: pre-boot sweep warm in 18 s
+[strata] boot contract: engine RSS 112.4 GiB (shmem 62.6), MemAvailable 105.9 GiB at READY
+[strata] prewarm: on (files + replay); the warm-in starts when the engine is up and holds live requests for up to 180 s, then yields to them
+[strata] prewarm: 18 files, 80.1 GiB into the page cache (the boot's pin dropped it)
+[strata] prewarm: page cache warm in 3 s
+[strata] prewarm: corpus warm: 3 prompt(s) x 600 tokens at temperature 0 in 12 s - the tier's starting state is deterministic
+[strata] prewarm: tool turn: 2 tool call(s), 75 tokens in 1 s
+[strata] prewarm: 6-way burst: 1200 tokens in 10 s (117 tokens/s over the whole requests)
+[strata] prewarm: replay done in 31 s - 15 warm-in requests, 3,980 tokens; solo 110 -> 98 tokens/s from the first short to the settled check; NOT CONVERGED: the first minutes of live traffic will finish the warming
+[strata] boot contract: engine RSS 121.3 GiB (shmem 62.6), MemAvailable 101.2 GiB settled (post-warm-in)

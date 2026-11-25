@@ -1,14 +1,29 @@
 #!/usr/bin/env python3
 """campaign/reqlog-census.py - where the box's own request time goes, read from the engine log.
 
-The engine writes one accounting line per request (src/program/generate.cpp, "strata serve: prompt N
-tokens = R reused + X read in A ms ..., G generated in B ms ..., drafts accepted a of b, c checkpoints").
+Two lines describe a request, and neither is the whole of it (F-467):
+
+* The engine's accounting line (src/program/generate.cpp, "strata serve: prompt N tokens = R reused + X read in
+  A ms ..., G generated in B ms ..., drafts accepted a of b, c checkpoints").  Its read term is complete: every
+  request's prompt read is on it.  Its decode term is the SOLO lane's only.  Under --batch a request runs this
+  path for one token and, when more are wanted, continues in the batch windows ("BADM <slot> 1",
+  generate.cpp:17473): the line is printed there, at the ADMISSION, reading "1 generated ... drafts accepted 0
+  of 0", and nothing in the log summarises the generation that follows.  Such a line is an admission record.
+  F-466's census read those records as one-token generations and so undercounted decode (3,145 of 4,821 lines
+  in the production boot).
+
+* The server's completion line (serve/server.py:6055, "[strata] done: N tokens in X s (R tok/s) (stop,
+  cancel=False)"): N is the request's true output, X its whole time from arrival to last token (prompt read
+  included, to the second), R its rate since the first token.  It is printed for streamed requests that run to
+  their end; a request without one is in no total here.
+
 The log (logs/custom-iq3_s.log) is appended across boots, so every read is anchored at its boot.
 
 This census answers the question the short probes cannot: the probes run ~1.1k-token prompts with long
 generations, while the production log holds the traffic the operator actually sends.  It splits a boot's
-request-seconds into decode, cold re-reads of long histories, and the per-turn delta read; it reads the
-decode rate against context depth; and it reads the conversation cache's occupancy at every re-read.
+request time into prompt reads (complete), solo-lane decode, and the batch lane's share (the server's total
+less the other two, given as a bracket because the two lines carry no request id to pair them by); it reads
+solo decode against context depth; and it reads the conversation cache's occupancy at every re-read.
 Request-seconds are per request (concurrent requests overlap in wall time); the engine's prompt reads
 run on the single window thread, so read seconds are close to wall seconds.
 
@@ -29,6 +44,8 @@ BOOT_START = re.compile(r"^\[strata\] (\d{4}-\d\d-\d\d \d\d:\d\d:\d\d) engine st
 PROMPT_LINE = re.compile(
     r"^strata serve: prompt (\d+) tokens = (\d+) reused \+ (\d+)(?: of \d+)? read in (\d+) ms(?: \([\d.]+ tok/s\))?, "
     r"(\d+) generated in (\d+) ms(?: \([\d.]+ tok/s\))?, drafts accepted (\d+) of (\d+), (\d+) checkpoints")
+DONE_LINE = re.compile(
+    r"^\[strata\] done: ([\d,]+) tokens in ([\d,]+) s \(([\d.]+) tok/s\) \((\w+), cancel=(\w+)\)")
 PARK_LINE = re.compile(
     r"^strata serve: conversation cache: parked (\d+) tokens.*? in (\d+(?:\.\d+)?) ms; parked=(\d+) bytes=(\d+) evictions=(\d+)")
 RESTORE_LINE = re.compile(r"^strata serve: conversation cache: (restored|borrowed) (\d+) tokens.*? in (\d+(?:\.\d+)?) ms")
@@ -53,8 +70,9 @@ def label(lo, hi):
 
 
 def read_log(path):
-    """-> (boots [(line, datetime)], requests [dict], per-boot cache state at each big read, cache events)."""
-    boots, reqs = [], []
+    """-> (boots [(line, datetime)], requests [dict], the cache state at each big read, parks, restores, elastic
+    events, the server's completion lines [(line, tokens, seconds, rate, finish)])."""
+    boots, reqs, dones = [], [], []
     cache = dict(slots=None, bytes=None, evictions=None)
     cache_at_big_read, parks, restores, elastic = [], [], [], collections.defaultdict(list)
     with open(path, "r", errors="replace") as f:
@@ -63,6 +81,10 @@ def read_log(path):
             if m:
                 boots.append((i, dt.datetime.strptime(m.group(1), "%Y-%m-%d %H:%M:%S")))
                 cache = dict(slots=None, bytes=None, evictions=None)
+                continue
+            m = DONE_LINE.match(line)
+            if m:
+                dones.append((i, int(m.group(1).replace(",", "")), int(m.group(2).replace(",", "")), float(m.group(3)), m.group(4)))
                 continue
             m = PARK_LINE.match(line)
             if m:
@@ -80,12 +102,13 @@ def read_log(path):
             m = PROMPT_LINE.match(line)
             if m:
                 g = [int(x) for x in m.groups()]
+                # an admission record: one token made in the solo lane and no drafts offered, the batch lane's work unseen
                 r = dict(line=i, prompt=g[0], reused=g[1], read=g[2], read_ms=g[3], gen=g[4], gen_ms=g[5],
-                         acc=g[6], drafts=g[7])
+                         acc=g[6], drafts=g[7], admitted=(g[4] == 1 and g[7] == 0))
                 reqs.append(r)
                 if r["read"] > BIG_READ:
                     cache_at_big_read.append((r, dict(cache)))
-    return boots, reqs, cache_at_big_read, parks, restores, elastic
+    return boots, reqs, cache_at_big_read, parks, restores, elastic, dones
 
 
 def boot_of(boots, starts, line):
@@ -108,22 +131,27 @@ def main():
     ap.add_argument("--boot", default=None, help='"YYYY-MM-DD HH:MM" of the boot\'s engine-start line; default: the boot with the most request-seconds')
     ap.add_argument("--top", type=int, default=12, help="boot rows to list")
     a = ap.parse_args()
-    boots, reqs, big, parks, restores, elastic = read_log(a.log)
+    boots, reqs, big, parks, restores, elastic, dones = read_log(a.log)
     starts = [b[0] for b in boots]
     if not reqs:
         raise SystemExit("no per-request lines in the log")
     per = collections.defaultdict(list)
     for r in reqs:
         per[boot_of(boots, starts, r["line"])].append(r)
-    print(f"boots {len(boots)}, requests with an accounting line {len(reqs)}")
-    print("\nPER BOOT, by request-seconds: start | requests | read s | decode s | read tok | gen tok | reused tok | read p50 | read p90 | read max | acceptance")
-    order = sorted(per, key=lambda b: -(sum(r["read_ms"] + r["gen_ms"] for r in per[b])))
+    served = collections.defaultdict(list)
+    for d in dones:
+        served[boot_of(boots, starts, d[0])].append(d)
+    print(f"boots {len(boots)}, engine accounting lines {len(reqs)} ({sum(r['admitted'] for r in reqs):,} one-token records),"
+          f" server completion lines {len(dones)}")
+    print("\nPER BOOT: start | engine lines (one-token records) | read s | solo decode s | server lines | their request s | their tokens | read p50 | read max | acceptance (solo)")
+    # seconds on both sides of the "or": the server's line counts seconds, the engine's milliseconds
+    order = sorted(per, key=lambda b: -(sum(x[2] for x in served[b]) or sum(r["read_ms"] + r["gen_ms"] for r in per[b]) / 1e3))
     for b in order[:a.top]:
-        R, reads = per[b], sorted(r["read"] for r in per[b])
+        R, reads, D = per[b], sorted(r["read"] for r in per[b]), served[b]
         dr = sum(r["drafts"] for r in R)
-        print(f"{boots[b][1]:%m-%d %H:%M} | {len(R):5d} | {sum(r['read_ms'] for r in R) / 1e3:7.0f} | {sum(r['gen_ms'] for r in R) / 1e3:7.0f} |"
-              f" {sum(reads):9,} | {sum(r['gen'] for r in R):8,} | {sum(r['reused'] for r in R):10,} | {st.median(reads):6.0f} |"
-              f" {reads[int(0.9 * (len(reads) - 1))]:7,} | {reads[-1]:7,} | {dr and sum(r['acc'] for r in R) / dr or 0:.3f}")
+        print(f"{boots[b][1]:%m-%d %H:%M} | {len(R):5d} ({sum(r['admitted'] for r in R):5d}) | {sum(r['read_ms'] for r in R) / 1e3:7.0f} |"
+              f" {sum(r['gen_ms'] for r in R) / 1e3:7.0f} | {len(D):5d} | {sum(x[2] for x in D):8,} | {sum(x[1] for x in D):10,} |"
+              f" {st.median(reads):6.0f} | {reads[-1]:7,} | {dr and sum(r['acc'] for r in R) / dr or 0:.3f}")
     if a.boot:
         sel = [b for b in per if boots[b][1].strftime("%Y-%m-%d %H:%M") == a.boot]
         if not sel:
@@ -132,23 +160,38 @@ def main():
     else:
         b = order[0]
     R = per[b]
-    T = sum(r["read_ms"] + r["gen_ms"] for r in R)
-    RD = sum(r["read_ms"] for r in R)
+    D = served[b]
+    RD = sum(r["read_ms"] for r in R)          # milliseconds, the unit every table below divides by
     GN = sum(r["gen_ms"] for r in R)
-    print(f"\nSELECTED BOOT {boots[b][1]:%Y-%m-%d %H:%M:%S}: {len(R)} requests, {T / 1e3:.0f} request-seconds"
-          f" (read {RD / 1e3:.0f} s = {100 * RD / T:.1f}%, decode {GN / 1e3:.0f} s = {100 * GN / T:.1f}%)")
+    T = RD + GN
+    SD, ST = sum(x[2] for x in D), sum(x[1] for x in D)   # the server's line counts seconds
+    print(f"\nSELECTED BOOT {boots[b][1]:%Y-%m-%d %H:%M:%S}: {len(R)} engine lines ({sum(r['admitted'] for r in R)} one-token records),"
+          f" {len(D)} server completion lines")
+    print("\nREQUEST TIME, TWO INSTRUMENTS (seconds)")
+    print(f"  prompt reads (every engine line)                 {RD / 1e3:8,.0f}")
+    print(f"  solo-lane decode (engine lines with a generation) {GN / 1e3:8,.0f}   {sum(1 for r in R if not r['admitted'])} requests,"
+          f" {sum(r['gen'] for r in R):,} tokens")
+    if D:
+        print(f"  server-recorded request time, read included       {SD:8,.0f}   {len(D)} requests, {ST:,} tokens"
+              f" (p50 {st.median(sorted(x[1] for x in D)):.0f} tokens a request, rate since the first token p50"
+              f" {st.median(sorted(x[3] for x in D)):.0f} t/s)")
+        lo = max(0.0, SD - (RD + GN) / 1e3)   # every read and every solo second inside the server's time is the batch lane's lower bound
+        print(f"  batch-lane decode lies between {lo:,.0f} s (all reads and solo decode belong to requests with a server line) and"
+              f" {SD:,.0f} s (none does); prompt reads are at most {100 * RD / 1e3 / SD if SD else 0:.1f} % of the server-recorded time")
+    else:
+        print("  no server completion lines in this boot: the batch lane's time is not on record")
     prom = sorted(r["prompt"] for r in R)
     print(f"  context per request: p50 {st.median(prom):,.0f}, p90 {prom[int(0.9 * (len(prom) - 1))]:,}, max {prom[-1]:,} tokens;"
           f" {sum(1 for r in R if r['prompt'] > KV_RESIDENT)} of {len(R)} requests run past the {KV_RESIDENT}-cell VRAM K/V window")
     cold = [r for r in R if r["read"] > BIG_READ]
     mid = [r for r in R if 8192 < r["read"] <= BIG_READ]
     small = [r for r in R if r["read"] <= 8192]
-    print("\nREQUEST-SECONDS BY TERM")
-    for name, S in (("decode", R), (f"cold re-read (>{BIG_READ:,} tokens read)", cold), ("mid read (8,193-32,768)", mid),
+    print("\nPROMPT READS BY TERM (complete; shares of the engine-line seconds, whose decode is the solo lane's only)")
+    for name, S in ((f"cold re-read (>{BIG_READ:,} tokens read)", cold), ("mid read (8,193-32,768)", mid),
                     ("per-turn delta read (<= 8,192 tokens)", small)):
-        ms = sum(r["gen_ms"] if name == "decode" else r["read_ms"] for r in S)
+        ms = sum(r["read_ms"] for r in S)
         print(f"  {name:38s} {ms / 1e3:7.0f} s  {100 * ms / T:5.1f}%   in {len(S):5d} requests"
-              + ("" if name == "decode" else f"  ({sum(r['read'] for r in S) / ms * 1000 if ms else 0:,.0f} tok/s over them)"))
+              f"  ({sum(r['read'] for r in S) / ms * 1000 if ms else 0:,.0f} tok/s over them)")
     rows = []
     for lo, hi in READ_BUCKETS:
         S = [r for r in R if lo <= r["read"] <= hi]
@@ -158,12 +201,12 @@ def main():
     size_table("PROMPT READS BY TOKENS READ", rows, "read_ms", "read", RD)
     rows = []
     for lo, hi in READ_BUCKETS:
-        S = [r for r in R if lo <= r["gen"] <= hi]
+        S = [r for r in R if lo <= r["gen"] <= hi and not r["admitted"]]
         if S:
             ms = sum(r["gen_ms"] for r in S)
             rows.append((lo, hi, len(S), ms, sum(r["gen"] for r in S), st.median(r["gen_ms"] for r in S)))
-    size_table("DECODE BY TOKENS GENERATED", rows, "gen_ms", "gen", GN)
-    print("\nDECODE RATE AGAINST CONTEXT DEPTH (requests generating >= 500 tokens): context | n | decode s | t/s (sum tok / sum ms) | p10 | p50 | p90 | acceptance")
+    size_table("SOLO-LANE DECODE BY TOKENS GENERATED (the batch lane's generations are on no engine line)", rows, "gen_ms", "gen", GN)
+    print("\nSOLO-LANE DECODE RATE AGAINST CONTEXT DEPTH (requests generating >= 500 tokens): context | n | decode s | t/s (sum tok / sum ms) | p10 | p50 | p90 | acceptance")
     for lo, hi in CTX_BUCKETS:
         S = [r for r in R if lo <= r["prompt"] <= hi and r["gen"] >= 500 and r["gen_ms"] > 0]
         if S:

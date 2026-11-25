@@ -1,0 +1,43 @@
+# calibration: 2000 words -> 7954 tokens (ratio 3.9770); gen 512/run; after each depth: nothing
+session   0 |   29180 tokens | created cold, TTFT   4.81s
+session   1 |   29260 tokens | created cold, TTFT   4.70s
+session   2 |   29125 tokens | created cold, TTFT   4.62s
+session   3 |   28947 tokens | created cold, TTFT   4.57s
+session   4 |   29128 tokens | created cold, TTFT   4.57s
+session   5 |   29241 tokens | created cold, TTFT   4.59s
+session   6 |   29189 tokens | created cold, TTFT   4.58s
+session   7 |   29294 tokens | created cold, TTFT   4.54s
+session   8 |   29294 tokens | created cold, TTFT   4.53s
+session   9 |   29040 tokens | created cold, TTFT   4.50s
+session  10 |   29191 tokens | created cold, TTFT   4.54s
+session  11 |   29168 tokens | created cold, TTFT   4.58s
+session  12 |   29278 tokens | created cold, TTFT   4.59s
+session  13 |   29123 tokens | created cold, TTFT   4.56s
+session  14 |   29365 tokens | created cold, TTFT   4.60s
+session  15 |   29260 tokens | created cold, TTFT   4.53s
+session  16 |   29099 tokens | created cold, TTFT   4.51s
+session  17 |   29310 tokens | created cold, TTFT   4.59s
+session  18 |   29121 tokens | created cold, TTFT   4.51s
+session  19 |   29151 tokens | created cold, TTFT   4.53s
+session   0 | turn | TTFT   0.50s served
+session   1 | turn | TTFT   0.43s served
+session   2 | turn | TTFT   0.43s served
+session   3 | turn | TTFT   0.42s served
+session   4 | turn | TTFT   0.43s served
+session   5 | turn | TTFT   0.44s served
+session   6 | turn | TTFT   0.42s served
+session   7 | turn | TTFT   0.42s served
+session   8 | turn | TTFT   0.42s served
+session   9 | turn | TTFT   0.41s served
+session  10 | turn | TTFT   0.43s served
+session  11 | turn | TTFT   0.43s served
+session  12 | turn | TTFT   0.43s served
+session  13 | turn | TTFT   0.42s served
+session  14 | turn | TTFT   0.45s served
+session  15 | turn | TTFT   0.43s served
+session  16 | turn | TTFT   0.42s served
+session  17 | turn | TTFT   0.42s served
+session  18 | turn | TTFT   0.43s served
+session  19 | turn | TTFT   0.43s served
+rotate 20 sessions of ~33000 tokens: 20 turns served, 0 re-read; turn TTFT 8.6 s in all, median 0.43s, max 0.50s
+# done

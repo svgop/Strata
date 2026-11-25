@@ -1,0 +1,3 @@
+hold-test | sent at the port's first answer (0.00 s after the probe began); /health then: prewarm=files hold_s=178.9
+hold-test | 3866 prompt tokens | first token after  33.69 s | 256 tokens, decode 146.2 t/s | wall  35.45 s | /health after: prewarm=done hold_s=0.0
+hold-test | TTFT 33.69s: the wait a live request met at the door

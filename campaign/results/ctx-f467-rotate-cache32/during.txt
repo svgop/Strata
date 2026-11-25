@@ -1,0 +1,1 @@
+.venv/bin/python: can't open file '/home/svg/LLM/strata-custom-2/campaign/hold-test.py': [Errno 13] Permission denied

@@ -1,0 +1,7 @@
+[strata] prewarm: pre-boot sweep: 18 files, 80.1 GiB into the page cache (before the engine's load, so the reclaim storm plays out here)
+[strata] prewarm: pre-boot sweep warm in 16 s
+[strata] boot contract: engine RSS 112.4 GiB (shmem 62.6), MemAvailable 107.0 GiB at READY
+[strata] prewarm: on (files + replay); the warm-in starts when the engine is up and holds live requests for up to 180 s, then yields to them
+[strata] prewarm: 18 files, 80.1 GiB into the page cache (the boot's pin dropped it)
+[strata] prewarm: page cache warm in 4 s
+[strata] prewarm: live traffic arrived; the rest of the warm-in is skipped

@@ -1,0 +1,43 @@
+# calibration: 2000 words -> 7954 tokens (ratio 3.9770); gen 512/run; after each depth: nothing
+session   0 |   29180 tokens | created cold, TTFT   4.77s
+session   1 |   29260 tokens | created cold, TTFT   4.59s
+session   2 |   29125 tokens | created cold, TTFT   4.51s
+session   3 |   28947 tokens | created cold, TTFT   4.54s
+session   4 |   29128 tokens | created cold, TTFT   4.54s
+session   5 |   29241 tokens | created cold, TTFT   4.49s
+session   6 |   29189 tokens | created cold, TTFT   4.48s
+session   7 |   29294 tokens | created cold, TTFT   4.52s
+session   8 |   29294 tokens | created cold, TTFT   4.50s
+session   9 |   29040 tokens | created cold, TTFT   4.50s
+session  10 |   29191 tokens | created cold, TTFT   4.50s
+session  11 |   29168 tokens | created cold, TTFT   4.52s
+session  12 |   29278 tokens | created cold, TTFT   4.55s
+session  13 |   29123 tokens | created cold, TTFT   4.45s
+session  14 |   29365 tokens | created cold, TTFT   4.45s
+session  15 |   29260 tokens | created cold, TTFT   4.43s
+session  16 |   29099 tokens | created cold, TTFT   4.42s
+session  17 |   29310 tokens | created cold, TTFT   4.52s
+session  18 |   29121 tokens | created cold, TTFT   4.48s
+session  19 |   29151 tokens | created cold, TTFT   4.43s
+session   0 | turn | TTFT   4.44s RE-READ
+session   1 | turn | TTFT   4.45s RE-READ
+session   2 | turn | TTFT   4.49s RE-READ
+session   3 | turn | TTFT   4.39s RE-READ
+session   4 | turn | TTFT   4.43s RE-READ
+session   5 | turn | TTFT   4.40s RE-READ
+session   6 | turn | TTFT   4.39s RE-READ
+session   7 | turn | TTFT   4.40s RE-READ
+session   8 | turn | TTFT   4.42s RE-READ
+session   9 | turn | TTFT   4.40s RE-READ
+session  10 | turn | TTFT   4.46s RE-READ
+session  11 | turn | TTFT   4.39s RE-READ
+session  12 | turn | TTFT   4.44s RE-READ
+session  13 | turn | TTFT   4.40s RE-READ
+session  14 | turn | TTFT   4.44s RE-READ
+session  15 | turn | TTFT   4.42s RE-READ
+session  16 | turn | TTFT   4.45s RE-READ
+session  17 | turn | TTFT   4.42s RE-READ
+session  18 | turn | TTFT   4.41s RE-READ
+session  19 | turn | TTFT   4.46s RE-READ
+rotate 20 sessions of ~33000 tokens: 0 turns served, 20 re-read (0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19); turn TTFT 88.5 s in all, median 4.42s, max 4.49s
+# done

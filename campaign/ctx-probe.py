@@ -6,6 +6,9 @@
 #   python ctx-probe.py --selftest          (offline: the request builder and the stream reader; no server)
 #   python ctx-probe.py --turn  4096 32768 131072
 #   python ctx-probe.py --branch 4096 32768 131072
+#   python ctx-probe.py --rotate 20 33000
+# --rotate N (F-467): the conversation cache's working set - N conversations of the one depth, each created cold,
+# then one agent turn on each.  A cache that cannot hold them re-reads the oldest from the prompt.
 # --turn (F-466): after each depth, one AGENT TURN - the ladder's reply is sent back (content and
 # reasoning), then a ~300-token user message, max_tokens 8.  This is the production shape (the engine log
 # shows 2,527 of the next prompts extending the previous prompt plus its generation), so the conversation
@@ -50,15 +53,18 @@ def post(body, stream):
     return urllib.request.urlopen(req, timeout=3600)
 
 
-def stream_run(body):
+def stream_run(body, extra=None):
     """One streamed request -> (ttft s or None, first-to-last-token s or None, wall s, prompt tokens,
-    completion tokens, the answer's content, its reasoning)."""
+    completion tokens, the answer's content, its reasoning).  With a dict as `extra` (F-467) it also fills
+    extra["finish"] (the stream's finish_reason) and extra["tool_calls"] (the tool calls' names and arguments
+    as sent), which the seven-tuple has no room for."""
     t0 = time.perf_counter()
     ttft = None
     t_last = 0.0
     chunks = 0
     usage = {}
-    text, reasoning = [], []
+    text, reasoning, tools = [], [], []
+    finish = None
     with post(body, stream=True) as r:
         for line in r:
             if not line.startswith(b"data: "):
@@ -75,7 +81,13 @@ def stream_run(body):
             ch = obj.get("choices") or []
             if ch:
                 d = ch[0].get("delta") or {}
-                if d.get("content") or d.get("reasoning_content"):
+                if ch[0].get("finish_reason"):
+                    finish = ch[0]["finish_reason"]
+                for tc in d.get("tool_calls") or ():
+                    fn = tc.get("function") or {}
+                    tools.append((fn.get("name") or "", fn.get("arguments") or ""))
+                # a tool-call delta is a token too: a stream may open with one (no content, no reasoning)
+                if d.get("content") or d.get("reasoning_content") or d.get("tool_calls"):
                     if ttft is None:
                         ttft = time.perf_counter() - t0
                     chunks += 1
@@ -86,6 +98,9 @@ def stream_run(body):
                         reasoning.append(d["reasoning_content"])
     total = time.perf_counter() - t0
     dec = (t_last - ttft) if ttft is not None and t_last > ttft else None
+    if extra is not None:
+        extra["finish"] = finish
+        extra["tool_calls"] = tools
     return (ttft, dec, total, usage.get("prompt_tokens"), usage.get("completion_tokens"),
             "".join(text), "".join(reasoning))
 
@@ -140,6 +155,40 @@ def branch_read(target_tokens, ratio, seed0, depth_ptok):
     report("branch", ptok, ttft, total, ctok, (ptok - depth_ptok) if ptok and depth_ptok else -1)
 
 
+def rotate(target_tokens, ratio, seed0, n_sessions):
+    """The conversation cache's working set (F-467): n_sessions conversations of one depth, each created cold,
+    then one agent turn on each in the same order.  A cache that cannot hold them re-reads the oldest from the
+    prompt: the operator's production failure (F-466: 201 re-reads of 17-27 s in one boot).  A turn counts as
+    re-read when its TTFT is more than 40 % of its conversation's cold read; the engine's accounting lines in the
+    boot's log say reused and read tokens exactly."""
+    n_words = int(target_tokens / ratio)
+    tail_words = int(TAIL_TOKENS / ratio)
+    created = []
+    for i in range(n_sessions):
+        prompt = gen_prompt(n_words, seed0 + i)
+        ttft, _, _, ptok, _, text, reasoning = stream_run({"model": MODEL, "messages": [{"role": "user", "content": prompt}],
+                                                           "max_tokens": 8, "stream": True})
+        created.append((prompt, (text, reasoning), ttft))
+        print(f"session {i:3d} | {ptok if ptok else -1:7d} tokens | created cold, TTFT {ttft if ttft else -1:6.2f}s", flush=True)
+        time.sleep(PARK_SETTLE_S)
+    served, reread, turn_ttfts = [], [], []
+    for i, (prompt, reply, cold) in enumerate(created):
+        time.sleep(PARK_SETTLE_S)
+        messages = [{"role": "user", "content": prompt},
+                    {"role": "assistant", "content": reply[0], **({"reasoning_content": reply[1]} if reply[1] else {})},
+                    {"role": "user", "content": gen_tail(tail_words, seed0 + 5000 + i)}]
+        ttft, _, _, _, _, _, _ = stream_run({"model": MODEL, "messages": messages, "max_tokens": 8, "stream": True})
+        ttft = ttft if ttft else -1.0
+        turn_ttfts.append(ttft)
+        again = cold is not None and cold > 0 and ttft > 0.4 * cold
+        (reread if again else served).append(i)
+        print(f"session {i:3d} | turn | TTFT {ttft:6.2f}s {'RE-READ' if again else 'served'}", flush=True)
+    ok = sorted(t for t in turn_ttfts if t >= 0)
+    print(f"rotate {n_sessions} sessions of ~{target_tokens} tokens: {len(served)} turns served, {len(reread)} re-read"
+          f"{' ' + str(tuple(reread)) if reread else ''}; turn TTFT {sum(ok):.1f} s in all, median {ok[len(ok) // 2]:.2f}s, "
+          f"max {ok[-1]:.2f}s", flush=True)
+
+
 def selftest():
     """Offline check of the request builder and the stream reader against a canned answer (no server)."""
     body = {"model": MODEL, "messages": [{"role": "user", "content": "x"}], "max_tokens": 8, "stream": True}
@@ -177,14 +226,24 @@ def main():
     argv = sys.argv[1:]
     if "--selftest" in argv:
         return selftest()
+    rotate_n = None
+    if "--rotate" in argv:
+        i = argv.index("--rotate")
+        rotate_n = int(argv[i + 1])
+        del argv[i:i + 2]
     after = [a for a in ("--turn", "--branch") if a in argv]
     args = [a for a in argv if not a.startswith("--")]
     sizes = [int(x) for x in args] or [4096, 16384, 32768, 65536, 98304, 122880]
+    if rotate_n is not None and len(sizes) != 1:
+        raise SystemExit("--rotate N takes exactly one depth: ctx-probe.py --rotate 20 33000")
     ratio, pt = calibrate()
     print(f"# calibration: 2000 words -> {pt} tokens (ratio {ratio:.4f}); gen {GEN}/run; after each depth: {after[0] if after else 'nothing'}",
           flush=True)
     for i, t in enumerate(sizes):
         seed0 = 100 + i * 7919
+        if rotate_n is not None:
+            rotate(t, ratio, seed0, rotate_n)
+            continue
         ptok, reply = ladder(t, ratio, seed0)
         if after:
             if after[0] == "--turn":

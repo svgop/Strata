@@ -1,0 +1,24 @@
+  [A0] up in 68s prewarm=done cvec=add:8-8+project:1-47
+  [A0 leg1  (discard)] M1 214.7  conc 258.5  M3b 75.8%  load 3.91
+  [A0 leg2] M1 209.5  conc 245.8  M3b 78.2%  load 7.77
+  [A0 leg3] M1 215.3  conc 228.5  M3b 79.6%  load 5.37
+  [B1] up in 60s prewarm=done cvec=add:8-8+project:1-47
+  [B1 leg1  (discard)] M1 234.9  conc 276.3  M3b 77.0%  load 4.06
+  [B1 leg2] M1 224.9  conc 272.5  M3b 77.6%  load 4.49
+  [B1 leg3] M1 216.3  conc 261.6  M3b 77.7%  load 5.15
+  [A2] up in 60s prewarm=done cvec=add:8-8+project:1-47
+  [A2 leg1  (discard)] M1 213.1  conc 268.6  M3b 77.9%  load 4.00
+  [A2 leg2] M1 197.7  conc 264.8  M3b 77.5%  load 5.91
+  [A2 leg3] M1 227.6  conc 255.5  M3b 77.4%  load 6.18
+  [B3] up in 60s prewarm=done cvec=add:8-8+project:1-47
+  [B3 leg1  (discard)] M1 224.0  conc 255.6  M3b 77.0%  load 3.24
+  [B3 leg2] M1 220.3  conc 268.0  M3b 75.6%  load 4.56
+  [B3 leg3] M1 206.9  conc 261.7  M3b 78.4%  load 5.30
+
+=== CONFIG LADDER [f467-cache32]  measured legs only, means over 4 boots x 2 legs
+lane               A         B    A vs B   band +-4%
+M1             212.5     217.1     -2.1%
+6-conc         248.7     265.9     -6.5%
+M3b %           78.2      77.3     +1.1%
+A = campaign/results/f467-cache32/config-a-cache32.json  |  B = campaign/results/f467-cache32/config-b-cache8.json
+ladder exit 0

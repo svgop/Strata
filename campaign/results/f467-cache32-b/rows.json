@@ -1,0 +1,134 @@
+[
+ {
+  "m1": 219.1,
+  "conc": 261.4,
+  "m3b": 75.5,
+  "arm": "A",
+  "boot": 0,
+  "leg": 1,
+  "measured": false,
+  "cvec": "add:8-8+project:1-47",
+  "load": 5.349609375
+ },
+ {
+  "m1": 218.5,
+  "conc": 273.1,
+  "m3b": 79.2,
+  "arm": "A",
+  "boot": 0,
+  "leg": 2,
+  "measured": true,
+  "cvec": "add:8-8+project:1-47",
+  "load": 4.451171875
+ },
+ {
+  "m1": 208.2,
+  "conc": 268.8,
+  "m3b": 77.3,
+  "arm": "A",
+  "boot": 0,
+  "leg": 3,
+  "measured": true,
+  "cvec": "add:8-8+project:1-47",
+  "load": 4.7568359375
+ },
+ {
+  "m1": 204.7,
+  "conc": 266.8,
+  "m3b": 77.0,
+  "arm": "B",
+  "boot": 1,
+  "leg": 1,
+  "measured": false,
+  "cvec": "add:8-8+project:1-47",
+  "load": 6.17529296875
+ },
+ {
+  "m1": 207.3,
+  "conc": 268.4,
+  "m3b": 78.2,
+  "arm": "B",
+  "boot": 1,
+  "leg": 2,
+  "measured": true,
+  "cvec": "add:8-8+project:1-47",
+  "load": 5.2685546875
+ },
+ {
+  "m1": 218.4,
+  "conc": 261.0,
+  "m3b": 77.4,
+  "arm": "B",
+  "boot": 1,
+  "leg": 3,
+  "measured": true,
+  "cvec": "add:8-8+project:1-47",
+  "load": 5.18701171875
+ },
+ {
+  "m1": 208.1,
+  "conc": 264.9,
+  "m3b": 75.2,
+  "arm": "A",
+  "boot": 2,
+  "leg": 1,
+  "measured": false,
+  "cvec": "add:8-8+project:1-47",
+  "load": 5.6201171875
+ },
+ {
+  "m1": 221.8,
+  "conc": 259.7,
+  "m3b": 75.4,
+  "arm": "A",
+  "boot": 2,
+  "leg": 2,
+  "measured": true,
+  "cvec": "add:8-8+project:1-47",
+  "load": 6.38134765625
+ },
+ {
+  "m1": 226.8,
+  "conc": 261.1,
+  "m3b": 79.9,
+  "arm": "A",
+  "boot": 2,
+  "leg": 3,
+  "measured": true,
+  "cvec": "add:8-8+project:1-47",
+  "load": 5.857421875
+ },
+ {
+  "m1": 206.1,
+  "conc": 278.6,
+  "m3b": 75.8,
+  "arm": "B",
+  "boot": 3,
+  "leg": 1,
+  "measured": false,
+  "cvec": "add:8-8+project:1-47",
+  "load": 5.53515625
+ },
+ {
+  "m1": 222.0,
+  "conc": 260.7,
+  "m3b": 78.0,
+  "arm": "B",
+  "boot": 3,
+  "leg": 2,
+  "measured": true,
+  "cvec": "add:8-8+project:1-47",
+  "load": 5.56689453125
+ },
+ {
+  "m1": 230.1,
+  "conc": 260.7,
+  "m3b": 80.3,
+  "arm": "B",
+  "boot": 3,
+  "leg": 3,
+  "measured": true,
+  "cvec": "add:8-8+project:1-47",
+  "load": 6.06005859375
+ }
+]

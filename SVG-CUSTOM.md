@@ -15256,6 +15256,8 @@ probes' ~1.1k-token prompts with 300-500-token generations.  The production log 
 a 96k-token median context and that two requests in three generate 64 tokens or fewer.
 
 ### 2. The production census [M] (`reqlog-census.py`; `production-request-time.txt`)
+
+**CORRECTED BY F-467, section 1 (same day, 17:22).**  The engine's per-request line is printed at a request's ADMISSION to the batch lane, and 3,145 of the 4,821 lines below are admission records carrying one generated token: the decode column is the solo lane's only.  By the server's completion lines the boot holds 80,557 request-seconds and 4.82 M generated tokens - prompt reads are at most 8.3 %, batch-lane decode about 80 %.  The read terms' absolute seconds stand; their shares do not.
 The engine writes one accounting line per request (`generate.cpp:17595`).  The log holds 21,470 over 112 boots since
 11-22; one boot is the operator's traffic: **11-22 15:59 -> 11-24, 4,819 requests, 15,817 request-seconds.**
 (Request-seconds are per request; the engine's prompt reads run on the single window thread, so read seconds are
@@ -15341,6 +15343,8 @@ turn; the engine's lines exposed it and the probe now sends both shapes under th
 - Prompt reads run on the single window thread and every slot stalls for a piece (F-463 section 1.6 [M]).
 
 ### 6. What is worth improving, ranked by the operator's own request-seconds
+
+**CORRECTED BY F-467, section 2.**  The shares here are of the engine-line seconds, not of the operator's request time: by request time the concurrent decode lane is about 80 % and the request path about 8 %.  The items stand in kind and re-weight: the conversation cache first (it removes the 17-27 s stall that freezes every slot), then the reads on the window thread.
 | # | term (share) | code / setting | measured now | ceiling | certainty |
 |---|---|---|---|---|---|
 | 1 | cold re-reads of long sessions (21.7 %) | `--conversation-cache-mib 8192`, `--conversation-cache-slots 24` (config) | 8 GiB holds 3-4 conversations of this size; 708 evictions | up to -3,440 s per 46 h of this traffic, and each avoided re-read removes a 17-27 s stall of every slot | the share that is eviction is unknown |
@@ -15354,7 +15358,7 @@ The adaptive tier, the CPU pool, the profile and the link share - F-454 to F-465
 
 ### 7. Corrections to the record
 - F-463 sections 1.6-1.7: "11,567 s of prompt reads vs 7,103 s of rounds - 62/38" sets request-seconds against
-  cohort-round seconds.  Like with like (section 2): **42.5 % read, 57.5 % decode.**  The ranking it drew stands.
+  cohort-round seconds.  Like with like (section 2): **42.5 % read, 57.5 % decode.**  The ranking it drew stands.  [CORRECTED by F-467: that is solo-lane decode; reads are at most 8.3 % of the server-recorded request time.]
 - F-463's A8 ("GDN recurrence is sequential per token; a chunked scan exists only in the sm_70 build",
   `kernels.cu:429-436`): those lines are the Volta-only warp-local variant of the experimental build; the
   WY-chunked recurrence is in the CUDA main build behind `STRATA_GDN_CHUNKED` (`kernels.cu:869`, `:2712-2714`) and
@@ -15384,3 +15388,132 @@ The adaptive tier, the CPU pool, the profile and the link share - F-454 to F-465
   issuer a layer ahead; no fidelity risk).  (c) row 4 - one nsys capture of a 112k-token read: the kernel split of
   its 17.4 s prices A7 and A9.  (d) row 6 - A5's Golden + LOGPOS gate build, the last solo item with a measured
   term under it (2.163 ms of handshake kernels a window).
+
+
+## F-467 — the census corrected: the batch lane is 80 % of the operator's request time; the conversation cache raised to 32 GiB; the warm-in measured by shape and given a door to hold (2026-11-25, 16:59-18:25)
+
+Operator request (16:59): "Raise that cache to 32gb ... review the prewarm logic and refine it so it warms up better ...
+The model should never need to run cold."  Three results, the first of them against my own F-466.
+
+### 1. Retraction [M]: F-466's "42.5 % read, 57.5 % decode" is wrong; prompt reads are at most 8.3 %
+
+The engine's per-request line (`generate.cpp:17595`) is printed by the SOLO path.  Under `--batch` a request runs
+that path for one token and, when more are wanted, continues in the batch windows (`BADM <slot> 1`,
+`generate.cpp:17473`): its line is printed there, at the ADMISSION, reading "1 generated ... drafts accepted 0 of
+0", and nothing summarises the generation that follows.  F-466 read those admission records as one-token
+generations.  Found 17:22 while reading the warm-in's own six-way burst (six requests, 200 tokens each, twelve
+lines of "1 generated").
+
+The server's completion line (`[strata] done: N tokens in X s`, `serve/server.py:6055`: X is the whole request,
+prompt read included) carries the truth.  Production boot 11-22 15:59:
+
+| instrument | requests | generated tokens | seconds |
+|---|---|---|---|
+| engine accounting lines: prompt reads (complete) | 4,819 | - | 6,717 |
+| engine accounting lines: decode (solo lane only; 3,145 of the lines are admission records) | 1,674 | 1,699,545 | 9,101 |
+| server completion lines (read included; 1,026 requests have none) | 3,795 | 4,819,855 | 80,557 |
+
+Batch-lane decode lies between 64,740 s and 80,557 s.  Per request it runs at 48 t/s against 187 solo (p50 rate
+since the first token 68 t/s; p50 601 tokens a request).  **Prompt reads are at most 8.3 % of the server-recorded
+request time: cold re-reads 4.3 %, per-turn reads 3.7 %.**  `campaign/reqlog-census.py` now reads both lines and
+prints the bracket (`request-time-two-instruments.txt`).
+
+### 2. What that does to F-466's ranking
+
+The absolute read terms stand (3,440 s of cold re-reads, 2,985 s of per-turn reads in 46 h); as shares they were
+overstated five-fold.  By the operator's request time the concurrent decode lane is about 80 %, solo decode 11 %,
+reads 8 %.  That lane is where the campaign spent its rounds and where F-461/F-465 priced the floor.  What remains
+true and worth doing on the request path is unchanged in kind: the 17-27 s re-read that freezes every slot (the
+cache, section 3), and reads on the window thread.  The claim "the maps were measured on a workload the operator
+does not run" is itself corrected: the concurrent lane IS the operator's workload.
+
+### 3. The conversation cache: 8 → 32 GiB, 24 → 96 slots (config; operator's choice of size)
+
+- **Lanes [M]** (`campaign/results/f467-cache32/`, `-b/`, `pooled.txt`): config ladder, A = 32768 MiB, B = 8192,
+  two interleaved runs in one window (17:05-17:45), 4 boots an arm, 8 measured legs an arm.  M1 215.7 vs 218.3
+  (-1.2 %), 6-conc 257.2 vs 264.3 (-2.7 %), M3b 78.1 vs 77.9 (+0.2 %): parity.  Run 1 alone read 6-conc -6.5 %,
+  run 2 +1.1 %.  The arms are one engine state during the measured legs - identical boot plan (107.0-107.3 GiB for
+  the page cache, 37.86 GiB resident copy, RSS 112.4 GiB at READY and 120.3-120.7 settled in all eight boots), the
+  cache never past 4.25 GiB, no eviction - so the spread is boot drift and the battery is blind to the setting by
+  construction.
+- **The failure it fixes [M]** (`campaign/ctx-probe.py --rotate N`, `ctx-f467-rotate-cache8/`): 20 conversations of
+  ~29k tokens, each created cold, then one agent turn on each in order.  At 8 GiB: **0 of 20 turns served, 20
+  re-read**, TTFT 4.39-4.49 s each, 88.5 s in all.  Each conversation parks at ~0.64 GiB; the cache reached its cap
+  with 22 evictions; and each re-read turn parks a fresh copy that evicts the next session ahead of its own turn
+  (evictions 37 by the end).  The engine's reuse is all-or-nothing per parked state
+  (`conversation_cache.hpp:235`: the parked token sequence must equal the prompt's start), so a cascade loses every
+  time.  This is the production pattern (F-466: 201 re-reads).
+- **At 32 GiB, 96 slots [M]** (`ctx-f467-rotate-cache32/`, 18:16, same prompts, same order): **20 of 20 turns
+  served, 0 re-read**; TTFT 0.41-0.50 s a turn, 8.6 s in all (8 GiB: 88.5 s).  The cache held 14.93 GiB in 32
+  parked conversations, no eviction.  The first after-boot read its three ~97.5k cold reads 8-14 % slower as parked
+  bytes grew (6,620 / 6,044 / 5,780 tok/s); the repeat did not (6,758 / 6,543 / 6,493 against 6,849 / 6,745 /
+  6,693 before; MemAvailable 88.7 GiB at the end, clocks 2,917-2,940 MHz, 57 C): a single boot is a rumour.
+- **Slots**: `--conversation-cache-slots` is an entry-count limit beside the byte budget (`entries_.size() <
+slots_`).  At 24, short sessions would fill the count at about 6 GiB of the 32; raised to 96 so the bytes bind
+  first.  Rollback: `--conversation-cache-slots 24`.
+- **RAM**: MemTotal 184.2 GiB; engine RSS ~121 settled + page cache + base ~13: with a full 32 GiB cache about
+  18 GiB stay free against 42 at 8 GiB (operator floor `STRATA_RAM_KEEP_GIB` 24 is checked at boot only).  The
+  after-boot's settled sample read MemAvailable 101.2 GiB, the 8 GiB boots 100.6-102.0.
+- **Battery note**: batteries drain their parked conversations to `STRATA_CONV_SLOT_DIR` (tmpfs by default) at
+  every stop; this ladder ran on NVMe scratch (`Custom-data/campaign-slots`, wiped).  A battery that parks many
+  distinct conversations (the MMLU gate) now fills 32 GiB instead of 8 while it runs.
+
+### 4. The warm-in by shape [M]: one small cost, one structural hole
+
+New instrument `campaign/cold-cost-probe.py` (run first after the warm-in; first against again by shape, on the
+client's clock).  Boots: `ctx-f467-cold-before/`, `ctx-f467-cold-before2/` (old warm-in), `ctx-f467-cold-after/`
+(after).  Sizes: 800 pseudo-words = a ~3.8k-token prompt; 28,571 = ~97.5k tokens (the tokenizer cuts random
+letter-strings into 3.38 tokens a word: the probe's first labels said 1.1k and 40k and were wrong).
+
+| shape | first (before x2) | again | the engine's terms on the first |
+|---|---|---|---|
+| solo, 256 tokens | 168.5 / 143.2 t/s | 238.3 / 190.4 | tier hit 90.2 % then 78.3 % (90.5, 79.9); 2.2-5.6 % of routed experts over PCIe; window 8.5 ms vs 5.3 |
+| tool call, two calls | 142 / 163 t/s decode | 189 / 209 | tier hit 85.6 % / 87.8 % against 92.8 % / 93.7 % |
+| bursts 2, 3, 4, 5, 6 | within +-4 % of again | | one -8.7 % on burst 2, +3.1 % on the repeat: noise |
+| three ~97.5k cold reads | 14.37, 14.68, 14.58 s | | 6,849 / 6,745 / 6,693 tok/s: no first-use cost |
+
+Mechanism: the adaptive expert tier fits whatever content ran last.  After the old warm-in (which ends with a
+six-way burst) the first single-stream request pays the re-fit: the warm-in's own line reads "solo 110 -> 98
+tokens/s from the first short to the settled check; NOT CONVERGED".  The cost is small - 0.4-0.7 s on the first
+long generation, about 0.1 s on the first tool call - and in the production boot the first twelve requests decoded
+at 205 t/s against 184 later.  The hole that remained is structural: a request arriving while the warm-in runs
+ENDED it (`_external()`), so an operator who restarts and sends inside the first minute met an engine warmed only
+as far as the corpus.
+
+Built (`serve/server.py`, `Prewarm`): **`prewarm.hold_s`** (standing: 180) - an inference request arriving during
+the warm-in waits at the HTTP door, owning no lock and no admission slot, until the warm-in ends or the hold
+expires; `X-Strata-Wait: 0` never waits (the warm-in's own requests carry it); released on every exit path.  A
+**settled reading** (the first short's whole-request rate against one more at the end, printed with its verdict),
+every stage's seconds and tokens on /v1/status, `hold_s` on /health.
+
+- **The hold's price and value [M]** (`ctx-f467-hold/`, `ctx-f467-hold-off/`, `campaign/hold-test.py`): one
+  request sent at the port's first answer, the same boot configuration.  Bypassing the hold (`X-Strata-Wait: 0`,
+  the behaviour before this entry): first token 1.31 s, decode **67.7 t/s**, and the next request of the same
+  shape 69.2 t/s - the warm-in was pre-empted at its corpus stage and the tier stayed in its boot state.  Held:
+  first token after 33.69 s (the warm-in finished: `done`), decode **146.2 t/s**.  A 600-token turn takes 8.8 s
+  un-warmed and 4.1 s held: the wait pays back inside five such turns.  The first held request still runs at 65 %
+  of its settled speed (200-230 t/s): the burst is the warm-in's last stage and the tier fits what ran last.
+
+Built and removed the same hour, with the pricing: a tool-call stage (the probe's first tool call still decoded at
+138 against 207 t/s with it on), a burst per slot count and a deep-read stage (no first-use cost in two boots).
+The code carries the measurement above the corpus so nobody rebuilds them blind.  Not done, next falsifier: the
+corpus runs FIRST and the sampled stages move the tier after it, so F-400's "deterministic starting state" holds
+only at the corpus stage; running the corpus last is the cheap test.
+
+### 5. External intel (operator asked; `campaign/research/prewarm-2026-11-25.md`)
+
+Triton does not report a model ready until a configured series of warm-up inference requests completes; SGLang
+runs its warm-up "before the server starts listening for requests" and takes custom warm-up functions; vLLM makes
+"the required specializations available during startup, before the first request", derived from the engine
+configuration; llama.cpp runs an empty warm-up pass by default beside its RAM prompt cache; the CUDA guide says to
+preload kernels and do at least one warm-up iteration before measuring.  Strata already kept the principles of
+memory population (the file sweep), state restore (the conversation cache) and determinism (the corpus); it did
+not keep the gate.
+
+### 6. Instruments
+
+`campaign/cold-cost-probe.py` (new), `campaign/hold-test.py` (new), `campaign/ctx-probe.py --rotate N` and
+`stream_run(body, extra)` (tool calls, finish reason), `campaign/ctx-lane.sh <label> [--during "<cmd>"] -- <cmd>`
+(any probe in a warmed boot; keeps the server's log as `server.log`), `campaign/reqlog-census.py` (both lines).
+Owed: the engine's admission record should say so instead of "1 generated" (a text change in the next engine
+build; every consumer of that line must treat `generated == 1 && drafts == 0` as "not a generation").
