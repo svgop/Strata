@@ -14144,7 +14144,7 @@ log was read.  Both queued chains were stopped by pid (06:03); the champion veri
   too).  Every candidate pays it before any ladder; it deploys nothing and never makes a tracker point.
 
 **THE CONCURRENT LANE'S SLOW ROUNDS, FROM THE PER-ROUND TELEMETRY (the armed smoke leg, 463 full 12-row rounds,
-`campaign/results/smoke-f453-fixed-tel/telemetry.log`):**
+`campaign/results/smoke-f453-fixed-tel/telemetry.txt`):**
 
 | rounds | n | window (median) | pool time (mean) | CPU experts per row (mean) |
 |---|---:|---:|---:|---:|
