@@ -14432,4 +14432,21 @@ batch-scoped build (a cumulative share across a round's layers - the exact form)
 (3) On a conc win: the 70q gate (nothing token-affecting is expected: an expert's output is the same whichever tier
 serves it), then M1's verdict picks config or scoped build.
 
-**Status: the config ladder is RUNNING (08:45).  Nothing here is adopted.**
+**THE CONFIG LADDER (08:22-08:42; one binary, the champion `3865e27a`; `config-abab.out`, per-leg probes under
+`campaign/results/f455-pciefrac/`): INSIDE THE BAND - NOT A WIN.**
+
+| lane | A - 0.35 | B - 0.50 | A vs B | band +-4% |
+|---|---:|---:|---:|---|
+| M1 | 241.5 | 234.7 | +2.9% to A | inside, wrong side |
+| 6-conc | 288.7 | 294.4 | +2.0% to B | inside |
+| M3b % | 77.7 | 78.2 | -0.6% | inside |
+
+Boot pairs - conc: -0.5%, then +4.6%; M1: -5.2%, then -0.3%.  **Recorded; nothing adopted.**  The +4-7% price missed by
+five points, so the model is incomplete.  Three candidates the ladder cannot tell apart: (1) the by-count share never
+rose as the floor model predicts (`pcie_model.pick`, `pcie_ok`, the per-layer conditions may bound it); (2) it rose but
+the pool time it saved was not those rounds' binding term; (3) it rose and the link's added traffic returned the saving
+as GPU waits.  The telemetry on arm B separates all three: PCIe experts per round and pool ms per round against arm A.
+- *What already follows from the ladder:* the standing's 0.35 is not leaving a large, free conc gain on the table
+through this knob alone; the operator's value stands.
+
+**Status: the diagnostic pair is next (08:45).  Nothing here is adopted.**
