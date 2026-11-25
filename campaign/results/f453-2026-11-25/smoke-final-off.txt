@@ -1,0 +1,11 @@
+smoke f453-final-off: binary 1db35c0350ba40c6 | engine pid 1552218 | env: none
+M1 single-stream : 228.6 t/s (2000 tok in 8.75s)
+M2 pair          : 191.5 t/s aggregate (1800 tok in 9.40s)
+M2 6-conc        : 297.0 t/s aggregate (3600 tok in 12.12s)
+  single-stream answers: 228.6 t/s
+  concurrent lane answers: 297.0 t/s
+  no request of the leg ended in an error
+  *** the engine restarted -1 time(s) during the leg
+  no stall was caught
+F-271 re-pin VERIFIED (learned == expert-profile-gold.bin, after the engine stop)
+SMOKE FAIL (f453-final-off) - do not ladder this binary

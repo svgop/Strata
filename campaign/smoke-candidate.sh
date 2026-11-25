@@ -39,7 +39,8 @@ grep -E '^M1|^M2|^prefill' "$OUT/leg.txt" | cut -c1-150
 M1=$(grep -E '^M1 single-stream' "$OUT/leg.txt" | tail -1 | sed -E 's/.*: ([0-9.]+) t\/s.*/\1/')
 CONC=$(grep -E '^M2 6-conc' "$OUT/leg.txt" | tail -1 | sed -E 's/.*: ([0-9.]+) t\/s.*/\1/')
 ERRS=$(grep -c '(error' "$OUT/boot.log")
-RESTARTS=$(( $(grep -c 'engine started:' logs/custom-iq3_s.log) - $(head -n "$L0" logs/custom-iq3_s.log | grep -c 'engine started:') - 1 ))
+# starts AFTER this boot's own start line = restarts (the first version subtracted one more: an anchor fix made it -1)
+RESTARTS=$(( $(grep -c 'engine started:' logs/custom-iq3_s.log) - $(head -n "$L0" logs/custom-iq3_s.log | grep -c 'engine started:') ))
 STALLS=$(tail -n +"$L0" logs/custom-iq3_s.log | grep -c 'no progress for')
 FAIL=0
 ok(){ echo "  $1"; }; bad(){ echo "  *** $1"; FAIL=1; }

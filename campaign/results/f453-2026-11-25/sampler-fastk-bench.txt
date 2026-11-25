@@ -1,0 +1,3 @@
+sampler_fastk_parity: device 0 (compute capability 12.0)
+  bench: nv 40960, k 64 (the drafter's shape): k argmax rounds   68.6 us, one-pass top-k   20.3 us per call
+  bench: nv 151936, k 20 (the main sampler's shape): k argmax rounds   20.4 us, one-pass top-k   12.8 us per call

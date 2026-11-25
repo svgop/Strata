@@ -18,7 +18,7 @@ restore(){ cp engine/strata.pre-f453-gdnab engine/strata.new && mv engine/strata
 trap restore EXIT
 cleanup_engine >/dev/null 2>&1
 [ "$(sha256sum build-fresh/strata | cut -c1-16)" = "$CAND" ] || { log "ABORT: build-fresh/strata is not the final candidate"; exit 1; }
-build-fresh/sampler_fastk_parity --bench > $O/sampler-fastk-bench.txt 2>&1; log "1. sampler benchmark exit $?: $(grep 'bench:' $O/sampler-fastk-bench.txt | cut -c1-160 | tr '\n' ';')"
+[ -s $O/sampler-fastk-bench.txt ] || build-fresh/sampler_fastk_parity --bench > $O/sampler-fastk-bench.txt 2>&1; log "1. sampler benchmark (quiet card): $(grep 'bench:' $O/sampler-fastk-bench.txt | sed -E 's/ +/ /g' | tr '\n' ';')"
 cp build-fresh/strata engine/strata; log "final candidate deployed ($(sha256sum engine/strata | cut -c1-16)); champion alongside"
 bash campaign/smoke-candidate.sh f453-final-off > $O/smoke-final-off.txt 2>&1; log "2. smoke (default env) exit $?: $(grep -E 'SMOKE (PASS|FAIL)|concurrent lane' $O/smoke-final-off.txt | tr '\n' ' ' | cut -c1-140)"
 grep -q 'SMOKE PASS' $O/smoke-final-off.txt || { log "ABORT: the smoke leg failed"; exit 1; }
