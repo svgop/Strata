@@ -48,6 +48,14 @@ below was read from the named file or command on this date.
   | 279.8 rows/s` -> 3.574 ms per row, 17.5 ms per cycle, of which the host waits on the GPU 0.40 ms (solo: 8.96).
   In conc every host-millisecond saved is conc throughput.
 
+## 04:10 - THE STEP GRAPH PRICED AT NODE LEVEL: kernel-bound (PDL dead); the coupled sampler is 25% of a step
+`drafter-stepgraph-pricing.md`.  1,826 step-graph instances: kernels 275.1 us, gaps 9.5 us - the "launch-bound" reading was an
+inference and is falsified; PDL for the drafter is worth <= 3% of a step.  The largest kernel is the coupled sampler's split
+part: 69.7 us on 10 blocks = 64 dependent argmax rounds (the widest list, because the request's top_k is a device value) over a
+~40k draft vocabulary; the standing traffic runs top_k 20.  Levers: k-aware step graphs (-46 us/step) or a one-pass selection
+(-60 us/step); a clamp is refused under law 16.  Steps per solo window measured at 1.56 (709 intervals) - the step cap's
++2% pricing stands (the 1,364 us "step chain" was wall).
+
 ## 04:00 - SECOND CANDIDATE PIECE: the drafter step cap (STRATA_DRAFT_STEP_CAP=1, default off) - compiled, not run
 Priced +2.4% M1 (82 of 293 warm windows drafted five steps for a T=2 window: 0.29 ms/window).  The W1 controller's size
 for the NEXT window is already decided when the drafter runs (its inputs: the acceptance tables, written by this window's
