@@ -1,0 +1,46 @@
+[
+ {
+  "m1": 230.7,
+  "conc": 267.9,
+  "m3b": 75.0,
+  "arm": "A",
+  "boot": 0,
+  "leg": 1,
+  "measured": false,
+  "cvec": "?",
+  "load": 2.0224609375
+ },
+ {
+  "m1": 251.3,
+  "conc": 295.2,
+  "m3b": 76.9,
+  "arm": "A",
+  "boot": 0,
+  "leg": 2,
+  "measured": true,
+  "cvec": "?",
+  "load": 2.724609375
+ },
+ {
+  "m1": 230.1,
+  "conc": 290.3,
+  "m3b": 75.4,
+  "arm": "B",
+  "boot": 1,
+  "leg": 1,
+  "measured": false,
+  "cvec": "?",
+  "load": 4.7060546875
+ },
+ {
+  "m1": 248.2,
+  "conc": 291.2,
+  "m3b": 75.0,
+  "arm": "B",
+  "boot": 1,
+  "leg": 2,
+  "measured": true,
+  "cvec": "?",
+  "load": 3.80419921875
+ }
+]

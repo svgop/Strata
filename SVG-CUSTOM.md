@@ -14449,4 +14449,37 @@ as GPU waits.  The telemetry on arm B separates all three: PCIe experts per roun
 - *What already follows from the ladder:* the standing's 0.35 is not leaving a large, free conc gain on the table
 through this knob alone; the operator's value stands.
 
-**Status: the diagnostic pair is next (08:45).  Nothing here is adopted.**
+**THE DIAGNOSTIC PAIR (08:43-08:49; the tree candidate `7a4d3477` on BOTH arms, telemetry armed, 782 and 773 rounds;
+`tel-A-035.txt`, `tel-B-050.txt`):**
+
+| arm | window | pool | CPU experts / round | link experts / round | link share | us per CPU expert |
+|---|---:|---:|---:|---:|---:|---:|
+| 0.35 | 24.58 ms | 11.57 ms | 181 | 47 | 20.7% | 64.1 |
+| 0.50 | 23.58 ms | 9.82 ms | 127 | 78 | 37.9% | **77.1** |
+
+- The share rose as the floor model predicts (fast rounds 17.8 -> 36.8%, slow 25.3 -> 42.1%): candidate (1) is out.
+- **A link expert is NOT hidden under the window.**  Least squares over each arm's rounds: window = 17.9 ms + 33 us per
+  CPU expert + 15 us per link expert (A); 18.2 + 29 + 22 (B).  A link expert costs about 40% less window than a CPU one.
+- **The moved load slows the pool: each remaining CPU expert +20% (64.1 -> 77.1 us)** - the pool's threads and the link's
+  host side contend for the memory system.
+- At equal TOTAL misses per round (the unbiased comparison - matching by CPU count alone is biased against B, which
+  carries more link experts at the same CPU count) B is faster in every bin: window -0.04 ms (60-130 misses), -0.37,
+  -0.41, -0.63, -0.76, **-1.12 ms** (360-600 misses): 0 to -3.7%, heaviest where the pool hurts most.  Summed over the
+  round population that is about -0.4 ms of 24 = +1.7% conc - the ladder's +2.0%.
+
+**RULING (08:55): A REAL LEVER AT A QUARTER OF ITS PRICE - NOT ADOPTED (inside the band); its correct form is a
+batch-scoped share, an engine change, and its ceiling is the link.**
+- The link (12.0 GB/s) carries about 140 experts per 24 ms round; past ~50% share it saturates.  0.50 gives +2.0% conc;
+  the limit is perhaps +4% - AT the bar, not above it, and solo windows lose from it (M1 -2.9% in the ladder).
+- *The form owed (law 4b, scoping):* the batch drive's share from its own setting (the solo verifier keeps the
+  operator's 0.35) - `drive.d.pcie_num` is set once from `o.pcie_frac` (`generate.cpp:10538`); an env-gated batch share
+  there is the whole change.  Priced +2-4% conc with M1 untouched by construction: a COMPOSITION piece (under the bar
+  alone), to be run when a second conc piece exists to stack with it - or when the operator rules the conc lane worth a
+  bar-level adoption on its own.
+- *The exact form of the rounding finding stands independently:* a per-cohort per-layer floor makes the standing's 0.35
+  deliver ~21% by count in the concurrent lane.  A cumulative share across a round's layers would make the operator's
+  number mean what it says - the same engine change, done exactly rather than by a larger nominal.
+- *Re-open clause:* a wider link (a x16 slot at full width; this box measures 12 GB/s), or a second conc piece to
+  compose with.
+
+**CLOSEOUT (08:57): champion `3865e27a` in service, engine stopped, profile pinned.  F-455 adopts nothing.**

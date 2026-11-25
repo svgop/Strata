@@ -1,0 +1,1 @@
+.venv/bin/python serve/server.py --engine strata --config /home/svg/LLM/strata-custom-2/config/custom-iq3_s-8081.json --port 8081 --host 127.0.0.1
