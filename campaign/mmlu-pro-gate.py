@@ -72,12 +72,18 @@ def fmt_options(opts):
     return "\n".join(f"{letters[i]}. {o}" for i, o in enumerate(opts))
 
 
-def ask(q, mt, floor):
-    body = json.dumps({"messages": [{"role": "user", "content": q}],
-                       "max_tokens": mt, "temperature": 0.1,
-                       # the per-request tuning key: this request's draft floor only
-                       "strata_tune": {"spec_min_p": floor},
-                       "sampling": {"strata_tune": {"spec_min_p": floor}}}).encode()
+def ask(q, mt, floor, presence):
+    body = {"messages": [{"role": "user", "content": q}],
+            "max_tokens": mt, "temperature": 0.1,
+            # the per-request tuning key: this request's draft floor only
+            "strata_tune": {"spec_min_p": floor},
+            "sampling": {"strata_tune": {"spec_min_p": floor}}}
+    if presence:
+        # --presence F: a presence penalty on every request (the engine applies it over the last 64 tokens when a
+        # penalty key arrives with no window; serve/server.py:1626).  The repetition knob the vendor names, so the
+        # accuracy gate can be run on the penalty the standing is about to adopt.
+        body["presence_penalty"] = presence
+    body = json.dumps(body).encode()
     req = urllib.request.Request(API, body, {"Content-Type": "application/json",
                                              "Authorization": "Bearer " + os.environ.get(
                                                  "STRATA_API_KEY",
@@ -94,6 +100,8 @@ def main():
                     help="70 = the validation split (the record suite); N = the fixed stratified test sample")
     ap.add_argument("--list", action="store_true",
                     help="print the suite's composition and exit (no server contact)")
+    ap.add_argument("--presence", type=float, default=0.0,
+                    help="send presence_penalty F on every request (0 = off, the record form)")
     ap.add_argument("--first", type=int, default=0,
                     help="score only the first N questions of the suite (the order is category round-robin, so a prefix "
                          "is a balanced sample): the paired form of a comparison against a run that covered more")
@@ -115,7 +123,7 @@ def main():
         sys.exit("usage: mmlu-pro-gate.py <floor> <label> [--suite N] [--list]")
     out = os.path.join(os.path.dirname(os.path.abspath(__file__)), "results", f"mmlu-{a.label}.json")
 
-    ask("hi", 20, a.floor)
+    ask("hi", 20, a.floor, a.presence)
 
     correct = 0
     by_cat = {}
@@ -127,7 +135,7 @@ def main():
         out_text, error = None, None
         for attempt in range(1, ATTEMPTS + 1):
             try:
-                out_text = ask(q, 4000, a.floor)
+                out_text = ask(q, 4000, a.floor, a.presence)
                 break
             except Exception as e:                    # transport: retried, then excluded - never scored wrong
                 error = repr(e)
@@ -163,7 +171,7 @@ def main():
         print(f"TRANSPORT FAILURES EXCLUDED: {len(failed)} -> {failed}")
 
     with open(out, "w", encoding="utf-8") as f:
-        json.dump({"label": a.label, "floor": a.floor, "suite": suite_name, "n": n, "seed": SUITE_SEED,
+        json.dump({"label": a.label, "floor": a.floor, "presence": a.presence, "suite": suite_name, "n": n, "seed": SUITE_SEED,
                    "order": "category round-robin" if a.suite != 70 else "dataset",
                    "first": a.first,
                    "score_pct": pct, "sigma_pts": se, "ci95_pts": 1.96 * se,
