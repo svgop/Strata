@@ -1,0 +1,64 @@
+F-489 receipts - the standing's deployed state verified end-to-end (2026-11-26 20:55)
+Server pid 3483767 (started 16:24:31, boot f478-guard-off-1624); engine pid 3483986.
+Method: the launcher's export recipe cross-examined against /proc/3483986/environ;
+the running binary against the tree; the profile args against the config. Read-only.
+
+launcher recipe entries: 46
+STRATA_ADAPTIVE_SPEC       1              1              match
+STRATA_ADAPT_DORMANT       64             64             match
+STRATA_ADAPT_EARLY         1              1              match
+STRATA_ADAPT_LAG           2              2              match
+STRATA_ADAPT_MIN_AGE       2              2              match
+STRATA_ADAPT_PINCAP        48             48             match
+STRATA_ATTN_DAILY          1              1              match
+STRATA_BATCH_MTP           1              1              match
+STRATA_BATCH_RESCUE        0              0              match
+STRATA_COHORTS             2              2              match
+STRATA_COMPLEMENT_BACKING  hostalloc      hostalloc      match
+STRATA_CONV_SLOT_DIR       /mnt/DATA/LLM/Models/GGUF/strata/data/conversation-slots /mnt/DATA/LLM/Models/GGUF/strata/data/conversation-slots match
+STRATA_DF_PDL              0              0              match
+STRATA_DM                  1              1              match
+STRATA_DMA_BATCH           1              1              match
+STRATA_DROP_CACHE_ON_EXIT  1              1              match
+STRATA_ELASTIC_PARK        1              1              match
+STRATA_ELASTIC_SESSIONS    1              1              match
+STRATA_ELASTIC_TIMED_SCAN  1              1              match
+STRATA_ELASTIC_WATERMARK   1              1              match
+STRATA_FUSE_HITS           1              1              match
+STRATA_GDN_CHUNKED         1              1              match
+STRATA_HUGEPAGE_ARENAS     1              1              match
+STRATA_KV_PREFETCH         1              1              match
+STRATA_L2_SETASIDE_MIB     60             60             match
+STRATA_PLE_BATCH           1              1              match
+STRATA_POOL_DIET           1              1              match
+STRATA_POOL_SPIN_US        100            100            match
+STRATA_PREDICT_BUDGET      2              2              match
+STRATA_PREDICT_CREDIT      1.0            1.0            match
+STRATA_PROMPT_ATTN_IMMA    1              1              match
+STRATA_QSA_SPLIT_ATTN      1              1              match
+STRATA_RAM_KEEP_GIB        24             24             match
+STRATA_ROUTE_RESIDENT      0.75           0.75           match
+STRATA_ROUTE_RESIDENT_MTP  1              1              match
+STRATA_ROUTE_TAIL_SKIP     7              7              match
+STRATA_SERVE_TELEMETRY     1              1              match
+STRATA_SPEC_COUPLED        1              1              match
+STRATA_SPEC_DRAFT_TEMP     0.85           0.85           match
+STRATA_SPEC_PROB           1              1              match
+STRATA_TYPICAL_ACCEPT      0.2            0.2            match
+STRATA_TYPICAL_DEVICE      1              1              match
+STRATA_VERIFY_ASYNC_LAUNCH 1              1              match
+STRATA_VERIFY_DEVICE_LAUNCH 1              1              match
+STRATA_VERIFY_DEVICE_PLAN  1              1              match
+STRATA_VMM_CHUNK_MIB       32             32             match
+engine-only STRATA_* (server/harness-set): ['STRATA_SHADOW_EXPERTS', 'STRATA_SWAP_GUARD']
+MISMATCHES: 0
+
+BINARY: /proc/3483986/exe -> /home/svg/LLM/strata-custom-2/engine/strata;
+md5 both sides 9c8a45677c0cbc4b67aaa1dc0b6fedab; on-disk mtime Nov 25 09:48;
+the champion archives (engine/strata.pre-*) intact on disk.
+
+PROFILE (config args 60-64): --expert-profile data/expert-profile.bin (the GOLD profile,
+Oct 14, read at start) and --expert-profile-save data/expert-profile-learned.bin
+--expert-profile-save-every 30 (saved, never read by the standing - the F-271 containment,
+verified against the live config; the learned bin mtime 20:27 = the periodic save during
+the operator's live turn; batteries pin via cleanup_engine's re-pin).

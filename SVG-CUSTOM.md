@@ -16312,3 +16312,36 @@ state or something real moved. The console's sampling line for this turn — "pr
 1.5" riding a 46.5k-token code-class answer — is the presence-code-scope tension on live
 display; the patch waits as ever. Receipts appended to
 campaign/results/f484-live-trim-watch.txt.
+
+## F-489 — the standing's deployed state verified end-to-end: 46/46 env arms live, the binary identity proven, the F-271 containment confirmed (2026-11-26 20:55)
+
+Law 14's rule is that the deployed process is the change. The session's record had verified
+the config key and the boot receipts; this round closed the remaining depth, read-only (the
+stream idle, 0 connections):
+
+1. **THE ENVIRONMENT: 46/46.** The launcher's full export recipe (46 STRATA_* entries, the
+   hard exports and the env-overridable defaults) cross-examined against
+   /proc/3483986/environ (the ENGINE process, not just the server): every entry matches,
+   zero mismatches. Every adopted arm is verifiably live in the deployed engine: F-201's
+   STRATA_SPEC_DRAFT_TEMP=0.85, F-224's STRATA_GDN_CHUNKED=1, F-226's STRATA_FUSE_HITS=1,
+   F-227's STRATA_POOL_DIET=1, F-233's STRATA_COHORTS=2, the F-276 elastic family
+   (sessions/park/watermark/timed-scan/VMM 32), STRATA_SERVE_TELEMETRY=1,
+   STRATA_TYPICAL_ACCEPT=0.2, STRATA_DF_PDL=0 (the PDL off, as recipe'd). The engine-only
+   STRATA_* beyond the recipe: STRATA_SHADOW_EXPERTS (server-set, the shadow store) and
+   STRATA_SWAP_GUARD (the reboot script's env line). Full table in
+   campaign/results/f489-deployed-env-verify.txt.
+2. **THE BINARY.** /proc/3483986/exe resolves to the tree's engine/strata; md5
+   9c8a45677c0cbc4b67aaa1dc0b6fedab on both sides; the on-disk mtime is Nov 25 09:48
+   (untouched through the whole session); the champion archives (engine/strata.pre-*,
+   15 copies) are intact.
+3. **THE PROFILE (F-271 containment, confirmed against the live config).** The standing's
+   args carry --expert-profile data/expert-profile.bin (the gold profile, read at start) and
+   --expert-profile-save data/expert-profile-learned.bin --expert-profile-save-every 30: the
+   learned bin is SAVED and never READ by the standing (mtime 20:27 = the periodic save
+   during the operator's live turn). The hazard is contained by construction; the batteries
+   pin via cleanup_engine's re-pin.
+
+Verification class: pure (no boot, no edit, no probe; "no worse" is the floor and the
+standing's whole adopted state is now itemized as verified live). The next agent reading
+this knows the standing's exact deployed env, binary, and profile state as of 2026-11-26
+20:55.
