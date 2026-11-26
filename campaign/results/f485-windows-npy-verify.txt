@@ -1,0 +1,53 @@
+F-485 receipts — windows.npy (the trainer's indexer prerequisite) verified present and
+structurally valid; read-only round, 2026-11-26 20:09
+
+AGENTS.md's workspace law carries: "Known gap: harvest/records/windows.npy is absent and
+required by the trainer (indexer cache, W=512/K=6/seam-law, SVG-CUSTOM:10477) - rebuild it
+over the 11 shards before the next cycle." Ground truth contradicts the note: the file is
+present (35,240 bytes, mtime 2026-11-26 05:08 — newer than the Oct 26 21:39 shards) and
+validates against the loader's contract (campaign/retrain/train_cycle.py:98-140).
+
+VERIFICATION (structural, mirrors the loader exactly):
+  npy shape (1463, 3), dtype int64 — columns read [start, start, end]:
+    row 0    [    0     0   511]
+    row 1    [  512   512  1023]
+    row 194  [99328 99328 99839]   <- dagger-0's last tile
+    row 195  [    0     0   511]   <- reset: dagger-1's first tile
+    row 1462 [49152 49152 49663]   <- shard 10's last tile
+  starts = np.load(...)[:, 0]; shard index advances when a start < prev (the loader's
+  reset segmentation). Segments found: 11, exactly the 11 records-*.f32 files in
+  sorted-glob order. All shard sizes are exact multiples of REC=40,976 (residual 0).
+
+  seg  0 records-dagger-0.f32 : 195 windows, start 0..99328, shard_records 100056, fits
+  seg  1 records-dagger-1.f32 :  97 windows, start 0..49152, shard_records  50169, fits
+  seg  2 records-dagger-2.f32 : 195 windows, start 0..99328, shard_records 100011, fits
+  seg  3 records-dagger-3.f32 :  97 windows, start 0..49152, shard_records  50152, fits
+  seg  4 records-probe.f32    :   3 windows, start 0..1024,  shard_records   1663, fits
+  seg  5 records-stream-4.f32 : 195 windows, start 0..99328, shard_records 100128, fits
+  seg  6 records-stream-5.f32 :  97 windows, start 0..49152, shard_records  50105, fits
+  seg  7 records-stream-6.f32 : 195 windows, start 0..99328, shard_records 100059, fits
+  seg  8 records-stream-7.f32 :  97 windows, start 0..49152, shard_records  50117, fits
+  seg  9 records-stream-8.f32 : 195 windows, start 0..99328, shard_records 100012, fits
+  seg 10 records-stream-9.f32 :  97 windows, start 0..49152, shard_records  50080, fits
+  total windows 1,463 -> anchors = 1463 x (W-K) = 1463 x 506 = 740,278
+
+SEAM SPOT CHECK (head/tail pos of three shards; 8 head + 4 tail records each):
+  records-dagger-0.f32: head pos [0, 1, 2, 3, 4, 5, 6, 7] | tail pos [100052..100055] | n=100056
+  records-stream-4.f32: head pos [0, 1, 2, 3, 4, 5, 6, 7] | tail pos [100124..100127] | n=100128
+  records-probe.f32   : head pos [0, 1, 2, 3, 4, 5, 6, 7] | tail pos [1659..1662]      | n=1663
+
+  pos runs continuously 0..n-1 inside each shard: each shard is one seam-free run, so the
+  uniform 512-record tiling is seam-correct and the per-shard index reset IS the seam law.
+  (The 50k shards carry 97 tiles because 50,080 - 96x512 - 512 leaves 416 < 512 records:
+  no 98th tile. The probe shard carries 3 tiles over 1,663 records.)
+
+VERDICT: windows.npy is present and valid; the next FastMTP cycle's indexer prerequisite
+is SATISFIED; no 30-GB rebuild is owed. The AGENTS.md "known gap" sentence is stale — the
+one-line correction is proposed to the operator (the doctrine file takes their word).
+The trainer's own F-327 label gate still runs at cycle start inside load_corpus().
+
+DISPOSITION (same round): campaign/results/f477-post-corpus-check.txt deleted. The file
+was empty (0 bytes), untracked, never committed, and no journal entry contains "F-477".
+The question it names — post-corpus health after the F-476b amplification — is closed by
+journaled receipts: F-476c (cap 3000, loop-free verified) and F-483's boot receipts
+(corpus warm 9 x 3000 at temperature 0 in 165 s, zero guard lines, loop files at 75).

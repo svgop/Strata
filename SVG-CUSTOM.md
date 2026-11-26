@@ -16142,3 +16142,34 @@ campaign/results/f484-live-trim-watch.txt). Nothing shipped to the standing this
 the watch was read-only, the record is the change. The client guidance stands as the
 delivered trim-class remedy (2610.34763's production numbers behind it); the server-side
 endgame remains queued at the operator's word.
+
+## F-485 — the trainer's windows.npy prerequisite verified present and valid (the AGENTS.md "known gap" note is stale; the empty f477 residue deleted) (2026-11-26 20:09)
+
+Read-only round (the stream idle since the 19:59 window: 0 connections, engine log and
+console line counts unchanged, loop files 75, GPU 33 degC). Two queued items resolved from
+artifact truth:
+
+1. **windows.npy EXISTS and validates.** AGENTS.md's workspace law says "Known gap:
+   harvest/records/windows.npy is absent and required by the trainer ... rebuild it over
+   the 11 shards before the next cycle." Ground truth: the file is present (35,240 bytes,
+   mtime 2026-11-26 05:08 — newer than the Oct 26 21:39 shards) and structurally valid
+   against the trainer's contract (campaign/retrain/train_cycle.py:98-140): shape
+   (1463, 3) int64, columns [start, start, end]; the loader's reset segmentation finds
+   exactly 11 segments in sorted-glob order; every tile fits its shard (dagger-0 195
+   windows, max start 99,328 + 512 <= 100,056 records; the 50k shards carry 97; probe 3);
+   all 11 shard sizes are exact multiples of REC=40,976 (residual 0). Total windows 1,463
+   -> 740,278 anchors. Seam spot check: pos runs continuously 0..n-1 inside each tested
+   shard (dagger-0, stream-4, probe) — each shard is one seam-free run, so the uniform
+   512-record tiling is seam-correct and the per-shard reset IS the seam law. The next
+   FastMTP cycle's indexer prerequisite is SATISFIED; no 30-GB rebuild is owed. The
+   AGENTS.md gap sentence is stale — the one-line correction is proposed to the operator
+   (the doctrine file takes their word). The F-327 label gate still runs at cycle start
+   inside load_corpus(), so label truth is re-checked by the trainer itself.
+   Receipts: campaign/results/f485-windows-npy-verify.txt.
+
+2. **campaign/results/f477-post-corpus-check.txt deleted.** The file was empty (0 bytes),
+   untracked, never committed, and no journal entry contains "F-477". The question it
+   names — post-corpus health after the F-476b amplification — is closed by journaled
+   receipts: F-476c (cap 3000, loop-free verified) and F-483's boot receipts (corpus warm
+   9 x 3000 at temperature 0 in 165 s, zero guard lines). Zero information lost; the
+   results lane is more ordered.
