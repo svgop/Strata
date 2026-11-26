@@ -9,7 +9,10 @@
 # in 24 h each held live requests at the door for up to 180 s.
 #
 # Usage: campaign/standing-reboot.sh [label]   — label names logs/<label>-<HHMM>.out
-set -euo pipefail
+# set -e + pipefail kills this script silently when `port_pid`'s grep finds no listener (grep
+# exits 1 through the pipe) — the exact trap the second sanctioned-reboot run hit (F-483). Keep
+# -u (typo guard) and pipefail (my own pipelines), handle failures explicitly instead of -e.
+set -uo pipefail
 cd "$(dirname "$0")/.."
 PORT=${PORT:-8081}
 . campaign/battery-lib.sh
@@ -18,11 +21,19 @@ OUT="logs/${LABEL}-$(date +%H%M).out"
 
 require_quiet_standing "$PORT" 120 "$REPO/logs/custom-iq3_s.log"
 
-p=$(port_pid)
+p=$(port_pid || true)
 if [ -n "$p" ]; then
-  echo "stopping the standing (pid $p)"; kill -TERM "$p" 2>/dev/null; sleep 8
+  echo "stopping the standing (pid $p) — it closes its engine and parks its conversations in order"
+  kill -TERM "$p" 2>/dev/null
+  # the ordered shutdown can outlast a fixed sleep (parking 12+ conversation slots of ~250-300 MB
+  # each): poll the port like cleanup_engine does, up to 60 s, and only then abort (a boot racing
+  # the listener's release is the port-8081 race every long session has paid at least once).
+  for t in $(seq 1 60); do
+    [ -z "$(port_pid)" ] && { echo "port free after ${t}s"; break; }
+    [ "$t" -eq 60 ] && { echo "port $PORT still bound after 60 s of ordered shutdown; aborting"; exit 1; }
+    sleep 1
+  done
 fi
-if [ -n "$(port_pid)" ]; then echo "port $PORT still bound after TERM; aborting"; exit 1; fi
 
 echo "booting: $OUT"
 nohup sudo -u svg -H env XDG_RUNTIME_DIR=/run/user/1000 STRATA_SWAP_GUARD=1 \

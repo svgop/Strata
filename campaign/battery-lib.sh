@@ -50,6 +50,11 @@ port_pid() { ss -ltnp 2>/dev/null | grep ":$PORT " | grep -oP 'pid=\K[0-9]+' | h
 require_quiet_standing() {  # require_quiet_standing [port] [quiet-seconds] [engine-log]
   local port="${1:-$PORT}" quiet="${2:-120}" log="${3:-$REPO/logs/custom-iq3_s.log}"
   local conns age evidence="" last
+  # The traffic checks only mean anything while a server LISTENS on the port: a down server has no
+  # interruptible traffic, and its dying appends (conversation parking, shutdown lines) would leave
+  # the engine log's mtime fresh with a stale request line still in the tail — a false refusal the
+  # first sanctioned reboot actually hit (F-483).
+  ss -ltn 2>/dev/null | grep -q ":$port " || return 0
   conns=$(ss -tn state established "( sport = :$port )" 2>/dev/null | tail -n +2 | wc -l)
   [ "${conns:-0}" -gt 0 ] && evidence=" ${conns} established connection(s) on :${port};"
   if [ -f "$log" ]; then

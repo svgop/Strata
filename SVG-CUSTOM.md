@@ -16065,3 +16065,35 @@ operator-approved window.
 kills today) until the operator-approved reboot. Connections: 0 (the stream idle at the read) —
 a quiet window exists whenever the operator gives the word. If this conversation's next turns
 resend verbatim, the whole ~45k held stream reuses (the byte-exact continuation path, F-480).
+
+## F-483 — the guard-off clean reboot executed and VERIFIED (the operator's word, 2026-11-26 16:24–16:35)
+
+The operator said "Do the clean reboot." Execution through campaign/standing-reboot.sh — the
+sanctioned path — which caught and fixed three real defects on the way, each now structure:
+
+1. **The ordered shutdown outlasts a fixed sleep:** the server closes its engine and parks 12+
+   conversation slots in order; the script's 8 s wait aborted with the port still bound. Fix:
+   poll the port up to 60 s (cleanup_engine's semantics). The old server then finished cleanly
+   (the launcher job exited 0; the GPU's nvidia-smi pids were desktop apps, none of ours).
+2. **The live-traffic gate false-refused on a DYING server:** a fresh engine-log mtime (shutdown
+   appends) plus a stale request line still in the tail read as "live traffic." Fix
+   (battery-lib): the traffic checks only run while a server LISTENS on the port — a down
+   server has no interruptible traffic.
+3. **set -euo pipefail killed the script silently:** `p=$(port_pid)` with the port empty makes
+   the grep exit 1, pipefail propagates it, and set -e exits before the boot ever starts. Fix:
+   `set -uo pipefail` + `p=$(port_pid || true)`.
+
+**Boot receipts (logs/f478-guard-off-1624.out):** pre-boot sweep 24 s; corpus warm 9 × 3000 at
+temperature 0 in 165 s (the tier's deterministic start); replay 177 s, 19 requests, 29,060
+tokens; /health ok, prewarm done. Server pid 3483767 started 16:24:31 — after the config commit
+(ceea697d0, 15:34) — carrying `reasoning_loop_recovery: false` (config line 113).
+
+**The deployed-process verification (law 14):** one code-shape request — the operator's exact
+class (a single-file HTML/CSS/JS simulation, temperature 0.3, max_tokens 12000) — ran 12,000
+tokens at 189.5 tok/s to the request's own cap: `done: 12000 tokens in 65 s (length)`. ZERO
+"repeated answer" console lines in this boot's console; loop logs FROZEN at 75. The same
+CSS-heavy class died at 6,656 tokens twice today under the armed guard. The guard is off in the
+deployed process; the operator's code generation is no longer killable by it.
+
+Standing state: engine 189.5 tok/s on the fresh boot (the standing band), corpus and all
+adoptions live, log_sampling still on (narration-only; the operator has not asked to drop it).
