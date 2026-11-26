@@ -24,6 +24,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import sys
 from pathlib import Path
 
@@ -74,7 +75,11 @@ def index_windows(harvest: Path):
                     a += W
                 start = i
     wins = np.array(win_rows, dtype=np.int64).reshape(-1, 3)
-    np.save(cache, wins)
+    # atomic write (tmp + rename): a killed build must never leave a half-written index the trainer would accept
+    tmp = str(cache) + ".tmp.npy"
+    with open(tmp, "wb") as f:
+        np.save(f, wins)
+    os.replace(tmp, cache)
     return wins
 
 

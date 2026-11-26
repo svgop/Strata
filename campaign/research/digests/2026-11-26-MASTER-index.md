@@ -14,4 +14,4 @@ B. [FREE, logging] Per-tensor effective-quant audit across 5 boots (residency-de
 C. [1 boot] Presence 1.5 as the standing thinking default + the 1500q gate pair (loops 0/24, accuracy-neutral 64/64 at 70q).
 D. [1 battery] Draft-temp sweep 0.85 -> {0.65, 0.5, 0.4}: +3-5 pts acceptance by collision-math, byte-stable output under the coupled contract.
 E. [1 battery each, free premises first] cohort-ITL-during-prefill (Sarathi), depth-stair read (adaptive budget), pool-combine code read, THP boot (GLIBC_TUNABLES zero-code).
-F. [days] FastMTP retrain cycle (windows.npy owed), block verification walk, block-granular prefix reuse, FP8 KV for QSA layers (shelf-variant labeling).
+F. [days] FastMTP retrain cycle (windows.npy CLOSED 2026-11-26: 1,463 windows rebuilt via tools/mtp_train.py::index_windows, matches F-327 exactly, trainer's load_corpus accepted it; remaining blocker = ~/venvs/mtp-train, rebuilding), block verification walk, block-granular prefix reuse, FP8 KV for QSA layers (shelf-variant labeling).
