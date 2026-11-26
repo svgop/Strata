@@ -15811,3 +15811,26 @@ Instrument notes banked: (a) the driver's port guard aborted once for free when 
 was caught by a call-ordering audit before launch; (c) per-arm engine-log reads must anchor on a line
 count taken at boot start (logs/custom-iq3_s.log appends across boots). Config restored byte-identical
 (trap-verified).
+
+## F-476 (2026-11-26) — OPERATOR DIRECTIVE: the 9-item low-level systems/security prewarm corpus ADOPTED as the standing `prewarm.corpus` (tokens 1600)
+
+Operator directive (verbatim intent): the corpus goes into the prewarm process. Installed as standing
+config, not argued: `config/custom-iq3_s-8081.json` -> `prewarm.corpus = {tokens: 1600, prompts: [9 items]}`
+- the operator's text verbatim (B1-B6: C++20 memory model, heap/ABI exploitation, kernel ioctl TOCTOU +
+  eBPF verifier, GPU warp/cp.async MoE kernel, crypto handshake/side-channel, symplectic 6-DOF; C1-C3:
+  inference-engine patch audit, P99 cold-start forensics, FSM/proxy-lifecycle refactor). Reader shape is the
+  dict form (F-475: a bare list is silently ignored); `tokens: 1600` because domain-dense text runs ~3.3
+  tokens/word on this model (F-475 smoke: 620 tok / 187 words), so 1600 delivers the operator's 450-550-word
+  target per item where 520 stops at ~190 words.
+
+Live proof on the standing boot (`logs/f476-corpus-standing.out`): `corpus warm: 9 prompt(s) x 1600 tokens at
+temperature 0 in 98 s`; full replay 114 s, 19 warm-in requests, 16,454 tokens; health ok, prewarm done,
+ctx 262144. Every adoption env verified on the engine (TYPICAL_ACCEPT=0.2, HUGEPAGE_ARENAS=1).
+
+Cost, measured: boot-to-ready grows ~86 s (the corpus stage: 3x600 tok/12 s -> 9x1600 tok/98 s). Rollback:
+delete the `corpus` key (the default three prompts return), or `prewarm.corpus.tokens` lowers the budget.
+F-475's cold-boot miss-share null stands on the record as the measurement it was; the operator's call to
+install overrides it as a standing choice, and the standing's first-real-request miss share is now a
+watch item the next probe battery reads for free (anatomy lines: CPU-miss share) - if the 9-item corpus
+moves it where the 5-item did not, that is the operator's thesis confirmed at scale; if not, the cost is
+86 s of boot, known and labeled.
