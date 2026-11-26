@@ -16097,3 +16097,48 @@ deployed process; the operator's code generation is no longer killable by it.
 
 Standing state: engine 189.5 tok/s on the fresh boot (the standing band), corpus and all
 adoptions live, log_sampling still on (narration-only; the operator has not asked to drop it).
+
+## F-484 — the trim-class watch closed on live traffic: 2 of 3 operator turns fell to the root (the KV-reuse row closes; the endgame banks its first live price point) (2026-11-26 19:59)
+
+F-479 diagnosed the two classes that collapse conversation KV reuse (the kill class, the
+trim class); F-480 priced the boundary as fundamental and priced the endgame levers; F-483
+killed the kill class in the deployed process. The one open item was the watch: does the
+trim class recur on the operator's own traffic? The 19:55-20:00 window answered it — three
+live agent turns on the standing (pid 3483767, guard off), read from the append-only engine
+log AFTER each request completed (no probe touched the live stream):
+
+1. **Checkpoint class (turn 1):** the park/restore cycle at full health — parked 13,219
+   tokens in 85.9 ms, restored 2,223 tokens from checkpoint in 41.2 ms, then a 5-token
+   prompt read. Prompt 2,228 = 2,223 reused (99.8%). A 43,336-token answer at 194.8 tok/s.
+2. **Trim class (turn 2):** the client's resend diverged from the parked tail; the engine
+   fell back to the longest byte-exact prefix (the 2,223-token root) and re-read 14,924
+   tokens — 87.0% of the 17,147-token prompt — at 5,044.2 tok/s = 2,959 ms of prefill.
+   A 32,318-token answer at 204.9 tok/s.
+3. **Rewrite class (turn 3):** no prefix matched any parked conversation (not even the
+   root); 2,255 tokens fully re-read in 1,706 ms. A 39,986-token answer at 198.4 tok/s.
+
+**The trim-tax law, now with live instances:** the diverged tail re-reads at ~5.0k tok/s,
+so the tax ~= (prompt − matching prefix) / 5044 tok/s — 2.96 s at a 17k prompt (this
+window), 7.5 s at a 47.6k prompt (F-479). It scales linearly with conversation length and
+recurred on 2 of 3 live agent turns in this window. That is the first live frequency and
+cost distribution for the queued endgame (STRATA_CACHE_MESSAGE_BOUNDARY — the
+previous-turn checkpoint, marginal per F-480; KV relocation sink+window —
+priced-not-designed): both stay queued, now with a measured payer population instead of a
+hypothesized one.
+
+**The standing carries the real workload:** three 30-40k-token answers in one window, all
+to natural stop (turn 3's console close: `done: 39986 tokens in 203 s (198.4 tok/s) (stop,
+cancel=False)`), zero guard lines, loop files frozen at 75 (newest 15:25:15 — before the
+revert). The F-483 verification (one 12,000-token request) is now corroborated by three
+live 43,336/32,318/39,986-token turns from the stream the campaign did not touch — the
+campaign's last request was the 16:31 verification; every request after it is not ours.
+Request-level reads from the same turns,
+banked as instrument data (full-request counts, not the probe's window-level M3b):
+draft acceptance 69.3/79.5/70.2%, suffix-draft acceptance 56.0/97.1/78.7%, KV streaming
+VRAM hit 99.82-99.92%, expert cache hit 95.6-96.5%, single-stream 194.8-204.9 tok/s.
+
+Verdict: the kv-reuse board row CLOSES (every acceptance item holds; receipts in
+campaign/results/f484-live-trim-watch.txt). Nothing shipped to the standing this round —
+the watch was read-only, the record is the change. The client guidance stands as the
+delivered trim-class remedy (2610.34763's production numbers behind it); the server-side
+endgame remains queued at the operator's word.

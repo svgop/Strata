@@ -1,0 +1,65 @@
+F-484 receipts — the trim-class watch on LIVE operator traffic (2026-11-26, ~19:55-20:00 window)
+
+Boot: standing pid 3483767, started 16:24:31 (console logs/f478-guard-off-1624.out),
+config custom-iq3_s-8081.json with reasoning_loop_recovery false (F-483). Engine log:
+logs/custom-iq3_s.log (append-only across boots; line numbers below are this boot's
+live-traffic tail, read at 19:59). Loop files frozen at 75 (newest
+reasoning-loop-20261126-152515.log — before the revert; no new ones can appear).
+Read-only watch: no probe was sent, no boot, no edit; every line below is the
+server's own accounting for requests that already completed. Attribution basis: the
+campaign's last request on this boot was the 16:31 F-483 verification (the pair below);
+every request after it came from the live stream the campaign does not touch.
+
+Boot context — the F-483 verification pair (the campaign's own request, not operator
+traffic):
+  1019339  prompt 1216 tokens = 0 reused + 1216 read in 1298 ms (936.9 tok/s), 9000 generated in 49339 ms (182.4 tok/s), drafts accepted 5748 of 9377, 1 checkpoints
+  1019348  prompt 10234 tokens = 10215 reused + 19 read in 82 ms (231.9 tok/s), 2982 generated in 13895 ms (214.6 tok/s), drafts accepted 2372 of 2903, 1 checkpoints
+
+OPERATOR TURN 1 — the checkpoint class (near-total reuse):
+  1019357  conversation cache: parked 13219 tokens in 85.9 ms; parked=73 bytes=22626197176 evictions=0 snapshot_bytes=437979224 reused_kv_bytes=0
+  1019358  conversation cache: restored 2223 tokens (checkpoint) in 41.2 ms; parked=73 bytes=23313934448
+  1019360  prompt 2228 tokens = 2223 reused + 5 read in 157 ms (31.9 tok/s), 43336 generated in 222441 ms (194.8 tok/s), drafts accepted 27910 of 40282, 1 checkpoints
+  1019361  decode expert cache hit rate: 96.5% (25635085 hits / 26557590 lookups); 175577 more read by the GPU over PCIe or from another GPU (0.7% of all 26733167 routed)
+  1019366  KV streaming: 99.90% of 343310076 block reads hit VRAM, 1387.5 MiB read from RAM
+  1019367  suffix drafts: 145 windows, 247 of 441 drafts accepted
+  1019368  conversation cache: parked 45565 tokens in 79.8 ms; parked=74 bytes=23636017480 evictions=0 snapshot_bytes=1009820304 reused_kv_bytes=33886080
+
+OPERATOR TURN 2 — the trim class (root fallback, tail re-read; F-479's boundary):
+  1019369  strata KV prefetch: 12 layer prefixes, single existing staging pool
+  1019370  typical acceptance: 966 of 3849 first-rejections rescued (threshold 0.20)
+  1019371  prompt 17147 tokens = 2223 reused + 14924 read in 2959 ms (5044.2 tok/s), 32318 generated in 157745 ms (204.9 tok/s), drafts accepted 22866 of 28763, 2 checkpoints
+  1019372  decode expert cache hit rate: 95.6% (17348024 hits / 18146868 lookups); 193084 more read by the GPU over PCIe or from another GPU (1.1% of all 18339952 routed)
+  1019377  KV streaming: 99.82% of 578827800 block reads hit VRAM, 4134.7 MiB read from RAM
+  1019378  suffix drafts: 1174 windows, 6590 of 6789 drafts accepted
+  1019379  conversation cache: dropped 1 superseded copy of this conversation; parked=73
+  1019380  conversation cache: parked 49466 tokens in 125.4 ms; parked=74 bytes=23735747508 evictions=0 snapshot_bytes=1109550332 reused_kv_bytes=0
+
+OPERATOR TURN 3 — the rewrite class (no prefix matched, full read):
+  1019381  strata KV prefetch: 0 layer prefixes, single existing staging pool
+  1019382  typical acceptance: 1638 of 6963 first-rejections rescued (threshold 0.20)
+  1019383  prompt 2255 tokens = 0 reused + 2255 read in 1706 ms (1322.2 tok/s), 39986 generated in 201580 ms (198.4 tok/s), drafts accepted 27233 of 38801, 1 checkpoints
+  1019384  decode expert cache hit rate: 96.1% (23592620 hits / 24537688 lookups); 204233 more read by the GPU over PCIe or from another GPU (0.8% of all 24741921 routed)
+  1019389  KV streaming: 99.92% of 317725488 block reads hit VRAM, 1033.3 MiB read from RAM
+  1019390  suffix drafts: 210 windows, 706 of 897 drafts accepted
+
+Console (logs/f478-guard-off-1624.out) closes turn 3: "done: 39986 tokens in 203 s
+(198.4 tok/s) (stop, cancel=False)". All three answers ran to natural stop. Zero
+guard lines in this boot's console; loop files still 75.
+
+CLASS READ (three operator turns, one window):
+  turn 1  checkpoint  2223/2228  = 99.8% reused; restore 41.2 ms + 5-token read; 43,336-token answer at 194.8 tok/s
+  turn 2  trim        2223/17147 = 13.0% reused; 14,924 re-read in 2,959 ms (5,044.2 tok/s); 32,318-token answer at 204.9 tok/s
+  turn 3  rewrite     0/2255     =  0.0% reused; 2,255 read in 1,706 ms; 39,986-token answer at 198.4 tok/s
+
+Trim-tax law on this box (F-479 + F-480 + this window): the diverged tail is re-read
+at ~5.0k tok/s, so the tax ~= (prompt - matching prefix) / 5044 tok/s. Measured
+instances: 2.96 s at a 17,147-token prompt (this window) and 7.5 s at a 47,622-token
+prompt (F-479). The tax scales linearly with conversation length and recurred on 2
+of 3 live agent turns in this window.
+
+Request-level instrument reads from the same turns (full-request counts — NOT the
+probe's window-level M3b; the 2610.30644 argmax-agreement caveat applies to any
+sampled turn): draft acceptance 69.3% / 79.5% / 70.2%; suffix-draft acceptance
+56.0% / 97.1% / 78.7%; KV streaming VRAM hit 99.90% / 99.82% / 99.92%; expert cache
+hit 96.5% / 95.6% / 96.1%; single-stream 194.8 / 204.9 / 198.4 tok/s (inside the
+standing band).
