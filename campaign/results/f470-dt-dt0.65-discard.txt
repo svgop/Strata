@@ -1,0 +1,73 @@
+=== PROBE f470-dt-dt0.65-discard | 2026-11-26 09:26:10 | log=/home/svg/LLM/strata-custom-2/logs/custom-iq3_s.log
+    warmup: 8 tok in 0.89s
+    A.short[1]: 220 tok in 2.03s = 108.2 t/s
+    A.short[2]: 220 tok in 0.91s = 242.1 t/s
+    A.short[3]: 220 tok in 1.07s = 206.4 t/s
+    A.short[4]: 220 tok in 1.04s = 212.2 t/s
+    A.short[5]: 220 tok in 0.86s = 254.9 t/s
+    A.short[6]: 220 tok in 0.84s = 263.2 t/s
+    fresh-long-prompt: 80 tok out in 1.92s
+    B.short[1]: 220 tok in 0.97s = 227.6 t/s
+    B.short[2]: 220 tok in 0.83s = 266.3 t/s
+    B.short[3]: 220 tok in 1.09s = 202.8 t/s
+    B.short[4]: 220 tok in 0.87s = 254.3 t/s
+    B.short[5]: 220 tok in 0.84s = 262.9 t/s
+    B.short[6]: 220 tok in 0.97s = 226.0 t/s
+SHORT-CLASS A/B   : before long prompt 214.5 t/s -> after 240.0 t/s (12%)
+M1 single-stream : 218.3 t/s (2000 tok in 9.16s)
+M2 pair          : 199.2 t/s aggregate (1800 tok in 9.04s)
+M2 6-conc        : 290.3 t/s aggregate (3600 tok in 12.40s)
+--- engine accounting, in order (ms/window is the degradation signal) ---
+    [ 1] prompt 1131 gen     8 ->    23.3 ms/window | accept  33.3% (5/15) | hit 94.8%
+    [ 2] prompt 1157 gen   112 ->    13.1 ms/window | accept  72.3% (73/101) | hit 96.0%
+    [ 3] prompt 1285 gen    92 ->    13.4 ms/window | accept  60.4% (58/96) | hit 96.3%
+    [ 4] prompt 1157 gen   111 ->    12.0 ms/window | accept  74.3% (78/105) | hit 98.0%
+    [ 5] prompt 1285 gen    92 ->    13.4 ms/window | accept  63.3% (62/98) | hit 97.9%
+    [ 6] prompt 1157 gen   112 ->    11.4 ms/window | accept  82.7% (81/98) | hit 98.5%
+    [ 7] prompt 1285 gen    92 ->    11.0 ms/window | accept  63.6% (56/88) | hit 98.3%
+    [ 8] prompt 1157 gen   114 ->    11.8 ms/window | accept  75.5% (83/110) | hit 98.6%
+    [ 9] prompt 1285 gen    92 ->    11.3 ms/window | accept  61.0% (61/100) | hit 98.5%
+    [10] prompt 1157 gen   111 ->    11.2 ms/window | accept  74.3% (78/105) | hit 98.8%
+    [11] prompt 1285 gen    92 ->    13.1 ms/window | accept  74.1% (63/85) | hit 96.3%
+    [12] prompt 1157 gen   111 ->    10.8 ms/window | accept  77.6% (76/98) | hit 98.8%
+    [13] prompt 1285 gen    92 ->    13.0 ms/window | accept  71.4% (65/91) | hit 97.4%
+    [14] prompt 6941 gen    40 ->    15.3 ms/window | accept  85.7% (30/35) | hit 95.5%
+    [15] prompt 6999 gen    22 ->    14.4 ms/window | accept 100.0% (15/15) | hit 94.9%
+    [16] prompt 1157 gen   111 ->    11.0 ms/window | accept  70.9% (73/103) | hit 98.4%
+    [17] prompt 1285 gen    92 ->    10.8 ms/window | accept  55.2% (53/96) | hit 98.5%
+    [18] prompt 1157 gen   110 ->    10.5 ms/window | accept  84.6% (77/91) | hit 98.9%
+    [19] prompt 1285 gen    92 ->    11.5 ms/window | accept  54.6% (59/108) | hit 99.0%
+    [20] prompt 1157 gen   112 ->    10.1 ms/window | accept  72.3% (73/101) | hit 99.1%
+    [21] prompt 1285 gen    92 ->    10.9 ms/window | accept  54.3% (57/105) | hit 99.1%
+    [22] prompt 1157 gen   110 ->    10.7 ms/window | accept  82.6% (76/92) | hit 98.6%
+    [23] prompt 1285 gen    92 ->     9.9 ms/window | accept  55.3% (52/94) | hit 99.1%
+    [24] prompt 1157 gen   111 ->    10.6 ms/window | accept  79.6% (78/98) | hit 99.1%
+    [25] prompt 1285 gen    92 ->    10.4 ms/window | accept  61.1% (55/90) | hit 98.9%
+    [26] prompt 1157 gen   112 ->    10.6 ms/window | accept  80.8% (80/99) | hit 99.2%
+    [27] prompt 1285 gen    92 ->    11.3 ms/window | accept  60.2% (62/103) | hit 99.1%
+    [28] prompt 1176 gen  1489 ->    11.0 ms/window | accept  72.7% (912/1255) | hit 97.6%
+    [29] prompt 2682 gen   494 ->    14.2 ms/window | accept  72.9% (353/484) | hit 96.8%
+    [30] prompt 1160 gen     6 ->    17.0 ms/window | accept  80.0% (4/5) | hit 89.7%
+    [31] prompt 1166 gen     1 ->     9.0 ms/window | accept   0.0% (0/0) | hit 89.6%
+    [32] prompt 1160 gen     1 ->     7.0 ms/window | accept   0.0% (0/0) | hit 96.7%
+    [33] prompt 1628 gen     1 ->    10.0 ms/window | accept   0.0% (0/0) | hit 94.1%
+    [34] prompt 1628 gen     1 ->     8.0 ms/window | accept   0.0% (0/0) | hit 97.5%
+    [35] prompt 1160 gen     1 ->    11.0 ms/window | accept   0.0% (0/0) | hit 84.9%
+    [36] prompt 1161 gen     1 ->    10.0 ms/window | accept   0.0% (0/0) | hit 86.4%
+    [37] prompt 1160 gen     1 ->    12.0 ms/window | accept   0.0% (0/0) | hit 84.9%
+    [38] prompt 1160 gen     1 ->     6.0 ms/window | accept   0.0% (0/0) | hit 99.2%
+    [39] prompt 1160 gen     1 ->     7.0 ms/window | accept   0.0% (0/0) | hit 99.0%
+    [40] prompt 1160 gen     1 ->     7.0 ms/window | accept   0.0% (0/0) | hit 99.2%
+    [41] prompt 1160 gen     1 ->    10.0 ms/window | accept   0.0% (0/0) | hit 97.7%
+    [42] prompt 1478 gen     1 ->    11.0 ms/window | accept   0.0% (0/0) | hit 82.3%
+    [43] prompt 1478 gen     1 ->    10.0 ms/window | accept   0.0% (0/0) | hit 83.7%
+    [44] prompt 1478 gen     1 ->    10.0 ms/window | accept   0.0% (0/0) | hit 83.5%
+    [45] prompt 1478 gen     1 ->    11.0 ms/window | accept   0.0% (0/0) | hit 88.7%
+    [46] prompt 1478 gen     1 ->     7.0 ms/window | accept   0.0% (0/0) | hit 96.0%
+    [47] prompt 1478 gen     1 ->     7.0 ms/window | accept   0.0% (0/0) | hit 95.8%
+TREND ms/window: early 12.3 -> late 9.9 (stable)
+M3b rate         : 69.9% mean over 29 requests (diagnostic)
+--- engine batch anatomy (last 3 flushes) ---
+    rows 4.76 | window 12.77 ms | gpu-wait 0.36 | cpu-exp 2.55 | hit 96.3% | accept 62.8% | 285.8 rows/s
+M3d per-position : not printed (arm STRATA_SPEC_DEPTH=1 to publish accepted/tested by depth)
+=== PROBE END f470-dt-dt0.65-discard

@@ -1,0 +1,55 @@
+09:20:48 boot dt0.85: STRATA_SPEC_DRAFT_TEMP=0.85 armed in derived launcher launch-arm-092048-dt0.85.sh (after the standing exports)
+09:21:54   warm-in terminal after 66 s; engine environ STRATA_SPEC_DRAFT_TEMP=0.85 VERIFIED
+[discard] M1 single-stream : 208.4 t/s (2000 tok in 9.60s)
+M1 single-stream : 237.5 t/s (2000 tok in 8.42s)
+M3b rate         : 75.0% mean over 29 requests (diagnostic)
+M1 single-stream : 237.0 t/s (2000 tok in 8.44s)
+M3b rate         : 77.2% mean over 29 requests (diagnostic)
+M1 single-stream : 240.2 t/s (2000 tok in 8.32s)
+M3b rate         : 75.5% mean over 27 requests (diagnostic)
+F-271 re-pin VERIFIED (learned == expert-profile-gold.bin, after the engine stop)
+09:25:04   stopped dt0.85; the boot took 256 s
+09:25:04 boot dt0.65: STRATA_SPEC_DRAFT_TEMP=0.65 armed in derived launcher launch-arm-092048-dt0.65.sh (after the standing exports)
+09:26:10   warm-in terminal after 66 s; engine environ STRATA_SPEC_DRAFT_TEMP=0.65 VERIFIED
+[discard] M1 single-stream : 218.3 t/s (2000 tok in 9.16s)
+M1 single-stream : 239.8 t/s (2000 tok in 8.34s)
+M3b rate         : 69.3% mean over 29 requests (diagnostic)
+M1 single-stream : 243.8 t/s (2000 tok in 8.20s)
+M3b rate         : 68.5% mean over 29 requests (diagnostic)
+M1 single-stream : 222.5 t/s (2000 tok in 8.99s)
+M3b rate         : 68.7% mean over 29 requests (diagnostic)
+F-271 re-pin VERIFIED (learned == expert-profile-gold.bin, after the engine stop)
+09:29:18   stopped dt0.65; the boot took 254 s
+09:29:18 boot dt0.5: STRATA_SPEC_DRAFT_TEMP=0.5 armed in derived launcher launch-arm-092048-dt0.5.sh (after the standing exports)
+09:30:25   warm-in terminal after 67 s; engine environ STRATA_SPEC_DRAFT_TEMP=0.5 VERIFIED
+[discard] M1 single-stream : 201.9 t/s (2000 tok in 9.90s)
+M1 single-stream : 219.9 t/s (2000 tok in 9.10s)
+M3b rate         : 64.7% mean over 29 requests (diagnostic)
+M1 single-stream : 242.9 t/s (2000 tok in 8.23s)
+M3b rate         : 64.9% mean over 29 requests (diagnostic)
+M1 single-stream : 250.9 t/s (2000 tok in 7.97s)
+M3b rate         : 67.3% mean over 28 requests (diagnostic)
+F-271 re-pin VERIFIED (learned == expert-profile-gold.bin, after the engine stop)
+09:33:33   stopped dt0.5; the boot took 255 s
+09:33:33 boot dt0.4: STRATA_SPEC_DRAFT_TEMP=0.4 armed in derived launcher launch-arm-092048-dt0.4.sh (after the standing exports)
+09:34:39   warm-in terminal after 66 s; engine environ STRATA_SPEC_DRAFT_TEMP=0.4 VERIFIED
+[discard] M1 single-stream : 204.9 t/s (2000 tok in 9.76s)
+M1 single-stream : 214.9 t/s (2000 tok in 9.31s)
+M3b rate         : 63.8% mean over 29 requests (diagnostic)
+M1 single-stream : 220.6 t/s (2000 tok in 9.07s)
+M3b rate         : 64.3% mean over 28 requests (diagnostic)
+M1 single-stream : 220.2 t/s (2000 tok in 9.08s)
+M3b rate         : 63.5% mean over 29 requests (diagnostic)
+F-271 re-pin VERIFIED (learned == expert-profile-gold.bin, after the engine stop)
+09:37:51   stopped dt0.4; the boot took 258 s
+dt0.85: M1 legs 237.5 / 237.0 / 240.2  mean 238.2 | M3b legs 75.0 / 77.2 / 75.5  mean 75.9
+dt0.65: M1 legs 239.8 / 243.8 / 222.5  mean 235.4 | M3b legs 69.3 / 68.5 / 68.7  mean 68.8
+dt0.5: M1 legs 219.9 / 242.9 / 250.9  mean 237.9 | M3b legs 64.7 / 64.9 / 67.3  mean 65.6
+dt0.4: M1 legs 214.9 / 220.6 / 220.2  mean 218.6 | M3b legs 63.8 / 64.3 / 63.5  mean 63.9
+>>> M3B CANARY MOVED: dt0.85=75.9%  dt0.65=68.8%  dt0.5=65.6%  dt0.4=63.9% — the parsed M3b values DIFFER across arms.  A mover is a BUG (the coupled
+>>> contract broke; the output can no longer be assumed draft-temp-invariant) OR the acceptance rate moving
+>>> by its normal mechanism (the rate is the speed dial F-201 tuned).  Separate them with the output-byte
+>>> checks (campaign/bit-check.py, probe-metrics.py golden hash) before calling it a tradeoff.
+09:37:51 battery done: 4 arm(s) x 1 round(s); summary campaign/results/f470-dt-dt-sweep.json
+F-271 re-pin VERIFIED (learned == expert-profile-gold.bin, after the engine stop)
+sweep exit 0

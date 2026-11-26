@@ -15665,3 +15665,30 @@ quickstart prescribes presence 0-2 for repetitions ("DO NOT use greedy").
 including battery traffic. Tonight's draft-temp sweep re-banks the lanes on the new standing; if M1 moves
 beyond ±4%, the presence default is the first suspect (expected effect ~0: probe traffic loops at ~1.5% of
 requests, and the penalty only suppresses repeats).
+
+## F-471 (2026-11-26) — Draft-temperature sharpening below 0.85 FALSIFIED; F-470's perf watch items close at standing norm
+
+**The falsification** (campaign/results/f470-dt-dt-sweep.json, per-leg files f470-dt-*): the MTP research lane's
+item 2 — sharpen STRATA_SPEC_DRAFT_TEMP toward 0.4-0.5 for +3-5 pts acceptance — is DEAD on this stack. One
+round, 4 arms (0.85 control first), law-11 discard + 3 legs each, /proc-environ verified, new standing (presence card):
+
+| arm | M1 legs | M1 mean | M3b mean |
+|-----|---------|---------|----------|
+| 0.85 | 237.5/237.0/240.2 | **238.2** | 75.9% |
+| 0.65 | 239.8/243.8/222.5 | 235.4 | 68.8% |
+| 0.5  | 219.9/242.9/250.9 | 237.9 | 65.6% |
+| 0.4  | 214.9/220.6/220.2 | **218.6** (−8.2%) | 63.9% |
+
+Acceptance decays MONOTONICALLY with sharpening — the opposite of the collision-math prediction. Mechanism: the
+prediction holds only when draft and target agree on the mode; our drafter is a TRAINED dense model with its own
+distribution, and pushing it past its calibration point (0.85, where F-201 placed it) moves q mass off the JOINT
+mode — the draft's argmax diverges from the target's exactly where it is most confident. 0.4's −8.2% M1 is the
+acceptance loss arriving as speed. Re-open clause: re-sweep ONLY after the FastMTP retrain (a drafter trained
+recursive-teacher-forced on target output will match the target conditional better; the sharpening lever may
+then flip sign). The M3b CANARY warning fired as designed and is resolved as the expected mechanism — the RATE
+is F-201's dial; output bytes stay contract-governed (exact-match verify emits the target's picks).
+
+**F-470 watch items CLOSED at standing norm** (the sweep's 0.85 arm = the first lanes on the presence card):
+M1 238.2 sits inside F-453's four-boot window (230.4-246.3, mean 240.4); M3b 75.9% sits inside the pre-presence
+probe band (74.4-79.1 across f453 compose/gdnab boots). Presence 1.5 moves neither performance lane. The
+adoption is clean on every measured axis: accuracy (1500q Δ0.06), loops (22→3 guard interventions), M1, M3b.
