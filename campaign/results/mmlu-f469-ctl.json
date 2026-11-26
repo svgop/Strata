@@ -1,0 +1,595 @@
+{
+ "label": "f469-ctl",
+ "floor": 0.933,
+ "presence": 0.0,
+ "suite": "MMLU-Pro validation (70q)",
+ "n": 70,
+ "seed": 20261125,
+ "order": "dataset",
+ "first": 0,
+ "score_pct": 88.57142857142857,
+ "sigma_pts": 3.8027150037068145,
+ "ci95_pts": 7.453321407265356,
+ "seconds": 212.23408794403076,
+ "excluded": [],
+ "by_cat": {
+  "biology": "4/5",
+  "business": "4/5",
+  "chemistry": "5/5",
+  "computer science": "4/5",
+  "economics": "5/5",
+  "engineering": "5/5",
+  "health": "3/5",
+  "history": "3/5",
+  "law": "5/5",
+  "math": "5/5",
+  "other": "5/5",
+  "philosophy": "5/5",
+  "physics": "5/5",
+  "psychology": "4/5"
+ },
+ "ids": [
+  0,
+  1,
+  2,
+  3,
+  4,
+  5,
+  6,
+  7,
+  8,
+  9,
+  10,
+  11,
+  12,
+  13,
+  14,
+  15,
+  16,
+  17,
+  18,
+  19,
+  20,
+  21,
+  22,
+  23,
+  24,
+  25,
+  26,
+  27,
+  28,
+  29,
+  30,
+  31,
+  32,
+  33,
+  34,
+  35,
+  36,
+  37,
+  38,
+  39,
+  40,
+  41,
+  42,
+  43,
+  44,
+  45,
+  46,
+  47,
+  48,
+  49,
+  50,
+  51,
+  52,
+  53,
+  54,
+  55,
+  56,
+  57,
+  58,
+  59,
+  60,
+  61,
+  62,
+  63,
+  64,
+  65,
+  66,
+  67,
+  68,
+  69
+ ],
+ "rows": [
+  {
+   "id": 0,
+   "cat": "math",
+   "ok": true,
+   "pred": "A",
+   "gold": "A"
+  },
+  {
+   "id": 1,
+   "cat": "math",
+   "ok": true,
+   "pred": "H",
+   "gold": "H"
+  },
+  {
+   "id": 2,
+   "cat": "math",
+   "ok": true,
+   "pred": "E",
+   "gold": "E"
+  },
+  {
+   "id": 3,
+   "cat": "math",
+   "ok": true,
+   "pred": "I",
+   "gold": "I"
+  },
+  {
+   "id": 4,
+   "cat": "math",
+   "ok": true,
+   "pred": "B",
+   "gold": "B"
+  },
+  {
+   "id": 5,
+   "cat": "health",
+   "ok": true,
+   "pred": "J",
+   "gold": "J"
+  },
+  {
+   "id": 6,
+   "cat": "health",
+   "ok": false,
+   "pred": "E",
+   "gold": "G"
+  },
+  {
+   "id": 7,
+   "cat": "health",
+   "ok": true,
+   "pred": "F",
+   "gold": "F"
+  },
+  {
+   "id": 8,
+   "cat": "health",
+   "ok": true,
+   "pred": "F",
+   "gold": "F"
+  },
+  {
+   "id": 9,
+   "cat": "health",
+   "ok": false,
+   "pred": "C",
+   "gold": "D"
+  },
+  {
+   "id": 10,
+   "cat": "physics",
+   "ok": true,
+   "pred": "E",
+   "gold": "E"
+  },
+  {
+   "id": 11,
+   "cat": "physics",
+   "ok": true,
+   "pred": "A",
+   "gold": "A"
+  },
+  {
+   "id": 12,
+   "cat": "physics",
+   "ok": true,
+   "pred": "H",
+   "gold": "H"
+  },
+  {
+   "id": 13,
+   "cat": "physics",
+   "ok": true,
+   "pred": "E",
+   "gold": "E"
+  },
+  {
+   "id": 14,
+   "cat": "physics",
+   "ok": true,
+   "pred": "A",
+   "gold": "A"
+  },
+  {
+   "id": 15,
+   "cat": "business",
+   "ok": true,
+   "pred": "F",
+   "gold": "F"
+  },
+  {
+   "id": 16,
+   "cat": "business",
+   "ok": true,
+   "pred": "D",
+   "gold": "D"
+  },
+  {
+   "id": 17,
+   "cat": "business",
+   "ok": true,
+   "pred": "A",
+   "gold": "A"
+  },
+  {
+   "id": 18,
+   "cat": "business",
+   "ok": false,
+   "pred": "F",
+   "gold": "G"
+  },
+  {
+   "id": 19,
+   "cat": "business",
+   "ok": true,
+   "pred": "H",
+   "gold": "H"
+  },
+  {
+   "id": 20,
+   "cat": "biology",
+   "ok": true,
+   "pred": "B",
+   "gold": "B"
+  },
+  {
+   "id": 21,
+   "cat": "biology",
+   "ok": true,
+   "pred": "D",
+   "gold": "D"
+  },
+  {
+   "id": 22,
+   "cat": "biology",
+   "ok": true,
+   "pred": "D",
+   "gold": "D"
+  },
+  {
+   "id": 23,
+   "cat": "biology",
+   "ok": true,
+   "pred": "A",
+   "gold": "A"
+  },
+  {
+   "id": 24,
+   "cat": "biology",
+   "ok": false,
+   "pred": "F",
+   "gold": "H"
+  },
+  {
+   "id": 25,
+   "cat": "chemistry",
+   "ok": true,
+   "pred": "B",
+   "gold": "B"
+  },
+  {
+   "id": 26,
+   "cat": "chemistry",
+   "ok": true,
+   "pred": "J",
+   "gold": "J"
+  },
+  {
+   "id": 27,
+   "cat": "chemistry",
+   "ok": true,
+   "pred": "E",
+   "gold": "E"
+  },
+  {
+   "id": 28,
+   "cat": "chemistry",
+   "ok": true,
+   "pred": "A",
+   "gold": "A"
+  },
+  {
+   "id": 29,
+   "cat": "chemistry",
+   "ok": true,
+   "pred": "J",
+   "gold": "J"
+  },
+  {
+   "id": 30,
+   "cat": "computer science",
+   "ok": false,
+   "pred": "G",
+   "gold": "B"
+  },
+  {
+   "id": 31,
+   "cat": "computer science",
+   "ok": true,
+   "pred": "I",
+   "gold": "I"
+  },
+  {
+   "id": 32,
+   "cat": "computer science",
+   "ok": true,
+   "pred": "C",
+   "gold": "C"
+  },
+  {
+   "id": 33,
+   "cat": "computer science",
+   "ok": true,
+   "pred": "I",
+   "gold": "I"
+  },
+  {
+   "id": 34,
+   "cat": "computer science",
+   "ok": true,
+   "pred": "A",
+   "gold": "A"
+  },
+  {
+   "id": 35,
+   "cat": "economics",
+   "ok": true,
+   "pred": "F",
+   "gold": "F"
+  },
+  {
+   "id": 36,
+   "cat": "economics",
+   "ok": true,
+   "pred": "H",
+   "gold": "H"
+  },
+  {
+   "id": 37,
+   "cat": "economics",
+   "ok": true,
+   "pred": "C",
+   "gold": "C"
+  },
+  {
+   "id": 38,
+   "cat": "economics",
+   "ok": true,
+   "pred": "G",
+   "gold": "G"
+  },
+  {
+   "id": 39,
+   "cat": "economics",
+   "ok": true,
+   "pred": "F",
+   "gold": "F"
+  },
+  {
+   "id": 40,
+   "cat": "engineering",
+   "ok": true,
+   "pred": "C",
+   "gold": "C"
+  },
+  {
+   "id": 41,
+   "cat": "engineering",
+   "ok": true,
+   "pred": "A",
+   "gold": "A"
+  },
+  {
+   "id": 42,
+   "cat": "engineering",
+   "ok": true,
+   "pred": "C",
+   "gold": "C"
+  },
+  {
+   "id": 43,
+   "cat": "engineering",
+   "ok": true,
+   "pred": "I",
+   "gold": "I"
+  },
+  {
+   "id": 44,
+   "cat": "engineering",
+   "ok": true,
+   "pred": "A",
+   "gold": "A"
+  },
+  {
+   "id": 45,
+   "cat": "philosophy",
+   "ok": true,
+   "pred": "B",
+   "gold": "B"
+  },
+  {
+   "id": 46,
+   "cat": "philosophy",
+   "ok": true,
+   "pred": "J",
+   "gold": "J"
+  },
+  {
+   "id": 47,
+   "cat": "philosophy",
+   "ok": true,
+   "pred": "B",
+   "gold": "B"
+  },
+  {
+   "id": 48,
+   "cat": "philosophy",
+   "ok": true,
+   "pred": "I",
+   "gold": "I"
+  },
+  {
+   "id": 49,
+   "cat": "philosophy",
+   "ok": true,
+   "pred": "D",
+   "gold": "D"
+  },
+  {
+   "id": 50,
+   "cat": "other",
+   "ok": true,
+   "pred": "E",
+   "gold": "E"
+  },
+  {
+   "id": 51,
+   "cat": "other",
+   "ok": true,
+   "pred": "B",
+   "gold": "B"
+  },
+  {
+   "id": 52,
+   "cat": "other",
+   "ok": true,
+   "pred": "B",
+   "gold": "B"
+  },
+  {
+   "id": 53,
+   "cat": "other",
+   "ok": true,
+   "pred": "J",
+   "gold": "J"
+  },
+  {
+   "id": 54,
+   "cat": "other",
+   "ok": true,
+   "pred": "J",
+   "gold": "J"
+  },
+  {
+   "id": 55,
+   "cat": "history",
+   "ok": false,
+   "pred": "B",
+   "gold": "A"
+  },
+  {
+   "id": 56,
+   "cat": "history",
+   "ok": true,
+   "pred": "C",
+   "gold": "C"
+  },
+  {
+   "id": 57,
+   "cat": "history",
+   "ok": true,
+   "pred": "E",
+   "gold": "E"
+  },
+  {
+   "id": 58,
+   "cat": "history",
+   "ok": false,
+   "pred": "J",
+   "gold": "E"
+  },
+  {
+   "id": 59,
+   "cat": "history",
+   "ok": true,
+   "pred": "G",
+   "gold": "G"
+  },
+  {
+   "id": 60,
+   "cat": "psychology",
+   "ok": true,
+   "pred": "H",
+   "gold": "H"
+  },
+  {
+   "id": 61,
+   "cat": "psychology",
+   "ok": true,
+   "pred": "H",
+   "gold": "H"
+  },
+  {
+   "id": 62,
+   "cat": "psychology",
+   "ok": true,
+   "pred": "A",
+   "gold": "A"
+  },
+  {
+   "id": 63,
+   "cat": "psychology",
+   "ok": true,
+   "pred": "J",
+   "gold": "J"
+  },
+  {
+   "id": 64,
+   "cat": "psychology",
+   "ok": false,
+   "pred": "F",
+   "gold": "E"
+  },
+  {
+   "id": 65,
+   "cat": "law",
+   "ok": true,
+   "pred": "I",
+   "gold": "I"
+  },
+  {
+   "id": 66,
+   "cat": "law",
+   "ok": true,
+   "pred": "I",
+   "gold": "I"
+  },
+  {
+   "id": 67,
+   "cat": "law",
+   "ok": true,
+   "pred": "J",
+   "gold": "J"
+  },
+  {
+   "id": 68,
+   "cat": "law",
+   "ok": true,
+   "pred": "G",
+   "gold": "G"
+  },
+  {
+   "id": 69,
+   "cat": "law",
+   "ok": true,
+   "pred": "F",
+   "gold": "F"
+  }
+ ]
+}

@@ -15632,3 +15632,36 @@ stopped underneath it.
 The presence trial's verdict; if it holds, and the MMLU gate holds, a thinking-phase presence penalty is the
 proactive candidate (the 3.6 model's card already carries it).  F-452 with more replies.  The operator's own loop
 prompt is still not in the document set.
+
+## F-470 (2026-11-26) — Presence 1.5 adopted on the qwen4exp THINKING card; the 1500q suite has its own norm (~86)
+
+**The change** (commit `6ba26d577`, one line, serve/server.py:8815): `"qwen4exp".thinking` gains
+`"presence_penalty": 1.5` — the qwen35moe thinking card has carried this exact set since it landed; qwen4exp
+now matches. The penalty flows through the card-merge in `_run` (:5745) into the same engine-line builder that
+arms `penalty_present=1.5 penalty_last_n=64` when a penalty key arrives with no window (:1616-1631), so the
+deployed default IS the tested configuration, and client-supplied fields still win. Rollback: delete the key.
+
+**The gate evidence (law 10, satisfied in full — four gates, two suites, all paired cold boots):**
+- 1500q stratified test suite (seed 20261125, σ 0.90): control **85.93** vs presence **85.87** — Δ 0.06 pts = 0.07σ,
+  a dead tie at the suite's own resolution. Both within 0.4σ of the banked `f453-stand` **86.27** — AT the standing norm.
+- 70q validation suite (σ 3.35): cold pair **64/70 = 64/70 (91.4 both)**; the earlier 97.1-vs-88.6 spread was the
+  cache-reuse confound (one boot, identical re-asked prompts served parked KV — F-450 class, now a named trap:
+  NEVER two gates on one boot; `campaign/gate-pair.sh` enforces it structurally).
+- Loop propensity (F-469): standing 10/24 → presence 0/24, interleaved same boots.
+- NEW mechanism confirmation at near-greedy: the loop guard (F-468) fired **22×** on the control 1500q boot vs
+  **3×** on the presence boot (logs/gate1500-boot{A,B}.out) — even at temperature 0.1 the bunched-head loop
+  persists without the penalty and collapses with it.
+
+**The floor discovery:** 93.3 is the 70q VALIDATION suite's escalation floor; the 1500q TEST-split suite norms
+at ~86 (86.27 banked, 85.93/85.87 tonight). The gate prints PASS/FAIL vs 0.933 regardless of suite — read
+1500q verdicts against the suite's own bank, not the 70q floor. (f453-stand also confirmed: 1,294/1,500.)
+
+**Verification of the deployed state:** standing rebooted after the commit; `/props`
+`default_generation_settings.params` = `{temperature 1.0, top_p 0.95, top_k 20, presence_penalty 1.5}`;
+live request OK. Vendor alignment: "1.0 / top_k 20 / presence 1.5" IS the Qwen3.5 thinking preset, and the
+quickstart prescribes presence 0-2 for repetitions ("DO NOT use greedy").
+
+**Watch item:** the card default now flows into EVERY thinking request that does not set its own sampling —
+including battery traffic. Tonight's draft-temp sweep re-banks the lanes on the new standing; if M1 moves
+beyond ±4%, the presence default is the first suspect (expected effect ~0: probe traffic loops at ~1.5% of
+requests, and the penalty only suppresses repeats).
