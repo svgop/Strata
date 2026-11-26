@@ -15714,3 +15714,12 @@ Adoption: launcher exports `STRATA_HUGEPAGE_ARENAS="${STRATA_HUGEPAGE_ARENAS:-1}
 `STRATA_HUGEPAGE_ARENAS=0` (env, no line edit). Tracker rows appended (solo + conc), chart rebuilt.
 F-470's watch items stand closed (the sweep's 0.85 arm = 238.2 M1 was pre-hugepage standing; the chart's
 next standing point reads from THIS recipe).
+
+### OPERATING LAW (operator directive, 2026-11-26 — binding on every session)
+**SMOKE BEFORE THE COMMIT.** Before any long run (multi-boot battery, gate pair, sweep, training cycle): run the
+QUICK form first against the live boot — one question, one leg, `--first 4` / `--list` / `--prompts 1 --repeat 1`
+— and read it. A long run that fails its premise mid-way is a waste the operator pays for; tonight it cost two
+windows (a /tmp-placed derived launcher that sourced nothing, and a propensity `--log` argument the instrument
+requires to pre-exist). The tested drivers (gate-pair.sh, draft-temp-sweep.sh) ran clean first try because they
+were self-tested; hand-rolled copies were not. No improvised drivers: use the tested instruments or extend them,
+and smoke them before the multi-boot commit. (Extends law 11's "instrument the instrument" to the run itself.)
