@@ -1,0 +1,105 @@
+--- a/serve/server.py
++++ b/serve/server.py
+@@ -356,6 +356,17 @@
+     return s
+ 
+ 
++def answer_scoped_sampling(sampling):
++    """The answer phase's sampling: the presence penalty is zeroed, the vendor's own precise-coding set being
++    presence 0 while its general sets carry 1.5 (F-481).  A client's temperature, top_p, top_k and its request
++    dict are never touched; the frequency and repetition penalties stay what the request set.  Composes with
++    #728: the loop-guard's recovery raises the presence penalty again when an answer truly repeats itself."""
++    s = dict(sampling or {})
++    if float(s.get("presence_penalty") or 0) != 0:
++        s["presence_penalty"] = 0.0
++    return s
++
++
+ def save_reasoning_loop(text, n, coverage, sampling, max_new, directory):
+     """The evidence of a detected reasoning loop, on disk: the reply's sampling and size, then the end of the
+     reasoning (what repeated).  Returns the path; a write that fails is said on the narration and never fails the
+@@ -4502,6 +4513,7 @@
+         self.vision_held = False                         # an elastic encoder holds VRAM the expert cache gave it
+         self.last_image_at = 0.0                         # when an image turn last ended (the elastic encoder's idle)
+         self.reasoning_loop_recovery = False
++        self.answer_penalty_scope = False       # F-481: zero the presence penalty for the answer phase (opt-in)
+         self.log_sampling = False
+         self.loop_log_dir = "logs"
+         self.reasoning_budget_tokens = 0                 # #123: the config's default thinking budget (0: none)
+@@ -5824,6 +5836,9 @@
+         looped, next_loop_check = False, LOOP_CHECK_EVERY       # #728: reasoning that repeats whole passages
+         loop_wrap = False      # a detected loop closed as a spent budget (no effort header to flip)
+         loop_resume = False     # a detected answer loop: the next pass goes on from the same words
++        answer_scope_resume = False   # F-481: the thinking -> answer transition seen; the pass ends to swap sampling
++        answer_scoped = False         # F-481: the swap already done (once a reply)
++        saw_reasoning = False         # F-481: a reasoning event came out (the reply has a thinking phase)
+         raw_ids = []                                    # every generated id (STRATA_DEBUG: dump raw model text)
+         emb, self.embeddings.path = getattr(self.embeddings, "path", None), None   # this run's to delete now
+         img_keys, self.embeddings.keys = getattr(self.embeddings, "keys", None), None
+@@ -5940,6 +5955,7 @@
+                             else self.engine.generate(prompt, max_new - n, sampling, cancel)
+                         recover_prompt = None
+                         loop_resume = False
++                        answer_scope_resume = False      # F-481: reset per pass (the swap flag survives at reply level)
+                         seg, wrap, leaving = [], False, False   # this pass's tokens; the budget is reached; closed
+                         nonfinite = False               # #879: the engine ended this pass on non-finite logits
+                         opens = False                   # the thinking is over: write the forced call's opening
+@@ -5987,12 +6003,18 @@
+                                 self._note(n, evs, st, rate)
+                                 last_print = self._progress(last_print, st=st)
+                                 for ev in evs:
++                                    if ev.kind == "reasoning":
++                                        saw_reasoning = True
+                                     if self.reasoning_loop_recovery and ev.kind == "reasoning":
+                                         reasoning_text += ev.text or ""
+                                     if self.reasoning_loop_recovery and ev.kind == "content":
+                                         answer_text += ev.text or ""
+                                     if ev.kind in ("content", "tool_start", "tool_call"):
+                                         answered = True
++                                    if (self.answer_penalty_scope and not answer_scoped and saw_reasoning
++                                            and ev.kind == "content"
++                                            and float((sampling or {}).get("presence_penalty") or 0) != 0):
++                                        answer_scope_resume = True    # F-481: swap the sampling at the transition
+                                     yield "event", ev
+                                 if evs:
+                                     last_out = time.perf_counter()
+@@ -6029,6 +6051,9 @@
+                                                 break
+                                             looped = True            # pictures: the splice cannot carry them (#554): the reply ends here
+                                             break
++                                if (answer_scope_resume and parser.state == "content" and not parser.buf
++                                        and not parser.pending and not detok.pending()):
++                                    break     # F-481: the pass ends at the transition; the answer resumes with the penalty zeroed
+                                 if budget and parser.state == "reasoning":
+                                     thought += 1
+                                     # at a clean point: no tag held back, no character split across tokens
+@@ -6101,6 +6126,15 @@
+                             print(f"[strata] the answer repeated itself at {n} tokens (coverage={repeat_coverage:.3f}); going on "
+                                   "from the same words with a presence penalty (reasoning_loop_recovery)", flush=True)
+                             continue
++                        if answer_scope_resume and finish == "length" and not cancel.is_set() and n < max_new:
++                            # finish "stop"/"error" ends the reply (5790 initializes it "length"); only this
++                            # pass's own transition break swaps - a stop token that hit first is the client's word.
++                            answer_scoped = True
++                            sampling = answer_scoped_sampling(sampling)
++                            prompt = ids + list(raw_ids)   # the same words so far, as token ids (never decoded and encoded again)
++                            print(f"[strata] presence penalty zeroed for the answer phase at {n} tokens "
++                                  "(answer_penalty_scope)", flush=True)
++                            continue
+                         if recover_prompt is not None and not cancel.is_set() and n < max_new:
+                             recovery_count += 1
+                             # Only the two settings that keep the same words coming are raised (loop_breaking_sampling): a client's
+@@ -9373,6 +9407,13 @@
+         raise SystemExit("[strata] config \"reasoning_loop_recovery\" must be false, \"stop\" or \"recover\", "
+                          f"not {recovery!r}")
+     svc.reasoning_loop_recovery = recovery
++    scope = cfg.get("answer_penalty_scope", False)   # F-481: the presence penalty rides the thinking card (1.5);
++    if not isinstance(scope, bool):                  # the answer phase runs at the vendor's precise-coding 0
++        raise SystemExit(f"[strata] config \"answer_penalty_scope\" must be true or false, not {scope!r}")
++    svc.answer_penalty_scope = scope
++    if scope:
++        print("[strata] answer penalty scope: the presence penalty is zeroed for the answer phase "
++              "(answer_penalty_scope)", flush=True)
+     svc.log_sampling = bool(cfg.get("log_sampling", False))   # a narration line a reply: its sampling
+     # where the evidence of a detected reasoning loop is written: beside the engine's log
+     svc.loop_log_dir = os.path.dirname(os.path.abspath(cfg.get("log") or os.path.join(cfg.get("cwd") or ROOT, "logs", "strata.log")))

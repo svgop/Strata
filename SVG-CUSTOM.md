@@ -16173,3 +16173,51 @@ artifact truth:
    receipts: F-476c (cap 3000, loop-free verified) and F-483's boot receipts (corpus warm
    9 x 3000 at temperature 0 in 165 s, zero guard lines). Zero information lost; the
    results lane is more ordered.
+
+## F-486 — the two word-gated server.py edits authored as validated patches, ready to apply beside the operator's hunks (2026-11-26 20:20)
+
+The session's law: every word-gated lever lands its ready-artifact BEFORE the word. The two
+F-481 designs were the last class without theirs. Both are now patches, authored against the
+CURRENT working tree (the operator's uncommitted hunks at 263/8515/9xxx, server.py mtime
+Nov 26 05:00; no hunk overlaps either edit site). Validated four ways: `git apply --check`
+clean against the live tree, each alone; both stacked, clean; `python -m py_compile` green
+on each and on the stack; a unit smoke on the two pure functions (below).
+
+**Patch 1 - campaign/results/f486-scoped-loop-guard.patch (49 lines).** The F-481 design:
+`reasoning_repeat_coverage(text, answer=False)`. With answer=True ONLY the #1753
+tail-period check runs (a character-periodic tail is degeneration, never code); the 12-gram
+word coverage that killed code (F-478: a stylesheet's own repetition read 0.26-0.364 against
+the 0.25 threshold) runs on the thinking phase alone. Call site passes `answer=in_answer`.
+Unit smoke: a periodic tail reads 1.0 in both phases; the F-478 fixture class (400
+equal-length CSS blocks, rotating selectors, repeated property runs; tail verified
+aperiodic) reads 0.0 on the answer path and 0.969 on the thinking path. RIDES THE EXISTING
+KEY: inert while the standing config keeps "reasoning_loop_recovery": false. Arming the
+guard after this patch arms the scoped form: thinking covered (restoring the loop
+protection F-483 took away with the full guard), code unkillable by the 12-gram class.
+
+**Patch 2 - campaign/results/f486-presence-answer-scope.patch (105 lines).** The F-481
+design, as a new opt-in config key "answer_penalty_scope" (default false; an absent key is
+zero behavior change; a non-bool value refuses the boot; an armed boot prints its
+narration line). When armed, and a reply's first content event follows reasoning events,
+and the pass's sampling carries a nonzero presence_penalty: the pass ends at the next
+clean parser/detokenizer boundary and the answer resumes from the same token ids
+(ids + raw_ids - the #728 loop_resume machinery, prompt never decoded and encoded again)
+with the penalty zeroed. `answer_scoped_sampling` touches ONLY presence_penalty;
+temperature, top_p, top_k, the frequency and repetition penalties, and the client's own
+request dict are never changed. Composes with #728: an answer that loops after the swap is
+re-penalized by loop_breaking_sampling (smoke: 1.5 -> 0.0, recovery re-raises 1.5 and
+temperature 1.0). Scope note, stated plainly: when the key is armed the swap zeroes ANY
+nonzero presence at the transition, so a client that explicitly sets presence also loses
+it for the answer phase; the vendor's precise-coding set is presence 0 and the A/B decides.
+The resume case is gated by `finish == "length"` (the value :5790 initializes it to; a stop
+token that hit first is the client's word and ends the reply) - the authoring draft's
+`finish is None` would never have fired; caught by the constant check, fixed before the
+patch was generated.
+
+**Application protocol (the operator's word, each or together):** `sudo -u svg -H env
+GIT_TERMINAL_PROMPT=0 git apply campaign/results/f486-<name>.patch` (they compose; the
+stacked check is green), then the designed verification: probe-lane CODE legs on the
+operator's shape, the corpus loop fixtures (B3/B4), the MMLU gate and the 1500q suite, then
+the reboot through campaign/standing-reboot.sh and the deployed-process re-verification.
+STALENESS CONDITION: the operator's hunks move -> re-author before applying; the
+git apply --check gate catches any drift loudly, never silently.
