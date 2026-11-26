@@ -130,3 +130,44 @@ overnight F-469 sweep (`2026-11-26-mtp-specdec.md`, `-engine-performance.md`, `-
    and IsoMoE's dual micro-batch pipeline): the structural lever the refutation boundary left open.
 7. **Scoped loop guard (thinking-only)** (server.py edit; F-478 open item).
 8. FastMTP retrain with HSM/HSGD findings folded into the cycle design (GPU-exclusive, operator go).
+
+## Addendum (16:55, the operator's sharpening directive: "research what is unclear")
+
+The four open uncertainties, researched:
+
+1. **KV reuse across history edits — external production proof (arXiv:2610.34763, "The
+   Physical Cost of Context"):** coding agents that rewrite cached history turn token savings
+   into physical work — Mask-5 (keep only the last 5 observations) cut prompt volume 33.3% but
+   lost 135.9k reusable tokens per task; uncached prefill rose 608.5%, the energy proxy 125.6%,
+   and the policy missed the quality gate. With prefix caching enabled and history kept
+   reusable, uncached prefill fell 67.7%. "A shorter prompt can cost more if it rewrites
+   cached history." This is the production-scale version of our F-480 measurement (the
+   front-trim re-read: 47,622 tokens, 7.5 s) and validates the verbatim-resend guidance
+   with 450-case numbers.
+2. **Speculative acceptance under sampling (arXiv:2610.30644, full-length diagnostic,
+   1.78M verification rounds):** acceptance does NOT decay with generation position (after
+   isolating a greedy-repetition pathology); the apparent sampling-mode degradation of
+   high-entropy reflection tokens is "a visibility artifact of argmax agreement, not a drop
+   in expected acceptance probability"; rejections concentrate on reflection triggers
+   ("wait", "however", "check"). Consequences for us: (a) the M3b acceptance meter reads
+   argmax agreement — under thinking-mode sampling it can under-report the real acceptance;
+   (b) no positional decay supports deeper windows on long code/CoT streams; (c) the
+   draft-calibration falsifier (0.95/1.05) must be read through this lens.
+3. **Code workloads favor drafting (arXiv:2611.27217, CoPyro):** copied n-gram proposals fed
+   to parallel drafters gain 2.19-5.08% overall acceptance, and "code generation benefits
+   most in both settings" — an independent second signal (with Sightline 2611.23807) that
+   code-shaped streams pay more from draft machinery.
+4. **Penalties vs. code quality — NO direct study found.** Searches (web + arXiv) return
+   nothing that measures presence/frequency/repetition penalty effects on code-generation
+   quality. The vendor's in-tree card (thinking 1.5 / precise coding 0, server.py:8817)
+   remains the strongest prior. Negative banked (law 8): the scoping edit's code-quality
+   A/B is the only instrument that can decide it.
+
+**Local arithmetic (not external): the MMLU protocol question.** Binomial 95% CI at p≈0.93:
+n=70 → ±6.0 points; n=1500 → ±1.3 points. The 70q suite's observed same-night range
+(91.4-92.9, four reads, 69/70 near-repeatability) is 1.5 points — the near-deterministic
+per-question behavior makes the suite tighter than binomial, but the swing IS the
+flip-question set, and a 0.4-point floor gap cannot be resolved by it. The 1500q suite
+(σ 0.90 observed, in-band across boots) resolves 10x finer. The statistical verdict: only
+the 1500q is fit to be the GATE; the 70q stays the record suite with its own re-banked band.
+The choice remains the operator's.
