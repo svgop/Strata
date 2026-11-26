@@ -1,0 +1,30 @@
+[10:49:18] arm S1 warm: done
+[S1] environ: STRATA_TYPICAL_ACCEPT=0.2
+M1 single-stream : 188.9 t/s (2000 tok in 10.59s)
+prompt 2 standing     loop finish stop     9902 tok  51 s  peak 0.35 guard no  most repeated x2: '6 combined_embeddings_path'
+--- loops / replies, and the median tokens of a reply:
+  standing     1 / 6 loops, median reply 10714 tokens
+responses: /home/svg/LLM/strata-custom-2/logs/loop-propensity/20261126-105012
+[10:56:40] arm ROFF warm: done
+[ROFF] environ: STRATA_TYPICAL_ACCEPT=
+M1 single-stream : 166.3 t/s (2000 tok in 12.03s)
+prompt 2 standing     ok   finish stop    10599 tok  65 s  peak 0.01 guard no  most repeated x1: "We need answer user's request. Need go through provided C++?"
+--- loops / replies, and the median tokens of a reply:
+  standing     0 / 6 loops, median reply 11064 tokens
+responses: /home/svg/LLM/strata-custom-2/logs/loop-propensity/20261126-105737
+[11:06:04] arm RATIO warm: done
+[RATIO] environ: STRATA_SPEC_RATIO=1
+[RATIO] environ: STRATA_TYPICAL_ACCEPT=0.2
+M1 single-stream : 176.9 t/s (2000 tok in 11.31s)
+prompt 2 standing     ok   finish stop    10681 tok  59 s  peak 0.01 guard no  most repeated x2: '- In `rttime_limit_note`, if RLIMIT_RTTIME hard limit is fin'
+--- loops / replies, and the median tokens of a reply:
+  standing     0 / 6 loops, median reply 10291 tokens
+responses: /home/svg/LLM/strata-custom-2/logs/loop-propensity/20261126-110659
+[11:13:56] arm S2 warm: done
+[S2] environ: STRATA_TYPICAL_ACCEPT=0.2
+M1 single-stream : 181.2 t/s (2000 tok in 11.04s)
+prompt 2 standing     ok   finish stop    10300 tok  52 s  peak 0.01 guard no  most repeated x2: '6 combined_embeddings_path'
+--- loops / replies, and the median tokens of a reply:
+  standing     0 / 6 loops, median reply 10633 tokens
+responses: /home/svg/LLM/strata-custom-2/logs/loop-propensity/20261126-111450
+RESCUE ARMS DONE
