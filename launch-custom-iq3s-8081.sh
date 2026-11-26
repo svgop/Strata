@@ -76,6 +76,7 @@ export STRATA_COMPLEMENT_BACKING="${STRATA_COMPLEMENT_BACKING:-hostalloc}"
 # machine class (their golden snapshots carry it).  Overridable; =0 is not valid for glibc, unset rolls
 # back to the libc default.
 export MALLOC_ARENA_MAX="${MALLOC_ARENA_MAX:-2}"
+export STRATA_HUGEPAGE_ARENAS="${STRATA_HUGEPAGE_ARENAS:-1}"   # F-472: ABAB 2-round pair +7.5% M1 / +7.7% conc, M3b flat; rollback: STRATA_HUGEPAGE_ARENAS=0
 # F-367 ADOPTED (10-27): the shadow store's canonical home is /dev/shm (tmpfs). F-365: one probe leg
 # took 2,635,199 minor faults for +160 MB of RSS — page churn on the disk-backed page cache, and the
 # pool is byte-bound at ~150 us/entry. tmpfs pages are RAM-resident, THP-eligible, never evicted.

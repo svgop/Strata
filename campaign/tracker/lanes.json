@@ -1,6 +1,6 @@
 {
  "type": "strata-lane-trend",
- "updated": "2026-11-25",
+ "updated": "2026-11-26",
  "unit": "tok/s",
  "engines": {
   "qwen": {
@@ -497,6 +497,28 @@
      "conc": null,
      "kinds": {
       "solo": "single"
+     }
+    },
+    {
+     "date": "2026-11-26",
+     "commit": "4c6ef02",
+     "label": "F-472 STRATA_HUGEPAGE_ARENAS=1 ADOPTED standing (ABAB 2-round: armed M1 233.1/222.5 vs control 221.9/201.9 = +7.5%; M3b flat 73-78 both sides; mechanism: THP kills first-touch faults on the 1.55 GiB KV shadow + park/restore copies)",
+     "solo": 227.8,
+     "pair": null,
+     "conc": null,
+     "kinds": {
+      "solo": "mean"
+     }
+    },
+    {
+     "date": "2026-11-26",
+     "commit": "4c6ef02",
+     "label": "F-472 hugepage pair concurrent lane: armed 304.9/286.7 vs control 281.0/268.1 = +7.7% (ABAB 2-round same-window)",
+     "solo": null,
+     "pair": null,
+     "conc": 295.8,
+     "kinds": {
+      "conc": "mean"
      }
     }
    ],

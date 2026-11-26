@@ -15692,3 +15692,25 @@ is F-201's dial; output bytes stay contract-governed (exact-match verify emits t
 M1 238.2 sits inside F-453's four-boot window (230.4-246.3, mean 240.4); M3b 75.9% sits inside the pre-presence
 probe band (74.4-79.1 across f453 compose/gdnab boots). Presence 1.5 moves neither performance lane. The
 adoption is clean on every measured axis: accuracy (1500q Δ0.06), loops (22→3 guard interventions), M1, M3b.
+
+## F-472 (2026-11-26) — STRATA_HUGEPAGE_ARENAS=1 ADOPTED standing: +7.5% M1 / +7.7% conc, ABAB 2-round, M3b flat
+
+The audit lane's tonight-leg (hugepage.hpp's own gate, never armed): ABAB, armed-first, 4 boots, law-11 discard
++ 3 legs each, /proc-environ verified per arm (campaign/results/f470-hp-*; first pass VOIDED - the derived
+launcher was written to /tmp, violating the LAUNCH LAW's relative-to-itself resolution; zero evidence kept).
+
+| round | M1 armed / control | 6-conc armed / control |
+|-------|--------------------|------------------------|
+| 1 | 233.1 / 221.9 (+5.1%) | 304.9 / 281.0 (+8.5%) |
+| 2 | 222.5 / 201.9 (+10.2%) | 286.7 / 268.1 (+7.0%) |
+| pooled | **227.8 / 211.9 (+7.5%)** | **295.8 / 268.1 (+7.7%)** |
+
+Both priority lanes clear the ±4% bar with both rounds agreeing; M3b 73.1-77.6% (armed) vs 73.2-77.2%
+(control) - flat, confirming the audit's bitwise-neutral pricing (allocation-only change). Mechanism: THP
+(2 MiB MADV_HUGEPAGE after the MAP_HUGETLB pool fails on vm.nr_hugepages=0) removes first-touch fault storms
+on the fault-prone classes the audit named - the 1.55 GiB KV host shadow (layer.cpp:596) and the park/restore
+copy paths that dominate conc's slow rounds. The measured-fast complement organ is untouched (hostalloc).
+Adoption: launcher exports `STRATA_HUGEPAGE_ARENAS="${STRATA_HUGEPAGE_ARENAS:-1}"`; rollback
+`STRATA_HUGEPAGE_ARENAS=0` (env, no line edit). Tracker rows appended (solo + conc), chart rebuilt.
+F-470's watch items stand closed (the sweep's 0.85 arm = 238.2 M1 was pre-hugepage standing; the chart's
+next standing point reads from THIS recipe).

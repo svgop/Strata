@@ -1,0 +1,41 @@
+[10:19:41] arm B1 warm: done
+[B1] environ VERIFIED armed
+M1 single-stream : 216.4 t/s (2000 tok in 9.24s)
+M3b rate         : 75.2% mean over 29 requests (diagnostic)
+M1 single-stream : 225.2 t/s (2000 tok in 8.88s)
+M3b rate         : 75.7% mean over 29 requests (diagnostic)
+M1 single-stream : 231.5 t/s (2000 tok in 8.64s)
+M3b rate         : 75.9% mean over 29 requests (diagnostic)
+M1 single-stream : 242.6 t/s (2000 tok in 8.24s)
+M3b rate         : 74.6% mean over 29 requests (diagnostic)
+[10:23:55] arm A1 warm: done
+[A1] environ control (gate absent = correct)
+M1 single-stream : 209.8 t/s (2000 tok in 9.53s)
+M3b rate         : 73.2% mean over 29 requests (diagnostic)
+M1 single-stream : 209.3 t/s (2000 tok in 9.56s)
+M3b rate         : 75.5% mean over 30 requests (diagnostic)
+M1 single-stream : 233.8 t/s (2000 tok in 8.55s)
+M3b rate         : 76.1% mean over 29 requests (diagnostic)
+M1 single-stream : 222.7 t/s (2000 tok in 8.98s)
+M3b rate         : 75.4% mean over 29 requests (diagnostic)
+[10:28:16] arm B2 warm: done
+[B2] environ VERIFIED armed
+M1 single-stream : 199.1 t/s (2000 tok in 10.05s)
+M3b rate         : 73.1% mean over 29 requests (diagnostic)
+M1 single-stream : 223.7 t/s (2000 tok in 8.94s)
+M3b rate         : 76.5% mean over 28 requests (diagnostic)
+M1 single-stream : 219.5 t/s (2000 tok in 9.11s)
+M3b rate         : 77.6% mean over 29 requests (diagnostic)
+M1 single-stream : 224.2 t/s (2000 tok in 8.92s)
+M3b rate         : 77.0% mean over 28 requests (diagnostic)
+[10:32:38] arm A2 warm: done
+[A2] environ control (gate absent = correct)
+M1 single-stream : 220.8 t/s (2000 tok in 9.06s)
+M3b rate         : 74.7% mean over 28 requests (diagnostic)
+M1 single-stream : 191.8 t/s (2000 tok in 10.43s)
+M3b rate         : 77.2% mean over 29 requests (diagnostic)
+M1 single-stream : 208.6 t/s (2000 tok in 9.59s)
+M3b rate         : 76.7% mean over 28 requests (diagnostic)
+M1 single-stream : 205.2 t/s (2000 tok in 9.75s)
+M3b rate         : 75.2% mean over 28 requests (diagnostic)
+HUGEPAGE PAIR DONE
