@@ -141,3 +141,21 @@ final_serve() {  # final_serve <launcher> <out-log> — leave the standing serve
   ( cd "$REPO" && nohup bash "$1" >"$2" 2>&1 & )
   wait_health || echo "final_serve: the server did not answer /health in 6 min"
 }
+
+# launcher_with_env <out-path> [VAR=value ...] — the standing launcher with env-arm overrides
+# INSERTED after its exports, immediately before the launch::exec_engine call.  The launcher
+# hard-exports several variables a battery arms (STRATA_SPEC_DRAFT_TEMP=0.85 among them), so an
+# override passed on the `env` command line is silently overwritten — the F-284 class ("the hard
+# export silently overrode the ternary arm boots").  A later export wins; the booting battery
+# then reads the engine's /proc/<pid>/environ to verify what actually armed.  The derived
+# launcher MUST sit beside the original in REPO root (it resolves campaign/lib, .venv and the
+# config relative to itself — LAUNCH LAW): a /tmp copy does not boot.  sed delimiter is '#':
+# values carry no '#', '$' or '&' (sed replacement metacharacters); VAR=value pairs only.
+launcher_with_env() {
+  local out=$1; shift
+  local exports="" v
+  for v in "$@"; do exports+="export $v; "; done
+  sed "s#^launch::exec_engine #${exports}launch::exec_engine #" \
+    "$REPO/${STRATA_LAUNCHER:-launch-custom-iq3s-8081.sh}" > "$out"
+  chmod 755 "$out"
+}

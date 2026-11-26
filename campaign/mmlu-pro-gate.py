@@ -7,10 +7,24 @@ measure whatever floor the engine booted with. Comparing that against a number r
 boot is the remembered-comparator error. Here the floor travels with each request through the same
 per-request key the campaign's sweep instrument uses (serve/server.py:1005 -> generate.cpp:10277).
 
-Usage: python mmlu-pro-gate.py <floor> <label> [--suite N] [--list]
+Usage: python mmlu-pro-gate.py <floor> <label> [--suite N] [--repeats K] [--list]
        e.g.  python mmlu-pro-gate.py 0.7 base07
              python mmlu-pro-gate.py 0.933 f453-stand --suite 1500
+             python mmlu-pro-gate.py 0.933 f470-pres --suite 1500 --repeats 3
 Writes campaign/results/mmlu-<label>.json and prints the score.
+
+THE REPEATS FORM (F-468/F-469, 2026-11-25).  Two gates on ONE boot are CONFOUNDED: the second
+gate re-asks identical prompts and the conversation cache serves run 1's parked KV back
+(F-450-class nondeterminism; the F-469 pair moved 88.6 vs 97.1 within one boot).  The clean
+between-boot comparison is campaign/gate-pair.sh (one cold boot per arm, gate run once).
+--repeats K is the other half, the vendors' within-boot form (DeepSeek-R1: "conduct multiple
+tests and average"; Kimi K2 avg@64): the SAME suite is asked K times against the ONE boot, so
+the spread across repeats is the in-boot sampling variance at temperature 0.1 - report the
+per-repeat scores, mean +/- sd, and the verdict vs the floor.  The repeats share the boot and
+its cache state, so sd is the served-state spread, not an iid bound, and never a substitute
+for the cold-boot pair.  --repeats 1 (the default) is byte-identical to the record form: no
+repeat lines, no extra JSON keys.  Per-question transport failures retry ONCE and are then
+excluded (the FAIL-TRANSPORT path - never scored wrong); the old form retried three times.
 
 THE SUITE (F-453).  The default, --suite 70, is the validation split in dataset order - the campaign's
 record suite; every MMLU number in the journal before F-453 is this suite, and its 1-sigma is 3.1
@@ -23,14 +37,14 @@ run, 2026-11-25 label f453-stand, asked the same set in dataset order; its JSON 
 At N = 1500 the 1-sigma is 0.60 points: a delta of one validation
 question (1.43 points) reads as 2.4 sigma instead of 0.34.  The 70-question path is unchanged.
 """
-import argparse, json, math, os, random, re, sys, time, urllib.request
+import argparse, json, math, os, random, re, statistics, sys, time, urllib.request
 from collections import defaultdict
 from datasets import load_dataset
 
 API = f"http://127.0.0.1:{os.environ.get('STRATA_GATE_PORT', '8081')}/v1/chat/completions"
 DATASET = "TIGER-Lab/MMLU-Pro"
 SUITE_SEED = 20261125   # the gate's fixed draw: change it and every --suite N result before it is another suite
-ATTEMPTS = 3            # a transport failure is retried, never scored as a wrong answer
+ATTEMPTS = 2            # a transport failure is retried ONCE, then the question is excluded - never scored wrong
 
 
 def suite(n):
@@ -105,7 +119,13 @@ def main():
     ap.add_argument("--first", type=int, default=0,
                     help="score only the first N questions of the suite (the order is category round-robin, so a prefix "
                          "is a balanced sample): the paired form of a comparison against a run that covered more")
+    ap.add_argument("--repeats", type=int, default=1,
+                    help="ask the SAME suite K times against this one boot and report per-repeat scores, mean +/- sd "
+                         "and the verdict vs the floor (in-boot sampling variance at temperature 0.1, the DeepSeek-R1 "
+                         "'multiple tests and average' form); 1 = the record form, byte-identical")
     a = ap.parse_args()
+    if a.repeats < 1:
+        sys.exit(f"--repeats must be >= 1; got {a.repeats}")
     examples, suite_name = suite(a.suite)
     if a.first > 0:
         if a.first > len(examples):
@@ -125,60 +145,99 @@ def main():
 
     ask("hi", 20, a.floor, a.presence)
 
-    correct = 0
+    K = a.repeats
+    correct = 0                                   # pooled across repeats (feeds by_cat and the K == 1 headline)
     by_cat = {}
     rows, failed = [], []
+    rep_scores = []                               # one percent per repeat, in repeat order
     t0 = time.time()
-    for k, ex in enumerate(examples, 1):
-        q = (f"{ex['question']}\n\n{fmt_options(ex['options'])}\n\n"
-             "Answer with just the letter of the correct option.")
-        out_text, error = None, None
-        for attempt in range(1, ATTEMPTS + 1):
-            try:
-                out_text = ask(q, 4000, a.floor, a.presence)
-                break
-            except Exception as e:                    # transport: retried, then excluded - never scored wrong
-                error = repr(e)
-                print(f"[retry {attempt}/{ATTEMPTS}] request failed: {error}", flush=True)
-                time.sleep(5)
-        if out_text is None:
-            failed.append(ex["question_id"])
-            rows.append({"id": ex["question_id"], "cat": ex["category"], "error": error})
-            print(f"[FAIL-TRANSPORT] {ex['category']:18s} id={ex['question_id']} excluded", flush=True)
-            continue
-        m = re.search(r"\b([A-J])\b", out_text)
-        pred = m.group(1) if m else "?"
-        ok = pred == ex["answer"]
-        correct += ok
-        by_cat.setdefault(ex["category"], []).append(ok)
-        rows.append({"id": ex["question_id"], "cat": ex["category"], "ok": bool(ok), "pred": pred, "gold": ex["answer"]})
-        print(f"[{'PASS' if ok else 'FAIL'}] {ex['category']:18s} pred={pred} gold={ex['answer']}", flush=True)
-        if k % 50 == 0 or k == len(examples):
-            el = time.time() - t0
-            print(f"[{k}/{len(examples)} running {100 * correct / len(rows):.1f}%] {el:.0f} s, {el / k:.2f} s/question", flush=True)
+    for rep in range(1, K + 1):
+        if K > 1:
+            print(f"=== repeat {rep}/{K} ===", flush=True)
+        rep_correct, rep_n = 0, 0
+        for k, ex in enumerate(examples, 1):
+            q = (f"{ex['question']}\n\n{fmt_options(ex['options'])}\n\n"
+                 "Answer with just the letter of the correct option.")
+            out_text, error = None, None
+            for attempt in range(1, ATTEMPTS + 1):
+                try:
+                    out_text = ask(q, 4000, a.floor, a.presence)
+                    break
+                except Exception as e:                    # transport: retried once, then excluded - never scored wrong
+                    error = repr(e)
+                    print(f"[retry {attempt}/{ATTEMPTS}] request failed: {error}", flush=True)
+                    time.sleep(5)
+            if out_text is None:
+                failed.append(ex["question_id"])
+                row = {"id": ex["question_id"], "cat": ex["category"], "error": error}
+                if K > 1:
+                    row["repeat"] = rep
+                rows.append(row)
+                print(f"[FAIL-TRANSPORT] {ex['category']:18s} id={ex['question_id']} excluded", flush=True)
+                continue
+            m = re.search(r"\b([A-J])\b", out_text)
+            pred = m.group(1) if m else "?"
+            ok = pred == ex["answer"]
+            correct += ok
+            rep_correct += ok
+            rep_n += 1
+            by_cat.setdefault(ex["category"], []).append(ok)
+            row = {"id": ex["question_id"], "cat": ex["category"], "ok": bool(ok), "pred": pred, "gold": ex["answer"]}
+            if K > 1:
+                row["repeat"] = rep
+            rows.append(row)
+            print(f"[{'PASS' if ok else 'FAIL'}] {ex['category']:18s} pred={pred} gold={ex['answer']}", flush=True)
+            if k % 50 == 0 or k == len(examples):
+                el = time.time() - t0
+                print(f"[{k}/{len(examples)} running {100 * correct / len(rows):.1f}%] {el:.0f} s, {el / k:.2f} s/question", flush=True)
+        rep_scores.append(100 * rep_correct / rep_n if rep_n else 0.0)
     seconds = time.time() - t0
 
-    n = len(examples) - len(failed)
-    pct = 100 * correct / n
+    sd_pts, verdict = None, None
+    if K == 1:
+        n = len(examples) - len(failed)
+        pct = 100 * correct / n
+    else:
+        # the mean over per-repeat scores is the vendor form (the repeat is the sampling unit);
+        # sample sd (n-1) - with k >= 2 repeats it is the conservative spread estimate.
+        n = len(examples)
+        pct = sum(rep_scores) / len(rep_scores)
+        sd_pts = statistics.stdev(rep_scores)
+        verdict = "PASS" if pct >= a.floor * 100 else "FAIL"
     # the binomial 1-sigma on this suite size: a drop smaller than this cannot be resolved by one run.
     # Stratification only lowers it, so the simple-random form is the conservative reading.
     se = 100 * ((pct / 100) * (1 - pct / 100) / n) ** 0.5
-    print(f"\n=== MMLU-Pro ({n} Qs) [floor {a.floor}, {a.label}]: {correct}/{n} = {pct:.1f}%  (1-sigma = {se:.2f} pts) ==="
-          f"  [{suite_name}; 95% CI +/- {1.96 * se:.1f}; {seconds:.0f} s, {seconds / len(examples):.2f} s/question]")
+    if K == 1:
+        print(f"\n=== MMLU-Pro ({n} Qs) [floor {a.floor}, {a.label}]: {correct}/{n} = {pct:.1f}%  (1-sigma = {se:.2f} pts) ==="
+              f"  [{suite_name}; 95% CI +/- {1.96 * se:.1f}; {seconds:.0f} s, {seconds / len(examples):.2f} s/question]")
+    else:
+        print(f"\n=== MMLU-Pro ({n} Qs x {K} repeats) [floor {a.floor}, {a.label}]: mean {pct:.2f} +/- {sd_pts:.2f} sd  (1-sigma = {se:.2f} pts) ==="
+              f"  [{suite_name}; 95% CI +/- {1.96 * se:.1f}; {seconds:.0f} s total, {seconds / (len(examples) * K):.2f} s/question]")
+        for i, s in enumerate(rep_scores, 1):
+            print(f"  repeat {i}/{K}: {s:.1f}%")
+        print(f"VERDICT vs floor {a.floor} ({a.floor * 100:.1f}%): {verdict} - mean {pct:.2f}, sd {sd_pts:.2f} over {K} in-boot repeats at temperature 0.1")
     for c, v in sorted(by_cat.items()):
         print(f"  {c:18s} {sum(v)}/{len(v)}")
     if failed:
         print(f"TRANSPORT FAILURES EXCLUDED: {len(failed)} -> {failed}")
 
+    rec = {"label": a.label, "floor": a.floor, "presence": a.presence, "suite": suite_name, "n": n, "seed": SUITE_SEED,
+           "order": "category round-robin" if a.suite != 70 else "dataset",
+           "first": a.first,
+           "score_pct": pct, "sigma_pts": se, "ci95_pts": 1.96 * se,
+           "seconds": seconds, "excluded": failed,
+           "by_cat": {c: f"{sum(v)}/{len(v)}" for c, v in sorted(by_cat.items())},
+           "ids": [ex["question_id"] for ex in examples], "rows": rows}
+    if K > 1:
+        # the repeats form: per-repeat scores in order, their mean (score_pct) and sample sd, and the
+        # verdict vs the floor the driver/consumer reads.  "excluded" pools the FAIL-TRANSPORT ids of
+        # all repeats (each row carries its "repeat"); n above is the per-repeat suite size.
+        rec["repeats"] = K
+        rec["repeat_scores"] = [round(s, 3) for s in rep_scores]
+        rec["sd_pts"] = sd_pts
+        rec["verdict"] = verdict
     with open(out, "w", encoding="utf-8") as f:
-        json.dump({"label": a.label, "floor": a.floor, "presence": a.presence, "suite": suite_name, "n": n, "seed": SUITE_SEED,
-                   "order": "category round-robin" if a.suite != 70 else "dataset",
-                   "first": a.first,
-                   "score_pct": pct, "sigma_pts": se, "ci95_pts": 1.96 * se,
-                   "seconds": seconds, "excluded": failed,
-                   "by_cat": {c: f"{sum(v)}/{len(v)}" for c, v in sorted(by_cat.items())},
-                   "ids": [ex["question_id"] for ex in examples], "rows": rows},
-                  f, indent=1, ensure_ascii=False)
+        json.dump(rec, f, indent=1, ensure_ascii=False)
 
 
 if __name__ == "__main__":

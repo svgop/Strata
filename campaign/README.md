@@ -5,13 +5,20 @@ its old path — the journal (SVG-CUSTOM.md) is the index of what ran and why.
 
 ## Top level — LIVING instruments (paths are referenced by batteries; do not move)
 - `battery-lib.sh`    — the shared battery infrastructure (port_pid / cleanup_engine with the
-  repo-path-scoped GPU kill / wait_health / wait_prewarm / final_serve). Every battery and both
+  repo-path-scoped GPU kill / wait_health / wait_prewarm / final_serve / launcher_with_env — the
+  standing launcher with env-arm overrides inserted after its exports, since the launcher's hard
+  exports silently override env-passed arms, the F-284 class). Every battery and both
   ladders source it; the fleet's ~1,040 copy-pasted lines and the `*strata*` kill substring
   (which killed BOTH engines) lived in the per-script copies until 2026-11-04
 - `probe-lane.py`     — the Proof-Law lane probe (M1/pair/conc/M3b/accept/ms-window)
 - `probe-metrics.py`  — stability capture (TTFT/ITL/E2E p50-p99, clock/temp/power, golden hash) → results/metrics.jsonl
 - `binary-ladder.sh`, `env-ladder.sh` — the promotion gauntlets (they wait for the server's own
   warm-in, the config's "prewarm" section, before their discarded leg)
+- `gate-pair.sh`, `draft-temp-sweep.sh` — the cold-boot drivers (F-468/F-469): ONE gate per boot —
+  NEVER two gates on one boot (the second gate re-asks identical prompts and the conversation
+  cache serves run 1's parked KV back); one draft-temp arm per boot with the law-11 discard +
+  measured legs and the M3b canary record.  Both boot via battery-lib's `launcher_with_env` and
+  honor STRATA_BATTERY_DRYRUN (guards fire, nothing boots)
 - `mmlu-pro-gate.py`, `mimicbench2.py` — quality gates (2x MMLU + mimic on adoptions)
 - `bit-check.py`      — F-209 bit-identity check (temp-0 fixed prompts → results/f209-bit-*.json)
 - `ctx-probe.py`, `depth-lane.py`, `depth-lane-real.py` — context/depth probes (post-retrain relevant)
