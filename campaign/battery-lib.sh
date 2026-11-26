@@ -39,6 +39,36 @@ mkdir -p "$STRATA_CONV_SLOT_DIR" 2>/dev/null || true
 
 port_pid() { ss -ltnp 2>/dev/null | grep ":$PORT " | grep -oP 'pid=\K[0-9]+' | head -1; }
 
+# F-479: the live-traffic gate. No boot, stop, or battery may take the standing server down while
+# the operator's requests flow. Evidence: established connections on the standing port, or request
+# lines in the standing engine log fresher than the quiet window (the engine log appends per
+# request, so a fresh mtime plus a request line in the tail means traffic). Refuses with exit 1
+# unless STRATA_BOOT_OVER_LIVE=1 (the override is printed loudly). Precedent, 2026-11-26: 33
+# standing reboots in 24 h, each holding live requests at the door for up to 180 s — the
+# operator's stream is never a test surface. Call it at TAKE-DOWN time, before the stop: mid-run
+# battery legs also write request lines to the same engine log.
+require_quiet_standing() {  # require_quiet_standing [port] [quiet-seconds] [engine-log]
+  local port="${1:-$PORT}" quiet="${2:-120}" log="${3:-$REPO/logs/custom-iq3_s.log}"
+  local conns age evidence="" last
+  conns=$(ss -tn state established "( sport = :$port )" 2>/dev/null | tail -n +2 | wc -l)
+  [ "${conns:-0}" -gt 0 ] && evidence=" ${conns} established connection(s) on :${port};"
+  if [ -f "$log" ]; then
+    age=$(( $(date +%s) - $(stat -c %Y "$log") ))
+    if [ "$age" -lt "$quiet" ] && tail -n 400 "$log" 2>/dev/null | grep -q "prompt [0-9]* tokens ="; then
+      last=$(tail -n 400 "$log" | grep "prompt [0-9]* tokens =" | tail -1 | cut -c1-140)
+      evidence="$evidence engine log ${age}s old, last request: $last"
+    fi
+  fi
+  [ -z "$evidence" ] && return 0
+  if [ "${STRATA_BOOT_OVER_LIVE:-0}" = "1" ]; then
+    echo "require_quiet_standing: OVERRIDE (STRATA_BOOT_OVER_LIVE=1) — live traffic:$evidence" >&2
+    return 0
+  fi
+  echo "require_quiet_standing: REFUSING — the operator's stream is live:$evidence" >&2
+  echo "  (override with STRATA_BOOT_OVER_LIVE=1, only with the operator's word)" >&2
+  return 1
+}
+
 # STRATA_BATTERY_DRYRUN=1 — a battery's pre-flight: its gates and guards fire (kernel checks,
 # pool checks, engines-down refusals) but nothing boots, kills, or probes.  Every converted
 # battery validates this way before it is trusted with a real leg.

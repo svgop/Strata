@@ -15922,3 +15922,38 @@ diff AND the live uncommitted hunks, labeled whose), the standing config's every
 launcher, the chat template, and the engine binary's mtime — against the commit BEFORE the symptom's
 onset. Run at 15:14, that one command names F-468 first. A day-sized git window is an instrument error,
 and the operator pays for it in hours.
+
+## F-479 — conversation KV reuse: the checkpoint mechanism named, the guard's forfeit tax quantified; the live-traffic gate lands as code (2026-11-26 16:05)
+
+**The mechanism (serve/server.py:2450-2463, `pick_slot`/`held_prefix`, + the engine's --turn-token):**
+a slot's reusable prefix is EITHER the byte-exact held stream — the prompt plus everything it
+decoded, which requires the client to resend the assistant reply verbatim — OR the turn checkpoint
+at the last <|im_start|> of the held stream. Model-decoded reply regions contain no turn tokens, so
+they carry no resumable checkpoints: a client that trims or edits history between turns falls back
+to the previous turn's checkpoint and re-reads the entire reply region.
+
+**Receipts (this boot, the operator's stream; logs/custom-iq3_s.log:1018377-1018469):**
+- The trim class: a 2,539-token prompt decoded 47,618; the next 50,156-token prompt — the client
+  resent a TRIMMED reply — reused exactly 2,534 (the previous turn boundary) and re-read 47,622 in
+  7,549 ms.
+- Clean turns reuse fully: 27,026/27,027, 22,305/22,310, 38,665/38,670 — byte-exact continuation works.
+- The kill class: guard-killed turns (finish "length") forfeit even their prompt read — after the
+  14,336-token kill the next request re-read 16,365 (2,793 ms); after the 6,656-token kill, 5,909
+  (1,717 ms). One stream, one hour: 47,622 + 16,365 + 5,909 = 69,896 tokens ≈ 12.1 s of pure
+  re-prefill — the loop guard's SECOND tax, on top of the killed work itself.
+
+**Remediation map:** (1) the kill class dies with the guard at the next operator-approved boot
+(F-478); (2) the trim class is engine-side — resumable checkpoints at reply boundaries (the
+<|im_end|> after decoding, or every <|im_start|> during prompt read) would let a turn-level
+compaction match up to the first dropped turn; the src read of the turn-token policy is the open
+slice; (3) client-side: resend history verbatim where possible — byte-exact continuation gets the
+whole held stream.
+
+**The live-traffic gate (law made structure):** `require_quiet_standing` in campaign/battery-lib.sh
+refuses any take-down while the standing port holds established connections or the standing engine
+log shows a request line inside the quiet window (default 120 s; override STRATA_BOOT_OVER_LIVE=1,
+printed loudly). `campaign/standing-reboot.sh` is the sanctioned manual reboot path — gate, TERM,
+launch as svg, /health + prewarm wait. Smoke on the live system: the quiet branch refused on
+1 established connection (the operator's stream was live at 16:06); the detection branch refused
+naming the last request line; syntax clean on both files. Open slice: wire the gate call into
+binary-ladder.sh and gate-pair.sh take-down sites.
