@@ -15834,3 +15834,20 @@ install overrides it as a standing choice, and the standing's first-real-request
 watch item the next probe battery reads for free (anatomy lines: CPU-miss share) - if the 9-item corpus
 moves it where the 5-item did not, that is the operator's thesis confirmed at scale; if not, the cost is
 86 s of boot, known and labeled.
+
+### F-476b (2026-11-26) — OPERATOR DIRECTIVE: prewarm budgets amplified ("the point of prewarm is to jumpstart/spark experts"): output 1600 -> 8192/item, inputs become full domain briefs (~1,250 tok/item)
+
+Output: `prewarm.corpus.tokens` 1600 -> 8192 (~2,500 words/item; 73,728-token decode budget, 5.1x F-476's).
+Input: each of the 9 items now opens with the operator's full 15-paragraph domain map (C++20 memory model,
+kernel ioctl/eBPF, GPU warp/cp.async MoE, crypto/side-channel, symplectic 6-DOF, code-regression forensics,
+fault injection, adversarial audit) as a governing preamble, followed by the per-item brief extended to 8-10
+fully-enumerated sub-topics so a long generation keeps routing through the cluster instead of running dry.
+Request path verified uncapped: `_ask` passes max_tokens straight through; the only bound is
+PREWARM_ASK_S=600 s/request (~88k tokens at the cold corpus rate) and ctx 262144.
+
+Live proof (`logs/f476b-corpus-standing.out`): `corpus warm: 9 prompt(s) x 8192 tokens at temperature 0 in
+412 s`; replay 424 s, 19 warm-in requests, 75,786 tokens; burst 194 tok/s; the replay's verdict line reads
+`the first real request is warm` (F-476's 1600-token boot read `NOT CONVERGED` - the larger corpus drove the
+tier further before the burst). Cost: boot-to-ready ~7 min (was ~2.5 min). Rollback: lower `tokens` or
+delete the `corpus` key. Watch item unchanged: the next probe battery reads the first-request CPU-miss share
+for free.
