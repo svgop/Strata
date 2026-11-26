@@ -15880,3 +15880,34 @@ single requests amortize the overhead to 200+. If the client sends 1-token reque
 that is the number it will show whatever the engine does. Not a regression from the corpus: per-request hit
 rates on the stream (79-96%, mean 88.8%) match the pre-corpus baseline (87.5-96.8%, mean 89.3%), and the
 window-level hit rate 95.6-97.3% / CPU-miss 2.3-3.8% is the standing's band.
+
+## F-478 — F-468's answer-phase loop guard kills legitimate code: REVERTED to the server default (2026-11-26 15:35)
+
+**The break:** the operator's code generation terminated "after a specific distance" — every CSS-dense
+reply died at first detection + 3,584 tokens (LOOP_CLEAR_TOKENS 3072 + LOOP_CHECK_EVERY 512),
+finish_reason "length". Six firings on the operator's live stream 15:17-15:25 (loop logs 69 -> 75); the
+15:24 log (`logs/reasoning-loop-20261126-152458.log`) contains the flagged "passages": ordinary CSS
+(`border:1px solid var(--edge)`-class patterns). Coverage on the operator's legitimate code: 0.265-0.364,
+against LOOP_COVERAGE 0.25.
+
+**Why no threshold fixes it:** the metric — share of the last 2,000 words inside 12-word passages seen
+3+ times — cannot separate boilerplate from degeneration. Today's degenerate corpus loop fired at coverage
+0.263, BELOW the operator's legitimate code at 0.364. The ranges overlap; word-level n-gram coverage was
+built for reasoning loops, and F-468 (commit 9bca4f2c5, 11-25 19:44) extended it to the answer phase
+without generating one long code document.
+
+**The verification failure (law 14 — the consumer's shape of use):** F-468's batteries verified MMLU
+questions and thinking-loop interventions (22 -> 3). The operator's actual workload — long code
+generation at temperature 0.3 with thinking — was never run. The adoption was sold as "fixes looping";
+it fixed looping and killed the workload it was supposed to serve. From this entry: no adoption lands
+without a leg on the operator's usage shapes (long code + thinking; the short max_tokens-200 requests).
+
+**The speed tax the guard added:** a killed reply discards its tokens and the client re-reads a longer
+prompt to retry, so effective throughput dropped below the decode rate. The engine itself never slowed:
+190-225 tok/s through every kill, windows 14.3-15.3 ms, hit rates 93-96% on the killed replies.
+
+**Fix (containment, law 13 — the item stays open):** `reasoning_loop_recovery` "recover" -> `false`
+(the server default, #728). Guard off in both phases; the corpus's temp-0 loop risk is contained by the
+3,000-token cap (F-476c), not the guard. Arms at the NEXT BOOT — the standing was NOT rebooted over the
+operator's live stream. Open item: a scoped guard (thinking-phase coverage retained, answer-phase exempt
+or code-aware) — a serve/server.py edit beside the operator's uncommitted hunks, explicit direction only.

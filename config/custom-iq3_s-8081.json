@@ -110,6 +110,6 @@
       ]
     }
   },
-  "reasoning_loop_recovery": "recover",
+  "reasoning_loop_recovery": false,
   "log_sampling": true
 }
