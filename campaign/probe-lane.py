@@ -17,6 +17,15 @@ FRESH_TMPL = ('Section {i} of the incident review. At step {i} the operator obse
               'behaviour and recorded it against the runbook entry number {i}. The measurement taken at '
               'that point was catalogued with identifier {i} and compared against the baseline that had '
               'been established before the change was introduced.')
+# F-482: the operator's actual workload shape — a single-file HTML/CSS/JS document, CSS-dense
+# (custom properties, panel styling) exactly like the stream the loop guard misread (F-478).
+# The code-shaped depth/acceptance falsifier legs run on this, not on REAL's prose.
+CODE = ('Write a complete single-file HTML document: a real-time mechanical simulation of a '
+        'four-stroke internal combustion engine rendered on canvas, with a fixed HUD panel styled '
+        'with CSS custom properties (colors, borders, radius, monospace typography), RPM and '
+        'temperature gauges as CSS bars, keyboard controls (throttle, advance, pause), and all '
+        'JavaScript inline in one script block. Style every panel and control; no explanation, '
+        'output only the document.')
 
 _probe_err_said = None
 
@@ -75,6 +84,9 @@ def main():
     ap.add_argument('--long-tok', type=int, default=2000)
     ap.add_argument('--fresh-sections', type=int, default=90)
     ap.add_argument('--skip-conc', action='store_true')
+    ap.add_argument('--code-leg', action='store_true',
+                    help='F-482: the M1 long leg runs the CODE prompt (the operator\'s single-file '
+                         'HTML/CSS/JS shape) instead of REAL prose — for depth/acceptance falsifiers')
     a = ap.parse_args()
     base = f"http://127.0.0.1:{a.port}/v1/chat/completions"
 
@@ -111,8 +123,9 @@ def main():
         ma, mb = sum(va)/len(va), sum(vb)/len(vb)
         print(f"SHORT-CLASS A/B   : before long prompt {ma:.1f} t/s -> after {mb:.1f} t/s ({100*(mb-ma)/ma:.0f}%)")
 
-    ok, tok, sec = probe(base, REAL, a.long_tok, 0.7, a.key)
-    print(f"M1 single-stream : {tok/sec:.1f} t/s ({tok} tok in {sec:.2f}s)")
+    ok, tok, sec = probe(base, CODE if a.code_leg else REAL, a.long_tok, 0.7, a.key)
+    print(f"M1 single-stream : {tok/sec:.1f} t/s ({tok} tok in {sec:.2f}s)"
+          + (" [prompt=code]" if a.code_leg else ""))
 
     if not a.skip_conc:
         tok, wall = conc_run(base, 2, 900, a.key)

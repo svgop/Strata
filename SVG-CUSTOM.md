@@ -16045,3 +16045,23 @@ relaunch then failed to bind. Fixed: `cleanup_engine` (the sanctioned stop: port
 the repo-scoped GPU sweep + the F-271 cache drop), plus the F-479 live-traffic gate before the
 gauntlet's first take-down. gate-pair needs no gate — it refuses when any engine is up, so it
 never takes the standing down itself.
+
+## F-482 — the code-shaped falsifier instrument landed; the stream's live state read (2026-11-26 16:15)
+
+**The instrument (campaign/probe-lane.py):** CODE — the operator's actual workload shape, a
+single-file HTML/CSS/JS document, CSS-dense (custom properties, panel styling) exactly like the
+stream the loop guard misread (F-478) — plus `--code-leg`: the M1 long leg runs CODE instead of
+REAL prose, the M1 line tagged `[prompt=code]`. The ladder's M1 regex still matches (verified).
+The depth/acceptance falsifier plan: STRATA_SPEC_DEPTH ladder legs (the F-228 stair shape:
+env-ladder + probe per-depth counters) run with `--code-leg`, reading acceptance-vs-depth on
+code — Sightline's claim (2611.23807: on code, misses are rare and clumped and accuracy
+persists deeper into a block) is then confirmed or falsified on this rig, in an
+operator-approved window.
+
+**The stream's live state (read-only, 16:10):** the new conversation's first request
+(2,228-token prompt, a fresh slot: 0 reused, 1 checkpoint) generated 42,813 tokens in 227 s at
+189.5 tok/s and finished CLEAN (stop) — the loop-log count held at 75, zero new firings since
+15:25. The armed guard stayed under threshold on this reply; it remains a standing hazard (three
+kills today) until the operator-approved reboot. Connections: 0 (the stream idle at the read) —
+a quiet window exists whenever the operator gives the word. If this conversation's next turns
+resend verbatim, the whole ~45k held stream reuses (the byte-exact continuation path, F-480).
