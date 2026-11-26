@@ -96,3 +96,55 @@ quality, lever 2 addresses prediction, lever 6 removes the term's cost even at c
 MoE-Infinity's production numbers (near-full-GPU latency from a 24 GB card over PCIe4) put the
 ceiling within reach on this hardware class. Order: 1 → 3 → 4 (cheap arms, one battery), then
 2 (the real candidate), then 6.
+
+## ADDENDUM (same day, code investigation — corrects §4 lever 1, re-ranks the queue)
+
+**Correction (law 8).** Lever 1's premise — "usage counter never decays" — is WRONG. The counter
+decays per adapt round (`v *= o.adapt_decay`, generate.cpp ~11155) and the standing passes
+`--adapt-decay 0.85` (config :61; engine default 0.7), a recipe element since the early F-entries
+and re-verified repeatedly (record :143/:551/:5445/:5972). The effective horizon is ~6.7 rounds
+(~27 windows) — the counter IS a decayed recency-frequency hybrid, which is the papers' recommended
+form. The decay SWEEP (0.7/0.85/0.95) remains a legal tuning arm but re-arms old, validated ground:
+deprioritized.
+
+**The confirmed structural absence.** `RouterLookahead::start` refuses unless the expert source
+"warms" (expert_source.cpp:2789; `warms()` defaults false at expert_source.hpp:278, only the file
+tier overrides it at :1009). On the resident-RAM standing the look-ahead therefore NEVER STARTS —
+prediction-driven admission is absent from this tier, not tuned badly. The adaptive tier is purely
+reactive: miss → count → swap-in every 4 windows by decayed usage with a +1.5 margin. The anatomy's
+2.9-4.1 ms/window CPU-expert term is what pure reactivity pays.
+
+**The composition is already coded.** `STRATA_LOOKAHEAD_STATS=1` runs the predictor measurement-only
+on ANY tier (stats mode is passed as allow_cold_source — the scorer, stats_window_start/stats_score
+and the report at expert_source.cpp:2893 exist). `STRATA_FS_SLOTS` arms ForesightSwap (per-layer GPU
+swap slots, own DMA streams, miss-count admission, budget 32 copies/card/round); `STRATA_FS_AHEAD=1`
+(default when FS is on) makes the look-ahead run on the resident tier and FEED its predictions to
+the swap space, where predicted copies bypass the miss counter (request_locked(predicted_copy=true),
+expert_source.cpp:6506). VRAM cost: slots × Σ blob_bytes per card, allocation from the
+`--vram-reserve-mib 1800` pool; the init refuses loudly if it does not fit.
+
+**Re-ranked best moves:**
+1. **MEASURE the predictor on our tier first** (zero behavior change, and the smoke for move 2):
+   one boot with `STRATA_LOOKAHEAD_STATS=1`, one probe → per-layer precision/recall of layer+1
+   routing prediction vs the real routing, and the % of layers scored without a prediction. This
+   prices moves 2-3 before anything is armed (law 4/11).
+2. **ARM THE PREDICTION PIPELINE end-to-end (the main candidate — env-only, no code):**
+   `STRATA_FS_SLOTS=8` (+ defaults FS_AHEAD=1, LOOKAHEAD on). Converts the CPU-miss class into
+   predicted GPU-resident hits served from the swap slots. Needle: the 2.9-4.1 ms/window CPU term
+   is the read; M3b must hold (parity kernels make GPU-vs-CPU expert outputs match by contract).
+   Verify the VRAM fit at arm time (loud refusal otherwise). ABAB, same hour, cooled box.
+3. **REQUEST-LEVEL EAM CREDIT (the MoE-Infinity core, minimal tree-native form, needs code):**
+   snapshot `d.usage` at request start, diff at prefill end = this request's EAM; keep a small ring
+   of recent EAMs; on cosine match at the next request's start, inject the matched top-k as usage
+   credit so the existing adapt round pre-places them BEFORE decode misses. No new copy machinery —
+   the existing chooser/refill stream acts on the credit. Price after move 1: if layer+1 prediction
+   is already precise, the request-level signal adds less; if misses concentrate in layer groups,
+   it adds more.
+4. **HYSTERESIS/CADENCE SWEEP** (cheap): admit threshold 2.0, margin +1.5, adapt_every 4,
+   max_swaps — F-127 closed capacity, not policy values. Legitimate only with move 1's instrument
+   in hand.
+5. **CPU-TIER OVERLAP** (unchanged, biggest, later): compute a layer's CPU experts concurrently
+   with the GPU kernel (the record's own untested structural lever).
+
+Not moves, confirmed by code + record: route tail-skip (lossy, default 7, "not a lever"), shadow
+Q2_0 experts (lossy, refused at blob size), more cache capacity (F-127).
