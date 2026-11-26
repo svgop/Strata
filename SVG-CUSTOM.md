@@ -15911,3 +15911,14 @@ prompt to retry, so effective throughput dropped below the decode rate. The engi
 3,000-token cap (F-476c), not the guard. Arms at the NEXT BOOT — the standing was NOT rebooted over the
 operator's live stream. Open item: a scoped guard (thinking-phase coverage retained, answer-phase exempt
 or code-aware) — a serve/server.py edit beside the operator's uncommitted hunks, explicit direction only.
+
+**Addendum 15:50 — the operator's audit charge ("when I asked what you tinkered with you said nothing"):
+the answer to "what changed?" is a closure diff, never a day-memory recital.** The first accounting was
+built from `git log --since="16 hours"` — a window sized to the agent's day, which silently excluded
+9bca4f2c5 (19:44 the night before, 213 lines of server.py + the `reasoning_loop_recovery` arm). The list
+was true and materially incomplete: the cause was missing from it. Law from this entry: when the operator
+asks what changed, the answer is produced by diffing the SERVED-PATH CLOSURE — serve/server.py (committed
+diff AND the live uncommitted hunks, labeled whose), the standing config's every behavioral key, the
+launcher, the chat template, and the engine binary's mtime — against the commit BEFORE the symptom's
+onset. Run at 15:14, that one command names F-468 first. A day-sized git window is an instrument error,
+and the operator pays for it in hours.
