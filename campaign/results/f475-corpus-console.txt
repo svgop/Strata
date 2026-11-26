@@ -1,0 +1,35 @@
+arm configs written: A=standing(3 default), B=5-item broad, C=2-item workload-shaped
+[14:18:23] arm A prewarm=done boot+warm=87s load=4.71
+M1 single-stream : 193.3 t/s (2000 tok in 10.35s)
+M3b rate         : 75.6% mean over 29 requests (diagnostic)
+M1 single-stream : 216.0 t/s (2000 tok in 9.26s)
+M3b rate         : 73.9% mean over 28 requests (diagnostic)
+  anatomy (first leg window):
+    VRAM 1541.5 (96.4%), PCIe 7.6 (0.5%), CPU 50.6 (3.2%)
+    VRAM 1882.3 (96.8%), PCIe 8.8 (0.5%), CPU 53.6 (2.8%)
+    VRAM 1459.5 (95.9%), PCIe 12.0 (0.8%), CPU 50.5 (3.3%)
+    VRAM 1864.7 (97.4%), PCIe 6.4 (0.3%), CPU 44.1 (2.3%)
+    VRAM 1410.7 (96.3%), PCIe 9.5 (0.6%), CPU 44.0 (3.0%)
+[14:21:31] arm B prewarm=done boot+warm=78s load=4.28
+M1 single-stream : 199.0 t/s (2000 tok in 10.05s)
+M3b rate         : 75.4% mean over 29 requests (diagnostic)
+M1 single-stream : 223.1 t/s (2000 tok in 8.97s)
+M3b rate         : 76.1% mean over 28 requests (diagnostic)
+  anatomy (first leg window):
+    VRAM 1598.8 (96.6%), PCIe 7.8 (0.5%), CPU 48.6 (2.9%)
+    VRAM 1890.4 (97.0%), PCIe 8.6 (0.4%), CPU 50.7 (2.6%)
+    VRAM 1388.5 (92.4%), PCIe 24.7 (1.6%), CPU 89.2 (5.9%)
+    VRAM 1881.2 (97.3%), PCIe 6.9 (0.4%), CPU 45.3 (2.3%)
+    VRAM 1420.1 (96.1%), PCIe 10.6 (0.7%), CPU 47.1 (3.2%)
+[14:24:30] arm C prewarm=done boot+warm=69s load=3.55
+M1 single-stream : 195.3 t/s (2000 tok in 10.24s)
+M3b rate         : 74.2% mean over 29 requests (diagnostic)
+M1 single-stream : 198.7 t/s (2000 tok in 10.07s)
+M3b rate         : 75.8% mean over 28 requests (diagnostic)
+  anatomy (first leg window):
+    VRAM 1508.1 (96.8%), PCIe 6.1 (0.4%), CPU 42.9 (2.8%)
+    VRAM 1866.1 (97.1%), PCIe 7.5 (0.4%), CPU 47.6 (2.5%)
+    VRAM 1463.0 (96.1%), PCIe 11.1 (0.7%), CPU 48.6 (3.2%)
+    VRAM 1856.2 (97.2%), PCIe 7.1 (0.4%), CPU 45.9 (2.4%)
+    VRAM 1460.5 (96.0%), PCIe 11.5 (0.8%), CPU 49.0 (3.2%)
+CORPUS BATTERY DONE

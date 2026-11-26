@@ -15760,3 +15760,54 @@ The operator's solo test read ~170 t/s against tonight's 223-238 bank and asked 
 - **Eliminators, in order:** (1) live-boot probe with law-11 discard: 88.4 discard, then 184.0 / 196.9 / 204.9 CLIMBING - the boot warms for 3+ legs; M3b flat 74-75% throughout (outputs untouched). (2) FRESH boot (scratch slots, baseline profile untouched since Oct-14): 181.9 / 190.7 / 204.2 - session-state (the F-271 gate-shaped tier) ruled out; the sag reproduces on a virgin boot. (3) Main thread on CPU 0 only: BY DESIGN - aux_cpus.hpp's host-core placement (the code's own comment names the degenerate case: "the host's one CPU must not be it"; the mask is the designed placement, workers span 0-31). (4) Standing slot dir empty; expert-profile.bin mtime Oct-14 - no profile corruption. (5) **The decisive arm: hugepage=0 vs =1 under the current box state, both fresh-boot discard+2-legs: 197.5 vs 200.3 mean - PARITY. The adoption is exonerated; the box moved under both configs equally.** (6) GPU full clocks (2947/3120 MHz), zero throttle event flags, 46°C; BOARD sensors 52.5/49.2/52.2°C against 55.0°C alarm limits (three ALARM flags) - the host side is soaked.
 - **Verdict:** after ~8h of continuous synthetic load (two 122-minute 1500q gates 05:00-09:07, two battery windows, three gate runs on the standing), the board is thermally soaked and the host-heavy M1 lane reads -10-20% with a lengthened warm-in curve. Nothing in config, engine, or launcher changed between the 230s and the 170s. Law 17 is exactly this: banked numbers describe their own window; a cross-window comparison is the world moving, not a regression. Expect the 220-235 band back after the box cools; until then, same-hour comparisons only.
 - **RETRACTION (law 8):** F-473's note that the rescue arms' M1 readings came from "the window's inline probe - a different instrument" is WRONG - the rescue harness ran probe-lane.py, the same instrument that made the banks. The 166-189 readings were the sag, visible in tonight's own data, and I mislabeled it instead of chasing it. The mislabel cost the operator a morning of doubt; chased at first sight it would have been an F-entry by 11:00. F-472's adoption verdict is unaffected (same-hour interleave, and the 0/1 parity pair here re-confirms it under the sagged state).
+
+## F-475 (2026-11-26) — Prewarm corpus as cold-boot expert pre-heat FALSIFIED: the decay horizon repays the loan before the first real request; broad corpus reads inside noise, CPU-miss share unmoved
+
+Operator thesis: dense low-level systems/security/domain prompts in the prewarm corpus route through the
+highest-value specialist experts and pull them into VRAM ahead of the real workload. Smoke on the live
+engine validated the prompt design: one B-item at temp 0 produced 620 dense on-topic tokens, 175/175
+unique 12-grams, finish=length, no loop, no refusal. Domain-dense text runs ~3.3 tokens/word here.
+
+**Surface (law 5, already owned):** `prewarm.corpus = {prompts, tokens}` (F-400) runs at temperature 0 as the
+FIRST replay stage so the tier converges deterministically before live traffic. A bare-list `corpus` is
+silently ignored (the reader's isinstance guard) and falls back to the default three prompts - executed to
+confirm. The operator's JSON needs the dict form.
+
+**Battery** (3 cold boots, one variable = the corpus, 1 measured leg as the FIRST traffic after prewarm
+done; `campaign/results/f475-corpus-*`):
+
+| arm | corpus | M1 first / second leg | CPU-miss share (routed entries) | corpus stage |
+|-----|--------|-----------------------|---------------------------------|--------------|
+| A control | default 3 prompts | 193.3 / 216.0 | 2.3-3.3% | 3 x 600 tok, 12 s |
+| B broad | operator's 5-item (B1,B4,B3,C1,C2) | 199.0 / 223.1 | 2.3-5.9% | 5 x 600 tok, 20 s |
+| C workload | C1,C2 only | 195.3 / 198.7 | 2.4-3.2% | 2 x 600 tok, 8 s |
+
+M3b 73.9-76.1% all arms (canary flat). Box had cooled (second legs 199-223; the F-474 thermal-soak
+band recovered as predicted). Load 4.71 -> 3.55 across the battery, disclosed.
+
+**Verdict: FALSIFIED as a cold-boot pre-heat.** B reads +2.9%/+3.3% over A - inside the +-4% band on one
+boot each (signal, not verdict) - and the decisive term, the CPU-miss share the mechanism is supposed to
+cut, is IDENTICAL across arms. 3,000 dense decode tokens of warm-up changed the first real request's
+miss rate by nothing measurable.
+
+**Mechanism (why it cannot work at this position):** adapt-decay 0.85 per adapt round (every 4 windows)
+gives a warmed expert's credit a ~27-window half-life-ish horizon; the prewarm's remaining stages (shorts,
+mid prefill, 6-way burst, settled check) plus the probe's own first leg consume far more than that, so the
+corpus's expert credit has decayed to noise before the measurement begins. The loan is repaid before the
+spend. This is the F-408 "corpus shape mismatch" arm, run and closed: extending the corpus's SHAPE does not
+help because the POSITION in the boot sequence is wrong for a decaying scoreboard, not the content.
+
+**Survivors (re-open conditions):** (1) ON-DEMAND pre-heat INSIDE the horizon: the same dense traffic
+issued by the client/operator immediately before a known long session (the operator's original
+paste-the-prompt use) - the credit is fresh when the real request lands. Unpriced; a one-boot A/B with
+the heat issued <30 windows before the measured leg prices it. (2) REQUEST-LEVEL EAM CREDIT (digest
+2026-11-26-gpu-cache-hit-99 move 3): make the tier REMEMBER per-request activation patterns (small ring of
+request EAMs, cosine match, inject as usage credit at request start) instead of re-learning them under a
+27-window decay - the structural fix for exactly this horizon. (3) PREDICTION (ForesightSwap + look-ahead,
+digest moves 1-2) sidesteps the scoreboard entirely.
+
+Instrument notes banked: (a) the driver's port guard aborted once for free when the standing was still up
+(law 11 - a premise failure caught before any boot); (b) a `stop_boot` call placed before its definition
+was caught by a call-ordering audit before launch; (c) per-arm engine-log reads must anchor on a line
+count taken at boot start (logs/custom-iq3_s.log appends across boots). Config restored byte-identical
+(trap-verified).
