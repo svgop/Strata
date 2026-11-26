@@ -15957,3 +15957,46 @@ launch as svg, /health + prewarm wait. Smoke on the live system: the quiet branc
 1 established connection (the operator's stream was live at 16:06); the detection branch refused
 naming the last request line; syntax clean on both files. Open slice: wire the gate call into
 binary-ladder.sh and gate-pair.sh take-down sites.
+
+## F-480 — three code reads: the KV trim-class boundary is fundamental (client fix priced), FS re-priced with its noise gate found in-tree, the CPU-miss assignment already split by pcie_frac (2026-11-26 16:20)
+
+**1. The trim class is a property of strict prefix KV, not a defect (src/program/generate.cpp:
+15874-15935, include/strata/program/message_boundary.hpp).** The engine checkpoints a prompt at:
+the resume point, the root (the first turn boundary = the system prompt's end, pinned), the
+opt-in STRATA_CACHE_MESSAGE_BOUNDARY boundary (the previous turn's start — only when the last
+turn's tail is ≤1024 tokens and the conversation is ≥8192), the last <|im_start|>, and the prompt
+end. No checkpoints exist between the root and the last turn. A client that front-trims history
+(the operator's agent client: a 54,395-token reply came back as 47,622) diverges from the held
+stream immediately after the system prompt — so EVERY strict-prefix cache (ours, vLLM prefix
+caching, SGLang's radix tree) re-reads everything after it; Callo (2611.18459) is the production
+acknowledgment of exactly this class. Remediation, priced: (a) CLIENT-SIDE, free, proven on
+today's clean turns — resend verbatim and byte-exact continuation reuses the whole held stream
+(27,026/27,027; 22,305/22,310; 38,665/38,670); at 6,308 tok/s prefill a 50k front-trim costs
+7.5 s/turn that verbatim resend pays only once; (b) STRATA_CACHE_MESSAGE_BOUNDARY=1 arms the
+in-tree previous-turn checkpoint (helps header/thinking variation, marginal for front-trim);
+(c) the structural endgame for a client that must front-trim is KV relocation (sink+window,
+StreamingLLM-class) — a large engine feature, priced, not designed.
+
+**2. FS re-priced (the Bevy cross-check closed).** ForesightSwap's predict path
+(src/core/expert_source.cpp:6481-6542) already prices prediction noise: a miss-count admission
+gate before any copy, a per-card per-round budget, LRU slots with depth protection; predicted
+copies bypass the miss counter by design (prediction, not reaction). Bevy's finding (2611.04794:
+prefetch precision falls as cache hit rises) therefore lands on the right question — the
+predictor's precision on the MISSED set at our 95.6–97.3% window hit — and the instrument exists
+and runs on the resident tier (generate.cpp:7220-7224: STRATA_LOOKAHEAD_STATS=1). Verdict: the
+FS_SLOTS arm stays gated on measured precision-on-missed-set; the drop condition is named —
+precision below the admission break-even drops the arm in favor of the scheduling/raunahead
+shape (Bevy's 3.46×, our cohort machinery is the local analog). The stats boot is the next move
+(operator-approved window).
+
+**3. The CPU-miss assignment already exists (expert_source.cpp:5273-5304).** plan_build() decides
+per routing entry: −1 CPU, 0 VRAM, 1 PCIe — "resident ones and the last pcie_num/256 of the
+missed ones go to the GPU" — and the GPU's share is "decided and published FIRST so the GPU
+starts while the CPU works." The F-125 lever narrows to: (a) the pcie_frac split (the engine arg
+--pcie-frac AND a per-request req_pcie_frac exist) — the sweep is the falsifier; today's anatomy:
+CPU experts 2.95 ms/window for 49 entries (3.0%) vs PCIe 0.14 ms for 7 — per-entry PCIe is ~3×
+cheaper here, so moving the CPU tail onto the link is priced at up to ~2 ms/window (the F-125
+276 t/s class), bounded by F-126/127's refuted "more residency" (the split, not the slots);
+(b) the residual serialized CPU tail (2.95 ms inside run 13.28) — IsoMoE's dual micro-batch
+(2611.27604, 1.26–1.54×, bitwise placement-invariant) is the structural shape. Next: pcie_frac
+sweep legs in an operator-approved window.
