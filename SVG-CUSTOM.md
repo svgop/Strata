@@ -15851,3 +15851,32 @@ Live proof (`logs/f476b-corpus-standing.out`): `corpus warm: 9 prompt(s) x 8192 
 tier further before the burst). Cost: boot-to-ready ~7 min (was ~2.5 min). Rollback: lower `tokens` or
 delete the `corpus` key. Watch item unchanged: the next probe battery reads the first-request CPU-miss share
 for free.
+
+### F-476c (2026-11-26) — the 8192-token corpus LOOPED at temperature 0 (2 of 9 items); cap 3000 = the measured coherent ceiling, loop-free verified
+
+Operator reported the live solo stream reading ~130 t/s. Investigation read the operator's OWN stream windows
+(no new load - a probe battery launched on top of it was killed at the discard leg; the engine log's per-request
+accounting is the correct instrument for "check the one that is running").
+
+**Finding 1 - the corpus was looping.** `logs/reasoning-loop-20261126-1443[52|37].log` are the PREWARM's own:
+B3 (kernel ioctl/eBPF) and B4 (GPU warp/cp.async) degenerated under greedy decode at `max_tokens 8192`, 54.6%
+and 26.3% of the trailing 2,000 words inside passages seen three times, ended by the server's loop recovery.
+Onset positions: 3,072 and 3,584 tokens generated - greedy decode stays coherent to ~3k on the hardest items;
+the other 7 items finished all 8,192 clean. F-476b's "75,786 warm-in tokens" was part loop. The 1,600 cap
+(F-476) was loop-free (175/175 unique 12-grams on smoke); the loop is a LENGTH effect at temperature 0, and
+the loop-recovery logs were on disk the whole time - uncaught at F-476b because the boot's verdict line
+(`the first real request is warm`) was read as the proof and the loop logs were not checked. Law 11 applied
+to the corpus itself now: the pass criterion is zero NEW reasoning-loop logs across the corpus stage.
+
+**Fix:** `prewarm.corpus.tokens` 8192 -> 3000 (27,000-token budget; 1.9x the proven 1,600, under the 3,072
+onset). Live proof (`logs/f476c-corpus-standing.out`): `corpus warm: 9 prompt(s) x 3000 tokens in 158 s`;
+replay 169 s, 29,060 tokens; loop logs 69 -> 69 (zero new). Rollback: lower `tokens`.
+
+**Finding 2 - the 130 t/s is REQUEST SHAPE, not engine speed.** The operator's live requests read
+`1 generated in 9 ms ... drafts accepted 0 of 0`: one-token requests. The per-request fixed cost (~8-14 ms:
+prompt read, one window, commit) divided by one token = 78-124 tok/s by arithmetic; the engine's steady
+windows in the same stream ran 14.3-14.6 ms/window (the standing's normal band) and the probe's 2,000-token
+single requests amortize the overhead to 200+. If the client sends 1-token requests (title/probe/tool-step),
+that is the number it will show whatever the engine does. Not a regression from the corpus: per-request hit
+rates on the stream (79-96%, mean 88.8%) match the pre-corpus baseline (87.5-96.8%, mean 89.3%), and the
+window-level hit rate 95.6-97.3% / CPU-miss 2.3-3.8% is the standing's band.
