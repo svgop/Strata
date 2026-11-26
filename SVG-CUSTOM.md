@@ -16221,3 +16221,46 @@ operator's shape, the corpus loop fixtures (B3/B4), the MMLU gate and the 1500q 
 the reboot through campaign/standing-reboot.sh and the deployed-process re-verification.
 STALENESS CONDITION: the operator's hunks move -> re-author before applying; the
 git apply --check gate catches any drift loudly, never silently.
+
+## F-487 — the sanctioned reboot path could not boot an armed env (sudo strips it); closed with a validated passthrough and a dry-run mode (2026-11-26 20:35)
+
+The hit-99 row's named leg - "LOOKAHEAD_STATS measure boot via standing-reboot.sh" - was
+UNEXECUTABLE as written. The script boots the engine through
+`sudo -u svg -H env XDG_RUNTIME_DIR=... STRATA_SWAP_GUARD=1 ./launch-custom-iq3s-8081.sh`,
+and sudo's env_reset strips the caller's environment at that boundary. Verified empirically,
+no boot spent: an exported TESTPASS and STRATA_COHORTS both read unset inside the sudo'd
+shell. A leg run as `STRATA_LOOKAHEAD_STATS=1 bash campaign/standing-reboot.sh stats` would
+have booted the standing UNARMED and silently - the no-op-boot class F-205/F-483 made law
+(an instrument that silently boots the wrong thing voids its verdicts). The engine-side env
+names were verified in source first: STRATA_LOOKAHEAD_STATS (generate.cpp:7222, measurement
+only, runs the predictor on any tier and scores it against the real routing) and
+STRATA_SPEC_DRAFT_TEMP (sampler.cu:1442, F-201, draft-side only).
+
+**The fix (campaign/standing-reboot.sh, default-off, byte-identical when unused):**
+- `STRATA_PASS_ENV="NAME=VALUE ..."` - named items, each validated (NAME=VALUE with
+  NAME [A-Za-z_][A-Za-z0-9_]*; a malformed item refuses with exit 1, fail-closed) and passed
+  as one argv element each into the env line; globbing is disabled around the split, and
+  nothing from the caller's environment reaches the engine unnamed.
+- The boot console gains the receipt line `[standing-reboot] armed env: ...` (law 14: the
+  deployed process is the change; the console carries what booted).
+- `STRATA_REBOOT_DRY=1` prints the exact command a run would execute and exits - no gate, no
+  stop, no boot, no files; the wrapper-validation law made cheap.
+
+**Verified, no boot spent:** bash -n green; four dry-run branches - default (the command
+byte-identical to the pre-extension form), armed (the item lands in the command), malformed
+(refusal, exit 1), two items (both land); and the delivery proof - the constructed env line
+run through the identical sudo form delivers STRATA_LOOKAHEAD_STATS=1 and
+STRATA_SPEC_DRAFT_TEMP=0.95 to the svg-side process (user=svg). The standing was untouched
+throughout (health ok, no console files created).
+
+**The exact leg commands now on record (each still waits for the operator's word):**
+- hit-99 stats boot: `STRATA_PASS_ENV="STRATA_LOOKAHEAD_STATS=1" bash campaign/
+  standing-reboot.sh hit99-stats` - then read the predictor's measured
+  precision-on-missed-set from the console and decide per the F-480 gate.
+- A draft-temp leg on the standing recipe, if run there rather than through the battery
+  harness (the ABAB harness boots arms through its own launcher copies, which set the env
+  inside the launcher - no sudo boundary): `STRATA_PASS_ENV="STRATA_SPEC_DRAFT_TEMP=0.95"
+  bash campaign/standing-reboot.sh dt095` (same for 1.05).
+
+The first real armed boot verifies end-to-end per law 14 (the console's armed-env line plus
+the engine's own stats output); the dry-run check catches drift before the boot is spent.
