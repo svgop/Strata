@@ -16264,3 +16264,51 @@ throughout (health ok, no console files created).
 
 The first real armed boot verifies end-to-end per law 14 (the console's armed-env line plus
 the engine's own stats output); the dry-run check catches drift before the boot is spent.
+
+## F-488 — the falsifier legs' exact commands verified on all three harness paths; env-ladder gains PROBE_ARGS; the turn-4 live datum (2026-11-26 20:40)
+
+**The readiness verification (F-487's class, extended to the battery path).** F-487's claim
+that "the ABAB harness boots arms through its own launcher copies" is now code-verified, and
+the harnesses are stronger than claimed:
+
+1. **draft-temp-sweep.sh** (the 0.95/1.05 legs): `bash campaign/draft-temp-sweep.sh <label>
+   0.85 0.95 1.05` — the control arm first (law 17), ROUNDS=2 reverses the arm order on even
+   rounds, LEGS measured per arm after a discarded warm leg (law 11). Per arm: a DERIVED
+   launcher with STRATA_SPEC_DRAFT_TEMP armed AFTER the standing exports (launcher_with_env —
+   the F-284 override class defeated by construction), and a /proc environ check that PROVES
+   what armed before any leg is measured. Battle-proven by the F-470/F-471 sweeps. Refuses to
+   start while an engine or port is up; its own STRATA_BATTERY_DRYRUN pre-flight exists.
+2. **config-ladder.sh** (the pcie_frac legs): `bash campaign/config-ladder.sh
+   "--pcie-frac <value>" <label>` — token-style on-args are REMOVED from the standing args
+   then appended; the config is mutated only through a python JSON round-trip (the owner law)
+   and restored by trap; ROUNDS=3 default (the 3v3); bits default "no" with the gates named
+   for residency-moving arms (M3b in-band + the MMLU floor) — exactly the pcie class.
+3. **env-ladder.sh** (the depth legs) — HAD THE ONE REAL GAP: its two probe invocations
+   hardcoded the standard prompt, so the depth row's "--code-leg" legs could not run through
+   it, and the warm-discard leg must warm the same path the measured legs read. FIXED
+   (default-off, byte-identical when unused): `PROBE_ARGS` appends to EVERY probe-lane
+   invocation (warm-discard and measured). The code-leg output keeps the ladder's regexes
+   (the M1 tag [prompt=code] and the unchanged M3b line; F-482 verified the M1 regex; the
+   summary parser's M3b pattern re-checked this round). Verified: bash -n green; the armed
+   argv shape lands --code-leg; the default argv is identical; both invocation sites carry
+   the passthrough. The depth legs' exact command:
+   `PROBE_ARGS="--code-leg" bash campaign/env-ladder.sh STRATA_SPEC_DEPTH unset <depth>
+   <label>` (the standing sets no SPEC_DEPTH — the round-15 audit — so "unset" is the honest
+   control; env-ladder boots the launcher directly, no sudo boundary; its /proc banner names
+   the arm; it restores the engine UP at the end).
+
+**The turn-4 live datum (20:31-20:36, the operator generating during this round; read-only,
+no probe).** The rewrite class recurred: prompt 4,668 = 0 reused + 4,668 read in 2,445 ms; a
+46,505-token answer to natural stop. The class table over four live turns now reads 1
+checkpoint (99.8%), 1 trim (13.0%), 2 rewrite (0.0%) — 3 of 4 turns lose the tail. THE RATE
+DATUM: 175.0 tok/s against the 19:59 window's 194.8-204.9, with the mechanism in the same
+accounting lines: 3,825.6 MB read from storage with 97 MAJOR FAULTS (the earlier turns read
+128.6/248.6/364.1 MB with 0 faults), the page cache holding 933.6 of 1,387.1 MB of expert
+reads (the earlier turns held 100%), and decode fetch waits of 92.9 ms in 308 fetches
+(earlier 13.0/129.3/33.7 ms). Class: page-cache eviction on the file tier — a box state, not
+an engine regression; the drift law bars any comparison across this window, and the next
+same-hour probe (the operator's word or the next quiet window) decides whether the cache
+state or something real moved. The console's sampling line for this turn — "presence_penalty
+1.5" riding a 46.5k-token code-class answer — is the presence-code-scope tension on live
+display; the patch waits as ever. Receipts appended to
+campaign/results/f484-live-trim-watch.txt.

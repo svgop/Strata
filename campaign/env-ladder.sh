@@ -13,6 +13,11 @@
 #
 # Usage: bash campaign/env-ladder.sh <VAR> <off-value> <on-value> <label> [bits]
 #   off-value "unset" -> the variable is not exported for the control boot.
+#   PROBE_ARGS (optional, default empty = the standard prompt, command identical): extra
+#   arguments appended to EVERY probe-lane invocation - the warm-discard leg AND the measured
+#   legs, so the discard warms the same path the measured legs read. The code-shaped depth
+#   legs use PROBE_ARGS="--code-leg" (F-482's instrument; the M1 tag and the M3b line keep
+#   this ladder's regexes and summary parser intact).
 set -u
 REPO=/home/svg/LLM/strata-custom-2
 VAR=${1:?variable}
@@ -51,11 +56,11 @@ boot_and_probe() {   # $1 = on|off, $2 = tag
   echo "[$2] env $VAR=$(tr '\0' '\n' < /proc/$ep/environ | sed -n "s/^$VAR=//p" | head -1)"
   grep -E ".{0,60}STRATA_SHARED_HOIST.{0,40}" $REPO/logs/custom-iq3_s.log 2>/dev/null | tail -2
   uptime | awk -F'average:' '{print "[warm-discard] load:"$2}'
-  .venv/bin/python campaign/probe-lane.py --port 8081 --label "$LABEL-$2-warm" 2>&1 \
+  .venv/bin/python campaign/probe-lane.py --port 8081 --label "$LABEL-$2-warm" ${PROBE_ARGS:-} 2>&1 \
     | tee "campaign/results/$LABEL-$2-warm.txt" | grep -E "^M1|^M2" | sed 's/^/[warm-discard] /'
   for l in 1 2 3; do
     uptime | awk -F'average:' '{print "['"$LABEL-$2-$l"'] load:"$2}'
-    .venv/bin/python campaign/probe-lane.py --port 8081 --label "$LABEL-$2-$l" 2>&1 \
+    .venv/bin/python campaign/probe-lane.py --port 8081 --label "$LABEL-$2-$l" ${PROBE_ARGS:-} 2>&1 \
       | tee "campaign/results/$LABEL-$2-$l.txt" | grep -E "^M1|^M2"
   done
 }
