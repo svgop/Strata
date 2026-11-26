@@ -3,7 +3,7 @@
 # Same prompts, same sequence, same engine-log accounting. Usage:
 #   .venv/bin/python campaign/probe-lane.py --port 8081 --label linux-standing
 import os
-import argparse, json, re, sys, threading, time, urllib.request
+import argparse, json, re, subprocess, sys, threading, time, urllib.request
 from datetime import datetime
 
 REAL = ('Write a comprehensive technical analysis of modern GPU memory hierarchies and their impact on '
@@ -19,6 +19,19 @@ FRESH_TMPL = ('Section {i} of the incident review. At step {i} the operator obse
               'been established before the change was introduced.')
 
 _probe_err_said = None
+
+def gpu_temp():
+    """F-474/F-481: the GPU temperature and the active throttle reasons right now (nvidia-smi,
+    a read-only query); ('', '') on any failure. The same-hour comparison law, checkable per leg."""
+    try:
+        out = subprocess.check_output(
+            ['nvidia-smi', '--query-gpu=temperature.gpu,clocks_event_reasons.active',
+             '--format=csv,noheader'], text=True, timeout=5).strip()
+        parts = [p.strip() for p in out.splitlines()[0].split(',')]
+        return parts[0], (parts[1] if len(parts) > 1 else '')
+    except Exception:
+        return '', ''
+
 
 def probe(base, prompt, max_tok, temp=0.7, key=None):
     body = json.dumps({"messages": [{"role": "user", "content": prompt}],
@@ -70,7 +83,9 @@ def main():
         offset0 = open(a.log, 'rb').seek(0, 2)
     except OSError:
         pass
-    print(f"=== PROBE {a.label} | {datetime.now():%Y-%m-%d %H:%M:%S} | log={a.log}")
+    t0, r0 = gpu_temp()
+    print(f"=== PROBE {a.label} | {datetime.now():%Y-%m-%d %H:%M:%S} | log={a.log}"
+          + (f" | gpu {t0}C" if t0 else "") + (f" ({r0})" if r0 else ""))
 
     ok, tok, sec = probe(base, 'Say OK.', 8, 0, a.key)
     print(f"    warmup: {tok} tok in {sec:.2f}s")
@@ -104,6 +119,16 @@ def main():
         print(f"M2 pair          : {tok/wall:.1f} t/s aggregate ({tok} tok in {wall:.2f}s)")
         tok, wall = conc_run(base, a.conc_n, 600, a.key)
         print(f"M2 {a.conc_n}-conc        : {tok/wall:.1f} t/s aggregate ({tok} tok in {wall:.2f}s)")
+
+    t1, r1 = gpu_temp()
+    if t0 and t1:
+        try:
+            print(f"THERMAL           : gpu {t0}C -> {t1}C over the leg" + (f" ({r1})" if r1 else ""))
+            if abs(float(t1) - float(t0)) > 2.0:
+                print("  ** THERMAL GUARD: the leg spans more than 2C — F-474's soak class. Do not"
+                      " compare this leg against another hour's; re-run the control same-hour.")
+        except ValueError:
+            pass
 
     time.sleep(2)
     with open(a.log, 'r', errors='replace') as f:

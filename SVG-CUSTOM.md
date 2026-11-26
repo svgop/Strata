@@ -16000,3 +16000,48 @@ cheaper here, so moving the CPU tail onto the link is priced at up to ~2 ms/wind
 (b) the residual serialized CPU tail (2.95 ms inside run 13.28) — IsoMoE's dual micro-batch
 (2611.27604, 1.26–1.54×, bitwise placement-invariant) is the structural shape. Next: pcie_frac
 sweep legs in an operator-approved window.
+
+## F-481 — the two server-side designs closed on paper, the calibration arm priced, the thermal guard wired, and a latent ladder-restore bug fixed (2026-11-26 16:35)
+
+**Scoped loop guard — the recommended design (a + tail), waiting for operator direction:** keep
+the full coverage guard for the THINKING phase (where loops live and where F-468's batteries
+measured 22→3 interventions); for the ANSWER phase keep ONLY the tail-period check
+(LOOP_TAIL_CHARS/LOOP_TAIL_PERIOD — the 64-char periodic window, which fires on true degenerate
+output such as the 24k-digit cycle and cannot fire on code: a stylesheet is not a
+character-periodic string); drop the answer-phase 12-gram coverage check entirely. Edit site:
+serve/server.py:6005-6031 — when `in_answer`, run the tail check only. Verification: the
+operator's code shape (long HTML/CSS at temperature 0.3 with thinking) replays with zero kills;
+the corpus loop fixtures (B3/B4) are still caught in the thinking phase; the MMLU gate is
+unchanged. WAITS FOR OPERATOR DIRECTION — the file carries their uncommitted effort hunks.
+
+**Presence scoping — the design (phase swap at the transition), waiting for operator direction:**
+the server already swaps sampling mid-stream (the loop-guard recovery resumes "with a presence
+penalty" — `loop_breaking_sampling`, server.py:349-356). The same mechanism applies at the
+thinking→answer transition: when the request's sampling carries the card's penalties
+(presence 1.5) and the parser enters the content state, resume the answer with the penalties
+zeroed — the vendor's own precise-coding set is presence 0 (server.py:8817). Verification: a
+code-quality A/B on the operator's shape plus the MMLU gate and the 1500q suite. WAITS FOR
+OPERATOR DIRECTION — same file.
+
+**Draft-temp calibration priced (the F-471 boundary extended):** F-471 falsified sharpening
+(0.85 → 0.65/0.5/0.4: acceptance 75.9 → 63.9, monotonic). The calibration paper's mechanism
+(drafts systematically underconfident; temperature scaling ≈ +10% acceptance) predicts the gain
+direction is UP on an underconfident drafter — and 0.95/1.05 are UNTESTED on ours. The cheap
+falsifier: two legs (STRATA_SPEC_DRAFT_TEMP 0.95 and 1.05), same-hour, M3b canary; the direction
+decides whether the mechanism applies at all. Lane math if it lands: acceptance 75.9 → ~83
+(+10% relative) is ≈ +3–8% M1 in the memory-bound regime — clears the +4% bar only at the top,
+so the arm is a composed candidate, not a solo adoption (law 4b).
+
+**Thermal guard wired (F-474 → structure):** campaign/probe-lane.py now reads the GPU
+temperature and the active throttle reasons at the head and the tail of every leg (nvidia-smi,
+a read-only query — zero load) and prints a THERMAL line; a span > 2 °C over the leg prints the
+same-hour refusal (F-474's soak class, made checkable). Smoke on the live box: 35 °C, no
+thermal throttle. The ladder's legs get the same read for free (they shell probe-lane).
+
+**binary-ladder's restore bug, found while wiring the gate:** the restore path called
+`stop_server`, which is defined nowhere — bash prints "command not found" and continues, so the
+ladder swapped the pre-run binary onto disk under the still-running last candidate and the
+relaunch then failed to bind. Fixed: `cleanup_engine` (the sanctioned stop: port-scoped TERM +
+the repo-scoped GPU sweep + the F-271 cache drop), plus the F-479 live-traffic gate before the
+gauntlet's first take-down. gate-pair needs no gate — it refuses when any engine is up, so it
+never takes the standing down itself.

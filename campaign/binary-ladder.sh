@@ -39,13 +39,23 @@ boot_and_probe() {   # $1 = binary, $2 = tag
 cp engine/strata /tmp/ladder-pre-run.bin   # the lane's own binary, restored at the end
 echo "lane binary saved: $(md5sum engine/strata | cut -c1-8)"
 
+# F-479: the gauntlet takes the standing down at the first cleanup_engine below — refuse while
+# the operator's requests flow (evidence printed; override STRATA_BOOT_OVER_LIVE=1, only with
+# the operator's word).
+require_quiet_standing
+
 for round in 1 2; do
   echo "=== round $round: champion ==="; cleanup_engine; boot_and_probe "$CHAMP" "champ$round"
   echo "=== round $round: candidate ==="; cleanup_engine; boot_and_probe "$CAND" "cand$round"
 done
 # campaign law 10/11: restore the binary the lane was RUNNING when the gauntlet started, never the
 # (possibly older) champion argument - a held candidate must not silently downgrade the lane.
-stop_server; cp /tmp/ladder-pre-run.bin engine/strata; nohup ./launch-custom-iq3s-8081.sh > /tmp/ladder-restore.out 2>&1 &
+# F-481: stop_server was never defined anywhere — bash printed "command not found" and went on,
+# so the restore swapped the pre-run binary onto disk under the still-running last candidate and
+# the relaunch failed to bind. The sanctioned stop is cleanup_engine (port-scoped TERM + the
+# repo-scoped GPU sweep + the F-271 cache drop).
+cleanup_engine
+cp /tmp/ladder-pre-run.bin engine/strata; nohup ./launch-custom-iq3s-8081.sh > /tmp/ladder-restore.out 2>&1 &
 for i in $(seq 1 100); do curl -s -m 3 http://127.0.0.1:8081/health 2>/dev/null | grep -q '"status": "ok"' && break; sleep 5; done
 wait_prewarm
 
